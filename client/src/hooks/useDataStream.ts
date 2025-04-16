@@ -19,6 +19,7 @@ export function useDataStream() {
   const [data, setData] = useState<StreamData>({
     vessels: [],
     refineries: [],
+    stats: null,
     loading: true,
     error: null,
     lastUpdated: null
@@ -64,6 +65,27 @@ export function useDataStream() {
         setData(prev => ({
           ...prev,
           error: 'Failed to parse refinery data',
+          loading: false
+        }));
+      }
+    });
+    
+    // Handle stats data updates
+    eventSource.addEventListener('stats', (event: MessageEvent) => {
+      try {
+        const stats = JSON.parse(event.data);
+        setData(prev => ({
+          ...prev,
+          stats,
+          loading: false,
+          lastUpdated: new Date()
+        }));
+        console.log('Received stats data');
+      } catch (error) {
+        console.error('Error parsing stats data:', error);
+        setData(prev => ({
+          ...prev,
+          error: 'Failed to parse stats data',
           loading: false
         }));
       }

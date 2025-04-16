@@ -1,11 +1,9 @@
 import { Stats } from "@/types";
 import { Truck, Package, Factory, Users } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useDataStream } from "@/hooks/useDataStream";
 
 export default function StatsCards() {
-  const { data: stats, isLoading } = useQuery<Stats>({
-    queryKey: ['/api/stats'],
-  });
+  const { stats, loading } = useDataStream();
 
   // Format large numbers with commas
   const formatNumber = (num: number | undefined): string => {
@@ -21,7 +19,7 @@ export default function StatsCards() {
     return `${num} barrels`;
   };
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {[1, 2, 3, 4].map((index) => (
