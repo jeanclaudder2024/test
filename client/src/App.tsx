@@ -4,6 +4,13 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
+import Vessels from "@/pages/Vessels";
+import VesselDetail from "@/pages/VesselDetail";
+import Refineries from "@/pages/Refineries";
+import RefineryDetail from "@/pages/RefineryDetail";
+import Brokers from "@/pages/Brokers";
+import AIAssistantPage from "@/pages/AIAssistant";
+import Settings from "@/pages/Settings";
 import { useEffect } from "react";
 import { apiRequest } from "./lib/queryClient";
 
@@ -27,6 +34,13 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Dashboard} />
+      <Route path="/vessels" component={Vessels} />
+      <Route path="/vessels/:id" component={VesselDetail} />
+      <Route path="/refineries" component={Refineries} />
+      <Route path="/refineries/:id" component={RefineryDetail} />
+      <Route path="/brokers" component={Brokers} />
+      <Route path="/ai-assistant" component={AIAssistantPage} />
+      <Route path="/settings" component={Settings} />
       <Route component={NotFound} />
     </Switch>
   );
