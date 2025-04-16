@@ -9,7 +9,8 @@ import {
   User, 
   Brain,
   ChevronRight,
-  ChevronLeft
+  ChevronLeft,
+  Settings
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -66,6 +67,11 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
       title: "AI Assistant",
       path: "/ai-assistant",
       icon: <Brain className="h-5 w-5 mr-3" />,
+    },
+    {
+      title: "Settings",
+      path: "/settings",
+      icon: <Settings className="h-5 w-5 mr-3" />,
     }
   ];
 
@@ -124,7 +130,7 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
                   href={item.path}
                   onClick={mobile ? onClose : undefined}
                 >
-                  <a
+                  <div
                     className={cn(
                       "flex items-center py-2 px-4",
                       isPathActive(item.path) 
@@ -135,7 +141,7 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
                   >
                     <span className={collapsed ? "mr-0" : "mr-3"}>{item.icon}</span>
                     {!collapsed && <span>{item.title}</span>}
-                  </a>
+                  </div>
                 </Link>
               </li>
             ))}
@@ -151,7 +157,7 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
               href={item.path}
               onClick={mobile ? onClose : undefined}
             >
-              <a
+              <div
                 className={cn(
                   "flex items-center py-2 px-4", 
                   isPathActive(item.path) 
@@ -162,7 +168,7 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
               >
                 <span className={collapsed ? "mr-0" : "mr-3"}>{item.icon}</span>
                 {!collapsed && <span>{item.title}</span>}
-              </a>
+              </div>
             </Link>
           ))}
         </div>
