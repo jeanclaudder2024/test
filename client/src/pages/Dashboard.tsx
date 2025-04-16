@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
 import WorldMap from "@/components/map/WorldMap";
@@ -7,19 +7,26 @@ import ProgressTimeline from "@/components/vessels/ProgressTimeline";
 import StatsCards from "@/components/dashboard/StatsCards";
 import AIAssistant from "@/components/ai/AIAssistant";
 import { Region, Vessel } from "@/types";
-import { useVessels, useVesselProgressEvents } from "@/hooks/useVessels";
-import { useRefineries } from "@/hooks/useRefineries";
+import { useVesselProgressEvents } from "@/hooks/useVessels";
 import { Button } from "@/components/ui/button";
+import { useDataStream } from "@/hooks/useDataStream";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function Dashboard() {
   const [selectedRegion, setSelectedRegion] = useState<Region | null>(null);
   const [selectedVessel, setSelectedVessel] = useState<Vessel | null>(null);
   
-  // Fetch vessels by region or all if no region selected
-  const { data: vessels = [], isLoading: vesselsLoading } = useVessels(selectedRegion || undefined);
+  // Use streaming data
+  const { vessels = [], refineries = [], loading, error, lastUpdated } = useDataStream();
   
-  // Fetch refineries by region or all if no region selected
-  const { data: refineries = [], isLoading: refineriesLoading } = useRefineries(selectedRegion || undefined);
+  // Filter data by selected region
+  const filteredVessels = selectedRegion 
+    ? vessels.filter(v => v.currentRegion === selectedRegion)
+    : vessels;
+    
+  const filteredRefineries = selectedRegion
+    ? refineries.filter(r => r.region === selectedRegion)
+    : refineries;
   
   // Fetch progress events for selected vessel
   const { data: progressEvents = [], isLoading: progressLoading } = useVesselProgressEvents(
@@ -36,7 +43,17 @@ export default function Dashboard() {
     setSelectedVessel(vessel);
   };
 
-  const regions: Region[] = ['North America', 'Europe', 'MEA', 'Africa', 'Russia'];
+  // Update the selected vessel when data refreshes
+  useEffect(() => {
+    if (selectedVessel && vessels.length > 0) {
+      const updatedVessel = vessels.find(v => v.id === selectedVessel.id);
+      if (updatedVessel) {
+        setSelectedVessel(updatedVessel);
+      }
+    }
+  }, [vessels, selectedVessel]);
+
+  const regions: Region[] = ['North America', 'Europe', 'MEA', 'Africa', 'Russia', 'Asia'];
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -71,11 +88,11 @@ export default function Dashboard() {
             
             {/* Map Container */}
             <WorldMap 
-              vessels={vessels}
-              refineries={refineries}
+              vessels={filteredVessels}
+              refineries={filteredRefineries}
               selectedRegion={selectedRegion}
               onVesselClick={handleVesselSelect}
-              isLoading={vesselsLoading || refineriesLoading}
+              isLoading={loading}
             />
           </div>
         </section>

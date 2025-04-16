@@ -40,7 +40,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   apiRouter.get("/stats", async (req, res) => {
     try {
       const stats = await storage.getStats();
-      res.json(stats);
+      
+      // Convert any BigInt values to numbers to avoid serialization issues
+      if (stats) {
+        const safeStats = {
+          ...stats,
+          id: Number(stats.id),
+          activeVessels: Number(stats.activeVessels),
+          totalCargo: Number(stats.totalCargo),
+          activeRefineries: Number(stats.activeRefineries),
+          activeBrokers: Number(stats.activeBrokers),
+          lastUpdated: stats.lastUpdated
+        };
+        res.json(safeStats);
+      } else {
+        res.json(null);
+      }
     } catch (error) {
       console.error("Error fetching stats:", error);
       res.status(500).json({ message: "Failed to fetch stats" });
@@ -325,6 +340,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Stream API endpoints
+  apiRouter.get("/stream/data", (req, res) => {
+    // Set headers for Server-Sent Events
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    
+    // Send initial data
+    const sendData = async () => {
+      try {
+        // Get vessels
+        const vessels = await vesselService.getAllVessels();
+        res.write(`event: vessels\n`);
+        res.write(`data: ${JSON.stringify(vessels)}\n\n`);
+        
+        // Get refineries
+        const refineries = await refineryService.getAllRefineries();
+        res.write(`event: refineries\n`);
+        res.write(`data: ${JSON.stringify(refineries)}\n\n`);
+        
+        // Get stats
+        const stats = await storage.getStats();
+        if (stats) {
+          // Convert BigInt values to numbers
+          const safeStats = {
+            ...stats,
+            id: Number(stats.id),
+            activeVessels: Number(stats.activeVessels),
+            totalCargo: Number(stats.totalCargo),
+            activeRefineries: Number(stats.activeRefineries),
+            activeBrokers: Number(stats.activeBrokers),
+            lastUpdated: stats.lastUpdated
+          };
+          res.write(`event: stats\n`);
+          res.write(`data: ${JSON.stringify(safeStats)}\n\n`);
+        }
+        
+        // Send a heartbeat to keep the connection alive
+        res.write(`event: heartbeat\n`);
+        res.write(`data: ${Date.now()}\n\n`);
+      } catch (error) {
+        console.error("Error streaming data:", error);
+        res.write(`event: error\n`);
+        res.write(`data: ${JSON.stringify({ message: "Error fetching data" })}\n\n`);
+      }
+    };
+    
+    // Send initial data
+    sendData();
+    
+    // Send data updates every 10 seconds
+    const intervalId = setInterval(sendData, 10000);
+    
+    // Handle client disconnect
+    req.on('close', () => {
+      clearInterval(intervalId);
+      res.end();
+    });
+  });
+  
   // Mount API router
   app.use("/api", apiRouter);
 
