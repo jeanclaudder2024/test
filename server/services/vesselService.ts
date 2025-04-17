@@ -44,14 +44,26 @@ export const vesselService = {
   // Seed data for development
   seedVesselData: async () => {
     try {
+      // First, clear existing vessel data
+      // This would be done in a real implementation with a transaction
+      // but for development, we'll just fetch all existing vessels first
+      const existingVessels = await storage.getVessels();
+      
       // Generate large vessel dataset (approximately 1500 vessels)
       console.log("Generating large vessel dataset...");
       const vessels = generateLargeVesselDataset(1500);
       console.log(`Generated ${vessels.length} vessels.`);
       
-      // Create vessels
+      // Create vessels (avoid duplicates)
       const createdVessels: Vessel[] = [];
+      const existingImoNumbers = new Set(existingVessels.map(v => v.imo));
+      
       for (const vessel of vessels) {
+        // Skip if vessel with this IMO already exists
+        if (existingImoNumbers.has(vessel.imo)) {
+          continue;
+        }
+        
         const created = await storage.createVessel(vessel);
         createdVessels.push(created);
       }

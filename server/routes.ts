@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { vesselService } from "./services/vesselService";
 import { refineryService } from "./services/refineryService";
 import { aiService } from "./services/aiService";
+import { asiStreamService } from "./services/asiStreamService";
 import { 
   insertVesselSchema, 
   insertRefinerySchema, 
@@ -348,18 +349,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
     
-    // Send initial data
+    // Send initial data and periodically update vessels
     const sendData = async () => {
       try {
-        // Get vessels
+        // --- DATABASE FIRST APPROACH ---
+        // Step 1: Get all vessels from database
         const vessels = await vesselService.getAllVessels();
+        
+        // Step 2: Get all refineries from database
+        const refineries = await refineryService.getAllRefineries();
+        
+        // Step 3: Send current data from database to client
         res.write(`event: vessels\n`);
         res.write(`data: ${JSON.stringify(vessels)}\n\n`);
         
-        // Get refineries
-        const refineries = await refineryService.getAllRefineries();
         res.write(`event: refineries\n`);
         res.write(`data: ${JSON.stringify(refineries)}\n\n`);
+        
+        // Step 4: Get updated vessel positions from API (async update)
+        // This runs in background and updates the database
+        setTimeout(async () => {
+          try {
+            // Get sample vessel positions from the API
+            const apiVessels = await asiStreamService.fetchVessels();
+            
+            // Update vessel positions in the database
+            for (const apiVessel of apiVessels) {
+              // Find vessel by IMO number
+              const existingVessels = vessels.filter(v => v.imo === apiVessel.imo);
+              
+              if (existingVessels.length > 0) {
+                const vesselToUpdate = existingVessels[0];
+                
+                // Update position and ETA data in database
+                await vesselService.updateVessel(vesselToUpdate.id, {
+                  currentLat: apiVessel.currentLat,
+                  currentLng: apiVessel.currentLng,
+                  eta: apiVessel.eta,
+                  destinationPort: apiVessel.destinationPort
+                });
+              }
+            }
+          } catch (updateError) {
+            console.error("Error updating vessel positions from API:", updateError);
+          }
+        }, 1000); // Run 1 second after sending current data
         
         // Get stats
         const stats = await storage.getStats();

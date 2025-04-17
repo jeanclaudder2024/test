@@ -30,14 +30,35 @@ export const refineryService = {
   // Seed data for development
   seedRefineryData: async () => {
     try {
+      // First, get existing refineries
+      const existingRefineries = await storage.getRefineries();
+      
       // Try to get refineries from asistream API
       const asiRefineries = await asiStreamService.fetchRefineries();
       
-      // Create refineries
+      // Create refineries (avoid duplicates by name and location)
       const createdRefineries: Refinery[] = [];
+      
+      // Create a Set of keys to check for duplicates (name + country)
+      const existingRefineryKeys = new Set();
+      existingRefineries.forEach(r => {
+        existingRefineryKeys.add(`${r.name}|${r.country}`);
+      });
+      
       for (const refinery of asiRefineries) {
+        // Create a unique key for the refinery
+        const refineryKey = `${refinery.name}|${refinery.country}`;
+        
+        // Skip if refinery already exists
+        if (existingRefineryKeys.has(refineryKey)) {
+          continue;
+        }
+        
         const created = await storage.createRefinery(refinery);
         createdRefineries.push(created);
+        
+        // Add to tracking Set to prevent adding duplicates in this batch
+        existingRefineryKeys.add(refineryKey);
       }
 
       // Update stats
