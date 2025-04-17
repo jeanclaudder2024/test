@@ -597,35 +597,35 @@ export default function WorldMap({
       <div className="absolute bottom-4 left-4 bg-white bg-opacity-90 rounded-md shadow-sm p-3 z-30">
         <div className="text-xs font-medium mb-2">Vessel Types</div>
         <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-          <div className="flex items-center space-x-2 text-xs">
+          <div key="legend-oil-tanker" className="flex items-center space-x-2 text-xs">
             <div className="relative h-4 w-4">
               <div className="absolute top-0 left-0 w-full h-full bg-[#FF6B6B] rounded-full opacity-20"></div>
               <div className="absolute top-1 left-1 w-2 h-2 bg-[#FF6B6B] rounded-full"></div>
             </div>
             <span>Oil Tankers</span>
           </div>
-          <div className="flex items-center space-x-2 text-xs">
+          <div key="legend-lng-carrier" className="flex items-center space-x-2 text-xs">
             <div className="relative h-4 w-4">
               <div className="absolute top-0 left-0 w-full h-full bg-[#4ECDC4] rounded-full opacity-20"></div>
               <div className="absolute top-1 left-1 w-2 h-2 bg-[#4ECDC4] rounded-full"></div>
             </div>
             <span>LNG Carriers</span>
           </div>
-          <div className="flex items-center space-x-2 text-xs">
+          <div key="legend-cargo" className="flex items-center space-x-2 text-xs">
             <div className="relative h-4 w-4">
               <div className="absolute top-0 left-0 w-full h-full bg-[#FFD166] rounded-full opacity-20"></div>
               <div className="absolute top-1 left-1 w-2 h-2 bg-[#FFD166] rounded-full"></div>
             </div>
             <span>Cargo Vessels</span>
           </div>
-          <div className="flex items-center space-x-2 text-xs">
+          <div key="legend-container" className="flex items-center space-x-2 text-xs">
             <div className="relative h-4 w-4">
               <div className="absolute top-0 left-0 w-full h-full bg-[#118AB2] rounded-full opacity-20"></div>
               <div className="absolute top-1 left-1 w-2 h-2 bg-[#118AB2] rounded-full"></div>
             </div>
             <span>Container Ships</span>
           </div>
-          <div className="flex items-center space-x-2 text-xs">
+          <div key="legend-chemical" className="flex items-center space-x-2 text-xs">
             <div className="relative h-4 w-4">
               <div className="absolute top-0 left-0 w-full h-full bg-[#9A48D0] rounded-full opacity-20"></div>
               <div className="absolute top-1 left-1 w-2 h-2 bg-[#9A48D0] rounded-full"></div>
