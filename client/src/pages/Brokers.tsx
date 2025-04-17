@@ -600,235 +600,434 @@ export default function Brokers() {
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-              <Card className="bg-white/80 hover:shadow-md transition-shadow">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg flex items-center">
-                    <FileText className="h-5 w-5 mr-2 text-primary" />
-                    Confidential Documents
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Access secure and private oil trading templates, SPAs, and bank guarantees.
-                  </p>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between p-2 bg-gray-50 rounded-md hover:bg-gray-100">
-                      <div className="flex items-center">
-                        <FileText className="h-4 w-4 mr-2 text-gray-500" />
-                        <span className="text-sm">Standard Trading Agreement</span>
-                      </div>
-                      <Badge variant="outline">PDF</Badge>
+              <div className="col-span-1">
+                <Card className="bg-primary/5 h-full">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg">Navigation</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="space-y-1">
+                      <Button variant="ghost" className="w-full justify-start" onClick={() => toast({ title: "Loading dashboard...", description: "الصفحة الرئيسية قيد التحميل" })}>
+                        <FileText className="h-4 w-4 mr-2" />
+                        Dashboard
+                      </Button>
+                      <Button variant="ghost" className="w-full justify-start" onClick={() => toast({ title: "Opening messages...", description: "جاري فتح الرسائل" })}>
+                        <MessageSquare className="h-4 w-4 mr-2" />
+                        Messages
+                        <Badge className="ml-auto" variant="destructive">3</Badge>
+                      </Button>
+                      <Button variant="ghost" className="w-full justify-start" onClick={() => toast({ title: "Opening active tenders...", description: "جاري فتح المناقصات النشطة" })}>
+                        <Globe className="h-4 w-4 mr-2" />
+                        Active Tenders
+                        <Badge className="ml-auto">12</Badge>
+                      </Button>
+                      <Button variant="ghost" className="w-full justify-start" onClick={() => toast({ title: "Opening your bids...", description: "جاري فتح عروضك" })}>
+                        <FileCheck className="h-4 w-4 mr-2" />
+                        My Bids
+                        <Badge className="ml-auto">4</Badge>
+                      </Button>
+                      <Button variant="ghost" className="w-full justify-start" onClick={() => toast({ title: "Opening company directory...", description: "جاري فتح دليل الشركات" })}>
+                        <Building className="h-4 w-4 mr-2" />
+                        Company Directory
+                      </Button>
+                      <Button variant="ghost" className="w-full justify-start" onClick={() => toast({ title: "Opening market reports...", description: "جاري فتح تقارير السوق" })}>
+                        <BarChart3 className="h-4 w-4 mr-2" />
+                        Market Reports
+                      </Button>
+                      <Button variant="ghost" className="w-full justify-start" onClick={() => toast({ title: "Opening trade calendar...", description: "جاري فتح تقويم التداول" })}>
+                        <Calendar className="h-4 w-4 mr-2" />
+                        Trade Calendar
+                      </Button>
+                      <Button variant="ghost" className="w-full justify-start" onClick={() => toast({ title: "Connecting to elite support...", description: "جاري الاتصال بالدعم المميز" })}>
+                        <HelpCircle className="h-4 w-4 mr-2" />
+                        Elite Support
+                      </Button>
                     </div>
-                    <div className="flex items-center justify-between p-2 bg-gray-50 rounded-md hover:bg-gray-100">
-                      <div className="flex items-center">
-                        <FileText className="h-4 w-4 mr-2 text-gray-500" />
-                        <span className="text-sm">Bank Guarantee Template</span>
-                      </div>
-                      <Badge variant="outline">DOCX</Badge>
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-gray-50 rounded-md hover:bg-gray-100">
-                      <div className="flex items-center">
-                        <FileText className="h-4 w-4 mr-2 text-gray-500" />
-                        <span className="text-sm">Confidential Price List Q2 2023</span>
-                      </div>
-                      <Badge variant="outline">XLSX</Badge>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <Button variant="outline" className="w-full">View All Documents</Button>
-                </CardFooter>
-              </Card>
+                  </CardContent>
+                </Card>
+              </div>
               
-              <Card className="bg-white/80 hover:shadow-md transition-shadow">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg flex items-center">
-                    <Building className="h-5 w-5 mr-2 text-primary" />
-                    Direct Company Communication
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Send offers directly to oil companies through secure channels.
-                  </p>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between p-2 bg-gray-50 rounded-md hover:bg-gray-100">
-                      <div className="flex items-center">
-                        <Building className="h-4 w-4 mr-2 text-gray-500" />
-                        <span className="text-sm">Saudi Aramco</span>
+              <div className="col-span-1 lg:col-span-3 space-y-4">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg">Active Tender Opportunities</CardTitle>
+                    <CardDescription>
+                      Premium oil shipment tenders available for elite brokers
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <Card className="bg-white/90 hover:shadow-md transition-shadow border-amber-100">
+                          <CardHeader className="p-4 pb-2">
+                            <Badge className="mb-2 bg-amber-100 text-amber-800 hover:bg-amber-100">
+                              Premium
+                            </Badge>
+                            <CardTitle className="text-base">Saudi Aramco Tender #SA-42187</CardTitle>
+                          </CardHeader>
+                          <CardContent className="p-4 pt-0">
+                            <div className="text-sm space-y-2">
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Cargo:</span>
+                                <span className="font-medium">Crude Oil</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Quantity:</span>
+                                <span className="font-medium">450,000 barrels</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Loading Port:</span>
+                                <span className="font-medium">Ras Tanura</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Delivery Window:</span>
+                                <span className="font-medium">Jun 15-25, 2025</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Closing Date:</span>
+                                <span className="font-medium text-red-600">Apr 21, 2025</span>
+                              </div>
+                            </div>
+                          </CardContent>
+                          <CardFooter className="p-4 pt-0 flex justify-between gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="flex-1"
+                              onClick={() => toast({ 
+                                title: "Tender details", 
+                                description: "تفاصيل المناقصة قيد التحميل" 
+                              })}
+                            >
+                              <FileText className="h-3 w-3 mr-2" />
+                              Details
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              className="flex-1"
+                              onClick={() => toast({ 
+                                title: "Bid placement form", 
+                                description: "نموذج تقديم العرض قيد التحميل" 
+                              })}
+                            >
+                              <ArrowUpRight className="h-3 w-3 mr-2" />
+                              Place Bid
+                            </Button>
+                          </CardFooter>
+                        </Card>
+                        
+                        <Card className="bg-white/90 hover:shadow-md transition-shadow border-amber-100">
+                          <CardHeader className="p-4 pb-2">
+                            <Badge className="mb-2 bg-green-100 text-green-800 hover:bg-green-100">
+                              New
+                            </Badge>
+                            <CardTitle className="text-base">ADNOC Tender #AD-2254</CardTitle>
+                          </CardHeader>
+                          <CardContent className="p-4 pt-0">
+                            <div className="text-sm space-y-2">
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Cargo:</span>
+                                <span className="font-medium">Murban Crude</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Quantity:</span>
+                                <span className="font-medium">250,000 barrels</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Loading Port:</span>
+                                <span className="font-medium">Jebel Dhanna</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Delivery Window:</span>
+                                <span className="font-medium">May 20-30, 2025</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Closing Date:</span>
+                                <span className="font-medium text-red-600">Apr 25, 2025</span>
+                              </div>
+                            </div>
+                          </CardContent>
+                          <CardFooter className="p-4 pt-0 flex justify-between gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="flex-1"
+                              onClick={() => toast({ 
+                                title: "Tender details", 
+                                description: "تفاصيل المناقصة قيد التحميل" 
+                              })}
+                            >
+                              <FileText className="h-3 w-3 mr-2" />
+                              Details
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              className="flex-1"
+                              onClick={() => toast({ 
+                                title: "Bid placement form", 
+                                description: "نموذج تقديم العرض قيد التحميل" 
+                              })}
+                            >
+                              <ArrowUpRight className="h-3 w-3 mr-2" />
+                              Place Bid
+                            </Button>
+                          </CardFooter>
+                        </Card>
+                        
+                        <Card className="bg-white/90 hover:shadow-md transition-shadow border-amber-100">
+                          <CardHeader className="p-4 pb-2">
+                            <Badge className="mb-2 bg-blue-100 text-blue-800 hover:bg-blue-100">
+                              Exclusive
+                            </Badge>
+                            <CardTitle className="text-base">Rosneft Tender #RN-9856</CardTitle>
+                          </CardHeader>
+                          <CardContent className="p-4 pt-0">
+                            <div className="text-sm space-y-2">
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Cargo:</span>
+                                <span className="font-medium">ESPO Blend</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Quantity:</span>
+                                <span className="font-medium">100,000 tonnes</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Loading Port:</span>
+                                <span className="font-medium">Kozmino</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Delivery Window:</span>
+                                <span className="font-medium">Jul 1-10, 2025</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Closing Date:</span>
+                                <span className="font-medium text-red-600">Apr 30, 2025</span>
+                              </div>
+                            </div>
+                          </CardContent>
+                          <CardFooter className="p-4 pt-0 flex justify-between gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="flex-1"
+                              onClick={() => toast({ 
+                                title: "Tender details", 
+                                description: "تفاصيل المناقصة قيد التحميل" 
+                              })}
+                            >
+                              <FileText className="h-3 w-3 mr-2" />
+                              Details
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              className="flex-1"
+                              onClick={() => toast({ 
+                                title: "Bid placement form", 
+                                description: "نموذج تقديم العرض قيد التحميل" 
+                              })}
+                            >
+                              <ArrowUpRight className="h-3 w-3 mr-2" />
+                              Place Bid
+                            </Button>
+                          </CardFooter>
+                        </Card>
                       </div>
-                      <Badge className="bg-green-500">Connected</Badge>
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-gray-50 rounded-md hover:bg-gray-100">
-                      <div className="flex items-center">
-                        <Building className="h-4 w-4 mr-2 text-gray-500" />
-                        <span className="text-sm">Shell Trading</span>
-                      </div>
-                      <Badge className="bg-green-500">Connected</Badge>
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-gray-50 rounded-md hover:bg-gray-100">
-                      <div className="flex items-center">
-                        <Building className="h-4 w-4 mr-2 text-gray-500" />
-                        <span className="text-sm">BP Supply and Trading</span>
-                      </div>
-                      <Badge variant="outline">Request Access</Badge>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <Button variant="outline" className="w-full">View All Companies</Button>
-                </CardFooter>
-              </Card>
-              
-              <Card className="bg-white/80 hover:shadow-md transition-shadow">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg flex items-center">
-                    <Calendar className="h-5 w-5 mr-2 text-primary" />
-                    Active Tenders
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Bid on open oil shipment tenders in real-time.
-                  </p>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between p-2 bg-gray-50 rounded-md hover:bg-gray-100">
-                      <div className="flex items-center">
-                        <Calendar className="h-4 w-4 mr-2 text-gray-500" />
-                        <span className="text-sm">1M bbl Crude Oil FOB Rotterdam</span>
-                      </div>
-                      <Badge className="bg-amber-500">Closes in 2d</Badge>
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-gray-50 rounded-md hover:bg-gray-100">
-                      <div className="flex items-center">
-                        <Calendar className="h-4 w-4 mr-2 text-gray-500" />
-                        <span className="text-sm">500K bbl LSFO CIF Singapore</span>
-                      </div>
-                      <Badge className="bg-amber-500">Closes in 5d</Badge>
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-gray-50 rounded-md hover:bg-gray-100">
-                      <div className="flex items-center">
-                        <Calendar className="h-4 w-4 mr-2 text-gray-500" />
-                        <span className="text-sm">200K MT Diesel 10ppm CIF ARA</span>
-                      </div>
-                      <Badge className="bg-red-500 text-white">Closing Today</Badge>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <Button variant="outline" className="w-full">View All Tenders</Button>
-                </CardFooter>
-              </Card>
-              
-              <Card className="bg-white/80 hover:shadow-md transition-shadow">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg flex items-center">
-                    <BarChart3 className="h-5 w-5 mr-2 text-primary" />
-                    Market Analytics
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Access premium market data and AI-powered insights.
-                  </p>
-                  <div className="h-40 bg-gray-100 rounded-md flex items-center justify-center text-gray-400">
-                    [Price Chart Visualization]
-                  </div>
-                  <div className="mt-4 grid grid-cols-2 gap-2">
-                    <div className="bg-gray-50 p-2 rounded-md">
-                      <div className="text-xs text-gray-500">Brent Crude</div>
-                      <div className="text-lg font-semibold">$84.27</div>
-                      <div className="text-xs text-green-500">+1.24%</div>
-                    </div>
-                    <div className="bg-gray-50 p-2 rounded-md">
-                      <div className="text-xs text-gray-500">WTI Crude</div>
-                      <div className="text-lg font-semibold">$80.12</div>
-                      <div className="text-xs text-green-500">+0.98%</div>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <Button variant="outline" className="w-full">View Full Analytics</Button>
-                </CardFooter>
-              </Card>
-              
-              <Card className="bg-white/80 hover:shadow-md transition-shadow">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg flex items-center">
-                    <MessageSquare className="h-5 w-5 mr-2 text-primary" />
-                    Secure Messages
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Encrypted messaging with oil companies and other brokers.
-                  </p>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between p-2 bg-gray-50 rounded-md hover:bg-gray-100">
-                      <div className="flex items-center">
-                        <MessageSquare className="h-4 w-4 mr-2 text-gray-500" />
-                        <span className="text-sm">RE: Saudi Aramco Tender Response</span>
-                      </div>
-                      <Badge className="bg-red-500 text-white">New</Badge>
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-gray-50 rounded-md hover:bg-gray-100">
-                      <div className="flex items-center">
-                        <MessageSquare className="h-4 w-4 mr-2 text-gray-500" />
-                        <span className="text-sm">Contract Negotiation - Shell</span>
-                      </div>
-                      <span className="text-xs text-gray-500">Yesterday</span>
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-gray-50 rounded-md hover:bg-gray-100">
-                      <div className="flex items-center">
-                        <MessageSquare className="h-4 w-4 mr-2 text-gray-500" />
-                        <span className="text-sm">Q2 Pricing Discussion</span>
-                      </div>
-                      <span className="text-xs text-gray-500">3 days ago</span>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <Button variant="outline" className="w-full">View All Messages</Button>
-                </CardFooter>
-              </Card>
-              
-              <Card className="bg-white/80 hover:shadow-md transition-shadow">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg flex items-center">
-                    <CreditCard className="h-5 w-5 mr-2 text-primary" />
-                    Membership Card
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="bg-gradient-to-br from-amber-600 to-amber-900 p-4 rounded-xl text-white shadow-lg">
-                    <div className="flex justify-between">
-                      <div className="text-xl font-bold">GloboOil</div>
-                      <Star className="h-6 w-6" />
-                    </div>
-                    <div className="mt-6 flex justify-between items-end">
-                      <div>
-                        <div className="text-xs opacity-80">ELITE BROKER</div>
-                        <div className="text-lg font-bold">JOHN SMITH</div>
-                        <div className="text-xs mt-1 opacity-80">MEMBER SINCE 2023</div>
-                      </div>
-                      <div className="bg-white/20 p-2 rounded">
-                        <div className="text-xs">ID</div>
-                        <div className="font-mono">#EB24601</div>
+                      
+                      <div className="flex justify-end">
+                        <Button 
+                          variant="outline"
+                          onClick={() => toast({ 
+                            title: "View all tenders", 
+                            description: "جاري فتح جميع المناقصات" 
+                          })}
+                        >
+                          <Globe className="h-4 w-4 mr-2" />
+                          View All Tenders (12)
+                        </Button>
                       </div>
                     </div>
-                    <div className="mt-6 bg-white/10 p-2 rounded flex justify-between">
-                      <div className="text-xs">VALID UNTIL</div>
-                      <div>{formatDate(new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), 'MM/yyyy')}</div>
-                    </div>
-                  </div>
-                  <div className="mt-4 text-sm text-center text-gray-500">
-                    Your physical membership card has been dispatched and will arrive in 5-7 business days.
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <Button variant="outline" className="w-full">View Membership Details</Button>
-                </CardFooter>
-              </Card>
+                  </CardContent>
+                </Card>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg flex items-center">
+                        <MessageSquare className="h-5 w-5 mr-2 text-primary" />
+                        Recent Messages
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div className="flex items-start gap-4 p-3 bg-gray-50 rounded-md">
+                          <Avatar>
+                            <AvatarFallback className="bg-primary/20">RA</AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 space-y-1">
+                            <div className="flex items-center justify-between">
+                              <p className="text-sm font-medium">Rosatom Energy Trading</p>
+                              <Badge variant="destructive">New</Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground line-clamp-2">
+                              We have received your offer for the North Sea crude delivery and would like to discuss terms...
+                            </p>
+                            <p className="text-xs text-gray-500">Today, 10:32 AM</p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-start gap-4 p-3 bg-gray-50 rounded-md">
+                          <Avatar>
+                            <AvatarFallback className="bg-primary/20">SA</AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 space-y-1">
+                            <div className="flex items-center justify-between">
+                              <p className="text-sm font-medium">Saudi Aramco</p>
+                              <Badge variant="destructive">New</Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground line-clamp-2">
+                              Your bid for tender #SA-42187 is under review. Please provide vessel documentation...
+                            </p>
+                            <p className="text-xs text-gray-500">Yesterday, 3:45 PM</p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-start gap-4 p-3 bg-gray-50 rounded-md">
+                          <Avatar>
+                            <AvatarFallback className="bg-primary/20">BP</AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 space-y-1">
+                            <div className="flex items-center justify-between">
+                              <p className="text-sm font-medium">BP Trading</p>
+                              <Badge variant="destructive">New</Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground line-clamp-2">
+                              Confirming receipt of your proposal. Our team will analyze the terms and get back...
+                            </p>
+                            <p className="text-xs text-gray-500">Apr 15, 2025</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-4 flex justify-end">
+                        <Button
+                          onClick={() => toast({ 
+                            title: "Opening inbox", 
+                            description: "جاري فتح صندوق الوارد" 
+                          })}
+                        >
+                          <MessageSquare className="h-4 w-4 mr-2" />
+                          Open Inbox
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg flex items-center">
+                        <BarChart3 className="h-5 w-5 mr-2 text-primary" />
+                        Market Insights
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div>
+                          <div className="flex justify-between items-center mb-2">
+                            <h4 className="text-sm font-medium">Crude Oil Price</h4>
+                            <Badge className="bg-green-500">+2.3%</Badge>
+                          </div>
+                          <div className="h-[60px] bg-gray-100 rounded-md overflow-hidden relative">
+                            <div className="absolute inset-0 flex items-end">
+                              <div className="h-[40%] w-[10%] bg-gray-300"></div>
+                              <div className="h-[45%] w-[10%] bg-gray-300"></div>
+                              <div className="h-[35%] w-[10%] bg-gray-300"></div>
+                              <div className="h-[50%] w-[10%] bg-gray-300"></div>
+                              <div className="h-[48%] w-[10%] bg-gray-300"></div>
+                              <div className="h-[42%] w-[10%] bg-gray-300"></div>
+                              <div className="h-[60%] w-[10%] bg-green-300"></div>
+                              <div className="h-[65%] w-[10%] bg-green-400"></div>
+                              <div className="h-[75%] w-[10%] bg-green-500"></div>
+                              <div className="h-[80%] w-[10%] bg-green-600"></div>
+                            </div>
+                          </div>
+                          <div className="flex justify-between text-xs text-gray-500 mt-1">
+                            <span>Apr 10</span>
+                            <span>Apr 17</span>
+                          </div>
+                        </div>
+                        
+                        <div className="pt-2">
+                          <h4 className="text-sm font-medium mb-2">Premium Market Reports</h4>
+                          <div className="space-y-2">
+                            <div className="flex items-center p-2 bg-gray-50 rounded-md">
+                              <FileText className="h-4 w-4 mr-2 text-primary" />
+                              <div className="flex-1">
+                                <p className="text-sm">Asia-Pacific Demand Forecast Q2 2025</p>
+                              </div>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => toast({ 
+                                  title: "Downloading report", 
+                                  description: "جاري تحميل التقرير" 
+                                })}
+                              >
+                                <Download className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            
+                            <div className="flex items-center p-2 bg-gray-50 rounded-md">
+                              <FileText className="h-4 w-4 mr-2 text-primary" />
+                              <div className="flex-1">
+                                <p className="text-sm">OPEC+ Output Strategy Analysis</p>
+                              </div>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => toast({ 
+                                  title: "Downloading report", 
+                                  description: "جاري تحميل التقرير" 
+                                })}
+                              >
+                                <Download className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            
+                            <div className="flex items-center p-2 bg-gray-50 rounded-md">
+                              <FileText className="h-4 w-4 mr-2 text-primary" />
+                              <div className="flex-1">
+                                <p className="text-sm">Vessel Availability Report - April 2025</p>
+                              </div>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => toast({ 
+                                  title: "Downloading report", 
+                                  description: "جاري تحميل التقرير" 
+                                })}
+                              >
+                                <Download className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-4 flex justify-end">
+                        <Button
+                          onClick={() => toast({ 
+                            title: "Opening market reports", 
+                            description: "جاري فتح تقارير السوق" 
+                          })}
+                        >
+                          <BarChart3 className="h-4 w-4 mr-2" />
+                          View All Reports
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
             </div>
           </div>
         </TabsContent>
