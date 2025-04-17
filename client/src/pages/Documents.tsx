@@ -93,7 +93,8 @@ export default function Documents() {
   });
 
   // Filter documents based on search term and active tab
-  const filteredDocuments = documents.filter(doc => {
+  const documentArray = Array.isArray(documents) ? documents : [];
+  const filteredDocuments = documentArray.filter((doc: Document) => {
     // Apply search filter
     const matchesSearch = !searchTerm || 
       doc.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
