@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline, Tooltip } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline, Tooltip, CircleMarker } from "react-leaflet";
 import L from "leaflet";
 import { Vessel, Refinery, Region, MapPosition } from "@/types";
 import { Button } from "@/components/ui/button";
@@ -103,36 +103,82 @@ function VesselTracker({ vessel }: { vessel: Vessel | null | undefined }) {
     }
   }, [vessel, map]);
   
+  // Create a historical path for the tracked vessel - simulated previous positions
+  const getVesselPath = () => {
+    if (!vessel?.currentLat || !vessel?.currentLng) return [];
+    
+    const lat = typeof vessel.currentLat === 'number' ? vessel.currentLat : parseFloat(String(vessel.currentLat));
+    const lng = typeof vessel.currentLng === 'number' ? vessel.currentLng : parseFloat(String(vessel.currentLng));
+    
+    // Create simulated historical path points (slight variations from current position)
+    return [
+      [lat - 0.8, lng - 0.5],
+      [lat - 0.5, lng - 0.3],
+      [lat - 0.3, lng - 0.15],
+      [lat - 0.1, lng - 0.05],
+      [lat, lng] // Current position
+    ];
+  };
+  
   return vessel ? (
-    <div className="absolute top-20 right-4 z-30 bg-white rounded-lg shadow-md p-3 max-w-[220px]">
-      <div className="flex items-center justify-between mb-2">
-        <h4 className="text-xs font-bold flex items-center">
-          <Navigation className="h-3 w-3 mr-1 text-blue-500"/>
-          Tracking Vessel
-        </h4>
-        <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 text-[10px]">LIVE</Badge>
-      </div>
-      <div className="space-y-1 text-xs">
-        <div className="font-medium">{vessel.name}</div>
-        <div className="flex justify-between">
-          <span className="text-gray-500">Vessel Type:</span>
-          <span>{vessel.vesselType}</span>
+    <>
+      {/* Vessel tracking path line */}
+      <Polyline
+        positions={getVesselPath() as L.LatLngExpression[]}
+        color="#ff5722"
+        weight={3}
+        opacity={0.8}
+        dashArray="5,10"
+      >
+        <Tooltip permanent direction="center" className="vessel-path-tooltip">
+          <span className="text-xs font-bold">Vessel Path</span>
+        </Tooltip>
+      </Polyline>
+      
+      {/* Current position marker */}
+      {vessel.currentLat && vessel.currentLng && (
+        <Marker
+          position={[vessel.currentLat, vessel.currentLng]}
+          icon={L.divIcon({
+            className: 'tracking-position-marker',
+            html: `<div class="w-4 h-4 rounded-full bg-orange-500 border-2 border-white pulse-animation"></div>`,
+            iconSize: [16, 16],
+          })}
+        >
+          <Popup>Current position</Popup>
+        </Marker>
+      )}
+      
+      <div className="absolute top-20 right-4 z-30 bg-white rounded-lg shadow-md p-3 max-w-[220px]">
+        <div className="flex items-center justify-between mb-2">
+          <h4 className="text-xs font-bold flex items-center">
+            <Navigation className="h-3 w-3 mr-1 text-blue-500"/>
+            Tracking Vessel
+          </h4>
+          <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 text-[10px]">LIVE</Badge>
         </div>
-        <div className="flex justify-between">
-          <span className="text-gray-500">Position:</span>
-          <span>
-            {typeof vessel.currentLat === 'number' ? vessel.currentLat.toFixed(3) : parseFloat(String(vessel.currentLat)).toFixed(3)}, 
-            {typeof vessel.currentLng === 'number' ? vessel.currentLng.toFixed(3) : parseFloat(String(vessel.currentLng)).toFixed(3)}
-          </span>
-        </div>
-        {vessel.destinationPort && (
+        <div className="space-y-1 text-xs">
+          <div className="font-medium">{vessel.name}</div>
           <div className="flex justify-between">
-            <span className="text-gray-500">Heading to:</span>
-            <span>{vessel.destinationPort.split(',')[0]}</span>
+            <span className="text-gray-500">Vessel Type:</span>
+            <span>{vessel.vesselType}</span>
           </div>
-        )}
+          <div className="flex justify-between">
+            <span className="text-gray-500">Position:</span>
+            <span>
+              {typeof vessel.currentLat === 'number' ? vessel.currentLat.toFixed(3) : parseFloat(String(vessel.currentLat)).toFixed(3)}, 
+              {typeof vessel.currentLng === 'number' ? vessel.currentLng.toFixed(3) : parseFloat(String(vessel.currentLng)).toFixed(3)}
+            </span>
+          </div>
+          {vessel.destinationPort && (
+            <div className="flex justify-between">
+              <span className="text-gray-500">Heading to:</span>
+              <span>{vessel.destinationPort.split(',')[0]}</span>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   ) : null;
 }
 
@@ -273,7 +319,7 @@ export default function WorldMap({
         zoomControl={false}
         className="h-full w-full"
         ref={mapRef}
-        whenReady={(e) => { mapRef.current = e.target; }}
+        whenReady={function(e: any) { mapRef.current = e.target; }}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
