@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useDataStream } from '@/hooks/useDataStream';
-import { AIQueryResponse } from '@/types';
+import { AIQueryResponse, Vessel, Refinery, Region } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import {
   Card,
@@ -22,7 +22,9 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Link } from 'wouter';
-import { Sparkles, Send, MessageCircle, Search, Clock, AlertCircle, Ship, Factory, FileText } from 'lucide-react';
+import WorldMap from '@/components/map/WorldMap';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Sparkles, Send, MessageCircle, Search, Clock, AlertCircle, Ship, Factory, FileText, Map, Navigation } from 'lucide-react';
 
 export default function AIAssistantPage() {
   const { vessels, refineries, loading } = useDataStream();
@@ -35,6 +37,37 @@ export default function AIAssistantPage() {
     response?: AIQueryResponse;
     timestamp: Date;
   }[]>([]);
+  const [selectedRegion, setSelectedRegion] = useState<Region | null>(null);
+  const [trackedVessel, setTrackedVessel] = useState<Vessel | null>(null);
+  const [selectedVessel, setSelectedVessel] = useState<Vessel | null>(null);
+  const [selectedRefinery, setSelectedRefinery] = useState<Refinery | null>(null);
+  
+  // Handle vessel selection for tracking
+  const handleVesselSelect = (vessel: Vessel) => {
+    setSelectedVessel(vessel);
+    setTrackedVessel(vessel);
+    setSelectedRefinery(null);
+  };
+  
+  // Handle refinery selection
+  const handleRefinerySelect = (refinery: Refinery) => {
+    setSelectedRefinery(refinery);
+    setSelectedVessel(null);
+    setTrackedVessel(null);
+  };
+  
+  // Keep tracked vessel updated with real-time data
+  useEffect(() => {
+    if (trackedVessel && vessels.length > 0) {
+      const updatedVessel = vessels.find(v => v.id === trackedVessel.id);
+      if (updatedVessel) {
+        setTrackedVessel(updatedVessel);
+        if (selectedVessel?.id === updatedVessel.id) {
+          setSelectedVessel(updatedVessel);
+        }
+      }
+    }
+  }, [vessels, trackedVessel]);
   
   // Function to handle AI query submission
   const handleSubmit = async (e: React.FormEvent) => {
