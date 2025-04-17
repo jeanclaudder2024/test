@@ -227,30 +227,42 @@ export default function WorldMap({
     // First, immediately render vessels near the view (if tracked or selected region)
     let initialVessels: Vessel[] = [];
     
+    // Filter for OIL VESSELS ONLY by default (this is the most important filter)
+    // Get vessels containing "oil", "tanker", "crude", or "vlcc" in their type
+    const filterOilVesselsOnly = (v: Vessel) => {
+      const vesselType = v.vesselType?.toLowerCase() || '';
+      return (
+        vesselType.includes('oil') ||
+        vesselType.includes('tanker') ||
+        vesselType.includes('crude') ||
+        vesselType.includes('vlcc')
+      ) && v.currentLat && v.currentLng;
+    };
+    
     if (trackedVessel) {
       // If tracking a vessel, prioritize vessels nearby
       initialVessels = vessels
-        .filter(v => v.currentLat && v.currentLng)
+        .filter(filterOilVesselsOnly)
         .slice(0, 50); // Start with just a few vessels for immediate feedback
     } else if (selectedRegion) {
       // If region selected, prioritize vessels in this region
       initialVessels = vessels
-        .filter(v => v.currentRegion === selectedRegion && v.currentLat && v.currentLng)
+        .filter(v => v.currentRegion === selectedRegion && filterOilVesselsOnly(v))
         .slice(0, 100);
     } else {
-      // Default case - start with a limited set to make the initial render fast
+      // Default case - show ONLY OIL VESSELS when app first runs
       initialVessels = vessels
-        .filter(v => v.currentLat && v.currentLng)
-        .slice(0, 100);
+        .filter(filterOilVesselsOnly)
+        .slice(0, 150); // Show more oil vessels initially
     }
     
     // Set initial vessels
     setRenderedVessels(initialVessels);
     
-    // Then progressively load the rest in batches
+    // Then progressively load the rest in batches - ONLY OIL VESSELS
     const remainingVessels = vessels
-      .filter(v => v.currentLat && v.currentLng && !initialVessels.some(iv => iv.id === v.id))
-      .slice(0, 400); // Limit total vessels for performance
+      .filter(v => filterOilVesselsOnly(v) && !initialVessels.some(iv => iv.id === v.id))
+      .slice(0, 300); // Limit total vessels for performance, but show many oil vessels
     
     const BATCH_SIZE = 50;
     const BATCH_DELAY = 500; // ms between batches
@@ -546,12 +558,14 @@ export default function WorldMap({
           ) : null
         ))}
         
-        {/* Display loading indicator if more vessels being loaded */}
-        {renderedVessels.length < vessels.filter(v => v.currentLat && v.currentLng).length && (
-          <div className="absolute bottom-4 right-4 bg-white rounded-md px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm z-30">
-            Loading more vessels... ({renderedVessels.length}/{vessels.filter(v => v.currentLat && v.currentLng).length})
+        {/* Display info about oil vessels being shown */}
+        <div className="absolute bottom-4 right-4 bg-white rounded-md px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm z-30 flex items-center space-x-2">
+          <Ship className="h-4 w-4 text-red-500" />
+          <div>
+            <span className="font-bold">OIL VESSELS ONLY</span>
+            <span className="ml-1">({renderedVessels.length} displayed)</span>
           </div>
-        )}
+        </div>
       </MapContainer>
       
       {/* Map Controls */}
