@@ -55,11 +55,11 @@ export default function Documents() {
     refetch: refetchDocuments,
   } = useQuery({
     queryKey: ['/api/documents', selectedVesselId],
-    queryFn: async ({ queryKey }) => {
+    queryFn: async () => {
       const url = selectedVesselId 
         ? `/api/documents?vesselId=${selectedVesselId}` 
         : '/api/documents';
-      return apiRequest(url);
+      return apiRequest(url, { method: 'GET' });
     }
   });
 
@@ -302,13 +302,14 @@ export default function Documents() {
                 Vessel
               </label>
               <Select 
-                value={selectedVesselId?.toString() || ''} 
-                onValueChange={(value) => setSelectedVesselId(parseInt(value))}
+                value={selectedVesselId?.toString() || 'select'} 
+                onValueChange={(value) => value !== 'select' ? setSelectedVesselId(parseInt(value)) : null}
               >
                 <SelectTrigger id="vessel">
                   <SelectValue placeholder="Select a vessel" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="select" disabled>Select a vessel</SelectItem>
                   {vessels.map((vessel) => (
                     <SelectItem key={vessel.id} value={vessel.id.toString()}>
                       {vessel.name}
