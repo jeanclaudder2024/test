@@ -38,6 +38,7 @@ export default function Dashboard() {
   const [selectedRegion, setSelectedRegion] = useState<Region | null>(null);
   const [selectedVessel, setSelectedVessel] = useState<Vessel | null>(null);
   const [selectedRefinery, setSelectedRefinery] = useState<Refinery | null>(null);
+  const [trackedVessel, setTrackedVessel] = useState<Vessel | null>(null);
   
   // Filters
   const [vesselTypeFilters, setVesselTypeFilters] = useState<string[]>([]);

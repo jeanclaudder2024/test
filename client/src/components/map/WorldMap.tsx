@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline, Tooltip } fro
 import L from "leaflet";
 import { Vessel, Refinery, Region, MapPosition } from "@/types";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { ZoomIn, ZoomOut, Locate, Ship, Factory, Navigation, Droplet } from "lucide-react";
 
 // Define the marker icons here to prevent recreation on each render
@@ -59,6 +60,7 @@ interface WorldMapProps {
   vessels: Vessel[];
   refineries: Refinery[];
   selectedRegion: Region | null;
+  trackedVessel?: Vessel | null;
   onVesselClick: (vessel: Vessel) => void;
   onRefineryClick?: (refinery: Refinery) => void;
   isLoading?: boolean;
@@ -88,10 +90,56 @@ function MapUpdater({ region }: { region: Region | null }) {
   return null;
 }
 
+// VesselTracker component to center the map on tracked vessel
+function VesselTracker({ vessel }: { vessel: Vessel | null | undefined }) {
+  const map = useMap();
+  
+  useEffect(() => {
+    if (vessel && vessel.currentLat && vessel.currentLng) {
+      map.flyTo([vessel.currentLat, vessel.currentLng], 8, {
+        animate: true,
+        duration: 1.5
+      });
+    }
+  }, [vessel, map]);
+  
+  return vessel ? (
+    <div className="absolute top-20 right-4 z-[1000] bg-white rounded-lg shadow-md p-3 max-w-[220px]">
+      <div className="flex items-center justify-between mb-2">
+        <h4 className="text-xs font-bold flex items-center">
+          <Navigation className="h-3 w-3 mr-1 text-blue-500"/>
+          Tracking Vessel
+        </h4>
+        <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 text-[10px]">LIVE</Badge>
+      </div>
+      <div className="space-y-1 text-xs">
+        <div className="font-medium">{vessel.name}</div>
+        <div className="flex justify-between">
+          <span className="text-gray-500">Vessel Type:</span>
+          <span>{vessel.vesselType}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-gray-500">Position:</span>
+          <span>
+            {vessel.currentLat?.toFixed(3)}, {vessel.currentLng?.toFixed(3)}
+          </span>
+        </div>
+        {vessel.destinationPort && (
+          <div className="flex justify-between">
+            <span className="text-gray-500">Heading to:</span>
+            <span>{vessel.destinationPort.split(',')[0]}</span>
+          </div>
+        )}
+      </div>
+    </div>
+  ) : null;
+}
+
 export default function WorldMap({ 
   vessels, 
   refineries, 
   selectedRegion, 
+  trackedVessel,
   onVesselClick,
   onRefineryClick,
   isLoading = false 
@@ -233,6 +281,9 @@ export default function WorldMap({
         
         {/* Update map when region changes */}
         <MapUpdater region={selectedRegion} />
+        
+        {/* Track vessel if one is selected */}
+        {trackedVessel && <VesselTracker vessel={trackedVessel} />}
         
         {/* Shipping Routes (draw first to be on bottom) */}
         {shippingRoutes.map((route) => (
