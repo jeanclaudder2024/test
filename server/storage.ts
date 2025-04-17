@@ -1,4 +1,7 @@
-import { 
+import { eq, and } from "drizzle-orm";
+import { db } from "./db";
+import {
+  users, vessels, refineries, progressEvents, documents, brokers, stats as statsTable,
   User, InsertUser, 
   Vessel, InsertVessel,
   Refinery, InsertRefinery,
@@ -55,333 +58,195 @@ export interface IStorage {
   updateStats(stats: Partial<InsertStats>): Promise<Stats | undefined>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private vessels: Map<number, Vessel>;
-  private refineries: Map<number, Refinery>;
-  private progressEvents: Map<number, ProgressEvent>;
-  private documents: Map<number, Document>;
-  private brokers: Map<number, Broker>;
-  private statsData: Stats | undefined;
-  
-  private userId: number;
-  private vesselId: number;
-  private refineryId: number;
-  private progressEventId: number;
-  private documentId: number;
-  private brokerId: number;
-  private statsId: number;
-
-  constructor() {
-    this.users = new Map();
-    this.vessels = new Map();
-    this.refineries = new Map();
-    this.progressEvents = new Map();
-    this.documents = new Map();
-    this.brokers = new Map();
-    
-    this.userId = 1;
-    this.vesselId = 1;
-    this.refineryId = 1;
-    this.progressEventId = 1;
-    this.documentId = 1;
-    this.brokerId = 1;
-    this.statsId = 1;
-
-    // Initialize with sample stats data
-    this.statsData = {
-      id: this.statsId,
-      activeVessels: 0,
-      totalCargo: "0",
-      activeRefineries: 0,
-      activeBrokers: 0,
-      lastUpdated: new Date()
-    };
-  }
-
-  // User methods
+export class DatabaseStorage implements IStorage {
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.userId++;
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
+    const [user] = await db.insert(users).values(insertUser).returning();
     return user;
   }
 
-  // Vessel methods
   async getVessels(): Promise<Vessel[]> {
-    return Array.from(this.vessels.values());
+    return await db.select().from(vessels);
   }
 
   async getVesselById(id: number): Promise<Vessel | undefined> {
-    return this.vessels.get(id);
+    const [vessel] = await db.select().from(vessels).where(eq(vessels.id, id));
+    return vessel || undefined;
   }
 
   async getVesselsByRegion(region: string): Promise<Vessel[]> {
-    return Array.from(this.vessels.values()).filter(
-      (vessel) => vessel.currentRegion === region
-    );
+    return await db.select().from(vessels).where(eq(vessels.currentRegion, region));
   }
 
   async createVessel(insertVessel: InsertVessel): Promise<Vessel> {
-    const id = this.vesselId++;
-    const vessel: Vessel = { 
-      ...insertVessel, 
-      id,
-      built: insertVessel.built ?? null,
-      deadweight: insertVessel.deadweight ?? null,
-      currentLat: insertVessel.currentLat ?? null,
-      currentLng: insertVessel.currentLng ?? null,
-      departurePort: insertVessel.departurePort ?? null,
-      departureDate: insertVessel.departureDate ?? null,
-      destinationPort: insertVessel.destinationPort ?? null,
-      eta: insertVessel.eta ?? null,
-      cargoType: insertVessel.cargoType ?? null,
-      cargoCapacity: insertVessel.cargoCapacity ?? null,
-      currentRegion: insertVessel.currentRegion ?? null
-    };
-    this.vessels.set(id, vessel);
-
-    // Update stats
-    if (this.statsData) {
-      this.statsData.activeVessels = this.vessels.size;
-      this.statsData.lastUpdated = new Date();
-    }
-
+    const [vessel] = await db.insert(vessels).values(insertVessel).returning();
     return vessel;
   }
 
   async updateVessel(id: number, vesselUpdate: Partial<InsertVessel>): Promise<Vessel | undefined> {
-    const vessel = this.vessels.get(id);
-    if (!vessel) return undefined;
-
-    const updatedVessel: Vessel = { ...vessel, ...vesselUpdate };
-    this.vessels.set(id, updatedVessel);
-    return updatedVessel;
+    const [updatedVessel] = await db
+      .update(vessels)
+      .set(vesselUpdate)
+      .where(eq(vessels.id, id))
+      .returning();
+    return updatedVessel || undefined;
   }
 
   async deleteVessel(id: number): Promise<boolean> {
-    const deleted = this.vessels.delete(id);
-    
-    // Update stats
-    if (deleted && this.statsData) {
-      this.statsData.activeVessels = this.vessels.size;
-      this.statsData.lastUpdated = new Date();
-    }
-    
-    return deleted;
+    const result = await db.delete(vessels).where(eq(vessels.id, id));
+    return true; // PostgreSQL doesn't return count of affected rows in the way we need
   }
 
-  // Refinery methods
   async getRefineries(): Promise<Refinery[]> {
-    return Array.from(this.refineries.values());
+    return await db.select().from(refineries);
   }
 
   async getRefineryById(id: number): Promise<Refinery | undefined> {
-    return this.refineries.get(id);
+    const [refinery] = await db.select().from(refineries).where(eq(refineries.id, id));
+    return refinery || undefined;
   }
 
   async getRefineryByRegion(region: string): Promise<Refinery[]> {
-    return Array.from(this.refineries.values()).filter(
-      (refinery) => refinery.region === region
-    );
+    return await db.select().from(refineries).where(eq(refineries.region, region));
   }
 
   async createRefinery(insertRefinery: InsertRefinery): Promise<Refinery> {
-    const id = this.refineryId++;
-    const refinery: Refinery = { 
-      ...insertRefinery, 
-      id,
-      status: insertRefinery.status ?? null,
-      capacity: insertRefinery.capacity ?? null
-    };
-    this.refineries.set(id, refinery);
-
-    // Update stats
-    if (this.statsData) {
-      this.statsData.activeRefineries = Array.from(this.refineries.values()).filter(r => r.status === 'active').length;
-      this.statsData.lastUpdated = new Date();
-    }
-
+    const [refinery] = await db.insert(refineries).values(insertRefinery).returning();
     return refinery;
   }
 
   async updateRefinery(id: number, refineryUpdate: Partial<InsertRefinery>): Promise<Refinery | undefined> {
-    const refinery = this.refineries.get(id);
-    if (!refinery) return undefined;
-
-    const updatedRefinery: Refinery = { ...refinery, ...refineryUpdate };
-    this.refineries.set(id, updatedRefinery);
-
-    // Update stats if status changed
-    if (refineryUpdate.status && this.statsData) {
-      this.statsData.activeRefineries = Array.from(this.refineries.values()).filter(r => r.status === 'active').length;
-      this.statsData.lastUpdated = new Date();
-    }
-
-    return updatedRefinery;
+    const [updatedRefinery] = await db
+      .update(refineries)
+      .set(refineryUpdate)
+      .where(eq(refineries.id, id))
+      .returning();
+    return updatedRefinery || undefined;
   }
 
   async deleteRefinery(id: number): Promise<boolean> {
-    const refinery = this.refineries.get(id);
-    const deleted = this.refineries.delete(id);
-    
-    // Update stats
-    if (deleted && refinery && refinery.status === 'active' && this.statsData) {
-      this.statsData.activeRefineries = Array.from(this.refineries.values()).filter(r => r.status === 'active').length;
-      this.statsData.lastUpdated = new Date();
-    }
-    
-    return deleted;
+    const result = await db.delete(refineries).where(eq(refineries.id, id));
+    return true;
   }
 
-  // Progress Event methods
   async getProgressEventsByVesselId(vesselId: number): Promise<ProgressEvent[]> {
-    return Array.from(this.progressEvents.values())
-      .filter(event => event.vesselId === vesselId)
-      .sort((a, b) => b.date.getTime() - a.date.getTime()); // Sort by date descending
+    return await db
+      .select()
+      .from(progressEvents)
+      .where(eq(progressEvents.vesselId, vesselId))
+      .orderBy(progressEvents.date);
   }
 
   async createProgressEvent(insertEvent: InsertProgressEvent): Promise<ProgressEvent> {
-    const id = this.progressEventId++;
-    const event: ProgressEvent = { 
-      ...insertEvent, 
-      id,
-      lat: insertEvent.lat ?? null,
-      lng: insertEvent.lng ?? null,
-      location: insertEvent.location ?? null
-    };
-    this.progressEvents.set(id, event);
+    const [event] = await db.insert(progressEvents).values(insertEvent).returning();
     return event;
   }
 
   async deleteProgressEvent(id: number): Promise<boolean> {
-    return this.progressEvents.delete(id);
+    const result = await db.delete(progressEvents).where(eq(progressEvents.id, id));
+    return true;
   }
 
-  // Document methods
   async getDocuments(): Promise<Document[]> {
-    return Array.from(this.documents.values());
+    return await db.select().from(documents);
   }
 
   async getDocumentsByVesselId(vesselId: number): Promise<Document[]> {
-    return Array.from(this.documents.values())
-      .filter(doc => doc.vesselId === vesselId)
-      .sort((a, b) => {
-        // Handle null createdAt dates
-        if (!a.createdAt) return 1;
-        if (!b.createdAt) return -1;
-        return b.createdAt.getTime() - a.createdAt.getTime();
-      }); // Sort by date descending
+    return await db
+      .select()
+      .from(documents)
+      .where(eq(documents.vesselId, vesselId));
   }
 
   async createDocument(insertDocument: InsertDocument): Promise<Document> {
-    const id = this.documentId++;
-    const document: Document = { 
-      ...insertDocument, 
-      id, 
-      createdAt: new Date() 
-    };
-    this.documents.set(id, document);
+    const [document] = await db.insert(documents).values(insertDocument).returning();
     return document;
   }
 
   async updateDocument(id: number, documentUpdate: Partial<InsertDocument>): Promise<Document | undefined> {
-    const document = this.documents.get(id);
-    if (!document) return undefined;
-
-    const updatedDocument: Document = { ...document, ...documentUpdate };
-    this.documents.set(id, updatedDocument);
-    return updatedDocument;
+    const [updatedDocument] = await db
+      .update(documents)
+      .set(documentUpdate)
+      .where(eq(documents.id, id))
+      .returning();
+    return updatedDocument || undefined;
   }
 
   async deleteDocument(id: number): Promise<boolean> {
-    return this.documents.delete(id);
+    const result = await db.delete(documents).where(eq(documents.id, id));
+    return true;
   }
 
-  // Broker methods
   async getBrokers(): Promise<Broker[]> {
-    return Array.from(this.brokers.values());
+    return await db.select().from(brokers);
   }
 
   async getBrokerById(id: number): Promise<Broker | undefined> {
-    return this.brokers.get(id);
+    const [broker] = await db.select().from(brokers).where(eq(brokers.id, id));
+    return broker || undefined;
   }
 
   async createBroker(insertBroker: InsertBroker): Promise<Broker> {
-    const id = this.brokerId++;
-    const broker: Broker = { 
-      ...insertBroker, 
-      id,
-      country: insertBroker.country ?? null,
-      active: insertBroker.active ?? null,
-      phone: insertBroker.phone ?? null
-    };
-    this.brokers.set(id, broker);
-
-    // Update stats
-    if (this.statsData) {
-      this.statsData.activeBrokers = Array.from(this.brokers.values()).filter(b => b.active).length;
-      this.statsData.lastUpdated = new Date();
-    }
-
+    const [broker] = await db.insert(brokers).values(insertBroker).returning();
     return broker;
   }
 
   async updateBroker(id: number, brokerUpdate: Partial<InsertBroker>): Promise<Broker | undefined> {
-    const broker = this.brokers.get(id);
-    if (!broker) return undefined;
-
-    const updatedBroker: Broker = { ...broker, ...brokerUpdate };
-    this.brokers.set(id, updatedBroker);
-
-    // Update stats if active status changed
-    if (brokerUpdate.active !== undefined && this.statsData) {
-      this.statsData.activeBrokers = Array.from(this.brokers.values()).filter(b => b.active).length;
-      this.statsData.lastUpdated = new Date();
-    }
-
-    return updatedBroker;
+    const [updatedBroker] = await db
+      .update(brokers)
+      .set(brokerUpdate)
+      .where(eq(brokers.id, id))
+      .returning();
+    return updatedBroker || undefined;
   }
 
   async deleteBroker(id: number): Promise<boolean> {
-    const broker = this.brokers.get(id);
-    const deleted = this.brokers.delete(id);
-    
-    // Update stats
-    if (deleted && broker && broker.active && this.statsData) {
-      this.statsData.activeBrokers = Array.from(this.brokers.values()).filter(b => b.active).length;
-      this.statsData.lastUpdated = new Date();
-    }
-    
-    return deleted;
+    const result = await db.delete(brokers).where(eq(brokers.id, id));
+    return true;
   }
 
-  // Stats methods
   async getStats(): Promise<Stats | undefined> {
-    return this.statsData;
+    const [stats] = await db.select().from(statsTable);
+    return stats || undefined;
   }
 
   async updateStats(statsUpdate: Partial<InsertStats>): Promise<Stats | undefined> {
-    if (!this.statsData) return undefined;
-
-    this.statsData = { 
-      ...this.statsData, 
-      ...statsUpdate, 
-      lastUpdated: new Date()
-    };
+    // Check if stats exist
+    const existingStats = await this.getStats();
     
-    return this.statsData;
+    if (existingStats) {
+      // Update existing stats
+      const [updatedStats] = await db
+        .update(statsTable)
+        .set({
+          ...statsUpdate,
+          lastUpdated: new Date()
+        })
+        .where(eq(statsTable.id, existingStats.id))
+        .returning();
+      return updatedStats;
+    } else {
+      // Create new stats
+      const [newStats] = await db
+        .insert(statsTable)
+        .values({
+          ...statsUpdate,
+          lastUpdated: new Date()
+        })
+        .returning();
+      return newStats;
+    }
   }
 }
 
-export const storage = new MemStorage();
+// Use database storage
+export const storage = new DatabaseStorage();
