@@ -72,7 +72,11 @@ import {
   Shield,
   Globe,
   AlertCircle,
-  HelpCircle
+  HelpCircle,
+  Send,
+  Download,
+  ArrowUpRight,
+  ArrowDownRight
 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 
