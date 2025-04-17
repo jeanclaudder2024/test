@@ -5,6 +5,7 @@ import { vesselService } from "./services/vesselService";
 import { refineryService } from "./services/refineryService";
 import { aiService } from "./services/aiService";
 import { asiStreamService } from "./services/asiStreamService";
+import { brokerService } from "./services/brokerService";
 import { 
   insertVesselSchema, 
   insertRefinerySchema, 
@@ -17,6 +18,7 @@ import {
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { apiTesterRouter } from "./routes/apiTester";
+import { brokerRouter } from "./routes/brokerRoutes";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const apiRouter = express.Router();
@@ -548,6 +550,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Mount API tester routes for testing large datasets
   apiRouter.use("/test", apiTesterRouter);
+  
+  // Mount broker routes
+  apiRouter.use("/brokers", brokerRouter);
   
   // Mount API router
   app.use("/api", apiRouter);

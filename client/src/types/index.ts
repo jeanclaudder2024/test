@@ -58,6 +58,15 @@ export interface Broker {
   phone?: string;
   country?: string;
   active: boolean;
+  
+  // Elite Membership fields
+  eliteMember?: boolean;
+  eliteMemberSince?: string | Date;
+  eliteMemberExpires?: string | Date;
+  membershipId?: string;
+  shippingAddress?: string;
+  subscriptionPlan?: 'monthly' | 'annual';
+  lastLogin?: string | Date;
 }
 
 export interface Stats {
