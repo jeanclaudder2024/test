@@ -81,6 +81,7 @@ import {
   Send,
   Download,
   ArrowUpRight,
+  FileCheck2,
   ArrowDownRight
 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
@@ -578,7 +579,7 @@ export default function Brokers() {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
               <div>
                 <h2 className="text-xl font-semibold flex items-center">
-                  <Star className="h-5 w-5 mr-2 text-amber-500" />
+                  <Shield className="h-5 w-5 mr-2 text-amber-500" />
                   Elite Broker Control Panel
                 </h2>
                 <p className="text-muted-foreground">
@@ -598,7 +599,7 @@ export default function Brokers() {
               </div>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
               <Card className="bg-white/80 hover:shadow-md transition-shadow">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-lg flex items-center">
