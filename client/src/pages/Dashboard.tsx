@@ -40,8 +40,10 @@ export default function Dashboard() {
   const [selectedRefinery, setSelectedRefinery] = useState<Refinery | null>(null);
   const [trackedVessel, setTrackedVessel] = useState<Vessel | null>(null);
   
-  // Filters
-  const [vesselTypeFilters, setVesselTypeFilters] = useState<string[]>([]);
+  // Filters - Default to showing only oil vessels (Crude Oil Tanker, VLCC, etc.)
+  const [vesselTypeFilters, setVesselTypeFilters] = useState<string[]>([
+    'Crude Oil Tanker', 'VLCC', 'Oil/Chemical Tanker', 'Product Tanker'
+  ]);
   const [refineryStatusFilters, setRefineryStatusFilters] = useState<string[]>([]);
   const [showFiltersPanel, setShowFiltersPanel] = useState(false);
   
