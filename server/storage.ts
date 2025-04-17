@@ -92,7 +92,7 @@ export class MemStorage implements IStorage {
     this.statsData = {
       id: this.statsId,
       activeVessels: 0,
-      totalCargo: 0n,
+      totalCargo: 0,
       activeRefineries: 0,
       activeBrokers: 0,
       lastUpdated: new Date()
@@ -134,7 +134,21 @@ export class MemStorage implements IStorage {
 
   async createVessel(insertVessel: InsertVessel): Promise<Vessel> {
     const id = this.vesselId++;
-    const vessel: Vessel = { ...insertVessel, id };
+    const vessel: Vessel = { 
+      ...insertVessel, 
+      id,
+      built: insertVessel.built ?? null,
+      deadweight: insertVessel.deadweight ?? null,
+      currentLat: insertVessel.currentLat ?? null,
+      currentLng: insertVessel.currentLng ?? null,
+      departurePort: insertVessel.departurePort ?? null,
+      departureDate: insertVessel.departureDate ?? null,
+      destinationPort: insertVessel.destinationPort ?? null,
+      eta: insertVessel.eta ?? null,
+      cargoType: insertVessel.cargoType ?? null,
+      cargoCapacity: insertVessel.cargoCapacity ?? null,
+      currentRegion: insertVessel.currentRegion ?? null
+    };
     this.vessels.set(id, vessel);
 
     // Update stats
@@ -184,7 +198,12 @@ export class MemStorage implements IStorage {
 
   async createRefinery(insertRefinery: InsertRefinery): Promise<Refinery> {
     const id = this.refineryId++;
-    const refinery: Refinery = { ...insertRefinery, id };
+    const refinery: Refinery = { 
+      ...insertRefinery, 
+      id,
+      status: insertRefinery.status ?? null,
+      capacity: insertRefinery.capacity ?? null
+    };
     this.refineries.set(id, refinery);
 
     // Update stats
@@ -234,7 +253,13 @@ export class MemStorage implements IStorage {
 
   async createProgressEvent(insertEvent: InsertProgressEvent): Promise<ProgressEvent> {
     const id = this.progressEventId++;
-    const event: ProgressEvent = { ...insertEvent, id };
+    const event: ProgressEvent = { 
+      ...insertEvent, 
+      id,
+      lat: insertEvent.lat ?? null,
+      lng: insertEvent.lng ?? null,
+      location: insertEvent.location ?? null
+    };
     this.progressEvents.set(id, event);
     return event;
   }
@@ -289,7 +314,13 @@ export class MemStorage implements IStorage {
 
   async createBroker(insertBroker: InsertBroker): Promise<Broker> {
     const id = this.brokerId++;
-    const broker: Broker = { ...insertBroker, id };
+    const broker: Broker = { 
+      ...insertBroker, 
+      id,
+      country: insertBroker.country ?? null,
+      active: insertBroker.active ?? null,
+      phone: insertBroker.phone ?? null
+    };
     this.brokers.set(id, broker);
 
     // Update stats

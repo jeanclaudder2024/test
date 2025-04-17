@@ -110,7 +110,7 @@ export default function Brokers() {
                       {broker.company}
                     </CardDescription>
                   </div>
-                  <Badge variant={broker.active ? "success" : "secondary"}>
+                  <Badge variant={broker.active ? "default" : "secondary"} className={broker.active ? "bg-green-500" : ""}>
                     {broker.active ? "Active" : "Inactive"}
                   </Badge>
                 </div>
