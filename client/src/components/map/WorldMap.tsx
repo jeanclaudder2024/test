@@ -403,11 +403,16 @@ export default function WorldMap({
                   </div>
                 </div>
                 <Button 
-                  variant="outline" 
-                  className="w-full mt-2 text-xs h-7"
-                  onClick={() => onRefineryClick && onRefineryClick(refinery)}
+                  variant="default" 
+                  className="w-full mt-2 text-xs h-7 bg-green-600 hover:bg-green-700"
+                  onClick={() => {
+                    if (onRefineryClick) onRefineryClick(refinery);
+                    // Navigate to refinery detail page
+                    window.location.href = `/refineries/${refinery.id}`;
+                  }}
                 >
-                  View Details
+                  <Factory className="h-3 w-3 mr-1" />
+                  View Refinery Details
                 </Button>
               </div>
             </Popup>
@@ -456,13 +461,28 @@ export default function WorldMap({
                       </div>
                     )}
                   </div>
-                  <Button 
-                    variant="outline" 
-                    className="w-full mt-2 text-xs h-7"
-                    onClick={() => onVesselClick(vessel)}
-                  >
-                    Track Vessel
-                  </Button>
+                  <div className="flex mt-2 gap-2">
+                    <Button 
+                      variant="outline" 
+                      className="flex-1 text-xs h-7"
+                      onClick={() => onVesselClick(vessel)}
+                    >
+                      <Ship className="h-3 w-3 mr-1" />
+                      Track
+                    </Button>
+                    <Button 
+                      variant="default" 
+                      className="flex-1 text-xs h-7 bg-blue-600 hover:bg-blue-700"
+                      onClick={() => {
+                        onVesselClick(vessel);
+                        // Navigate to vessel detail page
+                        window.location.href = `/vessels/${vessel.id}`;
+                      }}
+                    >
+                      <Navigation className="h-3 w-3 mr-1" />
+                      Details
+                    </Button>
+                  </div>
                 </div>
               </Popup>
             </Marker>
