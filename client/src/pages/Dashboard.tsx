@@ -88,6 +88,7 @@ export default function Dashboard() {
   // Handle vessel selection
   const handleVesselSelect = (vessel: Vessel) => {
     setSelectedVessel(vessel);
+    setTrackedVessel(vessel); // Start tracking the vessel on the map
     setSelectedRefinery(null); // Clear refinery selection when selecting vessel
   };
   
@@ -95,6 +96,7 @@ export default function Dashboard() {
   const handleRefinerySelect = (refinery: Refinery) => {
     setSelectedRefinery(refinery);
     setSelectedVessel(null); // Clear vessel selection when selecting refinery
+    setTrackedVessel(null); // Stop tracking any vessel when selecting refinery
   };
 
   // Toggle vessel type filter
@@ -135,6 +137,16 @@ export default function Dashboard() {
       }
     }
   }, [vessels, selectedVessel]);
+  
+  // Keep tracked vessel updated with real-time data
+  useEffect(() => {
+    if (trackedVessel && vessels.length > 0) {
+      const updatedTrackedVessel = vessels.find(v => v.id === trackedVessel.id);
+      if (updatedTrackedVessel) {
+        setTrackedVessel(updatedTrackedVessel);
+      }
+    }
+  }, [vessels, trackedVessel]);
 
   const regions: Region[] = ['North America', 'Europe', 'MEA', 'Africa', 'Russia', 'Asia'];
 
@@ -332,6 +344,7 @@ export default function Dashboard() {
             vessels={filteredVessels}
             refineries={filteredRefineries}
             selectedRegion={selectedRegion}
+            trackedVessel={trackedVessel}
             onVesselClick={handleVesselSelect}
             onRefineryClick={handleRefinerySelect}
             isLoading={loading}
