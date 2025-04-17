@@ -31,7 +31,7 @@ import {
   TabsList,
   TabsTrigger 
 } from "@/components/ui/tabs";
-import { ArrowUpDown, File, FileText, Filter, MoreHorizontal, Plus, RefreshCw, Search } from 'lucide-react';
+import { ArrowUpDown, Copy, File, FileText, Filter, MoreHorizontal, Plus, RefreshCw, Search } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { formatDate } from '@/lib/utils';
@@ -223,17 +223,17 @@ export default function Documents() {
                 onValueChange={setActiveTab}
                 className="w-full"
               >
-                <div className="flex items-center justify-between px-4 pt-4">
-                  <TabsList>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 pt-4 gap-2">
+                  <TabsList className="overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
                     <TabsTrigger value="all">All</TabsTrigger>
-                    <TabsTrigger value="bills">Bills of Lading</TabsTrigger>
+                    <TabsTrigger value="bills" className="whitespace-nowrap">Bills of Lading</TabsTrigger>
                     <TabsTrigger value="manifests">Manifests</TabsTrigger>
                     <TabsTrigger value="inspections">Inspections</TabsTrigger>
                     <TabsTrigger value="loading">Loading</TabsTrigger>
                     <TabsTrigger value="others">Others</TabsTrigger>
                   </TabsList>
                   
-                  <div className="text-sm text-gray-500">
+                  <div className="text-sm text-gray-500 w-full sm:w-auto text-right">
                     {filteredDocuments.length} document{filteredDocuments.length !== 1 ? 's' : ''}
                   </div>
                 </div>
@@ -360,12 +360,12 @@ export default function Documents() {
 
       {/* Document Viewer Dialog */}
       <Dialog open={!!selectedDocument} onOpenChange={(open) => !open && setSelectedDocument(null)}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] h-full sm:h-auto overflow-y-auto w-full sm:max-w-4xl">
           {selectedDocument && (
             <>
               <DialogHeader>
-                <DialogTitle>{selectedDocument.title}</DialogTitle>
-                <div className="flex items-center gap-2 mt-2">
+                <DialogTitle className="text-lg sm:text-xl break-words">{selectedDocument.title}</DialogTitle>
+                <div className="flex flex-wrap items-center gap-2 mt-2">
                   <Badge variant="outline">{selectedDocument.type}</Badge>
                   <span className="text-sm text-gray-500">
                     Created: {formatDate(selectedDocument.createdAt)}
@@ -373,12 +373,16 @@ export default function Documents() {
                 </div>
               </DialogHeader>
               
-              <div className="font-mono text-sm bg-gray-50 p-4 rounded-md whitespace-pre-wrap">
+              <div className="font-mono text-sm bg-gray-50 p-3 sm:p-4 rounded-md whitespace-pre-wrap overflow-x-auto">
                 {selectedDocument.content}
               </div>
               
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setSelectedDocument(null)}>
+              <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setSelectedDocument(null)}
+                  className="w-full sm:w-auto order-2 sm:order-1"
+                >
                   Close
                 </Button>
                 <Button
@@ -390,7 +394,9 @@ export default function Documents() {
                       description: 'Document content has been copied to clipboard.',
                     });
                   }}
+                  className="w-full sm:w-auto order-1 sm:order-2"
                 >
+                  <Copy className="h-4 w-4 mr-2" />
                   Copy to Clipboard
                 </Button>
               </DialogFooter>
@@ -445,15 +451,20 @@ function DocumentList({ documents, isLoading, onViewDocument }: DocumentListProp
       {documents.map((doc) => (
         <div 
           key={doc.id} 
-          className="flex items-center space-x-4 p-3 border rounded-lg hover:bg-gray-50"
+          className="flex flex-wrap sm:flex-nowrap items-center gap-3 p-3 border rounded-lg hover:bg-gray-50"
+          onClick={(e) => {
+            // Prevent triggering when clicking on buttons
+            if ((e.target as HTMLElement).closest('button')) return;
+            onViewDocument(doc);
+          }}
         >
-          <div className="bg-blue-50 p-2 rounded-md">
+          <div className="bg-blue-50 p-2 rounded-md shrink-0">
             <File className="h-6 w-6 text-blue-600" />
           </div>
           
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 order-1 sm:order-none w-[calc(100%-85px)] sm:w-auto">
             <h4 className="text-sm font-medium truncate">{doc.title}</h4>
-            <div className="flex items-center space-x-2 mt-1">
+            <div className="flex flex-wrap items-center gap-2 mt-1">
               <Badge variant="outline" className="text-xs">
                 {doc.type}
               </Badge>
@@ -463,37 +474,40 @@ function DocumentList({ documents, isLoading, onViewDocument }: DocumentListProp
             </div>
           </div>
           
-          <Button
-            variant="ghost" 
-            size="sm" 
-            onClick={() => onViewDocument(doc)}
-          >
-            View
-          </Button>
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => onViewDocument(doc)}>
-                View document
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => {
-                  navigator.clipboard.writeText(doc.content);
-                  toast({
-                    title: 'Copied to clipboard',
-                    description: 'Document content has been copied to clipboard.',
-                  });
-                }}
-              >
-                Copy content
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex gap-1 ml-auto shrink-0">
+            <Button
+              variant="ghost" 
+              size="sm" 
+              className="hidden sm:inline-flex"
+              onClick={() => onViewDocument(doc)}
+            >
+              View
+            </Button>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => onViewDocument(doc)}>
+                  View document
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => {
+                    navigator.clipboard.writeText(doc.content);
+                    toast({
+                      title: 'Copied to clipboard',
+                      description: 'Document content has been copied to clipboard.',
+                    });
+                  }}
+                >
+                  Copy content
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       ))}
     </div>
