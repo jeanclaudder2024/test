@@ -93,6 +93,17 @@ export const brokers = pgTable("brokers", {
   phone: text("phone"),
   country: text("country"),
   active: boolean("active").default(true),
+  
+  // Elite Membership fields
+  eliteMember: boolean("elite_member").default(false),
+  eliteMemberSince: timestamp("elite_member_since"),
+  eliteMemberExpires: timestamp("elite_member_expires"),
+  membershipId: text("membership_id"),
+  
+  // Additional contact and subscription information
+  shippingAddress: text("shipping_address"),
+  subscriptionPlan: text("subscription_plan"),
+  lastLogin: timestamp("last_login"),
 });
 
 export const insertBrokerSchema = createInsertSchema(brokers).omit({
