@@ -13,6 +13,7 @@ import {
 } from "@shared/schema";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
+import { apiTesterRouter } from "./routes/apiTester";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const apiRouter = express.Router();
@@ -399,6 +400,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.end();
     });
   });
+  
+  // Mount API tester routes for testing large datasets
+  apiRouter.use("/test", apiTesterRouter);
   
   // Mount API router
   app.use("/api", apiRouter);

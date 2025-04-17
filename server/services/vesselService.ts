@@ -1,6 +1,7 @@
 import { storage } from "../storage";
 import { InsertVessel, InsertProgressEvent, Vessel, ProgressEvent } from "@shared/schema";
 import { asiStreamService } from "./asiStreamService";
+import { generateLargeVesselDataset } from "./vesselGenerator";
 
 export const vesselService = {
   getAllVessels: async () => {
@@ -43,43 +44,78 @@ export const vesselService = {
   // Seed data for development
   seedVesselData: async () => {
     try {
-      // Try to get vessels from asistream API
-      const asiVessels = await asiStreamService.fetchVessels();
+      // Generate large vessel dataset (approximately 1500 vessels)
+      console.log("Generating large vessel dataset...");
+      const vessels = generateLargeVesselDataset(1500);
+      console.log(`Generated ${vessels.length} vessels.`);
       
       // Create vessels
       const createdVessels: Vessel[] = [];
-      for (const vessel of asiVessels) {
+      for (const vessel of vessels) {
         const created = await storage.createVessel(vessel);
         createdVessels.push(created);
       }
       
-      // Sample progress events for the first vessel
-      const progressEvents: InsertProgressEvent[] = [
-        {
-          vesselId: 1,
-          date: new Date("2023-03-24"),
-          event: "Vessel passed Gibraltar Strait",
-          lat: "36.1344",
-          lng: "5.4548",
-          location: "36.1344° N, 5.4548° W"
-        },
-        {
-          vesselId: 1,
-          date: new Date("2023-03-22"),
-          event: "Vessel entered Mediterranean Sea",
-          lat: "35.9375",
-          lng: "14.3754",
-          location: "35.9375° N, 14.3754° E"
-        },
-        {
-          vesselId: 1,
-          date: new Date("2023-03-18"),
-          event: "Vessel passed Suez Canal",
-          lat: "30.0286",
-          lng: "32.5793",
-          location: "30.0286° N, 32.5793° E"
-        }
+      // Generate progress events for multiple vessels
+      console.log("Generating progress events...");
+      const progressEvents: InsertProgressEvent[] = [];
+      
+      // Common event types
+      const eventTypes = [
+        "Departed from port",
+        "Arrived at port",
+        "Passed through strait",
+        "Encountered heavy weather",
+        "Changed course",
+        "Refueling operation",
+        "Security inspection",
+        "Maintenance performed",
+        "Cargo loading completed",
+        "Cargo unloading completed",
+        "Entered territorial waters",
+        "Exited territorial waters",
+        "Vessel passed checkpoint"
       ];
+      
+      // Generate events for the first 50 vessels
+      const vesselCount = Math.min(50, createdVessels.length);
+      console.log(`Generating events for ${vesselCount} vessels...`);
+      
+      for (let i = 0; i < vesselCount; i++) {
+        const vessel = createdVessels[i];
+        
+        // Generate 1-5 random events per vessel
+        const eventCount = Math.floor(Math.random() * 5) + 1;
+        
+        for (let j = 0; j < eventCount; j++) {
+          const eventType = eventTypes[Math.floor(Math.random() * eventTypes.length)];
+          const daysAgo = Math.floor(Math.random() * 30) + 1;
+          const eventDate = new Date();
+          eventDate.setDate(eventDate.getDate() - daysAgo);
+          
+          // Use vessel's position with slight variation
+          const latOffset = (Math.random() * 2 - 1) * 2; // -2 to +2 degrees
+          const lngOffset = (Math.random() * 2 - 1) * 2; // -2 to +2 degrees
+          
+          const baseLat = parseFloat(vessel.currentLat);
+          const baseLng = parseFloat(vessel.currentLng);
+          
+          const lat = Math.max(-85, Math.min(85, baseLat + latOffset)).toFixed(4);
+          const lng = Math.max(-180, Math.min(180, baseLng + lngOffset)).toFixed(4);
+          
+          // Create event
+          progressEvents.push({
+            vesselId: vessel.id,
+            date: eventDate,
+            event: eventType,
+            lat,
+            lng,
+            location: `${lat}° ${lat >= 0 ? 'N' : 'S'}, ${lng}° ${lng >= 0 ? 'E' : 'W'}`
+          });
+        }
+      }
+      
+      console.log(`Generated ${progressEvents.length} progress events.`);
 
       // Create progress events
       for (const event of progressEvents) {
