@@ -19,6 +19,7 @@ import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { apiTesterRouter } from "./routes/apiTester";
 import { brokerRouter } from "./routes/brokerRoutes";
+import { seedBrokers } from "./services/seedService";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const apiRouter = express.Router();
@@ -52,6 +53,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.error("Error seeding vessel data:", vesselError);
           // Continue with what we have
         }
+
+        // Seed broker data
+        let brokerResult = { count: 0, seeded: false };
+        try {
+          console.log("Seeding broker data...");
+          brokerResult = await seedBrokers();
+          console.log("Broker data seeded successfully:", brokerResult);
+        } catch (brokerError) {
+          console.error("Error seeding broker data:", brokerError);
+          // Continue with what we have
+        }
         
         // Return whatever data we managed to seed
         res.json({ 
@@ -62,7 +74,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             oilVessels: vesselResult.oilVessels || 0,
             totalCargo: vesselResult.totalCargo || 0,
             refineries: refineryResult.refineries || 0,
-            active: refineryResult.active || 0
+            active: refineryResult.active || 0,
+            brokers: brokerResult.count || 0
           }
         });
       } catch (error) {
