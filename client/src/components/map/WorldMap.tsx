@@ -227,16 +227,24 @@ export default function WorldMap({
     // First, immediately render vessels near the view (if tracked or selected region)
     let initialVessels: Vessel[] = [];
     
-    // Filter for OIL VESSELS ONLY by default (this is the most important filter)
-    // Get vessels containing "oil", "tanker", "crude", or "vlcc" in their type
-    const filterOilVesselsOnly = (v: Vessel) => {
-      const vesselType = v.vesselType?.toLowerCase() || '';
+    // Simple function to check if a vessel is an oil vessel
+    const isOilVessel = (vessel: Vessel): boolean => {
+      if (!vessel || !vessel.vesselType) return false;
+      
+      const type = vessel.vesselType.toLowerCase();
       return (
-        vesselType.includes('oil') ||
-        vesselType.includes('tanker') ||
-        vesselType.includes('crude') ||
-        vesselType.includes('vlcc')
-      ) && v.currentLat && v.currentLng;
+        type.includes('oil') ||
+        type.includes('tanker') ||
+        type.includes('crude') ||
+        type.includes('vlcc')
+      );
+    };
+    
+    // Filter for vessels with location and oil type
+    const filterOilVesselsOnly = (v: Vessel): boolean => {
+      return Boolean(v.currentLat) && 
+             Boolean(v.currentLng) && 
+             isOilVessel(v);
     };
     
     if (trackedVessel) {
@@ -260,9 +268,13 @@ export default function WorldMap({
     setRenderedVessels(initialVessels);
     
     // Then progressively load the rest in batches - ONLY OIL VESSELS
-    const remainingVessels = vessels
-      .filter(v => filterOilVesselsOnly(v) && !initialVessels.some(iv => iv.id === v.id))
-      .slice(0, 300); // Limit total vessels for performance, but show many oil vessels
+    // Make sure to get only vessels that haven't been loaded yet
+    const oilVessels = vessels.filter(filterOilVesselsOnly);
+    
+    // Get remaining vessels that weren't loaded in the initial batch
+    const remainingVessels = oilVessels
+      .filter(v => !initialVessels.some(iv => iv.id === v.id))
+      .slice(0, 200); // Limit total vessels for better performance
     
     const BATCH_SIZE = 50;
     const BATCH_DELAY = 500; // ms between batches
