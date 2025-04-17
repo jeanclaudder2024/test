@@ -46,9 +46,9 @@ const ProgressTimeline = ({ events }: { events: ProgressEvent[] }) => {
             <div className="absolute left-[9px] top-6 bottom-0 w-[2px] bg-muted"></div>
           )}
           <div className="absolute left-0 top-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-            {event.event.toLowerCase().includes('departure') ? (
+            {event.event && event.event.toLowerCase().includes('departure') ? (
               <Navigation className="h-3 w-3 text-white" />
-            ) : event.event.toLowerCase().includes('arrival') ? (
+            ) : event.event && event.event.toLowerCase().includes('arrival') ? (
               <Anchor className="h-3 w-3 text-white" />
             ) : (
               <div className="h-2 w-2 rounded-full bg-white" />
