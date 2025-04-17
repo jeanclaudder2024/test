@@ -1,10 +1,11 @@
 import { useRef, useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline, Tooltip, CircleMarker } from "react-leaflet";
-import L from "leaflet";
 import { Vessel, Refinery, Region, MapPosition } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ZoomIn, ZoomOut, Locate, Ship, Factory, Navigation, Droplet } from "lucide-react";
+import { ZoomIn, ZoomOut, Locate, Ship, Factory, Navigation, Droplet, Map as MapIcon } from "lucide-react";
+import { MapContainer, TileLayer, Marker, Popup, Polyline, Tooltip, CircleMarker, useMap } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 
 // Define the marker icons here to prevent recreation on each render
 const createVesselIcon = (type: string) => {
