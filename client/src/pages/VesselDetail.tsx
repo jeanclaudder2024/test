@@ -3,6 +3,8 @@ import { useDataStream } from '@/hooks/useDataStream';
 import { Vessel, ProgressEvent } from '@/types';
 import { useVesselProgressEvents, useAddProgressEvent } from '@/hooks/useVessels';
 import { useToast } from '@/hooks/use-toast';
+import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
+import L from 'leaflet';
 import {
   Card,
   CardContent,
@@ -22,7 +24,8 @@ import { Link, useRoute } from 'wouter';
 import {
   ArrowLeft, Ship, Calendar, Map, Info, Edit, Plus, Navigation, Anchor,
   Flag, Droplet, Package, AlertCircle, Truck, Gauge, BarChart, History,
-  Users, Clock, Compass, ArrowRight, FileText, Clipboard, Download, Globe
+  Users, Clock, Compass, ArrowRight, FileText, Clipboard, Download, Globe,
+  ZoomIn, ZoomOut
 } from 'lucide-react';
 
 // Helper components for vessel details
@@ -302,13 +305,40 @@ export default function VesselDetail() {
                   <CardContent>
                     {vessel.currentLat && vessel.currentLng ? (
                       <>
-                        <div className="aspect-square bg-muted rounded-md flex items-center justify-center mb-4">
-                          <div className="text-center">
-                            <Navigation className="h-8 w-8 text-primary mx-auto mb-2" />
-                            <div className="text-sm">Interactive Map View</div>
-                            <div className="text-xs text-muted-foreground mt-1">
-                              Click to view full map
-                            </div>
+                        <div className="aspect-square bg-muted rounded-md overflow-hidden mb-4 relative">
+                          <MapContainer
+                            center={[vessel.currentLat, vessel.currentLng]}
+                            zoom={6}
+                            zoomControl={false}
+                            className="h-full w-full"
+                            whenReady={(event) => {
+                              setTimeout(() => {
+                                event.target.invalidateSize();
+                              }, 0);
+                            }}
+                          >
+                            <TileLayer
+                              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                            />
+                            <Marker
+                              position={[vessel.currentLat, vessel.currentLng]}
+                              icon={L.divIcon({
+                                className: 'vessel-position-marker',
+                                html: `<div class="w-4 h-4 rounded-full bg-orange-500 border-2 border-white pulse-animation"></div>`,
+                                iconSize: [16, 16],
+                              })}
+                            >
+                              <Popup>Current position of {vessel.name}</Popup>
+                            </Marker>
+                          </MapContainer>
+                          <div className="absolute top-2 right-2 z-[1000] bg-white rounded-md shadow-sm">
+                            <Button variant="ghost" size="icon" className="p-1 text-gray-600 hover:bg-gray-100 hover:text-primary h-8 w-8">
+                              <ZoomIn className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="p-1 text-gray-600 hover:bg-gray-100 hover:text-primary h-8 w-8 border-t border-gray-100">
+                              <ZoomOut className="h-4 w-4" />
+                            </Button>
                           </div>
                         </div>
                         <div className="space-y-2">
