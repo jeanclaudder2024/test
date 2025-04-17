@@ -44,29 +44,55 @@ export const vesselService = {
   // Seed data for development
   seedVesselData: async () => {
     try {
-      // First, clear existing vessel data
-      // This would be done in a real implementation with a transaction
-      // but for development, we'll just fetch all existing vessels first
+      console.log("Checking existing vessels in database...");
+      // First, get existing vessels
       const existingVessels = await storage.getVessels();
       
-      // Generate large vessel dataset (approximately 1500 vessels)
+      // Check if we already have vessels in the database
+      if (existingVessels.length > 0) {
+        console.log(`Database already contains ${existingVessels.length} vessels.`);
+        
+        // We already have vessels, just return stats
+        const oilVessels = existingVessels.filter(v => {
+          if (!v.vesselType) return false;
+          const type = v.vesselType.toLowerCase();
+          return (
+            type.includes('oil') ||
+            type.includes('tanker') ||
+            type.includes('crude') ||
+            type.includes('vlcc')
+          );
+        });
+        
+        // Calculate total cargo capacity
+        let totalCargo = 0;
+        existingVessels.forEach(vessel => {
+          if (vessel.cargoCapacity) {
+            totalCargo += vessel.cargoCapacity;
+          }
+        });
+        
+        // Update stats
+        await storage.updateStats({ 
+          activeVessels: existingVessels.length, 
+          totalCargo 
+        });
+        
+        return {
+          vessels: existingVessels.length,
+          oilVessels: oilVessels.length,
+          totalCargo
+        };
+      }
+      
+      // Database empty, generate vessel dataset
       console.log("Generating large vessel dataset...");
       const vessels = generateLargeVesselDataset(1500);
       console.log(`Generated ${vessels.length} vessels.`);
       
-      // Create vessels (avoid duplicates)
+      // Track created vessels and IMOs to avoid duplicates
       const createdVessels: Vessel[] = [];
-      const existingImoNumbers = new Set(existingVessels.map(v => v.imo));
-      
-      for (const vessel of vessels) {
-        // Skip if vessel with this IMO already exists
-        if (existingImoNumbers.has(vessel.imo)) {
-          continue;
-        }
-        
-        const created = await storage.createVessel(vessel);
-        createdVessels.push(created);
-      }
+      const usedImoNumbers = new Set<string>();
       
       // Generate progress events for multiple vessels
       console.log("Generating progress events...");
@@ -143,13 +169,23 @@ export const vesselService = {
       });
 
       await storage.updateStats({ 
-        totalCargo: totalCargo.toString(),
+        totalCargo,
         activeVessels: createdVessels.length
       });
 
       return {
         vessels: createdVessels.length,
-        progressEvents: progressEvents.length
+        oilVessels: createdVessels.filter(v => {
+          if (!v.vesselType) return false;
+          const type = v.vesselType.toLowerCase();
+          return (
+            type.includes('oil') ||
+            type.includes('tanker') ||
+            type.includes('crude') ||
+            type.includes('vlcc')
+          );
+        }).length,
+        totalCargo
       };
     } catch (error) {
       console.error("Error seeding vessel data:", error);

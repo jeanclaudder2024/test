@@ -30,26 +30,40 @@ export const refineryService = {
   // Seed data for development
   seedRefineryData: async () => {
     try {
+      console.log("Checking existing refineries in database...");
       // First, get existing refineries
       const existingRefineries = await storage.getRefineries();
       
-      // Try to get refineries from asistream API
-      const asiRefineries = await asiStreamService.fetchRefineries();
+      // Check if we already have refineries in the database
+      if (existingRefineries.length > 0) {
+        console.log(`Database already contains ${existingRefineries.length} refineries.`);
+        
+        // Update stats
+        const activeRefineries = existingRefineries.filter(r => r.status === 'operational').length;
+        await storage.updateStats({ activeRefineries });
+        
+        return {
+          refineries: existingRefineries.length,
+          active: activeRefineries
+        };
+      }
       
-      // Create refineries (avoid duplicates by name and location)
+      // Database empty, try to get refineries from asistream API
+      console.log("No refineries in database. Fetching from API...");
+      const asiRefineries = await asiStreamService.fetchRefineries();
+      console.log(`Fetched ${asiRefineries.length} refineries from API.`);
+      
+      // Create refineries
       const createdRefineries: Refinery[] = [];
       
       // Create a Set of keys to check for duplicates (name + country)
       const existingRefineryKeys = new Set();
-      existingRefineries.forEach(r => {
-        existingRefineryKeys.add(`${r.name}|${r.country}`);
-      });
       
       for (const refinery of asiRefineries) {
         // Create a unique key for the refinery
         const refineryKey = `${refinery.name}|${refinery.country}`;
         
-        // Skip if refinery already exists
+        // Skip if refinery already exists in this batch
         if (existingRefineryKeys.has(refineryKey)) {
           continue;
         }
@@ -61,8 +75,10 @@ export const refineryService = {
         existingRefineryKeys.add(refineryKey);
       }
 
+      console.log(`Created ${createdRefineries.length} new refineries in database.`);
+
       // Update stats
-      const activeRefineries = createdRefineries.filter(r => r.status === 'active').length;
+      const activeRefineries = createdRefineries.filter(r => r.status === 'operational').length;
       await storage.updateStats({ activeRefineries });
 
       return {
