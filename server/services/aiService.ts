@@ -1,7 +1,7 @@
 import { storage } from "../storage";
 import { InsertDocument } from "@shared/schema";
+import { cohereService } from "./cohereService";
 
-// In a real application, this would integrate with OpenAI's API
 export const aiService = {
   // Process a natural language query about vessels or refineries
   processQuery: async (query: string) => {
@@ -9,7 +9,7 @@ export const aiService = {
     const refineries = await storage.getRefineries();
     
     // Simple keyword matching for demo purposes
-    // In a real app, this would use OpenAI's API for NLP
+    // This can be enhanced with Cohere for more natural language processing
 
     // Sample responses based on keywords
     if (query.toLowerCase().includes("vessel") && query.toLowerCase().includes("count")) {
@@ -46,26 +46,171 @@ export const aiService = {
     };
   },
 
-  // Generate document based on vessel data
+  // Generate document based on vessel data using Cohere AI
   generateDocument: async (vesselId: number, documentType: string) => {
     const vessel = await storage.getVesselById(vesselId);
     if (!vessel) {
       throw new Error("Vessel not found");
     }
 
-    let title = "";
+    // Document type names for display and organization
+    const documentTypes = {
+      "bill of lading": "Bill of Lading",
+      "bl": "Bill of Lading",
+      "cargo manifest": "Cargo Manifest",
+      "manifest": "Cargo Manifest",
+      "inspection report": "Inspection Report",
+      "inspection": "Inspection Report",
+      "loading instructions": "Loading Instructions",
+      "loading": "Loading Instructions",
+      "sds": "Safety Data Sheet",
+      "safety data sheet": "Safety Data Sheet",
+      "loi": "Letter of Interest"
+    };
+
+    // Normalize document type
+    const normalizedType = documentType.toLowerCase();
+    const formattedType = documentTypes[normalizedType] || documentType;
+
+    let title = `${formattedType} - ${vessel.name}`;
     let content = "";
 
-    switch (documentType.toLowerCase()) {
-      case "sds": // Safety Data Sheet
-        title = `SDS - ${vessel.cargoType} - ${vessel.name}`;
-        content = `SAFETY DATA SHEET\n
-Product: ${vessel.cargoType}
+    try {
+      // Generate document content with Cohere AI
+      if (process.env.COHERE_API_KEY) {
+        content = await cohereService.generateShippingDocument(vessel, normalizedType);
+      } else {
+        // Fallback to template-based generation if no API key
+        content = generateTemplateBasedDocument(vessel, normalizedType);
+      }
+    } catch (error) {
+      console.error("Error generating document with AI:", error);
+      // Fallback to template-based generation if AI fails
+      content = generateTemplateBasedDocument(vessel, normalizedType);
+    }
+
+    const documentData: InsertDocument = {
+      vesselId,
+      type: formattedType,
+      title,
+      content
+    };
+
+    return storage.createDocument(documentData);
+  }
+};
+
+/**
+ * Fallback function to generate documents without AI
+ */
+function generateTemplateBasedDocument(vessel: any, documentType: string): string {
+  let content = "";
+  const currentDate = new Date().toISOString().split('T')[0];
+
+  switch (documentType) {
+    case "bill of lading":
+    case "bl":
+      content = `BILL OF LADING\n
+Shipper: [SHIPPER COMPANY]
+Consignee: [CONSIGNEE COMPANY]
+Notify Party: [NOTIFY PARTY]
+
+Vessel: ${vessel.name}
+Voyage No: VY${new Date().getFullYear()}${Math.floor(Math.random() * 1000)}
+Port of Loading: ${vessel.departurePort || 'TBD'}
+Port of Discharge: ${vessel.destinationPort || 'TBD'}
+
+Description of Goods:
+${vessel.cargoType || 'Crude Oil'}
+Quantity: ${vessel.cargoCapacity || 'N/A'} tonnes
+Gross Weight: ${vessel.cargoCapacity ? Math.round(vessel.cargoCapacity * 0.9) : 'N/A'} metric tons
+
+SHIPPED on board the vessel, the goods or packages said to contain goods herein mentioned in apparent good order and condition.
+
+Date of Issue: ${currentDate}
+Signed: ______________________________
+        Master or Agent`;
+      break;
+
+    case "cargo manifest":
+    case "manifest":
+      content = `CARGO MANIFEST\n
+Vessel Name: ${vessel.name}
+IMO Number: ${vessel.imo}
+Voyage Number: VY${new Date().getFullYear()}${Math.floor(Math.random() * 1000)}
+Port of Loading: ${vessel.departurePort || 'TBD'}
+Port of Discharge: ${vessel.destinationPort || 'TBD'}
+Date: ${currentDate}
+
+CARGO DETAILS:
+---------------
+Type: ${vessel.cargoType || 'Crude Oil'}
+Quantity: ${vessel.cargoCapacity || 'N/A'} tonnes
+UN Number: UN1267
+Hazard Class: 3
+Packing Group: I
+
+SPECIAL INSTRUCTIONS:
+---------------------
+Temperature requirements: Ambient
+Handling requirements: Standard crude oil procedures
+Hazard notes: Flammable liquid
+
+TOTAL CARGO: ${vessel.cargoCapacity || 'N/A'} tonnes
+
+Certified by: _________________________
+Date: ${currentDate}
+Page: 1 of 1`;
+      break;
+
+    case "inspection report":
+    case "inspection":
+      content = `VESSEL INSPECTION REPORT\n
+Vessel Name: ${vessel.name}
+IMO Number: ${vessel.imo}
+Flag: ${vessel.flag}
+Built: ${vessel.built || 'N/A'}
+Current Location: Lat ${vessel.currentLat || 'N/A'}, Lng ${vessel.currentLng || 'N/A'}
+Inspection Date: ${currentDate}
+
+EXECUTIVE SUMMARY:
+-----------------
+The vessel ${vessel.name} was inspected on ${currentDate} and found to be in [CONDITION] condition.
+
+INSPECTION DETAILS:
+------------------
+1. Hull Condition: [DETAILS]
+2. Machinery & Equipment: [DETAILS]
+3. Safety Equipment: [DETAILS]
+4. Cargo Systems: [DETAILS]
+5. Navigation Equipment: [DETAILS]
+
+DEFICIENCIES:
+------------
+1. [DEFICIENCY 1]
+2. [DEFICIENCY 2]
+
+RECOMMENDATIONS:
+--------------
+1. [RECOMMENDATION 1]
+2. [RECOMMENDATION 2]
+
+Overall Rating: [RATING]
+
+Inspector: _______________________
+Credentials: _____________________
+Date: ${currentDate}`;
+      break;
+
+    case "safety data sheet":
+    case "sds":
+      content = `SAFETY DATA SHEET\n
+Product: ${vessel.cargoType || 'Crude Oil'}
 Vessel: ${vessel.name} (IMO: ${vessel.imo})
-Date Generated: ${new Date().toISOString().split('T')[0]}
+Date Generated: ${currentDate}
 
 SECTION 1: PRODUCT IDENTIFICATION
-Material: ${vessel.cargoType}
+Material: ${vessel.cargoType || 'Crude Oil'}
 UN Number: UN1267
 Shipping Name: Petroleum Crude Oil
 Hazard Class: 3
@@ -79,14 +224,76 @@ Hazard Statements:
 - May cause drowsiness or dizziness
 - May cause genetic defects
 - May cause cancer
-- Suspected of damaging fertility or the unborn child`;
-        break;
+- Suspected of damaging fertility or the unborn child
 
-      case "loi": // Letter of Interest
-        title = `LOI - ${vessel.name} - ${vessel.cargoType}`;
-        content = `LETTER OF INTEREST\n
-Date: ${new Date().toISOString().split('T')[0]}
-Re: Purchase of ${vessel.cargoType} from vessel ${vessel.name}
+SECTION 3: COMPOSITION
+Complex mixture of hydrocarbons consisting of paraffinic, cycloparaffinic, aromatic and olefinic hydrocarbons with carbon numbers predominantly in the C1 to C30 range.
+
+SECTION 4: FIRST AID MEASURES
+Eye Contact: Flush with water for at least 15 minutes
+Skin Contact: Remove contaminated clothing, wash with soap and water
+Inhalation: Remove to fresh air, seek medical attention
+Ingestion: Do NOT induce vomiting, seek immediate medical attention`;
+      break;
+
+    case "loading instructions":
+    case "loading":
+      content = `LOADING INSTRUCTIONS\n
+Vessel: ${vessel.name} (IMO: ${vessel.imo})
+Cargo: ${vessel.cargoType || 'Crude Oil'}
+Loading Port: ${vessel.departurePort || 'TBD'}
+Loading Date: ${vessel.departureDate ? new Date(vessel.departureDate).toISOString().split('T')[0] : currentDate}
+
+PRE-LOADING CHECKS:
+------------------
+1. Verify all tanks are clean and ready for loading
+2. Test inert gas system
+3. Check cargo pumps and valves
+4. Calibrate all measuring instruments
+
+LOADING SEQUENCE:
+----------------
+1. Commence loading at reduced rate (1,000 m3/hr)
+2. After 1 hour, increase to normal rate (10,000 m3/hr)
+3. Reduce rate for topping off (2,000 m3/hr)
+
+TANK DISTRIBUTION:
+----------------
+1C: 95% capacity
+2C: 95% capacity
+3C: 95% capacity
+4C: 95% capacity
+5C: 95% capacity
+
+SAMPLING:
+--------
+Take samples at beginning, middle, and end of loading
+Retain all samples for 90 days
+
+SAFETY MEASURES:
+--------------
+1. Maintain deck watch at all times
+2. Monitor vapor concentrations
+3. No hot work permitted during loading
+4. Emergency stop procedures to be reviewed before commencing
+
+DOCUMENTATION:
+------------
+Complete and sign:
+1. Cargo Manifest
+2. Bill of Lading
+3. Cargo Survey Report
+4. Ship/Shore Safety Checklist
+
+Master's Acknowledgment: ______________________
+Terminal Representative: ______________________
+Date: ${currentDate}`;
+      break;
+
+    case "loi": // Letter of Interest
+      content = `LETTER OF INTEREST\n
+Date: ${currentDate}
+Re: Purchase of ${vessel.cargoType || 'Crude Oil'} from vessel ${vessel.name}
 
 Dear Sir/Madam,
 
@@ -94,55 +301,22 @@ We hereby confirm our interest in purchasing the following cargo:
 
 Vessel Name: ${vessel.name}
 IMO Number: ${vessel.imo}
-Product: ${vessel.cargoType}
-Quantity: ${vessel.cargoCapacity} barrels
-Loading Port: ${vessel.departurePort}
-Discharge Port: ${vessel.destinationPort}
-Laycan: ${new Date(vessel.eta?.getTime() - 3*24*60*60*1000).toISOString().split('T')[0]} - ${new Date(vessel.eta?.getTime() + 3*24*60*60*1000).toISOString().split('T')[0]}
+Product: ${vessel.cargoType || 'Crude Oil'}
+Quantity: ${vessel.cargoCapacity || 'TBD'} tonnes
+Loading Port: ${vessel.departurePort || 'TBD'}
+Discharge Port: ${vessel.destinationPort || 'TBD'}
+Laycan: ${vessel.eta ? new Date(new Date(vessel.eta).getTime() - 3*24*60*60*1000).toISOString().split('T')[0] : 'TBD'} - ${vessel.eta ? new Date(new Date(vessel.eta).getTime() + 3*24*60*60*1000).toISOString().split('T')[0] : 'TBD'}
 
 We look forward to receiving your complete offer.
 
 Best regards,
 [BUYER NAME]
 [BUYER COMPANY]`;
-        break;
+      break;
 
-      case "bl": // Bill of Lading
-        title = `Bill of Lading - ${vessel.name} - ${vessel.cargoType}`;
-        content = `BILL OF LADING\n
-Shipper: [SHIPPER COMPANY]
-Consignee: [CONSIGNEE COMPANY]
-Notify Party: [NOTIFY PARTY]
-
-Vessel: ${vessel.name}
-Voyage No: VY${new Date().getFullYear()}${Math.floor(Math.random() * 1000)}
-Port of Loading: ${vessel.departurePort}
-Port of Discharge: ${vessel.destinationPort}
-
-Description of Goods:
-${vessel.cargoType}
-Quantity: ${vessel.cargoCapacity} barrels
-Gross Weight: ${Math.round(vessel.cargoCapacity * 0.136)} metric tons
-
-SHIPPED on board the vessel, the goods or packages said to contain goods herein mentioned in apparent good order and condition.
-
-Date of Issue: ${new Date().toISOString().split('T')[0]}
-Signed: ______________________________
-        Master or Agent`;
-        break;
-
-      default:
-        title = `Document - ${vessel.name}`;
-        content = `Generated document for ${vessel.name} carrying ${vessel.cargoType}`;
-    }
-
-    const documentData: InsertDocument = {
-      vesselId,
-      type: documentType,
-      title,
-      content
-    };
-
-    return storage.createDocument(documentData);
+    default:
+      content = `Generated document for ${vessel.name} carrying ${vessel.cargoType || 'cargo'}.`;
   }
-};
+
+  return content;
+}

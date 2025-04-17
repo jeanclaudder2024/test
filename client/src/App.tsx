@@ -9,6 +9,7 @@ import VesselDetail from "@/pages/VesselDetail";
 import Refineries from "@/pages/Refineries";
 import RefineryDetail from "@/pages/RefineryDetail";
 import Brokers from "@/pages/Brokers";
+import Documents from "@/pages/Documents";
 import AIAssistantPage from "@/pages/AIAssistant";
 import Settings from "@/pages/Settings";
 import { useEffect } from "react";
@@ -41,6 +42,7 @@ function Router() {
         <Route path="/refineries" component={Refineries} />
         <Route path="/refineries/:id" component={RefineryDetail} />
         <Route path="/brokers" component={Brokers} />
+        <Route path="/documents" component={Documents} />
         <Route path="/ai-assistant" component={AIAssistantPage} />
         <Route path="/settings" component={Settings} />
         <Route component={NotFound} />
