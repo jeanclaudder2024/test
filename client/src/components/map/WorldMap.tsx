@@ -121,7 +121,8 @@ function VesselTracker({ vessel }: { vessel: Vessel | null | undefined }) {
         <div className="flex justify-between">
           <span className="text-gray-500">Position:</span>
           <span>
-            {vessel.currentLat?.toFixed(3)}, {vessel.currentLng?.toFixed(3)}
+            {typeof vessel.currentLat === 'number' ? vessel.currentLat.toFixed(3) : parseFloat(String(vessel.currentLat)).toFixed(3)}, 
+            {typeof vessel.currentLng === 'number' ? vessel.currentLng.toFixed(3) : parseFloat(String(vessel.currentLng)).toFixed(3)}
           </span>
         </div>
         {vessel.destinationPort && (
@@ -272,7 +273,7 @@ export default function WorldMap({
         zoomControl={false}
         className="h-full w-full"
         ref={mapRef}
-        whenReady={(e: { target: L.Map }) => { mapRef.current = e.target; }}
+        whenReady={(e) => { mapRef.current = e.target; }}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

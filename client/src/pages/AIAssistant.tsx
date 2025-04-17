@@ -261,7 +261,7 @@ export default function AIAssistantPage() {
                         variant="outline" 
                         size="sm" 
                         className="h-7 px-2 text-xs"
-                        onClick={() => setTrackedVessel(response.vessel)}
+                        onClick={() => response.vessel && setTrackedVessel(response.vessel)}
                       >
                         <Navigation className="h-3 w-3 mr-1" />
                         Track
