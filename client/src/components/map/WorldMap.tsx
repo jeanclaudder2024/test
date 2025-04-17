@@ -9,42 +9,66 @@ import { ZoomIn, ZoomOut, Locate, Ship, Factory, Navigation, Droplet } from "luc
 // Define the marker icons here to prevent recreation on each render
 const createVesselIcon = (type: string) => {
   let className = 'vessel-marker-oil';
+  let color = '#FF6B6B';
   
   if (type.toLowerCase().includes('lng')) {
     className = 'vessel-marker-lng';
+    color = '#4ECDC4';
   } else if (type.toLowerCase().includes('cargo')) {
     className = 'vessel-marker-cargo';
+    color = '#FFD166';
   } else if (type.toLowerCase().includes('container')) {
     className = 'vessel-marker-container';
+    color = '#118AB2';
   } else if (type.toLowerCase().includes('chemical')) {
     className = 'vessel-marker-chemical';
+    color = '#9A48D0';
   }
   
   return L.divIcon({
     className: `vessel-marker ${className}`,
-    html: `<div class="vessel-marker-ping"></div>
-           <div class="absolute -top-6 -left-3 text-white bg-black/70 px-1 rounded text-[9px] whitespace-nowrap">
-             ${getVesselEmoji(type)}
-           </div>`,
-    iconSize: [12, 12],
+    html: `
+      <div class="vessel-boat" style="position: relative; width: 24px; height: 24px;">
+        <div style="position: absolute; top: 0; left: 0; width: 24px; height: 24px; background-color: ${color}; border-radius: 50%; opacity: 0.2; animation: pulse 2s infinite;"></div>
+        <div style="position: absolute; top: 4px; left: 4px; width: 16px; height: 16px; background-color: ${color}; border-radius: 50%; opacity: 0.6;"></div>
+        <div style="position: absolute; top: 6px; left: 6px; width: 12px; height: 12px; background-color: ${color}; border-radius: 50%; opacity: 1;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="white" stroke="white">
+            <path d="M2 22a8 8 0 1 1 16 0H2zm8-9c-3.315 0-6-2.685-6-6s2.685-6 6-6 6 2.685 6 6-2.685 6-6 6z"/>
+          </svg>
+        </div>
+      </div>
+      <div class="absolute -top-6 -left-3 text-white bg-black/70 px-1 rounded text-[10px] whitespace-nowrap font-bold">
+        ${getVesselEmoji(type)}
+      </div>
+    `,
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
   });
 };
 
 const createRefineryIcon = (status: string = 'operational') => {
-  let className = 'refinery-marker-operational';
+  let color = '#28a745'; // operational - green
   
   if (status.toLowerCase().includes('maintenance')) {
-    className = 'refinery-marker-maintenance';
+    color = '#fd7e14'; // maintenance - orange
   } else if (status.toLowerCase().includes('offline')) {
-    className = 'refinery-marker-offline';
+    color = '#dc3545'; // offline - red
   }
   
   return L.divIcon({
-    className: `refinery-marker ${className}`,
-    html: `<svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M8 22V16M12 22V10M16 22V16M19 22H5C3.895 22 3 21.105 3 20V10.5C3 9.395 3.895 8.5 5 8.5H5.5M5.5 8.5H18.5V4.5C18.5 3.395 17.605 2.5 16.5 2.5H7.5C6.395 2.5 5.5 3.395 5.5 4.5V8.5Z"></path>
-    </svg>`,
-    iconSize: [16, 16],
+    className: `refinery-marker`,
+    html: `
+      <div style="position: relative; width: 28px; height: 28px;">
+        <div style="position: absolute; width: 28px; height: 28px; background-color: white; border: 2px solid ${color}; border-radius: 50%;"></div>
+        <div style="position: absolute; top: 4px; left: 4px; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 22V16M12 22V10M16 22V16M19 22H5C3.895 22 3 21.105 3 20V10.5C3 9.395 3.895 8.5 5 8.5H5.5M5.5 8.5H18.5V4.5C18.5 3.395 17.605 2.5 16.5 2.5H7.5C6.395 2.5 5.5 3.395 5.5 4.5V8.5Z"></path>
+          </svg>
+        </div>
+      </div>
+    `,
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
   });
 };
 
@@ -319,7 +343,7 @@ export default function WorldMap({
         zoomControl={false}
         className="h-full w-full"
         ref={mapRef}
-        whenReady={(event) => { mapRef.current = event.target; }}
+        whenReady={(event: { target: L.Map }) => { mapRef.current = event.target; }}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -464,25 +488,38 @@ export default function WorldMap({
         <div className="text-xs font-medium mb-2">Vessel Types</div>
         <div className="grid grid-cols-2 gap-x-4 gap-y-1">
           <div className="flex items-center space-x-2 text-xs">
-            <span className="h-3 w-3 bg-secondary rounded-full relative">
-              <span className="absolute top-0 left-0 h-full w-full animate-ping bg-secondary rounded-full opacity-50"></span>
-            </span>
+            <div className="relative h-4 w-4">
+              <div className="absolute top-0 left-0 w-full h-full bg-[#FF6B6B] rounded-full opacity-20"></div>
+              <div className="absolute top-1 left-1 w-2 h-2 bg-[#FF6B6B] rounded-full"></div>
+            </div>
             <span>Oil Tankers</span>
           </div>
           <div className="flex items-center space-x-2 text-xs">
-            <span className="h-3 w-3 bg-accent rounded-full"></span>
+            <div className="relative h-4 w-4">
+              <div className="absolute top-0 left-0 w-full h-full bg-[#4ECDC4] rounded-full opacity-20"></div>
+              <div className="absolute top-1 left-1 w-2 h-2 bg-[#4ECDC4] rounded-full"></div>
+            </div>
             <span>LNG Carriers</span>
           </div>
           <div className="flex items-center space-x-2 text-xs">
-            <span className="h-3 w-3 bg-yellow-500 rounded-full"></span>
+            <div className="relative h-4 w-4">
+              <div className="absolute top-0 left-0 w-full h-full bg-[#FFD166] rounded-full opacity-20"></div>
+              <div className="absolute top-1 left-1 w-2 h-2 bg-[#FFD166] rounded-full"></div>
+            </div>
             <span>Cargo Vessels</span>
           </div>
           <div className="flex items-center space-x-2 text-xs">
-            <span className="h-3 w-3 bg-purple-500 rounded-full"></span>
+            <div className="relative h-4 w-4">
+              <div className="absolute top-0 left-0 w-full h-full bg-[#118AB2] rounded-full opacity-20"></div>
+              <div className="absolute top-1 left-1 w-2 h-2 bg-[#118AB2] rounded-full"></div>
+            </div>
             <span>Container Ships</span>
           </div>
           <div className="flex items-center space-x-2 text-xs">
-            <span className="h-3 w-3 bg-green-500 rounded-full"></span>
+            <div className="relative h-4 w-4">
+              <div className="absolute top-0 left-0 w-full h-full bg-[#9A48D0] rounded-full opacity-20"></div>
+              <div className="absolute top-1 left-1 w-2 h-2 bg-[#9A48D0] rounded-full"></div>
+            </div>
             <span>Chemical Tankers</span>
           </div>
         </div>
@@ -490,15 +527,27 @@ export default function WorldMap({
         <div className="text-xs font-medium mt-3 mb-2">Refinery Status</div>
         <div className="grid grid-cols-1 gap-y-1">
           <div className="flex items-center space-x-2 text-xs">
-            <span className="h-3 w-3 bg-green-600 rounded-sm"></span>
+            <div className="relative h-4 w-4">
+              <div className="h-4 w-4 rounded-full bg-white border-2 border-[#28a745] flex items-center justify-center">
+                <div className="h-2 w-2 bg-[#28a745] rounded-full"></div>
+              </div>
+            </div>
             <span>Operational</span>
           </div>
           <div className="flex items-center space-x-2 text-xs">
-            <span className="h-3 w-3 bg-orange-500 rounded-sm"></span>
+            <div className="relative h-4 w-4">
+              <div className="h-4 w-4 rounded-full bg-white border-2 border-[#fd7e14] flex items-center justify-center">
+                <div className="h-2 w-2 bg-[#fd7e14] rounded-full"></div>
+              </div>
+            </div>
             <span>Maintenance</span>
           </div>
           <div className="flex items-center space-x-2 text-xs">
-            <span className="h-3 w-3 bg-red-500 rounded-sm"></span>
+            <div className="relative h-4 w-4">
+              <div className="h-4 w-4 rounded-full bg-white border-2 border-[#dc3545] flex items-center justify-center">
+                <div className="h-2 w-2 bg-[#dc3545] rounded-full"></div>
+              </div>
+            </div>
             <span>Offline</span>
           </div>
         </div>
@@ -506,11 +555,11 @@ export default function WorldMap({
         <div className="text-xs font-medium mt-3 mb-2">Shipping Routes</div>
         <div className="grid grid-cols-1 gap-y-1">
           <div className="flex items-center space-x-2 text-xs">
-            <div className="w-4 h-0 border-b-2 border-secondary/50 border-dashed"></div>
+            <div className="w-6 h-0 border-b-2 border-gray-500/40 border-dashed"></div>
             <span>Planned Route</span>
           </div>
           <div className="flex items-center space-x-2 text-xs">
-            <div className="w-4 h-0 border-b-2 border-accent"></div>
+            <div className="w-6 h-0 border-b-2 border-blue-500/60"></div>
             <span>Active Route</span>
           </div>
         </div>

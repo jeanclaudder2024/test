@@ -69,57 +69,49 @@
     @apply bg-[#e8f5e9];
   }
   
+  /* Enhanced vessel markers */
   .vessel-marker {
-    @apply h-3 w-3 rounded-full relative z-20;
+    @apply relative z-30;
   }
   
-  .vessel-marker-ping {
-    @apply h-3 w-3 bg-secondary rounded-full absolute animate-ping;
+  .vessel-boat {
+    @apply absolute transform -translate-x-1/2 -translate-y-1/2;
   }
   
-  .vessel-marker-oil {
-    @apply bg-secondary;
+  .vessel-marker-oil .vessel-boat {
+    filter: drop-shadow(0 0 5px rgba(255, 107, 107, 0.8));
   }
   
-  .vessel-marker-lng {
-    @apply bg-accent;
+  .vessel-marker-lng .vessel-boat {
+    filter: drop-shadow(0 0 5px rgba(78, 205, 196, 0.8));
   }
   
-  .vessel-marker-cargo {
-    @apply bg-yellow-500;
+  .vessel-marker-cargo .vessel-boat {
+    filter: drop-shadow(0 0 5px rgba(255, 209, 102, 0.8));
   }
   
-  .vessel-marker-container {
-    @apply bg-purple-500;
+  .vessel-marker-container .vessel-boat {
+    filter: drop-shadow(0 0 5px rgba(17, 138, 178, 0.8));
   }
   
-  .vessel-marker-chemical {
-    @apply bg-green-500;
+  .vessel-marker-chemical .vessel-boat {
+    filter: drop-shadow(0 0 5px rgba(154, 72, 208, 0.8));
   }
   
+  /* Enhanced refinery markers */
   .refinery-marker {
-    @apply h-4 w-4 bg-primary rounded-sm relative flex items-center justify-center z-10;
+    @apply z-20;
+    filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.3));
   }
   
-  .refinery-marker-operational {
-    @apply bg-green-600;
-  }
-  
-  .refinery-marker-maintenance {
-    @apply bg-orange-500;
-  }
-  
-  .refinery-marker-offline {
-    @apply bg-red-500;
-  }
-  
+  /* Shipping routes */
   .route-path {
-    @apply stroke-[3] stroke-secondary/50 fill-none z-0;
-    stroke-dasharray: 5, 5;
+    @apply stroke-[2] stroke-gray-500/40 fill-none z-0;
+    stroke-dasharray: 4, 6;
   }
 
   .route-path-active {
-    @apply stroke-[3] stroke-accent z-0 animate-pulse;
+    @apply stroke-[2.5] stroke-blue-500/60 z-0;
     stroke-dasharray: 0;
   }
   
@@ -163,5 +155,41 @@
       transform: scale(0.95);
       box-shadow: 0 0 0 0 rgba(255, 87, 34, 0);
     }
+  }
+  
+  /* Added water ripple effect for vessels */
+  @keyframes ripple {
+    0% {
+      transform: scale(0.8);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(2.5);
+      opacity: 0;
+    }
+  }
+  
+  .vessel-boat div:first-child {
+    animation: ripple 2s ease-out infinite;
+  }
+  
+  /* Make leaflet tooltips more visible */
+  .leaflet-tooltip {
+    background-color: rgba(0, 0, 0, 0.75) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 4px !important;
+    padding: 4px 8px !important;
+    font-weight: bold !important;
+    white-space: nowrap !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.4) !important;
+  }
+  
+  .leaflet-tooltip:before {
+    border-right-color: rgba(0, 0, 0, 0.75) !important;
+  }
+  
+  .leaflet-tooltip-left:before {
+    border-left-color: rgba(0, 0, 0, 0.75) !important;
   }
 }
