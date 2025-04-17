@@ -1,11 +1,10 @@
 import { useRef, useEffect, useState } from "react";
+import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline, Tooltip, CircleMarker } from "react-leaflet";
+import L from "leaflet";
 import { Vessel, Refinery, Region, MapPosition } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ZoomIn, ZoomOut, Locate, Ship, Factory, Navigation, Droplet, Map as MapIcon } from "lucide-react";
-import { MapContainer, TileLayer, Marker, Popup, Polyline, Tooltip, CircleMarker, useMap } from "react-leaflet";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
+import { ZoomIn, ZoomOut, Locate, Ship, Factory, Navigation, Droplet } from "lucide-react";
 
 // Define the marker icons here to prevent recreation on each render
 const createVesselIcon = (type: string) => {
@@ -424,21 +423,17 @@ export default function WorldMap({
         zoom={defaultPosition.zoom}
         zoomControl={false}
         className="h-full w-full"
-        ref={(map) => {
-          mapRef.current = map;
+        ref={mapRef}
+        whenReady={(event) => { 
+          // Fix TypeScript error by using the correct type
+          if (event && event.target) {
+            mapRef.current = event.target;
+          }
         }}
       >
-        {/* Modern tile options - Try different ones to find the best look */}
         <TileLayer
-          attribution='&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'
-          url="https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"
-        />
-        
-        {/* Ocean layer for better marine visualization */}
-        <TileLayer
-          url="https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}"
-          attribution="Tiles &copy; Esri &mdash; Sources: GEBCO, NOAA, CHS, OSU, UNH, CSUMB, National Geographic, DeLorme, NAVTEQ, and Esri"
-          opacity={0.5}
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         
         {/* Update map when region changes */}
