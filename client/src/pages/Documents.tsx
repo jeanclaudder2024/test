@@ -136,28 +136,32 @@ export default function Documents() {
   return (
     <div className="container py-6 mx-auto">
       <div className="flex flex-col space-y-4">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row justify-between gap-4 items-start sm:items-center">
           <h1 className="text-2xl font-bold">Shipping Documents</h1>
           
-          <div className="flex space-x-2">
+          <div className="flex flex-wrap gap-2 w-full sm:w-auto">
             <Button 
               variant="outline" 
               onClick={() => refetchDocuments()}
               disabled={isLoadingDocuments}
+              className="flex-1 sm:flex-initial"
             >
               <RefreshCw className="mr-2 h-4 w-4" />
               Refresh
             </Button>
             
-            <Button onClick={() => setShowGenerateDialog(true)}>
+            <Button 
+              onClick={() => setShowGenerateDialog(true)}
+              className="flex-1 sm:flex-initial"
+            >
               <Plus className="mr-2 h-4 w-4" />
               Generate Document
             </Button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="col-span-1">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+          <div className="col-span-1 lg:sticky lg:top-4 lg:self-start h-auto">
             <div className="bg-white rounded-lg shadow p-4">
               <h3 className="font-medium mb-3">Document Filters</h3>
               

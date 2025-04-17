@@ -83,12 +83,12 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
 
   return (
     <aside className={cn(
-      "bg-white border-r border-gray-200 flex-shrink-0 shadow-sm flex flex-col h-full transition-all duration-300",
-      mobile ? "fixed inset-y-0 left-0 z-50 w-64" : "hidden md:flex",
+      "bg-white border-r border-gray-200 flex-shrink-0 shadow-sm flex flex-col h-full transition-all duration-300 overflow-y-auto",
+      mobile ? "fixed inset-y-0 left-0 z-50 w-64 h-screen" : "hidden md:flex",
       collapsed ? "w-16" : "w-64"
     )}>
       {/* Logo Area */}
-      <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+      <div className="p-4 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
         {!collapsed && (
           <h1 className="text-secondary font-bold text-2xl tracking-tighter leading-none">
             SHIPBOAT<br />TRACKING
