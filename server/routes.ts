@@ -10,7 +10,9 @@ import {
   insertRefinerySchema, 
   insertProgressEventSchema,
   insertDocumentSchema,
-  insertBrokerSchema
+  insertBrokerSchema,
+  Vessel,
+  Refinery
 } from "@shared/schema";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
@@ -401,9 +403,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const POSITION_UPDATE_INTERVAL = 5000; // 5 seconds - update positions more frequently
     
     // Cache the data to reduce database load
-    let cachedVessels = [];
-    let cachedRefineries = [];
-    let cachedStats = null;
+    let cachedVessels: Vessel[] = [];
+    let cachedRefineries: Refinery[] = [];
+    let cachedStats: any = null;
     
     // Main data sending function
     const sendData = async (forceDbRefresh = false) => {
@@ -423,7 +425,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           let vessels = await vesselService.getAllVessels();
           
           // Filter for oil vessels specifically to make the app smoother
-          const isOilVessel = (v) => {
+          const isOilVessel = (v: Vessel) => {
             if (!v.vesselType) return false;
             const type = v.vesselType.toLowerCase();
             return (

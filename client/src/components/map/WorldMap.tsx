@@ -424,7 +424,12 @@ export default function WorldMap({
         zoomControl={false}
         className="h-full w-full"
         ref={mapRef}
-        whenReady={(event: { target: L.Map }) => { mapRef.current = event.target; }}
+        whenReady={(event) => { 
+          // Fix TypeScript error by using the correct type
+          if (event && event.target) {
+            mapRef.current = event.target;
+          }
+        }}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -636,7 +641,7 @@ export default function WorldMap({
         
         <div className="text-xs font-medium mt-3 mb-2">Refinery Status</div>
         <div className="grid grid-cols-1 gap-y-1">
-          <div className="flex items-center space-x-2 text-xs">
+          <div key="refinery-operational" className="flex items-center space-x-2 text-xs">
             <div className="relative h-4 w-4">
               <div className="h-4 w-4 rounded-full bg-white border-2 border-[#28a745] flex items-center justify-center">
                 <div className="h-2 w-2 bg-[#28a745] rounded-full"></div>
@@ -644,7 +649,7 @@ export default function WorldMap({
             </div>
             <span>Operational</span>
           </div>
-          <div className="flex items-center space-x-2 text-xs">
+          <div key="refinery-maintenance" className="flex items-center space-x-2 text-xs">
             <div className="relative h-4 w-4">
               <div className="h-4 w-4 rounded-full bg-white border-2 border-[#fd7e14] flex items-center justify-center">
                 <div className="h-2 w-2 bg-[#fd7e14] rounded-full"></div>
@@ -652,7 +657,7 @@ export default function WorldMap({
             </div>
             <span>Maintenance</span>
           </div>
-          <div className="flex items-center space-x-2 text-xs">
+          <div key="refinery-offline" className="flex items-center space-x-2 text-xs">
             <div className="relative h-4 w-4">
               <div className="h-4 w-4 rounded-full bg-white border-2 border-[#dc3545] flex items-center justify-center">
                 <div className="h-2 w-2 bg-[#dc3545] rounded-full"></div>
@@ -664,11 +669,11 @@ export default function WorldMap({
         
         <div className="text-xs font-medium mt-3 mb-2">Shipping Routes</div>
         <div className="grid grid-cols-1 gap-y-1">
-          <div className="flex items-center space-x-2 text-xs">
+          <div key="route-planned" className="flex items-center space-x-2 text-xs">
             <div className="w-6 h-0 border-b-2 border-gray-500/40 border-dashed"></div>
             <span>Planned Route</span>
           </div>
-          <div className="flex items-center space-x-2 text-xs">
+          <div key="route-active" className="flex items-center space-x-2 text-xs">
             <div className="w-6 h-0 border-b-2 border-blue-500/60"></div>
             <span>Active Route</span>
           </div>
