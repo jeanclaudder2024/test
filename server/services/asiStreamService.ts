@@ -60,8 +60,10 @@ export const asiStreamService = {
       // });
       // const data = await response.json();
       
-      // Real vessel data based on maritime industry standards
-      const mockApiData: AsiStreamVessel[] = [
+      // Generate a much larger dataset of vessels (around 1500)
+      const generateManyVessels = (baseCount: number): AsiStreamVessel[] => {
+        // Base template vessel data to multiply
+        const templateVessels: AsiStreamVessel[] = [
         // Additional vessels - LNG Carriers
         {
           id: "V00234",
@@ -583,6 +585,172 @@ export const asiStreamService = {
           region: "MEA"
         }
       ];
+      
+        // Generate a large number of vessels based on templates
+        const vessels: AsiStreamVessel[] = [];
+        
+        // Add the original template vessels first
+        vessels.push(...templateVessels);
+        
+        // Names for generated vessels
+        const prefixes = ["Pacific", "Atlantic", "Oceanic", "Global", "Star", "Royal", "Nordic", "Eastern", "Western", "Southern", "Northern"];
+        const suffixes = ["Pride", "Explorer", "Pioneer", "Voyager", "Commander", "Mariner", "Navigator", "Carrier", "Trader", "Champion", "Express"];
+        
+        // Vessel types
+        const vesselTypes = [
+          "Crude Oil Tanker", "Product Tanker", "LNG Carrier", "Chemical Tanker", 
+          "Container Ship", "Cargo Ship", "VLCC", "Oil/Chemical Tanker"
+        ];
+        
+        // Country flags
+        const flags = [
+          "Panama", "Liberia", "Marshall Islands", "Singapore", "Hong Kong", "Malta", 
+          "Bahamas", "Greece", "Japan", "Cyprus", "Norway", "UK", "Denmark"
+        ];
+        
+        // Regions
+        const regions = ["North America", "Europe", "Asia", "MEA", "Africa", "Russia"];
+        
+        // Ports by region
+        const portsByRegion = {
+          "North America": ["Houston, USA", "New York, USA", "Long Beach, USA", "Vancouver, Canada", "Corpus Christi, USA"],
+          "Europe": ["Rotterdam, Netherlands", "Antwerp, Belgium", "Hamburg, Germany", "Marseille, France", "Barcelona, Spain"],
+          "Asia": ["Singapore", "Shanghai, China", "Tokyo, Japan", "Busan, South Korea", "Hong Kong"],
+          "MEA": ["Dubai, UAE", "Jebel Ali, UAE", "Ras Tanura, Saudi Arabia", "Fujairah, UAE", "Bandar Abbas, Iran"],
+          "Africa": ["Lagos, Nigeria", "Durban, South Africa", "Port Said, Egypt", "Mombasa, Kenya", "Tangier, Morocco"],
+          "Russia": ["Novorossiysk, Russia", "St. Petersburg, Russia", "Vladivostok, Russia", "Primorsk, Russia", "Murmansk, Russia"]
+        };
+        
+        // Cargo types by vessel type
+        const cargoTypesByVesselType = {
+          "Crude Oil Tanker": ["Crude Oil - Arabian Light", "Crude Oil - Brent", "Crude Oil - WTI", "Crude Oil - Dubai", "Crude Oil - Urals"],
+          "Product Tanker": ["Gasoline", "Diesel", "Jet Fuel", "Naphtha", "Kerosene"],
+          "LNG Carrier": ["LNG", "Liquefied Natural Gas", "Natural Gas"],
+          "Chemical Tanker": ["Chemical Products - Phenol", "Chemical Products - Glycols", "Chemical Products - Methanol"],
+          "Container Ship": ["Containerized Goods"],
+          "Cargo Ship": ["Iron Ore", "Coal", "Soybeans", "Grain", "Bauxite"],
+          "VLCC": ["Crude Oil - Arabian Heavy", "Crude Oil - Basrah Heavy", "Crude Oil - Tapis"],
+          "Oil/Chemical Tanker": ["Chemical Products", "Refined Products", "Mixed Cargo"]
+        };
+        
+        // Generate the additional vessels
+        for (let i = 0; i < baseCount; i++) {
+          // Create variations of the template vessels
+          const template = templateVessels[i % templateVessels.length];
+          const vesselType = vesselTypes[Math.floor(Math.random() * vesselTypes.length)];
+          const region = regions[Math.floor(Math.random() * regions.length)];
+          const flag = flags[Math.floor(Math.random() * flags.length)];
+          
+          // Generate name
+          const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+          const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
+          const name = `${prefix} ${suffix}`;
+          
+          // Generate random position within the region's general area
+          // This is a simplified approach - in reality, you'd want more precise coordinates
+          const latOffset = Math.random() * 20 - 10; // -10 to +10
+          const lngOffset = Math.random() * 20 - 10; // -10 to +10
+          const baseLat = template.position.lat;
+          const baseLng = template.position.lng;
+          const lat = Math.max(-85, Math.min(85, baseLat + latOffset));
+          const lng = Math.max(-180, Math.min(180, baseLng + lngOffset));
+          
+          // Select ports for this region
+          const regionPorts = portsByRegion[region] || portsByRegion["North America"];
+          const departurePort = regionPorts[Math.floor(Math.random() * regionPorts.length)];
+          const destinationPort = regionPorts[Math.floor(Math.random() * regionPorts.length)];
+          
+          // Generate random dates
+          const now = new Date();
+          const pastOffset = Math.floor(Math.random() * 20); // 0-20 days ago
+          const futureOffset = Math.floor(Math.random() * 30) + 5; // 5-35 days in future
+          
+          const departureDate = new Date(now);
+          departureDate.setDate(departureDate.getDate() - pastOffset);
+          
+          const etaDate = new Date(now);
+          etaDate.setDate(etaDate.getDate() + futureOffset);
+          
+          // Select cargo type based on vessel type
+          const cargoTypes = cargoTypesByVesselType[vesselType] || ["General Cargo"];
+          const cargoType = cargoTypes[Math.floor(Math.random() * cargoTypes.length)];
+          
+          // Generate capacity based on vessel type
+          let capacity;
+          switch (vesselType) {
+            case "Crude Oil Tanker":
+              capacity = Math.floor(Math.random() * 1500000) + 500000;
+              break;
+            case "VLCC":
+              capacity = Math.floor(Math.random() * 1000000) + 1500000;
+              break;
+            case "LNG Carrier":
+              capacity = Math.floor(Math.random() * 100000) + 100000;
+              break;
+            case "Container Ship":
+              capacity = Math.floor(Math.random() * 15000) + 5000;
+              break;
+            default:
+              capacity = Math.floor(Math.random() * 500000) + 50000;
+          }
+          
+          // Generate unique ID, IMO and MMSI
+          const id = `V${(1000000 + i).toString().substring(1)}`;
+          const imoNum = Math.floor(Math.random() * 1000000) + 9000000;
+          const mmsiNum = Math.floor(Math.random() * 900000000) + 100000000;
+          
+          // Generate built year
+          const builtYear = Math.floor(Math.random() * 23) + 2000; // 2000-2023
+          
+          // Generate deadweight based on vessel type
+          let deadweight;
+          switch (vesselType) {
+            case "Crude Oil Tanker":
+            case "VLCC":
+              deadweight = Math.floor(Math.random() * 150000) + 150000;
+              break;
+            case "Container Ship":
+              deadweight = Math.floor(Math.random() * 100000) + 100000;
+              break;
+            default:
+              deadweight = Math.floor(Math.random() * 100000) + 30000;
+          }
+          
+          // Create vessel object
+          vessels.push({
+            id,
+            name,
+            imo: imoNum.toString(),
+            mmsi: mmsiNum.toString(),
+            vessel_type: vesselType,
+            flag,
+            built: builtYear,
+            deadweight,
+            position: {
+              lat,
+              lng
+            },
+            departure: {
+              port: departurePort,
+              date: departureDate.toISOString()
+            },
+            destination: {
+              port: destinationPort,
+              eta: etaDate.toISOString()
+            },
+            cargo: {
+              type: cargoType,
+              capacity
+            },
+            region
+          });
+        }
+        
+        return vessels;
+      };
+      
+      // Generate large vessel dataset - around 1500 vessels
+      const mockApiData = generateManyVessels(1500);
       
       // Transform the API data to our application format
       return mockApiData.map(vessel => ({
