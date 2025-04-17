@@ -224,7 +224,7 @@ export default function WorldMap({
         zoomControl={false}
         className="h-full w-full"
         ref={mapRef}
-        whenReady={(e) => { mapRef.current = e.target; }}
+        whenReady={(e: { target: L.Map }) => { mapRef.current = e.target; }}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
