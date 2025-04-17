@@ -319,7 +319,7 @@ export default function WorldMap({
         zoomControl={false}
         className="h-full w-full"
         ref={mapRef}
-        whenReady={function(e: any) { mapRef.current = e.target; }}
+        whenCreated={(map) => { mapRef.current = map; }}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
