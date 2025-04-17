@@ -193,15 +193,20 @@ export default function Brokers() {
       return;
     }
     
-    // Process the upgrade
-    toast({
-      title: "Membership Upgraded Successfully",
-      description: `Your GloboOil Elite Broker Membership is being processed. Your ${selectedSubscription} subscription has been activated.`,
-      variant: "default"
-    });
+    // Use a default broker ID for demo purposes
+    // In a real app, this would be the ID of the currently logged-in broker
+    const brokerId = brokers.length > 0 ? brokers[0].id : 1;
     
-    setShowUpgradeDialog(false);
-    setActiveTab("elite-dashboard");
+    // Call the mutation to upgrade the membership
+    upgradeMutation.mutate({
+      id: brokerId,
+      subscription: selectedSubscription as 'monthly' | 'annual',
+      shippingAddress,
+      documents: {
+        passportUploaded: !!selectedFiles.passport,
+        photoUploaded: !!selectedFiles.photo
+      }
+    });
   };
 
   return (
@@ -561,19 +566,27 @@ export default function Brokers() {
         {/* Elite Dashboard Tab */}
         <TabsContent value="elite-dashboard">
           <div className="space-y-6">
-            <div className="flex flex-col md:flex-row justify-between items-start gap-4">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
               <div>
-                <h2 className="text-2xl font-bold">Elite Broker Dashboard</h2>
+                <h2 className="text-xl font-semibold flex items-center">
+                  <Star className="h-5 w-5 mr-2 text-amber-500" />
+                  Elite Broker Control Panel
+                </h2>
                 <p className="text-muted-foreground">
-                  Access exclusive tools and opportunities for premium members
+                  Access exclusive trading tools and premium features
                 </p>
               </div>
-              
-              <Badge className="bg-amber-500 text-white px-4 py-2 text-sm flex items-center">
-                <Star className="h-4 w-4 mr-2" />
-                Elite Member
-                <span className="ml-2 text-xs opacity-80">Expires: {formatDate(new Date(Date.now() + 365 * 24 * 60 * 60 * 1000))}</span>
-              </Badge>
+              <div className="flex items-center space-x-2 mt-2 md:mt-0">
+                <Badge className="bg-amber-500 text-white">
+                  <Star className="h-3 w-3 mr-1" /> Elite Member
+                </Badge>
+                <Badge variant="outline" className="text-amber-700 border-amber-200 bg-amber-50">
+                  Monthly Subscription
+                </Badge>
+                <Badge variant="outline" className="text-green-700 border-green-200 bg-green-50">
+                  Active
+                </Badge>
+              </div>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
