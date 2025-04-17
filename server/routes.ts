@@ -358,93 +358,137 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Stream API endpoints
+  // Stream API endpoints - Optimized for database first approach
   apiRouter.get("/stream/data", (req, res) => {
     // Set headers for Server-Sent Events
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
     
-    // Send initial data and periodically update vessels
-    const sendData = async () => {
+    // Keep track of last update time to reduce database queries
+    let lastDbFetchTime = 0;
+    const DB_REFRESH_INTERVAL = 30000; // 30 seconds - refresh database data
+    const POSITION_UPDATE_INTERVAL = 5000; // 5 seconds - update positions more frequently
+    
+    // Cache the data to reduce database load
+    let cachedVessels = [];
+    let cachedRefineries = [];
+    let cachedStats = null;
+    
+    // Main data sending function
+    const sendData = async (forceDbRefresh = false) => {
       try {
-        // --- DATABASE FIRST APPROACH ---
-        // Step 1: Get optimized data from database (limit to most relevant vessels)
-        const MAX_VESSELS_PER_RESPONSE = 500; // Limit number of vessels to 500 for faster performance
+        const currentTime = Date.now();
+        const shouldRefreshDb = forceDbRefresh || (currentTime - lastDbFetchTime > DB_REFRESH_INTERVAL);
         
-        // Get vessels (limited for better performance)
-        let vessels = await vesselService.getAllVessels();
+        // --- OPTIMIZED DATABASE-FIRST APPROACH ---
+        if (shouldRefreshDb) {
+          console.log("Refreshing data from database...");
+          lastDbFetchTime = currentTime;
+          
+          // Step 1: Get optimized data from database (limit to most relevant vessels)
+          const MAX_VESSELS_PER_RESPONSE = 350; // Reduced for better performance
+          
+          // Get vessels (limited for better performance)
+          let vessels = await vesselService.getAllVessels();
+          
+          // Filter for oil vessels specifically to make the app smoother
+          const isOilVessel = (v) => {
+            if (!v.vesselType) return false;
+            const type = v.vesselType.toLowerCase();
+            return (
+              type.includes('oil') ||
+              type.includes('tanker') ||
+              type.includes('crude') ||
+              type.includes('vlcc')
+            );
+          };
+          
+          // Prioritize vessels:
+          // 1. Only oil vessels (most important to show)
+          // 2. Only vessels with current location data
+          // 3. Limited for better performance
+          vessels = vessels
+            .filter(v => v.currentLat && v.currentLng && isOilVessel(v))
+            .slice(0, MAX_VESSELS_PER_RESPONSE);
+          
+          // Update the cache
+          cachedVessels = vessels;
+          
+          // Step 2: Get all refineries (there are fewer refineries, so we can get all)
+          cachedRefineries = await refineryService.getAllRefineries();
+          
+          // Get updated stats
+          const stats = await storage.getStats();
+          if (stats) {
+            // Convert BigInt values to numbers
+            cachedStats = {
+              ...stats,
+              id: Number(stats.id),
+              activeVessels: Number(stats.activeVessels),
+              totalCargo: Number(stats.totalCargo),
+              activeRefineries: Number(stats.activeRefineries),
+              activeBrokers: Number(stats.activeBrokers),
+              lastUpdated: stats.lastUpdated
+            };
+          }
+        }
         
-        // Prioritize vessels:
-        // 1. Oil vessels first (most important to show)
-        // 2. Vessels with current location data
-        // 3. Limit to a reasonable number
-        vessels = vessels
-          .filter(v => v.currentLat && v.currentLng) // Only vessels with position data
-          .sort((a, b) => {
-            // Prioritize oil tankers and vessels with destinations
-            const aScore = (a.vesselType?.toLowerCase().includes('oil') ? 2 : 0) + 
-                           (a.destinationPort ? 1 : 0);
-            const bScore = (b.vesselType?.toLowerCase().includes('oil') ? 2 : 0) + 
-                           (b.destinationPort ? 1 : 0);
-            return bScore - aScore;
-          })
-          .slice(0, MAX_VESSELS_PER_RESPONSE);
-        
-        // Step 2: Get all refineries (there are fewer refineries, so we can get all)
-        const refineries = await refineryService.getAllRefineries();
-        
-        // Step 3: Send optimized data to client
+        // Step 3: Send optimized data to client from cache
         res.write(`event: vessels\n`);
-        res.write(`data: ${JSON.stringify(vessels)}\n\n`);
+        res.write(`data: ${JSON.stringify(cachedVessels)}\n\n`);
         
         res.write(`event: refineries\n`);
-        res.write(`data: ${JSON.stringify(refineries)}\n\n`);
+        res.write(`data: ${JSON.stringify(cachedRefineries)}\n\n`);
         
-        // Step 4: Get updated vessel positions from API (async update)
-        // This runs in background and updates the database
-        setTimeout(async () => {
-          try {
-            // Get sample vessel positions from the API
-            const apiVessels = await asiStreamService.fetchVessels();
-            
-            // Update vessel positions in the database
-            for (const apiVessel of apiVessels) {
-              // Find vessel by IMO number
-              const existingVessels = vessels.filter(v => v.imo === apiVessel.imo);
-              
-              if (existingVessels.length > 0) {
-                const vesselToUpdate = existingVessels[0];
-                
-                // Update position and ETA data in database
-                await vesselService.updateVessel(vesselToUpdate.id, {
-                  currentLat: apiVessel.currentLat,
-                  currentLng: apiVessel.currentLng,
-                  eta: apiVessel.eta,
-                  destinationPort: apiVessel.destinationPort
-                });
-              }
-            }
-          } catch (updateError) {
-            console.error("Error updating vessel positions from API:", updateError);
-          }
-        }, 1000); // Run 1 second after sending current data
-        
-        // Get stats
-        const stats = await storage.getStats();
-        if (stats) {
-          // Convert BigInt values to numbers
-          const safeStats = {
-            ...stats,
-            id: Number(stats.id),
-            activeVessels: Number(stats.activeVessels),
-            totalCargo: Number(stats.totalCargo),
-            activeRefineries: Number(stats.activeRefineries),
-            activeBrokers: Number(stats.activeBrokers),
-            lastUpdated: stats.lastUpdated
-          };
+        if (cachedStats) {
           res.write(`event: stats\n`);
-          res.write(`data: ${JSON.stringify(safeStats)}\n\n`);
+          res.write(`data: ${JSON.stringify(cachedStats)}\n\n`);
+        }
+        
+        // Step 4: Update positions in background (no need to wait)
+        // This runs asynchronously and updates the vessel positions in cache
+        if (currentTime - lastDbFetchTime > POSITION_UPDATE_INTERVAL) {
+          setTimeout(async () => {
+            try {
+              // Only get position updates from API, not full vessel data
+              const positionUpdates = await asiStreamService.fetchVessels();
+              
+              // Map of IMO -> position updates for fast lookup
+              const positionMap = new Map();
+              positionUpdates.forEach(vessel => {
+                if (vessel.imo && vessel.currentLat && vessel.currentLng) {
+                  positionMap.set(vessel.imo, {
+                    currentLat: vessel.currentLat,
+                    currentLng: vessel.currentLng,
+                    eta: vessel.eta,
+                    destinationPort: vessel.destinationPort
+                  });
+                }
+              });
+              
+              // Update cached vessels with new positions
+              cachedVessels = cachedVessels.map(vessel => {
+                const update = positionMap.get(vessel.imo);
+                if (update) {
+                  return { ...vessel, ...update };
+                }
+                return vessel;
+              });
+              
+              // Batch update vessels in database (in background)
+              for (const vessel of cachedVessels) {
+                const update = positionMap.get(vessel.imo);
+                if (update) {
+                  // Don't wait for this to complete
+                  vesselService.updateVessel(vessel.id, update)
+                    .catch(err => console.error(`Error updating vessel ${vessel.id}:`, err));
+                }
+              }
+            } catch (updateError) {
+              console.error("Error updating vessel positions from API:", updateError);
+            }
+          }, 100); // Run quickly after sending data to update positions
         }
         
         // Send a heartbeat to keep the connection alive
@@ -457,11 +501,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     };
     
-    // Send initial data
-    sendData();
+    // Send initial data with full DB refresh
+    sendData(true);
     
-    // Send data updates every 10 seconds
-    const intervalId = setInterval(sendData, 10000);
+    // Send position updates more frequently, with DB refresh every 30 seconds
+    const intervalId = setInterval(() => sendData(false), 5000);
     
     // Handle client disconnect
     req.on('close', () => {
