@@ -62,6 +62,256 @@ export const asiStreamService = {
       
       // Real vessel data based on maritime industry standards
       const mockApiData: AsiStreamVessel[] = [
+        // Additional vessels - LNG Carriers
+        {
+          id: "V00234",
+          name: "Arctic Aurora",
+          imo: "9649016",
+          mmsi: "236488000",
+          vessel_type: "LNG Carrier",
+          flag: "Norway",
+          built: 2013,
+          deadweight: 84800,
+          position: {
+            lat: 53.8647,
+            lng: -0.4431
+          },
+          departure: {
+            port: "Hammerfest, Norway",
+            date: "2023-03-12T14:30:00Z"
+          },
+          destination: {
+            port: "Tokyo, Japan",
+            eta: "2023-04-05T08:00:00Z"
+          },
+          cargo: {
+            type: "LNG",
+            capacity: 155000
+          },
+          region: "Europe"
+        },
+        {
+          id: "V00235",
+          name: "BW Paris",
+          imo: "9354572",
+          mmsi: "563085000",
+          vessel_type: "LNG Carrier",
+          flag: "Singapore",
+          built: 2009,
+          deadweight: 76624,
+          position: {
+            lat: 28.8389,
+            lng: -89.4287
+          },
+          departure: {
+            port: "Sabine Pass, USA",
+            date: "2023-03-15T09:45:00Z"
+          },
+          destination: {
+            port: "Zeebrugge, Belgium",
+            eta: "2023-03-28T16:00:00Z"
+          },
+          cargo: {
+            type: "LNG",
+            capacity: 160000
+          },
+          region: "North America"
+        },
+        {
+          id: "V00236",
+          name: "Gaslog Wales",
+          imo: "9732163",
+          mmsi: "256970000",
+          vessel_type: "LNG Carrier",
+          flag: "Malta",
+          built: 2020,
+          deadweight: 83500,
+          position: {
+            lat: 22.5431,
+            lng: 120.3542
+          },
+          departure: {
+            port: "Darwin, Australia",
+            date: "2023-03-18T16:30:00Z"
+          },
+          destination: {
+            port: "Shanghai, China",
+            eta: "2023-03-30T10:15:00Z"
+          },
+          cargo: {
+            type: "LNG",
+            capacity: 174000
+          },
+          region: "Asia"
+        },
+        
+        // Additional vessels - Chemical Tankers
+        {
+          id: "V00237",
+          name: "Stolt Commitment",
+          imo: "9368479",
+          mmsi: "249847000",
+          vessel_type: "Chemical Tanker",
+          flag: "Liberia",
+          built: 2008,
+          deadweight: 37500,
+          position: {
+            lat: 51.3542,
+            lng: 3.0201
+          },
+          departure: {
+            port: "Antwerp, Belgium",
+            date: "2023-03-19T08:15:00Z"
+          },
+          destination: {
+            port: "New York, USA",
+            eta: "2023-03-29T14:00:00Z"
+          },
+          cargo: {
+            type: "Chemical Products - Glycols",
+            capacity: 42000
+          },
+          region: "Europe"
+        },
+        {
+          id: "V00238",
+          name: "Chembulk Barcelona",
+          imo: "9290762",
+          mmsi: "538006213",
+          vessel_type: "Chemical Tanker",
+          flag: "Marshall Islands",
+          built: 2005,
+          deadweight: 33700,
+          position: {
+            lat: 35.0657,
+            lng: 136.2215
+          },
+          departure: {
+            port: "Busan, South Korea",
+            date: "2023-03-16T10:45:00Z"
+          },
+          destination: {
+            port: "Nagoya, Japan",
+            eta: "2023-03-20T13:30:00Z"
+          },
+          cargo: {
+            type: "Chemical Products - Phenol",
+            capacity: 38000
+          },
+          region: "Asia"
+        },
+        
+        // Additional vessels - Container Ships
+        {
+          id: "V00239",
+          name: "Ever Given",
+          imo: "9811000",
+          mmsi: "353136000",
+          vessel_type: "Container Ship",
+          flag: "Panama",
+          built: 2018,
+          deadweight: 199000,
+          position: {
+            lat: 30.0328,
+            lng: 32.5498
+          },
+          departure: {
+            port: "Singapore",
+            date: "2023-03-10T11:00:00Z"
+          },
+          destination: {
+            port: "Rotterdam, Netherlands",
+            eta: "2023-04-01T08:30:00Z"
+          },
+          cargo: {
+            type: "Containerized Goods",
+            capacity: 20000 // TEUs
+          },
+          region: "MEA"
+        },
+        {
+          id: "V00240",
+          name: "MSC Gülsün",
+          imo: "9839430",
+          mmsi: "372003000",
+          vessel_type: "Container Ship",
+          flag: "Panama",
+          built: 2019,
+          deadweight: 224300,
+          position: {
+            lat: 22.3293,
+            lng: 114.1607
+          },
+          departure: {
+            port: "Hong Kong",
+            date: "2023-03-17T15:30:00Z"
+          },
+          destination: {
+            port: "Long Beach, USA",
+            eta: "2023-04-05T09:00:00Z"
+          },
+          cargo: {
+            type: "Containerized Goods",
+            capacity: 23756 // TEUs
+          },
+          region: "Asia"
+        },
+        
+        // Additional vessels - Cargo Ships
+        {
+          id: "V00241",
+          name: "Capesize Bulk",
+          imo: "9459242",
+          mmsi: "636005193",
+          vessel_type: "Cargo Ship",
+          flag: "Marshall Islands",
+          built: 2010,
+          deadweight: 180000,
+          position: {
+            lat: -32.9266,
+            lng: 151.7817
+          },
+          departure: {
+            port: "Newcastle, Australia",
+            date: "2023-03-18T09:30:00Z"
+          },
+          destination: {
+            port: "Qingdao, China",
+            eta: "2023-04-03T14:00:00Z"
+          },
+          cargo: {
+            type: "Iron Ore",
+            capacity: 170000
+          },
+          region: "Asia"
+        },
+        {
+          id: "V00242",
+          name: "Atlantic Eagle",
+          imo: "9262895",
+          mmsi: "538002883",
+          vessel_type: "Cargo Ship",
+          flag: "Marshall Islands",
+          built: 2003,
+          deadweight: 75500,
+          position: {
+            lat: -22.8903,
+            lng: -43.1957
+          },
+          departure: {
+            port: "Santos, Brazil",
+            date: "2023-03-15T12:45:00Z"
+          },
+          destination: {
+            port: "Amsterdam, Netherlands",
+            eta: "2023-03-31T16:30:00Z"
+          },
+          cargo: {
+            type: "Soybeans",
+            capacity: 72000
+          },
+          region: "Africa"
+        },
         {
           id: "V00124",
           name: "Aquitania Voyager",
@@ -374,6 +624,307 @@ export const asiStreamService = {
       
       // Real refinery data from the provided detailed list
       const mockApiData: AsiStreamRefinery[] = [
+        // Added more refineries from the document
+        
+        // Russia
+        {
+          id: "R0101",
+          name: "Omsk Refinery",
+          country: "Russia",
+          region: "Russia",
+          location: {
+            lat: 54.9924,
+            lng: 73.3686
+          },
+          capacity: 486000,
+          status: "operational"
+        },
+        {
+          id: "R0102",
+          name: "Gazprom Neft Moscow",
+          country: "Russia",
+          region: "Russia",
+          location: {
+            lat: 55.7558,
+            lng: 37.6173
+          },
+          capacity: 360000,
+          status: "operational"
+        },
+        {
+          id: "R0103",
+          name: "Ryazan Refinery",
+          country: "Russia",
+          region: "Russia",
+          location: {
+            lat: 54.6092,
+            lng: 39.7145
+          },
+          capacity: 340000,
+          status: "maintenance"
+        },
+        {
+          id: "R0104",
+          name: "Volgograd Refinery",
+          country: "Russia",
+          region: "Russia",
+          location: {
+            lat: 48.7080,
+            lng: 44.5133
+          },
+          capacity: 290000,
+          status: "operational"
+        },
+        
+        // Additional European refineries
+        {
+          id: "R0105",
+          name: "Schwedt Refinery",
+          country: "Germany",
+          region: "Europe",
+          location: {
+            lat: 53.0615,
+            lng: 14.2815
+          },
+          capacity: 240000,
+          status: "operational"
+        },
+        {
+          id: "R0106",
+          name: "Hellenic Petroleum",
+          country: "Greece",
+          region: "Europe",
+          location: {
+            lat: 37.9838,
+            lng: 23.7275
+          },
+          capacity: 150000,
+          status: "operational"
+        },
+        {
+          id: "R0107",
+          name: "Milazzo Refinery",
+          country: "Italy",
+          region: "Europe",
+          location: {
+            lat: 38.2173,
+            lng: 15.2420
+          },
+          capacity: 240000,
+          status: "operational"
+        },
+        {
+          id: "R0108",
+          name: "ISAB Refinery",
+          country: "Italy",
+          region: "Europe",
+          location: {
+            lat: 37.0333,
+            lng: 15.2833
+          },
+          capacity: 320000,
+          status: "maintenance"
+        },
+        
+        // Additional Asian refineries
+        {
+          id: "R0109",
+          name: "SK Energy Ulsan",
+          country: "South Korea",
+          region: "Asia",
+          location: {
+            lat: 35.5384,
+            lng: 129.3114
+          },
+          capacity: 840000,
+          status: "operational"
+        },
+        {
+          id: "R0110",
+          name: "Daqing Refining",
+          country: "China",
+          region: "Asia",
+          location: {
+            lat: 46.5830,
+            lng: 125.1004
+          },
+          capacity: 410000,
+          status: "operational"
+        },
+        {
+          id: "R0111",
+          name: "Zhenhai Refinery",
+          country: "China",
+          region: "Asia",
+          location: {
+            lat: 29.9490,
+            lng: 121.7178
+          },
+          capacity: 460000,
+          status: "operational"
+        },
+        {
+          id: "R0112",
+          name: "Negishi Refinery",
+          country: "Japan",
+          region: "Asia",
+          location: {
+            lat: 35.4532,
+            lng: 139.6372
+          },
+          capacity: 270000,
+          status: "maintenance"
+        },
+        
+        // Additional American refineries
+        {
+          id: "R0113",
+          name: "Whiting Refinery",
+          country: "United States",
+          region: "North America",
+          location: {
+            lat: 41.6590,
+            lng: -87.4794
+          },
+          capacity: 430000,
+          status: "operational"
+        },
+        {
+          id: "R0114",
+          name: "Baton Rouge Refinery",
+          country: "United States",
+          region: "North America",
+          location: {
+            lat: 30.5102,
+            lng: -91.1839
+          },
+          capacity: 502000,
+          status: "operational"
+        },
+        {
+          id: "R0115",
+          name: "Deer Park Refinery",
+          country: "United States",
+          region: "North America",
+          location: {
+            lat: 29.7051,
+            lng: -95.1271
+          },
+          capacity: 340000,
+          status: "operational"
+        },
+        {
+          id: "R0116",
+          name: "Pascagoula Refinery",
+          country: "United States",
+          region: "North America",
+          location: {
+            lat: 30.3658,
+            lng: -88.5561
+          },
+          capacity: 330000,
+          status: "maintenance"
+        },
+
+        // African refineries
+        {
+          id: "R0117",
+          name: "Zawia Refinery",
+          country: "Libya",
+          region: "Africa",
+          location: {
+            lat: 32.7647,
+            lng: 12.7330
+          },
+          capacity: 120000,
+          status: "offline"
+        },
+        {
+          id: "R0118",
+          name: "Algiers Refinery",
+          country: "Algeria",
+          region: "Africa",
+          location: {
+            lat: 36.7539,
+            lng: 3.0589
+          },
+          capacity: 60000,
+          status: "operational"
+        },
+        {
+          id: "R0119",
+          name: "Port Harcourt Refinery",
+          country: "Nigeria",
+          region: "Africa",
+          location: {
+            lat: 4.7776,
+            lng: 7.0984
+          },
+          capacity: 210000,
+          status: "maintenance"
+        },
+        {
+          id: "R0120",
+          name: "Cape Town Refinery",
+          country: "South Africa",
+          region: "Africa",
+          location: {
+            lat: -33.9258,
+            lng: 18.4232
+          },
+          capacity: 100000,
+          status: "operational"
+        },
+        
+        // MEA additional refineries
+        {
+          id: "R0121",
+          name: "Yanbu Aramco Sinopec",
+          country: "Saudi Arabia",
+          region: "MEA",
+          location: {
+            lat: 24.0283,
+            lng: 38.1088
+          },
+          capacity: 400000,
+          status: "operational"
+        },
+        {
+          id: "R0122",
+          name: "Rabigh Refinery",
+          country: "Saudi Arabia",
+          region: "MEA",
+          location: {
+            lat: 22.7372,
+            lng: 39.0326
+          },
+          capacity: 400000,
+          status: "operational"
+        },
+        {
+          id: "R0123",
+          name: "Abadan Refinery",
+          country: "Iran",
+          region: "MEA",
+          location: {
+            lat: 30.3600,
+            lng: 48.2900
+          },
+          capacity: 400000,
+          status: "operational"
+        },
+        {
+          id: "R0124",
+          name: "Isfahan Refinery",
+          country: "Iran",
+          region: "MEA",
+          location: {
+            lat: 32.6546,
+            lng: 51.6680
+          },
+          capacity: 375000,
+          status: "maintenance"
+        },
         // Middle East
         {
           id: "R0001",
@@ -385,7 +936,7 @@ export const asiStreamService = {
             lng: 52.6512
           },
           capacity: 817000,
-          status: "active"
+          status: "operational"
         },
         {
           id: "R0002",
@@ -397,7 +948,7 @@ export const asiStreamService = {
             lng: 48.3942
           },
           capacity: 615000,
-          status: "active"
+          status: "operational"
         },
         {
           id: "R0003",
@@ -409,7 +960,7 @@ export const asiStreamService = {
             lng: 50.1520
           },
           capacity: 550000,
-          status: "active"
+          status: "operational"
         },
         {
           id: "R0004",
@@ -421,7 +972,7 @@ export const asiStreamService = {
             lng: 48.1500
           },
           capacity: 466000,
-          status: "active"
+          status: "operational"
         },
         {
           id: "R0005",
@@ -433,7 +984,7 @@ export const asiStreamService = {
             lng: 38.2128
           },
           capacity: 400000,
-          status: "active"
+          status: "operational"
         },
         
         // North Africa
@@ -447,7 +998,7 @@ export const asiStreamService = {
             lng: 6.9428
           },
           capacity: 300000,
-          status: "active"
+          status: "operational"
         },
         {
           id: "R0007",
@@ -471,7 +1022,7 @@ export const asiStreamService = {
             lng: -7.4159
           },
           capacity: 200000,
-          status: "active"
+          status: "operational"
         },
         
         // Eastern Europe
@@ -485,7 +1036,7 @@ export const asiStreamService = {
             lng: 18.6466
           },
           capacity: 210000,
-          status: "active"
+          status: "operational"
         },
         {
           id: "R0010",
@@ -497,7 +1048,7 @@ export const asiStreamService = {
             lng: 27.4626
           },
           capacity: 196000,
-          status: "active"
+          status: "operational"
         },
         
         // Western Europe
@@ -511,7 +1062,7 @@ export const asiStreamService = {
             lng: 4.3327
           },
           capacity: 416000,
-          status: "active"
+          status: "operational"
         },
         {
           id: "R0012",
@@ -523,7 +1074,7 @@ export const asiStreamService = {
             lng: 4.1390
           },
           capacity: 400000,
-          status: "active"
+          status: "operational"
         },
         {
           id: "R0013",
@@ -535,7 +1086,7 @@ export const asiStreamService = {
             lng: 4.3242
           },
           capacity: 360000,
-          status: "active"
+          status: "operational"
         },
         
         // North America
@@ -549,7 +1100,7 @@ export const asiStreamService = {
             lng: -93.9636
           },
           capacity: 600000,
-          status: "active"
+          status: "operational"
         },
         {
           id: "R0015",
@@ -561,7 +1112,7 @@ export const asiStreamService = {
             lng: -95.0159
           },
           capacity: 560000,
-          status: "active"
+          status: "operational"
         },
         {
           id: "R0016",
@@ -573,7 +1124,7 @@ export const asiStreamService = {
             lng: -94.9068
           },
           capacity: 585000,
-          status: "active"
+          status: "operational"
         },
         
         // Asia
@@ -587,7 +1138,7 @@ export const asiStreamService = {
             lng: 69.0819
           },
           capacity: 1240000,
-          status: "active"
+          status: "operational"
         },
         {
           id: "R0018",
@@ -599,7 +1150,7 @@ export const asiStreamService = {
             lng: 129.3114
           },
           capacity: 840000,
-          status: "active"
+          status: "operational"
         }
       ];
       
