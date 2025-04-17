@@ -104,7 +104,7 @@ function VesselTracker({ vessel }: { vessel: Vessel | null | undefined }) {
   }, [vessel, map]);
   
   return vessel ? (
-    <div className="absolute top-20 right-4 z-[1000] bg-white rounded-lg shadow-md p-3 max-w-[220px]">
+    <div className="absolute top-20 right-4 z-30 bg-white rounded-lg shadow-md p-3 max-w-[220px]">
       <div className="flex items-center justify-between mb-2">
         <h4 className="text-xs font-bold flex items-center">
           <Navigation className="h-3 w-3 mr-1 text-blue-500"/>
@@ -400,7 +400,7 @@ export default function WorldMap({
       </MapContainer>
       
       {/* Map Controls */}
-      <div className="absolute top-4 right-4 bg-white rounded-md shadow-sm">
+      <div className="absolute top-4 right-4 bg-white rounded-md shadow-sm z-30">
         <Button variant="ghost" size="icon" onClick={handleZoomIn} className="p-2 text-gray-600 hover:bg-gray-100 hover:text-primary">
           <ZoomIn className="h-5 w-5" />
         </Button>
@@ -413,7 +413,7 @@ export default function WorldMap({
       </div>
       
       {/* Map Legend */}
-      <div className="absolute bottom-4 left-4 bg-white bg-opacity-90 rounded-md shadow-sm p-3">
+      <div className="absolute bottom-4 left-4 bg-white bg-opacity-90 rounded-md shadow-sm p-3 z-30">
         <div className="text-xs font-medium mb-2">Vessel Types</div>
         <div className="grid grid-cols-2 gap-x-4 gap-y-1">
           <div className="flex items-center space-x-2 text-xs">

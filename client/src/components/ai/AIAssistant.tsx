@@ -54,7 +54,7 @@ export default function AIAssistant() {
   return (
     <>
       {/* Floating AI Button */}
-      <div className="fixed bottom-6 right-6 z-10">
+      <div className="fixed bottom-6 right-6 z-50">
         <Button
           onClick={toggleAssistant}
           className={`h-14 w-14 rounded-full shadow-lg flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${isOpen ? 'bg-secondary hover:bg-secondary-dark' : 'bg-primary hover:bg-primary-dark'}`}
@@ -65,7 +65,7 @@ export default function AIAssistant() {
       
       {/* AI Assistant Panel */}
       {isOpen && (
-        <div className="fixed bottom-24 right-6 w-full max-w-md z-10">
+        <div className="fixed bottom-24 right-6 w-full max-w-md z-50">
           <Card className="shadow-xl">
             <CardHeader className="bg-primary text-white py-4">
               <CardTitle className="text-lg flex items-center">
