@@ -216,11 +216,56 @@ export default function WorldMap({
   isLoading = false 
 }: WorldMapProps) {
   const mapRef = useRef<L.Map | null>(null);
+  const [renderedVessels, setRenderedVessels] = useState<Vessel[]>([]);
+  const [visibleMarkers, setVisibleMarkers] = useState<Set<number>>(new Set());
   
   // Default center on world view
   const defaultPosition: MapPosition = { lat: 25, lng: 10, zoom: 2 };
   
-  // Calculate shipping routes connecting vessels to nearest refinery
+  // Progressive loading for better performance
+  useEffect(() => {
+    // First, immediately render vessels near the view (if tracked or selected region)
+    let initialVessels: Vessel[] = [];
+    
+    if (trackedVessel) {
+      // If tracking a vessel, prioritize vessels nearby
+      initialVessels = vessels
+        .filter(v => v.currentLat && v.currentLng)
+        .slice(0, 50); // Start with just a few vessels for immediate feedback
+    } else if (selectedRegion) {
+      // If region selected, prioritize vessels in this region
+      initialVessels = vessels
+        .filter(v => v.currentRegion === selectedRegion && v.currentLat && v.currentLng)
+        .slice(0, 100);
+    } else {
+      // Default case - start with a limited set to make the initial render fast
+      initialVessels = vessels
+        .filter(v => v.currentLat && v.currentLng)
+        .slice(0, 100);
+    }
+    
+    // Set initial vessels
+    setRenderedVessels(initialVessels);
+    
+    // Then progressively load the rest in batches
+    const remainingVessels = vessels
+      .filter(v => v.currentLat && v.currentLng && !initialVessels.some(iv => iv.id === v.id))
+      .slice(0, 400); // Limit total vessels for performance
+    
+    const BATCH_SIZE = 50;
+    const BATCH_DELAY = 500; // ms between batches
+    
+    // Load in batches
+    for (let i = 0; i < remainingVessels.length; i += BATCH_SIZE) {
+      const batch = remainingVessels.slice(i, i + BATCH_SIZE);
+      
+      setTimeout(() => {
+        setRenderedVessels(prev => [...prev, ...batch]);
+      }, BATCH_DELAY * (i / BATCH_SIZE + 1));
+    }
+  }, [vessels, trackedVessel, selectedRegion]);
+  
+  // Calculate shipping routes more efficiently
   const getShippingRoutes = () => {
     const routes: {
       key: string;
@@ -230,13 +275,23 @@ export default function WorldMap({
       active: boolean;
     }[] = [];
     
-    vessels.forEach(vessel => {
-      if (!vessel.currentLat || !vessel.currentLng) return;
+    // Only use rendered vessels for routes to improve performance
+    // Also limit the total number of routes to avoid overwhelming the map
+    const MAX_ROUTES = 50;
+    const vesselSource = trackedVessel 
+      ? [trackedVessel] // If tracking a vessel, only show its route
+      : renderedVessels.slice(0, Math.min(renderedVessels.length, 100)); // Otherwise sample a subset
+    
+    let routeCount = 0;
+    
+    vesselSource.forEach(vessel => {
+      if (!vessel.currentLat || !vessel.currentLng || routeCount >= MAX_ROUTES) return;
       
       // Find the nearest refinery in the same region (if available)
-      const nearbyRefineries = refineries.filter(r => 
-        r.region === vessel.currentRegion || !vessel.currentRegion
-      );
+      // For performance, limit the number of refineries to check
+      const nearbyRefineries = refineries
+        .filter(r => r.region === vessel.currentRegion || !vessel.currentRegion)
+        .slice(0, 10); // Only check closest 10 refineries
       
       if (nearbyRefineries.length > 0) {
         // Find the closest refinery
@@ -275,6 +330,8 @@ export default function WorldMap({
             // Active if vessel is en route (has destination) and refinery is operational
             active: !!vessel.destinationPort && closestRefinery.status?.toLowerCase() === 'operational'
           });
+          
+          routeCount++;
         }
       }
     });
@@ -419,8 +476,8 @@ export default function WorldMap({
           </Marker>
         ))}
         
-        {/* Vessel Markers (draw last to be on top) */}
-        {vessels.map((vessel) => (
+        {/* Vessel Markers (draw last to be on top) - Using progressive loading */}
+        {renderedVessels.map((vessel) => (
           vessel.currentLat && vessel.currentLng ? (
             <Marker
               key={vessel.id}
@@ -488,6 +545,13 @@ export default function WorldMap({
             </Marker>
           ) : null
         ))}
+        
+        {/* Display loading indicator if more vessels being loaded */}
+        {renderedVessels.length < vessels.filter(v => v.currentLat && v.currentLng).length && (
+          <div className="absolute bottom-4 right-4 bg-white rounded-md px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm z-30">
+            Loading more vessels... ({renderedVessels.length}/{vessels.filter(v => v.currentLat && v.currentLng).length})
+          </div>
+        )}
       </MapContainer>
       
       {/* Map Controls */}

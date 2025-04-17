@@ -68,14 +68,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   apiRouter.get("/vessels", async (req, res) => {
     try {
       const region = req.query.region as string | undefined;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+      const vesselType = req.query.type as string | undefined;
       
+      // Apply filters based on query parameters
+      let vessels;
       if (region) {
-        const vessels = await vesselService.getVesselsByRegion(region);
-        res.json(vessels);
+        vessels = await vesselService.getVesselsByRegion(region);
       } else {
-        const vessels = await vesselService.getAllVessels();
-        res.json(vessels);
+        vessels = await vesselService.getAllVessels();
       }
+      
+      // Apply vessel type filter if specified
+      if (vesselType && vesselType !== 'all') {
+        vessels = vessels.filter(v => 
+          v.vesselType?.toLowerCase().includes(vesselType.toLowerCase())
+        );
+      }
+      
+      // Apply limit to reduce payload size if specified
+      if (limit && limit > 0 && limit < vessels.length) {
+        vessels = vessels.slice(0, limit);
+      }
+      
+      res.json(vessels);
     } catch (error) {
       console.error("Error fetching vessels:", error);
       res.status(500).json({ message: "Failed to fetch vessels" });
@@ -353,13 +369,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const sendData = async () => {
       try {
         // --- DATABASE FIRST APPROACH ---
-        // Step 1: Get all vessels from database
-        const vessels = await vesselService.getAllVessels();
+        // Step 1: Get optimized data from database (limit to most relevant vessels)
+        const MAX_VESSELS_PER_RESPONSE = 500; // Limit number of vessels to 500 for faster performance
         
-        // Step 2: Get all refineries from database
+        // Get vessels (limited for better performance)
+        let vessels = await vesselService.getAllVessels();
+        
+        // Prioritize vessels:
+        // 1. Oil vessels first (most important to show)
+        // 2. Vessels with current location data
+        // 3. Limit to a reasonable number
+        vessels = vessels
+          .filter(v => v.currentLat && v.currentLng) // Only vessels with position data
+          .sort((a, b) => {
+            // Prioritize oil tankers and vessels with destinations
+            const aScore = (a.vesselType?.toLowerCase().includes('oil') ? 2 : 0) + 
+                           (a.destinationPort ? 1 : 0);
+            const bScore = (b.vesselType?.toLowerCase().includes('oil') ? 2 : 0) + 
+                           (b.destinationPort ? 1 : 0);
+            return bScore - aScore;
+          })
+          .slice(0, MAX_VESSELS_PER_RESPONSE);
+        
+        // Step 2: Get all refineries (there are fewer refineries, so we can get all)
         const refineries = await refineryService.getAllRefineries();
         
-        // Step 3: Send current data from database to client
+        // Step 3: Send optimized data to client
         res.write(`event: vessels\n`);
         res.write(`data: ${JSON.stringify(vessels)}\n\n`);
         
