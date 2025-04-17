@@ -83,43 +83,43 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
 
   return (
     <aside className={cn(
-      "bg-white border-r border-gray-200 flex-shrink-0 shadow-sm flex flex-col h-full transition-all duration-300 overflow-y-auto",
+      "backdrop-blur-sm bg-white/80 border-r border-gray-100 flex-shrink-0 flex flex-col h-full transition-all duration-300 overflow-y-auto",
       mobile ? "fixed inset-y-0 left-0 z-50 w-64 h-screen" : "hidden md:flex",
       collapsed ? "w-16" : "w-64"
     )}>
       {/* Logo Area */}
-      <div className="p-4 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
+      <div className="p-4 border-b border-gray-100 flex items-center justify-between sticky top-0 backdrop-blur-sm bg-white/90 z-10">
         {!collapsed && (
-          <h1 className="text-secondary font-bold text-2xl tracking-tighter leading-none">
+          <h1 className="font-bold text-2xl tracking-tighter leading-none bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-primary">
             SHIPBOAT<br />TRACKING
           </h1>
         )}
         {collapsed && (
-          <span className="text-secondary font-bold text-xl mx-auto">🚢</span>
+          <span className="font-bold text-xl mx-auto bg-gradient-to-r from-blue-600 to-primary rounded-full p-2 text-white">🚢</span>
         )}
         
         {!mobile && (
           <Button
             variant="ghost"
             size="icon"
-            className="h-6 w-6 rounded-full"
+            className="h-6 w-6 rounded-full hover:bg-primary/10"
             onClick={toggleSidebar}
           >
-            {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+            {collapsed ? <ChevronRight className="h-4 w-4 text-primary" /> : <ChevronLeft className="h-4 w-4 text-primary" />}
           </Button>
         )}
         
         {mobile && (
-          <Button variant="ghost" size="icon" className="md:hidden" onClick={onClose}>
-            <ChevronLeft className="h-5 w-5" />
+          <Button variant="ghost" size="icon" className="md:hidden hover:bg-primary/10" onClick={onClose}>
+            <ChevronLeft className="h-5 w-5 text-primary" />
           </Button>
         )}
       </div>
       
       {/* Main Navigation */}
       <div className="flex-grow overflow-y-auto">
-        <div className="mt-6 mb-2 px-4">
-          {!collapsed && <h2 className="font-heading uppercase text-gray-600 font-bold pb-2 text-sm">DASHBOARD</h2>}
+        <div className="mt-6 mb-2 px-6">
+          {!collapsed && <h2 className="font-heading uppercase text-primary/60 font-bold pb-2 text-xs tracking-wider">NAVIGATION</h2>}
         </div>
         
         <nav>
@@ -132,14 +132,18 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
                 >
                   <div
                     className={cn(
-                      "flex items-center py-2 px-4",
+                      "flex items-center py-3 px-4 rounded-lg my-1 mx-2 transition-all duration-200",
                       isPathActive(item.path) 
-                        ? "bg-red-50 text-secondary border-l-4 border-secondary" 
-                        : "text-gray-700 hover:bg-gray-100 border-l-4 border-transparent",
+                        ? "bg-primary/10 text-primary font-medium" 
+                        : "text-gray-700 hover:bg-gray-100/80",
                       collapsed && "justify-center px-2"
                     )}
                   >
-                    <span className={collapsed ? "mr-0" : "mr-3"}>{item.icon}</span>
+                    <span className={cn(
+                      "flex items-center justify-center",
+                      isPathActive(item.path) ? "text-primary" : "text-gray-500",
+                      collapsed ? "mr-0" : "mr-3"
+                    )}>{item.icon}</span>
                     {!collapsed && <span>{item.title}</span>}
                   </div>
                 </Link>
@@ -149,7 +153,10 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
         </nav>
         
         <div className="mt-8">
-          <div className="border-t border-gray-100 my-4"></div>
+          <div className="border-t border-primary/10 my-5 mx-6"></div>
+          <div className="px-6 mb-2">
+            {!collapsed && <h2 className="font-heading uppercase text-primary/60 font-bold pb-2 text-xs tracking-wider">PROFILE</h2>}
+          </div>
           
           {userItems.map((item, index) => (
             <Link
@@ -159,14 +166,18 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
             >
               <div
                 className={cn(
-                  "flex items-center py-2 px-4", 
+                  "flex items-center py-3 px-4 rounded-lg my-1 mx-2 transition-all duration-200", 
                   isPathActive(item.path) 
-                    ? "bg-red-50 text-secondary border-l-4 border-secondary" 
-                    : "text-gray-700 hover:bg-gray-100 border-l-4 border-transparent",
+                    ? "bg-primary/10 text-primary font-medium" 
+                    : "text-gray-700 hover:bg-gray-100/80",
                   collapsed && "justify-center px-2"
                 )}
               >
-                <span className={collapsed ? "mr-0" : "mr-3"}>{item.icon}</span>
+                <span className={cn(
+                  "flex items-center justify-center",
+                  isPathActive(item.path) ? "text-primary" : "text-gray-500",
+                  collapsed ? "mr-0" : "mr-3"
+                )}>{item.icon}</span>
                 {!collapsed && <span>{item.title}</span>}
               </div>
             </Link>

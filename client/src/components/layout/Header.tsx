@@ -42,33 +42,33 @@ export default function Header() {
       )}
 
       {/* App Header */}
-      <header className="bg-white shadow-sm py-3 px-6 flex justify-between items-center">
+      <header className="backdrop-blur-sm bg-white/80 border-b border-gray-100 py-3 px-6 flex justify-between items-center">
         <div className="flex items-center">
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden mr-2"
+            className="md:hidden mr-2 hover:bg-primary/10"
             onClick={toggleMobileSidebar}
           >
             <Menu className="h-5 w-5" />
           </Button>
-          <h2 className="font-heading text-xl text-gray-800">{getPageTitle()}</h2>
+          <h2 className="font-heading text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-500">{getPageTitle()}</h2>
         </div>
         
         <div className="flex items-center space-x-4">
           <Button 
-            variant="secondary" 
+            variant="outline" 
             size="sm" 
-            className="hidden sm:flex bg-gray-100 hover:bg-gray-200 text-gray-700"
+            className="hidden sm:flex border border-primary/20 hover:bg-primary/10 text-primary"
           >
-            <Download className="h-4 w-4 mr-1" />
-            Export
+            <Download className="h-4 w-4 mr-2" />
+            Export Data
           </Button>
           
           <div className="flex items-center">
-            <span className="mr-2 text-sm text-gray-700 hidden sm:inline">Log Out</span>
-            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full bg-gray-200">
-              <LogOut className="h-4 w-4 text-gray-600" />
+            <span className="mr-2 text-sm text-primary/80 font-medium hidden sm:inline">Log Out</span>
+            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full bg-primary/10 hover:bg-primary/20 transition-colors">
+              <LogOut className="h-4 w-4 text-primary" />
             </Button>
           </div>
         </div>
