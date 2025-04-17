@@ -48,6 +48,11 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useToast } from '@/hooks/use-toast';
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/components/ui/avatar";
 import { 
   Users, 
   Search, 
@@ -242,8 +247,8 @@ export default function Brokers() {
               <span className="hidden sm:inline-block mr-1">Elite</span> Membership
             </TabsTrigger>
             <TabsTrigger value="elite-dashboard" className="px-3 py-2">
-              <BarChart3 className="h-4 w-4 mr-2 md:mr-2" />
-              <span className="hidden sm:inline-block mr-1">Broker</span> Dashboard
+              <Shield className="h-4 w-4 mr-2 md:mr-2" />
+              <span className="hidden sm:inline-block mr-1">Elite</span> Dashboard
             </TabsTrigger>
           </TabsList>
         </div>
