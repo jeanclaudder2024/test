@@ -70,7 +70,7 @@
   }
   
   .vessel-marker {
-    @apply h-3 w-3 rounded-full relative;
+    @apply h-3 w-3 rounded-full relative z-20;
   }
   
   .vessel-marker-ping {
@@ -85,8 +85,42 @@
     @apply bg-accent;
   }
   
+  .vessel-marker-cargo {
+    @apply bg-yellow-500;
+  }
+  
+  .vessel-marker-container {
+    @apply bg-purple-500;
+  }
+  
+  .vessel-marker-chemical {
+    @apply bg-green-500;
+  }
+  
   .refinery-marker {
-    @apply h-4 w-4 bg-primary rounded-sm relative flex items-center justify-center;
+    @apply h-4 w-4 bg-primary rounded-sm relative flex items-center justify-center z-10;
+  }
+  
+  .refinery-marker-operational {
+    @apply bg-green-600;
+  }
+  
+  .refinery-marker-maintenance {
+    @apply bg-orange-500;
+  }
+  
+  .refinery-marker-offline {
+    @apply bg-red-500;
+  }
+  
+  .route-path {
+    @apply stroke-[3] stroke-secondary/50 fill-none z-0;
+    stroke-dasharray: 5, 5;
+  }
+
+  .route-path-active {
+    @apply stroke-[3] stroke-accent z-0 animate-pulse;
+    stroke-dasharray: 0;
   }
   
   .nav-link {
@@ -95,5 +129,17 @@
   
   .nav-link-active {
     @apply flex items-center px-4 py-2 bg-red-50 text-secondary border-l-4 border-secondary;
+  }
+  
+  .leaflet-popup-content-wrapper {
+    @apply rounded-md shadow-lg border border-gray-200;
+  }
+  
+  .leaflet-popup-content {
+    @apply p-2;
+  }
+  
+  .leaflet-popup-tip {
+    @apply bg-white;
   }
 }
