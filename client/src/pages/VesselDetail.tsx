@@ -9,14 +9,21 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatDate } from '@/lib/utils';
 import { Link, useRoute } from 'wouter';
-import { ArrowLeft, Ship, Calendar, Map, Info, Edit, Plus, Navigation, Anchor } from 'lucide-react';
+import {
+  ArrowLeft, Ship, Calendar, Map, Info, Edit, Plus, Navigation, Anchor,
+  Flag, Droplet, Package, AlertCircle, Truck, Gauge, BarChart, History,
+  Users, Clock, Compass, ArrowRight, FileText, Clipboard, Download
+} from 'lucide-react';
 
 // Helper components for vessel details
 const InfoItem = ({ label, value }: { label: string; value: React.ReactNode }) => (
