@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { Broker } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -68,7 +68,11 @@ import {
   Building,
   Calendar,
   CheckCircle2,
-  Award
+  Award,
+  Shield,
+  Globe,
+  AlertCircle,
+  HelpCircle
 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 
@@ -91,6 +95,50 @@ export default function Brokers() {
   // Query to get brokers
   const { data: brokers = [], isLoading } = useQuery<Broker[]>({
     queryKey: ['/api/brokers'],
+  });
+  
+  // Mutations for broker actions
+  const upgradeMutation = useMutation({
+    mutationFn: async (data: {
+      id: number,
+      subscription: 'monthly' | 'annual',
+      shippingAddress: string,
+      documents: {
+        passportUploaded: boolean,
+        photoUploaded: boolean
+      }
+    }) => {
+      const response = await fetch(`/api/brokers/${data.id}/elite-membership`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to upgrade membership');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Membership Upgraded Successfully",
+        description: `Your GloboOil Elite Broker Membership is active. Your ${selectedSubscription} subscription has been activated.`,
+        variant: "default"
+      });
+      
+      setShowUpgradeDialog(false);
+      setActiveTab("elite-dashboard");
+    },
+    onError: (error) => {
+      toast({
+        title: "Upgrade Failed",
+        description: `Error: ${error.message}`,
+        variant: "destructive"
+      });
+    }
   });
   
   // Filter brokers based on search term
