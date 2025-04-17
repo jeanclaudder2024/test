@@ -168,27 +168,31 @@ export default function Dashboard() {
     <div className="w-full">
       {/* Header Stats Summary */}
       <div className="p-4 md:p-6 pb-0">
-        <div className="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
+        <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
           <div>
-            <h1 className="text-2xl font-bold">Maritime Operations Dashboard</h1>
-            <p className="text-gray-500 text-sm">
+            <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-500">Maritime Operations Dashboard</h1>
+            <p className="text-gray-500 text-sm mt-1">
               {lastUpdated ? `Last updated: ${formatDate(lastUpdated, 'PPpp')}` : 'Real-time tracking data'}
             </p>
           </div>
           
-          <div className="flex space-x-2">
+          <div className="flex flex-wrap gap-2">
             <Button 
-              variant="outline" 
-              className={`flex items-center ${showFiltersPanel ? 'bg-blue-50 border-primary text-primary' : ''}`}
+              variant={showFiltersPanel ? "default" : "outline"}
+              className={`flex items-center transition-all duration-200 ${
+                showFiltersPanel 
+                  ? 'bg-primary text-white shadow-md' 
+                  : 'border-primary/20 text-primary hover:bg-primary/10'
+              }`}
               onClick={toggleFiltersPanel}
             >
               <Filter className="mr-2 h-4 w-4" />
               Filters {vesselTypeFilters.length + refineryStatusFilters.length > 0 && 
-                `(${vesselTypeFilters.length + refineryStatusFilters.length})`}
+                (<Badge variant="secondary" className="ml-1 bg-white/20">{vesselTypeFilters.length + refineryStatusFilters.length}</Badge>)}
             </Button>
             
             <Select value={selectedRegion || 'all'} onValueChange={(value) => setSelectedRegion(value !== 'all' ? value as Region : null)}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-[180px] border-primary/20">
                 <SelectValue placeholder="All Regions" />
               </SelectTrigger>
               <SelectContent>
@@ -202,48 +206,64 @@ export default function Dashboard() {
         </div>
         
         {/* Summary Statistics Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-            <CardContent className="p-4 flex items-center justify-between">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <Card className="backdrop-blur-sm bg-white/70 border border-blue-200 shadow-sm overflow-hidden">
+            <div className="absolute w-full h-1 top-0 left-0 bg-gradient-to-r from-blue-400 to-blue-600"></div>
+            <CardContent className="p-5 flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-blue-900">Vessels Tracked</p>
-                <h3 className="text-2xl font-bold text-blue-700">{filteredVessels.length}</h3>
-              </div>
-              <Ship className="h-8 w-8 text-blue-500" />
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-            <CardContent className="p-4 flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-green-900">Active Refineries</p>
-                <h3 className="text-2xl font-bold text-green-700">{filteredRefineries.length}</h3>
-              </div>
-              <Factory className="h-8 w-8 text-green-500" />
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200">
-            <CardContent className="p-4 flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-amber-900">Cargo Volume (k bbl)</p>
-                <h3 className="text-2xl font-bold text-amber-700">
-                  {Math.round(filteredVessels.reduce((sum, v) => sum + (v.cargoCapacity || 0), 0) / 1000)}
+                <p className="text-sm font-medium text-gray-500 mb-1">Vessels Tracked</p>
+                <h3 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-400">
+                  {filteredVessels.length.toLocaleString()}
                 </h3>
               </div>
-              <Droplet className="h-8 w-8 text-amber-500" />
+              <div className="h-12 w-12 rounded-full flex items-center justify-center bg-blue-50 border border-blue-100">
+                <Ship className="h-6 w-6 text-blue-500" />
+              </div>
             </CardContent>
           </Card>
           
-          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
-            <CardContent className="p-4 flex items-center justify-between">
+          <Card className="backdrop-blur-sm bg-white/70 border border-green-200 shadow-sm overflow-hidden">
+            <div className="absolute w-full h-1 top-0 left-0 bg-gradient-to-r from-green-400 to-green-600"></div>
+            <CardContent className="p-5 flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-purple-900">Refining Capacity (k bbl)</p>
-                <h3 className="text-2xl font-bold text-purple-700">
-                  {Math.round(filteredRefineries.reduce((sum, r) => sum + (r.capacity || 0), 0) / 1000)}
+                <p className="text-sm font-medium text-gray-500 mb-1">Active Refineries</p>
+                <h3 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-green-400">
+                  {filteredRefineries.length.toLocaleString()}
                 </h3>
               </div>
-              <Workflow className="h-8 w-8 text-purple-500" />
+              <div className="h-12 w-12 rounded-full flex items-center justify-center bg-green-50 border border-green-100">
+                <Factory className="h-6 w-6 text-green-500" />
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="backdrop-blur-sm bg-white/70 border border-amber-200 shadow-sm overflow-hidden">
+            <div className="absolute w-full h-1 top-0 left-0 bg-gradient-to-r from-amber-400 to-amber-600"></div>
+            <CardContent className="p-5 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500 mb-1">Cargo Volume</p>
+                <h3 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-600 to-amber-400">
+                  {Math.round(filteredVessels.reduce((sum, v) => sum + (v.cargoCapacity || 0), 0) / 1000).toLocaleString()} k
+                </h3>
+              </div>
+              <div className="h-12 w-12 rounded-full flex items-center justify-center bg-amber-50 border border-amber-100">
+                <Droplet className="h-6 w-6 text-amber-500" />
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="backdrop-blur-sm bg-white/70 border border-purple-200 shadow-sm overflow-hidden">
+            <div className="absolute w-full h-1 top-0 left-0 bg-gradient-to-r from-purple-400 to-purple-600"></div>
+            <CardContent className="p-5 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500 mb-1">Refining Capacity</p>
+                <h3 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-purple-400">
+                  {Math.round(filteredRefineries.reduce((sum, r) => sum + (r.capacity || 0), 0) / 1000).toLocaleString()} k
+                </h3>
+              </div>
+              <div className="h-12 w-12 rounded-full flex items-center justify-center bg-purple-50 border border-purple-100">
+                <Workflow className="h-6 w-6 text-purple-500" />
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -251,17 +271,27 @@ export default function Dashboard() {
       
       {/* Filters Panel - Collapsible */}
       {showFiltersPanel && (
-        <div className="mx-4 md:mx-6 mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200 shadow-sm">
-          <div className="flex justify-between items-center mb-3">
-            <h3 className="font-medium flex items-center">
+        <div className="mx-4 md:mx-6 mb-6 p-5 backdrop-blur-sm bg-white/70 rounded-xl border border-primary/10 shadow-sm">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-medium flex items-center text-primary">
               <Filter className="h-4 w-4 mr-2" /> Advanced Filters
             </h3>
             <div className="flex items-center space-x-2">
-              <Button variant="ghost" size="sm" onClick={clearAllFilters} className="text-xs h-7">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={clearAllFilters} 
+                className="text-xs h-8 border-primary/20 text-primary hover:bg-primary/10"
+              >
                 Clear All
               </Button>
-              <Button variant="ghost" size="sm" onClick={toggleFiltersPanel} className="h-7 w-7 p-0">
-                <X className="h-4 w-4" />
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={toggleFiltersPanel} 
+                className="h-8 w-8 p-0 rounded-full hover:bg-primary/10"
+              >
+                <X className="h-4 w-4 text-primary" />
               </Button>
             </div>
           </div>
@@ -314,25 +344,30 @@ export default function Dashboard() {
             </div>
           </div>
           
-          <div className="mt-3 pt-3 border-t text-xs text-gray-500">
-            Showing {filteredVessels.length} vessels and {filteredRefineries.length} refineries based on current filters
+          <div className="mt-4 pt-4 border-t border-primary/10 text-xs text-gray-500 flex items-center justify-between">
+            <div>
+              Showing <span className="font-medium text-primary">{filteredVessels.length}</span> vessels and <span className="font-medium text-primary">{filteredRefineries.length}</span> refineries
+            </div>
+            <Button variant="link" size="sm" className="text-xs h-7 text-primary p-0">
+              Apply to Map View
+            </Button>
           </div>
         </div>
       )}
       
       {/* Map Section */}
       <section className="p-4 md:p-6 pt-0">
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+        <div className="backdrop-blur-sm bg-white/80 rounded-xl shadow-sm overflow-hidden border border-primary/10">
           {/* Region Selector Tabs */}
-          <div className="bg-gray-50 border-b border-gray-200 flex overflow-x-auto">
+          <div className="border-b border-primary/10 flex overflow-x-auto">
             {regions.map((region) => (
               <Button
                 key={region}
                 variant="ghost"
-                className={`px-4 py-2 text-sm font-medium rounded-none ${
+                className={`px-5 py-3 text-sm font-medium transition-all duration-200 ${
                   selectedRegion === region
-                    ? 'text-primary bg-blue-50 border-b-2 border-primary'
-                    : 'text-gray-600 hover:text-primary hover:bg-blue-50'
+                    ? 'text-primary bg-primary/5 border-b-2 border-primary'
+                    : 'text-gray-600 hover:text-primary hover:bg-primary/5'
                 }`}
                 onClick={() => handleRegionSelect(region)}
               >
