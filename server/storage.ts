@@ -92,7 +92,7 @@ export class MemStorage implements IStorage {
     this.statsData = {
       id: this.statsId,
       activeVessels: 0,
-      totalCargo: 0,
+      totalCargo: "0",
       activeRefineries: 0,
       activeBrokers: 0,
       lastUpdated: new Date()
@@ -276,7 +276,12 @@ export class MemStorage implements IStorage {
   async getDocumentsByVesselId(vesselId: number): Promise<Document[]> {
     return Array.from(this.documents.values())
       .filter(doc => doc.vesselId === vesselId)
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()); // Sort by date descending
+      .sort((a, b) => {
+        // Handle null createdAt dates
+        if (!a.createdAt) return 1;
+        if (!b.createdAt) return -1;
+        return b.createdAt.getTime() - a.createdAt.getTime();
+      }); // Sort by date descending
   }
 
   async createDocument(insertDocument: InsertDocument): Promise<Document> {
