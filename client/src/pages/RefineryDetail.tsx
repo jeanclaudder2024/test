@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 
 // Helper components for refinery details
-const InfoItem = ({ label, value }: { label: string; value: React.ReactNode }) => (
+const InfoItem = ({ label, value }: { label: React.ReactNode; value: React.ReactNode }) => (
   <div className="flex justify-between py-2">
     <span className="text-muted-foreground">{label}</span>
     <span className="font-medium">{value || 'N/A'}</span>

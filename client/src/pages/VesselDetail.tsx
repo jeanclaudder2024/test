@@ -22,11 +22,11 @@ import { Link, useRoute } from 'wouter';
 import {
   ArrowLeft, Ship, Calendar, Map, Info, Edit, Plus, Navigation, Anchor,
   Flag, Droplet, Package, AlertCircle, Truck, Gauge, BarChart, History,
-  Users, Clock, Compass, ArrowRight, FileText, Clipboard, Download
+  Users, Clock, Compass, ArrowRight, FileText, Clipboard, Download, Globe
 } from 'lucide-react';
 
 // Helper components for vessel details
-const InfoItem = ({ label, value }: { label: string; value: React.ReactNode }) => (
+const InfoItem = ({ label, value }: { label: React.ReactNode; value: React.ReactNode }) => (
   <div className="flex justify-between py-2">
     <span className="text-muted-foreground">{label}</span>
     <span className="font-medium">{value || 'N/A'}</span>
@@ -167,41 +167,134 @@ export default function VesselDetail() {
             <TabsContent value="details">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <Card className="md:col-span-2">
-                  <CardHeader>
-                    <CardTitle>Vessel Information</CardTitle>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center">
+                      <Ship className="h-5 w-5 mr-2 text-primary" />
+                      Vessel Information
+                    </CardTitle>
                     <CardDescription>
                       Technical details and specifications
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <InfoItem label="Vessel Name" value={vessel.name} />
-                        <InfoItem label="IMO Number" value={vessel.imo} />
-                        <InfoItem label="MMSI" value={vessel.mmsi} />
-                        <InfoItem label="Vessel Type" value={vessel.vesselType} />
-                        <InfoItem label="Flag" value={vessel.flag} />
+                        <h3 className="text-sm font-medium mb-3 flex items-center">
+                          <Info className="h-4 w-4 mr-2 text-primary" />
+                          Vessel Identity
+                        </h3>
+                        <InfoItem 
+                          label={<span className="flex items-center"><Ship className="h-4 w-4 mr-1" /> Name</span>} 
+                          value={vessel.name} 
+                        />
+                        <InfoItem 
+                          label={<span className="flex items-center"><FileText className="h-4 w-4 mr-1" /> IMO Number</span>} 
+                          value={vessel.imo} 
+                        />
+                        <InfoItem 
+                          label={<span className="flex items-center"><Gauge className="h-4 w-4 mr-1" /> MMSI</span>} 
+                          value={vessel.mmsi} 
+                        />
+                        <InfoItem 
+                          label={<span className="flex items-center"><Package className="h-4 w-4 mr-1" /> Vessel Type</span>} 
+                          value={vessel.vesselType} 
+                        />
+                        <InfoItem 
+                          label={<span className="flex items-center"><Flag className="h-4 w-4 mr-1" /> Flag</span>} 
+                          value={vessel.flag} 
+                        />
                       </div>
                       <div>
-                        <InfoItem label="Year Built" value={vessel.built} />
+                        <h3 className="text-sm font-medium mb-3 flex items-center">
+                          <BarChart className="h-4 w-4 mr-2 text-primary" />
+                          Technical Specifications
+                        </h3>
                         <InfoItem 
-                          label="Deadweight" 
+                          label={<span className="flex items-center"><Calendar className="h-4 w-4 mr-1" /> Year Built</span>} 
+                          value={vessel.built || 'N/A'} 
+                        />
+                        <InfoItem 
+                          label={<span className="flex items-center"><Package className="h-4 w-4 mr-1" /> Deadweight</span>} 
                           value={vessel.deadweight ? `${vessel.deadweight.toLocaleString()} tons` : 'N/A'} 
                         />
                         <InfoItem 
-                          label="Cargo Capacity" 
+                          label={<span className="flex items-center"><Droplet className="h-4 w-4 mr-1" /> Cargo Capacity</span>} 
                           value={vessel.cargoCapacity ? `${vessel.cargoCapacity.toLocaleString()} barrels` : 'N/A'} 
                         />
-                        <InfoItem label="Cargo Type" value={vessel.cargoType} />
-                        <InfoItem label="Current Region" value={vessel.currentRegion} />
+                        <InfoItem 
+                          label={<span className="flex items-center"><Droplet className="h-4 w-4 mr-1" /> Cargo Type</span>} 
+                          value={vessel.cargoType || 'N/A'} 
+                        />
+                        <InfoItem 
+                          label={<span className="flex items-center"><Globe className="h-4 w-4 mr-1" /> Current Region</span>} 
+                          value={vessel.currentRegion || 'N/A'} 
+                        />
+                      </div>
+                    </div>
+
+                    <Separator className="my-6" />
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <h3 className="text-sm font-medium mb-3 flex items-center">
+                          <Users className="h-4 w-4 mr-2 text-primary" />
+                          Ownership & Class
+                        </h3>
+                        <InfoItem 
+                          label="Owner"
+                          value="Global Tanker Corp." 
+                        />
+                        <InfoItem 
+                          label="Operator"
+                          value="Oceanic Shipping Ltd." 
+                        />
+                        <InfoItem 
+                          label="Class Society"
+                          value="American Bureau of Shipping (ABS)" 
+                        />
+                        <InfoItem 
+                          label="P&I Club"
+                          value="North of England P&I" 
+                        />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-medium mb-3 flex items-center">
+                          <Gauge className="h-4 w-4 mr-2 text-primary" />
+                          Dimensions & Equipment
+                        </h3>
+                        <InfoItem 
+                          label="Length Overall"
+                          value="333.0 m" 
+                        />
+                        <InfoItem 
+                          label="Breadth"
+                          value="60.0 m" 
+                        />
+                        <InfoItem 
+                          label="Summer Draft"
+                          value="22.5 m" 
+                        />
+                        <InfoItem 
+                          label="Main Engine"
+                          value="MAN B&W 7G80ME-C9.5" 
+                        />
                       </div>
                     </div>
                   </CardContent>
+                  <CardFooter>
+                    <p className="text-xs text-muted-foreground">
+                      <AlertCircle className="h-3 w-3 inline mr-1" />
+                      Last verified: April 10, 2023
+                    </p>
+                  </CardFooter>
                 </Card>
                 
                 <Card>
-                  <CardHeader>
-                    <CardTitle>Current Location</CardTitle>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center">
+                      <Navigation className="h-5 w-5 mr-2 text-primary" />
+                      Current Location
+                    </CardTitle>
                     <CardDescription>
                       Last reported coordinates
                     </CardDescription>
@@ -212,17 +305,48 @@ export default function VesselDetail() {
                         <div className="aspect-square bg-muted rounded-md flex items-center justify-center mb-4">
                           <div className="text-center">
                             <Navigation className="h-8 w-8 text-primary mx-auto mb-2" />
-                            <div className="text-sm">Map View</div>
+                            <div className="text-sm">Interactive Map View</div>
+                            <div className="text-xs text-muted-foreground mt-1">
+                              Click to view full map
+                            </div>
                           </div>
                         </div>
-                        <InfoItem 
-                          label="Latitude" 
-                          value={vessel.currentLat} 
-                        />
-                        <InfoItem 
-                          label="Longitude" 
-                          value={vessel.currentLng} 
-                        />
+                        <div className="space-y-2">
+                          <InfoItem 
+                            label={<span className="flex items-center"><Compass className="h-4 w-4 mr-1" /> Latitude</span>} 
+                            value={vessel.currentLat} 
+                          />
+                          <InfoItem 
+                            label={<span className="flex items-center"><Compass className="h-4 w-4 mr-1" /> Longitude</span>} 
+                            value={vessel.currentLng} 
+                          />
+                          <InfoItem 
+                            label={<span className="flex items-center"><Clock className="h-4 w-4 mr-1" /> Last Updated</span>} 
+                            value={"2 hours ago"} 
+                          />
+                          <InfoItem 
+                            label={<span className="flex items-center"><Gauge className="h-4 w-4 mr-1" /> Speed</span>} 
+                            value={"12.5 knots"} 
+                          />
+                          <InfoItem 
+                            label={<span className="flex items-center"><Compass className="h-4 w-4 mr-1" /> Heading</span>} 
+                            value={"135° SE"} 
+                          />
+                        </div>
+                        
+                        <div className="mt-4 bg-muted/30 rounded-md p-3">
+                          <h4 className="text-sm font-medium mb-2">Nearby Vessels</h4>
+                          <div className="space-y-2 text-sm">
+                            <div className="flex justify-between items-center">
+                              <span>Celestial Voyager</span>
+                              <Badge variant="outline">22.4 nm</Badge>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span>Northern Star</span>
+                              <Badge variant="outline">35.1 nm</Badge>
+                            </div>
+                          </div>
+                        </div>
                       </>
                     ) : (
                       <div className="text-center py-8 text-muted-foreground">
@@ -234,26 +358,96 @@ export default function VesselDetail() {
               </div>
               
               <Card className="mt-6">
-                <CardHeader>
-                  <CardTitle>Journey Details</CardTitle>
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center">
+                    <Truck className="h-5 w-5 mr-2 text-primary" />
+                    Current Voyage
+                  </CardTitle>
                   <CardDescription>
-                    Current voyage information
+                    Details of ongoing journey
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <h3 className="font-medium mb-2">Departure</h3>
-                      <InfoItem label="Port" value={vessel.departurePort} />
-                      <InfoItem label="Date" value={vessel.departureDate ? formatDate(vessel.departureDate) : 'N/A'} />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="bg-muted/30 p-4 rounded-md">
+                      <h3 className="font-medium mb-3 flex items-center">
+                        <Navigation className="h-4 w-4 mr-2 text-primary" />
+                        Departure
+                      </h3>
+                      <InfoItem 
+                        label={<span className="flex items-center"><Anchor className="h-4 w-4 mr-1" /> Port</span>} 
+                        value={vessel.departurePort || 'N/A'} 
+                      />
+                      <InfoItem 
+                        label={<span className="flex items-center"><Calendar className="h-4 w-4 mr-1" /> Date</span>} 
+                        value={vessel.departureDate ? formatDate(vessel.departureDate) : 'N/A'} 
+                      />
+                      <InfoItem 
+                        label={<span className="flex items-center"><Clock className="h-4 w-4 mr-1" /> Terminal</span>} 
+                        value="North Terminal, Berth 12" 
+                      />
+                      <InfoItem 
+                        label={<span className="flex items-center"><Droplet className="h-4 w-4 mr-1" /> Loading Qty</span>} 
+                        value={vessel.cargoCapacity ? `${(vessel.cargoCapacity * 0.95).toLocaleString()} barrels` : 'N/A'} 
+                      />
                     </div>
-                    <div>
-                      <h3 className="font-medium mb-2">Destination</h3>
-                      <InfoItem label="Port" value={vessel.destinationPort} />
-                      <InfoItem label="ETA" value={vessel.eta ? formatDate(vessel.eta) : 'N/A'} />
+                    
+                    <div className="bg-muted/30 p-4 rounded-md">
+                      <h3 className="font-medium mb-3 flex items-center">
+                        <Anchor className="h-4 w-4 mr-2 text-primary" />
+                        Destination
+                      </h3>
+                      <InfoItem 
+                        label={<span className="flex items-center"><Anchor className="h-4 w-4 mr-1" /> Port</span>} 
+                        value={vessel.destinationPort || 'N/A'} 
+                      />
+                      <InfoItem 
+                        label={<span className="flex items-center"><Calendar className="h-4 w-4 mr-1" /> ETA</span>} 
+                        value={vessel.eta ? formatDate(vessel.eta) : 'N/A'} 
+                      />
+                      <InfoItem 
+                        label={<span className="flex items-center"><Clock className="h-4 w-4 mr-1" /> Terminal</span>} 
+                        value="South Basin Terminal" 
+                      />
+                      <InfoItem 
+                        label={<span className="flex items-center"><History className="h-4 w-4 mr-1" /> Status</span>} 
+                        value={<Badge className="ml-1" variant="outline">In Transit</Badge>} 
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="mt-6">
+                    <h3 className="font-medium mb-3">Journey Progress</h3>
+                    <div className="relative pt-1">
+                      <div className="flex mb-2 items-center justify-between">
+                        <div>
+                          <span className="text-xs font-semibold inline-block text-primary">
+                            {vessel.departureDate && vessel.eta ? "48%" : "N/A"}
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-xs font-semibold inline-block text-primary">
+                            {vessel.departureDate && vessel.eta ? formatDate(vessel.departureDate) + " → " + formatDate(vessel.eta) : "Unknown Duration"}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-primary/20">
+                        <div style={{ width: "48%" }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-primary"></div>
+                      </div>
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <div>{vessel.departurePort}</div>
+                        <div>Current Position</div>
+                        <div>{vessel.destinationPort}</div>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
+                <CardFooter>
+                  <Button variant="outline" size="sm" className="ml-auto">
+                    <ArrowRight className="h-4 w-4 mr-2" />
+                    View Detailed Tracking
+                  </Button>
+                </CardFooter>
               </Card>
             </TabsContent>
             
