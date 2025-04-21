@@ -1,7 +1,8 @@
 import { InsertVessel, InsertRefinery } from "@shared/schema";
+import fetch from "node-fetch";
 
-// Interface for asistream API vessel data
-interface AsiStreamVessel {
+// Interface for vessel data from RapidAPI
+interface RapidAPIVessel {
   id: string;
   name: string;
   imo: string;
@@ -29,8 +30,8 @@ interface AsiStreamVessel {
   region: string;
 }
 
-// Interface for asistream API refinery data
-interface AsiStreamRefinery {
+// Interface for refinery data from RapidAPI
+interface RapidAPIRefinery {
   id: string;
   name: string;
   country: string;
@@ -43,38 +44,121 @@ interface AsiStreamRefinery {
   status: string;
 }
 
+// Configurations for RapidAPI
+const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
+const RAPIDAPI_HOST = "maritime-api.p.rapidapi.com"; // Replace with actual host
+const VESSEL_ENDPOINT = "/vessels"; // Replace with actual endpoint
+const REFINERY_ENDPOINT = "/refineries"; // Replace with actual endpoint
+
 /**
- * Service for interacting with the asistream API
- * NOTE: API is temporarily disabled - we're only using database data
+ * Service for interacting with the maritime tracking API via RapidAPI
  */
 export const asiStreamService = {
   /**
-   * Fetch vessel data from asistream API
-   * Currently disabled - returns empty array since we'll use database data only
+   * Fetch vessel data from RapidAPI
+   * @returns Array of vessel data ready to be inserted into the database
    */
   fetchVessels: async (): Promise<InsertVessel[]> => {
     try {
-      console.log("NOTICE: AsiStream Vessels API is temporarily disabled. Using database data only.");
-      // Return empty array, we'll rely on database data
-      return [];
+      // Check if API key is available
+      if (!RAPIDAPI_KEY) {
+        console.log("WARNING: RapidAPI key not found. Using database data only.");
+        return [];
+      }
+
+      console.log("Fetching vessel data from RapidAPI...");
+      
+      const options = {
+        method: 'GET',
+        headers: {
+          'X-RapidAPI-Key': RAPIDAPI_KEY,
+          'X-RapidAPI-Host': RAPIDAPI_HOST
+        }
+      };
+
+      const response = await fetch(`https://${RAPIDAPI_HOST}${VESSEL_ENDPOINT}?limit=100`, options);
+      
+      if (!response.ok) {
+        throw new Error(`RapidAPI responded with status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log(`Retrieved ${data.vessels?.length || 0} vessels from RapidAPI`);
+      
+      // Map the RapidAPI response to our InsertVessel format
+      return (data.vessels || []).map((vessel: RapidAPIVessel) => ({
+        name: vessel.name,
+        imo: vessel.imo,
+        mmsi: vessel.mmsi,
+        vesselType: vessel.vessel_type,
+        flag: vessel.flag,
+        built: vessel.built || null,
+        deadweight: vessel.deadweight || null,
+        latitude: vessel.position.lat,
+        longitude: vessel.position.lng,
+        departurePort: vessel.departure.port,
+        departureDate: new Date(vessel.departure.date),
+        destinationPort: vessel.destination.port,
+        eta: new Date(vessel.destination.eta),
+        cargoType: vessel.cargo.type,
+        cargoCapacity: vessel.cargo.capacity,
+        region: vessel.region,
+        status: 'active',
+        lastUpdated: new Date()
+      }));
     } catch (error) {
-      console.error("Error in asistream API:", error);
-      throw new Error("Failed to fetch vessel data from asistream API");
+      console.error("Error fetching vessels from RapidAPI:", error);
+      console.log("Using database data only due to API error.");
+      return [];
     }
   },
 
   /**
-   * Fetch refinery data from asistream API
-   * Currently disabled - returns empty array since we'll use database data only
+   * Fetch refinery data from RapidAPI
+   * @returns Array of refinery data ready to be inserted into the database
    */
   fetchRefineries: async (): Promise<InsertRefinery[]> => {
     try {
-      console.log("NOTICE: AsiStream Refineries API is temporarily disabled. Using database data only.");
-      // Return empty array, we'll rely on database data
-      return [];
+      // Check if API key is available
+      if (!RAPIDAPI_KEY) {
+        console.log("WARNING: RapidAPI key not found. Using database data only.");
+        return [];
+      }
+
+      console.log("Fetching refinery data from RapidAPI...");
+      
+      const options = {
+        method: 'GET',
+        headers: {
+          'X-RapidAPI-Key': RAPIDAPI_KEY,
+          'X-RapidAPI-Host': RAPIDAPI_HOST
+        }
+      };
+
+      const response = await fetch(`https://${RAPIDAPI_HOST}${REFINERY_ENDPOINT}?limit=50`, options);
+      
+      if (!response.ok) {
+        throw new Error(`RapidAPI responded with status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log(`Retrieved ${data.refineries?.length || 0} refineries from RapidAPI`);
+      
+      // Map the RapidAPI response to our InsertRefinery format
+      return (data.refineries || []).map((refinery: RapidAPIRefinery) => ({
+        name: refinery.name,
+        country: refinery.country,
+        region: refinery.region,
+        latitude: refinery.location.lat,
+        longitude: refinery.location.lng,
+        capacity: refinery.capacity,
+        status: refinery.status,
+        lastUpdated: new Date()
+      }));
     } catch (error) {
-      console.error("Error in asistream API:", error);
-      throw new Error("Failed to fetch refinery data from asistream API");
+      console.error("Error fetching refineries from RapidAPI:", error);
+      console.log("Using database data only due to API error.");
+      return [];
     }
   }
 };
