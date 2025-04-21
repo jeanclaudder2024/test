@@ -7,7 +7,7 @@ let stripe: Stripe | null = null;
 try {
   if (process.env.STRIPE_SECRET_KEY) {
     stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: '2023-10-16',
+      apiVersion: '2023-08-16',
     });
   } else {
     console.warn('STRIPE_SECRET_KEY not found in environment variables');
@@ -61,10 +61,22 @@ export const stripeService = {
           user.stripeSubscriptionId
         );
 
+        // Get payment intent from the subscription if available
+        let clientSecret = null;
+        if (typeof subscription.latest_invoice === 'string') {
+          const invoice = await stripe.invoices.retrieve(subscription.latest_invoice, {
+            expand: ['payment_intent']
+          });
+          // Use any type to handle possible Stripe API differences
+          const invoiceData = invoice as any;
+          if (invoiceData.payment_intent && typeof invoiceData.payment_intent !== 'string') {
+            clientSecret = invoiceData.payment_intent.client_secret;
+          }
+        }
+        
         return {
           subscriptionId: subscription.id,
-          clientSecret: (subscription.latest_invoice as Stripe.Invoice)
-            .payment_intent?.client_secret || null,
+          clientSecret,
           status: subscription.status,
         };
       }
@@ -108,11 +120,30 @@ export const stripeService = {
         stripeSubscriptionId: subscription.id,
       });
 
+      // Get client secret from invoice if available
+      let clientSecret = null;
+      if (typeof subscription.latest_invoice === 'string') {
+        const invoice = await stripe.invoices.retrieve(subscription.latest_invoice, {
+          expand: ['payment_intent']
+        });
+        // Use any type to handle possible Stripe API differences
+        const invoiceData = invoice as any;
+        if (invoiceData.payment_intent && typeof invoiceData.payment_intent !== 'string') {
+          clientSecret = invoiceData.payment_intent.client_secret;
+        }
+      } else if (subscription.latest_invoice && 
+                typeof subscription.latest_invoice === 'object') {
+        // Cast to any to handle TypeScript limitations with the Stripe SDK
+        const latestInvoice = subscription.latest_invoice as any;
+        if (latestInvoice.payment_intent && typeof latestInvoice.payment_intent !== 'string') {
+          clientSecret = latestInvoice.payment_intent.client_secret;
+        }
+      }
+      
       // Return subscription details
       return {
         subscriptionId: subscription.id,
-        clientSecret: ((subscription.latest_invoice as Stripe.Invoice)
-          .payment_intent as Stripe.PaymentIntent).client_secret,
+        clientSecret,
         status: subscription.status,
       };
     } catch (error: any) {
@@ -163,11 +194,9 @@ export const stripeService = {
         }
         
         case 'invoice.payment_succeeded': {
-          const invoice = event.data.object as Stripe.Invoice;
-          if (invoice.subscription) {
-            const subscription = await stripe.subscriptions.retrieve(
-              invoice.subscription as string
-            );
+          const invoice = event.data.object as any;
+          if (invoice.subscription && typeof invoice.subscription === 'string') {
+            const subscription = await stripe.subscriptions.retrieve(invoice.subscription);
             
             // Find user by Stripe customer ID
             const user = await storage.getUserByStripeCustomerId(
@@ -186,7 +215,7 @@ export const stripeService = {
         }
         
         case 'invoice.payment_failed': {
-          const invoice = event.data.object as Stripe.Invoice;
+          const invoice = event.data.object as any;
           // Handle failed payment
           break;
         }

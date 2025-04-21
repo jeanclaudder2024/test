@@ -646,6 +646,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Stripe payment endpoints - protected with authentication
+  apiRouter.post("/create-payment-intent", (req, res, next) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+    next();
+  }, async (req, res) => {
+    try {
+      const { amount } = req.body;
+      
+      if (!amount || isNaN(amount)) {
+        return res.status(400).json({ message: "Valid amount is required" });
+      }
+      
+      const result = await stripeService.createPaymentIntent(amount);
+      res.json(result);
+    } catch (error: any) {
+      console.error("Payment intent error:", error);
+      res.status(500).json({ message: error.message || "Failed to create payment intent" });
+    }
+  });
+  
+  apiRouter.post("/get-or-create-subscription", (req, res, next) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+    next();
+  }, async (req, res) => {
+    try {
+      // Use PRICE_ID from environment or a default price ID from request
+      const priceId = process.env.STRIPE_PRICE_ID || req.body.priceId;
+      
+      if (!priceId) {
+        return res.status(400).json({ message: "Price ID is required" });
+      }
+      
+      const userId = req.user!.id;
+      const result = await stripeService.getOrCreateSubscription(userId, priceId);
+      res.json(result);
+    } catch (error: any) {
+      console.error("Subscription error:", error);
+      res.status(500).json({ message: error.message || "Failed to process subscription" });
+    }
+  });
+  
+  apiRouter.post("/cancel-subscription", (req, res, next) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+    next();
+  }, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const result = await stripeService.cancelSubscription(userId);
+      res.json(result);
+    } catch (error: any) {
+      console.error("Subscription cancellation error:", error);
+      res.status(500).json({ message: error.message || "Failed to cancel subscription" });
+    }
+  });
+
   // Mount API router
   app.use("/api", apiRouter);
 
