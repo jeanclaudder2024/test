@@ -4,7 +4,7 @@ import { Vessel, Refinery, Region } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ZoomIn, ZoomOut, Locate, Ship, Factory, Navigation, Droplet } from "lucide-react";
-import { REGIONS } from "@/../../shared/constants";
+import { REGIONS, OIL_PRODUCT_TYPES } from "@/../../shared/constants";
 
 // Define custom styles for the map
 const mapContainerStyle = {
@@ -88,6 +88,10 @@ export default function GoogleMapView({
     id: 'google-map-script',
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ""
   });
+  
+  // We'll create some default icons and map definitions
+  const DEFAULT_MAP_MARKER_URL = "https://maps.google.com/mapfiles/ms/icons/blue-dot.png";
+  const REFINERY_MARKER_URL = "https://maps.google.com/mapfiles/ms/icons/red-dot.png";
 
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [selectedVessel, setSelectedVessel] = useState<Vessel | null>(null);
@@ -204,15 +208,33 @@ export default function GoogleMapView({
     setSelectedRefinery(null);
   };
 
+  // Check if vessel matches any oil product type
+  const matchesOilProductType = (vesselType: string | null) => {
+    if (!vesselType) return false;
+    
+    // Check exact match with oil product types
+    if (OIL_PRODUCT_TYPES.some(product => vesselType.includes(product))) {
+      return true;
+    }
+    
+    // Check generic oil vessel types
+    return (
+      vesselType.toLowerCase().includes('oil') ||
+      vesselType.toLowerCase().includes('tanker') ||
+      vesselType.toLowerCase().includes('crude') ||
+      vesselType.toLowerCase().includes('vlcc') ||
+      vesselType.toLowerCase().includes('diesel') ||
+      vesselType.toLowerCase().includes('petroleum') ||
+      vesselType.toLowerCase().includes('gas') ||
+      vesselType.toLowerCase().includes('gasoline') ||
+      vesselType.toLowerCase().includes('fuel')
+    );
+  };
+  
   // Filter down vessels for better performance
   const filteredVessels = vessels.filter(vessel => 
     vessel.currentLat && vessel.currentLng && // Must have coordinates
-    (
-      vessel.vesselType?.toLowerCase().includes('oil') ||
-      vessel.vesselType?.toLowerCase().includes('tanker') ||
-      vessel.vesselType?.toLowerCase().includes('crude') ||
-      vessel.vesselType?.toLowerCase().includes('vlcc')
-    )
+    matchesOilProductType(vessel.vesselType) // Only show oil vessels or vessels carrying oil products
   ).slice(0, 500); // Limit to 500 vessels for performance
 
   // Render vessel routes for tracked vessel
@@ -237,13 +259,7 @@ export default function GoogleMapView({
         options={{
           strokeColor: '#FF5722',
           strokeOpacity: 0.8,
-          strokeWeight: 3,
-          icons: [{
-            icon: {
-              path: google.maps.SymbolPath.FORWARD_OPEN_ARROW
-            },
-            offset: '100%'
-          }]
+          strokeWeight: 3
         }}
       />
     );
