@@ -6,6 +6,8 @@ import { refineryService } from "./services/refineryService";
 import { aiService } from "./services/aiService";
 import { asiStreamService } from "./services/asiStreamService";
 import { brokerService } from "./services/brokerService";
+import { stripeService } from "./services/stripeService";
+import { setupAuth } from "./auth";
 import { 
   insertVesselSchema, 
   insertRefinerySchema, 

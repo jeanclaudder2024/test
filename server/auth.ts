@@ -13,7 +13,10 @@ const scryptAsync = promisify(scrypt);
 
 declare global {
   namespace Express {
-    interface User extends User {}
+    // Extend Express.User with our User type 
+    interface User extends Omit<User, 'id'> {
+      id: number;
+    }
   }
 }
 
