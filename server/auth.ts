@@ -19,7 +19,6 @@ declare global {
       username: string;
       password: string;
       email: string;
-      isAdmin?: boolean | null;
       stripeCustomerId?: string | null;
       stripeSubscriptionId?: string | null;
       isSubscribed?: boolean | null;
@@ -115,7 +114,6 @@ export function setupAuth(app: Express) {
           id: user.id,
           username: user.username,
           email: user.email,
-          isAdmin: user.isAdmin,
           isSubscribed: user.isSubscribed,
           subscriptionTier: user.subscriptionTier,
         });
@@ -133,7 +131,6 @@ export function setupAuth(app: Express) {
       id: user.id,
       username: user.username,
       email: user.email,
-      isAdmin: user.isAdmin,
       isSubscribed: user.isSubscribed,
       subscriptionTier: user.subscriptionTier,
     });
@@ -156,7 +153,6 @@ export function setupAuth(app: Express) {
       id: user.id,
       username: user.username,
       email: user.email,
-      isAdmin: user.isAdmin,
       isSubscribed: user.isSubscribed,
       subscriptionTier: user.subscriptionTier,
     });
