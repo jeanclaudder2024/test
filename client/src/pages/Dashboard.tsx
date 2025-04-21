@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import WorldMap from "@/components/map/WorldMap";
-import MapboxView from "@/components/map/MapboxView";
+import MapboxView from "@/components/map/NewMapboxView";
 import VesselInfo from "@/components/vessels/VesselInfo";
 import ProgressTimeline from "@/components/vessels/ProgressTimeline";
 import StatsCards from "@/components/dashboard/StatsCards";
