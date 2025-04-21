@@ -207,18 +207,18 @@ adminRouter.patch("/feature-flags/:id", async (req, res) => {
 adminRouter.get("/stats", async (req, res) => {
   try {
     // Use direct count methods instead of count property
-    const users = await db.select().from(users);
-    const userCount = users.length;
-    const subscribedUsers = users.filter(user => user.isSubscribed === true);
+    const allUsers = await db.select().from(userTable);
+    const userCount = allUsers.length;
+    const subscribedUsers = allUsers.filter(user => user.isSubscribed === true);
     const subscribedUserCount = subscribedUsers.length;
     
-    const allVessels = await db.select().from(vessels);
+    const allVessels = await db.select().from(vesselTable);
     const vesselCount = allVessels.length;
     
-    const allRefineries = await db.select().from(refineries);
+    const allRefineries = await db.select().from(refineryTable);
     const refineryCount = allRefineries.length;
     
-    const allBrokers = await db.select().from(brokers);
+    const allBrokers = await db.select().from(brokerTable);
     const brokerCount = allBrokers.length;
     
     res.json({
