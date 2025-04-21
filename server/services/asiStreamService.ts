@@ -46,9 +46,12 @@ interface RapidAPIRefinery {
 
 // Configurations for RapidAPI
 const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
-const RAPIDAPI_HOST = "maritime-api.p.rapidapi.com"; // Replace with actual host
-const VESSEL_ENDPOINT = "/vessels"; // Replace with actual endpoint
-const REFINERY_ENDPOINT = "/refineries"; // Replace with actual endpoint
+
+// RapidAPI configuration - these need to be updated with the correct API details
+// Currently configured to detect and handle API connection failures gracefully
+const RAPIDAPI_HOST = "maritime-tracking-api.p.rapidapi.com";
+const VESSEL_ENDPOINT = "/vessels";
+const REFINERY_ENDPOINT = "/refineries";
 
 /**
  * Service for interacting with the maritime tracking API via RapidAPI
