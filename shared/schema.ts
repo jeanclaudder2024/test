@@ -121,7 +121,7 @@ export const insertBrokerSchema = createInsertSchema(brokers).omit({
 export const stats = pgTable("stats", {
   id: serial("id").primaryKey(),
   activeVessels: integer("active_vessels").default(0),
-  totalCargo: text("total_cargo").default("0"),
+  totalCargo: decimal("total_cargo", { precision: 15, scale: 2 }).default("0"),
   activeRefineries: integer("active_refineries").default(0),
   activeBrokers: integer("active_brokers").default(0),
   lastUpdated: timestamp("last_updated").defaultNow(),
