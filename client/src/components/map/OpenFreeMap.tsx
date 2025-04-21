@@ -64,6 +64,7 @@ export default function OpenFreeMap({
   isLoading = false
 }: OpenFreeMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<any>(null);
   const [mapStyle, setMapStyle] = useState(mapStyles[0].id);
   
   // Initialize map
@@ -126,29 +127,32 @@ export default function OpenFreeMap({
       const L = window.L;
       if (!L || !mapRef.current) return;
       
-      // Clear previous map if exists
-      mapRef.current.innerHTML = '';
+      // Remove previous map instance if exists
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
       
       // Create new map
-      const map = L.map(mapRef.current).setView([52.517, 13.388], 2);
+      mapInstanceRef.current = L.map(mapRef.current).setView([52.517, 13.388], 2);
       
       // Add MapLibre GL layer
       // @ts-ignore - maplibreGL plugin is not properly typed
       L.maplibreGL({
         style: getStyleUrl(mapStyle),
-      }).addTo(map);
+      }).addTo(mapInstanceRef.current);
       
       // Add vessel markers
-      addVesselMarkers(map);
+      addVesselMarkers(mapInstanceRef.current);
       
       // Add refinery markers
-      addRefineryMarkers(map);
+      addRefineryMarkers(mapInstanceRef.current);
       
       // Update view for selected region
       if (selectedRegion) {
         const position = regionPositions[selectedRegion];
         if (position) {
-          map.setView([position.lat, position.lng], position.zoom);
+          mapInstanceRef.current.setView([position.lat, position.lng], position.zoom);
         }
       }
       
@@ -156,7 +160,7 @@ export default function OpenFreeMap({
       if (trackedVessel && trackedVessel.currentLat && trackedVessel.currentLng) {
         const lat = typeof trackedVessel.currentLat === 'number' ? trackedVessel.currentLat : parseFloat(String(trackedVessel.currentLat));
         const lng = typeof trackedVessel.currentLng === 'number' ? trackedVessel.currentLng : parseFloat(String(trackedVessel.currentLng));
-        map.setView([lat, lng], 8);
+        mapInstanceRef.current.setView([lat, lng], 8);
       }
     };
     
@@ -314,6 +318,13 @@ export default function OpenFreeMap({
     // Load the scripts and initialize the map
     loadScripts();
     
+    // Cleanup function
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
   }, [vessels, refineries, selectedRegion, trackedVessel, onVesselClick, onRefineryClick, mapStyle, isLoading]);
   
   // Handle map style change
