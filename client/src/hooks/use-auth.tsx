@@ -11,6 +11,7 @@ type User = {
   id: number;
   username: string;
   email?: string | null;
+  isAdmin?: boolean;
   isSubscribed?: boolean;
   subscriptionTier?: string | null;
 };

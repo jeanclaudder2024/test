@@ -28,6 +28,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
   
   const apiRouter = express.Router();
+  
+  // Admin authentication routes
+  apiRouter.post("/admin/login", async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      
+      // In a real application, these credentials would be stored securely
+      // For demo purposes, we're using hardcoded values
+      if (username === "admin" && password === "adminpassword") {
+        // If using the current user session, update it to have admin flag
+        if (req.user) {
+          await storage.updateUser(req.user.id, { isAdmin: true });
+          
+          // Return the updated user
+          const updatedUser = await storage.getUser(req.user.id);
+          return res.json({ success: true, user: updatedUser });
+        }
+        
+        return res.json({ success: true });
+      }
+      
+      return res.status(401).json({ success: false, message: "Invalid admin credentials" });
+    } catch (error) {
+      console.error("Admin login error:", error);
+      res.status(500).json({ success: false, message: "Admin authentication failed" });
+    }
+  });
+  
+  // Check if current user has admin access
+  apiRouter.get("/admin/check", (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ isAdmin: false, message: "Not authenticated" });
+    }
+    
+    // Check if user has admin flag
+    const isAdmin = req.user.isAdmin === true;
+    res.json({ isAdmin });
+  });
 
   // Initialize with seed data in development - with better error handling
   if (app.get("env") === "development") {
