@@ -4,6 +4,7 @@ import { Vessel, Refinery, Region } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { Ship, Navigation as NavigationIcon, Droplet } from 'lucide-react';
 import { OIL_PRODUCT_TYPES } from '@/../../shared/constants';
+import { MapStyleSelector, mapStyles } from './MapStyles';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 // Region center positions
@@ -46,6 +47,7 @@ export default function MapboxView({
   const [selectedVessel, setSelectedVessel] = useState<Vessel | null>(null);
   const markerRefs = useRef<Record<string, mapboxgl.Marker>>({});
   const popupRef = useRef<mapboxgl.Popup | null>(null);
+  const [mapStyle, setMapStyle] = useState('mapbox://styles/mapbox/streets-v12');
   
   // Default center and zoom
   const defaultCenter = { lng: 10, lat: 25 };
@@ -62,7 +64,7 @@ export default function MapboxView({
     // Create the map instance
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/satellite-streets-v12', // Satellite with labels
+      style: mapStyle, // Use the style from state
       center: defaultCenter,
       zoom: defaultZoom,
       attributionControl: true
@@ -91,7 +93,7 @@ export default function MapboxView({
         map.current = null;
       }
     };
-  }, [isLoading]);
+  }, [isLoading, mapStyle]);
   
   // Check if vessel matches any oil product type
   const matchesOilProductType = (vesselType: string | null) => {
@@ -319,9 +321,26 @@ export default function MapboxView({
     );
   }
   
+  // Handle map style change
+  const handleStyleChange = (styleId: string) => {
+    setMapStyle(styleId);
+    
+    if (map.current) {
+      map.current.setStyle(styleId);
+      
+      // Re-add markers after style change when the map is loaded
+      map.current.once('style.load', () => {
+        addMarkers();
+      });
+    }
+  };
+
   return (
     <div className="relative h-96 md:h-[500px] rounded-lg overflow-hidden">
       <div ref={mapContainer} className="absolute top-0 left-0 w-full h-full" />
+      
+      {/* Map Style Selector */}
+      <MapStyleSelector currentStyle={mapStyle} onStyleChange={handleStyleChange} />
       
       {/* Tracked Vessel Info */}
       {trackedVessel && trackedVessel.currentLat && trackedVessel.currentLng && (
