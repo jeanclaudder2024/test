@@ -83,10 +83,13 @@ export default function SubscribePage() {
     setError(null);
     
     try {
-      const result = await apiRequest("/api/get-or-create-subscription", {
+      const response = await apiRequest({
+        url: "/api/get-or-create-subscription",
         method: "POST",
-        body: JSON.stringify({ priceId })
+        body: { priceId }
       });
+      
+      const result = await response.json();
       
       if (result.clientSecret) {
         setClientSecret(result.clientSecret);

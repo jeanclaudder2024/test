@@ -23,6 +23,8 @@ declare global {
       stripeSubscriptionId?: string | null;
       isSubscribed?: boolean | null;
       subscriptionTier?: string | null;
+      role?: string | null;
+      isAdmin?: boolean | null;
       createdAt?: Date | null;
     }
   }

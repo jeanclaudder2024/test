@@ -65,7 +65,7 @@ function Router() {
         <ProtectedRoute path="/ai-assistant" component={AIAssistantPage} />
         <ProtectedRoute path="/settings" component={Settings} />
         <ProtectedRoute path="/subscribe" component={Subscribe} />
-        <ProtectedRoute path="/admin" component={AdminDashboard} />
+        <ProtectedRoute path="/admin" component={AdminDashboard} adminOnly={true} />
         <Route component={NotFound} />
       </Switch>
     </MainLayout>

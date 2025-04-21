@@ -120,8 +120,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("/api/logout", {
-        method: "POST",
+      await apiRequest({
+        url: "/api/logout",
+        method: "POST"
       });
     },
     onSuccess: () => {
