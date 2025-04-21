@@ -1,29 +1,42 @@
-import Stripe from "stripe";
-import { storage } from "../storage";
-import { User } from "@shared/schema";
+import Stripe from 'stripe';
+import { storage } from '../storage';
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  console.warn('STRIPE_SECRET_KEY is not set. Payment features will not work correctly.');
+// Initialize Stripe with the secret key from environment variables
+// and handle errors gracefully
+let stripe: Stripe | null = null;
+try {
+  if (process.env.STRIPE_SECRET_KEY) {
+    stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2023-10-16',
+    });
+  } else {
+    console.warn('STRIPE_SECRET_KEY not found in environment variables');
+  }
+} catch (error) {
+  console.error('Failed to initialize Stripe:', error);
 }
-
-// @ts-ignore - stripe-js types might be out of date, but the API works
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: "2023-10-16" as any,
-});
 
 export const stripeService = {
   /**
    * Create a payment intent for a one-time payment
    */
-  createPaymentIntent: async (amount: number, currency: string = "usd"): Promise<Stripe.PaymentIntent> => {
+  createPaymentIntent: async (amount: number, currency: string = 'usd') => {
+    if (!stripe) {
+      throw new Error('Stripe is not initialized');
+    }
+
     try {
       const paymentIntent = await stripe.paymentIntents.create({
         amount: Math.round(amount * 100), // Convert to cents
         currency,
       });
-      return paymentIntent;
+      
+      return {
+        clientSecret: paymentIntent.client_secret,
+        paymentIntentId: paymentIntent.id,
+      };
     } catch (error: any) {
-      console.error("Error creating payment intent:", error.message);
+      console.error('Stripe payment intent error:', error);
       throw new Error(`Failed to create payment intent: ${error.message}`);
     }
   },
@@ -31,77 +44,79 @@ export const stripeService = {
   /**
    * Get or create a subscription for a user
    */
-  getOrCreateSubscription: async (userId: number, priceId: string): Promise<{
-    subscriptionId: string;
-    clientSecret?: string | null;
-  }> => {
+  getOrCreateSubscription: async (userId: number, priceId: string) => {
+    if (!stripe) {
+      throw new Error('Stripe is not initialized');
+    }
+
     try {
       const user = await storage.getUser(userId);
-      
       if (!user) {
-        throw new Error("User not found");
+        throw new Error('User not found');
       }
-
-      // If the user already has a subscription, retrieve it
+      
+      // If the user already has a subscription, return it
       if (user.stripeSubscriptionId) {
-        const subscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
-        
+        const subscription = await stripe.subscriptions.retrieve(
+          user.stripeSubscriptionId
+        );
+
         return {
           subscriptionId: subscription.id,
-          // @ts-ignore - Stripe types issue
-          clientSecret: subscription.latest_invoice?.payment_intent
-            // @ts-ignore - Stripe types issue
-            ? subscription.latest_invoice.payment_intent.client_secret
-            : null,
+          clientSecret: (subscription.latest_invoice as Stripe.Invoice)
+            .payment_intent?.client_secret || null,
+          status: subscription.status,
         };
       }
-      
+
+      // Otherwise, create a new customer and subscription
       if (!user.email) {
-        throw new Error("User email is required for subscription");
+        throw new Error('User email is required for subscription');
       }
 
-      // Create a new customer if the user doesn't have a Stripe customer ID
+      // Create or retrieve Stripe customer
       let customerId = user.stripeCustomerId;
-      
       if (!customerId) {
         const customer = await stripe.customers.create({
           email: user.email,
           name: user.username,
+          metadata: {
+            userId: user.id.toString(),
+          },
         });
         customerId = customer.id;
         
-        // Update the user with the new customer ID
-        await storage.updateUser(userId, { 
+        // Update user with Stripe customer ID
+        await storage.updateUser(user.id, { 
           stripeCustomerId: customerId 
         });
       }
 
-      // Create a new subscription
+      // Create subscription
       const subscription = await stripe.subscriptions.create({
         customer: customerId,
         items: [{ price: priceId }],
-        payment_behavior: "default_incomplete",
-        payment_settings: { save_default_payment_method: "on_subscription" },
-        expand: ["latest_invoice.payment_intent"],
+        payment_behavior: 'default_incomplete',
+        expand: ['latest_invoice.payment_intent'],
+        metadata: {
+          userId: user.id.toString(),
+        },
       });
 
-      // Update the user with the subscription ID
-      await storage.updateUser(userId, {
+      // Update user with subscription info
+      await storage.updateUser(user.id, {
         stripeSubscriptionId: subscription.id,
-        isSubscribed: true,
-        subscriptionTier: "pro", // Set the appropriate tier based on the priceId
       });
 
+      // Return subscription details
       return {
         subscriptionId: subscription.id,
-        // @ts-ignore - Stripe types issue
-        clientSecret: subscription.latest_invoice?.payment_intent
-          // @ts-ignore - Stripe types issue
-          ? subscription.latest_invoice.payment_intent.client_secret
-          : null,
+        clientSecret: ((subscription.latest_invoice as Stripe.Invoice)
+          .payment_intent as Stripe.PaymentIntent).client_secret,
+        status: subscription.status,
       };
     } catch (error: any) {
-      console.error("Error creating subscription:", error.message);
+      console.error('Stripe subscription error:', error);
       throw new Error(`Failed to create subscription: ${error.message}`);
     }
   },
@@ -109,26 +124,24 @@ export const stripeService = {
   /**
    * Cancel a user's subscription
    */
-  cancelSubscription: async (userId: number): Promise<boolean> => {
+  cancelSubscription: async (userId: number) => {
+    if (!stripe) {
+      throw new Error('Stripe is not initialized');
+    }
+
     try {
       const user = await storage.getUser(userId);
-      
       if (!user || !user.stripeSubscriptionId) {
-        throw new Error("User has no active subscription");
+        throw new Error('User or subscription not found');
       }
 
-      // @ts-ignore - Stripe types issue
-      await stripe.subscriptions.del(user.stripeSubscriptionId);
-      
-      // Update the user to reflect the cancelled subscription
-      await storage.updateUser(userId, {
-        isSubscribed: false,
-        stripeSubscriptionId: null,
+      await stripe.subscriptions.update(user.stripeSubscriptionId, {
+        cancel_at_period_end: true,
       });
 
-      return true;
+      return { success: true };
     } catch (error: any) {
-      console.error("Error cancelling subscription:", error.message);
+      console.error('Stripe subscription cancellation error:', error);
       throw new Error(`Failed to cancel subscription: ${error.message}`);
     }
   },
@@ -136,7 +149,11 @@ export const stripeService = {
   /**
    * Handle Stripe webhook events
    */
-  handleWebhookEvent: async (event: Stripe.Event): Promise<void> => {
+  handleWebhookEvent: async (event: Stripe.Event) => {
+    if (!stripe) {
+      throw new Error('Stripe is not initialized');
+    }
+
     try {
       switch (event.type) {
         case 'checkout.session.completed': {
@@ -147,14 +164,21 @@ export const stripeService = {
         
         case 'invoice.payment_succeeded': {
           const invoice = event.data.object as Stripe.Invoice;
-          // @ts-ignore - Stripe types issue
-          if (invoice.subscription && invoice.customer) {
-            // Update the user's subscription status
-            const user = await storage.getUserByStripeCustomerId(invoice.customer as string);
+          if (invoice.subscription) {
+            const subscription = await stripe.subscriptions.retrieve(
+              invoice.subscription as string
+            );
+            
+            // Find user by Stripe customer ID
+            const user = await storage.getUserByStripeCustomerId(
+              subscription.customer as string
+            );
+            
             if (user) {
+              // Update subscription status to active
               await storage.updateUser(user.id, {
                 isSubscribed: true,
-                subscriptionTier: 'pro', // Set based on the subscription
+                subscriptionTier: 'premium', // or get from metadata
               });
             }
           }
@@ -169,22 +193,27 @@ export const stripeService = {
         
         case 'customer.subscription.deleted': {
           const subscription = event.data.object as Stripe.Subscription;
-          // Handle subscription cancellation
-          if (subscription.customer) {
-            const user = await storage.getUserByStripeCustomerId(subscription.customer as string);
-            if (user) {
-              await storage.updateUser(user.id, {
-                isSubscribed: false,
-                stripeSubscriptionId: null,
-              });
-            }
+          
+          // Find user by Stripe customer ID
+          const user = await storage.getUserByStripeCustomerId(
+            subscription.customer as string
+          );
+          
+          if (user) {
+            // Update subscription status
+            await storage.updateUser(user.id, {
+              isSubscribed: false,
+              subscriptionTier: null,
+            });
           }
           break;
         }
       }
+      
+      return { success: true };
     } catch (error: any) {
-      console.error("Error handling webhook event:", error.message);
-      throw new Error(`Failed to handle webhook event: ${error.message}`);
+      console.error('Stripe webhook error:', error);
+      throw new Error(`Failed to process webhook: ${error.message}`);
     }
-  },
+  }
 };

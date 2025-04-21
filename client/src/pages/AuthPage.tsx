@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useLocation } from "wouter";
+import { useEffect } from "react";
+import { useLocation, Redirect } from "wouter";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,8 +10,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { apiRequest } from "@/lib/queryClient";
-import { Anchor, Lock, Mail, User, Globe } from "lucide-react";
+import { Anchor, Lock, Mail, User, Globe, Loader2 } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
 // Form validation schemas
 const loginSchema = z.object({
@@ -30,8 +30,15 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export default function AuthPage() {
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [, navigate] = useLocation();
+  const { user, isLoading, loginMutation, registerMutation } = useAuth();
+  
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate("/dashboard");
+    }
+  }, [user, navigate]);
   
   // Handle successful login or registration
   const handleSuccess = () => {
@@ -48,23 +55,12 @@ export default function AuthPage() {
   });
 
   const onLoginSubmit = async (data: LoginFormValues) => {
-    setIsLoading(true);
     try {
-      await apiRequest("/api/login", { method: "POST", body: JSON.stringify(data) });
-      toast({
-        title: "Login Successful",
-        description: "Welcome back to AsiStream!",
-      });
-      handleSuccess();
+      await loginMutation.mutateAsync(data);
+      // Navigation is handled in the auth context on success
     } catch (error) {
       console.error("Login error:", error);
-      toast({
-        title: "Login Failed",
-        description: "Invalid username or password. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
+      // Toast handled in auth context
     }
   };
 
@@ -79,23 +75,12 @@ export default function AuthPage() {
   });
 
   const onRegisterSubmit = async (data: RegisterFormValues) => {
-    setIsLoading(true);
     try {
-      await apiRequest("/api/register", { method: "POST", body: JSON.stringify(data) });
-      toast({
-        title: "Registration Successful",
-        description: "Your account has been created. Welcome to AsiStream!",
-      });
-      handleSuccess();
+      await registerMutation.mutateAsync(data);
+      // Navigation is handled in the auth context on success
     } catch (error) {
       console.error("Registration error:", error);
-      toast({
-        title: "Registration Failed",
-        description: "This username may already be taken. Please try another one.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
+      // Toast handled in auth context
     }
   };
 
@@ -185,8 +170,13 @@ export default function AuthPage() {
                             Forgot password?
                           </a>
                         </div>
-                        <Button type="submit" className="w-full" disabled={isLoading}>
-                          {isLoading ? "Signing in..." : "Sign In"}
+                        <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
+                          {loginMutation.isPending ? (
+                            <div className="flex items-center justify-center">
+                              <Loader2 className="animate-spin h-4 w-4 mr-2" />
+                              Signing in...
+                            </div>
+                          ) : "Sign In"}
                         </Button>
                       </form>
                     </Form>
@@ -302,8 +292,13 @@ export default function AuthPage() {
                             </a>
                           </Label>
                         </div>
-                        <Button type="submit" className="w-full" disabled={isLoading}>
-                          {isLoading ? "Creating account..." : "Create Account"}
+                        <Button type="submit" className="w-full" disabled={registerMutation.isPending}>
+                          {registerMutation.isPending ? (
+                            <div className="flex items-center justify-center">
+                              <Loader2 className="animate-spin h-4 w-4 mr-2" />
+                              Creating account...
+                            </div>
+                          ) : "Create Account"}
                         </Button>
                       </form>
                     </Form>
