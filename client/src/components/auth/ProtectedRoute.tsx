@@ -30,6 +30,15 @@ export function ProtectedRoute({
       </Route>
     );
   }
+  
+  // If user tries to go to root path, redirect to dashboard
+  if (path === "/" && user) {
+    return (
+      <Route path={path}>
+        <Redirect to="/dashboard" />
+      </Route>
+    );
+  }
 
   // Check for admin access if the route requires it
   if (adminOnly && !user.isAdmin && user.role !== 'admin' && user.role !== 'superadmin') {
