@@ -72,19 +72,27 @@ export default function AdminDashboard() {
     const checkAdminStatus = async () => {
       if (user) {
         try {
-          // In real implementation, this would check if the user has admin privileges
-          // For now, we'll just check if the user's isAdmin field is true
-          setIsAdmin(user.isAdmin === true);
+          // Check if the user's isAdmin field is true
+          console.log("Current user:", user);
+          if (user.isAdmin === true) {
+            console.log("User is admin by database flag");
+            setIsAdmin(true);
+          }
         } catch (error) {
+          console.error("Error checking admin status:", error);
           setIsAdmin(false);
         } finally {
           setCheckingAdmin(false);
         }
+      } else {
+        setCheckingAdmin(false);
       }
     };
     
     if (user) {
       checkAdminStatus();
+    } else {
+      setCheckingAdmin(false);
     }
   }, [user]);
   

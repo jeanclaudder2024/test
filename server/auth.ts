@@ -115,6 +115,7 @@ export function setupAuth(app: Express) {
           id: user.id,
           username: user.username,
           email: user.email,
+          isAdmin: user.isAdmin,
           isSubscribed: user.isSubscribed,
           subscriptionTier: user.subscriptionTier,
         });
