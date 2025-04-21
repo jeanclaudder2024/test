@@ -6,8 +6,9 @@ import { storage } from '../storage';
 let stripe: Stripe | null = null;
 try {
   if (process.env.STRIPE_SECRET_KEY) {
+    // Use any to bypass TypeScript API version constraint
     stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: '2023-08-16',
+      apiVersion: '2023-08-16' as any,
     });
   } else {
     console.warn('STRIPE_SECRET_KEY not found in environment variables');
@@ -174,6 +175,26 @@ export const stripeService = {
     } catch (error: any) {
       console.error('Stripe subscription cancellation error:', error);
       throw new Error(`Failed to cancel subscription: ${error.message}`);
+    }
+  },
+
+  /**
+   * Parse webhook events from Stripe
+   */
+  parseWebhookEvent: async (payload: Buffer | string, signature: string, secret: string): Promise<Stripe.Event> => {
+    if (!stripe) {
+      throw new Error('Stripe is not initialized');
+    }
+
+    try {
+      return stripe.webhooks.constructEvent(
+        payload,
+        signature,
+        secret
+      );
+    } catch (error: any) {
+      console.error('Webhook parsing error:', error);
+      throw new Error(`Webhook parsing failed: ${error.message}`);
     }
   },
 

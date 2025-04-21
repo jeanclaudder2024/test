@@ -632,14 +632,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const signature = req.headers['stripe-signature'] as string;
     
     try {
-      // Verify webhook signature using your webhook signing secret
-      // const event = stripe.webhooks.constructEvent(req.body, signature, process.env.STRIPE_WEBHOOK_SECRET);
+      // Make sure we have the necessary values
+      if (!signature || !process.env.STRIPE_WEBHOOK_SECRET) {
+        return res.status(400).json({ message: "Stripe signature or webhook secret missing" });
+      }
       
-      // For now we'll use the raw event data
-      const event = JSON.parse(req.body.toString());
+      // Parse and validate the webhook event
+      const event = await stripeService.parseWebhookEvent(
+        req.body,
+        signature,
+        process.env.STRIPE_WEBHOOK_SECRET
+      );
       
+      // Handle the event
       await stripeService.handleWebhookEvent(event);
-      res.sendStatus(200);
+      
+      res.json({ received: true });
     } catch (error: any) {
       console.error("Webhook Error:", error.message);
       res.status(400).send(`Webhook Error: ${error.message}`);
