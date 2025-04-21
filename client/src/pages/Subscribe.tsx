@@ -74,7 +74,7 @@ export default function SubscribePage() {
     setError(null);
     
     try {
-      const result = await apiRequest("/api/create-subscription", {
+      const result = await apiRequest("/api/get-or-create-subscription", {
         method: "POST",
         body: JSON.stringify({ priceId })
       });
