@@ -8,6 +8,7 @@ import { dataService } from "./services/asiStreamService";
 import { brokerService } from "./services/brokerService";
 import { stripeService } from "./services/stripeService";
 import { setupAuth } from "./auth";
+import { db } from "./db";
 import { 
   insertVesselSchema, 
   insertRefinerySchema, 
@@ -15,7 +16,11 @@ import {
   insertDocumentSchema,
   insertBrokerSchema,
   Vessel,
-  Refinery
+  Refinery,
+  vessels,
+  refineries,
+  progressEvents,
+  documents
 } from "@shared/schema";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
@@ -29,8 +34,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   const apiRouter = express.Router();
 
-  // Initialize with seed data in development - with better error handling
+  // Endpoint to clear all vessel and refinery data from the database
   if (app.get("env") === "development") {
+    apiRouter.post("/clear-data", async (req, res) => {
+      try {
+        console.log("Starting database clearing process...");
+        
+        // Delete all vessels
+        console.log("Deleting all vessels...");
+        const vesselsDeleted = await db.delete(vessels).returning();
+        console.log(`Deleted ${vesselsDeleted.length} vessels.`);
+        
+        // Delete all refineries
+        console.log("Deleting all refineries...");
+        const refineriesDeleted = await db.delete(refineries).returning();
+        console.log(`Deleted ${refineriesDeleted.length} refineries.`);
+        
+        // Delete all progress events
+        console.log("Deleting all progress events...");
+        const eventsDeleted = await db.delete(progressEvents).returning();
+        console.log(`Deleted ${eventsDeleted.length} progress events.`);
+        
+        // Delete all documents related to vessels
+        console.log("Deleting all vessel documents...");
+        const documentsDeleted = await db.delete(documents).returning();
+        console.log(`Deleted ${documentsDeleted.length} documents.`);
+        
+        // Reset stats
+        await storage.updateStats({ 
+          activeVessels: 0, 
+          totalCargo: 0,
+          activeRefineries: 0,
+          lastUpdated: new Date()
+        });
+        
+        res.json({ 
+          success: true, 
+          message: "All vessel and refinery data has been deleted",
+          deleted: {
+            vessels: vesselsDeleted.length,
+            refineries: refineriesDeleted.length,
+            progressEvents: eventsDeleted.length,
+            documents: documentsDeleted.length
+          }
+        });
+      } catch (error) {
+        console.error("Error clearing database:", error);
+        res.status(500).json({ message: "Failed to clear data" });
+      }
+    });
+    
+    // Initialize with seed data in development
     apiRouter.post("/seed", async (req, res) => {
       try {
         console.log("Starting database seeding process...");
