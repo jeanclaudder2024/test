@@ -151,7 +151,7 @@ export default function Dashboard() {
     }
   }, [vessels, trackedVessel]);
 
-  const regions: Region[] = ['North America', 'Europe', 'MEA', 'Africa', 'Russia', 'Asia'];
+  // Use the REGIONS constant for region selection
 
   // Get vessel count by type
   const vesselCounts = vesselTypes.reduce((acc, type) => {
@@ -198,8 +198,10 @@ export default function Dashboard() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Regions</SelectItem>
-                {regions.map(region => (
-                  <SelectItem key={region} value={region}>{region}</SelectItem>
+                {REGIONS.map(region => (
+                  <SelectItem key={region.id} value={region.id}>
+                    {region.name} - {region.nameAr}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -361,18 +363,19 @@ export default function Dashboard() {
         <div className="backdrop-blur-sm bg-white/80 rounded-xl shadow-sm overflow-hidden border border-primary/10">
           {/* Region Selector Tabs */}
           <div className="border-b border-primary/10 flex overflow-x-auto">
-            {regions.map((region) => (
+            {REGIONS.map((region) => (
               <Button
-                key={region}
+                key={region.id}
                 variant="ghost"
                 className={`px-5 py-3 text-sm font-medium transition-all duration-200 ${
-                  selectedRegion === region
+                  selectedRegion === region.id
                     ? 'text-primary bg-primary/5 border-b-2 border-primary'
                     : 'text-gray-600 hover:text-primary hover:bg-primary/5'
                 }`}
-                onClick={() => handleRegionSelect(region)}
+                onClick={() => handleRegionSelect(region.id)}
               >
-                {region.toUpperCase()}
+                <span className="mr-2">{region.name}</span>
+                <span className="text-xs opacity-75">{region.nameAr}</span>
               </Button>
             ))}
           </div>

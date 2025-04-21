@@ -1,10 +1,11 @@
 import { useRef, useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline, Tooltip, CircleMarker } from "react-leaflet";
 import L from "leaflet";
-import { Vessel, Refinery, Region, MapPosition } from "@/types";
+import { Vessel, Refinery, Region, MapPosition, RegionData } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ZoomIn, ZoomOut, Locate, Ship, Factory, Navigation, Droplet } from "lucide-react";
+import { REGIONS } from "@/../../shared/constants";
 
 // Define the marker icons here to prevent recreation on each render
 const createVesselIcon = (type: string) => {
@@ -91,13 +92,19 @@ interface WorldMapProps {
 }
 
 // Region center positions
-const regionPositions: Record<Region, MapPosition> = {
-  'North America': { lat: 40, lng: -100, zoom: 4 },
-  'Europe': { lat: 50, lng: 10, zoom: 4 },
-  'MEA': { lat: 25, lng: 45, zoom: 4 },
-  'Africa': { lat: 0, lng: 20, zoom: 3 },
-  'Russia': { lat: 60, lng: 80, zoom: 3 },
-  'Asia': { lat: 30, lng: 100, zoom: 3 }
+const regionPositions: Record<string, MapPosition> = {
+  'north-america': { lat: 40, lng: -100, zoom: 4 },
+  'south-america': { lat: -15, lng: -60, zoom: 3 },
+  'central-america': { lat: 15, lng: -85, zoom: 4 },
+  'western-europe': { lat: 50, lng: 0, zoom: 4 },
+  'eastern-europe': { lat: 50, lng: 25, zoom: 4 },
+  'middle-east': { lat: 28, lng: 45, zoom: 4 },
+  'north-africa': { lat: 25, lng: 20, zoom: 4 },
+  'southern-africa': { lat: -10, lng: 20, zoom: 3 },
+  'russia': { lat: 60, lng: 80, zoom: 3 },
+  'china': { lat: 35, lng: 105, zoom: 4 },
+  'asia-pacific': { lat: 20, lng: 110, zoom: 3 },
+  'southeast-asia-oceania': { lat: -10, lng: 130, zoom: 3 }
 };
 
 // MapUpdater component to change view when region changes
