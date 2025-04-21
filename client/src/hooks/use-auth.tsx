@@ -57,7 +57,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           throw new Error(res.statusText);
         }
         
-        return await res.json();
+        const userData = await res.json();
+        return userData as User;
       } catch (err) {
         console.error("Auth error:", err);
         return null;

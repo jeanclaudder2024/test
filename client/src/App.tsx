@@ -12,11 +12,14 @@ import Brokers from "@/pages/Brokers";
 import Documents from "@/pages/Documents";
 import AIAssistantPage from "@/pages/AIAssistant";
 import Settings from "@/pages/Settings";
+import Subscribe from "@/pages/Subscribe";
 import LandingPage from "@/pages/LandingPage";
 import AuthPage from "@/pages/AuthPage";
 import { useEffect } from "react";
 import { apiRequest } from "./lib/queryClient";
 import MainLayout from "@/components/layout/MainLayout";
+import { AuthProvider } from "@/hooks/use-auth";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 function Router() {
   const [location] = useLocation();
@@ -51,15 +54,16 @@ function Router() {
   return (
     <MainLayout>
       <Switch>
-        <Route path="/dashboard" component={Dashboard} />
-        <Route path="/vessels" component={Vessels} />
-        <Route path="/vessels/:id" component={VesselDetail} />
-        <Route path="/refineries" component={Refineries} />
-        <Route path="/refineries/:id" component={RefineryDetail} />
-        <Route path="/brokers" component={Brokers} />
-        <Route path="/documents" component={Documents} />
-        <Route path="/ai-assistant" component={AIAssistantPage} />
-        <Route path="/settings" component={Settings} />
+        <ProtectedRoute path="/dashboard" component={Dashboard} />
+        <ProtectedRoute path="/vessels" component={Vessels} />
+        <ProtectedRoute path="/vessels/:id" component={VesselDetail} />
+        <ProtectedRoute path="/refineries" component={Refineries} />
+        <ProtectedRoute path="/refineries/:id" component={RefineryDetail} />
+        <ProtectedRoute path="/brokers" component={Brokers} />
+        <ProtectedRoute path="/documents" component={Documents} />
+        <ProtectedRoute path="/ai-assistant" component={AIAssistantPage} />
+        <ProtectedRoute path="/settings" component={Settings} />
+        <ProtectedRoute path="/subscribe" component={Subscribe} />
         <Route component={NotFound} />
       </Switch>
     </MainLayout>
@@ -69,8 +73,10 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Router />
-      <Toaster />
+      <AuthProvider>
+        <Router />
+        <Toaster />
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
