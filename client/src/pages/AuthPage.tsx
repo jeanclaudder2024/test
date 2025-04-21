@@ -315,7 +315,8 @@ export default function AuthPage() {
                         href="#"
                         onClick={(e) => {
                           e.preventDefault();
-                          document.querySelector('[data-state="inactive"][value="login"]')?.click();
+                          const tab = document.querySelector('[data-state="inactive"][value="login"]') as HTMLElement;
+                          tab?.click();
                         }}
                         className="font-medium text-primary hover:underline"
                       >
