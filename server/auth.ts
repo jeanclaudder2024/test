@@ -18,13 +18,12 @@ declare global {
       id: number;
       username: string;
       password: string;
-      email?: string | null;
+      email: string;
       stripeCustomerId?: string | null;
       stripeSubscriptionId?: string | null;
-      isSubscribed?: boolean;
+      isSubscribed?: boolean | null;
       subscriptionTier?: string | null;
-      createdAt?: Date;
-      updatedAt?: Date;
+      createdAt?: Date | null;
     }
   }
 }
