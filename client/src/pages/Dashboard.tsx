@@ -381,7 +381,7 @@ export default function Dashboard() {
           </div>
           
           {/* Map Container */}
-          <GoogleMapView 
+          <MapboxView 
             vessels={filteredVessels}
             refineries={filteredRefineries}
             selectedRegion={selectedRegion}

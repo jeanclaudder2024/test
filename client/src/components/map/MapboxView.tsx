@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import Map, { Marker, Popup, NavigationControl, FullscreenControl, ScaleControl } from 'react-map-gl';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import mapboxgl from 'mapbox-gl';
 import { Vessel, Refinery, Region } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { Ship, Navigation as NavigationIcon, Droplet } from 'lucide-react';
@@ -157,7 +157,7 @@ export default function MapboxView({
     <div className="relative h-96 md:h-[500px] rounded-lg overflow-hidden">
       <Map
         {...viewport}
-        onMove={evt => setViewport(evt.viewState)}
+        onMove={(evt: { viewState: ViewState }) => setViewport(evt.viewState)}
         mapStyle="mapbox://styles/mapbox/satellite-streets-v12"
         mapboxAccessToken={mapboxToken}
         attributionControl={true}
@@ -179,7 +179,7 @@ export default function MapboxView({
               key={`vessel-${vessel.id}`}
               latitude={typeof vessel.currentLat === 'number' ? vessel.currentLat : parseFloat(String(vessel.currentLat))}
               longitude={typeof vessel.currentLng === 'number' ? vessel.currentLng : parseFloat(String(vessel.currentLng))}
-              onClick={e => {
+              onClick={(e: { originalEvent: MouseEvent }) => {
                 e.originalEvent.stopPropagation();
                 handleVesselClick(vessel);
               }}
@@ -212,7 +212,7 @@ export default function MapboxView({
             key={`refinery-${refinery.id}`}
             latitude={refinery.lat}
             longitude={refinery.lng}
-            onClick={e => {
+            onClick={(e: { originalEvent: MouseEvent }) => {
               e.originalEvent.stopPropagation();
               handleRefineryClick(refinery);
             }}
