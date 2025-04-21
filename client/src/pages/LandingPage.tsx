@@ -55,217 +55,307 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* Hero Section - Professional Design */}
-      <section className="w-full pt-24 pb-32 md:pt-32 md:pb-40 lg:pt-40 lg:pb-48 border-b relative overflow-hidden bg-slate-900">
-        {/* Background effects */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_#3a7bd5_0%,_transparent_50%)] opacity-10"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_#00d2ff_0%,_transparent_50%)] opacity-10"></div>
-        <div className="absolute inset-0 bg-grid-slate-700/20 bg-[size:40px_40px]"></div>
+      {/* Hero Section - Maritime Design */}
+      <section className="w-full pt-24 pb-32 md:pt-32 md:pb-40 lg:pt-40 lg:pb-48 border-b relative overflow-hidden bg-[#15151e]">
+        {/* Background image - sunset with vessel */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center opacity-60" 
+          style={{ 
+            backgroundImage: "url('https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?q=80&w=1974&auto=format&fit=crop')",
+            backgroundSize: 'cover',
+            backgroundPosition: 'center'
+          }}
+        ></div>
         
-        {/* Abstract shapes */}
-        <div className="absolute top-20 right-[10%] w-64 h-64 bg-gradient-to-br from-primary/30 to-blue-500/20 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 left-[10%] w-72 h-72 bg-gradient-to-tr from-blue-600/20 to-primary/20 rounded-full blur-3xl"></div>
+        {/* Overlay gradient */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#15151e]/90 via-[#15151e]/70 to-[#15151e]/90"></div>
         
-        <div className="container px-4 md:px-6 flex flex-col items-center gap-8 text-center relative z-10">
-          <div className="space-y-6 max-w-4xl">
-            {/* Professional badge */}
-            <div className="inline-flex items-center py-1 px-3 rounded-full bg-slate-800/80 border border-slate-700/80 backdrop-blur-sm mb-4 shadow-lg">
-              <div className="w-2 h-2 rounded-full bg-cyan-500 mr-2 animate-pulse"></div>
-              <span className="text-sm font-medium text-slate-200">Maritime Intelligence Platform</span>
+        <div className="container px-4 md:px-6 flex flex-col items-start gap-8 relative z-10 h-full">
+          <div className="space-y-6 max-w-2xl">
+            {/* Logo badge */}
+            <div className="inline-flex items-center py-1 px-3 rounded-lg bg-[#bf5c45]/20 border border-[#bf5c45]/30 mb-4">
+              <Ship className="h-5 w-5 text-[#f6d2c7] mr-2" />
+              <span className="text-sm font-semibold text-[#f6d2c7]">AsiStream</span>
             </div>
             
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white">
-              <span className="block mb-2">Advanced Maritime</span>
-              <span className="bg-gradient-to-r from-cyan-400 via-blue-500 to-primary bg-clip-text text-transparent">Intelligence Platform</span>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-white">
+              <span className="block mb-2">Track Your Fleet</span>
+              <span className="block text-[#bf5c45]">in Real-Time.</span>
+              <span className="block">Optimize Your</span>
+              <span className="block text-[#bf5c45]">Ship Operations.</span>
             </h1>
             
-            <p className="text-xl md:text-2xl text-slate-300 max-w-3xl mx-auto">
-              Powerful AI-driven vessel tracking and analytics for industry professionals
+            <p className="text-lg md:text-xl text-[#f6d2c7]/90 max-w-2xl">
+              Manage up to 10 ships with live location tracking, fuel monitoring, and trip management.
             </p>
           </div>
           
-          <div className="flex flex-col sm:flex-row gap-4 mt-6">
+          <div className="mt-6">
             <Link href="/auth">
-              <Button size="lg" className="rounded-md bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/30">
-                Start Free Trial
-                <ChevronRight className="h-4 w-4 ml-1" />
-              </Button>
-            </Link>
-            <Link href="#features">
-              <Button size="lg" variant="outline" className="rounded-md text-slate-200 border-slate-700 hover:bg-slate-800">
-                Learn More
+              <Button size="lg" className="rounded-md bg-[#bf5c45] hover:bg-[#a3503c] text-white shadow-lg px-6 py-3 text-base font-medium">
+                Get Started Now
               </Button>
             </Link>
           </div>
           
-          {/* Trust indicators */}
-          <div className="flex items-center gap-3 mt-8 bg-slate-800/50 backdrop-blur-sm rounded-full px-4 py-2 border border-slate-700/50">
-            <div className="flex -space-x-2">
-              <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-medium text-slate-300 border-2 border-slate-800">E</div>
-              <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-medium text-slate-300 border-2 border-slate-800">B</div>
-              <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-medium text-slate-300 border-2 border-slate-800">S</div>
-            </div>
-            <div className="text-sm text-slate-300">
-              Trusted by <span className="font-semibold text-white">5,000+</span> shipping professionals
-            </div>
-          </div>
-          
-          {/* Stats cards - professional style */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12 w-full max-w-4xl">
+          {/* Stats cards - maritime style */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-20 w-full max-w-4xl self-center">
             {stats.map((stat, index) => (
               <div 
                 key={index} 
-                className="bg-slate-800/60 backdrop-blur-sm rounded-lg p-4 text-center border border-slate-700/60 shadow-xl hover:shadow-2xl transition-all duration-300"
+                className="bg-[#15151e]/80 backdrop-blur-sm rounded-lg p-4 text-center border border-[#bf5c45]/20 shadow-xl"
               >
-                <p className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent">{stat.value}</p>
-                <p className="text-sm text-slate-400">{stat.label}</p>
+                <p className="text-2xl md:text-3xl font-bold text-[#bf5c45]">{stat.value}</p>
+                <p className="text-sm text-[#f6d2c7]/70">{stat.label}</p>
               </div>
             ))}
           </div>
         </div>
         
-        {/* Professional visual elements */}
-        <div className="absolute bottom-0 right-0 w-1/3 max-w-md z-20 hidden lg:block">
-          <div className="relative">
-            <img src={oilTankerSvg} alt="Oil Tanker" className="w-full h-auto drop-shadow-2xl" />
-            <div className="absolute -top-8 -right-4 bg-slate-800/90 backdrop-blur-sm rounded-md shadow-lg px-3 py-2 z-30 border border-slate-700 text-xs flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full bg-emerald-400"></div>
-              <span className="text-slate-300">Live Tracking</span>
-            </div>
-          </div>
+        {/* Oil tanker image */}
+        <div className="absolute bottom-0 right-0 w-2/5 max-w-xl z-20 hidden lg:block transform translate-y-1/4">
+          <img src={oilTankerSvg} alt="Oil Tanker" className="w-full h-auto drop-shadow-2xl" />
         </div>
       </section>
 
-      {/* Features Section - Professional Style */}
-      <section id="features" className="w-full py-16 md:py-24 lg:py-32 border-b bg-slate-50 dark:bg-slate-950/50">
+      {/* Features Section - Maritime Style */}
+      <section id="features" className="w-full py-16 md:py-24 lg:py-32 border-b bg-[#f5f2ed]">
         <div className="container px-4 md:px-6">
           {/* Section header */}
-          <div className="flex flex-col items-center justify-center gap-4 text-center mb-16">
-            <div className="inline-flex p-4 rounded-full bg-slate-100 dark:bg-slate-800/60 shadow-md mb-2">
-              <Database className="h-8 w-8 text-slate-700 dark:text-slate-300" />
-            </div>
-            <div className="space-y-2 max-w-[58rem]">
-              <h2 className="text-3xl font-bold tracking-tight md:text-4xl text-slate-900 dark:text-white">
-                Enterprise-Grade <span className="text-primary">Maritime Intelligence</span>
+          <div className="flex flex-col gap-4 mb-16">
+            <div className="space-y-4 max-w-[58rem]">
+              <h2 className="text-3xl font-bold tracking-tight md:text-4xl text-[#15151e]">
+                Powerful Tools for Ship <span className="text-[#bf5c45]">Owners and Drivers</span>
               </h2>
-              <p className="text-slate-600 dark:text-slate-400 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed max-w-3xl mx-auto">
-                Our platform combines real-time tracking with advanced analytics to provide comprehensive maritime intelligence for industry professionals
+              <p className="text-[#15151e]/80 text-lg max-w-2xl">
+                Our key features of the app that make it essential for ship owners and drivers.
               </p>
             </div>
           </div>
           
-          {/* Feature showcase with image - professional style */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 mb-24 items-center">
+          {/* Feature cards grid - 3 columns */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+            {/* Feature 1 */}
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-[#f1e6df]">
+              <div className="p-6">
+                <div className="w-12 h-12 bg-[#f8efe9] rounded-lg flex items-center justify-center mb-4">
+                  <Map className="h-6 w-6 text-[#bf5c45]" />
+                </div>
+                <h3 className="text-xl font-bold text-[#15151e] mb-2">Real-Time Location Tracking</h3>
+                <p className="text-[#15151e]/70">
+                  Track the exact position of your vessels in real-time across global waters with accurate GPS positioning.
+                </p>
+              </div>
+            </div>
+            
+            {/* Feature 2 */}
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-[#f1e6df]">
+              <div className="p-6">
+                <div className="w-12 h-12 bg-[#f8efe9] rounded-lg flex items-center justify-center mb-4">
+                  <BarChart3 className="h-6 w-6 text-[#bf5c45]" />
+                </div>
+                <h3 className="text-xl font-bold text-[#15151e] mb-2">Fuel Monitoring</h3>
+                <p className="text-[#15151e]/70">
+                  Keep track of fuel consumption, costs, and efficiency to optimize operations and reduce expenses.
+                </p>
+              </div>
+            </div>
+            
+            {/* Feature 3 */}
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-[#f1e6df]">
+              <div className="p-6">
+                <div className="w-12 h-12 bg-[#f8efe9] rounded-lg flex items-center justify-center mb-4">
+                  <Ship className="h-6 w-6 text-[#bf5c45]" />
+                </div>
+                <h3 className="text-xl font-bold text-[#15151e] mb-2">Ship Management</h3>
+                <p className="text-[#15151e]/70">
+                  Comprehensive vessel management including maintenance schedules, crew assignments, and document storage.
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          {/* Steps section - based on reference image */}
+          <div className="mt-12 mb-16">
+            <h2 className="text-2xl md:text-3xl font-bold text-[#15151e] mb-6">
+              Simple Steps to <span className="text-[#bf5c45]">Manage Your Fleet</span>
+            </h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-8">
+              {/* Step 1 */}
+              <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-[#f1e6df] relative">
+                <div className="absolute top-0 left-0 w-16 h-16 flex items-center justify-center">
+                  <div className="w-12 h-12 bg-[#bf5c45] rounded-br-xl flex items-center justify-center text-white font-bold text-xl">
+                    01
+                  </div>
+                </div>
+                <div className="p-6 pt-10 mt-8">
+                  <h3 className="text-xl font-bold text-[#15151e] mb-2">Sign Up and Add Your Ships</h3>
+                  <p className="text-[#15151e]/70">
+                    Create an account and register your ships in the app. Add details such as vessel type, capacity, and crew information.
+                  </p>
+                </div>
+              </div>
+              
+              {/* Step 2 */}
+              <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-[#f1e6df] relative">
+                <div className="absolute top-0 left-0 w-16 h-16 flex items-center justify-center">
+                  <div className="w-12 h-12 bg-[#bf5c45] rounded-br-xl flex items-center justify-center text-white font-bold text-xl">
+                    02
+                  </div>
+                </div>
+                <div className="p-6 pt-10 mt-8">
+                  <h3 className="text-xl font-bold text-[#15151e] mb-2">Install Tracking Devices</h3>
+                  <p className="text-[#15151e]/70">
+                    Set up our tracking hardware on your vessels to enable real-time monitoring and data collection.
+                  </p>
+                </div>
+              </div>
+              
+              {/* Step 3 */}
+              <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-[#f1e6df] relative">
+                <div className="absolute top-0 left-0 w-16 h-16 flex items-center justify-center">
+                  <div className="w-12 h-12 bg-[#bf5c45] rounded-br-xl flex items-center justify-center text-white font-bold text-xl">
+                    03
+                  </div>
+                </div>
+                <div className="p-6 pt-10 mt-8">
+                  <h3 className="text-xl font-bold text-[#15151e] mb-2">Monitor Your Fleet</h3>
+                  <p className="text-[#15151e]/70">
+                    Access the dashboard to view real-time data, track vessel locations, and manage operations from anywhere.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Feature showcase with image - maritime style */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-24 items-center mt-16 bg-white p-8 rounded-xl shadow-lg border border-[#f1e6df]">
             <div className="relative">
-              <div className="absolute -inset-1 bg-gradient-to-r from-slate-200 to-slate-300 dark:from-slate-800 dark:to-slate-700 rounded-2xl blur-sm"></div>
-              <div className="relative overflow-hidden rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-                <div className="absolute top-4 left-4 bg-white dark:bg-slate-800 rounded-md px-2 py-1 text-xs font-medium text-slate-600 dark:text-slate-300 shadow-sm border border-slate-200 dark:border-slate-700 z-10">
-                  Premium Feature
-                </div>
-                <img 
-                  src={refinerySvg} 
-                  alt="Oil Refinery" 
-                  className="w-full h-auto object-cover transform hover:scale-105 transition-transform duration-700"
-                />
+              <img 
+                src="https://images.unsplash.com/photo-1494412651409-8963ce7935a7?q=80&w=2070&auto=format&fit=crop" 
+                alt="Ship at sea" 
+                className="w-full h-auto rounded-xl object-cover shadow-lg"
+              />
+              <div className="absolute bottom-4 right-4 bg-[#bf5c45]/90 text-white px-3 py-1 rounded-md text-sm font-medium">
+                Premium Feature
               </div>
             </div>
             
-            <div className="space-y-8">
-              <div>
-                <div className="inline-flex items-center rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 text-sm font-medium text-slate-800 dark:text-slate-300 mb-4">
-                  <span className="flex h-2 w-2 rounded-full bg-primary mr-1.5"></span>
-                  Enterprise Solution
-                </div>
-                <h3 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">Global Refinery Network</h3>
-              </div>
+            <div className="space-y-6">
+              <h3 className="text-2xl font-bold text-[#15151e]">Empowering Ship Owners & Drivers with Smart Fleet Management</h3>
               
-              <p className="text-slate-600 dark:text-slate-400 text-lg leading-relaxed">
-                Track the operations of 42 major refineries across the world with detailed status monitoring and capacity analytics. 
-                Our system provides real-time updates on operational status, maintenance schedules, and production levels.
+              <p className="text-[#15151e]/80">
+                At AsiStream, we believe in making ship management simple, efficient, and data-driven. Our mission is to empower ship owners and drivers with real-time tracking, fuel monitoring, and comprehensive trip management tools.
               </p>
               
-              <ul className="space-y-4">
+              <ul className="space-y-3">
                 <li className="flex items-start">
-                  <div className="mr-3 mt-1 bg-emerald-100 dark:bg-emerald-900/30 p-1.5 rounded-full">
-                    <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                  <div className="mr-3 mt-1 bg-[#f8efe9] p-1 rounded-full">
+                    <Check className="h-4 w-4 text-[#bf5c45]" />
                   </div>
-                  <span className="text-slate-700 dark:text-slate-300">Real-time refinery operational status monitoring</span>
+                  <span className="text-[#15151e]/80">Real-time vessel tracking across global waters</span>
                 </li>
                 <li className="flex items-start">
-                  <div className="mr-3 mt-1 bg-emerald-100 dark:bg-emerald-900/30 p-1.5 rounded-full">
-                    <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                  <div className="mr-3 mt-1 bg-[#f8efe9] p-1 rounded-full">
+                    <Check className="h-4 w-4 text-[#bf5c45]" />
                   </div>
-                  <span className="text-slate-700 dark:text-slate-300">Production capacity and utilization metrics</span>
+                  <span className="text-[#15151e]/80">Advanced fuel consumption monitoring and optimization</span>
                 </li>
                 <li className="flex items-start">
-                  <div className="mr-3 mt-1 bg-emerald-100 dark:bg-emerald-900/30 p-1.5 rounded-full">
-                    <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                  <div className="mr-3 mt-1 bg-[#f8efe9] p-1 rounded-full">
+                    <Check className="h-4 w-4 text-[#bf5c45]" />
                   </div>
-                  <span className="text-slate-700 dark:text-slate-300">Maintenance schedule forecasting and alerts</span>
+                  <span className="text-[#15151e]/80">Comprehensive trip planning and management</span>
                 </li>
               </ul>
               
-              <Button className="mt-6 rounded-md bg-slate-900 hover:bg-slate-800 text-white dark:bg-primary dark:hover:bg-primary/90 dark:text-white shadow-lg px-5 py-2.5">
-                Explore Refineries
-                <ChevronRight className="h-4 w-4 ml-1.5" />
+              <Button className="rounded-md bg-[#bf5c45] hover:bg-[#a3503c] text-white shadow-lg px-5 py-2.5">
+                Learn More
               </Button>
             </div>
           </div>
           
-          {/* Stats card image showcase - professional style */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-24">
-            <div className="order-2 lg:order-1 space-y-8">
-              <div>
-                <div className="inline-flex items-center rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 text-sm font-medium text-slate-800 dark:text-slate-300 mb-4">
-                  <span className="flex h-2 w-2 rounded-full bg-blue-500 mr-1.5"></span>
-                  Data-Driven Insights
-                </div>
-                <h3 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">Advanced Maritime Analytics</h3>
-              </div>
-              
-              <p className="text-slate-600 dark:text-slate-400 text-lg leading-relaxed">
-                Leverage our powerful analytics tools to gain unprecedented insights into global maritime traffic patterns, 
-                cargo volumes, and market trends. Make data-driven decisions with confidence using our comprehensive dashboards.
+          {/* Dashboard preview section */}
+          <div className="p-8 bg-[#15151e] rounded-xl shadow-2xl mb-24 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(ellipse_at_top_right,_#bf5c45_0%,_transparent_50%)] opacity-10 z-0"></div>
+            
+            <div className="relative z-10 mb-8">
+              <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+                Vessel Dashboard <span className="text-[#bf5c45]">Preview</span>
+              </h2>
+              <p className="text-white/80 max-w-2xl">
+                Our intuitive dashboard provides comprehensive vessel data at a glance. Track locations, monitor fuel consumption, and manage your fleet efficiently.
               </p>
-              
-              <ul className="space-y-4">
-                <li className="flex items-start">
-                  <div className="mr-3 mt-1 bg-blue-100 dark:bg-blue-900/30 p-1.5 rounded-full">
-                    <Check className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <span className="text-slate-700 dark:text-slate-300">Interactive data visualization dashboards</span>
-                </li>
-                <li className="flex items-start">
-                  <div className="mr-3 mt-1 bg-blue-100 dark:bg-blue-900/30 p-1.5 rounded-full">
-                    <Check className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <span className="text-slate-700 dark:text-slate-300">Predictive analytics for vessel routing and ETA</span>
-                </li>
-                <li className="flex items-start">
-                  <div className="mr-3 mt-1 bg-blue-100 dark:bg-blue-900/30 p-1.5 rounded-full">
-                    <Check className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <span className="text-slate-700 dark:text-slate-300">Custom report generation and export capabilities</span>
-                </li>
-              </ul>
-              
-              <Button className="mt-6 rounded-md bg-blue-600 hover:bg-blue-700 text-white shadow-lg px-5 py-2.5">
-                View Analytics Demo
-                <ChevronRight className="h-4 w-4 ml-1.5" />
-              </Button>
             </div>
             
-            <div className="order-1 lg:order-2 relative">
-              <div className="absolute -inset-1 bg-gradient-to-r from-blue-200 to-blue-300 dark:from-blue-800/50 dark:to-blue-700/50 rounded-2xl blur-sm"></div>
-              <div className="relative overflow-hidden rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-                <div className="absolute top-4 right-4 bg-white dark:bg-slate-800 rounded-md px-2 py-1 text-xs font-medium text-slate-600 dark:text-slate-300 shadow-sm border border-slate-200 dark:border-slate-700 z-10">
-                  Enterprise Dashboard
+            <div className="bg-[#1c1c25] p-6 rounded-xl border border-[#2c2c38] shadow-xl">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center">
+                  <Ship className="h-5 w-5 text-[#bf5c45] mr-2" />
+                  <span className="text-white font-medium">Vessel Dashboard</span>
                 </div>
-                <img 
-                  src={statsCardSvg} 
-                  alt="Analytics Dashboard" 
-                  className="w-full h-auto transform hover:scale-105 transition-transform duration-700"
-                />
+                <div className="flex gap-2">
+                  <div className="w-2 h-2 rounded-full bg-[#bf5c45]"></div>
+                  <div className="w-2 h-2 rounded-full bg-white/20"></div>
+                  <div className="w-2 h-2 rounded-full bg-white/20"></div>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="bg-[#232330] p-4 rounded-lg border border-[#2c2c38]">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-white/60 text-sm">Container Ship</span>
+                    <div className="flex items-center">
+                      <div className="w-2 h-2 rounded-full bg-green-500 mr-1"></div>
+                      <span className="text-green-500 text-xs">Active</span>
+                    </div>
+                  </div>
+                  <p className="text-xl font-bold text-white">$56,863</p>
+                  <div className="flex mt-1">
+                    {Array(5).fill(0).map((_, i) => (
+                      <div key={i} className={`w-1 h-6 rounded-sm mx-0.5 ${i < 4 ? 'bg-[#bf5c45]' : 'bg-[#bf5c45]/30'}`}></div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="bg-[#232330] p-4 rounded-lg border border-[#2c2c38]">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-white/60 text-sm">Ro-Ro Ship</span>
+                    <div className="flex items-center">
+                      <div className="w-2 h-2 rounded-full bg-green-500 mr-1"></div>
+                      <span className="text-green-500 text-xs">Active</span>
+                    </div>
+                  </div>
+                  <p className="text-xl font-bold text-white">$92,649</p>
+                  <div className="flex mt-1">
+                    {Array(5).fill(0).map((_, i) => (
+                      <div key={i} className={`w-1 h-6 rounded-sm mx-0.5 ${i < 3 ? 'bg-[#bf5c45]' : 'bg-[#bf5c45]/30'}`}></div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="bg-[#232330] p-4 rounded-lg border border-[#2c2c38]">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-white/60 text-sm">Bulk Carrier</span>
+                    <div className="flex items-center">
+                      <div className="w-2 h-2 rounded-full bg-amber-500 mr-1"></div>
+                      <span className="text-amber-500 text-xs">Docked</span>
+                    </div>
+                  </div>
+                  <p className="text-xl font-bold text-white">$13,946</p>
+                  <div className="flex mt-1">
+                    {Array(5).fill(0).map((_, i) => (
+                      <div key={i} className={`w-1 h-6 rounded-sm mx-0.5 ${i < 2 ? 'bg-[#bf5c45]' : 'bg-[#bf5c45]/30'}`}></div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mt-4">
+                <Button className="bg-[#bf5c45] hover:bg-[#a3503c] text-white">
+                  View Full Dashboard
+                </Button>
               </div>
             </div>
           </div>
