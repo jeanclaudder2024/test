@@ -2,6 +2,7 @@ import { storage } from "../storage";
 import { InsertVessel, InsertProgressEvent, Vessel, ProgressEvent } from "@shared/schema";
 import { dataService } from "./asiStreamService";
 import { generateLargeVesselDataset } from "./vesselGenerator";
+import { OIL_PRODUCT_TYPES } from "@shared/constants";
 
 export const vesselService = {
   getAllVessels: async () => {
@@ -54,14 +55,8 @@ export const vesselService = {
         
         // We already have vessels, just return stats
         const oilVessels = existingVessels.filter(v => {
-          if (!v.vesselType) return false;
-          const type = v.vesselType.toLowerCase();
-          return (
-            type.includes('oil') ||
-            type.includes('tanker') ||
-            type.includes('crude') ||
-            type.includes('vlcc')
-          );
+          // Check if vessel has a cargo type that matches any of the oil product types
+          return v.cargoType && OIL_PRODUCT_TYPES.includes(v.cargoType);
         });
         
         // Calculate total cargo capacity
@@ -93,6 +88,26 @@ export const vesselService = {
       // Track created vessels and IMOs to avoid duplicates
       const createdVessels: Vessel[] = [];
       const usedImoNumbers = new Set<string>();
+      
+      // Save vessels to database
+      for (const vessel of vessels) {
+        try {
+          // Skip vessels with IMO numbers we've already processed to avoid duplicates
+          if (usedImoNumbers.has(vessel.imo)) continue;
+          
+          // Add this IMO to our tracking set
+          usedImoNumbers.add(vessel.imo);
+          
+          // Save vessel to database
+          const createdVessel = await storage.createVessel(vessel);
+          createdVessels.push(createdVessel);
+        } catch (err) {
+          console.error(`Error creating vessel ${vessel.name}:`, err);
+          // Continue with the next vessel
+        }
+      }
+      
+      console.log(`Saved ${createdVessels.length} vessels to database.`);
       
       // Generate progress events for multiple vessels
       console.log("Generating progress events...");
@@ -176,14 +191,8 @@ export const vesselService = {
       return {
         vessels: createdVessels.length,
         oilVessels: createdVessels.filter(v => {
-          if (!v.vesselType) return false;
-          const type = v.vesselType.toLowerCase();
-          return (
-            type.includes('oil') ||
-            type.includes('tanker') ||
-            type.includes('crude') ||
-            type.includes('vlcc')
-          );
+          // Check if vessel has a cargo type that matches any of the oil product types
+          return v.cargoType && OIL_PRODUCT_TYPES.includes(v.cargoType);
         }).length,
         totalCargo
       };
