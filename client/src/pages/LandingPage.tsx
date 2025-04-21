@@ -10,7 +10,7 @@ export default function LandingPage() {
       <header className="px-4 lg:px-6 h-16 flex items-center justify-between border-b backdrop-blur-sm bg-background/50 fixed w-full z-50">
         <div className="flex items-center gap-2 font-bold text-xl text-primary">
           <Anchor className="h-6 w-6" />
-          <span>AsiStream</span>
+          <span>Vesselian</span>
         </div>
         <nav className="hidden md:flex gap-6 items-center">
           <Link href="#features" className="text-sm font-medium hover:text-primary transition-colors">
@@ -42,33 +42,89 @@ export default function LandingPage() {
       </header>
 
       {/* Hero Section */}
-      <section className="w-full py-24 md:py-32 lg:py-40 border-b relative overflow-hidden">
-        <div className="container px-4 md:px-6 flex flex-col items-center gap-4 text-center relative z-10">
-          <div className="space-y-3">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tighter">
-              Intelligent Maritime Tracking
-            </h1>
-            <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto">
-              Powerful AI-driven vessel tracking and analytics for the shipping industry
-            </p>
+      <section className="w-full min-h-screen grid md:grid-cols-2 relative overflow-hidden">
+        {/* Left side - Dark hero with vessel image */}
+        <div className="bg-black text-white py-24 md:py-12 lg:py-16 relative">
+          <div className="absolute inset-0 opacity-60">
+            <img 
+              src="https://images.unsplash.com/photo-1561361398-a957b93dbf35?q=80&w=1000&auto=format&fit=crop" 
+              alt="Oil vessel at night" 
+              className="w-full h-full object-cover" 
+            />
           </div>
-          <div className="flex flex-col sm:flex-row gap-3 min-w-[176px] mt-6">
-            <Link href="/auth">
-              <Button size="lg">
-                Start Free Trial
-                <ChevronRight className="h-4 w-4 ml-1" />
-              </Button>
-            </Link>
-            <Link href="#features">
-              <Button variant="outline" size="lg">
-                Learn More
-              </Button>
-            </Link>
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/80" />
+          <div className="px-8 md:px-16 flex flex-col justify-center h-full relative z-10 max-w-xl mx-auto md:mx-0">
+            <h1 className="text-5xl md:text-6xl font-bold leading-tight mb-6">
+              Track Your Fleet in Real-Time.
+              <br />
+              Optimize Your Ship Operations.
+            </h1>
+            <p className="text-lg md:text-xl text-gray-300 mb-8">
+              Manage up to 10 ships with live location tracking, fuel monitoring, and trip management.
+            </p>
+            <div>
+              <Link href="/auth">
+                <Button size="lg" className="bg-primary hover:bg-primary/90 text-white font-bold px-8 py-6 text-lg rounded-full">
+                  Get Started Now
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
-        {/* Background design elements */}
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-transparent to-primary/20 opacity-30" />
-        <div className="absolute top-1/3 left-0 w-full h-1/3 bg-gradient-to-r from-primary/30 via-primary/5 to-primary/30 blur-3xl transform -rotate-12" />
+        
+        {/* Right side - Feature highlight */}
+        <div className="bg-gradient-to-br from-orange-50 to-orange-100 py-24 md:py-12 lg:py-16">
+          <div className="px-8 md:px-16 flex flex-col justify-center h-full relative z-10 max-w-xl mx-auto md:mx-0">
+            <div className="mb-12">
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">
+                Empowering Ship Owners & Drivers with Smart Fleet Management
+              </h2>
+              <p className="text-gray-700 mb-8">
+                At Vesselian, we believe in making ship management simple, efficient, and data-driven. Our mission is to empower ship owners and drivers with real-time tracking, fuel monitoring, and comprehensive fleet management.
+              </p>
+              <Link href="#features">
+                <Button variant="outline" className="border-primary text-primary hover:bg-primary/10 rounded-full px-6">
+                  Learn More
+                </Button>
+              </Link>
+            </div>
+            
+            <div>
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">
+                Simple Steps to Manage Your Fleet
+              </h2>
+              <div className="space-y-6">
+                <div className="flex items-start">
+                  <div className="bg-primary/10 rounded-full p-3 mr-4">
+                    <span className="text-primary font-bold text-lg">01</span>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg mb-1">Sign Up and Add Your Ships</h3>
+                    <p className="text-gray-700">Create an account and register your ships in the app.</p>
+                  </div>
+                </div>
+                <div className="flex items-start">
+                  <div className="bg-primary/10 rounded-full p-3 mr-4">
+                    <span className="text-primary font-bold text-lg">02</span>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg mb-1">Track in Real-Time</h3>
+                    <p className="text-gray-700">Monitor location, status and performance of your vessels.</p>
+                  </div>
+                </div>
+                <div className="flex items-start">
+                  <div className="bg-primary/10 rounded-full p-3 mr-4">
+                    <span className="text-primary font-bold text-lg">03</span>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg mb-1">Optimize Operations</h3>
+                    <p className="text-gray-700">Use insights to improve efficiency and reduce costs.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* Features Section */}
