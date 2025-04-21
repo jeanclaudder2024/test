@@ -219,8 +219,11 @@ export default function AdminDashboard() {
   // Handle create feature flag
   const handleCreateFeatureFlag = async () => {
     try {
-      const response = await apiRequest("POST", "/api/admin/feature-flags", newFeatureFlag);
-      
+      const response = await apiRequest({ 
+        method: "POST", 
+        url: "/api/admin/feature-flags", 
+        body: newFeatureFlag 
+      });
       if (response.ok) {
         const newFlagData = await response.json();
         setFeatureFlags([...featureFlags, newFlagData]);
@@ -253,8 +256,10 @@ export default function AdminDashboard() {
   // Handle toggle feature flag
   const handleToggleFeatureFlag = async (flagId: number, isEnabled: boolean) => {
     try {
-      const response = await apiRequest("PATCH", `/api/admin/feature-flags/${flagId}`, {
-        isEnabled
+      const response = await apiRequest({ 
+        method: "PATCH", 
+        url: `/api/admin/feature-flags/${flagId}`, 
+        body: { isEnabled } 
       });
       
       if (response.ok) {
@@ -285,8 +290,10 @@ export default function AdminDashboard() {
   // Handle toggle subscription plan active status
   const handleTogglePlanStatus = async (planId: number, isActive: boolean) => {
     try {
-      const response = await apiRequest("PATCH", `/api/admin/subscription-plans/${planId}`, {
-        isActive
+      const response = await apiRequest({ 
+        method: "PATCH", 
+        url: `/api/admin/subscription-plans/${planId}`, 
+        body: { isActive } 
       });
       
       if (response.ok) {
