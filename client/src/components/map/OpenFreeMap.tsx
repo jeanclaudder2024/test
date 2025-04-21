@@ -51,6 +51,34 @@ const mapStyles = [
     name: 'OSM Bright',
     url: 'https://tiles.openfreemap.org/styles/osm-bright',
     description: 'OpenFreeMap bright style'
+  },
+  {
+    id: 'osm-standard',
+    name: 'OSM Standard',
+    tileLayer: true,
+    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    description: 'Standard OpenStreetMap'
+  },
+  {
+    id: 'stamen-terrain',
+    name: 'Terrain',
+    tileLayer: true,
+    url: 'https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}{r}.png',
+    description: 'Stamen Terrain'
+  },
+  {
+    id: 'carto-dark',
+    name: 'Dark',
+    tileLayer: true,
+    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    description: 'CARTO Dark'
+  },
+  {
+    id: 'carto-voyager',
+    name: 'Voyager',
+    tileLayer: true,
+    url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+    description: 'CARTO Voyager'
   }
 ];
 
@@ -136,11 +164,22 @@ export default function OpenFreeMap({
       // Create new map
       mapInstanceRef.current = L.map(mapRef.current).setView([52.517, 13.388], 2);
       
-      // Add MapLibre GL layer
-      // @ts-ignore - maplibreGL plugin is not properly typed
-      L.maplibreGL({
-        style: getStyleUrl(mapStyle),
-      }).addTo(mapInstanceRef.current);
+      // Get the selected style
+      const selectedStyle = mapStyles.find(s => s.id === mapStyle) || mapStyles[0];
+      
+      if (selectedStyle.tileLayer) {
+        // Add a standard tile layer
+        L.tileLayer(selectedStyle.url, {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          maxZoom: 19
+        }).addTo(mapInstanceRef.current);
+      } else {
+        // Add MapLibre GL vector layer
+        // @ts-ignore - maplibreGL plugin is not properly typed
+        L.maplibreGL({
+          style: selectedStyle.url,
+        }).addTo(mapInstanceRef.current);
+      }
       
       // Add vessel markers
       addVesselMarkers(mapInstanceRef.current);
@@ -345,21 +384,36 @@ export default function OpenFreeMap({
       <div ref={mapRef} className="absolute inset-0 w-full h-full" />
       
       {/* Map Style Selector */}
-      <div className="absolute bottom-4 left-4 z-10 bg-white/90 backdrop-blur-sm rounded-md shadow-md p-2 flex flex-wrap gap-1.5 max-w-[320px]">
-        {mapStyles.map(style => (
-          <Button
-            key={style.id}
-            variant={style.id === mapStyle ? "default" : "outline"}
-            size="sm"
-            className={`flex flex-col items-center justify-center py-1 px-3 h-auto ${
-              style.id === mapStyle ? 'bg-primary text-white' : 'border-primary/20 hover:bg-primary/10'
-            }`}
-            onClick={() => handleStyleChange(style.id)}
-            title={style.description}
-          >
-            <span className="text-xs font-medium">{style.name}</span>
-          </Button>
-        ))}
+      <div className="absolute bottom-4 left-4 z-10 bg-white/90 backdrop-blur-sm rounded-lg shadow-md p-3 flex flex-col gap-2 max-w-[320px]">
+        <h4 className="text-xs font-semibold text-gray-500 mb-1">Map Style</h4>
+        <div className="flex flex-wrap gap-1.5">
+          {mapStyles.map(style => {
+            // Create icons for different map styles
+            let icon = '🗺️';
+            if (style.id === 'liberty') icon = '🌍';
+            if (style.id === 'osm-bright') icon = '🌐';
+            if (style.id === 'osm-standard') icon = '🧭';
+            if (style.id === 'stamen-terrain') icon = '⛰️';
+            if (style.id === 'carto-dark') icon = '🌑';
+            if (style.id === 'carto-voyager') icon = '🧪';
+            
+            return (
+              <Button
+                key={style.id}
+                variant={style.id === mapStyle ? "default" : "outline"}
+                size="sm"
+                className={`flex flex-row items-center justify-center py-1 px-2 h-auto gap-1 ${
+                  style.id === mapStyle ? 'bg-primary text-white' : 'border-primary/20 hover:bg-primary/10'
+                }`}
+                onClick={() => handleStyleChange(style.id)}
+                title={style.description}
+              >
+                <span className="text-xs">{icon}</span>
+                <span className="text-xs font-medium">{style.name}</span>
+              </Button>
+            );
+          })}
+        </div>
       </div>
       
       {/* Tracked Vessel Info */}
