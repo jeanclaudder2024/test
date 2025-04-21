@@ -407,6 +407,9 @@ export default function LandingPage() {
       <section id="pricing" className="w-full py-12 md:py-24 lg:py-32 border-b">
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center justify-center gap-4 text-center">
+            <div className="inline-flex p-3 rounded-full bg-primary/10 mb-2">
+              <Shield className="h-8 w-8 text-primary" />
+            </div>
             <div className="space-y-2">
               <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight">
                 Choose Your Plan
