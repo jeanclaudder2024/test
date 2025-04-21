@@ -40,45 +40,41 @@ interface OpenFreeMapProps {
 
 // Available free map styles
 const mapStyles = [
-  { 
-    id: 'liberty',
-    name: 'Liberty',
-    url: 'https://tiles.openfreemap.org/styles/liberty',
-    description: 'OpenFreeMap Liberty style'
-  },
-  { 
-    id: 'osm-bright',
-    name: 'OSM Bright',
-    url: 'https://tiles.openfreemap.org/styles/osm-bright',
-    description: 'OpenFreeMap bright style'
-  },
   {
     id: 'osm-standard',
     name: 'OSM Standard',
-    tileLayer: true,
     url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
     description: 'Standard OpenStreetMap'
   },
   {
     id: 'stamen-terrain',
     name: 'Terrain',
-    tileLayer: true,
     url: 'https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}{r}.png',
     description: 'Stamen Terrain'
   },
   {
     id: 'carto-dark',
     name: 'Dark',
-    tileLayer: true,
     url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
     description: 'CARTO Dark'
   },
   {
     id: 'carto-voyager',
     name: 'Voyager',
-    tileLayer: true,
     url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
     description: 'CARTO Voyager'
+  },
+  {
+    id: 'opentopomap',
+    name: 'Topo',
+    url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+    description: 'OpenTopoMap - topographical map'
+  },
+  {
+    id: 'esri-world',
+    name: 'Satellite',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    description: 'ESRI World Imagery'
   }
 ];
 
@@ -110,12 +106,6 @@ export default function OpenFreeMap({
       leafletCss.href = 'https://unpkg.com/leaflet/dist/leaflet.css';
       document.head.appendChild(leafletCss);
       
-      // Load Maplibre CSS
-      const maplibreCss = document.createElement('link');
-      maplibreCss.rel = 'stylesheet';
-      maplibreCss.href = 'https://unpkg.com/maplibre-gl/dist/maplibre-gl.css';
-      document.head.appendChild(maplibreCss);
-      
       // Load Leaflet script
       const leafletScript = document.createElement('script');
       leafletScript.src = 'https://unpkg.com/leaflet/dist/leaflet.js';
@@ -126,31 +116,11 @@ export default function OpenFreeMap({
         leafletScript.onload = () => resolve();
       });
       
-      // Load Maplibre script
-      const maplibreScript = document.createElement('script');
-      maplibreScript.src = 'https://unpkg.com/maplibre-gl/dist/maplibre-gl.js';
-      document.body.appendChild(maplibreScript);
-      
-      // Wait for Maplibre to load
-      await new Promise<void>((resolve) => {
-        maplibreScript.onload = () => resolve();
-      });
-      
-      // Load Maplibre-Leaflet script
-      const maplibreLeafletScript = document.createElement('script');
-      maplibreLeafletScript.src = 'https://unpkg.com/@maplibre/maplibre-gl-leaflet/leaflet-maplibre-gl.js';
-      document.body.appendChild(maplibreLeafletScript);
-      
-      // Wait for Maplibre-Leaflet to load
-      await new Promise<void>((resolve) => {
-        maplibreLeafletScript.onload = () => resolve();
-      });
-      
       // Initialize the map
       initializeMap();
     };
     
-    // Initialize the map with OpenFreeMap styles
+    // Initialize the map with the selected tile layer
     const initializeMap = () => {
       const L = window.L;
       if (!L || !mapRef.current) return;
@@ -167,19 +137,11 @@ export default function OpenFreeMap({
       // Get the selected style
       const selectedStyle = mapStyles.find(s => s.id === mapStyle) || mapStyles[0];
       
-      if (selectedStyle.tileLayer) {
-        // Add a standard tile layer
-        L.tileLayer(selectedStyle.url, {
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-          maxZoom: 19
-        }).addTo(mapInstanceRef.current);
-      } else {
-        // Add MapLibre GL vector layer
-        // @ts-ignore - maplibreGL plugin is not properly typed
-        L.maplibreGL({
-          style: selectedStyle.url,
-        }).addTo(mapInstanceRef.current);
-      }
+      // Add a standard tile layer
+      L.tileLayer(selectedStyle.url, {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19
+      }).addTo(mapInstanceRef.current);
       
       // Add vessel markers
       addVesselMarkers(mapInstanceRef.current);
@@ -201,12 +163,6 @@ export default function OpenFreeMap({
         const lng = typeof trackedVessel.currentLng === 'number' ? trackedVessel.currentLng : parseFloat(String(trackedVessel.currentLng));
         mapInstanceRef.current.setView([lat, lng], 8);
       }
-    };
-    
-    // Get the style URL based on the style ID
-    const getStyleUrl = (styleId: string) => {
-      const style = mapStyles.find(s => s.id === styleId);
-      return style ? style.url : mapStyles[0].url;
     };
     
     // Add vessel markers to the map
@@ -390,12 +346,12 @@ export default function OpenFreeMap({
           {mapStyles.map(style => {
             // Create icons for different map styles
             let icon = '🗺️';
-            if (style.id === 'liberty') icon = '🌍';
-            if (style.id === 'osm-bright') icon = '🌐';
             if (style.id === 'osm-standard') icon = '🧭';
             if (style.id === 'stamen-terrain') icon = '⛰️';
             if (style.id === 'carto-dark') icon = '🌑';
             if (style.id === 'carto-voyager') icon = '🧪';
+            if (style.id === 'opentopomap') icon = '🏔️';
+            if (style.id === 'esri-world') icon = '🛰️';
             
             return (
               <Button
