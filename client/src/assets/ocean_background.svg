@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 720" width="1440" height="720">
+  <!-- Sky gradient -->
+  <defs>
+    <linearGradient id="skyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#0d47a1;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#1976d2;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#42a5f5;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="oceanGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#0288d1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#01579b;stop-opacity:1" />
+    </linearGradient>
+    
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="10" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+  
+  <!-- Sky -->
+  <rect x="0" y="0" width="1440" height="400" fill="url(#skyGradient)"/>
+  
+  <!-- Sun -->
+  <circle cx="1100" cy="150" r="60" fill="#ff9800" filter="url(#glow)"/>
+  <circle cx="1100" cy="150" r="80" fill="#ffcc80" opacity="0.2" filter="url(#glow)"/>
+  <circle cx="1100" cy="150" r="100" fill="#ffecb3" opacity="0.1" filter="url(#glow)"/>
+  
+  <!-- Distant clouds -->
+  <ellipse cx="200" cy="120" rx="100" ry="40" fill="#ffffff" opacity="0.7"/>
+  <ellipse cx="250" cy="110" rx="70" ry="30" fill="#ffffff" opacity="0.7"/>
+  <ellipse cx="300" cy="125" rx="60" ry="25" fill="#ffffff" opacity="0.7"/>
+  
+  <ellipse cx="700" cy="180" rx="120" ry="30" fill="#ffffff" opacity="0.6"/>
+  <ellipse cx="780" cy="160" rx="80" ry="20" fill="#ffffff" opacity="0.6"/>
+  <ellipse cx="850" cy="170" rx="70" ry="25" fill="#ffffff" opacity="0.6"/>
+  
+  <!-- Ocean -->
+  <rect x="0" y="400" width="1440" height="320" fill="url(#oceanGradient)"/>
+  
+  <!-- Waves -->
+  <path d="M0,400 Q180,380 360,400 T720,380 T1080,400 T1440,380 L1440,720 L0,720 Z" fill="#0277bd" opacity="0.8"/>
+  <path d="M0,450 Q240,430 480,450 T960,430 T1440,450 L1440,720 L0,720 Z" fill="#01579b" opacity="0.6"/>
+  
+  <!-- Wave details -->
+  <path d="M0,410 Q120,405 240,410 T480,405 T720,410 T960,405 T1200,410 T1440,405" stroke="#b3e5fc" stroke-width="1" fill="none" opacity="0.3"/>
+  <path d="M0,420 Q160,415 320,420 T640,415 T960,420 T1280,415 T1440,420" stroke="#b3e5fc" stroke-width="1" fill="none" opacity="0.3"/>
+  <path d="M0,470 Q180,465 360,470 T720,465 T1080,470 T1440,465" stroke="#b3e5fc" stroke-width="1" fill="none" opacity="0.2"/>
+  
+  <!-- Distant ships silhouettes -->
+  <path d="M160,390 L200,390 L205,385 L155,385 Z" fill="#455a64" opacity="0.7"/>
+  <rect x="170" y="375" width="10" height="10" fill="#455a64" opacity="0.7"/>
+  <rect x="185" y="380" width="5" height="5" fill="#455a64" opacity="0.7"/>
+  
+  <path d="M960,385 L1020,385 L1025,380 L955,380 Z" fill="#455a64" opacity="0.6"/>
+  <rect x="980" y="370" width="15" height="10" fill="#455a64" opacity="0.6"/>
+  <rect x="1000" y="375" width="5" height="5" fill="#455a64" opacity="0.6"/>
+  
+  <!-- Small birds -->
+  <path d="M400,150 C405,145 410,150 415,145 C420,150 425,145 430,150" stroke="#37474f" stroke-width="2" fill="none"/>
+  <path d="M430,120 C435,115 440,120 445,115 C450,120 455,115 460,120" stroke="#37474f" stroke-width="2" fill="none"/>
+  <path d="M480,100 C485,95 490,100 495,95 C500,100 505,95 510,100" stroke="#37474f" stroke-width="2" fill="none"/>
+</svg>
