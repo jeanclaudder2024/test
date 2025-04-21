@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import WorldMap from "@/components/map/WorldMap";
 import MapboxView from "@/components/map/NewMapboxView";
+import LeafletMap from "@/components/map/LeafletMap";
 import VesselInfo from "@/components/vessels/VesselInfo";
 import ProgressTimeline from "@/components/vessels/ProgressTimeline";
 import StatsCards from "@/components/dashboard/StatsCards";
@@ -381,7 +382,7 @@ export default function Dashboard() {
           </div>
           
           {/* Map Container */}
-          <MapboxView 
+          <LeafletMap 
             vessels={filteredVessels}
             refineries={filteredRefineries}
             selectedRegion={selectedRegion}
