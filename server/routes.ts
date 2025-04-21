@@ -26,6 +26,7 @@ import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { apiTesterRouter } from "./routes/apiTester";
 import { brokerRouter } from "./routes/brokerRoutes";
+import { adminRouter } from "./routes/adminRoutes";
 import { seedBrokers } from "./services/seedService";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -717,6 +718,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Mount API router
+  app.use("/api/admin", adminRouter); // Secured admin routes
   app.use("/api", apiRouter);
 
   const httpServer = createServer(app);

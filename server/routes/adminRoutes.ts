@@ -2,7 +2,14 @@ import { Router, Request, Response, NextFunction } from "express";
 import { storage } from "../storage";
 import { db } from "../db";
 import { eq } from "drizzle-orm";
-import { subscriptionPlans, featureFlags } from "@shared/schema";
+import { 
+  subscriptionPlans, 
+  featureFlags, 
+  users as userTable, 
+  vessels as vesselTable, 
+  refineries as refineryTable, 
+  brokers as brokerTable 
+} from "@shared/schema";
 import { z } from "zod";
 
 export const adminRouter = Router();
@@ -14,7 +21,8 @@ const requireAdmin = async (req: Request, res: Response, next: NextFunction) => 
   }
 
   const user = req.user;
-  if (!user.isAdmin && user.role !== "admin" && user.role !== "superadmin") {
+  // Check if user has admin role based on fields in the User type
+  if (!(user.isAdmin === true || (user.role && ['admin', 'superadmin'].includes(user.role as string)))) {
     return res.status(403).json({ message: "Unauthorized - Admin access required" });
   }
 
@@ -83,7 +91,8 @@ adminRouter.get("/subscription-plans", async (req, res) => {
 const subscriptionPlanSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
-  price: z.string().or(z.number()).transform(val => typeof val === 'string' ? parseFloat(val) : val),
+  price: z.string().or(z.number()).transform(val => typeof val === 'string' ? parseFloat(val) : val)
+    .transform(val => val.toString()), // Convert to string for Drizzle
   interval: z.string().refine(val => ['monthly', 'yearly'].includes(val), {
     message: "Interval must be 'monthly' or 'yearly'"
   }),
@@ -197,14 +206,20 @@ adminRouter.patch("/feature-flags/:id", async (req, res) => {
 // Stats
 adminRouter.get("/stats", async (req, res) => {
   try {
-    const userCount = await db.query.users.count();
-    const subscribedUserCount = await db.query.users.count(
-      eq(req.user.isSubscribed, true)
-    );
+    // Use direct count methods instead of count property
+    const users = await db.select().from(users);
+    const userCount = users.length;
+    const subscribedUsers = users.filter(user => user.isSubscribed === true);
+    const subscribedUserCount = subscribedUsers.length;
     
-    const vesselCount = await db.query.vessels.count();
-    const refineryCount = await db.query.refineries.count();
-    const brokerCount = await db.query.brokers.count();
+    const allVessels = await db.select().from(vessels);
+    const vesselCount = allVessels.length;
+    
+    const allRefineries = await db.select().from(refineries);
+    const refineryCount = allRefineries.length;
+    
+    const allBrokers = await db.select().from(brokers);
+    const brokerCount = allBrokers.length;
     
     res.json({
       users: {
