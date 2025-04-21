@@ -136,105 +136,137 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Features Section with colorful cards */}
-      <section id="features" className="w-full py-16 md:py-24 lg:py-32 border-b bg-gradient-to-b from-background to-background/80">
+      {/* Features Section - Professional Style */}
+      <section id="features" className="w-full py-16 md:py-24 lg:py-32 border-b bg-slate-50 dark:bg-slate-950/50">
         <div className="container px-4 md:px-6">
           {/* Section header */}
           <div className="flex flex-col items-center justify-center gap-4 text-center mb-16">
-            <div className="inline-block p-2 bg-primary/10 rounded-full mb-2">
-              <Database className="h-8 w-8 text-primary" />
+            <div className="inline-flex p-4 rounded-full bg-slate-100 dark:bg-slate-800/60 shadow-md mb-2">
+              <Database className="h-8 w-8 text-slate-700 dark:text-slate-300" />
             </div>
             <div className="space-y-2 max-w-[58rem]">
-              <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-                Powerful Maritime Intelligence
+              <h2 className="text-3xl font-bold tracking-tight md:text-4xl text-slate-900 dark:text-white">
+                Enterprise-Grade <span className="text-primary">Maritime Intelligence</span>
               </h2>
-              <p className="text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed max-w-3xl mx-auto">
-                Our platform combines real-time tracking with advanced analytics to provide comprehensive maritime intelligence
+              <p className="text-slate-600 dark:text-slate-400 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed max-w-3xl mx-auto">
+                Our platform combines real-time tracking with advanced analytics to provide comprehensive maritime intelligence for industry professionals
               </p>
             </div>
           </div>
           
-          {/* Feature showcase with image */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-20 items-center">
-            <div className="overflow-hidden rounded-xl shadow-xl border border-primary/20">
-              <img 
-                src={refinerySvg} 
-                alt="Oil Refinery" 
-                className="w-full h-auto object-cover transform hover:scale-105 transition-transform duration-700"
-              />
+          {/* Feature showcase with image - professional style */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 mb-24 items-center">
+            <div className="relative">
+              <div className="absolute -inset-1 bg-gradient-to-r from-slate-200 to-slate-300 dark:from-slate-800 dark:to-slate-700 rounded-2xl blur-sm"></div>
+              <div className="relative overflow-hidden rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                <div className="absolute top-4 left-4 bg-white dark:bg-slate-800 rounded-md px-2 py-1 text-xs font-medium text-slate-600 dark:text-slate-300 shadow-sm border border-slate-200 dark:border-slate-700 z-10">
+                  Premium Feature
+                </div>
+                <img 
+                  src={refinerySvg} 
+                  alt="Oil Refinery" 
+                  className="w-full h-auto object-cover transform hover:scale-105 transition-transform duration-700"
+                />
+              </div>
             </div>
-            <div className="space-y-6">
-              <h3 className="text-2xl font-bold">Global Refinery Network</h3>
-              <p className="text-muted-foreground">
+            
+            <div className="space-y-8">
+              <div>
+                <div className="inline-flex items-center rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 text-sm font-medium text-slate-800 dark:text-slate-300 mb-4">
+                  <span className="flex h-2 w-2 rounded-full bg-primary mr-1.5"></span>
+                  Enterprise Solution
+                </div>
+                <h3 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">Global Refinery Network</h3>
+              </div>
+              
+              <p className="text-slate-600 dark:text-slate-400 text-lg leading-relaxed">
                 Track the operations of 42 major refineries across the world with detailed status monitoring and capacity analytics. 
                 Our system provides real-time updates on operational status, maintenance schedules, and production levels.
               </p>
-              <ul className="space-y-3">
+              
+              <ul className="space-y-4">
                 <li className="flex items-start">
-                  <div className="mr-2 mt-1 bg-green-500/20 p-1 rounded-full">
-                    <Check className="h-4 w-4 text-green-500" />
+                  <div className="mr-3 mt-1 bg-emerald-100 dark:bg-emerald-900/30 p-1.5 rounded-full">
+                    <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                   </div>
-                  <span>Real-time refinery operational status monitoring</span>
+                  <span className="text-slate-700 dark:text-slate-300">Real-time refinery operational status monitoring</span>
                 </li>
                 <li className="flex items-start">
-                  <div className="mr-2 mt-1 bg-green-500/20 p-1 rounded-full">
-                    <Check className="h-4 w-4 text-green-500" />
+                  <div className="mr-3 mt-1 bg-emerald-100 dark:bg-emerald-900/30 p-1.5 rounded-full">
+                    <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                   </div>
-                  <span>Production capacity and utilization metrics</span>
+                  <span className="text-slate-700 dark:text-slate-300">Production capacity and utilization metrics</span>
                 </li>
                 <li className="flex items-start">
-                  <div className="mr-2 mt-1 bg-green-500/20 p-1 rounded-full">
-                    <Check className="h-4 w-4 text-green-500" />
+                  <div className="mr-3 mt-1 bg-emerald-100 dark:bg-emerald-900/30 p-1.5 rounded-full">
+                    <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                   </div>
-                  <span>Maintenance schedule forecasting and alerts</span>
+                  <span className="text-slate-700 dark:text-slate-300">Maintenance schedule forecasting and alerts</span>
                 </li>
               </ul>
-              <Button className="mt-4">
+              
+              <Button className="mt-6 rounded-md bg-slate-900 hover:bg-slate-800 text-white dark:bg-primary dark:hover:bg-primary/90 dark:text-white shadow-lg px-5 py-2.5">
                 Explore Refineries
-                <ChevronRight className="h-4 w-4 ml-1" />
+                <ChevronRight className="h-4 w-4 ml-1.5" />
               </Button>
             </div>
           </div>
           
-          {/* Stats card image showcase */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-20">
-            <div className="order-2 lg:order-1 space-y-6">
-              <h3 className="text-2xl font-bold">Advanced Maritime Analytics</h3>
-              <p className="text-muted-foreground">
+          {/* Stats card image showcase - professional style */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-24">
+            <div className="order-2 lg:order-1 space-y-8">
+              <div>
+                <div className="inline-flex items-center rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 text-sm font-medium text-slate-800 dark:text-slate-300 mb-4">
+                  <span className="flex h-2 w-2 rounded-full bg-blue-500 mr-1.5"></span>
+                  Data-Driven Insights
+                </div>
+                <h3 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">Advanced Maritime Analytics</h3>
+              </div>
+              
+              <p className="text-slate-600 dark:text-slate-400 text-lg leading-relaxed">
                 Leverage our powerful analytics tools to gain unprecedented insights into global maritime traffic patterns, 
                 cargo volumes, and market trends. Make data-driven decisions with confidence using our comprehensive dashboards.
               </p>
-              <ul className="space-y-3">
+              
+              <ul className="space-y-4">
                 <li className="flex items-start">
-                  <div className="mr-2 mt-1 bg-blue-500/20 p-1 rounded-full">
-                    <Check className="h-4 w-4 text-blue-500" />
+                  <div className="mr-3 mt-1 bg-blue-100 dark:bg-blue-900/30 p-1.5 rounded-full">
+                    <Check className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <span>Interactive data visualization dashboards</span>
+                  <span className="text-slate-700 dark:text-slate-300">Interactive data visualization dashboards</span>
                 </li>
                 <li className="flex items-start">
-                  <div className="mr-2 mt-1 bg-blue-500/20 p-1 rounded-full">
-                    <Check className="h-4 w-4 text-blue-500" />
+                  <div className="mr-3 mt-1 bg-blue-100 dark:bg-blue-900/30 p-1.5 rounded-full">
+                    <Check className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <span>Predictive analytics for vessel routing and ETA</span>
+                  <span className="text-slate-700 dark:text-slate-300">Predictive analytics for vessel routing and ETA</span>
                 </li>
                 <li className="flex items-start">
-                  <div className="mr-2 mt-1 bg-blue-500/20 p-1 rounded-full">
-                    <Check className="h-4 w-4 text-blue-500" />
+                  <div className="mr-3 mt-1 bg-blue-100 dark:bg-blue-900/30 p-1.5 rounded-full">
+                    <Check className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <span>Custom report generation and export capabilities</span>
+                  <span className="text-slate-700 dark:text-slate-300">Custom report generation and export capabilities</span>
                 </li>
               </ul>
-              <Button className="mt-4">
+              
+              <Button className="mt-6 rounded-md bg-blue-600 hover:bg-blue-700 text-white shadow-lg px-5 py-2.5">
                 View Analytics Demo
-                <ChevronRight className="h-4 w-4 ml-1" />
+                <ChevronRight className="h-4 w-4 ml-1.5" />
               </Button>
             </div>
-            <div className="order-1 lg:order-2 overflow-hidden rounded-xl shadow-xl border border-primary/20">
-              <img 
-                src={statsCardSvg} 
-                alt="Analytics Dashboard" 
-                className="w-full h-auto transform hover:scale-105 transition-transform duration-700"
-              />
+            
+            <div className="order-1 lg:order-2 relative">
+              <div className="absolute -inset-1 bg-gradient-to-r from-blue-200 to-blue-300 dark:from-blue-800/50 dark:to-blue-700/50 rounded-2xl blur-sm"></div>
+              <div className="relative overflow-hidden rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                <div className="absolute top-4 right-4 bg-white dark:bg-slate-800 rounded-md px-2 py-1 text-xs font-medium text-slate-600 dark:text-slate-300 shadow-sm border border-slate-200 dark:border-slate-700 z-10">
+                  Enterprise Dashboard
+                </div>
+                <img 
+                  src={statsCardSvg} 
+                  alt="Analytics Dashboard" 
+                  className="w-full h-auto transform hover:scale-105 transition-transform duration-700"
+                />
+              </div>
             </div>
           </div>
           
