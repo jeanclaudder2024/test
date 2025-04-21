@@ -10,7 +10,7 @@ import { useVesselProgressEvents } from "@/hooks/useVessels";
 import { Button } from "@/components/ui/button";
 import { useDataStream } from "@/hooks/useDataStream";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { REGIONS } from "@/../../shared/constants";
+import { REGIONS, OIL_PRODUCT_TYPES } from "@/../../shared/constants";
 import { 
   Ship, Droplet, RadioTower, Factory, 
   Workflow, Filter, X, MapPin, Navigation 
@@ -300,11 +300,11 @@ export default function Dashboard() {
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Vessel Type Filters */}
             <div>
               <h4 className="text-sm font-medium mb-2">Vessel Types</h4>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 gap-2 max-h-[300px] overflow-y-auto pr-2">
                 {vesselTypes.map(type => (
                   <div key={type} className="flex items-center space-x-2">
                     <Checkbox 
@@ -315,6 +315,25 @@ export default function Dashboard() {
                     <Label htmlFor={`vessel-type-${type}`} className="text-sm flex items-center justify-between w-full">
                       <span>{type}</span>
                       <Badge variant="outline" className="ml-1">{vesselCounts[type] || 0}</Badge>
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {/* Oil Product Types */}
+            <div>
+              <h4 className="text-sm font-medium mb-2">Oil Product Types</h4>
+              <div className="grid grid-cols-1 gap-2 max-h-[300px] overflow-y-auto pr-2">
+                {OIL_PRODUCT_TYPES.map(product => (
+                  <div key={product} className="flex items-center space-x-2">
+                    <Checkbox 
+                      id={`product-type-${product}`} 
+                      checked={vesselTypeFilters.includes(product)}
+                      onCheckedChange={() => toggleVesselTypeFilter(product)}
+                    />
+                    <Label htmlFor={`product-type-${product}`} className="text-sm flex items-center justify-between w-full">
+                      <span>{product}</span>
                     </Label>
                   </div>
                 ))}
