@@ -42,9 +42,9 @@ export default function Dashboard() {
   const [selectedRefinery, setSelectedRefinery] = useState<Refinery | null>(null);
   const [trackedVessel, setTrackedVessel] = useState<Vessel | null>(null);
   
-  // Filters - Default to showing only oil vessels (Crude Oil Tanker, VLCC, etc.)
+  // Filters - Default to showing vessels carrying major oil products
   const [vesselTypeFilters, setVesselTypeFilters] = useState<string[]>([
-    'Crude Oil Tanker', 'VLCC', 'Oil/Chemical Tanker', 'Product Tanker'
+    'CRUDE OIL', 'GASOLINE (PETROL / MOGAS)', 'JET FUEL', 'DIESEL', 'EXPORT BLEND CRUDE'
   ]);
   const [refineryStatusFilters, setRefineryStatusFilters] = useState<string[]>([]);
   const [showFiltersPanel, setShowFiltersPanel] = useState(false);
