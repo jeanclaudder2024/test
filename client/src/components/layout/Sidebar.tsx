@@ -31,7 +31,7 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
   const navItems = [
     {
       title: "Overview",
-      path: "/",
+      path: "/dashboard",
       icon: <LayoutDashboard className="h-5 w-5 mr-3" />,
       section: "DASHBOARD"
     },
@@ -76,8 +76,8 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
   ];
 
   const isPathActive = (path: string) => {
-    if (path === "/" && location === "/") return true;
-    if (path !== "/" && location.startsWith(path)) return true;
+    if (path === "/dashboard" && location === "/dashboard") return true;
+    if (path !== "/" && path !== "/dashboard" && location.startsWith(path)) return true;
     return false;
   };
 
