@@ -91,7 +91,7 @@ export default function SubscribePage() {
       
       const result = await response.json();
       
-      if (result.clientSecret) {
+      if (result && result.clientSecret) {
         setClientSecret(result.clientSecret);
       } else {
         // User already has a subscription

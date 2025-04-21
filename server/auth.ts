@@ -118,6 +118,8 @@ export function setupAuth(app: Express) {
           email: user.email,
           isSubscribed: user.isSubscribed,
           subscriptionTier: user.subscriptionTier,
+          role: user.role || 'user',
+          isAdmin: user.isAdmin || false,
         });
       });
     } catch (error) {
@@ -135,6 +137,8 @@ export function setupAuth(app: Express) {
       email: user.email,
       isSubscribed: user.isSubscribed,
       subscriptionTier: user.subscriptionTier,
+      role: user.role || 'user',
+      isAdmin: user.isAdmin || false,
     });
   });
 
@@ -157,6 +161,8 @@ export function setupAuth(app: Express) {
       email: user.email,
       isSubscribed: user.isSubscribed,
       subscriptionTier: user.subscriptionTier,
+      role: user.role || 'user',
+      isAdmin: user.isAdmin || false,
     });
   });
 }
