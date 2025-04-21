@@ -1,16 +1,34 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useStripe, useElements, PaymentElement } from '@stripe/react-stripe-js';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertTriangle } from 'lucide-react';
 import { useLocation } from 'wouter';
 
 export default function SubscriptionForm() {
   const stripe = useStripe();
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { toast } = useToast();
   const [, navigate] = useLocation();
+  
+  // Check if Stripe is loaded properly
+  useEffect(() => {
+    if (stripe && elements) {
+      setIsLoading(false);
+    } else {
+      setIsLoading(true);
+      // Display error after a timeout if Stripe is still not loaded
+      const timer = setTimeout(() => {
+        if (!stripe || !elements) {
+          setErrorMessage('Could not load the payment processor. Please check your internet connection or try again later.');
+        }
+      }, 5000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [stripe, elements]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

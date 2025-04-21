@@ -10,7 +10,16 @@ import { Loader2, ShieldCheck } from 'lucide-react';
 
 // Make sure to call loadStripe outside of a component's render to avoid
 // recreating the Stripe object on every render
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+let stripePromise: Promise<any> | null = null;
+try {
+  if (import.meta.env.VITE_STRIPE_PUBLIC_KEY) {
+    stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+  } else {
+    console.error('Missing VITE_STRIPE_PUBLIC_KEY environment variable');
+  }
+} catch (error) {
+  console.error('Error loading Stripe:', error);
+}
 
 export default function SubscribePage() {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
