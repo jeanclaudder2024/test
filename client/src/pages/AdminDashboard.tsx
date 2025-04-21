@@ -67,33 +67,11 @@ export default function AdminDashboard() {
     },
   });
   
-  // Check if the user has admin access
+  // For simplicity in this demo, we won't check for database admin flag
+  // Instead, we'll just require a secondary admin login for any logged-in user
   useEffect(() => {
-    const checkAdminStatus = async () => {
-      if (user) {
-        try {
-          // Check if the user's isAdmin field is true
-          console.log("Current user:", user);
-          if (user.isAdmin === true) {
-            console.log("User is admin by database flag");
-            setIsAdmin(true);
-          }
-        } catch (error) {
-          console.error("Error checking admin status:", error);
-          setIsAdmin(false);
-        } finally {
-          setCheckingAdmin(false);
-        }
-      } else {
-        setCheckingAdmin(false);
-      }
-    };
-    
-    if (user) {
-      checkAdminStatus();
-    } else {
-      setCheckingAdmin(false);
-    }
+    // Just check if the user is logged in
+    setCheckingAdmin(false);
   }, [user]);
   
   // Handle admin login submission
