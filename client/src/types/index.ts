@@ -1,4 +1,10 @@
-export type Region = 'North America' | 'Europe' | 'MEA' | 'Africa' | 'Russia' | 'Asia';
+export interface RegionData {
+  id: string;
+  name: string;
+  nameAr: string;
+}
+
+export type Region = string; // Region ID
 
 export interface Vessel {
   id: number;

@@ -4,11 +4,12 @@ import VesselInfo from "@/components/vessels/VesselInfo";
 import ProgressTimeline from "@/components/vessels/ProgressTimeline";
 import StatsCards from "@/components/dashboard/StatsCards";
 import AIAssistant from "@/components/ai/AIAssistant";
-import { Region, Vessel, Refinery } from "@/types";
+import { Region, RegionData, Vessel, Refinery } from "@/types";
 import { useVesselProgressEvents } from "@/hooks/useVessels";
 import { Button } from "@/components/ui/button";
 import { useDataStream } from "@/hooks/useDataStream";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { REGIONS } from "@/../../shared/constants";
 import { 
   Ship, Droplet, RadioTower, Factory, 
   Workflow, Filter, X, MapPin, Navigation 
