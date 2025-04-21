@@ -421,131 +421,214 @@ export default function LandingPage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-16">
             {/* Basic Plan */}
-            <Card className="flex flex-col border shadow-sm">
-              <CardHeader>
-                <CardTitle>Basic</CardTitle>
-                <CardDescription>Essential tracking for small operations</CardDescription>
-                <div className="mt-4 flex items-baseline text-primary">
-                  <span className="text-4xl font-bold tracking-tight">$99</span>
-                  <span className="ml-1 text-sm text-muted-foreground">/month</span>
+            <div className="relative group">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-400 to-blue-600 rounded-2xl blur opacity-30 group-hover:opacity-80 transition duration-1000 group-hover:duration-200"></div>
+              <div className="relative flex flex-col h-full bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-900/10 backdrop-blur-sm border border-blue-200 dark:border-blue-800/30 rounded-xl overflow-hidden">
+                <div className="pt-6 px-6 pb-2 relative z-10">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-2xl font-bold text-blue-600 dark:text-blue-400">Basic</h3>
+                      <p className="text-sm text-blue-600/70 dark:text-blue-400/70 mt-1">Essential tracking for small operations</p>
+                    </div>
+                    <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-full">
+                      <Ship className="h-6 w-6 text-blue-500 dark:text-blue-400" />
+                    </div>
+                  </div>
+                  
+                  <div className="mt-6 pb-6 border-b border-blue-200/50 dark:border-blue-800/20">
+                    <div className="flex items-baseline">
+                      <span className="text-4xl font-bold text-blue-600 dark:text-blue-400">$99</span>
+                      <span className="ml-1 text-sm text-blue-500/70 dark:text-blue-400/70">/month</span>
+                    </div>
+                  </div>
                 </div>
-              </CardHeader>
-              <CardContent className="flex-1">
-                <ul className="space-y-3 text-sm">
-                  <li className="flex items-start">
-                    <Check className="h-4 w-4 mr-2 text-primary mt-1" />
-                    <span>Access to global vessel tracking</span>
-                  </li>
-                  <li className="flex items-start">
-                    <Check className="h-4 w-4 mr-2 text-primary mt-1" />
-                    <span>Basic analytics dashboard</span>
-                  </li>
-                  <li className="flex items-start">
-                    <Check className="h-4 w-4 mr-2 text-primary mt-1" />
-                    <span>Standard document templates</span>
-                  </li>
-                  <li className="flex items-start">
-                    <Check className="h-4 w-4 mr-2 text-primary mt-1" />
-                    <span>Email support</span>
-                  </li>
-                </ul>
-              </CardContent>
-              <CardFooter>
-                <Link href="/auth" className="w-full">
-                  <Button variant="outline" className="w-full">Get Started</Button>
-                </Link>
-              </CardFooter>
-            </Card>
+                
+                <div className="px-6 py-6 flex-1">
+                  <ul className="space-y-4 text-sm">
+                    <li className="flex items-start">
+                      <div className="flex-shrink-0 p-1 bg-blue-100 dark:bg-blue-900/30 rounded-full mr-3">
+                        <Check className="h-4 w-4 text-blue-500 dark:text-blue-400" />
+                      </div>
+                      <span className="text-foreground dark:text-gray-300">Access to global vessel tracking</span>
+                    </li>
+                    <li className="flex items-start">
+                      <div className="flex-shrink-0 p-1 bg-blue-100 dark:bg-blue-900/30 rounded-full mr-3">
+                        <Check className="h-4 w-4 text-blue-500 dark:text-blue-400" />
+                      </div>
+                      <span className="text-foreground dark:text-gray-300">Basic analytics dashboard</span>
+                    </li>
+                    <li className="flex items-start">
+                      <div className="flex-shrink-0 p-1 bg-blue-100 dark:bg-blue-900/30 rounded-full mr-3">
+                        <Check className="h-4 w-4 text-blue-500 dark:text-blue-400" />
+                      </div>
+                      <span className="text-foreground dark:text-gray-300">Standard document templates</span>
+                    </li>
+                    <li className="flex items-start">
+                      <div className="flex-shrink-0 p-1 bg-blue-100 dark:bg-blue-900/30 rounded-full mr-3">
+                        <Check className="h-4 w-4 text-blue-500 dark:text-blue-400" />
+                      </div>
+                      <span className="text-foreground dark:text-gray-300">Email support</span>
+                    </li>
+                  </ul>
+                </div>
+                
+                <div className="p-6 pt-2 mt-auto relative">
+                  <Link href="/auth" className="w-full">
+                    <button className="w-full py-3 px-4 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition duration-200 shadow-lg shadow-blue-500/20 hover:shadow-blue-600/30">
+                      Get Started
+                    </button>
+                  </Link>
+                </div>
+              </div>
+            </div>
 
             {/* Premium Plan */}
-            <Card className="flex flex-col relative border shadow-sm overflow-hidden">
-              <div className="absolute top-0 inset-x-0 h-1 bg-primary"></div>
-              <div className="absolute top-3 right-3 bg-primary text-primary-foreground text-xs font-medium px-2 py-1 rounded-full">
-                Popular
-              </div>
-              <CardHeader>
-                <CardTitle>Premium</CardTitle>
-                <CardDescription>Advanced features for growing businesses</CardDescription>
-                <div className="mt-4 flex items-baseline text-primary">
-                  <span className="text-4xl font-bold tracking-tight">$199</span>
-                  <span className="ml-1 text-sm text-muted-foreground">/month</span>
+            <div className="relative group">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-400 to-purple-600 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
+              <div className="relative flex flex-col h-full bg-gradient-to-br from-purple-600 to-purple-800 border border-purple-400/30 rounded-xl overflow-hidden">
+                <div className="absolute top-0 right-0">
+                  <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs uppercase tracking-wider font-bold px-3 py-1 rounded-bl-lg shadow-lg transform rotate-0">
+                    Most Popular
+                  </div>
                 </div>
-              </CardHeader>
-              <CardContent className="flex-1">
-                <ul className="space-y-3 text-sm">
-                  <li className="flex items-start">
-                    <Check className="h-4 w-4 mr-2 text-primary mt-1" />
-                    <span>Everything in Basic</span>
-                  </li>
-                  <li className="flex items-start">
-                    <Check className="h-4 w-4 mr-2 text-primary mt-1" />
-                    <span>Advanced analytics and reporting</span>
-                  </li>
-                  <li className="flex items-start">
-                    <Check className="h-4 w-4 mr-2 text-primary mt-1" />
-                    <span>AI-powered document generation</span>
-                  </li>
-                  <li className="flex items-start">
-                    <Check className="h-4 w-4 mr-2 text-primary mt-1" />
-                    <span>Historical data (up to 12 months)</span>
-                  </li>
-                  <li className="flex items-start">
-                    <Check className="h-4 w-4 mr-2 text-primary mt-1" />
-                    <span>Priority email & phone support</span>
-                  </li>
-                </ul>
-              </CardContent>
-              <CardFooter>
-                <Link href="/auth" className="w-full">
-                  <Button className="w-full">Get Started</Button>
-                </Link>
-              </CardFooter>
-            </Card>
+                
+                <div className="pt-6 px-6 pb-2 relative z-10">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-2xl font-bold text-white">Premium</h3>
+                      <p className="text-sm text-purple-200/90 mt-1">Advanced features for growing businesses</p>
+                    </div>
+                    <div className="p-3 bg-purple-500/40 rounded-full">
+                      <BarChart3 className="h-6 w-6 text-purple-100" />
+                    </div>
+                  </div>
+                  
+                  <div className="mt-6 pb-6 border-b border-purple-500/30">
+                    <div className="flex items-baseline">
+                      <span className="text-4xl font-bold text-white">$199</span>
+                      <span className="ml-1 text-sm text-purple-200/80">/month</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="px-6 py-6 flex-1">
+                  <ul className="space-y-4 text-sm">
+                    <li className="flex items-start">
+                      <div className="flex-shrink-0 p-1 bg-purple-500/40 rounded-full mr-3">
+                        <Check className="h-4 w-4 text-purple-100" />
+                      </div>
+                      <span className="text-white">Everything in Basic</span>
+                    </li>
+                    <li className="flex items-start">
+                      <div className="flex-shrink-0 p-1 bg-purple-500/40 rounded-full mr-3">
+                        <Check className="h-4 w-4 text-purple-100" />
+                      </div>
+                      <span className="text-white">Advanced analytics and reporting</span>
+                    </li>
+                    <li className="flex items-start">
+                      <div className="flex-shrink-0 p-1 bg-purple-500/40 rounded-full mr-3">
+                        <Check className="h-4 w-4 text-purple-100" />
+                      </div>
+                      <span className="text-white">AI-powered document generation</span>
+                    </li>
+                    <li className="flex items-start">
+                      <div className="flex-shrink-0 p-1 bg-purple-500/40 rounded-full mr-3">
+                        <Check className="h-4 w-4 text-purple-100" />
+                      </div>
+                      <span className="text-white">Historical data (up to 12 months)</span>
+                    </li>
+                    <li className="flex items-start">
+                      <div className="flex-shrink-0 p-1 bg-purple-500/40 rounded-full mr-3">
+                        <Check className="h-4 w-4 text-purple-100" />
+                      </div>
+                      <span className="text-white">Priority email & phone support</span>
+                    </li>
+                  </ul>
+                </div>
+                
+                <div className="p-6 pt-2 mt-auto relative">
+                  <Link href="/auth" className="w-full">
+                    <button className="w-full py-3 px-4 bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white rounded-lg font-medium transition duration-200 shadow-lg shadow-orange-500/30 hover:shadow-orange-600/40">
+                      Get Started
+                    </button>
+                  </Link>
+                </div>
+              </div>
+            </div>
 
             {/* Elite Plan */}
-            <Card className="flex flex-col border shadow-sm bg-gradient-to-b from-muted/50 to-background">
-              <CardHeader>
-                <CardTitle>Elite</CardTitle>
-                <CardDescription>Premium features for industry professionals</CardDescription>
-                <div className="mt-4 flex items-baseline text-primary">
-                  <span className="text-4xl font-bold tracking-tight">$399</span>
-                  <span className="ml-1 text-sm text-muted-foreground">/month</span>
+            <div className="relative group">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-400 to-teal-600 rounded-2xl blur opacity-30 group-hover:opacity-80 transition duration-1000 group-hover:duration-200"></div>
+              <div className="relative flex flex-col h-full bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-900/10 backdrop-blur-sm border border-emerald-200 dark:border-emerald-800/30 rounded-xl overflow-hidden">
+                <div className="pt-6 px-6 pb-2 relative z-10">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">Elite</h3>
+                      <p className="text-sm text-emerald-600/70 dark:text-emerald-400/70 mt-1">Premium features for industry professionals</p>
+                    </div>
+                    <div className="p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-full">
+                      <Zap className="h-6 w-6 text-emerald-500 dark:text-emerald-400" />
+                    </div>
+                  </div>
+                  
+                  <div className="mt-6 pb-6 border-b border-emerald-200/50 dark:border-emerald-800/20">
+                    <div className="flex items-baseline">
+                      <span className="text-4xl font-bold text-emerald-600 dark:text-emerald-400">$399</span>
+                      <span className="ml-1 text-sm text-emerald-500/70 dark:text-emerald-400/70">/month</span>
+                    </div>
+                  </div>
                 </div>
-              </CardHeader>
-              <CardContent className="flex-1">
-                <ul className="space-y-3 text-sm">
-                  <li className="flex items-start">
-                    <Check className="h-4 w-4 mr-2 text-primary mt-1" />
-                    <span>Everything in Premium</span>
-                  </li>
-                  <li className="flex items-start">
-                    <Check className="h-4 w-4 mr-2 text-primary mt-1" />
-                    <span>Elite broker dashboard</span>
-                  </li>
-                  <li className="flex items-start">
-                    <Check className="h-4 w-4 mr-2 text-primary mt-1" />
-                    <span>Direct messaging with carriers</span>
-                  </li>
-                  <li className="flex items-start">
-                    <Check className="h-4 w-4 mr-2 text-primary mt-1" />
-                    <span>Tender bidding tools</span>
-                  </li>
-                  <li className="flex items-start">
-                    <Check className="h-4 w-4 mr-2 text-primary mt-1" />
-                    <span>Custom API access</span>
-                  </li>
-                  <li className="flex items-start">
-                    <Check className="h-4 w-4 mr-2 text-primary mt-1" />
-                    <span>Dedicated account manager</span>
-                  </li>
-                </ul>
-              </CardContent>
-              <CardFooter>
-                <Link href="/auth" className="w-full">
-                  <Button variant="outline" className="w-full">Get Started</Button>
-                </Link>
-              </CardFooter>
-            </Card>
+                
+                <div className="px-6 py-6 flex-1">
+                  <ul className="space-y-4 text-sm">
+                    <li className="flex items-start">
+                      <div className="flex-shrink-0 p-1 bg-emerald-100 dark:bg-emerald-900/30 rounded-full mr-3">
+                        <Check className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
+                      </div>
+                      <span className="text-foreground dark:text-gray-300">Everything in Premium</span>
+                    </li>
+                    <li className="flex items-start">
+                      <div className="flex-shrink-0 p-1 bg-emerald-100 dark:bg-emerald-900/30 rounded-full mr-3">
+                        <Check className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
+                      </div>
+                      <span className="text-foreground dark:text-gray-300">Elite broker dashboard</span>
+                    </li>
+                    <li className="flex items-start">
+                      <div className="flex-shrink-0 p-1 bg-emerald-100 dark:bg-emerald-900/30 rounded-full mr-3">
+                        <Check className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
+                      </div>
+                      <span className="text-foreground dark:text-gray-300">Direct messaging with carriers</span>
+                    </li>
+                    <li className="flex items-start">
+                      <div className="flex-shrink-0 p-1 bg-emerald-100 dark:bg-emerald-900/30 rounded-full mr-3">
+                        <Check className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
+                      </div>
+                      <span className="text-foreground dark:text-gray-300">Tender bidding tools</span>
+                    </li>
+                    <li className="flex items-start">
+                      <div className="flex-shrink-0 p-1 bg-emerald-100 dark:bg-emerald-900/30 rounded-full mr-3">
+                        <Check className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
+                      </div>
+                      <span className="text-foreground dark:text-gray-300">Custom API access</span>
+                    </li>
+                    <li className="flex items-start">
+                      <div className="flex-shrink-0 p-1 bg-emerald-100 dark:bg-emerald-900/30 rounded-full mr-3">
+                        <Check className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
+                      </div>
+                      <span className="text-foreground dark:text-gray-300">Dedicated account manager</span>
+                    </li>
+                  </ul>
+                </div>
+                
+                <div className="p-6 pt-2 mt-auto relative">
+                  <Link href="/auth" className="w-full">
+                    <button className="w-full py-3 px-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-medium transition duration-200 shadow-lg shadow-emerald-500/20 hover:shadow-emerald-600/30">
+                      Get Started
+                    </button>
+                  </Link>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
