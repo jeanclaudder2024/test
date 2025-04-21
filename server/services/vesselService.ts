@@ -74,7 +74,7 @@ export const vesselService = {
         
         // Update stats
         await storage.updateStats({ 
-          activeVessels: existingVessels.length.toString(), 
+          activeVessels: existingVessels.length, 
           totalCargo: totalCargo.toString()
         });
         
@@ -191,7 +191,7 @@ export const vesselService = {
       });
 
       await storage.updateStats({ 
-        totalCargo,
+        totalCargo: totalCargo.toString(),
         activeVessels: createdVessels.length
       });
 
