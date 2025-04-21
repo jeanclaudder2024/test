@@ -52,8 +52,7 @@ export default function Dashboard() {
   // Use streaming data
   const { vessels = [], refineries = [], stats, loading, error, lastUpdated } = useDataStream();
 
-  // Create list of unique vessel types and refinery statuses for filtering
-  const vesselTypes = Array.from(new Set(vessels.map(v => v.vesselType || 'Unknown')));
+  // Create list of unique refinery statuses for filtering
   const refineryStatuses = Array.from(new Set(refineries.map(r => r.status || 'Unknown')));
   
   // Apply all filters
@@ -61,9 +60,9 @@ export default function Dashboard() {
     // Apply region filter
     const passesRegionFilter = !selectedRegion || vessel.currentRegion === selectedRegion;
     
-    // Apply vessel type filter
+    // Apply cargo/oil product type filter
     const passesTypeFilter = vesselTypeFilters.length === 0 || 
-      vesselTypeFilters.includes(vessel.vesselType || 'Unknown');
+      vesselTypeFilters.includes(vessel.cargoType || 'Unknown');
     
     return passesRegionFilter && passesTypeFilter;
   });
@@ -154,9 +153,9 @@ export default function Dashboard() {
 
   // Use the REGIONS constant for region selection
 
-  // Get vessel count by type
-  const vesselCounts = vesselTypes.reduce((acc, type) => {
-    acc[type] = vessels.filter(v => v.vesselType === type).length;
+  // Get vessel count by oil product type
+  const oilProductCounts = OIL_PRODUCT_TYPES.reduce((acc, type) => {
+    acc[type] = vessels.filter(v => v.cargoType === type).length;
     return acc;
   }, {} as Record<string, number>);
 
@@ -301,26 +300,6 @@ export default function Dashboard() {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Vessel Type Filters */}
-            <div>
-              <h4 className="text-sm font-medium mb-2">Vessel Types</h4>
-              <div className="grid grid-cols-1 gap-2 max-h-[300px] overflow-y-auto pr-2">
-                {vesselTypes.map(type => (
-                  <div key={type} className="flex items-center space-x-2">
-                    <Checkbox 
-                      id={`vessel-type-${type}`} 
-                      checked={vesselTypeFilters.includes(type)}
-                      onCheckedChange={() => toggleVesselTypeFilter(type)}
-                    />
-                    <Label htmlFor={`vessel-type-${type}`} className="text-sm flex items-center justify-between w-full">
-                      <span>{type}</span>
-                      <Badge variant="outline" className="ml-1">{vesselCounts[type] || 0}</Badge>
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
             {/* Oil Product Types */}
             <div>
               <h4 className="text-sm font-medium mb-2">Oil Product Types</h4>
@@ -334,6 +313,7 @@ export default function Dashboard() {
                     />
                     <Label htmlFor={`product-type-${product}`} className="text-sm flex items-center justify-between w-full">
                       <span>{product}</span>
+                      <Badge variant="outline" className="ml-1">{oilProductCounts[product] || 0}</Badge>
                     </Label>
                   </div>
                 ))}

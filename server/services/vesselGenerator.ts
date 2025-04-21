@@ -1,4 +1,5 @@
 import { InsertVessel } from "@shared/schema";
+import { REGIONS, OIL_PRODUCT_TYPES } from "@shared/constants";
 
 // Interface for vessel template data
 interface VesselTemplate {
