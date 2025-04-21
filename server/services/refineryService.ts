@@ -1,6 +1,6 @@
 import { storage } from "../storage";
 import { InsertRefinery, Refinery } from "@shared/schema";
-import { asiStreamService } from "./asiStreamService";
+import { dataService } from "./asiStreamService";
 
 export const refineryService = {
   getAllRefineries: async () => {
@@ -48,10 +48,10 @@ export const refineryService = {
         };
       }
       
-      // Database empty, try to get refineries from asistream API
-      console.log("No refineries in database. Fetching from API...");
-      const asiRefineries = await asiStreamService.fetchRefineries();
-      console.log(`Fetched ${asiRefineries.length} refineries from API.`);
+      // Database empty, try to get refineries from database
+      console.log("No refineries in database. Using data service...");
+      const asiRefineries = await dataService.fetchRefineries();
+      console.log(`Fetched ${asiRefineries.length} refineries from data service.`);
       
       // Create refineries
       const createdRefineries: Refinery[] = [];

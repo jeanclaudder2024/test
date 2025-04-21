@@ -1,6 +1,6 @@
 import { storage } from "../storage";
 import { InsertVessel, InsertProgressEvent, Vessel, ProgressEvent } from "@shared/schema";
-import { asiStreamService } from "./asiStreamService";
+import { dataService } from "./asiStreamService";
 import { generateLargeVesselDataset } from "./vesselGenerator";
 
 export const vesselService = {

@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { vesselService } from "./services/vesselService";
 import { refineryService } from "./services/refineryService";
 import { aiService } from "./services/aiService";
-import { asiStreamService } from "./services/asiStreamService";
+import { dataService } from "./services/asiStreamService";
 import { brokerService } from "./services/brokerService";
 import { stripeService } from "./services/stripeService";
 import { setupAuth } from "./auth";
@@ -503,8 +503,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (currentTime - lastDbFetchTime > POSITION_UPDATE_INTERVAL) {
           setTimeout(async () => {
             try {
-              // Only get position updates from API, not full vessel data
-              const positionUpdates = await asiStreamService.fetchVessels();
+              // Get position updates from database, no longer using API
+              const positionUpdates = await dataService.fetchVessels();
               
               // Map of IMO -> position updates for fast lookup
               const positionMap = new Map();
@@ -538,7 +538,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 }
               }
             } catch (updateError) {
-              console.error("Error updating vessel positions from API:", updateError);
+              console.error("Error updating vessel positions from database:", updateError);
             }
           }, 100); // Run quickly after sending data to update positions
         }
