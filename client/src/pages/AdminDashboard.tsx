@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Redirect } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
 import { 
   BarChart3, 
   Users, 
@@ -24,11 +25,17 @@ import {
   UserPlus,
   UserMinus,
   ShoppingCart,
-  Landmark
+  Landmark,
+  Lock
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 
 // Panel transition animation
 const panelAnimation = {
@@ -36,15 +43,80 @@ const panelAnimation = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
 };
 
+// Admin login schema
+const adminLoginSchema = z.object({
+  username: z.string().min(1, "Username is required"),
+  password: z.string().min(1, "Password is required"),
+});
+
+type AdminLoginFormValues = z.infer<typeof adminLoginSchema>;
+
 export default function AdminDashboard() {
   const { user, isLoading } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [checkingAdmin, setCheckingAdmin] = useState(true);
+  const { toast } = useToast();
   
-  // Check if the user is an admin
-  const isAdmin = user?.username === "admin"; // Simple check - ideally use a dedicated role field
+  // Admin login form
+  const form = useForm<AdminLoginFormValues>({
+    resolver: zodResolver(adminLoginSchema),
+    defaultValues: {
+      username: "",
+      password: "",
+    },
+  });
+  
+  // Check if the user has admin access
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (user) {
+        try {
+          // In real implementation, this would check if the user has admin privileges
+          // For now, we'll just check if the user's isAdmin field is true
+          setIsAdmin(user.isAdmin === true);
+        } catch (error) {
+          setIsAdmin(false);
+        } finally {
+          setCheckingAdmin(false);
+        }
+      }
+    };
+    
+    if (user) {
+      checkAdminStatus();
+    }
+  }, [user]);
+  
+  // Handle admin login submission
+  const onSubmit = async (data: AdminLoginFormValues) => {
+    try {
+      // In real implementation, this would verify against admin credentials
+      // For now, we'll hard-code the admin credentials for demo purposes
+      if (data.username === "admin" && data.password === "adminpassword") {
+        setIsAdmin(true);
+        toast({
+          title: "Admin access granted",
+          description: "Welcome to the admin dashboard",
+        });
+      } else {
+        toast({
+          title: "Access denied",
+          description: "Invalid admin credentials",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to verify credentials",
+        variant: "destructive", 
+      });
+    }
+  };
   
   // If still loading auth state, show a loading spinner
-  if (isLoading) {
+  if (isLoading || checkingAdmin) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
@@ -52,9 +124,74 @@ export default function AdminDashboard() {
     );
   }
   
-  // If not logged in or not an admin, redirect to auth page
-  if (!user || !isAdmin) {
+  // If not logged in, redirect to auth page
+  if (!user) {
     return <Redirect to="/auth" />;
+  }
+  
+  // If user is logged in but not admin, show admin login form
+  if (!isAdmin) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-background to-muted/50 p-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="w-full max-w-md"
+        >
+          <Card className="border-2 border-primary/10 shadow-lg">
+            <CardHeader className="text-center pb-2">
+              <div className="mx-auto mb-4 bg-primary/10 p-3 rounded-full w-16 h-16 flex items-center justify-center">
+                <Lock className="h-8 w-8 text-primary" />
+              </div>
+              <CardTitle className="text-2xl">Admin Access</CardTitle>
+              <CardDescription>
+                Please enter admin credentials to continue
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="username"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Username</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Admin username" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Password</FormLabel>
+                        <FormControl>
+                          <Input type="password" placeholder="Admin password" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button type="submit" className="w-full">
+                    {form.formState.isSubmitting ? "Verifying..." : "Log in to Admin Dashboard"}
+                  </Button>
+                </form>
+              </Form>
+            </CardContent>
+            <CardContent className="flex flex-col space-y-2 text-center text-sm text-muted-foreground pt-0">
+              <p>This area is restricted to authorized personnel only.</p>
+              <p>For this demo, use username: <strong>admin</strong> and password: <strong>adminpassword</strong></p>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+    );
   }
 
   return (
