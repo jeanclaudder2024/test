@@ -13,9 +13,18 @@ const scryptAsync = promisify(scrypt);
 
 declare global {
   namespace Express {
-    // Extend Express.User with our User type 
-    interface User extends Omit<User, 'id'> {
+    // Extend Express.User with our User schema type
+    interface User {
       id: number;
+      username: string;
+      password: string;
+      email?: string | null;
+      stripeCustomerId?: string | null;
+      stripeSubscriptionId?: string | null;
+      isSubscribed?: boolean;
+      subscriptionTier?: string | null;
+      createdAt?: Date;
+      updatedAt?: Date;
     }
   }
 }

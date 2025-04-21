@@ -24,6 +24,9 @@ import { brokerRouter } from "./routes/brokerRoutes";
 import { seedBrokers } from "./services/seedService";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Set up authentication
+  setupAuth(app);
+  
   const apiRouter = express.Router();
 
   // Initialize with seed data in development - with better error handling
@@ -568,6 +571,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Mount broker routes
   apiRouter.use("/brokers", brokerRouter);
+  
+  // Subscription and payment endpoints
+  apiRouter.post("/create-payment-intent", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { amount } = req.body;
+      if (!amount || typeof amount !== 'number') {
+        return res.status(400).json({ message: "Valid amount is required" });
+      }
+
+      const paymentIntent = await stripeService.createPaymentIntent(amount);
+      res.json({ clientSecret: paymentIntent.client_secret });
+    } catch (error: any) {
+      console.error("Error creating payment intent:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  apiRouter.post("/create-subscription", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { priceId } = req.body;
+      if (!priceId) {
+        return res.status(400).json({ message: "Price ID is required" });
+      }
+
+      const user = req.user as any;
+      const subscription = await stripeService.getOrCreateSubscription(user.id, priceId);
+      res.json(subscription);
+    } catch (error: any) {
+      console.error("Error creating subscription:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  apiRouter.post("/cancel-subscription", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const user = req.user as any;
+      const result = await stripeService.cancelSubscription(user.id);
+      res.json({ success: result });
+    } catch (error: any) {
+      console.error("Error cancelling subscription:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Stripe webhook endpoint
+  app.post("/webhook", express.raw({ type: 'application/json' }), async (req, res) => {
+    const signature = req.headers['stripe-signature'] as string;
+    
+    try {
+      // Verify webhook signature using your webhook signing secret
+      // const event = stripe.webhooks.constructEvent(req.body, signature, process.env.STRIPE_WEBHOOK_SECRET);
+      
+      // For now we'll use the raw event data
+      const event = JSON.parse(req.body.toString());
+      
+      await stripeService.handleWebhookEvent(event);
+      res.sendStatus(200);
+    } catch (error: any) {
+      console.error("Webhook Error:", error.message);
+      res.status(400).send(`Webhook Error: ${error.message}`);
+    }
+  });
   
   // Mount API router
   app.use("/api", apiRouter);
