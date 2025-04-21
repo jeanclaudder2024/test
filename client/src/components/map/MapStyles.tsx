@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import {
-  MapIcon, Sunrise, Baseline, TreePine, Satellite, Navigation, 
-  Anchor, Mountain
+  Map as MapIcon, Sunrise, Globe2 as Baseline, TreePine, 
+  Satellite, Navigation, Anchor, Mountain
 } from "lucide-react";
 
 // Available free mapbox styles
@@ -68,7 +68,7 @@ export function MapStyleSelector({ currentStyle, onStyleChange }: MapStyleSelect
         <Button
           key={style.id}
           variant={style.id === currentStyle ? "default" : "outline"}
-          size="xs"
+          size="sm"
           className={`flex flex-col items-center justify-center py-1 h-auto w-[70px] ${
             style.id === currentStyle ? 'bg-primary text-white' : 'border-primary/20 hover:bg-primary/10'
           }`}
