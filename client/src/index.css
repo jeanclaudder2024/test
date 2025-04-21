@@ -2,6 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom map styling */
+.google-map-container {
+  touch-action: pan-x pan-y; /* Allow touch panning but prevent zooming with pinch */
+}
+
+/* Prevent map from capturing scroll events when cursor is over the map */
+.map-scroll-prevention {
+  pointer-events: auto;
+}
+
+/* Add a pulse animation for vessel tracking */
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(255, 87, 34, 0.7);
+  }
+  
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(255, 87, 34, 0);
+  }
+  
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(255, 87, 34, 0);
+  }
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

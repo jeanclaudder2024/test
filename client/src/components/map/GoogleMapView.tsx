@@ -10,7 +10,9 @@ import { REGIONS, OIL_PRODUCT_TYPES } from "@/../../shared/constants";
 const mapContainerStyle = {
   width: "100%",
   height: "100%",
-  minHeight: "500px"
+  minHeight: "500px",
+  borderRadius: "0.5rem",
+  overflow: "hidden"
 };
 
 // Define map options
@@ -20,20 +22,23 @@ const defaultOptions = {
   streetViewControl: false,
   mapTypeControl: false,
   fullscreenControl: false,
+  scrollwheel: false,  // Disable scrolling through the map with the mouse wheel
+  gestureHandling: "cooperative", // This makes it so scrolling doesn't move the map
+  mapTypeId: "terrain", // Use terrain type to show Earth-like appearance when zoomed out
   styles: [
     {
       featureType: "water",
       elementType: "geometry",
       stylers: [
-        { color: "#e9e9e9" },
-        { lightness: 17 }
+        { color: "#a8d7f5" }, // More blue water color
+        { lightness: 10 }
       ]
     },
     {
       featureType: "landscape",
       elementType: "geometry",
       stylers: [
-        { color: "#f5f5f5" },
+        { color: "#e6f0e6" }, // More green land color
         { lightness: 20 }
       ]
     },
@@ -308,8 +313,9 @@ export default function GoogleMapView({
   }
 
   return (
-    <div className="relative h-96 md:h-[500px]">
+    <div className="relative h-96 md:h-[500px] overflow-hidden rounded-lg map-scroll-prevention">
       <GoogleMap
+        className="google-map-container"
         mapContainerStyle={mapContainerStyle}
         center={defaultCenter}
         zoom={defaultZoom}
