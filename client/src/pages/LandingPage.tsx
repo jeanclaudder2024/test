@@ -55,64 +55,84 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="w-full pt-24 pb-32 md:pt-32 md:pb-40 lg:pt-40 lg:pb-48 border-b relative overflow-hidden">
-        <div 
-          className="absolute inset-0 w-full h-full bg-cover bg-center z-0" 
-          style={{ 
-            backgroundImage: `url(${oceanBackgroundSvg})`,
-            backgroundSize: 'cover',
-            opacity: 0.9 
-          }}
-        />
+      {/* Hero Section - Professional Design */}
+      <section className="w-full pt-24 pb-32 md:pt-32 md:pb-40 lg:pt-40 lg:pb-48 border-b relative overflow-hidden bg-slate-900">
+        {/* Background effects */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_#3a7bd5_0%,_transparent_50%)] opacity-10"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_#00d2ff_0%,_transparent_50%)] opacity-10"></div>
+        <div className="absolute inset-0 bg-grid-slate-700/20 bg-[size:40px_40px]"></div>
         
-        {/* Overlay gradient */}
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/40 via-transparent to-primary/40 z-0" />
+        {/* Abstract shapes */}
+        <div className="absolute top-20 right-[10%] w-64 h-64 bg-gradient-to-br from-primary/30 to-blue-500/20 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 left-[10%] w-72 h-72 bg-gradient-to-tr from-blue-600/20 to-primary/20 rounded-full blur-3xl"></div>
         
         <div className="container px-4 md:px-6 flex flex-col items-center gap-8 text-center relative z-10">
-          <div className="space-y-4">
-            <div className="inline-block animate-bounce-slow mb-4">
-              <Ship className="h-12 w-12 text-primary" />
+          <div className="space-y-6 max-w-4xl">
+            {/* Professional badge */}
+            <div className="inline-flex items-center py-1 px-3 rounded-full bg-slate-800/80 border border-slate-700/80 backdrop-blur-sm mb-4 shadow-lg">
+              <div className="w-2 h-2 rounded-full bg-cyan-500 mr-2 animate-pulse"></div>
+              <span className="text-sm font-medium text-slate-200">Maritime Intelligence Platform</span>
             </div>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tighter text-white drop-shadow-md">
-              Intelligent Maritime Tracking
+            
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white">
+              <span className="block mb-2">Advanced Maritime</span>
+              <span className="bg-gradient-to-r from-cyan-400 via-blue-500 to-primary bg-clip-text text-transparent">Intelligence Platform</span>
             </h1>
-            <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto drop-shadow-md">
-              Powerful AI-driven vessel tracking and analytics for the shipping industry
+            
+            <p className="text-xl md:text-2xl text-slate-300 max-w-3xl mx-auto">
+              Powerful AI-driven vessel tracking and analytics for industry professionals
             </p>
           </div>
           
-          <div className="flex flex-col sm:flex-row gap-4 min-w-[176px] mt-6">
+          <div className="flex flex-col sm:flex-row gap-4 mt-6">
             <Link href="/auth">
-              <Button size="lg" className="bg-primary hover:bg-primary/90 text-white border-white/20 shadow-lg">
+              <Button size="lg" className="rounded-md bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/30">
                 Start Free Trial
                 <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             </Link>
             <Link href="#features">
-              <Button variant="outline" size="lg" className="bg-white/10 backdrop-blur-sm text-white border-white/30 hover:bg-white/20">
+              <Button size="lg" variant="outline" className="rounded-md text-slate-200 border-slate-700 hover:bg-slate-800">
                 Learn More
               </Button>
             </Link>
           </div>
           
-          {/* Stats cards */}
+          {/* Trust indicators */}
+          <div className="flex items-center gap-3 mt-8 bg-slate-800/50 backdrop-blur-sm rounded-full px-4 py-2 border border-slate-700/50">
+            <div className="flex -space-x-2">
+              <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-medium text-slate-300 border-2 border-slate-800">E</div>
+              <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-medium text-slate-300 border-2 border-slate-800">B</div>
+              <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-medium text-slate-300 border-2 border-slate-800">S</div>
+            </div>
+            <div className="text-sm text-slate-300">
+              Trusted by <span className="font-semibold text-white">5,000+</span> shipping professionals
+            </div>
+          </div>
+          
+          {/* Stats cards - professional style */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12 w-full max-w-4xl">
             {stats.map((stat, index) => (
               <div 
                 key={index} 
-                className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center border border-white/20 shadow-lg hover:transform hover:-translate-y-1 transition-all duration-300"
+                className="bg-slate-800/60 backdrop-blur-sm rounded-lg p-4 text-center border border-slate-700/60 shadow-xl hover:shadow-2xl transition-all duration-300"
               >
-                <p className="text-2xl md:text-3xl font-bold text-white">{stat.value}</p>
-                <p className="text-sm text-white/80">{stat.label}</p>
+                <p className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent">{stat.value}</p>
+                <p className="text-sm text-slate-400">{stat.label}</p>
               </div>
             ))}
           </div>
         </div>
         
-        {/* Oil tanker image */}
-        <div className="absolute bottom-0 right-0 w-1/3 max-w-md z-20 hidden lg:block transform translate-y-1/4 translate-x-1/6 animate-float">
-          <img src={oilTankerSvg} alt="Oil Tanker" className="w-full h-auto" />
+        {/* Professional visual elements */}
+        <div className="absolute bottom-0 right-0 w-1/3 max-w-md z-20 hidden lg:block">
+          <div className="relative">
+            <img src={oilTankerSvg} alt="Oil Tanker" className="w-full h-auto drop-shadow-2xl" />
+            <div className="absolute -top-8 -right-4 bg-slate-800/90 backdrop-blur-sm rounded-md shadow-lg px-3 py-2 z-30 border border-slate-700 text-xs flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-emerald-400"></div>
+              <span className="text-slate-300">Live Tracking</span>
+            </div>
+          </div>
         </div>
       </section>
 
