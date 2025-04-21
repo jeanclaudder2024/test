@@ -124,6 +124,15 @@ export default function AdminDashboard() {
     );
   }
   
+  // Handle admin logout
+  const handleAdminLogout = () => {
+    setIsAdmin(false);
+    toast({
+      title: "Logged out",
+      description: "You have been logged out of admin dashboard",
+    });
+  };
+  
   // If not logged in, redirect to auth page
   if (!user) {
     return <Redirect to="/auth" />;
@@ -302,6 +311,9 @@ export default function AdminDashboard() {
               <span className="text-sm font-medium">{user.username}</span>
               <span className="text-xs text-muted-foreground">Admin</span>
             </div>
+            <Button size="sm" variant="outline" className="ml-auto" onClick={handleAdminLogout}>
+              Logout
+            </Button>
           </div>
         </div>
       </div>
@@ -315,7 +327,10 @@ export default function AdminDashboard() {
               <Ship className="h-6 w-6" />
               <span>Vesselian Admin</span>
             </div>
-            <Button size="sm" variant="outline">Menu</Button>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={handleAdminLogout}>Logout</Button>
+              <Button size="sm" variant="outline">Menu</Button>
+            </div>
           </div>
         </header>
         
