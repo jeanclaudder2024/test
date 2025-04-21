@@ -74,8 +74,8 @@ export const vesselService = {
         
         // Update stats
         await storage.updateStats({ 
-          activeVessels: existingVessels.length, 
-          totalCargo 
+          activeVessels: existingVessels.length.toString(), 
+          totalCargo: totalCargo.toString()
         });
         
         return {
@@ -85,10 +85,28 @@ export const vesselService = {
         };
       }
       
-      // Database empty, generate vessel dataset
-      console.log("Generating large vessel dataset...");
-      const vessels = generateLargeVesselDataset(1500);
-      console.log(`Generated ${vessels.length} vessels.`);
+      // Try to fetch vessels from RapidAPI, fallback to generated data if needed
+      console.log("Attempting to fetch vessel data from RapidAPI...");
+      
+      let vessels: InsertVessel[] = [];
+      try {
+        // First try to get data from RapidAPI
+        const rapidApiVessels = await asiStreamService.fetchVessels();
+        
+        if (rapidApiVessels.length > 0) {
+          console.log(`Successfully retrieved ${rapidApiVessels.length} vessels from RapidAPI.`);
+          vessels = rapidApiVessels;
+        } else {
+          console.log("No vessels returned from RapidAPI. Falling back to generated data.");
+          vessels = generateLargeVesselDataset(1500);
+          console.log(`Generated ${vessels.length} vessels as fallback.`);
+        }
+      } catch (apiError) {
+        console.error("Failed to fetch vessels from RapidAPI:", apiError);
+        console.log("Falling back to generated data...");
+        vessels = generateLargeVesselDataset(1500);
+        console.log(`Generated ${vessels.length} vessels as fallback.`);
+      }
       
       // Track created vessels and IMOs to avoid duplicates
       const createdVessels: Vessel[] = [];
@@ -135,11 +153,15 @@ export const vesselService = {
           const latOffset = (Math.random() * 2 - 1) * 2; // -2 to +2 degrees
           const lngOffset = (Math.random() * 2 - 1) * 2; // -2 to +2 degrees
           
-          const baseLat = parseFloat(vessel.currentLat);
-          const baseLng = parseFloat(vessel.currentLng);
+          // Make sure to handle null values for latitude/longitude
+          const baseLat = vessel.currentLat ? parseFloat(vessel.currentLat) : 0;
+          const baseLng = vessel.currentLng ? parseFloat(vessel.currentLng) : 0;
           
-          const lat = Math.max(-85, Math.min(85, baseLat + latOffset)).toFixed(4);
-          const lng = Math.max(-180, Math.min(180, baseLng + lngOffset)).toFixed(4);
+          const latValue = Math.max(-85, Math.min(85, baseLat + latOffset));
+          const lngValue = Math.max(-180, Math.min(180, baseLng + lngOffset));
+          
+          const lat = latValue.toFixed(4);
+          const lng = lngValue.toFixed(4);
           
           // Create event
           progressEvents.push({
@@ -148,7 +170,7 @@ export const vesselService = {
             event: eventType,
             lat,
             lng,
-            location: `${lat}° ${lat >= 0 ? 'N' : 'S'}, ${lng}° ${lng >= 0 ? 'E' : 'W'}`
+            location: `${lat}° ${latValue >= 0 ? 'N' : 'S'}, ${lng}° ${lngValue >= 0 ? 'E' : 'W'}`
           });
         }
       }

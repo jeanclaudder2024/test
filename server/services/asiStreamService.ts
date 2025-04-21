@@ -82,7 +82,7 @@ export const asiStreamService = {
         throw new Error(`RapidAPI responded with status: ${response.status}`);
       }
       
-      const data = await response.json();
+      const data = await response.json() as { vessels?: RapidAPIVessel[] };
       console.log(`Retrieved ${data.vessels?.length || 0} vessels from RapidAPI`);
       
       // Map the RapidAPI response to our InsertVessel format
@@ -94,17 +94,15 @@ export const asiStreamService = {
         flag: vessel.flag,
         built: vessel.built || null,
         deadweight: vessel.deadweight || null,
-        latitude: vessel.position.lat,
-        longitude: vessel.position.lng,
+        currentLat: vessel.position.lat.toString(),
+        currentLng: vessel.position.lng.toString(),
         departurePort: vessel.departure.port,
         departureDate: new Date(vessel.departure.date),
         destinationPort: vessel.destination.port,
         eta: new Date(vessel.destination.eta),
         cargoType: vessel.cargo.type,
         cargoCapacity: vessel.cargo.capacity,
-        region: vessel.region,
-        status: 'active',
-        lastUpdated: new Date()
+        currentRegion: vessel.region
       }));
     } catch (error) {
       console.error("Error fetching vessels from RapidAPI:", error);
@@ -141,7 +139,7 @@ export const asiStreamService = {
         throw new Error(`RapidAPI responded with status: ${response.status}`);
       }
       
-      const data = await response.json();
+      const data = await response.json() as { refineries?: RapidAPIRefinery[] };
       console.log(`Retrieved ${data.refineries?.length || 0} refineries from RapidAPI`);
       
       // Map the RapidAPI response to our InsertRefinery format
@@ -149,11 +147,10 @@ export const asiStreamService = {
         name: refinery.name,
         country: refinery.country,
         region: refinery.region,
-        latitude: refinery.location.lat,
-        longitude: refinery.location.lng,
+        lat: refinery.location.lat.toString(),
+        lng: refinery.location.lng.toString(),
         capacity: refinery.capacity,
-        status: refinery.status,
-        lastUpdated: new Date()
+        status: refinery.status
       }));
     } catch (error) {
       console.error("Error fetching refineries from RapidAPI:", error);
