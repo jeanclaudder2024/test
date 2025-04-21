@@ -17,41 +17,19 @@ const mapContainerStyle = {
 
 // Define map options
 const defaultOptions = {
-  disableDefaultUI: true,
-  zoomControl: false,
+  disableDefaultUI: false,
+  zoomControl: true,
   streetViewControl: false,
-  mapTypeControl: false,
-  fullscreenControl: false,
-  scrollwheel: false,  // Disable scrolling through the map with the mouse wheel
-  gestureHandling: "cooperative", // This makes it so scrolling doesn't move the map
-  mapTypeId: "terrain", // Use terrain type to show Earth-like appearance when zoomed out
-  styles: [
-    {
-      featureType: "water",
-      elementType: "geometry",
-      stylers: [
-        { color: "#a8d7f5" }, // More blue water color
-        { lightness: 10 }
-      ]
-    },
-    {
-      featureType: "landscape",
-      elementType: "geometry",
-      stylers: [
-        { color: "#e6f0e6" }, // More green land color
-        { lightness: 20 }
-      ]
-    },
-    {
-      featureType: "administrative",
-      elementType: "geometry.stroke",
-      stylers: [
-        { color: "#fefefe" },
-        { lightness: 17 },
-        { weight: 1.2 }
-      ]
-    }
-  ]
+  mapTypeControl: true,
+  fullscreenControl: true,
+  scrollwheel: true,  // Enable scrolling through the map with the mouse wheel
+  gestureHandling: "greedy", // Make the map handle all gestures
+  mapTypeId: "satellite", // Use satellite view (aerial view)
+  mapTypeControlOptions: {
+    style: 2, // DROPDOWN_MENU
+    position: 3, // TOP_RIGHT
+    mapTypeIds: ["roadmap", "satellite", "hybrid", "terrain"]
+  }
 };
 
 // Region center positions
@@ -315,7 +293,6 @@ export default function GoogleMapView({
   return (
     <div className="relative h-96 md:h-[500px] overflow-hidden rounded-lg map-scroll-prevention">
       <GoogleMap
-        className="google-map-container"
         mapContainerStyle={mapContainerStyle}
         center={defaultCenter}
         zoom={defaultZoom}
