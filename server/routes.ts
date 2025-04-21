@@ -27,6 +27,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication
   setupAuth(app);
   
+  // Direct login helper endpoint for testing
+  app.get("/api/auto-login", async (req, res) => {
+    try {
+      const user = await storage.getUserByUsername("Taline");
+      if (user) {
+        req.login(user, (err) => {
+          if (err) {
+            return res.status(500).json({ message: "Login failed" });
+          }
+          return res.json({ 
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            isAdmin: user.isAdmin,
+            isSubscribed: user.isSubscribed,
+            subscriptionTier: user.subscriptionTier
+          });
+        });
+      } else {
+        res.status(404).json({ message: "Demo user not found" });
+      }
+    } catch (error) {
+      console.error("Auto-login error:", error);
+      res.status(500).json({ message: "Error logging in" });
+    }
+  });
+  
   const apiRouter = express.Router();
   
   // Admin authentication routes
