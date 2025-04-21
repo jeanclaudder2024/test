@@ -61,7 +61,7 @@ export function generateLargeVesselDataset(count: number = 1500): InsertVessel[]
         eta: "2023-04-05T08:00:00Z"
       },
       cargo: {
-        type: "LNG",
+        type: "LNG (Liquefied Natural Gas)",
         capacity: 155000
       },
       region: "Europe"
@@ -89,7 +89,7 @@ export function generateLargeVesselDataset(count: number = 1500): InsertVessel[]
         eta: "2023-03-29T00:00:00Z"
       },
       cargo: {
-        type: "Crude Oil - Arabian Heavy",
+        type: "EXPORT BLEND CRUDE",
         capacity: 2000000
       },
       region: "Europe"
@@ -145,7 +145,7 @@ export function generateLargeVesselDataset(count: number = 1500): InsertVessel[]
         eta: "2023-03-29T14:00:00Z"
       },
       cargo: {
-        type: "Chemical Products - Glycols",
+        type: "Base Oils",
         capacity: 42000
       },
       region: "Europe"
@@ -173,7 +173,7 @@ export function generateLargeVesselDataset(count: number = 1500): InsertVessel[]
         eta: "2023-04-03T14:00:00Z"
       },
       cargo: {
-        type: "Iron Ore",
+        type: "Gasoline (Petrol / Mogas)",
         capacity: 170000
       },
       region: "Asia"
@@ -196,8 +196,8 @@ export function generateLargeVesselDataset(count: number = 1500): InsertVessel[]
     "Bahamas", "Greece", "Japan", "Cyprus", "Norway", "UK", "Denmark"
   ];
   
-  // Regions
-  const regions = ["North America", "Europe", "Asia", "MEA", "Africa", "Russia"];
+  // Get region IDs from constants
+  const regions = REGIONS.map(r => r.id);
   
   // Ports by region
   const portsByRegion: Record<string, string[]> = {
@@ -285,9 +285,8 @@ export function generateLargeVesselDataset(count: number = 1500): InsertVessel[]
     const etaDate = new Date(now);
     etaDate.setDate(etaDate.getDate() + futureOffset);
     
-    // Select cargo type based on vessel type
-    const cargoTypes = cargoTypesByVesselType[vesselType] || ["General Cargo"];
-    const cargoType = cargoTypes[Math.floor(Math.random() * cargoTypes.length)];
+    // Use oil product types from constants instead of vessel-based cargo types
+    const oilProductType = OIL_PRODUCT_TYPES[Math.floor(Math.random() * OIL_PRODUCT_TYPES.length)];
     
     // Generate capacity based on vessel type
     let capacity;
@@ -344,7 +343,7 @@ export function generateLargeVesselDataset(count: number = 1500): InsertVessel[]
       departureDate,
       destinationPort,
       eta: etaDate,
-      cargoType,
+      cargoType: oilProductType,
       cargoCapacity: capacity,
       currentRegion: region
     });
