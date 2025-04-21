@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -12,11 +12,15 @@ import Brokers from "@/pages/Brokers";
 import Documents from "@/pages/Documents";
 import AIAssistantPage from "@/pages/AIAssistant";
 import Settings from "@/pages/Settings";
+import LandingPage from "@/pages/LandingPage";
+import AuthPage from "@/pages/AuthPage";
 import { useEffect } from "react";
 import { apiRequest } from "./lib/queryClient";
 import MainLayout from "@/components/layout/MainLayout";
 
 function Router() {
+  const [location] = useLocation();
+  
   // Seed data on development
   useEffect(() => {
     const seedData = async () => {
@@ -33,10 +37,21 @@ function Router() {
     seedData();
   }, []);
 
+  // For landing page and auth page, don't use MainLayout (no sidebar/header)
+  if (location === "/" || location === "/auth") {
+    return (
+      <Switch>
+        <Route path="/" component={LandingPage} />
+        <Route path="/auth" component={AuthPage} />
+      </Switch>
+    );
+  }
+
+  // For app routes, use MainLayout with sidebar/header
   return (
     <MainLayout>
       <Switch>
-        <Route path="/" component={Dashboard} />
+        <Route path="/dashboard" component={Dashboard} />
         <Route path="/vessels" component={Vessels} />
         <Route path="/vessels/:id" component={VesselDetail} />
         <Route path="/refineries" component={Refineries} />
