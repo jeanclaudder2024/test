@@ -449,6 +449,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to create progress event" });
     }
   });
+  
+  // Update vessel location with accurate coordinates
+  apiRouter.post("/vessels/:id/update-location", async (req, res) => {
+    try {
+      const vesselId = parseInt(req.params.id);
+      const { lat, lng, eventDescription } = req.body;
+      
+      // Validate inputs
+      if (!lat || !lng || isNaN(parseFloat(lat)) || isNaN(parseFloat(lng))) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid coordinates provided. Both lat and lng must be valid numbers."
+        });
+      }
+      
+      // Convert to numbers and validate ranges
+      const latitude = parseFloat(lat);
+      const longitude = parseFloat(lng);
+      
+      if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+        return res.status(400).json({
+          success: false,
+          message: "Coordinates out of range. Latitude must be between -90 and 90, longitude between -180 and 180."
+        });
+      }
+      
+      // Get the vessel to make sure it exists
+      const vessel = await vesselService.getVesselById(vesselId);
+      if (!vessel) {
+        return res.status(404).json({
+          success: false,
+          message: "Vessel not found"
+        });
+      }
+      
+      // Import function to determine region from coordinates
+      const { determineRegionFromCoordinates } = await import('./services/vesselGenerator');
+      const newRegion = determineRegionFromCoordinates(latitude, longitude);
+      
+      // Update vessel location
+      const updatedVessel = await vesselService.updateVessel(vesselId, {
+        currentLat: latitude.toString(),
+        currentLng: longitude.toString(),
+        currentRegion: newRegion
+      });
+      
+      // Create progress event if there's a description
+      if (eventDescription) {
+        await vesselService.addProgressEvent({
+          vesselId,
+          date: new Date(),
+          event: eventDescription,
+          lat: latitude.toString(),
+          lng: longitude.toString(),
+          location: vessel.destinationPort || "At sea"
+        });
+      }
+      
+      res.json({
+        success: true,
+        message: "Vessel location updated successfully",
+        vessel: updatedVessel,
+        region: newRegion
+      });
+    } catch (error: any) {
+      console.error("Error updating vessel location:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to update vessel location",
+        error: error.message
+      });
+    }
+  });
 
   // Refinery endpoints
   apiRouter.get("/refineries", async (req, res) => {

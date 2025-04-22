@@ -323,7 +323,7 @@ export default function VesselDetail() {
                       Current Location
                     </CardTitle>
                     <CardDescription>
-                      Last reported coordinates
+                      Last reported coordinates - الإحداثيات الحالية
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
