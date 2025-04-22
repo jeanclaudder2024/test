@@ -31,13 +31,22 @@ export function SubscriptionCard({ plan, isCurrent = false }: SubscriptionCardPr
   const [_, navigate] = useLocation();
   const [isProcessing, setIsProcessing] = useState(false);
   
-  // Parse features array from JSON string
+  // Handle features which might be an array or a string
   let featureList = [];
   try {
-    featureList = typeof plan.features === 'string' ? 
-      JSON.parse(plan.features) : [];
+    if (Array.isArray(plan.features)) {
+      featureList = plan.features;
+    } else if (typeof plan.features === 'string') {
+      // If it's JSON string, try to parse it
+      try {
+        featureList = JSON.parse(plan.features);
+      } catch {
+        // If parsing fails, it might be a simple string or not properly formatted
+        featureList = [plan.features];
+      }
+    }
   } catch (error) {
-    console.error("Error parsing features:", error);
+    console.error("Error handling features:", error);
   }
 
   // Subscribe to plan
