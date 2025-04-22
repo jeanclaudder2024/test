@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
 import { Loader2, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "wouter";
+import { useLocation } from "wouter";
 
 interface FeatureProtectedRouteProps {
   path: string;
@@ -22,7 +22,7 @@ export function FeatureProtectedRoute({
   const { user, isLoading: authLoading } = useAuth();
   const { hasAccess, isLoading: featureLoading } = useFeatureAccess();
   const isLoading = authLoading || featureLoading;
-  const [, navigate] = useNavigate();
+  const [, navigate] = useLocation();
 
   if (isLoading) {
     return (

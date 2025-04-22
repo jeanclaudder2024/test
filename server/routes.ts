@@ -28,6 +28,7 @@ import { apiTesterRouter } from "./routes/apiTester";
 import { brokerRouter } from "./routes/brokerRoutes";
 import { adminRouter } from "./routes/adminRoutes";
 import { testAuthRouter } from "./routes/testAuth";
+import { subscriptionRouter } from "./routes/subscriptionRoutes";
 import { seedBrokers } from "./services/seedService";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -723,6 +724,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Mount API router
   app.use("/api/admin", adminRouter); // Secured admin routes
+  app.use("/api/auth-test", testAuthRouter); // Test auth endpoints
+  app.use("/api", subscriptionRouter); // Subscription endpoints
   app.use("/api", apiRouter);
 
   const httpServer = createServer(app);

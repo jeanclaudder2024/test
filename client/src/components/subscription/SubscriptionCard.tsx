@@ -3,7 +3,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Shield, Star } from "lucide-react";
-import { useNavigate } from "wouter";
+import { useLocation } from "wouter";
 
 interface SubscriptionPlan {
   id: number;
@@ -23,7 +23,7 @@ interface SubscriptionCardProps {
 }
 
 export function SubscriptionCard({ plan, currentPlan, onSelect }: SubscriptionCardProps) {
-  const [, navigate] = useNavigate();
+  const [, navigate] = useLocation();
   const isCurrent = currentPlan === plan.name;
   const features = plan.features || [];
   
