@@ -61,7 +61,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`Deleted ${documentsDeleted.length} documents.`);
         
         // Reset stats
-        await storage.updateStats({ 
+        // Update via direct db query to include lastUpdated field
+        await db.update(stats).set({ 
           activeVessels: 0, 
           totalCargo: "0",
           activeRefineries: 0,
@@ -85,6 +86,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
     
     // Initialize with seed data in development
+    // Route to refresh vessel data with force parameter
+    apiRouter.post("/vessels/refresh", async (req, res) => {
+      try {
+        console.log("Refreshing vessel data with new vessel types...");
+        const forceRefresh = true; // Force refresh to regenerate all vessels
+        
+        // Use the seedVesselData function with forceRefresh = true
+        const vesselResult = await vesselService.seedVesselData(forceRefresh);
+        console.log("Vessel data refreshed successfully:", vesselResult);
+        
+        res.json({
+          success: true,
+          message: "Vessel data has been completely refreshed with new vessel types",
+          data: {
+            vessels: vesselResult.vessels || 0,
+            oilVessels: vesselResult.oilVessels || 0,
+            totalCargo: vesselResult.totalCargo || 0
+          }
+        });
+      } catch (error) {
+        console.error("Error refreshing vessel data:", error);
+        res.status(500).json({ message: "Failed to refresh vessel data" });
+      }
+    });
+
     apiRouter.post("/seed", async (req, res) => {
       try {
         console.log("Starting database seeding process...");

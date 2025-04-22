@@ -184,10 +184,25 @@ export function generateLargeVesselDataset(count: number = 1500): InsertVessel[]
   const prefixes = ["Pacific", "Atlantic", "Oceanic", "Global", "Star", "Royal", "Nordic", "Eastern", "Western", "Southern", "Northern"];
   const suffixes = ["Pride", "Explorer", "Pioneer", "Voyager", "Commander", "Mariner", "Navigator", "Carrier", "Trader", "Champion", "Express"];
   
-  // Vessel types
+  // Extended list of vessel types for greater variety
   const vesselTypes = [
-    "Crude Oil Tanker", "Product Tanker", "LNG Carrier", "Chemical Tanker", 
-    "Container Ship", "Cargo Ship", "VLCC", "Oil/Chemical Tanker"
+    "Crude Oil Tanker",
+    "Product Tanker", 
+    "LNG Carrier", 
+    "Chemical Tanker",
+    "Container Ship", 
+    "Cargo Ship", 
+    "VLCC (Very Large Crude Carrier)",
+    "ULCC (Ultra Large Crude Carrier)",
+    "Aframax Tanker",
+    "Suezmax Tanker",
+    "Panamax Tanker",
+    "Shuttle Tanker",
+    "Bunker Tanker",
+    "Bulk Carrier",
+    "Oil/Chemical Tanker",
+    "LPG Carrier",
+    "Asphalt/Bitumen Tanker"
   ];
   
   // Country flags
@@ -209,16 +224,36 @@ export function generateLargeVesselDataset(count: number = 1500): InsertVessel[]
     "Russia": ["Novorossiysk, Russia", "St. Petersburg, Russia", "Vladivostok, Russia", "Primorsk, Russia", "Murmansk, Russia"]
   };
   
-  // Cargo types by vessel type
-  const cargoTypesByVesselType: Record<string, string[]> = {
-    "Crude Oil Tanker": ["Crude Oil - Arabian Light", "Crude Oil - Brent", "Crude Oil - WTI", "Crude Oil - Dubai", "Crude Oil - Urals"],
-    "Product Tanker": ["Gasoline", "Diesel", "Jet Fuel", "Naphtha", "Kerosene"],
-    "LNG Carrier": ["LNG", "Liquefied Natural Gas", "Natural Gas"],
-    "Chemical Tanker": ["Chemical Products - Phenol", "Chemical Products - Glycols", "Chemical Products - Methanol"],
-    "Container Ship": ["Containerized Goods"],
-    "Cargo Ship": ["Iron Ore", "Coal", "Soybeans", "Grain", "Bauxite"],
-    "VLCC": ["Crude Oil - Arabian Heavy", "Crude Oil - Basrah Heavy", "Crude Oil - Tapis"],
-    "Oil/Chemical Tanker": ["Chemical Products", "Refined Products", "Mixed Cargo"]
+  // Use standardized OIL_PRODUCT_TYPES from constants.ts
+  // Creating a grouping of vessel types to cargo types mapping
+  const vesselToOilProductMapping: Record<string, string[]> = {
+    "Crude Oil Tanker": OIL_PRODUCT_TYPES.filter(type => type.includes('CRUDE')),
+    "Product Tanker": OIL_PRODUCT_TYPES.filter(type => 
+      type.includes('GASOLINE') || 
+      type.includes('DIESEL') || 
+      type.includes('JET FUEL') || 
+      type.includes('KEROSENE')
+    ),
+    "LNG Carrier": OIL_PRODUCT_TYPES.filter(type => 
+      type.includes('LNG') || 
+      type.includes('GAS')
+    ),
+    "Chemical Tanker": OIL_PRODUCT_TYPES.filter(type => 
+      type.includes('CHEMICAL') || 
+      type.includes('METHANOL')
+    ),
+    "VLCC (Very Large Crude Carrier)": OIL_PRODUCT_TYPES.filter(type => type.includes('CRUDE')),
+    "ULCC (Ultra Large Crude Carrier)": OIL_PRODUCT_TYPES.filter(type => type.includes('CRUDE')),
+    "Aframax Tanker": [...OIL_PRODUCT_TYPES.filter(type => type.includes('CRUDE')), ...OIL_PRODUCT_TYPES.filter(type => type.includes('FUEL OIL'))],
+    "Suezmax Tanker": [...OIL_PRODUCT_TYPES.filter(type => type.includes('CRUDE')), ...OIL_PRODUCT_TYPES.filter(type => type.includes('FUEL OIL'))],
+    "Panamax Tanker": OIL_PRODUCT_TYPES.filter(type => 
+      type.includes('GASOLINE') || 
+      type.includes('DIESEL') || 
+      type.includes('FUEL OIL')
+    ),
+    "Oil/Chemical Tanker": [...OIL_PRODUCT_TYPES.filter(type => type.includes('CHEMICAL')), ...OIL_PRODUCT_TYPES.filter(type => !type.includes('CRUDE') && !type.includes('LNG'))],
+    "LPG Carrier": OIL_PRODUCT_TYPES.filter(type => type.includes('LPG') || type.includes('PROPANE')),
+    "Asphalt/Bitumen Tanker": OIL_PRODUCT_TYPES.filter(type => type.includes('BITUMEN') || type.includes('ASPHALT'))
   };
   
   // Generated vessels array
@@ -285,26 +320,35 @@ export function generateLargeVesselDataset(count: number = 1500): InsertVessel[]
     const etaDate = new Date(now);
     etaDate.setDate(etaDate.getDate() + futureOffset);
     
-    // Use oil product types from constants instead of vessel-based cargo types
-    const oilProductType = OIL_PRODUCT_TYPES[Math.floor(Math.random() * OIL_PRODUCT_TYPES.length)];
+    // Use appropriate oil product types based on vessel type
+    let possibleCargoTypes = vesselToOilProductMapping[vesselType] || OIL_PRODUCT_TYPES;
+    
+    // If no specific mapping or empty mapping, use a random oil product type
+    if (!possibleCargoTypes || possibleCargoTypes.length === 0) {
+      possibleCargoTypes = OIL_PRODUCT_TYPES;
+    }
+    
+    // Select a random cargo type from the appropriate list
+    const oilProductType = possibleCargoTypes[Math.floor(Math.random() * possibleCargoTypes.length)];
     
     // Generate capacity based on vessel type
     let capacity;
-    switch (vesselType) {
-      case "Crude Oil Tanker":
-        capacity = Math.floor(Math.random() * 1500000) + 500000;
-        break;
-      case "VLCC":
-        capacity = Math.floor(Math.random() * 1000000) + 1500000;
-        break;
-      case "LNG Carrier":
-        capacity = Math.floor(Math.random() * 100000) + 100000;
-        break;
-      case "Container Ship":
-        capacity = Math.floor(Math.random() * 15000) + 5000;
-        break;
-      default:
-        capacity = Math.floor(Math.random() * 500000) + 50000;
+    if (vesselType.includes("Crude Oil") || vesselType.includes("Oil/Chemical")) {
+      capacity = Math.floor(Math.random() * 1500000) + 500000;
+    } else if (vesselType.includes("VLCC") || vesselType.includes("ULCC")) {
+      capacity = Math.floor(Math.random() * 1000000) + 1500000;
+    } else if (vesselType.includes("Aframax") || vesselType.includes("Suezmax")) {
+      capacity = Math.floor(Math.random() * 750000) + 750000;
+    } else if (vesselType.includes("LNG") || vesselType.includes("LPG")) {
+      capacity = Math.floor(Math.random() * 100000) + 100000;
+    } else if (vesselType.includes("Container") || vesselType.includes("Cargo")) {
+      capacity = Math.floor(Math.random() * 15000) + 5000;
+    } else if (vesselType.includes("Bitumen") || vesselType.includes("Asphalt")) {
+      capacity = Math.floor(Math.random() * 300000) + 100000;
+    } else if (vesselType.includes("Product") || vesselType.includes("Panamax")) {
+      capacity = Math.floor(Math.random() * 600000) + 200000;
+    } else {
+      capacity = Math.floor(Math.random() * 500000) + 50000;
     }
     
     // Generate IMO and MMSI numbers
@@ -316,16 +360,20 @@ export function generateLargeVesselDataset(count: number = 1500): InsertVessel[]
     
     // Generate deadweight based on vessel type
     let deadweight;
-    switch (vesselType) {
-      case "Crude Oil Tanker":
-      case "VLCC":
-        deadweight = Math.floor(Math.random() * 150000) + 150000;
-        break;
-      case "Container Ship":
-        deadweight = Math.floor(Math.random() * 100000) + 100000;
-        break;
-      default:
-        deadweight = Math.floor(Math.random() * 100000) + 30000;
+    if (vesselType.includes("VLCC") || vesselType.includes("ULCC")) {
+      deadweight = Math.floor(Math.random() * 150000) + 250000;
+    } else if (vesselType.includes("Crude Oil")) {
+      deadweight = Math.floor(Math.random() * 150000) + 150000;
+    } else if (vesselType.includes("Aframax")) {
+      deadweight = Math.floor(Math.random() * 40000) + 80000;
+    } else if (vesselType.includes("Suezmax")) {
+      deadweight = Math.floor(Math.random() * 60000) + 120000;
+    } else if (vesselType.includes("Panamax")) {
+      deadweight = Math.floor(Math.random() * 30000) + 60000;
+    } else if (vesselType.includes("Container") || vesselType.includes("Cargo")) {
+      deadweight = Math.floor(Math.random() * 100000) + 100000;
+    } else {
+      deadweight = Math.floor(Math.random() * 100000) + 30000;
     }
     
     // Create vessel object
