@@ -32,8 +32,13 @@ export function SubscriptionCard({ plan, isCurrent = false }: SubscriptionCardPr
   const [isProcessing, setIsProcessing] = useState(false);
   
   // Parse features array from JSON string
-  const featureList = typeof plan.features === 'string' ? 
-    JSON.parse(plan.features) : [];
+  let featureList = [];
+  try {
+    featureList = typeof plan.features === 'string' ? 
+      JSON.parse(plan.features) : [];
+  } catch (error) {
+    console.error("Error parsing features:", error);
+  }
 
   // Subscribe to plan
   const subscribe = useMutation({
