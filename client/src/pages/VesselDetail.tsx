@@ -25,8 +25,32 @@ import {
   ArrowLeft, Ship, Calendar, Map, Info, Edit, Plus, Navigation, Anchor,
   Flag, Droplet, Package, AlertCircle, Truck, Gauge, BarChart, History,
   Users, Clock, Compass, ArrowRight, FileText, Clipboard, Download, Globe,
-  ZoomIn, ZoomOut
+  ZoomIn, ZoomOut, Fuel, Activity, Layers, Filter, Tag
 } from 'lucide-react';
+
+// Define oil product categories for filtering
+const OIL_CATEGORIES = {
+  "Crude": ["CRUDE", "EXPORT BLEND CRUDE", "EASTERN SIBERIA PACIFIC OCEAN CRUDE OIL", "ESPO"],
+  "Jet Fuel": ["JET FUEL", "JET A1", "AVIATION KEROSENE", "COLONIAL GRADE 54"],
+  "Diesel": ["DIESEL", "GASOIL", "ULTRA‐LOW SULPHUR DIESEL", "AUTOMATIVE GAS OIL", "AGO OIL"],
+  "Fuel Oil": ["FUEL OIL", "IFO", "HFO", "MFO", "MAZUT", "M100", "VIRGIN FUEL OIL D6", "CST-180"],
+  "Gas": ["LPG", "LNG", "LIQUEFIED PETROLEUM GAS", "LIQUEFIED NATURAL GAS", "COMPRESSED NATURAL GAS", "CNG"],
+  "Gasoline": ["GASOLINE", "PETROL", "MOGAS", "GASOLENE", "OCTANES"],
+  "Other": ["NAPHTHA", "KEROSENE", "BITUMEN", "ASPHALT", "BASE OIL", "SULPHUR", "UREA", "DIAMMONIUM PHOSPHATE", "DAP"]
+};
+
+// Helper function to determine oil category
+const getOilCategory = (cargoType: string | null | undefined): string => {
+  if (!cargoType) return "Other";
+  const upperCargoType = cargoType.toUpperCase();
+  
+  for (const [category, keywords] of Object.entries(OIL_CATEGORIES)) {
+    if (keywords.some(keyword => upperCargoType.includes(keyword))) {
+      return category;
+    }
+  }
+  return "Other";
+};
 
 // Helper components for vessel details
 const InfoItem = ({ label, value }: { label: React.ReactNode; value: React.ReactNode }) => (
@@ -311,9 +335,14 @@ export default function VesselDetail() {
                             zoom={6}
                             zoomControl={false}
                             className="h-full w-full"
-                            whenReady={(event) => {
+                            whenReady={() => {
                               setTimeout(() => {
-                                event.target.invalidateSize();
+                                // Fix map size when tab changes
+                                const mapElement = document.querySelector('.leaflet-container');
+                                if (mapElement) {
+                                  const map = (mapElement as any)._leaflet_map;
+                                  if (map) map.invalidateSize();
+                                }
                               }, 0);
                             }}
                           >
@@ -483,11 +512,172 @@ export default function VesselDetail() {
             
             <TabsContent value="journey">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Cargo Information Card */}
+                <Card>
+                  <div className="relative">
+                    {/* Background image based on cargo type */}
+                    <div 
+                      className="absolute inset-0 bg-cover bg-center opacity-15 rounded-t-lg h-32"
+                      style={{ 
+                        backgroundImage: `url(${
+                          getOilCategory(vessel.cargoType) === 'Crude' ? "https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?w=600&auto=format" : 
+                          getOilCategory(vessel.cargoType) === 'Jet Fuel' ? "https://images.unsplash.com/photo-1526841535633-ef3be0b23ad9?w=600&auto=format" : 
+                          getOilCategory(vessel.cargoType) === 'Diesel' ? "https://images.unsplash.com/photo-1527671507471-3c83585da23f?w=600&auto=format" : 
+                          getOilCategory(vessel.cargoType) === 'Fuel Oil' ? "https://images.unsplash.com/photo-1495321308589-43affb814eee?w=600&auto=format" : 
+                          getOilCategory(vessel.cargoType) === 'Gas' ? "https://images.unsplash.com/photo-1622058275800-82c2226305f0?w=600&auto=format" :
+                          getOilCategory(vessel.cargoType) === 'Gasoline' ? "https://images.unsplash.com/photo-1581525231557-d932c9a51c92?w=600&auto=format" :
+                          "https://images.unsplash.com/photo-1580810746032-cede1e872c66?w=600&auto=format"
+                        })`
+                      }}
+                    />
+                    <CardHeader className="pb-2 relative z-10">
+                      <CardTitle className="flex items-center">
+                        <Droplet className="h-5 w-5 mr-2 text-primary" />
+                        Cargo Information
+                      </CardTitle>
+                      <CardDescription>
+                        Current cargo details and status - تفاصيل وحالة الحمولة
+                      </CardDescription>
+                    </CardHeader>
+                  </div>
+                  <CardContent className="pt-2">
+                    <div className="space-y-4">
+                      {/* Oil Type Badge */}
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Oil Product Type:</span>
+                        <Badge 
+                          variant="outline"
+                          className={`
+                            ${getOilCategory(vessel.cargoType) === 'Crude' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                              getOilCategory(vessel.cargoType) === 'Jet Fuel' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                              getOilCategory(vessel.cargoType) === 'Diesel' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
+                              getOilCategory(vessel.cargoType) === 'Fuel Oil' ? 'bg-orange-50 text-orange-700 border-orange-200' :
+                              getOilCategory(vessel.cargoType) === 'Gas' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                              getOilCategory(vessel.cargoType) === 'Gasoline' ? 'bg-red-50 text-red-700 border-red-200' :
+                              'bg-gray-50 text-gray-700 border-gray-200'
+                            }
+                          `}
+                        >
+                          <div className="flex items-center gap-1">
+                            <Droplet className={`h-3 w-3 
+                              ${getOilCategory(vessel.cargoType) === 'Crude' ? 'text-amber-500' :
+                                getOilCategory(vessel.cargoType) === 'Jet Fuel' ? 'text-blue-500' :
+                                getOilCategory(vessel.cargoType) === 'Diesel' ? 'text-indigo-500' :
+                                getOilCategory(vessel.cargoType) === 'Fuel Oil' ? 'text-orange-500' :
+                                getOilCategory(vessel.cargoType) === 'Gas' ? 'text-emerald-500' :
+                                getOilCategory(vessel.cargoType) === 'Gasoline' ? 'text-red-500' :
+                                'text-gray-500'
+                              }
+                            `} />
+                            {getOilCategory(vessel.cargoType)}
+                          </div>
+                        </Badge>
+                      </div>
+                      
+                      {/* Cargo Details */}
+                      <div className="bg-muted/30 p-3 rounded-lg">
+                        <div className="flex justify-between mb-1">
+                          <span className="text-sm flex items-center">
+                            <Tag className="h-4 w-4 mr-1 text-primary" />
+                            Cargo Type
+                          </span>
+                          <span className="text-sm font-medium">
+                            {vessel.cargoType || 'Not specified'}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      {/* Cargo Volume with Visuals */}
+                      <div className="space-y-3">
+                        <div className="text-sm font-medium">Cargo Volume</div>
+                        
+                        {/* Show default cargo capacity */}
+                        <div className="space-y-1">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Total Capacity:</span>
+                            <span>{vessel.cargoCapacity ? `${vessel.cargoCapacity.toLocaleString()} barrels` : 'Unknown'}</span>
+                          </div>
+                          {vessel.cargoCapacity ? (
+                            <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
+                              <div className="h-full rounded-full bg-primary" style={{ width: '100%' }} />
+                            </div>
+                          ) : null}
+                        </div>
+                        
+                        {/* Show estimated current cargo (95% of capacity) */}
+                        <div className="space-y-1">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Current Cargo:</span>
+                            <span>{vessel.cargoCapacity ? `${Math.round(vessel.cargoCapacity * 0.95).toLocaleString()} barrels` : 'Unknown'}</span>
+                          </div>
+                          {vessel.cargoCapacity ? (
+                            <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
+                              <div className="h-full rounded-full bg-blue-500" style={{ width: '95%' }} />
+                            </div>
+                          ) : null}
+                        </div>
+                        
+                        {/* Show weight equivalent */}
+                        <div className="space-y-1">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Weight Equivalent:</span>
+                            <span>{vessel.cargoCapacity ? `${Math.round(vessel.cargoCapacity * 0.136).toLocaleString()} metric tons` : 'Unknown'}</span>
+                          </div>
+                        </div>
+                        
+                        {/* Add Arabic label */}
+                        <div className="mt-2 text-xs text-center text-muted-foreground">
+                          حجم الحمولة وسعة الشحن
+                        </div>
+                      </div>
+                      
+                      {/* Additional Cargo Details */}
+                      <div className="bg-muted/30 p-3 rounded-lg">
+                        <h4 className="text-sm font-medium mb-2">Cargo Status</h4>
+                        <div className="flex justify-between mb-2">
+                          <span className="text-sm flex items-center">
+                            <Fuel className="h-4 w-4 mr-1 text-green-500" />
+                            Loading Status
+                          </span>
+                          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                            Fully Loaded
+                          </Badge>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm flex items-center">
+                            <Activity className="h-4 w-4 mr-1 text-blue-500" />
+                            Cargo Density
+                          </span>
+                          <span className="text-sm font-medium">
+                            {getOilCategory(vessel.cargoType) === 'Crude' ? '0.85 g/ml' :
+                             getOilCategory(vessel.cargoType) === 'Jet Fuel' ? '0.81 g/ml' :
+                             getOilCategory(vessel.cargoType) === 'Diesel' ? '0.83 g/ml' :
+                             getOilCategory(vessel.cargoType) === 'Fuel Oil' ? '0.92 g/ml' :
+                             getOilCategory(vessel.cargoType) === 'Gas' ? '0.75 g/ml' :
+                             getOilCategory(vessel.cargoType) === 'Gasoline' ? '0.72 g/ml' :
+                             '0.85 g/ml'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                  <CardFooter>
+                    <Button variant="outline" className="w-full">
+                      <FileText className="h-4 w-4 mr-2" />
+                      Generate Cargo Manifest
+                    </Button>
+                  </CardFooter>
+                </Card>
+                
+                {/* Journey Progress Timeline Card */}
                 <Card className="md:col-span-2">
                   <CardHeader>
-                    <CardTitle>Voyage Progress</CardTitle>
+                    <CardTitle className="flex items-center">
+                      <History className="h-5 w-5 mr-2 text-primary" />
+                      Voyage Progress
+                    </CardTitle>
                     <CardDescription>
-                      Timeline of vessel's journey
+                      Timeline of vessel's journey - جدول زمني لرحلة السفينة
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
