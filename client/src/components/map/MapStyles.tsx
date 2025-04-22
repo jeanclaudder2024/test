@@ -4,55 +4,74 @@ import {
   Satellite, Navigation, Anchor, Mountain
 } from "lucide-react";
 
-// Available free mapbox styles
+// Language settings - Add true for multilingual support
+export type LanguageOption = 'en' | 'ar' | 'multilingual';
+
+// Available free styles with proper Leaflet tile URLs
 export const mapStyles = [
   { 
-    id: 'mapbox://styles/mapbox/streets-v12',
-    name: 'Streets',
+    id: 'osm-standard',
+    name: 'OpenStreetMap',
     icon: <MapIcon className="h-3 w-3" />,
-    description: 'A complete basemap for urban navigation'
+    description: 'Standard OpenStreetMap tiles in English',
+    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
   },
   { 
-    id: 'mapbox://styles/mapbox/light-v11',
+    id: 'carto-light',
     name: 'Light',
     icon: <Sunrise className="h-3 w-3" />,
-    description: 'A light, minimal basemap'
+    description: 'Light Carto basemap optimized for data visualization',
+    url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://carto.com/attribution">CARTO</a>'
   },
   { 
-    id: 'mapbox://styles/mapbox/dark-v11',
+    id: 'carto-dark',
     name: 'Dark',
     icon: <Baseline className="h-3 w-3" />,
-    description: 'A dark basemap for data visualization'
+    description: 'Dark Carto basemap optimized for data visualization',
+    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://carto.com/attribution">CARTO</a>'
   },
   { 
-    id: 'mapbox://styles/mapbox/outdoors-v12',
-    name: 'Outdoors',
-    icon: <TreePine className="h-3 w-3" />,
-    description: 'A topographic basemap with trails and terrain'
-  },
-  { 
-    id: 'mapbox://styles/mapbox/satellite-v9',
+    id: 'esri-world-imagery',
     name: 'Satellite',
     icon: <Satellite className="h-3 w-3" />,
-    description: 'High-resolution satellite imagery'
+    description: 'ESRI World Imagery satellite map',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
   },
   { 
-    id: 'mapbox://styles/mapbox/satellite-streets-v12',
-    name: 'Satellite Streets',
+    id: 'stamen-terrain',
+    name: 'Terrain',
+    icon: <TreePine className="h-3 w-3" />,
+    description: 'Terrain map with natural features and elevation contours',
+    url: 'https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}{r}.png',
+    attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+  },
+  { 
+    id: 'esri-world-street',
+    name: 'Streets',
     icon: <Navigation className="h-3 w-3" />,
-    description: 'Satellite imagery with streets and labels'
+    description: 'ESRI World Street Map with detailed street network',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom, 2012'
   },
   { 
-    id: 'mapbox://styles/mapbox/navigation-day-v1',
-    name: 'Navigation',
+    id: 'esri-ocean-basemap',
+    name: 'Ocean',
     icon: <Anchor className="h-3 w-3" />,
-    description: 'Optimized for maritime navigation'
+    description: 'ESRI Ocean Basemap optimized for maritime visualization',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}',
+    attribution: 'Tiles &copy; Esri &mdash; Sources: GEBCO, NOAA, CHS, OSU, UNH, CSUMB, National Geographic, DeLorme, NAVTEQ, and Esri'
   },
   { 
-    id: 'mapbox://styles/mapbox/standard',
-    name: 'Standard',
+    id: 'esri-gray',
+    name: 'Grayscale',
     icon: <Mountain className="h-3 w-3" />,
-    description: 'Beautiful 3D buildings and topography'
+    description: 'ESRI World Gray Canvas minimal basemap',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+    attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ'
   }
 ];
 

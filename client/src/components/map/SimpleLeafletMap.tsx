@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { Vessel, Refinery, Region } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from "@/components/ui/button";
-import { Info, Map, Navigation } from 'lucide-react';
+import { Info, Map, Navigation, Globe2 } from 'lucide-react';
 import { OIL_PRODUCT_TYPES } from '@/../../shared/constants';
+import { MapStyleSelector, mapStyles, LanguageOption } from './MapStyles';
 
 // Define Leaflet types
 declare global {
@@ -38,37 +39,7 @@ interface SimpleLeafletMapProps {
   isLoading?: boolean;
 }
 
-// Map style definitions
-const mapStyles = [
-  {
-    id: 'osm-standard',
-    name: 'Standard',
-    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    icon: '🗺️'
-  },
-  {
-    id: 'carto-voyager',
-    name: 'Voyager',
-    url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://carto.com/attributions">CARTO</a>',
-    icon: '🧭'
-  },
-  {
-    id: 'carto-dark',
-    name: 'Dark',
-    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://carto.com/attributions">CARTO</a>',
-    icon: '🌑'
-  },
-  {
-    id: 'esri-world',
-    name: 'Satellite',
-    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
-    icon: '🛰️'
-  }
-];
+// Import map styles from MapStyles.tsx
 
 export default function SimpleLeafletMap({
   vessels,
@@ -82,6 +53,7 @@ export default function SimpleLeafletMap({
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const [mapStyle, setMapStyle] = useState(mapStyles[0].id);
+  const [mapLanguage, setMapLanguage] = useState<LanguageOption>('en');
   const [isMapReady, setIsMapReady] = useState(false);
   const [displayVessels, setDisplayVessels] = useState<Vessel[]>([]);
   
@@ -137,7 +109,9 @@ export default function SimpleLeafletMap({
       zoom: 2,
       minZoom: 2,
       maxZoom: 18,
-      worldCopyJump: true
+      worldCopyJump: true,
+      // Set language preference: en=English, ar=Arabic, uses local language by default
+      language: mapLanguage === 'multilingual' ? undefined : mapLanguage
     });
     
     mapInstanceRef.current = map;
@@ -145,9 +119,12 @@ export default function SimpleLeafletMap({
     // Add tile layer based on selected style
     const selectedMapStyle = mapStyles.find(style => style.id === mapStyle) || mapStyles[0];
     
+    // Some tile providers accept language parameter
     L.tileLayer(selectedMapStyle.url, {
       attribution: selectedMapStyle.attribution,
-      maxZoom: 19
+      maxZoom: 19,
+      // Set language for providers that support it (like ESRI and Carto)
+      language: mapLanguage === 'multilingual' ? undefined : mapLanguage
     }).addTo(map);
     
     // Add vessel markers
