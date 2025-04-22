@@ -343,7 +343,9 @@ export default function SimpleLeafletMap({
     trackedVessel,
     onVesselClick,
     onRefineryClick,
-    isLoading
+    isLoading,
+    initialCenter,
+    initialZoom
   ]);
   
   // Handlers for UI controls

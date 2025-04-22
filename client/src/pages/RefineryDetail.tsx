@@ -106,7 +106,7 @@ export default function RefineryDetail() {
     } else {
       setAssociatedVessels([]);
     }
-  }, [refinery, vessels]);
+  }, [refinery, vessels, refineryId]);
   
   // Redirect to refineries page if refinery not found and not loading
   if (!loading && !refinery) {
