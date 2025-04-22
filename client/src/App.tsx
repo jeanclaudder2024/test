@@ -15,6 +15,7 @@ import Settings from "@/pages/Settings";
 import Subscribe from "@/pages/Subscribe";
 import LandingPage from "@/pages/LandingPage";
 import AuthPage from "@/pages/AuthPage";
+import AdminLoginPage from "@/pages/AdminLoginPage";
 import AdminDashboard from "@/pages/AdminDashboard";
 import { useEffect } from "react";
 import { apiRequest } from "./lib/queryClient";
@@ -41,13 +42,13 @@ function Router() {
     seedData();
   }, []);
 
-  // For landing page and auth page, don't use MainLayout (no sidebar/header)
-  if (location === "/" || location === "/auth") {
+  // For landing page, auth page, and admin login, don't use MainLayout (no sidebar/header)
+  if (location === "/" || location === "/auth" || location === "/admin") {
     return (
       <Switch>
         <Route path="/" component={LandingPage} />
         <Route path="/auth" component={AuthPage} />
-
+        <Route path="/admin" component={AdminLoginPage} />
       </Switch>
     );
   }
@@ -67,7 +68,7 @@ function Router() {
         <ProtectedRoute path="/ai-assistant" component={AIAssistantPage} />
         <ProtectedRoute path="/settings" component={Settings} />
         <ProtectedRoute path="/subscribe" component={Subscribe} />
-        <ProtectedRoute path="/admin" component={AdminDashboard} adminOnly={true} />
+        <ProtectedRoute path="/admin/dashboard" component={AdminDashboard} adminOnly={true} />
         <Route component={NotFound} />
       </Switch>
     </MainLayout>
