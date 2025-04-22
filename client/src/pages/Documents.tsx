@@ -31,7 +31,8 @@ import {
   TabsList,
   TabsTrigger 
 } from "@/components/ui/tabs";
-import { ArrowUpDown, Copy, File, FileText, Filter, MoreHorizontal, Plus, RefreshCw, Search } from 'lucide-react';
+import { ArrowUpDown, Copy, File, FileText, Filter, MoreHorizontal, Plus, RefreshCw, Search, Ship, Store, GanttChart } from 'lucide-react';
+import { LawJustice } from "@/components/icons/LawJustice";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { formatDate } from '@/lib/utils';
@@ -109,17 +110,73 @@ export default function Documents() {
     // Only proceed if it passes both search and status filters
     if (!matchesSearch || !matchesStatus) return false;
     
-    // Apply tab filter (all, bills, manifests, inspections, others)
+    // Apply tab filter based on document categories
     if (activeTab === 'all') return true;
+    
+    // Legal document types
+    if (activeTab === 'legal') {
+      return doc.type.toLowerCase().includes('contract') || 
+             doc.type.toLowerCase().includes('agreement') || 
+             doc.type.toLowerCase().includes('certificate') ||
+             doc.type.toLowerCase().includes('compliance') ||
+             doc.type.toLowerCase().includes('legal');
+    }
+    
+    // Commercial document types
+    if (activeTab === 'commercial') {
+      return doc.type.toLowerCase().includes('invoice') || 
+             doc.type.toLowerCase().includes('commercial') || 
+             doc.type.toLowerCase().includes('sales') ||
+             doc.type.toLowerCase().includes('purchase') ||
+             doc.type.toLowerCase().includes('trading');
+    }
+    
+    // Shipping document types
+    if (activeTab === 'shipping') {
+      return doc.type.toLowerCase().includes('shipping') || 
+             doc.type.toLowerCase().includes('transport') || 
+             doc.type.toLowerCase().includes('delivery') ||
+             doc.type.toLowerCase().includes('cargo');
+    }
+    
+    // Bills of Lading
     if (activeTab === 'bills' && doc.type.toLowerCase().includes('bill')) return true;
+    
+    // Letters of Intent
+    if (activeTab === 'loi' && (
+      doc.type.toLowerCase().includes('loi') || 
+      doc.type.toLowerCase().includes('letter of intent') ||
+      doc.type.toLowerCase().includes('letter of indemnity')
+    )) return true;
+    
+    // Sales/Purchase Agreements
+    if (activeTab === 'spa' && (
+      doc.type.toLowerCase().includes('spa') || 
+      doc.type.toLowerCase().includes('sales and purchase') ||
+      doc.type.toLowerCase().includes('purchase agreement')
+    )) return true;
+    
+    // Manifests (keeping for backward compatibility)
     if (activeTab === 'manifests' && doc.type.toLowerCase().includes('manifest')) return true;
+    
+    // Inspections (keeping for backward compatibility)
     if (activeTab === 'inspections' && doc.type.toLowerCase().includes('inspection')) return true;
+    
+    // Loading (keeping for backward compatibility)
     if (activeTab === 'loading' && doc.type.toLowerCase().includes('loading')) return true;
+    
+    // Others - anything that doesn't fit in above categories
     if (activeTab === 'others') {
-      return !doc.type.toLowerCase().includes('bill') && 
-        !doc.type.toLowerCase().includes('manifest') && 
-        !doc.type.toLowerCase().includes('inspection') &&
-        !doc.type.toLowerCase().includes('loading');
+      const commonTypes = [
+        'bill', 'manifest', 'inspection', 'loading',
+        'contract', 'agreement', 'certificate', 'compliance', 'legal',
+        'invoice', 'commercial', 'sales', 'purchase', 'trading',
+        'shipping', 'transport', 'delivery', 'cargo',
+        'loi', 'letter of intent', 'letter of indemnity',
+        'spa', 'sales and purchase', 'purchase agreement'
+      ];
+      
+      return !commonTypes.some(type => doc.type.toLowerCase().includes(type));
     }
     return false;
   });
@@ -279,10 +336,27 @@ export default function Documents() {
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 pt-4 gap-2">
                   <TabsList className="overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
                     <TabsTrigger value="all">All</TabsTrigger>
+                    <TabsTrigger value="legal" className="whitespace-nowrap">
+                      <div className="flex items-center">
+                        <LawJustice className="w-3 h-3 mr-1" />
+                        Legal
+                      </div>
+                    </TabsTrigger>
+                    <TabsTrigger value="commercial" className="whitespace-nowrap">
+                      <div className="flex items-center">
+                        <Store className="w-3 h-3 mr-1" />
+                        Commercial
+                      </div>
+                    </TabsTrigger>
+                    <TabsTrigger value="shipping" className="whitespace-nowrap">
+                      <div className="flex items-center">
+                        <Ship className="w-3 h-3 mr-1" />
+                        Shipping
+                      </div>
+                    </TabsTrigger>
                     <TabsTrigger value="bills" className="whitespace-nowrap">Bills of Lading</TabsTrigger>
-                    <TabsTrigger value="manifests">Manifests</TabsTrigger>
-                    <TabsTrigger value="inspections">Inspections</TabsTrigger>
-                    <TabsTrigger value="loading">Loading</TabsTrigger>
+                    <TabsTrigger value="loi" className="whitespace-nowrap">LOI</TabsTrigger>
+                    <TabsTrigger value="spa" className="whitespace-nowrap">SPA</TabsTrigger>
                     <TabsTrigger value="others">Others</TabsTrigger>
                   </TabsList>
                   
@@ -300,6 +374,46 @@ export default function Documents() {
                 </TabsContent>
                 
                 <TabsContent value="bills" className="mt-0">
+                  <DocumentList 
+                    documents={filteredDocuments} 
+                    isLoading={isLoadingDocuments}
+                    onViewDocument={setSelectedDocument}
+                  />
+                </TabsContent>
+                
+                <TabsContent value="legal" className="mt-0">
+                  <DocumentList 
+                    documents={filteredDocuments} 
+                    isLoading={isLoadingDocuments}
+                    onViewDocument={setSelectedDocument}
+                  />
+                </TabsContent>
+
+                <TabsContent value="commercial" className="mt-0">
+                  <DocumentList 
+                    documents={filteredDocuments} 
+                    isLoading={isLoadingDocuments}
+                    onViewDocument={setSelectedDocument}
+                  />
+                </TabsContent>
+
+                <TabsContent value="shipping" className="mt-0">
+                  <DocumentList 
+                    documents={filteredDocuments} 
+                    isLoading={isLoadingDocuments}
+                    onViewDocument={setSelectedDocument}
+                  />
+                </TabsContent>
+
+                <TabsContent value="loi" className="mt-0">
+                  <DocumentList 
+                    documents={filteredDocuments} 
+                    isLoading={isLoadingDocuments}
+                    onViewDocument={setSelectedDocument}
+                  />
+                </TabsContent>
+
+                <TabsContent value="spa" className="mt-0">
                   <DocumentList 
                     documents={filteredDocuments} 
                     isLoading={isLoadingDocuments}
