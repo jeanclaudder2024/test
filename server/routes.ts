@@ -454,7 +454,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   apiRouter.post("/vessels/:id/update-location", async (req, res) => {
     try {
       const vesselId = parseInt(req.params.id);
-      const { lat, lng, eventDescription } = req.body;
+      const { lat, lng, eventDescription, destinationRefineryId, destinationPort } = req.body;
       
       // Validate inputs
       if (!lat || !lng || isNaN(parseFloat(lat)) || isNaN(parseFloat(lng))) {
@@ -484,16 +484,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
+      // Get destination refinery information if provided
+      let destinationRefineryName = null;
+      if (destinationRefineryId) {
+        const destinationRefinery = await refineryService.getRefineryById(parseInt(destinationRefineryId));
+        if (destinationRefinery) {
+          destinationRefineryName = destinationRefinery.name;
+        }
+      }
+      
       // Import function to determine region from coordinates
       const { determineRegionFromCoordinates } = await import('./services/vesselGenerator');
       const newRegion = determineRegionFromCoordinates(latitude, longitude);
       
-      // Update vessel location
-      const updatedVessel = await vesselService.updateVessel(vesselId, {
+      // Prepare vessel update data
+      const vesselUpdateData: any = {
         currentLat: latitude.toString(),
         currentLng: longitude.toString(),
         currentRegion: newRegion
-      });
+      };
+      
+      // Add destination information if provided
+      if (destinationRefineryId) {
+        vesselUpdateData.destinationRefineryId = parseInt(destinationRefineryId);
+        if (destinationRefineryName) {
+          vesselUpdateData.destinationPort = destinationRefineryName;
+        }
+      } else if (destinationPort) {
+        vesselUpdateData.destinationPort = destinationPort;
+        // Clear any previous refinery destination if only port is provided
+        vesselUpdateData.destinationRefineryId = null;
+      }
+      
+      // Update vessel location and destination
+      const updatedVessel = await vesselService.updateVessel(vesselId, vesselUpdateData);
+      
+      // Format destination information for event description
+      let destinationInfo = "At sea";
+      if (destinationRefineryName) {
+        destinationInfo = `Refinery: ${destinationRefineryName}`;
+      } else if (destinationPort) {
+        destinationInfo = `Port: ${destinationPort}`;
+      } else if (vessel.destinationPort) {
+        destinationInfo = vessel.destinationPort;
+      }
       
       // Create progress event if there's a description
       if (eventDescription) {
@@ -503,7 +537,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
           event: eventDescription,
           lat: latitude.toString(),
           lng: longitude.toString(),
-          location: vessel.destinationPort || "At sea"
+          location: destinationInfo
+        });
+      }
+      
+      // Add destination change event if destination has changed
+      const destRefId = destinationRefineryId ? parseInt(destinationRefineryId) : null;
+      const vesselDestRefId = vessel.destinationRefineryId || null;
+      
+      if ((destinationRefineryId && vesselDestRefId !== destRefId) || 
+          (destinationPort && vessel.destinationPort !== destinationPort)) {
+        await vesselService.addProgressEvent({
+          vesselId,
+          date: new Date(),
+          event: `Destination changed to ${destinationInfo}`,
+          lat: latitude.toString(),
+          lng: longitude.toString(),
+          location: destinationInfo
         });
       }
       
@@ -511,7 +561,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: true,
         message: "Vessel location updated successfully",
         vessel: updatedVessel,
-        region: newRegion
+        region: newRegion,
+        destination: destinationInfo
       });
     } catch (error: any) {
       console.error("Error updating vessel location:", error);

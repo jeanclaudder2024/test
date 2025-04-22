@@ -35,6 +35,7 @@ export const vessels = pgTable("vessels", {
   departurePort: text("departure_port"),
   departureDate: timestamp("departure_date"),
   destinationPort: text("destination_port"),
+  destinationRefineryId: integer("destination_refinery_id"),
   eta: timestamp("eta"),
   cargoType: text("cargo_type"),
   cargoCapacity: integer("cargo_capacity"),

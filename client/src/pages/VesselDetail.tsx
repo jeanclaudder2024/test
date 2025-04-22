@@ -120,22 +120,56 @@ const LocationUpdateForm = ({
   onSuccess 
 }: { 
   vesselId: number, 
-  initialLat?: string, 
-  initialLng?: string, 
+  initialLat?: string | number | null, 
+  initialLng?: string | number | null, 
   onSuccess: () => void 
 }) => {
   const { toast } = useToast();
   const [lat, setLat] = useState(initialLat || "");
   const [lng, setLng] = useState(initialLng || "");
   const [eventDescription, setEventDescription] = useState("");
+  const [destinationType, setDestinationType] = useState<'none' | 'refinery' | 'port'>('none');
+  const [destinationRefineryId, setDestinationRefineryId] = useState<string>("");
+  const [destinationPort, setDestinationPort] = useState<string>("");
+  const [refineries, setRefineries] = useState<any[]>([]);
+  const [isLoadingRefineries, setIsLoadingRefineries] = useState(false);
+  
+  // Load refineries on component mount
+  useEffect(() => {
+    const fetchRefineries = async () => {
+      setIsLoadingRefineries(true);
+      try {
+        const response = await fetch('/api/refineries');
+        if (response.ok) {
+          const data = await response.json();
+          setRefineries(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch refineries:', error);
+      } finally {
+        setIsLoadingRefineries(false);
+      }
+    };
+    
+    fetchRefineries();
+  }, []);
   
   const updateLocationMutation = useMutation({
-    mutationFn: async (data: { lat: string, lng: string, eventDescription?: string }) => {
-      const response = await apiRequest(
-        "POST", 
-        `/api/vessels/${vesselId}/update-location`,
-        data
-      );
+    mutationFn: async (data: { 
+      lat: string, 
+      lng: string, 
+      eventDescription?: string,
+      destinationRefineryId?: string,
+      destinationPort?: string
+    }) => {
+      const response = await fetch(`/api/vessels/${vesselId}/update-location`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || "Failed to update location");
@@ -143,9 +177,14 @@ const LocationUpdateForm = ({
       return await response.json();
     },
     onSuccess: (data) => {
+      let destinationMsg = "";
+      if (data.destination && data.destination !== "At sea") {
+        destinationMsg = ` heading to ${data.destination}`;
+      }
+      
       toast({
         title: "Location updated",
-        description: `Vessel location updated to ${lat}, ${lng} in the ${data.region} region.`,
+        description: `Vessel location updated to ${lat}, ${lng} in the ${data.region} region${destinationMsg}.`,
       });
       onSuccess();
     },
@@ -160,14 +199,24 @@ const LocationUpdateForm = ({
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    updateLocationMutation.mutate({ lat, lng, eventDescription });
+    
+    const updateData: any = { lat, lng, eventDescription };
+    
+    // Add destination information based on selection
+    if (destinationType === 'refinery' && destinationRefineryId) {
+      updateData.destinationRefineryId = destinationRefineryId;
+    } else if (destinationType === 'port' && destinationPort) {
+      updateData.destinationPort = destinationPort;
+    }
+    
+    updateLocationMutation.mutate(updateData);
   };
   
   return (
     <div className="rounded-md border p-4 mt-2 bg-muted/20">
       <h4 className="text-sm font-medium mb-3 flex items-center">
         <MapPin className="h-4 w-4 mr-2 text-primary" />
-        تحديث الموقع - Update Location
+        تحديث الموقع والوجهة - Update Location & Destination
       </h4>
       
       <form onSubmit={handleSubmit} className="space-y-3">
@@ -194,7 +243,79 @@ const LocationUpdateForm = ({
           </div>
         </div>
         
-        <div className="space-y-1">
+        {/* Destination Section */}
+        <div className="space-y-2 pt-2">
+          <Label>Destination Type - نوع الوجهة</Label>
+          <div className="flex space-x-2">
+            <Button 
+              type="button" 
+              size="sm"
+              variant={destinationType === 'none' ? 'default' : 'outline'}
+              onClick={() => setDestinationType('none')}
+            >
+              None
+            </Button>
+            <Button 
+              type="button" 
+              size="sm"
+              variant={destinationType === 'refinery' ? 'default' : 'outline'}
+              onClick={() => setDestinationType('refinery')}
+            >
+              Refinery - مصفاة
+            </Button>
+            <Button 
+              type="button" 
+              size="sm"
+              variant={destinationType === 'port' ? 'default' : 'outline'}
+              onClick={() => setDestinationType('port')}
+            >
+              Port - ميناء
+            </Button>
+          </div>
+          
+          {destinationType === 'refinery' && (
+            <div className="space-y-1 pt-2">
+              <Label htmlFor="destinationRefinery">
+                Destination Refinery - مصفاة الوجهة
+              </Label>
+              <select
+                id="destinationRefinery"
+                className="w-full p-2 rounded-md border"
+                value={destinationRefineryId}
+                onChange={(e) => setDestinationRefineryId(e.target.value)}
+                required={destinationType === 'refinery'}
+              >
+                <option value="">Select a refinery...</option>
+                {isLoadingRefineries ? (
+                  <option disabled>Loading refineries...</option>
+                ) : (
+                  refineries.map(refinery => (
+                    <option key={refinery.id} value={refinery.id.toString()}>
+                      {refinery.name} ({refinery.country})
+                    </option>
+                  ))
+                )}
+              </select>
+            </div>
+          )}
+          
+          {destinationType === 'port' && (
+            <div className="space-y-1 pt-2">
+              <Label htmlFor="destinationPort">
+                Destination Port - ميناء الوجهة
+              </Label>
+              <Input
+                id="destinationPort"
+                placeholder="e.g. Rotterdam Port"
+                value={destinationPort}
+                onChange={(e) => setDestinationPort(e.target.value)}
+                required={destinationType === 'port'}
+              />
+            </div>
+          )}
+        </div>
+        
+        <div className="space-y-1 pt-2">
           <Label htmlFor="event-description">
             Event Description (optional) - وصف الحدث
           </Label>
@@ -206,7 +327,7 @@ const LocationUpdateForm = ({
           />
         </div>
         
-        <div className="flex space-x-2 justify-end pt-2">
+        <div className="flex space-x-2 justify-end pt-3">
           <Button 
             type="button" 
             variant="outline" 
