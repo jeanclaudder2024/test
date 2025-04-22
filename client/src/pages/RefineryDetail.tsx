@@ -227,15 +227,30 @@ export default function RefineryDetail() {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center">
-                  <Factory className="h-5 w-5 mr-2 text-primary" />
-                  Refinery Information
-                </CardTitle>
-                <CardDescription>
-                  Details and specifications
-                </CardDescription>
-              </CardHeader>
+              <div className="relative">
+                {/* Background image based on refinery region */}
+                <div 
+                  className="absolute inset-0 bg-cover bg-center opacity-15 rounded-t-lg h-32"
+                  style={{ 
+                    backgroundImage: `url(${
+                      refinery.region?.includes("Middle East") ? "https://images.unsplash.com/photo-1605023040084-89c87644e368?w=600&auto=format" : 
+                      refinery.region?.includes("Asia") ? "https://images.unsplash.com/photo-1500477967233-53333be64072?w=600&auto=format" : 
+                      refinery.region?.includes("Europe") ? "https://images.unsplash.com/photo-1552128427-2e5de3b3d614?w=600&auto=format" : 
+                      refinery.region?.includes("North America") ? "https://images.unsplash.com/photo-1532408840957-031d8034aeef?w=600&auto=format" : 
+                      "https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?w=600&auto=format"
+                    })`
+                  }}
+                />
+                <CardHeader className="pb-3 relative z-10">
+                  <CardTitle className="flex items-center">
+                    <Factory className="h-5 w-5 mr-2 text-primary" />
+                    Refinery Information
+                  </CardTitle>
+                  <CardDescription>
+                    Details and specifications
+                  </CardDescription>
+                </CardHeader>
+              </div>
               <CardContent>
                 <InfoItem 
                   label={<div className="flex items-center"><Building className="h-4 w-4 mr-1" /> Name</div>} 
@@ -281,15 +296,30 @@ export default function RefineryDetail() {
             </Card>
             
             <Card className="md:col-span-2">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center">
-                  <Map className="h-5 w-5 mr-2 text-primary" />
-                  Location
-                </CardTitle>
-                <CardDescription>
-                  Geographical location of the refinery
-                </CardDescription>
-              </CardHeader>
+              <div className="relative">
+                {/* Background image based on refinery country */}
+                <div 
+                  className="absolute inset-0 bg-cover bg-center opacity-15 rounded-t-lg h-32"
+                  style={{ 
+                    backgroundImage: `url(${
+                      refinery.country?.includes("Saudi") ? "https://images.unsplash.com/photo-1578895101408-1a6b23eb14f2?w=600&auto=format" : 
+                      refinery.country?.includes("UAE") ? "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=600&auto=format" : 
+                      refinery.country?.includes("Kuwait") ? "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=600&auto=format" : 
+                      refinery.country?.includes("Qatar") ? "https://images.unsplash.com/photo-1518684079-3c830dcef090?w=600&auto=format" : 
+                      "https://images.unsplash.com/photo-1582846067186-84548411fefc?w=600&auto=format"
+                    })`
+                  }}
+                />
+                <CardHeader className="pb-3 relative z-10">
+                  <CardTitle className="flex items-center">
+                    <Map className="h-5 w-5 mr-2 text-primary" />
+                    Location
+                  </CardTitle>
+                  <CardDescription>
+                    Geographical location of the refinery
+                  </CardDescription>
+                </CardHeader>
+              </div>
               <CardContent>
                 <div className="aspect-video rounded-md overflow-hidden border border-muted">
                   {refinery?.lat && refinery?.lng ? (
@@ -446,15 +476,29 @@ export default function RefineryDetail() {
             </Card>
             
             <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center">
-                  <Activity className="h-5 w-5 mr-2 text-primary" />
-                  Capacity Utilization
-                </CardTitle>
-                <CardDescription>
-                  Current operational capacity
-                </CardDescription>
-              </CardHeader>
+              <div className="relative">
+                {/* Background image based on refinery capacity */}
+                <div 
+                  className="absolute inset-0 bg-cover bg-center opacity-15 rounded-t-lg h-32"
+                  style={{ 
+                    backgroundImage: `url(${
+                      (refinery?.capacity ?? 0) > 500000 ? "https://images.unsplash.com/photo-1626028693925-d886ec16a635?w=600&auto=format" : 
+                      (refinery?.capacity ?? 0) > 300000 ? "https://images.unsplash.com/photo-1528468606546-33ca8f836154?w=600&auto=format" : 
+                      (refinery?.capacity ?? 0) > 100000 ? "https://images.unsplash.com/photo-1610217053983-68feaee7e8e7?w=600&auto=format" : 
+                      "https://images.unsplash.com/photo-1590794056873-cfd07dc5a25b?w=600&auto=format"
+                    })`
+                  }}
+                />
+                <CardHeader className="pb-3 relative z-10">
+                  <CardTitle className="flex items-center">
+                    <Activity className="h-5 w-5 mr-2 text-primary" />
+                    Capacity Utilization
+                  </CardTitle>
+                  <CardDescription>
+                    Current operational capacity
+                  </CardDescription>
+                </CardHeader>
+              </div>
               <CardContent className="pb-2">
                 <div className="space-y-6">
                   <div className="space-y-2">
@@ -512,15 +556,26 @@ export default function RefineryDetail() {
             
             {/* Associated Vessels Card */}
             <Card className="md:col-span-2">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center">
-                  <Ship className="h-5 w-5 mr-2 text-primary" />
-                  Connected Vessels
-                </CardTitle>
-                <CardDescription>
-                  Vessels associated with this refinery - السفن المرتبطة بهذه المصفاة
-                </CardDescription>
-              </CardHeader>
+              <div className="relative">
+                {/* Background image for connected vessels */}
+                <div 
+                  className="absolute inset-0 bg-cover bg-center opacity-15 rounded-t-lg h-32"
+                  style={{ 
+                    backgroundImage: `url(${
+                      "https://images.unsplash.com/photo-1575353803406-7cee4a383d21?w=600&auto=format"
+                    })`
+                  }}
+                />
+                <CardHeader className="pb-3 relative z-10">
+                  <CardTitle className="flex items-center">
+                    <Ship className="h-5 w-5 mr-2 text-primary" />
+                    Connected Vessels
+                  </CardTitle>
+                  <CardDescription>
+                    Vessels associated with this refinery - السفن المرتبطة بهذه المصفاة
+                  </CardDescription>
+                </CardHeader>
+              </div>
               <CardContent>
                 {associatedVessels.length > 0 ? (
                   <div className="space-y-4">
@@ -630,15 +685,26 @@ export default function RefineryDetail() {
             </Card>
             
             <Card className="md:col-span-2">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center">
-                  <PieChart className="h-5 w-5 mr-2 text-primary" />
-                  Production Overview
-                </CardTitle>
-                <CardDescription>
-                  Monthly output by product type
-                </CardDescription>
-              </CardHeader>
+              <div className="relative">
+                {/* Background image for production overview */}
+                <div 
+                  className="absolute inset-0 bg-cover bg-center opacity-15 rounded-t-lg h-32"
+                  style={{ 
+                    backgroundImage: `url(${
+                      "https://images.unsplash.com/photo-1589928558003-59b6bb406982?w=600&auto=format"
+                    })`
+                  }}
+                />
+                <CardHeader className="pb-3 relative z-10">
+                  <CardTitle className="flex items-center">
+                    <PieChart className="h-5 w-5 mr-2 text-primary" />
+                    Production Overview
+                  </CardTitle>
+                  <CardDescription>
+                    Monthly output by product type
+                  </CardDescription>
+                </CardHeader>
+              </div>
               <CardContent>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="bg-muted/50 rounded-lg p-4 text-center">
