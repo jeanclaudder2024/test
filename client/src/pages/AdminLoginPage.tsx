@@ -27,6 +27,7 @@ export default function AdminLoginPage() {
   const { user, isLoading, loginMutation } = useAuth();
   const [testResult, setTestResult] = useState<any>(null);
   const [testLoading, setTestLoading] = useState(false);
+  const [usersLoading, setUsersLoading] = useState(false);
   
   // Redirect if already logged in and is admin
   useEffect(() => {
@@ -69,9 +70,10 @@ export default function AdminLoginPage() {
   const testLoginCredentials = async (username: string, password: string) => {
     setTestLoading(true);
     try {
-      const response = await apiRequest("POST", "/api/auth-test/test-login", {
-        username,
-        password
+      const response = await apiRequest({
+        url: "/api/auth-test/test-login",
+        method: "POST", 
+        body: { username, password }
       });
       
       const result = await response.json();
@@ -95,6 +97,38 @@ export default function AdminLoginPage() {
       });
     } finally {
       setTestLoading(false);
+    }
+  };
+  
+  // Get a list of all users for debugging
+  const fetchAllUsers = async () => {
+    setUsersLoading(true);
+    try {
+      const response = await apiRequest({
+        url: "/api/auth-test/users",
+        method: "GET",
+      });
+      
+      const result = await response.json();
+      setTestResult(result);
+      
+      toast({
+        title: "Users List Retrieved",
+        description: `Found ${result.count} users in the database`,
+      });
+      
+      console.log("Users list:", result);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      setTestResult({ error: String(error) });
+      
+      toast({
+        title: "Error Fetching Users",
+        description: `Failed to fetch users: ${String(error)}`,
+        variant: "destructive",
+      });
+    } finally {
+      setUsersLoading(false);
     }
   };
 
@@ -187,22 +221,37 @@ export default function AdminLoginPage() {
                     <Bug className="h-4 w-4" />
                     Diagnostic Tools
                   </h3>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => testLoginCredentials(
-                      loginForm.getValues("username"),
-                      loginForm.getValues("password")
-                    )}
-                    disabled={testLoading}
-                  >
-                    {testLoading ? (
-                      <Loader2 className="h-4 w-4 animate-spin mr-1" />
-                    ) : (
-                      <Bug className="h-4 w-4 mr-1" />
-                    )}
-                    Test Credentials
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => fetchAllUsers()}
+                      disabled={usersLoading}
+                    >
+                      {usersLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                      ) : (
+                        <User className="h-4 w-4 mr-1" />
+                      )}
+                      View Users
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => testLoginCredentials(
+                        loginForm.getValues("username"),
+                        loginForm.getValues("password")
+                      )}
+                      disabled={testLoading}
+                    >
+                      {testLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                      ) : (
+                        <Bug className="h-4 w-4 mr-1" />
+                      )}
+                      Test Credentials
+                    </Button>
+                  </div>
                 </div>
                 
                 {testResult && (
