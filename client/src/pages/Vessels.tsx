@@ -104,7 +104,12 @@ export default function Vessels() {
     try {
       setIsUpdatingDestinations(true);
       
-      const response = await apiRequest('POST', '/api/vessels/ensure-destinations', {});
+      const response = await fetch('/api/vessels/ensure-destinations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      
       const result = await response.json();
       
       if (result.success) {

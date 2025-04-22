@@ -458,11 +458,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: true,
         message: `Updated ${result.updated} vessels out of ${result.total} total vessels with destinations.`
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error ensuring vessel destinations:", error);
       res.status(500).json({
         success: false,
-        message: `Error ensuring vessel destinations: ${error.message}`
+        message: `Error ensuring vessel destinations: ${error.message || String(error)}`
       });
     }
   });
