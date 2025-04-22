@@ -18,14 +18,13 @@ export default function Header() {
 
   // Helper function to get page title based on the current location
   const getPageTitle = () => {
-    if (location === "/dashboard") return "Dashboard";
+    if (location === "/") return "Dashboard";
     if (location.startsWith("/vessels")) return "Vessels";
     if (location.startsWith("/refineries")) return "Refineries";
     if (location.startsWith("/documents")) return "Documents";
     if (location.startsWith("/brokers")) return "Brokers";
     if (location.startsWith("/profile")) return "Profile";
     if (location.startsWith("/ai-assistant")) return "AI Assistant";
-    if (location.startsWith("/admin")) return "Admin Dashboard";
     return "Dashboard";
   };
 

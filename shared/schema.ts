@@ -11,8 +11,6 @@ export const users = pgTable("users", {
   subscriptionTier: text("subscription_tier").default("free"),
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
-  role: text("role").default("user"), // "user", "admin", "superadmin"
-  isAdmin: boolean("is_admin").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -20,11 +18,6 @@ export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
   email: true,
-  isSubscribed: true,
-  subscriptionTier: true,
-  role: true,
-  isAdmin: true,
-  createdAt: true,
 });
 
 // Vessels
@@ -124,41 +117,6 @@ export const insertBrokerSchema = createInsertSchema(brokers).omit({
   id: true,
 });
 
-// Subscription Plans
-export const subscriptionPlans = pgTable("subscription_plans", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  description: text("description"),
-  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
-  interval: text("interval").notNull(), // monthly, yearly
-  features: text("features"), // JSON string containing array of features included
-  stripePriceId: text("stripe_price_id"),
-  isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-export const insertSubscriptionPlanSchema = createInsertSchema(subscriptionPlans).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-// Feature Access Control
-export const featureFlags = pgTable("feature_flags", {
-  id: serial("id").primaryKey(),
-  featureName: text("feature_name").notNull().unique(),
-  description: text("description"),
-  isEnabled: boolean("is_enabled").default(true),
-  requiredSubscription: text("required_subscription"), // minimum subscription required
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
-export const insertFeatureFlagSchema = createInsertSchema(featureFlags).omit({
-  id: true,
-  createdAt: true,
-});
-
 // Stats
 export const stats = pgTable("stats", {
   id: serial("id").primaryKey(),
@@ -195,9 +153,3 @@ export type Broker = typeof brokers.$inferSelect;
 
 export type InsertStats = z.infer<typeof insertStatsSchema>;
 export type Stats = typeof stats.$inferSelect;
-
-export type InsertSubscriptionPlan = z.infer<typeof insertSubscriptionPlanSchema>;
-export type SubscriptionPlan = typeof subscriptionPlans.$inferSelect;
-
-export type InsertFeatureFlag = z.infer<typeof insertFeatureFlagSchema>;
-export type FeatureFlag = typeof featureFlags.$inferSelect;

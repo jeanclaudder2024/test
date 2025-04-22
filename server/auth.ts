@@ -23,31 +23,22 @@ declare global {
       stripeSubscriptionId?: string | null;
       isSubscribed?: boolean | null;
       subscriptionTier?: string | null;
-      role?: string | null;
-      isAdmin?: boolean | null;
       createdAt?: Date | null;
     }
   }
 }
 
-// Export this function for use in testing routes
-export async function hashPassword(password: string) {
+async function hashPassword(password: string) {
   const salt = randomBytes(16).toString("hex");
   const buf = (await scryptAsync(password, salt, 64)) as Buffer;
   return `${buf.toString("hex")}.${salt}`;
 }
 
-// Export this function so it can be used in other modules
-export async function compare(supplied: string, stored: string) {
+async function comparePasswords(supplied: string, stored: string) {
   const [hashed, salt] = stored.split(".");
   const hashedBuf = Buffer.from(hashed, "hex");
   const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
   return timingSafeEqual(hashedBuf, suppliedBuf);
-}
-
-// Keep this for backward compatibility
-async function comparePasswords(supplied: string, stored: string) {
-  return compare(supplied, stored);
 }
 
 export function setupAuth(app: Express) {
@@ -125,8 +116,6 @@ export function setupAuth(app: Express) {
           email: user.email,
           isSubscribed: user.isSubscribed,
           subscriptionTier: user.subscriptionTier,
-          role: user.role || 'user',
-          isAdmin: user.isAdmin || false,
         });
       });
     } catch (error) {
@@ -144,8 +133,6 @@ export function setupAuth(app: Express) {
       email: user.email,
       isSubscribed: user.isSubscribed,
       subscriptionTier: user.subscriptionTier,
-      role: user.role || 'user',
-      isAdmin: user.isAdmin || false,
     });
   });
 
@@ -168,8 +155,6 @@ export function setupAuth(app: Express) {
       email: user.email,
       isSubscribed: user.isSubscribed,
       subscriptionTier: user.subscriptionTier,
-      role: user.role || 'user',
-      isAdmin: user.isAdmin || false,
     });
   });
 }

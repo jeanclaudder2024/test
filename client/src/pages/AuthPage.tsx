@@ -1,16 +1,16 @@
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/hooks/use-toast";
-import { useLocation } from "wouter";
 import { useEffect } from "react";
+import { useLocation, Redirect } from "wouter";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Anchor, Lock, Mail, User, Globe, Loader2, Shield } from "lucide-react";
+import { Anchor, Lock, Mail, User, Globe, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
 // Form validation schemas
@@ -196,15 +196,6 @@ export default function AuthPage() {
                         Register now
                       </a>
                     </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="mt-4 w-full"
-                      onClick={() => navigate("/admin")}
-                    >
-                      <Shield className="h-4 w-4 mr-2 text-primary" />
-                      Admin Login
-                    </Button>
                   </CardFooter>
                 </Card>
               </TabsContent>
@@ -327,15 +318,6 @@ export default function AuthPage() {
                         Sign in
                       </a>
                     </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="mt-4 w-full"
-                      onClick={() => navigate("/admin")}
-                    >
-                      <Shield className="h-4 w-4 mr-2 text-primary" />
-                      Admin Login
-                    </Button>
                   </CardFooter>
                 </Card>
               </TabsContent>

@@ -13,8 +13,6 @@ type User = {
   email?: string | null;
   isSubscribed?: boolean;
   subscriptionTier?: string | null;
-  role?: string | null;
-  isAdmin?: boolean;
 };
 
 type AuthContextType = {
@@ -70,12 +68,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
-      const res = await apiRequest({
-        url: "/api/login",
+      const res = await apiRequest("/api/login", {
         method: "POST",
-        body: credentials,
+        body: JSON.stringify(credentials),
       });
-      return await res.json();
+      return res;
     },
     onSuccess: (user: User) => {
       queryClient.setQueryData(['/api/user'], user);
@@ -95,12 +92,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const registerMutation = useMutation({
     mutationFn: async (userData: RegisterData) => {
-      const res = await apiRequest({
-        url: "/api/register",
+      const res = await apiRequest("/api/register", {
         method: "POST",
-        body: userData,
+        body: JSON.stringify(userData),
       });
-      return await res.json();
+      return res;
     },
     onSuccess: (user: User) => {
       queryClient.setQueryData(['/api/user'], user);
@@ -120,9 +116,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest({
-        url: "/api/logout",
-        method: "POST"
+      await apiRequest("/api/logout", {
+        method: "POST",
       });
     },
     onSuccess: () => {

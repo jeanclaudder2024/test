@@ -8,55 +8,26 @@ async function throwIfResNotOk(res: Response) {
 }
 
 export async function apiRequest(
-  urlOrOptions: string | { 
-    url: string; 
-    method?: string; 
-    body?: any; 
-  },
+  url: string, 
   options?: { 
     method?: string; 
-    body?: any; 
-  }
-): Promise<Response> {
-  let url: string;
-  let fetchOptions: { 
-    method: string; 
-    headers: Record<string, string>; 
     body?: string; 
-    credentials: RequestCredentials;
-  };
-
-  // Handle the new object-based API
-  if (typeof urlOrOptions === 'object') {
-    url = urlOrOptions.url;
-    const method = urlOrOptions.method || 'GET';
-    const body = urlOrOptions.body ? JSON.stringify(urlOrOptions.body) : undefined;
-    
-    fetchOptions = {
-      method,
-      headers: body ? { "Content-Type": "application/json" } : {},
-      body,
-      credentials: "include",
-    };
-  } 
-  // Handle the original string-based API (for backward compatibility)
-  else {
-    url = urlOrOptions;
-    const method = options?.method || 'GET';
-    const bodyStr = options?.body ? 
-      (typeof options.body === 'string' ? options.body : JSON.stringify(options.body)) : 
-      undefined;
-    
-    fetchOptions = {
-      method,
-      headers: bodyStr ? { "Content-Type": "application/json" } : {},
-      body: bodyStr,
-      credentials: "include",
-    };
   }
+): Promise<any> {
+  const method = options?.method || 'GET';
+  const res = await fetch(url, {
+    method,
+    headers: options?.body ? { "Content-Type": "application/json" } : {},
+    body: options?.body,
+    credentials: "include",
+  });
 
-  const res = await fetch(url, fetchOptions);
   await throwIfResNotOk(res);
+  
+  // Parse JSON response
+  if (res.headers.get('content-type')?.includes('application/json')) {
+    return res.json();
+  }
   
   return res;
 }

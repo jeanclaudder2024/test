@@ -26,11 +26,7 @@ import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { apiTesterRouter } from "./routes/apiTester";
 import { brokerRouter } from "./routes/brokerRoutes";
-import { adminRouter } from "./routes/adminRoutes";
-import { testAuthRouter } from "./routes/testAuth";
-import { subscriptionRouter } from "./routes/subscriptionRoutes";
 import { seedBrokers } from "./services/seedService";
-import { subscriptionService } from "./services/subscriptionSeedService";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication
@@ -66,9 +62,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Reset stats
         await storage.updateStats({ 
-          activeVessels: "0", 
-          totalCargo: "0",
-          activeRefineries: "0",
+          activeVessels: 0, 
+          totalCargo: 0,
+          activeRefineries: 0,
           lastUpdated: new Date()
         });
         
@@ -125,17 +121,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log("Broker data seeded successfully:", brokerResult);
         } catch (brokerError) {
           console.error("Error seeding broker data:", brokerError);
-          // Continue with what we have
-        }
-        
-        // Seed subscription plans and feature flags
-        let subscriptionResult = { plans: 0, flags: 0 };
-        try {
-          console.log("Seeding subscription data...");
-          subscriptionResult = await subscriptionService.seedSubscriptionData();
-          console.log("Subscription data seeded successfully:", subscriptionResult);
-        } catch (subscriptionError) {
-          console.error("Error seeding subscription data:", subscriptionError);
           // Continue with what we have
         }
         
@@ -638,9 +623,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Mount API tester routes for testing large datasets
   apiRouter.use("/test", apiTesterRouter);
   
-  // Mount auth test routes for debugging authentication
-  apiRouter.use("/auth-test", testAuthRouter);
-  
   // Mount broker routes
   apiRouter.use("/brokers", brokerRouter);
   
@@ -735,9 +717,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Mount API router
-  app.use("/api/admin", adminRouter); // Secured admin routes
-  app.use("/api/auth-test", testAuthRouter); // Test auth endpoints
-  app.use("/api/subscription", subscriptionRouter); // Subscription endpoints
   app.use("/api", apiRouter);
 
   const httpServer = createServer(app);

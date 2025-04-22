@@ -83,15 +83,12 @@ export default function SubscribePage() {
     setError(null);
     
     try {
-      const response = await apiRequest({
-        url: "/api/get-or-create-subscription",
+      const result = await apiRequest("/api/get-or-create-subscription", {
         method: "POST",
-        body: { priceId }
+        body: JSON.stringify({ priceId })
       });
       
-      const result = await response.json();
-      
-      if (result && result.clientSecret) {
+      if (result.clientSecret) {
         setClientSecret(result.clientSecret);
       } else {
         // User already has a subscription
