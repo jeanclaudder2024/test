@@ -1,6 +1,81 @@
 import { InsertVessel } from "@shared/schema";
 import { REGIONS, OIL_PRODUCT_TYPES } from "@shared/constants";
 
+/**
+ * Determines the region ID from a set of latitude and longitude coordinates
+ * @param lat Latitude (-90 to 90)
+ * @param lng Longitude (-180 to 180)
+ * @returns Region ID from REGIONS constant
+ */
+export function determineRegionFromCoordinates(lat: number, lng: number): string {
+  // North America: Mostly United States and Canada
+  if (lat >= 25 && lat <= 90 && lng >= -170 && lng <= -50) {
+    return "north-america";
+  }
+  
+  // Central America: Mexico, Caribbean, and Central American countries
+  if (lat >= 7 && lat < 25 && lng >= -120 && lng <= -60) {
+    return "central-america";
+  }
+  
+  // South America
+  if (lat >= -60 && lat < 15 && lng >= -90 && lng <= -30) {
+    return "south-america";
+  }
+  
+  // Western Europe
+  if (lat >= 35 && lat <= 75 && lng >= -15 && lng < 15) {
+    return "western-europe";
+  }
+  
+  // Eastern Europe
+  if (lat >= 35 && lat <= 75 && lng >= 15 && lng < 45) {
+    return "eastern-europe";
+  }
+  
+  // North Africa
+  if (lat >= 15 && lat < 35 && lng >= -20 && lng < 50) {
+    return "north-africa";
+  }
+  
+  // Southern Africa
+  if (lat >= -40 && lat < 15 && lng >= -20 && lng < 55) {
+    return "southern-africa";
+  }
+  
+  // Middle East
+  if (lat >= 15 && lat < 40 && lng >= 30 && lng < 65) {
+    return "middle-east";
+  }
+  
+  // Russia - large country spanning much of northern Asia
+  if ((lat >= 45 && lat <= 90 && lng >= 30 && lng < 180)) {
+    return "russia";
+  }
+  
+  // China
+  if (lat >= 18 && lat < 45 && lng >= 75 && lng < 135) {
+    return "china";
+  }
+  
+  // Asia & Pacific (Indian subcontinent and surrounding areas)
+  if (lat >= 5 && lat < 35 && lng >= 65 && lng < 95) {
+    return "asia-pacific";
+  }
+  
+  // Southeast Asia & Oceania (includes Australia)
+  if (lat >= -50 && lat < 25 && lng >= 95 && lng < 180) {
+    return "southeast-asia-oceania";
+  }
+  
+  // Default to a region based on hemisphere if no specific match
+  if (lat >= 0) {
+    return lng >= 0 ? "asia-pacific" : "north-america";
+  } else {
+    return lng >= 0 ? "southern-africa" : "south-america";
+  }
+}
+
 // Interface for vessel template data
 interface VesselTemplate {
   id: string;
@@ -64,7 +139,7 @@ export function generateLargeVesselDataset(count: number = 1500): InsertVessel[]
         type: "LNG (Liquefied Natural Gas)",
         capacity: 155000
       },
-      region: "Europe"
+      region: "western-europe"
     },
     // Crude Oil Tanker
     {
@@ -92,7 +167,7 @@ export function generateLargeVesselDataset(count: number = 1500): InsertVessel[]
         type: "EXPORT BLEND CRUDE",
         capacity: 2000000
       },
-      region: "Europe"
+      region: "western-europe"
     },
     // Container Ship
     {
@@ -304,8 +379,20 @@ export function generateLargeVesselDataset(count: number = 1500): InsertVessel[]
     const lat = Math.max(-85, Math.min(85, baseLat + latOffset));
     const lng = Math.max(-180, Math.min(180, baseLng + lngOffset));
     
+    // Determine the region based on coordinates
+    const mappedRegion = determineRegionFromCoordinates(lat, lng);
+    
+    // Map our new region IDs to old region port mapping keys
+    const portMappingKey = 
+      mappedRegion.includes('europe') ? 'Europe' :
+      mappedRegion.includes('america') ? 'North America' :
+      mappedRegion === 'asia-pacific' || mappedRegion === 'china' || mappedRegion === 'southeast-asia-oceania' ? 'Asia' :
+      mappedRegion === 'middle-east' || mappedRegion === 'north-africa' ? 'MEA' :
+      mappedRegion === 'southern-africa' ? 'Africa' :
+      mappedRegion === 'russia' ? 'Russia' : 'North America';
+    
     // Select ports for this region
-    const regionPorts = portsByRegion[region] || portsByRegion["North America"];
+    const regionPorts = portsByRegion[portMappingKey] || portsByRegion["North America"];
     const departurePort = regionPorts[Math.floor(Math.random() * regionPorts.length)];
     const destinationPort = regionPorts[Math.floor(Math.random() * regionPorts.length)];
     
@@ -393,7 +480,7 @@ export function generateLargeVesselDataset(count: number = 1500): InsertVessel[]
       eta: etaDate,
       cargoType: oilProductType,
       cargoCapacity: capacity,
-      currentRegion: region
+      currentRegion: mappedRegion // Use the mapped region based on coordinates
     });
   }
   
