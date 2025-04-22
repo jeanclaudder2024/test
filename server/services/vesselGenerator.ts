@@ -8,6 +8,32 @@ import { REGIONS, OIL_PRODUCT_TYPES } from "@shared/constants";
  * @returns Region ID from REGIONS constant
  */
 export function determineRegionFromCoordinates(lat: number, lng: number): string {
+  // Special cases for specific countries that need precise classification
+  
+  // Poland (Eastern Europe)
+  if (lat >= 49 && lat <= 55 && lng >= 14 && lng <= 24) {
+    return "eastern-europe";
+  }
+  
+  // Korea (Southeast Asia & Oceania)
+  if (lat >= 33 && lat <= 43 && lng >= 124 && lng <= 132) {
+    return "southeast-asia-oceania";
+  }
+  
+  // Istanbul/Turkey area (special case on the border of Europe and Middle East)
+  if (lat >= 36 && lat <= 42 && lng >= 26 && lng <= 45) {
+    return "eastern-europe";
+  }
+  
+  // Check for Russia (since it's large and spans multiple regions)
+  // Russia - European and Asian parts
+  if (
+    (lat >= 50 && lat <= 90 && lng >= 27 && lng < 180) || // Main Russia (northern parts)
+    (lat >= 41 && lat <= 90 && lng >= 37 && lng < 180)    // Eastern parts
+  ) {
+    return "russia";
+  }
+  
   // North America: Mostly United States and Canada
   if (lat >= 25 && lat <= 90 && lng >= -170 && lng <= -50) {
     return "north-america";
@@ -29,12 +55,20 @@ export function determineRegionFromCoordinates(lat: number, lng: number): string
   }
   
   // Eastern Europe
-  if (lat >= 35 && lat <= 75 && lng >= 15 && lng < 45) {
+  if (lat >= 35 && lat <= 75 && lng >= 15 && lng < 30) {
     return "eastern-europe";
   }
   
+  // Middle East - expanded to include more of the Arabian Peninsula
+  if (
+    (lat >= 15 && lat < 42 && lng >= 30 && lng < 65) || // Main Middle East
+    (lat >= 23 && lat < 33 && lng >= 43 && lng < 60)    // Saudi Arabia and surroundings
+  ) {
+    return "middle-east";
+  }
+  
   // North Africa
-  if (lat >= 15 && lat < 35 && lng >= -20 && lng < 50) {
+  if (lat >= 15 && lat < 35 && lng >= -20 && lng < 30) {
     return "north-africa";
   }
   
@@ -43,18 +77,8 @@ export function determineRegionFromCoordinates(lat: number, lng: number): string
     return "southern-africa";
   }
   
-  // Middle East
-  if (lat >= 15 && lat < 40 && lng >= 30 && lng < 65) {
-    return "middle-east";
-  }
-  
-  // Russia - large country spanning much of northern Asia
-  if ((lat >= 45 && lat <= 90 && lng >= 30 && lng < 180)) {
-    return "russia";
-  }
-  
   // China
-  if (lat >= 18 && lat < 45 && lng >= 75 && lng < 135) {
+  if (lat >= 18 && lat < 45 && lng >= 75 && lng < 125) {
     return "china";
   }
   
@@ -63,8 +87,13 @@ export function determineRegionFromCoordinates(lat: number, lng: number): string
     return "asia-pacific";
   }
   
-  // Southeast Asia & Oceania (includes Australia)
-  if (lat >= -50 && lat < 25 && lng >= 95 && lng < 180) {
+  // Japan should be in Southeast Asia & Oceania
+  if (lat >= 30 && lat < 46 && lng >= 129 && lng < 150) {
+    return "southeast-asia-oceania";
+  }
+  
+  // Southeast Asia & Oceania (includes Australia, Japan, Korea)
+  if (lat >= -50 && lat < 30 && lng >= 95 && lng < 180) {
     return "southeast-asia-oceania";
   }
   
