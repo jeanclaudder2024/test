@@ -108,6 +108,18 @@ export async function seedFeatureFlags(): Promise<{ count: number, seeded: boole
         requiredSubscription: null // Available on all plans
       },
       {
+        featureName: "region_filtering",
+        description: "Filter vessels by region",
+        isEnabled: true,
+        requiredSubscription: null // Available on all plans
+      },
+      {
+        featureName: "advanced_filtering",
+        description: "Advanced filtering options for vessels and cargo",
+        isEnabled: true,
+        requiredSubscription: "Standard" // Requires at least Standard plan
+      },
+      {
         featureName: "document_generation",
         description: "Generate shipping documents",
         isEnabled: true,
