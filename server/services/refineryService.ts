@@ -1,6 +1,6 @@
 import { storage } from "../storage";
 import { InsertRefinery, Refinery } from "@shared/schema";
-import { dataService } from "./asiStreamService";
+import { generateRefineryDataset } from "./refineryGenerator";
 
 export const refineryService = {
   getAllRefineries: async () => {
@@ -48,10 +48,10 @@ export const refineryService = {
         };
       }
       
-      // Database empty, try to get refineries from database
-      console.log("No refineries in database. Using data service...");
-      const asiRefineries = await dataService.fetchRefineries();
-      console.log(`Fetched ${asiRefineries.length} refineries from data service.`);
+      // Database empty, generate refineries from our dataset
+      console.log("No refineries in database. Generating refinery data...");
+      const refineries = generateRefineryDataset();
+      console.log(`Generated ${refineries.length} refineries from dataset.`);
       
       // Create refineries
       const createdRefineries: Refinery[] = [];
@@ -59,7 +59,7 @@ export const refineryService = {
       // Create a Set of keys to check for duplicates (name + country)
       const existingRefineryKeys = new Set();
       
-      for (const refinery of asiRefineries) {
+      for (const refinery of refineries) {
         // Create a unique key for the refinery
         const refineryKey = `${refinery.name}|${refinery.country}`;
         
