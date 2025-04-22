@@ -34,8 +34,7 @@ export const vessels = pgTable("vessels", {
   currentLng: decimal("current_lng", { precision: 10, scale: 6 }),
   departurePort: text("departure_port"),
   departureDate: timestamp("departure_date"),
-  destinationPort: text("destination_port"),
-  destinationRefineryId: integer("destination_refinery_id"),
+  destinationPort: text("destination_port"), // Will store refinery references in format "REF:id:name"
   eta: timestamp("eta"),
   cargoType: text("cargo_type"),
   cargoCapacity: integer("cargo_capacity"),

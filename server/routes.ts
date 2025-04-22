@@ -486,11 +486,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get destination refinery information if provided
       let destinationRefineryName = null;
+      let formattedDestination = null;
+      
       if (destinationRefineryId) {
         const destinationRefinery = await refineryService.getRefineryById(parseInt(destinationRefineryId));
         if (destinationRefinery) {
           destinationRefineryName = destinationRefinery.name;
+          // Format destination to include refinery reference (REF:id:name)
+          formattedDestination = `REF:${destinationRefinery.id}:${destinationRefinery.name}`;
         }
+      } else if (destinationPort) {
+        // Regular port destination
+        formattedDestination = destinationPort;
       }
       
       // Import function to determine region from coordinates
@@ -504,29 +511,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         currentRegion: newRegion
       };
       
-      // Add destination information if provided
-      if (destinationRefineryId) {
-        vesselUpdateData.destinationRefineryId = parseInt(destinationRefineryId);
-        if (destinationRefineryName) {
-          vesselUpdateData.destinationPort = destinationRefineryName;
-        }
-      } else if (destinationPort) {
-        vesselUpdateData.destinationPort = destinationPort;
-        // Clear any previous refinery destination if only port is provided
-        vesselUpdateData.destinationRefineryId = null;
+      // Update destination if provided
+      if (formattedDestination) {
+        vesselUpdateData.destinationPort = formattedDestination;
       }
       
       // Update vessel location and destination
       const updatedVessel = await vesselService.updateVessel(vesselId, vesselUpdateData);
       
-      // Format destination information for event description
+      // Format destination information for event description and response
       let destinationInfo = "At sea";
-      if (destinationRefineryName) {
-        destinationInfo = `Refinery: ${destinationRefineryName}`;
-      } else if (destinationPort) {
-        destinationInfo = `Port: ${destinationPort}`;
-      } else if (vessel.destinationPort) {
-        destinationInfo = vessel.destinationPort;
+      let destinationType = "none";
+      
+      if (updatedVessel && updatedVessel.destinationPort) {
+        if (updatedVessel.destinationPort.startsWith('REF:')) {
+          // Extract refinery name from the format REF:id:name
+          const parts = updatedVessel.destinationPort.split(':');
+          const refineryName = parts.length > 2 ? parts[2] : updatedVessel.destinationPort;
+          destinationInfo = `Refinery: ${refineryName}`;
+          destinationType = "refinery";
+        } else {
+          destinationInfo = `Port: ${updatedVessel.destinationPort}`;
+          destinationType = "port";
+        }
       }
       
       // Create progress event if there's a description
@@ -541,12 +548,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Add destination change event if destination has changed
-      const destRefId = destinationRefineryId ? parseInt(destinationRefineryId) : null;
-      const vesselDestRefId = vessel.destinationRefineryId || null;
+      // Check if destination has changed
+      const previousDestination = vessel.destinationPort || "";
+      const newDestination = updatedVessel && updatedVessel.destinationPort ? updatedVessel.destinationPort : "";
       
-      if ((destinationRefineryId && vesselDestRefId !== destRefId) || 
-          (destinationPort && vessel.destinationPort !== destinationPort)) {
+      if (previousDestination !== newDestination) {
         await vesselService.addProgressEvent({
           vesselId,
           date: new Date(),
