@@ -38,6 +38,7 @@ import { formatDate } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useVessels } from '@/hooks/useVessels';
 import type { Document } from '@/types';
+import { DOCUMENT_TYPES } from '@shared/constants';
 
 export default function Documents() {
   const { toast } = useToast();
@@ -332,13 +333,19 @@ export default function Documents() {
                 <SelectTrigger id="documentType">
                   <SelectValue placeholder="Select document type" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="bill of lading">Bill of Lading</SelectItem>
-                  <SelectItem value="cargo manifest">Cargo Manifest</SelectItem>
-                  <SelectItem value="inspection report">Inspection Report</SelectItem>
-                  <SelectItem value="loading instructions">Loading Instructions</SelectItem>
-                  <SelectItem value="sds">Safety Data Sheet</SelectItem>
-                  <SelectItem value="loi">Letter of Interest</SelectItem>
+                <SelectContent className="max-h-[300px] overflow-y-auto">
+                  {DOCUMENT_TYPES.map((docType) => {
+                    // Extract English part of document type (before the dash)
+                    const englishDocType = docType.split(' - ')[0];
+                    // Use a simplified value for the backend API
+                    const valueForAPI = englishDocType.split(' (')[0].toLowerCase();
+                    
+                    return (
+                      <SelectItem key={docType} value={valueForAPI}>
+                        {docType}
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>
