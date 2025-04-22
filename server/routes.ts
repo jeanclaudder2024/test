@@ -625,6 +625,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Mount API tester routes for testing large datasets
   apiRouter.use("/test", apiTesterRouter);
   
+  // Mount auth test routes for debugging authentication
+  apiRouter.use("/auth-test", testAuthRouter);
+  
   // Mount broker routes
   apiRouter.use("/brokers", brokerRouter);
   

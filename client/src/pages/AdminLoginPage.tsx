@@ -4,13 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Lock, User, Loader2, Shield } from "lucide-react";
+import { Lock, User, Loader2, Shield, Bug } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { apiRequest } from "@/lib/queryClient";
 
 // Form validation schema
 const loginSchema = z.object({
@@ -24,6 +25,8 @@ export default function AdminLoginPage() {
   const { toast } = useToast();
   const [, navigate] = useLocation();
   const { user, isLoading, loginMutation } = useAuth();
+  const [testResult, setTestResult] = useState<any>(null);
+  const [testLoading, setTestLoading] = useState(false);
   
   // Redirect if already logged in and is admin
   useEffect(() => {
@@ -56,6 +59,42 @@ export default function AdminLoginPage() {
     } catch (error) {
       console.error("Login error:", error);
       // Toast handled in auth context
+      
+      // Try test login route to diagnose the issue
+      await testLoginCredentials(data.username, data.password);
+    }
+  };
+  
+  // Diagnostic function to test authentication
+  const testLoginCredentials = async (username: string, password: string) => {
+    setTestLoading(true);
+    try {
+      const response = await apiRequest("POST", "/api/auth-test/test-login", {
+        username,
+        password
+      });
+      
+      const result = await response.json();
+      setTestResult(result);
+      
+      toast({
+        title: "Auth Test Result",
+        description: `Test login ${result.message === "Credentials valid" ? "succeeded" : "failed"}: ${result.message}`,
+        variant: result.message === "Credentials valid" ? "default" : "destructive",
+      });
+      
+      console.log("Auth test result:", result);
+    } catch (error) {
+      console.error("Test login error:", error);
+      setTestResult({ error: String(error) });
+      
+      toast({
+        title: "Auth Test Error",
+        description: `Failed to test credentials: ${String(error)}`,
+        variant: "destructive",
+      });
+    } finally {
+      setTestLoading(false);
     }
   };
 
@@ -140,6 +179,38 @@ export default function AdminLoginPage() {
                   </Button>
                 </form>
               </Form>
+              
+              {/* Debug section */}
+              <div className="mt-6 border-t pt-6">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-medium flex items-center gap-1">
+                    <Bug className="h-4 w-4" />
+                    Diagnostic Tools
+                  </h3>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => testLoginCredentials(
+                      loginForm.getValues("username"),
+                      loginForm.getValues("password")
+                    )}
+                    disabled={testLoading}
+                  >
+                    {testLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                    ) : (
+                      <Bug className="h-4 w-4 mr-1" />
+                    )}
+                    Test Credentials
+                  </Button>
+                </div>
+                
+                {testResult && (
+                  <div className="bg-muted p-2 rounded-md text-xs overflow-auto max-h-32">
+                    <pre>{JSON.stringify(testResult, null, 2)}</pre>
+                  </div>
+                )}
+              </div>
             </CardContent>
             <CardFooter className="flex flex-col border-t pt-4">
               <p className="text-sm text-muted-foreground text-center">
