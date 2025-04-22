@@ -1,5 +1,6 @@
 import { InsertRefinery } from "@shared/schema";
 import { REGIONS, REFINERY_STATUSES } from "@shared/constants";
+import { ACCURATE_REFINERIES, getAccurateRefineries } from "./refineryCoordinates";
 
 // Type for refineries with numeric lat/lng
 type RefinerySource = {
@@ -1016,17 +1017,11 @@ const WORLD_REFINERIES: RefinerySource[] = [
  * @returns Array of refinery data ready to be inserted
  */
 export function generateRefineryDataset(): InsertRefinery[] {
-  return WORLD_REFINERIES.map(refinery => ({
-    name: refinery.name,
-    country: refinery.country,
-    region: refinery.region,
-    // Convert numbers to strings for lat/lng since database expects decimal type
-    lat: String(refinery.lat),
-    lng: String(refinery.lng),
-    capacity: refinery.capacity,
-    status: refinery.status,
+  // Use accurate refinery data from refineryCoordinates.ts
+  return getAccurateRefineries().map(refinery => ({
+    ...refinery,
     // Additional fields
-    description: `${refinery.name} is a major oil refinery located in ${refinery.country}. It has a capacity of ${refinery.capacity.toLocaleString()} barrels per day.`,
+    description: `${refinery.name} is a major oil refinery located in ${refinery.country}. It has a capacity of ${Number(refinery.capacity).toLocaleString()} barrels per day.`,
   }));
 }
 
