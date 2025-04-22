@@ -99,7 +99,15 @@ export default function SimpleLeafletMap({
     
     // Destroy existing map instance if it exists
     if (mapInstanceRef.current) {
-      mapInstanceRef.current.remove();
+      try {
+        // Remove all event listeners and layers to prevent memory leaks
+        const map = mapInstanceRef.current;
+        map.eachLayer((layer: any) => layer.remove());
+        map.off();
+        map.remove();
+      } catch (err) {
+        console.error("Error cleaning up map:", err);
+      }
       mapInstanceRef.current = null;
     }
 
@@ -301,7 +309,8 @@ export default function SimpleLeafletMap({
     };
   }, [
     isMapReady, 
-    mapStyle, 
+    mapStyle,
+    mapLanguage, 
     vessels, 
     refineries, 
     selectedRegion, 
@@ -314,6 +323,11 @@ export default function SimpleLeafletMap({
   // Handle map style change
   const handleStyleChange = (newStyle: string) => {
     setMapStyle(newStyle);
+  };
+  
+  // Handle map language change
+  const handleLanguageChange = (newLanguage: LanguageOption) => {
+    setMapLanguage(newLanguage);
   };
   
   if (isLoading) {
@@ -342,30 +356,84 @@ export default function SimpleLeafletMap({
         </div>
       )}
       
-      {/* Map style selector */}
+      {/* Map controls */}
       <div className="absolute bottom-4 left-4 z-10 bg-background/90 backdrop-blur-sm rounded-lg shadow-md p-3 border border-border">
-        <h4 className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
-          <Map className="h-3 w-3" />
-          Map Style
-        </h4>
-        <div className="flex flex-wrap gap-1.5 max-w-[300px]">
-          {mapStyles.map(style => (
+        {/* Map style selector */}
+        <div className="mb-3">
+          <h4 className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
+            <Map className="h-3 w-3" />
+            Map Style
+          </h4>
+          <div className="flex flex-wrap gap-1.5 max-w-[300px]">
+            {mapStyles.map(style => (
+              <Button
+                key={style.id}
+                variant={style.id === mapStyle ? "default" : "outline"}
+                size="sm"
+                className={`flex items-center gap-1 h-7 px-2 py-1 ${
+                  style.id === mapStyle 
+                    ? 'bg-primary text-primary-foreground' 
+                    : 'bg-background hover:bg-accent text-foreground'
+                }`}
+                onClick={() => handleStyleChange(style.id)}
+                title={style.description}
+              >
+                {style.icon}
+                <span className="text-xs font-medium">{style.name}</span>
+              </Button>
+            ))}
+          </div>
+        </div>
+        
+        {/* Map language selector */}
+        <div>
+          <h4 className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
+            <Globe2 className="h-3 w-3" />
+            Language
+          </h4>
+          <div className="flex gap-1.5">
             <Button
-              key={style.id}
-              variant={style.id === mapStyle ? "default" : "outline"}
+              variant={mapLanguage === 'en' ? "default" : "outline"}
               size="sm"
               className={`flex items-center gap-1 h-7 px-2 py-1 ${
-                style.id === mapStyle 
+                mapLanguage === 'en' 
                   ? 'bg-primary text-primary-foreground' 
                   : 'bg-background hover:bg-accent text-foreground'
               }`}
-              onClick={() => handleStyleChange(style.id)}
-              title={style.name}
+              onClick={() => handleLanguageChange('en')}
+              title="Show map labels in English"
             >
-              <span className="text-xs">{style.icon}</span>
-              <span className="text-xs font-medium">{style.name}</span>
+              <span className="text-xs font-medium">English</span>
             </Button>
-          ))}
+            
+            <Button
+              variant={mapLanguage === 'ar' ? "default" : "outline"}
+              size="sm"
+              className={`flex items-center gap-1 h-7 px-2 py-1 ${
+                mapLanguage === 'ar' 
+                  ? 'bg-primary text-primary-foreground' 
+                  : 'bg-background hover:bg-accent text-foreground'
+              }`}
+              onClick={() => handleLanguageChange('ar')}
+              title="Show map labels in Arabic"
+            >
+              <span className="text-xs font-medium">العربية</span>
+            </Button>
+            
+            <Button
+              variant={mapLanguage === 'multilingual' ? "default" : "outline"}
+              size="sm"
+              className={`flex items-center gap-1 h-7 px-2 py-1 ${
+                mapLanguage === 'multilingual' 
+                  ? 'bg-primary text-primary-foreground' 
+                  : 'bg-background hover:bg-accent text-foreground'
+              }`}
+              onClick={() => handleLanguageChange('multilingual')}
+              title="Show map labels in local languages"
+            >
+              <span className="text-xs font-medium">Local</span>
+            </Button>
+          </div>
         </div>
       </div>
       
