@@ -13,6 +13,7 @@ import Documents from "@/pages/Documents";
 import AIAssistantPage from "@/pages/AIAssistant";
 import Settings from "@/pages/Settings";
 import Subscribe from "@/pages/Subscribe";
+import SubscriptionPlans from "@/pages/SubscriptionPlans";
 import LandingPage from "@/pages/LandingPage";
 import AuthPage from "@/pages/AuthPage";
 import AdminLoginPage from "@/pages/AdminLoginPage";
@@ -21,7 +22,9 @@ import { useEffect } from "react";
 import { apiRequest } from "./lib/queryClient";
 import MainLayout from "@/components/layout/MainLayout";
 import { AuthProvider } from "@/hooks/use-auth";
+import { FeatureFlagProvider } from "@/hooks/use-feature-access";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { FeatureProtectedRoute } from "@/components/auth/FeatureProtectedRoute";
 
 function Router() {
   const [location] = useLocation();
@@ -64,10 +67,19 @@ function Router() {
         <ProtectedRoute path="/refineries" component={Refineries} />
         <ProtectedRoute path="/refineries/:id" component={RefineryDetail} />
         <ProtectedRoute path="/brokers" component={Brokers} />
-        <ProtectedRoute path="/documents" component={Documents} />
-        <ProtectedRoute path="/ai-assistant" component={AIAssistantPage} />
+        <FeatureProtectedRoute 
+          path="/documents" 
+          component={Documents} 
+          featureName="document_generation"
+        />
+        <FeatureProtectedRoute 
+          path="/ai-assistant" 
+          component={AIAssistantPage} 
+          featureName="ai_assistant"
+        />
         <ProtectedRoute path="/settings" component={Settings} />
         <ProtectedRoute path="/subscribe" component={Subscribe} />
+        <ProtectedRoute path="/subscription-plans" component={SubscriptionPlans} />
         <ProtectedRoute path="/admin/dashboard" component={AdminDashboard} adminOnly={true} />
         <Route component={NotFound} />
       </Switch>
@@ -79,8 +91,10 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <Router />
-        <Toaster />
+        <FeatureFlagProvider>
+          <Router />
+          <Toaster />
+        </FeatureFlagProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

@@ -16,7 +16,7 @@ if (!process.env.STRIPE_SECRET_KEY) {
 }
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2023-10-16",
+  apiVersion: "2024-04-10" as any,
 });
 
 export const subscriptionRouter = Router();
@@ -256,7 +256,7 @@ subscriptionRouter.post("/webhook", async (req, res) => {
       signature,
       process.env.STRIPE_WEBHOOK_SECRET
     );
-  } catch (err) {
+  } catch (err: any) {
     console.error(`Webhook signature verification failed: ${err.message}`);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
@@ -265,7 +265,7 @@ subscriptionRouter.post("/webhook", async (req, res) => {
   switch (event.type) {
     case 'checkout.session.completed': {
       const session = event.data.object;
-      const userId = parseInt(session.metadata?.userId);
+      const userId = session.metadata?.userId ? parseInt(session.metadata.userId) : undefined;
       const planName = session.metadata?.planName;
       
       if (userId && planName) {

@@ -1,29 +1,21 @@
-import React from "react";
-import { cn } from "@/lib/utils";
+import { ReactNode } from "react";
 
 interface PageTitleProps {
   title: string;
-  subtitle?: string;
-  className?: string;
-  actions?: React.ReactNode;
+  description?: string;
+  actions?: ReactNode;
 }
 
-export function PageTitle({ title, subtitle, className, actions }: PageTitleProps) {
+export function PageTitle({ title, description, actions }: PageTitleProps) {
   return (
-    <div className={cn("flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6", className)}>
+    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 pb-4 border-b">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-          {title}
-        </h1>
-        {subtitle && (
-          <p className="text-muted-foreground mt-1">{subtitle}</p>
+        <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
+        {description && (
+          <p className="text-muted-foreground mt-1">{description}</p>
         )}
       </div>
-      {actions && (
-        <div className="flex-shrink-0">
-          {actions}
-        </div>
-      )}
+      {actions && <div className="flex-shrink-0 ml-auto">{actions}</div>}
     </div>
   );
 }

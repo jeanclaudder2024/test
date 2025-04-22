@@ -149,7 +149,7 @@ export default function SubscriptionPlans() {
         <div className="mt-8 text-center">
           <Button 
             variant="outline"
-            onClick={() => navigate(-1)}
+            onClick={() => navigate("/dashboard")}
             disabled={subscribeMutation.isPending}
           >
             Back
