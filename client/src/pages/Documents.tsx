@@ -500,18 +500,145 @@ export default function Documents() {
                   <SelectValue placeholder="Select document type" />
                 </SelectTrigger>
                 <SelectContent className="max-h-[300px] overflow-y-auto">
-                  {DOCUMENT_TYPES.map((docType) => {
-                    // Extract English part of document type (before the dash)
-                    const englishDocType = docType.split(' - ')[0];
-                    // Use a simplified value for the backend API
-                    const valueForAPI = englishDocType.split(' (')[0].toLowerCase();
-                    
-                    return (
-                      <SelectItem key={docType} value={valueForAPI}>
-                        {docType}
-                      </SelectItem>
-                    );
-                  })}
+                  <SelectItem value="" disabled>Select document type</SelectItem>
+                  
+                  {/* Legal Document Category */}
+                  <SelectItem value="legal-separator" disabled className="font-bold text-primary bg-muted">
+                    <div className="flex items-center">
+                      <LawJustice className="w-4 h-4 mr-2" />
+                      Legal Documents
+                    </div>
+                  </SelectItem>
+                  {DOCUMENT_TYPES
+                    .filter(docType => {
+                      const lowerDocType = docType.toLowerCase();
+                      return lowerDocType.includes('contract') || 
+                             lowerDocType.includes('agreement') || 
+                             lowerDocType.includes('loi') || 
+                             lowerDocType.includes('letter of intent') ||
+                             lowerDocType.includes('letter of indemnity') ||
+                             lowerDocType.includes('legal') ||
+                             lowerDocType.includes('certificate') ||
+                             lowerDocType.includes('spa');
+                    })
+                    .map((docType) => {
+                      // Extract English part of document type (before the dash)
+                      const englishDocType = docType.split(' - ')[0];
+                      // Use a simplified value for the backend API
+                      const valueForAPI = englishDocType.split(' (')[0].toLowerCase();
+                      
+                      return (
+                        <SelectItem key={docType} value={valueForAPI} className="pl-6">
+                          {docType}
+                        </SelectItem>
+                      );
+                    })
+                  }
+                  
+                  {/* Commercial Document Category */}
+                  <SelectItem value="commercial-separator" disabled className="font-bold text-primary bg-muted">
+                    <div className="flex items-center">
+                      <Store className="w-4 h-4 mr-2" />
+                      Commercial Documents
+                    </div>
+                  </SelectItem>
+                  {DOCUMENT_TYPES
+                    .filter(docType => {
+                      const lowerDocType = docType.toLowerCase();
+                      return lowerDocType.includes('invoice') || 
+                             lowerDocType.includes('commercial') || 
+                             lowerDocType.includes('sale') ||
+                             lowerDocType.includes('purchase') && !lowerDocType.includes('agreement');
+                    })
+                    .map((docType) => {
+                      // Extract English part of document type (before the dash)
+                      const englishDocType = docType.split(' - ')[0];
+                      // Use a simplified value for the backend API
+                      const valueForAPI = englishDocType.split(' (')[0].toLowerCase();
+                      
+                      return (
+                        <SelectItem key={docType} value={valueForAPI} className="pl-6">
+                          {docType}
+                        </SelectItem>
+                      );
+                    })
+                  }
+                  
+                  {/* Shipping Document Category */}
+                  <SelectItem value="shipping-separator" disabled className="font-bold text-primary bg-muted">
+                    <div className="flex items-center">
+                      <Ship className="w-4 h-4 mr-2" />
+                      Shipping Documents
+                    </div>
+                  </SelectItem>
+                  {DOCUMENT_TYPES
+                    .filter(docType => {
+                      const lowerDocType = docType.toLowerCase();
+                      return lowerDocType.includes('bill') || 
+                             lowerDocType.includes('lading') || 
+                             lowerDocType.includes('manifest') ||
+                             lowerDocType.includes('shipping') ||
+                             lowerDocType.includes('cargo') ||
+                             lowerDocType.includes('inspection') ||
+                             lowerDocType.includes('loading');
+                    })
+                    .map((docType) => {
+                      // Extract English part of document type (before the dash)
+                      const englishDocType = docType.split(' - ')[0];
+                      // Use a simplified value for the backend API
+                      const valueForAPI = englishDocType.split(' (')[0].toLowerCase();
+                      
+                      return (
+                        <SelectItem key={docType} value={valueForAPI} className="pl-6">
+                          {docType}
+                        </SelectItem>
+                      );
+                    })
+                  }
+                  
+                  {/* Other Document Category */}
+                  <SelectItem value="other-separator" disabled className="font-bold text-primary bg-muted">
+                    <div className="flex items-center">
+                      <File className="w-4 h-4 mr-2" />
+                      Other Documents
+                    </div>
+                  </SelectItem>
+                  {DOCUMENT_TYPES
+                    .filter(docType => {
+                      const lowerDocType = docType.toLowerCase();
+                      return !lowerDocType.includes('contract') && 
+                             !lowerDocType.includes('agreement') && 
+                             !lowerDocType.includes('loi') && 
+                             !lowerDocType.includes('letter of intent') &&
+                             !lowerDocType.includes('letter of indemnity') &&
+                             !lowerDocType.includes('legal') &&
+                             !lowerDocType.includes('certificate') &&
+                             !lowerDocType.includes('spa') &&
+                             !lowerDocType.includes('invoice') && 
+                             !lowerDocType.includes('commercial') && 
+                             !lowerDocType.includes('sale') &&
+                             !lowerDocType.includes('purchase') &&
+                             !lowerDocType.includes('bill') && 
+                             !lowerDocType.includes('lading') && 
+                             !lowerDocType.includes('manifest') &&
+                             !lowerDocType.includes('shipping') &&
+                             !lowerDocType.includes('cargo') &&
+                             !lowerDocType.includes('inspection') &&
+                             !lowerDocType.includes('loading');
+                    })
+                    .map((docType) => {
+                      // Extract English part of document type (before the dash)
+                      const englishDocType = docType.split(' - ')[0];
+                      // Use a simplified value for the backend API
+                      const valueForAPI = englishDocType.split(' (')[0].toLowerCase();
+                      
+                      return (
+                        <SelectItem key={docType} value={valueForAPI} className="pl-6">
+                          {docType}
+                        </SelectItem>
+                      );
+                    })
+                  }
                 </SelectContent>
               </Select>
             </div>
@@ -647,9 +774,92 @@ export default function Documents() {
                 </div>
               </div>
               
-              <div className="font-mono text-sm bg-white border p-3 sm:p-4 rounded-md whitespace-pre-wrap overflow-x-auto mt-4">
-                {selectedDocument.content}
-              </div>
+              {/* Legal Document Template for LOI, SPA, and other legal documents */}
+              {(selectedDocument.type.toLowerCase().includes('loi') || 
+                selectedDocument.type.toLowerCase().includes('letter of intent') || 
+                selectedDocument.type.toLowerCase().includes('letter of indemnity') ||
+                selectedDocument.type.toLowerCase().includes('spa') || 
+                selectedDocument.type.toLowerCase().includes('sale') || 
+                selectedDocument.type.toLowerCase().includes('purchase agreement') ||
+                selectedDocument.type.toLowerCase().includes('contract') ||
+                selectedDocument.type.toLowerCase().includes('legal')
+               ) ? (
+                <div className="border border-slate-200 rounded-md overflow-hidden mt-4">
+                  {/* Legal Document Header */}
+                  <div className="bg-slate-50 p-4 border-b border-slate-200">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center">
+                        <LawJustice className="h-5 w-5 text-slate-700 mr-2" />
+                        <span className="font-semibold text-slate-800">
+                          {selectedDocument.type} - {selectedDocument.reference || 'Confidential'}
+                        </span>
+                      </div>
+                      <Badge variant="outline" className="border-slate-400">
+                        {selectedDocument.language === 'ar' ? 'وثيقة قانونية' : 'Legal Document'}
+                      </Badge>
+                    </div>
+                  </div>
+                  
+                  {/* Legal Document Content with professional styling */}
+                  <div className="p-5 bg-white">
+                    <div className="text-sm leading-relaxed whitespace-pre-wrap">
+                      {selectedDocument.content.split('\n').map((paragraph, idx) => {
+                        // Format section headers
+                        if (paragraph.toUpperCase() === paragraph && paragraph.trim().length > 0) {
+                          return (
+                            <h3 key={idx} className="font-bold text-slate-800 my-3">
+                              {paragraph}
+                            </h3>
+                          );
+                        } 
+                        // Format article numbers (e.g., "1.", "Article 1:", etc.)
+                        else if (/^(Article\s+)?\d+[\.:]\s/.test(paragraph) || /^[A-Z][\.:]\s/.test(paragraph)) {
+                          return (
+                            <h4 key={idx} className="font-semibold text-slate-700 mt-3 mb-2">
+                              {paragraph}
+                            </h4>
+                          );
+                        }
+                        // Regular paragraphs
+                        else if (paragraph.trim()) {
+                          return (
+                            <p key={idx} className="mb-2 text-slate-700">
+                              {paragraph}
+                            </p>
+                          );
+                        }
+                        // Empty lines for spacing
+                        return <div key={idx} className="h-2"></div>;
+                      })}
+                    </div>
+                    
+                    {/* Signatures section if document has signatures */}
+                    {selectedDocument.content.toLowerCase().includes('sign') && (
+                      <div className="mt-8 pt-6 border-t border-slate-200">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                            <h5 className="text-xs uppercase text-slate-500 mb-1">ISSUER</h5>
+                            <div className="h-16 border border-dashed border-slate-300 rounded-md flex items-center justify-center">
+                              <span className="text-slate-400 text-sm">{selectedDocument.issuer || 'Authorized Signature'}</span>
+                            </div>
+                          </div>
+                          <div>
+                            <h5 className="text-xs uppercase text-slate-500 mb-1">RECIPIENT</h5>
+                            <div className="h-16 border border-dashed border-slate-300 rounded-md flex items-center justify-center">
+                              <span className="text-slate-400 text-sm">{selectedDocument.recipientName || 'Authorized Signature'}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                // Standard document view for non-legal documents
+                <div className="font-mono text-sm bg-white border p-3 sm:p-4 rounded-md whitespace-pre-wrap overflow-x-auto mt-4">
+                  {selectedDocument.content}
+                </div>
+              )}
               
               <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
                 <Button 
@@ -745,14 +955,56 @@ function DocumentList({ documents, isLoading, onViewDocument }: DocumentListProp
             doc.status === 'draft' ? 'bg-gray-50' : 
             'bg-blue-50'
           }`}>
-            <File className={`h-6 w-6 ${
-              doc.status === 'active' ? 'text-green-600' : 
-              doc.status === 'expired' ? 'text-amber-600' : 
-              doc.status === 'revoked' ? 'text-red-600' : 
-              doc.status === 'pending' ? 'text-blue-600' : 
-              doc.status === 'draft' ? 'text-gray-600' : 
-              'text-blue-600'
-            }`} />
+            {/* Use specific icons based on document type */}
+            {doc.type.toLowerCase().includes('loi') || 
+             doc.type.toLowerCase().includes('letter of intent') || 
+             doc.type.toLowerCase().includes('letter of indemnity') ||
+             doc.type.toLowerCase().includes('contract') || 
+             doc.type.toLowerCase().includes('legal') ? (
+              <LawJustice className={`h-6 w-6 ${
+                doc.status === 'active' ? 'text-green-600' : 
+                doc.status === 'expired' ? 'text-amber-600' : 
+                doc.status === 'revoked' ? 'text-red-600' : 
+                doc.status === 'pending' ? 'text-blue-600' : 
+                doc.status === 'draft' ? 'text-gray-600' : 
+                'text-blue-600'
+              }`} />
+            ) : doc.type.toLowerCase().includes('spa') || 
+                doc.type.toLowerCase().includes('sale') || 
+                doc.type.toLowerCase().includes('purchase') || 
+                doc.type.toLowerCase().includes('invoice') ||
+                doc.type.toLowerCase().includes('commercial') ? (
+              <Store className={`h-6 w-6 ${
+                doc.status === 'active' ? 'text-green-600' : 
+                doc.status === 'expired' ? 'text-amber-600' : 
+                doc.status === 'revoked' ? 'text-red-600' : 
+                doc.status === 'pending' ? 'text-blue-600' : 
+                doc.status === 'draft' ? 'text-gray-600' : 
+                'text-blue-600'
+              }`} />
+            ) : doc.type.toLowerCase().includes('shipping') || 
+                doc.type.toLowerCase().includes('bill') || 
+                doc.type.toLowerCase().includes('lading') ||
+                doc.type.toLowerCase().includes('manifest') ||
+                doc.type.toLowerCase().includes('cargo') ? (
+              <Ship className={`h-6 w-6 ${
+                doc.status === 'active' ? 'text-green-600' : 
+                doc.status === 'expired' ? 'text-amber-600' : 
+                doc.status === 'revoked' ? 'text-red-600' : 
+                doc.status === 'pending' ? 'text-blue-600' : 
+                doc.status === 'draft' ? 'text-gray-600' : 
+                'text-blue-600'
+              }`} />
+            ) : (
+              <File className={`h-6 w-6 ${
+                doc.status === 'active' ? 'text-green-600' : 
+                doc.status === 'expired' ? 'text-amber-600' : 
+                doc.status === 'revoked' ? 'text-red-600' : 
+                doc.status === 'pending' ? 'text-blue-600' : 
+                doc.status === 'draft' ? 'text-gray-600' : 
+                'text-blue-600'
+              }`} />
+            )}
           </div>
           
           <div className="flex-1 min-w-0 order-1 sm:order-none w-[calc(100%-85px)] sm:w-auto">
