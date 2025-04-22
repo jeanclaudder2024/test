@@ -332,6 +332,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Rebuild vessel regions with accurate classification
+  apiRouter.post("/vessels/rebuild-regions", async (req, res) => {
+    try {
+      console.log("Starting vessel region classification rebuild...");
+      // Get all existing vessels
+      const vessels = await vesselService.getAllVessels();
+      console.log(`Found ${vessels.length} vessels to update regions.`);
+      
+      // Update each vessel's region based on coordinates
+      let updatedCount = 0;
+      const { determineRegionFromCoordinates } = await import('./services/vesselGenerator');
+      
+      for (const vessel of vessels) {
+        const lat = parseFloat(vessel.currentLat);
+        const lng = parseFloat(vessel.currentLng);
+        
+        if (!isNaN(lat) && !isNaN(lng)) {
+          const mappedRegion = determineRegionFromCoordinates(lat, lng);
+          
+          // Only update if region changed
+          if (vessel.currentRegion !== mappedRegion) {
+            await vesselService.updateVessel(vessel.id, { currentRegion: mappedRegion });
+            updatedCount++;
+          }
+        }
+      }
+      
+      res.json({
+        success: true,
+        message: `Vessel regions updated successfully: ${updatedCount} of ${vessels.length} updated`
+      });
+    } catch (error) {
+      console.error("Error rebuilding vessel regions:", error);
+      res.status(500).json({
+        success: false,
+        message: "Error updating vessel regions",
+        error: error.message
+      });
+    }
+  });
+
   // Progress events endpoints
   apiRouter.get("/vessels/:id/progress", async (req, res) => {
     try {

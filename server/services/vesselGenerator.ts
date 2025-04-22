@@ -195,7 +195,7 @@ export function generateLargeVesselDataset(count: number = 1500): InsertVessel[]
         type: "Containerized Goods",
         capacity: 20000
       },
-      region: "MEA"
+      region: "middle-east"
     },
     // Chemical Tanker
     {
@@ -223,7 +223,7 @@ export function generateLargeVesselDataset(count: number = 1500): InsertVessel[]
         type: "Base Oils",
         capacity: 42000
       },
-      region: "Europe"
+      region: "western-europe"
     },
     // Cargo Ship
     {
@@ -251,7 +251,7 @@ export function generateLargeVesselDataset(count: number = 1500): InsertVessel[]
         type: "Gasoline (Petrol / Mogas)",
         capacity: 170000
       },
-      region: "Asia"
+      region: "southeast-asia-oceania"
     }
   ];
   
