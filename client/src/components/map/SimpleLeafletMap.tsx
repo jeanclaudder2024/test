@@ -37,6 +37,8 @@ interface SimpleLeafletMapProps {
   onVesselClick: (vessel: Vessel) => void;
   onRefineryClick?: (refinery: Refinery) => void;
   isLoading?: boolean;
+  initialCenter?: [number, number]; // Optional [lat, lng] initial center
+  initialZoom?: number;             // Optional initial zoom level
 }
 
 // Create a unique ID for this map instance
@@ -49,7 +51,9 @@ export default function SimpleLeafletMap({
   trackedVessel,
   onVesselClick,
   onRefineryClick,
-  isLoading = false
+  isLoading = false,
+  initialCenter,
+  initialZoom
 }: SimpleLeafletMapProps) {
   // Generate a stable instance ID for this component
   const instanceId = useMemo(() => `map-${Math.random().toString(36).substring(2, 9)}`, []);
@@ -301,8 +305,15 @@ export default function SimpleLeafletMap({
       refineryMarkersRef.current.push(marker);
     });
     
-    // Set view based on selected region or tracked vessel
-    if (selectedRegion) {
+    // Set view based on priority:
+    // 1. initialCenter/initialZoom (if provided)
+    // 2. Selected region
+    // 3. Tracked vessel
+    // 4. Default view (already set when map was created)
+    if (initialCenter && initialZoom) {
+      // Use the provided initial center and zoom
+      map.setView(initialCenter, initialZoom);
+    } else if (selectedRegion) {
       const position = regionPositions[selectedRegion];
       if (position) {
         map.setView([position.lat, position.lng], position.zoom);

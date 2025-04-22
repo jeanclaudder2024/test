@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useDataStream } from '@/hooks/useDataStream';
 import { Refinery, Vessel } from '@/types';
 import { useToast } from '@/hooks/use-toast';
+import SimpleLeafletMap from '@/components/map/SimpleLeafletMap';
 import {
   Card,
   CardContent,
@@ -63,22 +64,45 @@ export default function RefineryDetail() {
   // Find vessels associated with this refinery
   useEffect(() => {
     if (refinery && vessels.length > 0) {
-      // Look for vessels that are linked to this refinery
-      // We'll look for vessel's destination/departure that matches the refinery's country
-      // or vessels that are in the same region as the refinery
-      const connected = vessels.filter(v => 
-        // Check if destination or departure port matches the refinery's country
+      // Look for vessels that are linked to this refinery using multiple methods
+      
+      // Method 1: Direct port matching - check destination or departure port against refinery country
+      const byPort = vessels.filter(v => 
         (v.destinationPort?.toLowerCase().includes(refinery.country.toLowerCase()) || 
-         v.departurePort?.toLowerCase().includes(refinery.country.toLowerCase())) ||
-        // Check if vessel is in the same region as the refinery
-        (v.currentRegion === refinery.region) ||
-        // Check if latitude and longitude is close to the refinery (within about 2 degrees)
-        (v.currentLat && v.currentLng && refinery.lat && refinery.lng &&
-         Math.abs(v.currentLat - refinery.lat) < 2 && 
-         Math.abs(v.currentLng - refinery.lng) < 2)
+         v.departurePort?.toLowerCase().includes(refinery.country.toLowerCase()))
       );
       
-      setAssociatedVessels(connected);
+      // Method 2: Region matching - vessels in the same region as refinery
+      const byRegion = vessels.filter(v => 
+        v.currentRegion === refinery.region
+      );
+      
+      // Method 3: Geographic proximity - vessels within reasonable distance of refinery
+      const byProximity = vessels.filter(v => 
+        v.currentLat && v.currentLng && refinery.lat && refinery.lng &&
+        Math.abs(v.currentLat - refinery.lat) < 5 && 
+        Math.abs(v.currentLng - refinery.lng) < 5
+      );
+      
+      // Combine results, removing duplicates (using Set and vessel IDs)
+      const allConnected = [...byPort, ...byRegion, ...byProximity];
+      const uniqueIds = new Set();
+      const uniqueVessels = allConnected.filter(vessel => {
+        if (uniqueIds.has(vessel.id)) return false;
+        uniqueIds.add(vessel.id);
+        return true;
+      });
+      
+      // If no vessels are found using those methods, just return a sample of vessels from the same region
+      if (uniqueVessels.length === 0) {
+        const sampleVessels = vessels
+          .filter(v => v.currentRegion === refinery.region)
+          .slice(0, 6);
+        
+        setAssociatedVessels(sampleVessels);
+      } else {
+        setAssociatedVessels(uniqueVessels);
+      }
     } else {
       setAssociatedVessels([]);
     }
@@ -199,14 +223,30 @@ export default function RefineryDetail() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="aspect-video bg-muted rounded-md flex items-center justify-center">
-                  <div className="text-center">
-                    <Map className="h-12 w-12 text-primary mx-auto mb-2" />
-                    <div>Interactive Map View</div>
-                    <div className="text-sm text-muted-foreground mt-1">
-                      Coordinates: {refinery.lat}, {refinery.lng}
+                <div className="aspect-video rounded-md overflow-hidden border border-muted">
+                  {refinery?.lat && refinery?.lng ? (
+                    <SimpleLeafletMap
+                      vessels={[]}
+                      refineries={[refinery]}
+                      selectedRegion={null}
+                      trackedVessel={null}
+                      onRefineryClick={() => {}}
+                      onVesselClick={() => {}}
+                      isLoading={false}
+                      initialCenter={[refinery.lat, refinery.lng]}
+                      initialZoom={8}
+                    />
+                  ) : (
+                    <div className="h-full bg-muted flex items-center justify-center">
+                      <div className="text-center">
+                        <Map className="h-12 w-12 text-primary mx-auto mb-2" />
+                        <div>Map unavailable</div>
+                        <div className="text-sm text-muted-foreground mt-1">
+                          Coordinates missing
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
