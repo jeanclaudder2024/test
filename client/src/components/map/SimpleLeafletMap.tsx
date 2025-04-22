@@ -260,27 +260,50 @@ export default function SimpleLeafletMap({
     refineries.forEach(refinery => {
       if (!refinery.lat || !refinery.lng) return;
       
+      // Get color based on refinery status
+      const getRefineryColor = () => {
+        const status = refinery.status?.toLowerCase() || '';
+        if (status.includes('active') || status.includes('operational')) return "#22c55e"; // green
+        if (status.includes('maintenance')) return "#f59e0b"; // amber
+        if (status.includes('planned')) return "#3b82f6"; // blue
+        if (status.includes('shutdown')) return "#ef4444"; // red
+        return "#6b7280"; // gray default
+      };
+      
+      // Get emoji based on country/region
+      const getRefineryEmoji = () => {
+        if (refinery.country?.includes("Saudi")) return '🏭';
+        if (refinery.country?.includes("UAE")) return '⛽';
+        if (refinery.country?.includes("Kuwait")) return '💧';
+        if (refinery.country?.includes("Qatar")) return '🔥';
+        if (refinery.region?.includes("Middle East")) return '🛢️';
+        if (refinery.region?.includes("Africa")) return '⛰️';
+        if (refinery.region?.includes("Europe")) return '🏢';
+        if (refinery.region?.includes("Asia")) return '🌊';
+        return '🏭';
+      };
+      
       const refineryIcon = L.divIcon({
         html: `
           <div style="
-            width: 24px;
-            height: 24px;
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
             background: rgba(255,255,255,0.9);
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 2px solid #dc3545;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-            font-size: 14px;
+            border: 3px solid ${getRefineryColor()};
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            font-size: 15px;
             text-align: center;
           ">
-            ⛽
+            ${getRefineryEmoji()}
           </div>
         `,
         className: 'refinery-marker',
-        iconSize: [24, 24],
-        iconAnchor: [12, 12]
+        iconSize: [28, 28],
+        iconAnchor: [14, 14]
       });
       
       const marker = L.marker([refinery.lat, refinery.lng], { icon: refineryIcon })

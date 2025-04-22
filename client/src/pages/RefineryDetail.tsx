@@ -192,7 +192,23 @@ export default function RefineryDetail() {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
             <div>
               <h1 className="text-3xl font-bold flex items-center">
-                <Factory className="h-8 w-8 mr-2 text-primary" />
+                <div className={`h-10 w-10 rounded-full flex items-center justify-center mr-3 ${
+                  refinery.status?.toLowerCase().includes('active') ? 'bg-green-100 text-green-600' :
+                  refinery.status?.toLowerCase().includes('maintenance') ? 'bg-orange-100 text-orange-600' :
+                  refinery.status?.toLowerCase().includes('planned') ? 'bg-blue-100 text-blue-600' :
+                  refinery.status?.toLowerCase().includes('shutdown') ? 'bg-red-100 text-red-600' :
+                  'bg-gray-100 text-gray-600'
+                }`}>
+                  {refinery.country?.includes("Saudi") ? <Factory className="h-6 w-6" /> : 
+                   refinery.country?.includes("UAE") ? <Factory className="h-6 w-6" /> :
+                   refinery.country?.includes("Kuwait") ? <Droplet className="h-6 w-6" /> : 
+                   refinery.country?.includes("Qatar") ? <Flame className="h-6 w-6" /> :
+                   refinery.region?.includes("Middle East") ? <Droplet className="h-6 w-6" /> :
+                   refinery.region?.includes("Africa") ? <Globe className="h-6 w-6" /> :
+                   refinery.region?.includes("Europe") ? <Building className="h-6 w-6" /> :
+                   refinery.region?.includes("Asia") ? <Ship className="h-6 w-6" /> :
+                   <Factory className="h-6 w-6" />}
+                </div>
                 {refinery.name}
               </h1>
               <p className="text-muted-foreground">
