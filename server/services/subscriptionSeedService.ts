@@ -13,8 +13,8 @@ import { eq } from "drizzle-orm";
 export async function seedSubscriptionPlans(): Promise<{ count: number, seeded: boolean }> {
   try {
     // Check if any plans already exist
-    const existingPlans = await db.select({ count: db.fn.count() }).from(subscriptionPlans);
-    const count = Number(existingPlans[0]?.count || 0);
+    const existingPlans = await db.select().from(subscriptionPlans);
+    const count = existingPlans.length;
     
     if (count > 0) {
       console.log(`Database already contains ${count} subscription plans.`);
@@ -30,7 +30,7 @@ export async function seedSubscriptionPlans(): Promise<{ count: number, seeded: 
         description: "Basic access to vessel tracking",
         price: "0",
         interval: "monthly",
-        features: ["Basic vessel tracking", "View vessel details", "Region filtering"],
+        features: JSON.stringify(["Basic vessel tracking", "View vessel details", "Region filtering"]),
         stripePriceId: null,
         isActive: true
       },
@@ -39,12 +39,12 @@ export async function seedSubscriptionPlans(): Promise<{ count: number, seeded: 
         description: "Enhanced access with document generation",
         price: "19.99",
         interval: "monthly",
-        features: [
+        features: JSON.stringify([
           "All Free features",
           "Document generation",
           "Advanced vessel filtering",
           "Refinery data access"
-        ],
+        ]),
         stripePriceId: process.env.STRIPE_STANDARD_PRICE_ID || null,
         isActive: true
       },
@@ -53,13 +53,13 @@ export async function seedSubscriptionPlans(): Promise<{ count: number, seeded: 
         description: "Full access to all features including AI Assistant",
         price: "49.99",
         interval: "monthly",
-        features: [
+        features: JSON.stringify([
           "All Standard features",
           "AI Assistant",
           "Unlimited document generation",
           "Priority support",
           "Data export"
-        ],
+        ]),
         stripePriceId: process.env.STRIPE_PREMIUM_PRICE_ID || null,
         isActive: true
       }
@@ -83,8 +83,8 @@ export async function seedSubscriptionPlans(): Promise<{ count: number, seeded: 
 export async function seedFeatureFlags(): Promise<{ count: number, seeded: boolean }> {
   try {
     // Check if any feature flags already exist
-    const existingFlags = await db.select({ count: db.fn.count() }).from(featureFlags);
-    const count = Number(existingFlags[0]?.count || 0);
+    const existingFlags = await db.select().from(featureFlags);
+    const count = existingFlags.length;
     
     if (count > 0) {
       console.log(`Database already contains ${count} feature flags.`);
