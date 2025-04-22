@@ -184,14 +184,30 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createDocument(insertDocument: InsertDocument): Promise<Document> {
-    const [document] = await db.insert(documents).values(insertDocument).returning();
+    // Convert string dates to Date objects if present
+    const documentValues = {
+      ...insertDocument,
+      // Convert string dates to Date objects if provided
+      issueDate: insertDocument.issueDate ? new Date(insertDocument.issueDate) : undefined,
+      expiryDate: insertDocument.expiryDate ? new Date(insertDocument.expiryDate) : undefined
+    };
+    
+    const [document] = await db.insert(documents).values(documentValues).returning();
     return document;
   }
 
   async updateDocument(id: number, documentUpdate: Partial<InsertDocument>): Promise<Document | undefined> {
+    // Convert string dates to Date objects if present
+    const updateValues = {
+      ...documentUpdate,
+      // Convert string dates to Date objects if provided
+      issueDate: documentUpdate.issueDate ? new Date(documentUpdate.issueDate) : undefined,
+      expiryDate: documentUpdate.expiryDate ? new Date(documentUpdate.expiryDate) : undefined
+    };
+    
     const [updatedDocument] = await db
       .update(documents)
-      .set(documentUpdate)
+      .set(updateValues)
       .where(eq(documents.id, id))
       .returning();
     return updatedDocument || undefined;

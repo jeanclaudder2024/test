@@ -94,7 +94,7 @@ export default function Documents() {
     }
   });
 
-  // Filter documents based on search term and active tab
+  // Filter documents based on search term, active tab, and status
   const documentArray = Array.isArray(documents) ? documents : [];
   const filteredDocuments = documentArray.filter((doc: Document) => {
     // Apply search filter
@@ -103,15 +103,20 @@ export default function Documents() {
       doc.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
       doc.type.toLowerCase().includes(searchTerm.toLowerCase());
     
+    // Apply status filter
+    const matchesStatus = statusFilter === 'all' || (doc.status || 'active') === statusFilter;
+    
+    // Only proceed if it passes both search and status filters
+    if (!matchesSearch || !matchesStatus) return false;
+    
     // Apply tab filter (all, bills, manifests, inspections, others)
-    if (activeTab === 'all') return matchesSearch;
-    if (activeTab === 'bills' && doc.type.toLowerCase().includes('bill')) return matchesSearch;
-    if (activeTab === 'manifests' && doc.type.toLowerCase().includes('manifest')) return matchesSearch;
-    if (activeTab === 'inspections' && doc.type.toLowerCase().includes('inspection')) return matchesSearch;
-    if (activeTab === 'loading' && doc.type.toLowerCase().includes('loading')) return matchesSearch;
+    if (activeTab === 'all') return true;
+    if (activeTab === 'bills' && doc.type.toLowerCase().includes('bill')) return true;
+    if (activeTab === 'manifests' && doc.type.toLowerCase().includes('manifest')) return true;
+    if (activeTab === 'inspections' && doc.type.toLowerCase().includes('inspection')) return true;
+    if (activeTab === 'loading' && doc.type.toLowerCase().includes('loading')) return true;
     if (activeTab === 'others') {
-      return matchesSearch && 
-        !doc.type.toLowerCase().includes('bill') && 
+      return !doc.type.toLowerCase().includes('bill') && 
         !doc.type.toLowerCase().includes('manifest') && 
         !doc.type.toLowerCase().includes('inspection') &&
         !doc.type.toLowerCase().includes('loading');
@@ -202,12 +207,58 @@ export default function Documents() {
                 </div>
                 
                 <div>
+                  <label className="text-sm text-gray-500">Status</label>
+                  <Select 
+                    value={statusFilter}
+                    onValueChange={setStatusFilter}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="All statuses" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All statuses</SelectItem>
+                      <SelectItem value="active">
+                        <div className="flex items-center">
+                          <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                          Active
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="pending">
+                        <div className="flex items-center">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+                          Pending
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="expired">
+                        <div className="flex items-center">
+                          <div className="w-2 h-2 bg-amber-500 rounded-full mr-2"></div>
+                          Expired
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="revoked">
+                        <div className="flex items-center">
+                          <div className="w-2 h-2 bg-red-500 rounded-full mr-2"></div>
+                          Revoked
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="draft">
+                        <div className="flex items-center">
+                          <div className="w-2 h-2 bg-gray-500 rounded-full mr-2"></div>
+                          Draft
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
                   <Button 
                     variant="outline"
                     className="w-full"
                     onClick={() => {
                       setSearchTerm('');
                       setSelectedVesselId(null);
+                      setStatusFilter('all');
                     }}
                   >
                     Clear Filters
