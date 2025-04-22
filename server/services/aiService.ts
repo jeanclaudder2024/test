@@ -70,7 +70,7 @@ export const aiService = {
 
     // Normalize document type
     const normalizedType = documentType.toLowerCase();
-    const formattedType = documentTypes[normalizedType] || documentType;
+    const formattedType = (documentTypes as Record<string, string>)[normalizedType] || documentType;
 
     let title = `${formattedType} - ${vessel.name}`;
     let content = "";
@@ -89,11 +89,37 @@ export const aiService = {
       content = generateTemplateBasedDocument(vessel, normalizedType);
     }
 
+    // Generate a unique reference number for the document
+    const refNumber = `DOC-${vesselId}-${new Date().getTime().toString().slice(-6)}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
+    
+    // Calculate a reasonable expiry date (90 days from now for most documents)
+    const today = new Date();
+    const expiryDate = new Date();
+    expiryDate.setDate(today.getDate() + 90); // Most shipping documents valid for 90 days
+    
+    // Determine a relevant issuer based on document type
+    let issuer = "Vesselian Maritime Authority";
+    if (normalizedType.includes("bill") || normalizedType.includes("invoice")) {
+      issuer = "Vesselian Shipping Company";
+    } else if (normalizedType.includes("certificate") || normalizedType.includes("inspection")) {
+      issuer = "International Maritime Certification Bureau";
+    } else if (normalizedType.includes("manifest") || normalizedType.includes("cargo")) {
+      issuer = "Global Cargo Documentation Authority";
+    }
+    
     const documentData: InsertDocument = {
       vesselId,
       type: formattedType,
       title,
-      content
+      content,
+      status: "active",
+      reference: refNumber,
+      issuer,
+      issueDate: today.toISOString(),
+      expiryDate: expiryDate.toISOString(),
+      recipientName: "Authorized Personnel",
+      recipientOrg: "Maritime Operations",
+      language: "en"
     };
 
     return storage.createDocument(documentData);

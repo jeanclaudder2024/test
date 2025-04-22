@@ -458,27 +458,78 @@ function DocumentList({ documents, isLoading, onViewDocument }: DocumentListProp
       {documents.map((doc) => (
         <div 
           key={doc.id} 
-          className="flex flex-wrap sm:flex-nowrap items-center gap-3 p-3 border rounded-lg hover:bg-gray-50"
+          className={`flex flex-wrap sm:flex-nowrap items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 ${
+            doc.status === 'expired' ? 'border-amber-300 bg-amber-50' : 
+            doc.status === 'revoked' ? 'border-red-300 bg-red-50' : 
+            doc.status === 'pending' ? 'border-blue-300 bg-blue-50' : 
+            'border-gray-200'
+          }`}
           onClick={(e) => {
             // Prevent triggering when clicking on buttons
             if ((e.target as HTMLElement).closest('button')) return;
             onViewDocument(doc);
           }}
         >
-          <div className="bg-blue-50 p-2 rounded-md shrink-0">
-            <File className="h-6 w-6 text-blue-600" />
+          <div className={`p-2 rounded-md shrink-0 ${
+            doc.status === 'active' ? 'bg-green-50' : 
+            doc.status === 'expired' ? 'bg-amber-50' : 
+            doc.status === 'revoked' ? 'bg-red-50' : 
+            doc.status === 'pending' ? 'bg-blue-50' : 
+            doc.status === 'draft' ? 'bg-gray-50' : 
+            'bg-blue-50'
+          }`}>
+            <File className={`h-6 w-6 ${
+              doc.status === 'active' ? 'text-green-600' : 
+              doc.status === 'expired' ? 'text-amber-600' : 
+              doc.status === 'revoked' ? 'text-red-600' : 
+              doc.status === 'pending' ? 'text-blue-600' : 
+              doc.status === 'draft' ? 'text-gray-600' : 
+              'text-blue-600'
+            }`} />
           </div>
           
           <div className="flex-1 min-w-0 order-1 sm:order-none w-[calc(100%-85px)] sm:w-auto">
-            <h4 className="text-sm font-medium truncate">{doc.title}</h4>
+            <div className="flex justify-between">
+              <h4 className="text-sm font-medium truncate">{doc.title}</h4>
+              {doc.reference && (
+                <span className="text-xs text-gray-500 hidden sm:inline">
+                  Ref: {doc.reference}
+                </span>
+              )}
+            </div>
             <div className="flex flex-wrap items-center gap-2 mt-1">
               <Badge variant="outline" className="text-xs">
                 {doc.type}
               </Badge>
+              
+              {doc.status && (
+                <Badge variant="outline" className={`text-xs ${
+                  doc.status === 'active' ? 'bg-green-50 text-green-700 border-green-200' : 
+                  doc.status === 'expired' ? 'bg-amber-50 text-amber-700 border-amber-200' : 
+                  doc.status === 'revoked' ? 'bg-red-50 text-red-700 border-red-200' : 
+                  doc.status === 'pending' ? 'bg-blue-50 text-blue-700 border-blue-200' : 
+                  doc.status === 'draft' ? 'bg-gray-50 text-gray-700 border-gray-200' : 
+                  ''
+                }`}>
+                  {doc.status}
+                </Badge>
+              )}
+              
               <span className="text-xs text-gray-500">
-                {formatDate(doc.createdAt)}
+                {doc.issueDate ? formatDate(doc.issueDate) : formatDate(doc.createdAt)}
               </span>
+              
+              {doc.expiryDate && (
+                <span className="text-xs text-gray-500">
+                  Exp: {formatDate(doc.expiryDate)}
+                </span>
+              )}
             </div>
+            {doc.issuer && (
+              <span className="text-xs text-gray-500 block mt-1">
+                Issuer: {doc.issuer}
+              </span>
+            )}
           </div>
           
           <div className="flex gap-1 ml-auto shrink-0">
