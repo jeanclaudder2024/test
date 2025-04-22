@@ -53,6 +53,15 @@ export interface Document {
   type: string;
   title: string;
   content: string;
+  status?: string; // active, expired, pending, revoked
+  issueDate?: string;
+  expiryDate?: string;
+  reference?: string; // Document reference number
+  issuer?: string; // Organization that issued document
+  recipientName?: string;
+  recipientOrg?: string;
+  lastModified?: string;
+  language?: string;
   createdAt: string;
 }
 

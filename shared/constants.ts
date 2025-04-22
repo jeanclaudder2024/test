@@ -73,6 +73,15 @@ export const REFINERY_STATUSES = [
   'under construction',
 ];
 
+export const DOCUMENT_STATUSES = [
+  'active - ساري المفعول',
+  'expired - منتهي الصلاحية',
+  'pending - قيد الانتظار',
+  'revoked - ملغى',
+  'archived - مؤرشف',
+  'draft - مسودة',
+];
+
 export const DOCUMENT_TYPES = [
   'Bill of Lading (B/L) - بوليصة الشحن',
   'Certificate of Origin - شهادة المنشأ',

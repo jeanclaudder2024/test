@@ -84,6 +84,15 @@ export const documents = pgTable("documents", {
   type: text("type").notNull(), // e.g., SDS, LOI, BL
   title: text("title").notNull(),
   content: text("content").notNull(),
+  status: text("status").default("active"), // active, expired, pending, revoked
+  issueDate: timestamp("issue_date").defaultNow(),
+  expiryDate: timestamp("expiry_date"),
+  reference: text("reference"), // Document reference number
+  issuer: text("issuer"), // Organization that issued document
+  recipientName: text("recipient_name"),
+  recipientOrg: text("recipient_org"),
+  lastModified: timestamp("last_modified").defaultNow(),
+  language: text("language").default("en"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
