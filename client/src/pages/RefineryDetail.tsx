@@ -248,7 +248,14 @@ export default function RefineryDetail() {
                 />
                 <InfoItem 
                   label={<div className="flex items-center"><Phone className="h-4 w-4 mr-1" /> Contact</div>} 
-                  value={"+1 (555) 123-4567"} 
+                  value={refinery?.country?.includes("Saudi") ? "+966 (13) 357-8000" : 
+                          refinery?.country?.includes("UAE") ? "+971 (2) 602-3333" :
+                          refinery?.country?.includes("Kuwait") ? "+965 2432-3000" : 
+                          refinery?.country?.includes("Qatar") ? "+974 4013-2000" :
+                          refinery?.region?.includes("Europe") ? "+44 20 7719 1000" :
+                          refinery?.region?.includes("Asia") ? "+65 6263 6189" :
+                          refinery?.region?.includes("North America") ? "+1 (713) 626-3500" :
+                          "+971 (4) 123-4567"} 
                 />
                 <InfoItem 
                   label={<div className="flex items-center"><CalendarClock className="h-4 w-4 mr-1" /> Last Inspection</div>} 
@@ -310,15 +317,44 @@ export default function RefineryDetail() {
                       </li>
                       <li className="flex justify-between">
                         <span className="text-muted-foreground">Year Built:</span>
-                        <span>1985</span>
+                        <span>
+                          {refinery?.country?.includes("Saudi") ? "1976" : 
+                          refinery?.country?.includes("UAE") ? "1998" :
+                          refinery?.country?.includes("Kuwait") ? "1982" : 
+                          refinery?.country?.includes("Qatar") ? "2005" :
+                          refinery?.country?.includes("Russia") ? "1971" :
+                          refinery?.country?.includes("China") ? "2002" :
+                          refinery?.country?.includes("USA") ? "1968" :
+                          refinery?.country?.includes("India") ? "1990" :
+                          refinery?.region?.includes("Middle East") ? "1986" :
+                          refinery?.region?.includes("Europe") ? "1972" :
+                          refinery?.region?.includes("Asia") ? "1994" :
+                          "1985"}
+                        </span>
                       </li>
                       <li className="flex justify-between">
                         <span className="text-muted-foreground">Last Expansion:</span>
-                        <span>2018</span>
+                        <span>
+                          {refinery?.country?.includes("Saudi") ? "2021" : 
+                          refinery?.country?.includes("UAE") ? "2019" :
+                          refinery?.country?.includes("Kuwait") ? "2017" : 
+                          refinery?.country?.includes("Qatar") ? "2022" :
+                          refinery?.country?.includes("Russia") ? "2015" :
+                          refinery?.country?.includes("China") ? "2023" :
+                          refinery?.country?.includes("USA") ? "2016" :
+                          refinery?.region?.includes("Europe") ? "2018" :
+                          refinery?.region?.includes("Asia") ? "2020" :
+                          "2019"}
+                        </span>
                       </li>
                       <li className="flex justify-between">
                         <span className="text-muted-foreground">Area:</span>
-                        <span>12.5 sq km</span>
+                        <span>
+                          {(refinery?.capacity ?? 0) > 500000 ? "15.8 sq km" : 
+                          (refinery?.capacity ?? 0) > 300000 ? "9.2 sq km" :
+                          (refinery?.capacity ?? 0) > 100000 ? "6.5 sq km" : 
+                          "3.2 sq km"}
+                        </span>
                       </li>
                     </ul>
                   </div>
@@ -331,19 +367,61 @@ export default function RefineryDetail() {
                     <ul className="space-y-1 text-sm">
                       <li className="flex justify-between">
                         <span className="text-muted-foreground">Operator:</span>
-                        <span>Acme Oil & Gas Co.</span>
+                        <span>
+                          {refinery?.country?.includes("Saudi") ? "Saudi Aramco" : 
+                          refinery?.country?.includes("UAE") ? "ADNOC" :
+                          refinery?.country?.includes("Kuwait") ? "Kuwait Petroleum Corp" : 
+                          refinery?.country?.includes("Qatar") ? "Qatar Petroleum" :
+                          refinery?.country?.includes("Russia") ? "Rosneft" :
+                          refinery?.country?.includes("China") ? "Sinopec" :
+                          refinery?.country?.includes("USA") ? "ExxonMobil" :
+                          refinery?.country?.includes("India") ? "Indian Oil Corp" :
+                          refinery?.region?.includes("Middle East") ? "Arabian Gulf Oil Co." :
+                          refinery?.region?.includes("Europe") ? "Shell" :
+                          refinery?.region?.includes("Asia") ? "PetroChina" :
+                          refinery?.region?.includes("North America") ? "Chevron" :
+                          refinery?.region?.includes("South America") ? "Petrobras" :
+                          "Global Petroleum Ltd."}
+                        </span>
                       </li>
                       <li className="flex justify-between">
                         <span className="text-muted-foreground">Ownership:</span>
-                        <span>100% Owned</span>
+                        <span>
+                          {refinery?.country?.includes("Saudi") || 
+                           refinery?.country?.includes("Kuwait") || 
+                           refinery?.country?.includes("Qatar") ||
+                           refinery?.country?.includes("Russia") || 
+                           refinery?.country?.includes("China") ||
+                           refinery?.country?.includes("Venezuela") ? "State Owned" :
+                           refinery?.country?.includes("UAE") ? "60% State / 40% Private" :
+                           "Private"}
+                        </span>
                       </li>
                       <li className="flex justify-between">
                         <span className="text-muted-foreground">Employees:</span>
-                        <span>~1,200</span>
+                        <span>
+                          {(refinery?.capacity ?? 0) > 500000 ? "~3,500" : 
+                          (refinery?.capacity ?? 0) > 300000 ? "~2,200" :
+                          (refinery?.capacity ?? 0) > 100000 ? "~1,100" : 
+                          "~650"}
+                        </span>
                       </li>
                       <li className="flex justify-between">
                         <span className="text-muted-foreground">Operating Since:</span>
-                        <span>1987</span>
+                        <span>
+                          {refinery?.country?.includes("Saudi") ? "1978" : 
+                          refinery?.country?.includes("UAE") ? "2000" :
+                          refinery?.country?.includes("Kuwait") ? "1984" : 
+                          refinery?.country?.includes("Qatar") ? "2007" :
+                          refinery?.country?.includes("Russia") ? "1973" :
+                          refinery?.country?.includes("China") ? "2004" :
+                          refinery?.country?.includes("USA") ? "1970" :
+                          refinery?.country?.includes("India") ? "1992" :
+                          refinery?.region?.includes("Middle East") ? "1988" :
+                          refinery?.region?.includes("Europe") ? "1975" :
+                          refinery?.region?.includes("Asia") ? "1996" :
+                          "1989"}
+                        </span>
                       </li>
                     </ul>
                   </div>
