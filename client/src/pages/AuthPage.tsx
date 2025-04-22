@@ -10,7 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Anchor, Lock, Mail, User, Globe, Loader2 } from "lucide-react";
+import { Anchor, Lock, Mail, User, Globe, Loader2, Shield } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
 // Form validation schemas
@@ -196,6 +196,15 @@ export default function AuthPage() {
                         Register now
                       </a>
                     </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="mt-4 w-full"
+                      onClick={() => navigate("/admin")}
+                    >
+                      <Shield className="h-4 w-4 mr-2 text-primary" />
+                      Access Admin Dashboard
+                    </Button>
                   </CardFooter>
                 </Card>
               </TabsContent>
@@ -318,6 +327,15 @@ export default function AuthPage() {
                         Sign in
                       </a>
                     </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="mt-4 w-full"
+                      onClick={() => navigate("/admin")}
+                    >
+                      <Shield className="h-4 w-4 mr-2 text-primary" />
+                      Access Admin Dashboard
+                    </Button>
                   </CardFooter>
                 </Card>
               </TabsContent>
