@@ -20,7 +20,8 @@ import {
   vessels,
   refineries,
   progressEvents,
-  documents
+  documents,
+  stats
 } from "@shared/schema";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
