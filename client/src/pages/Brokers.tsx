@@ -81,7 +81,8 @@ import {
   Send,
   Download,
   ArrowUpRight,
-  ArrowDownRight
+  ArrowDownRight,
+  Ship
 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 
@@ -90,6 +91,8 @@ export default function Brokers() {
   const [activeTab, setActiveTab] = useState("brokers");
   const [searchTerm, setSearchTerm] = useState('');
   const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
+  const [showProfileDialog, setShowProfileDialog] = useState(false);
+  const [selectedBroker, setSelectedBroker] = useState<Broker | null>(null);
   const [selectedSubscription, setSelectedSubscription] = useState('monthly');
   const [selectedFiles, setSelectedFiles] = useState<{
     passport: File | null;
@@ -182,6 +185,12 @@ export default function Brokers() {
     }
   };
   
+  // Function to handle viewing broker details
+  const handleViewBroker = (broker: Broker) => {
+    setSelectedBroker(broker);
+    setShowProfileDialog(true);
+  };
+
   // Function to handle membership upgrade
   const handleUpgradeMembership = () => {
     if (!selectedFiles.passport || !selectedFiles.photo) {
@@ -356,7 +365,10 @@ export default function Brokers() {
                           <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem>View Details</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleViewBroker(broker)}>
+                              <Users className="h-4 w-4 mr-2" />
+                              View Details
+                            </DropdownMenuItem>
                             <DropdownMenuItem>Send Message</DropdownMenuItem>
                             <DropdownMenuItem>Assign Vessel</DropdownMenuItem>
                             <DropdownMenuSeparator />
@@ -976,6 +988,195 @@ export default function Brokers() {
               Upgrade Membership
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Broker Profile Dialog */}
+      <Dialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          {selectedBroker && (
+            <>
+              <DialogHeader>
+                <div className="flex items-center justify-between">
+                  <DialogTitle className="text-xl">Broker Profile</DialogTitle>
+                  {selectedBroker.eliteMember && (
+                    <Badge className="bg-amber-500 text-white">
+                      <Star className="h-3 w-3 mr-1" /> Elite
+                    </Badge>
+                  )}
+                </div>
+                <DialogDescription>
+                  Profile details and contact information
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+                <div className="md:col-span-1">
+                  <div className="flex flex-col items-center space-y-4">
+                    <Avatar className="h-32 w-32">
+                      <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
+                        {selectedBroker.name?.split(' ').map(n => n[0]).join('')}
+                      </AvatarFallback>
+                    </Avatar>
+                    
+                    <div className="text-center">
+                      <h3 className="font-bold text-lg">{selectedBroker.name}</h3>
+                      <p className="text-sm text-muted-foreground">{selectedBroker.company}</p>
+                    </div>
+                    
+                    <Badge variant={selectedBroker.active ? "default" : "secondary"} className={selectedBroker.active ? "bg-green-500" : ""}>
+                      {selectedBroker.active ? "Active" : "Inactive"}
+                    </Badge>
+                    
+                    <div className="flex flex-col space-y-2 w-full mt-2">
+                      <Button variant="outline" className="w-full justify-start">
+                        <Mail className="h-4 w-4 mr-2" />
+                        Contact
+                      </Button>
+                      <Button variant="outline" className="w-full justify-start">
+                        <FileText className="h-4 w-4 mr-2" />
+                        Documents
+                      </Button>
+                      <Button variant="outline" className="w-full justify-start">
+                        <Ship className="h-4 w-4 mr-2" />
+                        Vessels
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="md:col-span-2 space-y-6">
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base">Contact Information</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <dl className="space-y-2">
+                        <div className="flex justify-between">
+                          <dt className="font-medium">Email:</dt>
+                          <dd>
+                            <a href={`mailto:${selectedBroker.email}`} className="text-primary hover:underline">
+                              {selectedBroker.email}
+                            </a>
+                          </dd>
+                        </div>
+                        
+                        {selectedBroker.phone && (
+                          <div className="flex justify-between">
+                            <dt className="font-medium">Phone:</dt>
+                            <dd>
+                              <a href={`tel:${selectedBroker.phone}`} className="hover:underline">
+                                {selectedBroker.phone}
+                              </a>
+                            </dd>
+                          </div>
+                        )}
+                        
+                        <div className="flex justify-between">
+                          <dt className="font-medium">Country:</dt>
+                          <dd>{selectedBroker.country || 'Not specified'}</dd>
+                        </div>
+                        
+                        {selectedBroker.address && (
+                          <div className="flex justify-between">
+                            <dt className="font-medium">Address:</dt>
+                            <dd>{selectedBroker.address}</dd>
+                          </div>
+                        )}
+                        
+                        {selectedBroker.website && (
+                          <div className="flex justify-between">
+                            <dt className="font-medium">Website:</dt>
+                            <dd>
+                              <a href={selectedBroker.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex items-center">
+                                {selectedBroker.website}
+                                <ArrowUpRight className="h-3 w-3 ml-1" />
+                              </a>
+                            </dd>
+                          </div>
+                        )}
+                      </dl>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base">Broker Details</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <dl className="space-y-2">
+                        <div className="flex justify-between">
+                          <dt className="font-medium">ID:</dt>
+                          <dd>{selectedBroker.id}</dd>
+                        </div>
+                        
+                        <div className="flex justify-between">
+                          <dt className="font-medium">Company:</dt>
+                          <dd>{selectedBroker.company || 'Not specified'}</dd>
+                        </div>
+                        
+                        {selectedBroker.license && (
+                          <div className="flex justify-between">
+                            <dt className="font-medium">License:</dt>
+                            <dd>{selectedBroker.license}</dd>
+                          </div>
+                        )}
+                        
+                        {selectedBroker.specialization && (
+                          <div className="flex justify-between">
+                            <dt className="font-medium">Specialization:</dt>
+                            <dd>{selectedBroker.specialization}</dd>
+                          </div>
+                        )}
+                        
+                        {selectedBroker.createdAt && (
+                          <div className="flex justify-between">
+                            <dt className="font-medium">Joined:</dt>
+                            <dd>{formatDate(selectedBroker.createdAt)}</dd>
+                          </div>
+                        )}
+                        
+                        {selectedBroker.eliteMember && selectedBroker.eliteSince && (
+                          <div className="flex justify-between">
+                            <dt className="font-medium">Elite Member Since:</dt>
+                            <dd>{formatDate(selectedBroker.eliteSince)}</dd>
+                          </div>
+                        )}
+                        
+                        {selectedBroker.eliteMember && selectedBroker.eliteExpiry && (
+                          <div className="flex justify-between">
+                            <dt className="font-medium">Elite Membership Expires:</dt>
+                            <dd>{formatDate(selectedBroker.eliteExpiry)}</dd>
+                          </div>
+                        )}
+                      </dl>
+                    </CardContent>
+                  </Card>
+                  
+                  {selectedBroker.notes && (
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-base">Notes</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm">{selectedBroker.notes}</p>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              </div>
+              
+              <DialogFooter className="mt-6">
+                <Button variant="outline" onClick={() => setShowProfileDialog(false)}>
+                  Close
+                </Button>
+                <Button>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit Profile
+                </Button>
+              </DialogFooter>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </div>
