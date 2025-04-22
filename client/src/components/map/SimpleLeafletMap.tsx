@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { Vessel, Refinery, Region } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from "@/components/ui/button";
 import { Info, Map, Navigation, Globe2 } from 'lucide-react';
-import { OIL_PRODUCT_TYPES } from '@/../../shared/constants';
 import { mapStyles, LanguageOption } from './MapStyles';
+import MapContainer from './MapContainer';
 
 // Define Leaflet types
 declare global {
@@ -39,6 +39,9 @@ interface SimpleLeafletMapProps {
   isLoading?: boolean;
 }
 
+// Create a unique ID for this map instance
+const MAP_CONTAINER_ID = 'leaflet-map-container';
+
 export default function SimpleLeafletMap({
   vessels,
   refineries,
@@ -48,82 +51,93 @@ export default function SimpleLeafletMap({
   onRefineryClick,
   isLoading = false
 }: SimpleLeafletMapProps) {
-  const mapContainerRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<any>(null);
+  // Generate a stable instance ID for this component
+  const instanceId = useMemo(() => `map-${Math.random().toString(36).substring(2, 9)}`, []);
+  
+  const mapRef = useRef<any>(null);
+  const vesselMarkersRef = useRef<any[]>([]);
+  const refineryMarkersRef = useRef<any[]>([]);
   const [mapStyle, setMapStyle] = useState(mapStyles[0].id);
   const [mapLanguage, setMapLanguage] = useState<LanguageOption>('en');
   const [isMapReady, setIsMapReady] = useState(false);
   const [displayVessels, setDisplayVessels] = useState<Vessel[]>([]);
   
-  // Load Leaflet scripts and styles
+  // Load Leaflet once when the component mounts
   useEffect(() => {
-    // Skip if already loaded
     if (window.L) {
       setIsMapReady(true);
       return;
     }
-
-    const loadLeaflet = async () => {
-      try {
-        // Add Leaflet CSS
-        const linkElement = document.createElement('link');
-        linkElement.rel = 'stylesheet';
-        linkElement.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-        linkElement.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
-        linkElement.crossOrigin = '';
-        document.head.appendChild(linkElement);
-
-        // Add Leaflet script
-        const scriptElement = document.createElement('script');
-        scriptElement.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-        scriptElement.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
-        scriptElement.crossOrigin = '';
-        document.body.appendChild(scriptElement);
-
-        // Wait for script to load
-        scriptElement.onload = () => {
-          setIsMapReady(true);
-        };
-      } catch (err) {
-        console.error("Error loading Leaflet:", err);
+    
+    // Add Leaflet CSS
+    const linkEl = document.createElement('link');
+    linkEl.rel = 'stylesheet';
+    linkEl.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    linkEl.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
+    linkEl.crossOrigin = '';
+    document.head.appendChild(linkEl);
+    
+    // Add Leaflet script
+    const scriptEl = document.createElement('script');
+    scriptEl.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    scriptEl.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
+    scriptEl.crossOrigin = '';
+    
+    scriptEl.onload = () => {
+      setIsMapReady(true);
+    };
+    
+    document.body.appendChild(scriptEl);
+    
+    return () => {
+      // Cleanup function runs on unmount
+      if (mapRef.current) {
+        try {
+          mapRef.current.remove();
+          mapRef.current = null;
+        } catch (err) {
+          console.error('Error cleaning up map:', err);
+        }
       }
     };
-
-    loadLeaflet();
   }, []);
-
-  // Cleanup function to safely remove the map
-  const cleanupMap = useCallback(() => {
-    if (mapInstanceRef.current) {
-      try {
-        const map = mapInstanceRef.current;
-        map.eachLayer((layer: any) => {
-          if (layer && typeof layer.remove === 'function') {
-            layer.remove();
-          }
-        });
-        map.off();
-        map.remove();
-      } catch (err) {
-        console.error("Error cleaning up map:", err);
-      }
-      mapInstanceRef.current = null;
-    }
-  }, []);
-
-  // Initialize map when Leaflet is loaded
+  
+  // Initialize and update the map when dependencies change
   useEffect(() => {
-    if (!isMapReady || !mapContainerRef.current || isLoading) return;
-    if (!window.L) return;
-
+    // Don't proceed until Leaflet is loaded and we're not in loading state
+    if (!isMapReady || isLoading) return;
+    
     const L = window.L;
+    if (!L) return;
     
-    // Clean up any existing map instance
-    cleanupMap();
+    const mapContainer = document.getElementById(MAP_CONTAINER_ID);
+    if (!mapContainer) return;
     
-    try {
-      // Initialize the map
-      const map = L.map(mapContainerRef.current, {
+    // Function to clear all existing markers
+    const clearMarkers = () => {
+      // Clear vessel markers
+      vesselMarkersRef.current.forEach(marker => {
+        if (marker && typeof marker.remove === 'function') {
+          marker.remove();
+        }
+      });
+      vesselMarkersRef.current = [];
+      
+      // Clear refinery markers
+      refineryMarkersRef.current.forEach(marker => {
+        if (marker && typeof marker.remove === 'function') {
+          marker.remove();
+        }
+      });
+      refineryMarkersRef.current = [];
+    };
+    
+    // If map exists, just update it; otherwise create a new one
+    let map = mapRef.current;
+    
+    if (!map) {
+      // Create new map
+      map = L.map(mapContainer, {
         center: [0, 0],
         zoom: 2,
         minZoom: 2,
@@ -131,194 +145,201 @@ export default function SimpleLeafletMap({
         worldCopyJump: true
       });
       
-      mapInstanceRef.current = map;
+      mapRef.current = map;
+    } else {
+      // Clear existing markers before updating
+      clearMarkers();
       
-      // Add the tile layer
-      const selectedMapStyle = mapStyles.find(style => style.id === mapStyle) || mapStyles[0];
-      L.tileLayer(selectedMapStyle.url, {
-        attribution: selectedMapStyle.attribution,
-        maxZoom: 19,
-        language: mapLanguage === 'multilingual' ? undefined : mapLanguage
-      }).addTo(map);
-      
-      // Filter and add vessel markers
-      const filteredVessels = vessels
-        .filter(vessel => vessel.currentLat && vessel.currentLng)
-        .slice(0, 1000);
-      
-      setDisplayVessels(filteredVessels);
-      
-      filteredVessels.forEach(vessel => {
-        if (!vessel.currentLat || !vessel.currentLng) return;
-        
-        const lat = typeof vessel.currentLat === 'number' 
-          ? vessel.currentLat 
-          : parseFloat(String(vessel.currentLat));
-        
-        const lng = typeof vessel.currentLng === 'number' 
-          ? vessel.currentLng 
-          : parseFloat(String(vessel.currentLng));
-        
-        if (isNaN(lat) || isNaN(lng)) return;
-        
-        // Determine the vessel color based on type
-        const getVesselColor = () => {
-          const type = vessel.vesselType?.toLowerCase() || '';
-          if (type.includes('lng')) return "#4ECDC4";
-          if (type.includes('cargo')) return "#FFD166";
-          if (type.includes('container')) return "#118AB2";
-          if (type.includes('chemical')) return "#9A48D0";
-          return "#FF6B6B"; // Default oil tanker color
-        };
-        
-        // Choose appropriate emoji for vessel type
-        const getVesselEmoji = () => {
-          const type = vessel.vesselType?.toLowerCase() || '';
-          if (type.includes('lng')) return '🔋';
-          if (type.includes('container')) return '📦';
-          if (type.includes('chemical')) return '⚗️';
-          if (type.includes('cargo')) return '🚢';
-          return '🛢️'; // Default oil tanker emoji
-        };
-        
-        // Create a custom icon
-        const customIcon = L.divIcon({
-          html: `
-            <div style="
-              width: 24px;
-              height: 24px;
-              border-radius: 50%;
-              background: rgba(255,255,255,0.9);
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              border: 2px solid ${getVesselColor()};
-              box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-              font-size: 14px;
-              text-align: center;
-            ">
-              ${getVesselEmoji()}
-            </div>
-          `,
-          className: 'vessel-marker',
-          iconSize: [24, 24],
-          iconAnchor: [12, 12]
-        });
-        
-        // Add the marker
-        L.marker([lat, lng], { icon: customIcon })
-          .bindPopup(`
-            <div style="padding: 8px; max-width: 200px;">
-              <h3 style="font-weight: bold; margin-bottom: 5px;">${vessel.name}</h3>
-              <div style="font-size: 12px; line-height: 1.5;">
-                <div><strong>Type:</strong> ${vessel.vesselType || 'Unknown'}</div>
-                <div><strong>Cargo:</strong> ${vessel.cargoType || 'Unknown'}</div>
-                <div><strong>IMO:</strong> ${vessel.imo || 'Unknown'}</div>
-                <div><strong>Flag:</strong> ${vessel.flag || 'Unknown'}</div>
-                ${vessel.departurePort ? `<div><strong>From:</strong> ${vessel.departurePort}</div>` : ''}
-                ${vessel.destinationPort ? `<div><strong>To:</strong> ${vessel.destinationPort}</div>` : ''}
-              </div>
-            </div>
-          `)
-          .on('click', () => onVesselClick(vessel))
-          .addTo(map);
-      });
-      
-      // Add refinery markers
-      refineries.forEach(refinery => {
-        if (!refinery.lat || !refinery.lng) return;
-        
-        const refineryIcon = L.divIcon({
-          html: `
-            <div style="
-              width: 24px;
-              height: 24px;
-              border-radius: 50%;
-              background: rgba(255,255,255,0.9);
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              border: 2px solid #dc3545;
-              box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-              font-size: 14px;
-              text-align: center;
-            ">
-              ⛽
-            </div>
-          `,
-          className: 'refinery-marker',
-          iconSize: [24, 24],
-          iconAnchor: [12, 12]
-        });
-        
-        L.marker([refinery.lat, refinery.lng], { icon: refineryIcon })
-          .bindPopup(`
-            <div style="padding: 8px; max-width: 200px;">
-              <h3 style="font-weight: bold; margin-bottom: 5px;">${refinery.name}</h3>
-              <div style="font-size: 12px; line-height: 1.5;">
-                <div><strong>Country:</strong> ${refinery.country || 'Unknown'}</div>
-                <div><strong>Region:</strong> ${refinery.region || 'Unknown'}</div>
-                <div><strong>Status:</strong> ${refinery.status || 'Unknown'}</div>
-                ${refinery.capacity ? `<div><strong>Capacity:</strong> ${refinery.capacity.toLocaleString()} bpd</div>` : ''}
-              </div>
-            </div>
-          `)
-          .on('click', () => {
-            if (onRefineryClick) {
-              onRefineryClick(refinery);
-            }
-          })
-          .addTo(map);
-      });
-      
-      // Set map view based on selection
-      if (selectedRegion) {
-        const position = regionPositions[selectedRegion];
-        if (position) {
-          map.setView([position.lat, position.lng], position.zoom);
+      // Remove existing layer
+      map.eachLayer((layer: any) => {
+        if (layer && layer._url) { // Check if it's a tile layer
+          map.removeLayer(layer);
         }
-      } else if (trackedVessel?.currentLat && trackedVessel?.currentLng) {
-        const lat = typeof trackedVessel.currentLat === 'number' 
-          ? trackedVessel.currentLat 
-          : parseFloat(String(trackedVessel.currentLat));
-        
-        const lng = typeof trackedVessel.currentLng === 'number' 
-          ? trackedVessel.currentLng 
-          : parseFloat(String(trackedVessel.currentLng));
-        
-        map.setView([lat, lng], 7);
-      }
-      
-      // Force a resize to prevent display issues
-      setTimeout(() => {
-        map.invalidateSize();
-      }, 100);
-    } catch (err) {
-      console.error("Error initializing map:", err);
+      });
     }
     
-    // Return cleanup function
-    return cleanupMap;
+    // Add tile layer based on selected style
+    const selectedMapStyle = mapStyles.find(style => style.id === mapStyle) || mapStyles[0];
+    
+    L.tileLayer(selectedMapStyle.url, {
+      attribution: selectedMapStyle.attribution,
+      maxZoom: 19,
+      language: mapLanguage === 'multilingual' ? undefined : mapLanguage
+    }).addTo(map);
+    
+    // Filter and add vessel markers
+    const filteredVessels = vessels
+      .filter(vessel => vessel.currentLat && vessel.currentLng)
+      .slice(0, 1000);
+      
+    setDisplayVessels(filteredVessels);
+    
+    filteredVessels.forEach(vessel => {
+      if (!vessel.currentLat || !vessel.currentLng) return;
+      
+      const lat = typeof vessel.currentLat === 'number'
+        ? vessel.currentLat
+        : parseFloat(String(vessel.currentLat));
+        
+      const lng = typeof vessel.currentLng === 'number'
+        ? vessel.currentLng
+        : parseFloat(String(vessel.currentLng));
+        
+      if (isNaN(lat) || isNaN(lng)) return;
+      
+      // Get vessel color
+      const getVesselColor = () => {
+        const type = vessel.vesselType?.toLowerCase() || '';
+        if (type.includes('lng')) return "#4ECDC4";
+        if (type.includes('cargo')) return "#FFD166";
+        if (type.includes('container')) return "#118AB2";
+        if (type.includes('chemical')) return "#9A48D0";
+        return "#FF6B6B"; // Default oil tanker color
+      };
+      
+      // Get vessel emoji
+      const getVesselEmoji = () => {
+        const type = vessel.vesselType?.toLowerCase() || '';
+        if (type.includes('lng')) return '🔋';
+        if (type.includes('container')) return '📦';
+        if (type.includes('chemical')) return '⚗️';
+        if (type.includes('cargo')) return '🚢';
+        return '🛢️'; // Default oil tanker emoji
+      };
+      
+      // Create custom icon
+      const customIcon = L.divIcon({
+        html: `
+          <div style="
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid ${getVesselColor()};
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            font-size: 14px;
+            text-align: center;
+          ">
+            ${getVesselEmoji()}
+          </div>
+        `,
+        className: 'vessel-marker',
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
+      });
+      
+      // Add marker
+      const marker = L.marker([lat, lng], { icon: customIcon })
+        .bindPopup(`
+          <div style="padding: 8px; max-width: 200px;">
+            <h3 style="font-weight: bold; margin-bottom: 5px;">${vessel.name}</h3>
+            <div style="font-size: 12px; line-height: 1.5;">
+              <div><strong>Type:</strong> ${vessel.vesselType || 'Unknown'}</div>
+              <div><strong>Cargo:</strong> ${vessel.cargoType || 'Unknown'}</div>
+              <div><strong>IMO:</strong> ${vessel.imo || 'Unknown'}</div>
+              <div><strong>Flag:</strong> ${vessel.flag || 'Unknown'}</div>
+              ${vessel.departurePort ? `<div><strong>From:</strong> ${vessel.departurePort}</div>` : ''}
+              ${vessel.destinationPort ? `<div><strong>To:</strong> ${vessel.destinationPort}</div>` : ''}
+            </div>
+          </div>
+        `)
+        .on('click', () => onVesselClick(vessel))
+        .addTo(map);
+      
+      vesselMarkersRef.current.push(marker);
+    });
+    
+    // Add refinery markers
+    refineries.forEach(refinery => {
+      if (!refinery.lat || !refinery.lng) return;
+      
+      const refineryIcon = L.divIcon({
+        html: `
+          <div style="
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #dc3545;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            font-size: 14px;
+            text-align: center;
+          ">
+            ⛽
+          </div>
+        `,
+        className: 'refinery-marker',
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
+      });
+      
+      const marker = L.marker([refinery.lat, refinery.lng], { icon: refineryIcon })
+        .bindPopup(`
+          <div style="padding: 8px; max-width: 200px;">
+            <h3 style="font-weight: bold; margin-bottom: 5px;">${refinery.name}</h3>
+            <div style="font-size: 12px; line-height: 1.5;">
+              <div><strong>Country:</strong> ${refinery.country || 'Unknown'}</div>
+              <div><strong>Region:</strong> ${refinery.region || 'Unknown'}</div>
+              <div><strong>Status:</strong> ${refinery.status || 'Unknown'}</div>
+              ${refinery.capacity ? `<div><strong>Capacity:</strong> ${refinery.capacity.toLocaleString()} bpd</div>` : ''}
+            </div>
+          </div>
+        `)
+        .on('click', () => {
+          if (onRefineryClick) {
+            onRefineryClick(refinery);
+          }
+        })
+        .addTo(map);
+      
+      refineryMarkersRef.current.push(marker);
+    });
+    
+    // Set view based on selected region or tracked vessel
+    if (selectedRegion) {
+      const position = regionPositions[selectedRegion];
+      if (position) {
+        map.setView([position.lat, position.lng], position.zoom);
+      }
+    } else if (trackedVessel?.currentLat && trackedVessel?.currentLng) {
+      const lat = typeof trackedVessel.currentLat === 'number'
+        ? trackedVessel.currentLat
+        : parseFloat(String(trackedVessel.currentLat));
+      
+      const lng = typeof trackedVessel.currentLng === 'number'
+        ? trackedVessel.currentLng
+        : parseFloat(String(trackedVessel.currentLng));
+      
+      map.setView([lat, lng], 7);
+    }
+    
+    // Make sure map is sized properly
+    map.invalidateSize();
+    
   }, [
-    isMapReady, 
-    mapStyle, 
+    isMapReady,
+    mapStyle,
     mapLanguage,
-    vessels, 
-    refineries, 
-    selectedRegion, 
-    trackedVessel, 
-    onVesselClick, 
-    onRefineryClick, 
-    isLoading, 
-    cleanupMap
+    vessels,
+    refineries,
+    selectedRegion,
+    trackedVessel,
+    onVesselClick,
+    onRefineryClick,
+    isLoading
   ]);
   
-  // Handle style changes
+  // Handlers for UI controls
   const handleStyleChange = (newStyle: string) => {
     setMapStyle(newStyle);
   };
   
-  // Handle language changes
   const handleLanguageChange = (newLanguage: LanguageOption) => {
     setMapLanguage(newLanguage);
   };
@@ -334,11 +355,10 @@ export default function SimpleLeafletMap({
   
   return (
     <div className="relative h-[500px] rounded-lg overflow-hidden border border-border bg-card">
-      {/* Map container */}
-      <div 
-        ref={mapContainerRef} 
-        className="absolute inset-0 w-full h-full z-0" 
-      />
+      {/* Stable Map Container - key prevents remounting */}
+      <div className="absolute inset-0 w-full h-full z-0">
+        <MapContainer id={MAP_CONTAINER_ID} className="w-full h-full" />
+      </div>
       
       {/* Loading overlay */}
       {!isMapReady && (
