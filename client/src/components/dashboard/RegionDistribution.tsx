@@ -36,8 +36,7 @@ export default function RegionDistribution() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await apiRequest("GET", "/api/stats/vessels-by-region");
-        const data = await response.json();
+        const data = await apiRequest("/api/stats/vessels-by-region");
         setData(data);
         setError(null);
       } catch (err) {

@@ -356,6 +356,30 @@ export default function Dashboard() {
         </div>
       )}
       
+      {/* Detailed Statistics Section */}
+      <div className="p-4 md:p-6 pt-0 pb-4">
+        <div className="grid grid-cols-12 gap-4">
+          {/* Region Distribution Chart */}
+          <RegionDistribution />
+          
+          {/* AI Assistant Card */}
+          <Card className="col-span-12 md:col-span-6 overflow-hidden">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center">
+                <Workflow className="mr-2 h-5 w-5" />
+                AI Insights Assistant
+              </CardTitle>
+              <CardDescription>
+                Ask questions about vessels, regions, or supply chains
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <AIAssistant />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+      
       {/* Map Section */}
       <section className="p-4 md:p-6 pt-0">
         <div className="backdrop-blur-sm bg-white/80 rounded-xl shadow-sm overflow-hidden border border-primary/10">
