@@ -3,6 +3,7 @@ import SimpleLeafletMap from "@/components/map/SimpleLeafletMap";
 import VesselInfo from "@/components/vessels/VesselInfo";
 import ProgressTimeline from "@/components/vessels/ProgressTimeline";
 import StatsCards from "@/components/dashboard/StatsCards";
+import RegionDistribution from "@/components/dashboard/RegionDistribution";
 import AIAssistant from "@/components/ai/AIAssistant";
 import { Region, RegionData, Vessel, Refinery } from "@/types";
 import { useVesselProgressEvents } from "@/hooks/useVessels";
