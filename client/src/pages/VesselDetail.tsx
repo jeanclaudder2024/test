@@ -31,7 +31,7 @@ import {
   Flag, Droplet, Package, AlertCircle, Truck, Gauge, BarChart, History,
   Users, Clock, Compass, ArrowRight, FileText, Clipboard, Download, Globe,
   ZoomIn, ZoomOut, Fuel, Activity, Layers, Filter, Tag, Check, RotateCw,
-  MapPin
+  MapPin, ExternalLink, Factory
 } from 'lucide-react';
 
 // Define oil product categories for filtering
@@ -735,10 +735,56 @@ export default function VesselDetail() {
                         <Anchor className="h-4 w-4 mr-2 text-primary" />
                         Destination
                       </h3>
-                      <InfoItem 
-                        label={<span className="flex items-center"><Anchor className="h-4 w-4 mr-1" /> Port</span>} 
-                        value={vessel.destinationPort || 'N/A'} 
-                      />
+                      {/* Format destination display based on destinationPort format */}
+                      {(() => {
+                        // Helper function to format destination
+                        const formatDestination = () => {
+                          if (!vessel.destinationPort) return 'N/A';
+                          
+                          if (vessel.destinationPort.startsWith('REF:')) {
+                            // Extract refinery name from the format REF:id:name
+                            const parts = vessel.destinationPort.split(':');
+                            if (parts.length > 2) {
+                              const refineryId = parts[1];
+                              const refineryName = parts[2];
+                              return (
+                                <div className="flex items-center">
+                                  <Link 
+                                    href={`/refineries/${refineryId}`} 
+                                    className="text-primary hover:underline flex items-center"
+                                  >
+                                    {refineryName}
+                                    <ExternalLink className="h-3 w-3 ml-1" />
+                                  </Link>
+                                  <Badge variant="outline" className="ml-2 text-xs">
+                                    Refinery
+                                  </Badge>
+                                </div>
+                              );
+                            }
+                          }
+                          // Regular port name
+                          return vessel.destinationPort;
+                        };
+                        
+                        // Determine what label to use
+                        const destinationLabel = vessel.destinationPort?.startsWith('REF:') ? (
+                          <span className="flex items-center">
+                            <Factory className="h-4 w-4 mr-1" /> Facility
+                          </span>
+                        ) : (
+                          <span className="flex items-center">
+                            <Anchor className="h-4 w-4 mr-1" /> Port
+                          </span>
+                        );
+                        
+                        return (
+                          <InfoItem 
+                            label={destinationLabel} 
+                            value={formatDestination()} 
+                          />
+                        );
+                      })()}
                       <InfoItem 
                         label={<span className="flex items-center"><Calendar className="h-4 w-4 mr-1" /> ETA</span>} 
                         value={vessel.eta ? formatDate(vessel.eta) : 'N/A'} 
@@ -775,7 +821,11 @@ export default function VesselDetail() {
                       <div className="flex justify-between text-xs text-muted-foreground">
                         <div>{vessel.departurePort}</div>
                         <div>Current Position</div>
-                        <div>{vessel.destinationPort}</div>
+                        <div>
+                          {vessel.destinationPort?.startsWith('REF:') 
+                            ? vessel.destinationPort.split(':')[2] + ' (Refinery)' 
+                            : vessel.destinationPort}
+                        </div>
                       </div>
                     </div>
                   </div>
