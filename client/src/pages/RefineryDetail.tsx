@@ -66,26 +66,46 @@ export default function RefineryDetail() {
     if (refinery && vessels.length > 0) {
       // Look for vessels that are linked to this refinery using multiple methods
       
-      // Method 1: Direct port matching - check destination or departure port against refinery country
-      const byPort = vessels.filter(v => 
-        (v.destinationPort?.toLowerCase().includes(refinery.country.toLowerCase()) || 
-         v.departurePort?.toLowerCase().includes(refinery.country.toLowerCase()))
-      );
+      // Method 1: Direct port matching - check destination or departure port against refinery country and city
+      const byPort = vessels.filter(v => {
+        // Check if destination or departure port includes refinery country or city name
+        const destinationMatch = v.destinationPort?.toLowerCase().includes(refinery.country.toLowerCase()) ||
+                                 (refinery.name && v.destinationPort?.toLowerCase().includes(refinery.name.toLowerCase()));
+        
+        const departureMatch = v.departurePort?.toLowerCase().includes(refinery.country.toLowerCase()) ||
+                               (refinery.name && v.departurePort?.toLowerCase().includes(refinery.name.toLowerCase()));
+        
+        return destinationMatch || departureMatch;
+      });
       
       // Method 2: Region matching - vessels in the same region as refinery
       const byRegion = vessels.filter(v => 
-        v.currentRegion === refinery.region
+        v.currentRegion === refinery.region &&
+        // Only include oil vessels for region matches to ensure relevance
+        (v.cargoType?.toLowerCase().includes('crude') || 
+         v.cargoType?.toLowerCase().includes('oil') ||
+         v.vesselType?.toLowerCase().includes('tanker'))
       );
       
       // Method 3: Geographic proximity - vessels within reasonable distance of refinery
+      // Reduced distance to be more precise (from 5 to 3 degrees)
       const byProximity = vessels.filter(v => 
         v.currentLat && v.currentLng && refinery.lat && refinery.lng &&
-        Math.abs(v.currentLat - refinery.lat) < 5 && 
-        Math.abs(v.currentLng - refinery.lng) < 5
+        Math.abs(v.currentLat - refinery.lat) < 3 && 
+        Math.abs(v.currentLng - refinery.lng) < 3
       );
       
-      // Combine results, removing duplicates (using Set and vessel IDs)
-      const allConnected = [...byPort, ...byRegion, ...byProximity];
+      // Method 4: Cargo type relevance - prioritize oil tankers
+      const oilVessels = vessels.filter(v =>
+        (v.cargoType?.toLowerCase().includes('crude') || 
+         v.cargoType?.toLowerCase().includes('oil') ||
+         v.vesselType?.toLowerCase().includes('tanker')) &&
+        v.currentRegion === refinery.region
+      );
+      
+      // Combine results with prioritization, removing duplicates
+      // Add proximity vessels first, then port matches, then oil vessels, then general region matches
+      const allConnected = [...byProximity, ...byPort, ...oilVessels, ...byRegion];
       const uniqueIds = new Set();
       const uniqueVessels = allConnected.filter(vessel => {
         if (uniqueIds.has(vessel.id)) return false;
@@ -93,20 +113,45 @@ export default function RefineryDetail() {
         return true;
       });
       
-      // If no vessels are found using those methods, just return a sample of vessels from the same region
-      if (uniqueVessels.length === 0) {
-        const sampleVessels = vessels
-          .filter(v => v.currentRegion === refinery.region)
-          .slice(0, 6);
+      // Always ensure we have at least 6 vessels to display
+      if (uniqueVessels.length < 6) {
+        // Get additional oil vessels from the region if we don't have enough
+        const additionalVessels = vessels
+          .filter(v => 
+            !uniqueIds.has(v.id) && 
+            v.currentRegion === refinery.region &&
+            (v.cargoType?.toLowerCase().includes('crude') || 
+             v.cargoType?.toLowerCase().includes('oil') ||
+             v.vesselType?.toLowerCase().includes('tanker'))
+          )
+          .slice(0, 6 - uniqueVessels.length);
+          
+        const combinedVessels = [...uniqueVessels, ...additionalVessels];
         
-        setAssociatedVessels(sampleVessels);
+        // If we still don't have enough, add any vessels from the region
+        if (combinedVessels.length < 6) {
+          const moreVessels = vessels
+            .filter(v => !uniqueIds.has(v.id) && v.currentRegion === refinery.region)
+            .slice(0, 6 - combinedVessels.length);
+            
+          setAssociatedVessels([...combinedVessels, ...moreVessels].slice(0, 10)); // Limit to 10 max
+        } else {
+          setAssociatedVessels(combinedVessels.slice(0, 10)); // Limit to 10 max
+        }
       } else {
-        setAssociatedVessels(uniqueVessels);
+        // If we have enough vessels, use them but limit to 10 for display
+        setAssociatedVessels(uniqueVessels.slice(0, 10));
       }
     } else {
       setAssociatedVessels([]);
     }
+    
   }, [refinery, vessels, refineryId]);
+  
+  // Log for debugging when associated vessels change
+  useEffect(() => {
+    console.log(`Found ${associatedVessels.length} vessels associated with refinery ${refinery?.name}`);
+  }, [associatedVessels, refinery?.name]);
   
   // Redirect to refineries page if refinery not found and not loading
   if (!loading && !refinery) {
@@ -226,15 +271,18 @@ export default function RefineryDetail() {
                 <div className="aspect-video rounded-md overflow-hidden border border-muted">
                   {refinery?.lat && refinery?.lng ? (
                     <SimpleLeafletMap
-                      vessels={[]}
+                      vessels={associatedVessels.slice(0, 6)} // Show associated vessels on the map
                       refineries={[refinery]}
                       selectedRegion={null}
                       trackedVessel={null}
                       onRefineryClick={() => {}}
-                      onVesselClick={() => {}}
+                      onVesselClick={(vessel) => {
+                        // Navigate to vessel details on click
+                        window.location.href = `/vessels/${vessel.id}`;
+                      }}
                       isLoading={false}
                       initialCenter={[refinery.lat, refinery.lng]}
-                      initialZoom={8}
+                      initialZoom={7} // Slightly zoomed out to show nearby vessels
                     />
                   ) : (
                     <div className="h-full bg-muted flex items-center justify-center">
@@ -382,23 +430,81 @@ export default function RefineryDetail() {
               <CardContent>
                 {associatedVessels.length > 0 ? (
                   <div className="space-y-4">
+                    {/* Arabic/English heading for Connected Vessels */}
+                    <div className="flex items-center justify-between mb-2 border-b pb-2">
+                      <div className="flex items-center space-x-2">
+                        <Ship className="h-4 w-4 text-primary" />
+                        <span className="text-sm font-medium">Vessels - الناقلات البحرية</span>
+                      </div>
+                      <Badge variant="outline">
+                        {associatedVessels.length} {associatedVessels.length === 1 ? 'vessel' : 'vessels'}
+                      </Badge>
+                    </div>
+                    
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {associatedVessels.slice(0, 6).map(vessel => (
+                      {associatedVessels.map(vessel => (
                         <Link key={vessel.id} href={`/vessels/${vessel.id}`}>
                           <div className="p-4 bg-muted/50 border border-primary/10 hover:bg-muted/80 hover:border-primary/30 transition-colors rounded-lg flex items-center justify-between group">
                             <div className="flex items-center space-x-3">
-                              <div className="h-10 w-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0">
+                              {/* Vessel icon with cargo type coloring */}
+                              <div className={`h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                vessel.cargoType?.toLowerCase().includes('crude') ? 'bg-amber-100 text-amber-600' :
+                                vessel.cargoType?.toLowerCase().includes('gas') ? 'bg-emerald-100 text-emerald-600' :
+                                vessel.cargoType?.toLowerCase().includes('diesel') ? 'bg-indigo-100 text-indigo-600' :
+                                vessel.cargoType?.toLowerCase().includes('fuel') ? 'bg-orange-100 text-orange-600' :
+                                'bg-blue-100 text-blue-600'
+                              }`}>
                                 <Ship className="h-5 w-5" />
                               </div>
+                              
                               <div>
                                 <h4 className="text-sm font-medium group-hover:text-primary transition-colors">{vessel.name}</h4>
                                 <p className="text-xs text-muted-foreground">
                                   {vessel.cargoType || vessel.vesselType || 'Unknown Type'}
                                 </p>
+                                {/* Add origin/destination if available */}
+                                {(vessel.departurePort || vessel.destinationPort) && (
+                                  <p className="text-xs text-muted-foreground mt-1 flex items-center">
+                                    {vessel.departurePort && (
+                                      <span className="mr-1 flex items-center">
+                                        <ArrowLeft className="h-3 w-3 mr-1" />
+                                        {vessel.departurePort.split(',')[0]}
+                                      </span>
+                                    )}
+                                    {vessel.departurePort && vessel.destinationPort && <span className="mx-1">→</span>}
+                                    {vessel.destinationPort && (
+                                      <span className="flex items-center">
+                                        <ArrowLeft className="h-3 w-3 mr-1 rotate-180" />
+                                        {vessel.destinationPort.split(',')[0]}
+                                      </span>
+                                    )}
+                                  </p>
+                                )}
                               </div>
                             </div>
+                            
                             <div className="flex flex-col items-end">
-                              <Badge variant="outline" className="mb-1">{vessel.currentRegion}</Badge>
+                              {/* Status badge based on cargo and flag */}
+                              <Badge 
+                                variant="outline" 
+                                className={`mb-1 ${
+                                  vessel.cargoType?.toLowerCase().includes('crude') ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                                  vessel.cargoType?.toLowerCase().includes('gas') ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                                  vessel.cargoType?.toLowerCase().includes('diesel') ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
+                                  vessel.cargoType?.toLowerCase().includes('fuel') ? 'bg-orange-50 text-orange-700 border-orange-200' :
+                                  'bg-blue-50 text-blue-700 border-blue-200'
+                                }`}
+                              >
+                                {vessel.flag || vessel.currentRegion || 'Unknown'}
+                              </Badge>
+                              
+                              {/* Cargo capacity if available */}
+                              {vessel.cargoCapacity && (
+                                <span className="text-xs text-muted-foreground mb-1">
+                                  {vessel.cargoCapacity.toLocaleString()} tons
+                                </span>
+                              )}
+                              
                               <span className="text-xs text-muted-foreground flex items-center">
                                 <ExternalLink className="h-3 w-3 mr-1" />
                                 View Details
@@ -409,7 +515,7 @@ export default function RefineryDetail() {
                       ))}
                     </div>
                     
-                    {associatedVessels.length > 6 && (
+                    {associatedVessels.length > 10 && (
                       <div className="text-center pt-2">
                         <Button variant="outline" size="sm">
                           View All {associatedVessels.length} Vessels
@@ -420,7 +526,7 @@ export default function RefineryDetail() {
                 ) : (
                   <div className="text-center py-8 px-4">
                     <Ship className="h-12 w-12 mx-auto text-muted-foreground opacity-50 mb-3" />
-                    <h3 className="text-lg font-medium mb-1">No Connected Vessels</h3>
+                    <h3 className="text-lg font-medium mb-1">No Connected Vessels - لا توجد ناقلات مرتبطة</h3>
                     <p className="text-sm text-muted-foreground max-w-md mx-auto">
                       No vessels are currently associated with this refinery. Vessels are linked based on destination, proximity, and region.
                     </p>
