@@ -1,8 +1,12 @@
-import React from "react";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Shield, Star } from "lucide-react";
+import { Check } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 
 interface SubscriptionPlan {
@@ -11,81 +15,115 @@ interface SubscriptionPlan {
   description: string | null;
   price: string;
   interval: string;
-  features: string[] | null;
+  features: string;
   stripePriceId: string | null;
   isActive: boolean | null;
 }
 
 interface SubscriptionCardProps {
   plan: SubscriptionPlan;
-  currentPlan?: string | null;
-  onSelect: (plan: SubscriptionPlan) => void;
+  isCurrent?: boolean;
 }
 
-export function SubscriptionCard({ plan, currentPlan, onSelect }: SubscriptionCardProps) {
-  const [, navigate] = useLocation();
-  const isCurrent = currentPlan === plan.name;
-  const features = plan.features || [];
+export function SubscriptionCard({ plan, isCurrent = false }: SubscriptionCardProps) {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [_, navigate] = useLocation();
+  const [isProcessing, setIsProcessing] = useState(false);
   
-  // Format price display 
-  const formattedPrice = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2
-  }).format(parseFloat(plan.price));
+  // Parse features array from JSON string
+  const featureList = typeof plan.features === 'string' ? 
+    JSON.parse(plan.features) : [];
+
+  // Subscribe to plan
+  const subscribe = useMutation({
+    mutationFn: async () => {
+      setIsProcessing(true);
+      const response = await apiRequest({
+        url: "/api/subscription/subscribe",
+        method: "POST",
+        body: { planId: plan.id }
+      });
+      
+      // If response has URL, it's a checkout session
+      const data = await response.json();
+      if (data.url) {
+        window.location.href = data.url;
+        return;
+      }
+      
+      return data;
+    },
+    onSuccess: (data) => {
+      if (!data) return; // Handled externally by redirect
+      
+      toast({
+        title: "Subscription Updated",
+        description: `You are now subscribed to the ${plan.name} plan.`,
+      });
+      
+      navigate("/dashboard");
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Subscription Failed",
+        description: error.message || "Failed to update subscription. Please try again.",
+        variant: "destructive",
+      });
+      setIsProcessing(false);
+    },
+  });
   
-  // Premium plan highlight
-  const isPremium = plan.name.toLowerCase().includes('premium') || 
-    plan.name.toLowerCase().includes('elite');
+  // Format price display
+  const formatPrice = () => {
+    const price = parseFloat(plan.price);
+    if (price === 0) return "Free";
+    return `$${price}/${plan.interval === 'monthly' ? 'mo' : 'yr'}`;
+  };
   
   return (
-    <Card className={`w-full overflow-hidden ${isPremium ? 'border-primary' : 'border-border'}`}>
-      {isPremium && (
-        <div className="bg-primary text-primary-foreground text-xs py-1 text-center font-medium">
-          RECOMMENDED
-        </div>
-      )}
-      <CardHeader className={`${isPremium ? 'bg-primary/5' : ''}`}>
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-xl flex items-center gap-1">
-            {isPremium ? <Shield className="h-5 w-5 text-primary" /> : <Star className="h-5 w-5" />}
-            {plan.name}
-          </CardTitle>
+    <Card className={`w-full ${isCurrent ? 'border-primary' : ''}`}>
+      <CardHeader>
+        <div className="flex justify-between items-start">
+          <div>
+            <CardTitle className="text-2xl">{plan.name}</CardTitle>
+            <CardDescription className="mt-1">{plan.description}</CardDescription>
+          </div>
           {isCurrent && (
-            <Badge variant="secondary" className="text-xs font-normal">
+            <Badge variant="outline" className="bg-primary/10 text-primary border-primary">
               Current Plan
             </Badge>
           )}
         </div>
-        <CardDescription>{plan.description}</CardDescription>
-      </CardHeader>
-      <CardContent className="p-6">
-        <div className="mb-6">
-          <p className="text-3xl font-bold">{formattedPrice}</p>
-          <p className="text-sm text-muted-foreground">{plan.interval === 'monthly' ? 'per month' : 'per year'}</p>
-        </div>
-        
-        <div className="space-y-2">
-          {features.length > 0 ? (
-            features.map((feature, index) => (
-              <div key={index} className="flex items-start gap-2">
-                <CheckCircle className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                <span className="text-sm">{feature}</span>
-              </div>
-            ))
-          ) : (
-            <p className="text-sm text-muted-foreground">Basic access to the platform</p>
+        <div className="mt-1">
+          <span className="text-3xl font-bold">{formatPrice()}</span>
+          {plan.price !== "0" && (
+            <span className="text-muted-foreground"> per {plan.interval}</span>
           )}
         </div>
+      </CardHeader>
+      <CardContent>
+        <ul className="space-y-2">
+          {featureList.map((feature: string, i: number) => (
+            <li key={i} className="flex items-start">
+              <Check className="h-5 w-5 text-primary shrink-0 mr-2" />
+              <span>{feature}</span>
+            </li>
+          ))}
+        </ul>
       </CardContent>
-      <CardFooter className="bg-muted/30 p-6 flex flex-col">
+      <CardFooter>
         <Button 
-          onClick={() => onSelect(plan)} 
-          variant={isPremium ? "default" : "outline"}
-          disabled={!plan.isActive || isCurrent}
-          className="w-full"
+          className="w-full" 
+          variant={isCurrent ? "secondary" : "default"}
+          disabled={isCurrent || isProcessing}
+          onClick={() => subscribe.mutate()}
         >
-          {isCurrent ? 'Current Plan' : `Subscribe to ${plan.name}`}
+          {isCurrent
+            ? "Current Plan"
+            : isProcessing
+            ? "Processing..."
+            : `Subscribe to ${plan.name}`}
         </Button>
       </CardFooter>
     </Card>

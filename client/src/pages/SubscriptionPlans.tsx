@@ -1,85 +1,37 @@
-import React, { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast";
+import React from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import { queryClient, apiRequest } from "@/lib/queryClient";
 import { SubscriptionCard } from "@/components/subscription/SubscriptionCard";
-import { Loader2, AlertTriangle, Shield } from "lucide-react";
+import { Loader2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { PageTitle } from "@/components/ui/page-title";
 import { useLocation } from "wouter";
 
-interface SubscriptionPlan {
+// Define the subscription plan interface
+interface SubscriptionPlanType {
   id: number;
   name: string;
   description: string | null;
   price: string;
   interval: string;
-  features: string[] | null;
+  features: string;
   stripePriceId: string | null;
   isActive: boolean | null;
 }
 
 export default function SubscriptionPlans() {
-  const { toast } = useToast();
   const { user } = useAuth();
-  const [, navigate] = useLocation();
-  const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
+  const [_, navigate] = useLocation();
 
   // Fetch subscription plans
   const { data: plans = [], isLoading, error } = useQuery({
-    queryKey: ["/api/subscription-plans"],
-    queryFn: async () => {
-      const res = await apiRequest({ url: "/api/subscription-plans" });
-      return await res.json() as SubscriptionPlan[];
-    }
+    queryKey: ["/api/subscription/subscription-plans"],
   });
-
-  // Subscription mutation
-  const subscribeMutation = useMutation({
-    mutationFn: async (planId: number) => {
-      const res = await apiRequest({
-        url: "/api/subscribe",
-        method: "POST",
-        body: { planId }
-      });
-      return await res.json();
-    },
-    onSuccess: (data) => {
-      // If we get a payment link, redirect to it
-      if (data.url) {
-        window.location.href = data.url;
-        return;
-      }
-      
-      toast({
-        title: "Subscription Updated",
-        description: "Your subscription has been updated successfully",
-      });
-      
-      // Invalidate the user query to refresh subscription status
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-      navigate("/dashboard");
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Subscription Failed",
-        description: `Could not process subscription: ${error.message}`,
-        variant: "destructive",
-      });
-    }
-  });
-
-  const handleSelectPlan = (plan: SubscriptionPlan) => {
-    setSelectedPlan(plan);
-    subscribeMutation.mutate(plan.id);
-  };
 
   if (isLoading) {
     return (
       <div className="flex flex-col gap-4 p-6">
-        <PageTitle title="Subscription Plans" />
+        <h1 className="text-3xl font-bold">Subscription Plans</h1>
         <div className="flex justify-center items-center min-h-[50vh]">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
@@ -90,7 +42,7 @@ export default function SubscriptionPlans() {
   if (error) {
     return (
       <div className="flex flex-col gap-4 p-6">
-        <PageTitle title="Subscription Plans" />
+        <h1 className="text-3xl font-bold">Subscription Plans</h1>
         <Alert variant="destructive" className="max-w-md mx-auto">
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>Error Loading Plans</AlertTitle>
@@ -103,11 +55,13 @@ export default function SubscriptionPlans() {
   }
 
   // Filter only active plans
-  const activePlans = plans.filter(plan => plan.isActive !== false);
+  const activePlans = Array.isArray(plans) 
+    ? plans.filter((plan: SubscriptionPlanType) => plan.isActive !== false)
+    : [];
 
   return (
     <div className="flex flex-col gap-6 p-6">
-      <PageTitle title="Subscription Plans" />
+      <h1 className="text-3xl font-bold">Subscription Plans</h1>
       
       <div className="max-w-4xl mx-auto w-full">
         <div className="mb-8 text-center">
@@ -126,23 +80,13 @@ export default function SubscriptionPlans() {
           </Alert>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {activePlans.map((plan) => (
+            {activePlans.map((plan: SubscriptionPlanType) => (
               <SubscriptionCard
                 key={plan.id}
                 plan={plan}
-                currentPlan={user?.subscriptionTier}
-                onSelect={handleSelectPlan}
+                isCurrent={user?.subscriptionTier === plan.name}
               />
             ))}
-          </div>
-        )}
-        
-        {subscribeMutation.isPending && (
-          <div className="mt-8 flex flex-col items-center">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="mt-2 text-center">
-              Processing your subscription...
-            </p>
           </div>
         )}
         
@@ -150,9 +94,8 @@ export default function SubscriptionPlans() {
           <Button 
             variant="outline"
             onClick={() => navigate("/dashboard")}
-            disabled={subscribeMutation.isPending}
           >
-            Back
+            Back to Dashboard
           </Button>
         </div>
       </div>

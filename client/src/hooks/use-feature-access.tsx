@@ -1,85 +1,78 @@
-import React, { createContext, useContext, ReactNode } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { useAuth } from '@/hooks/use-auth';
-import { apiRequest } from '@/lib/queryClient';
+import { createContext, ReactNode, useContext, useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "./use-auth";
 
-// Define feature flag type
-interface FeatureFlag {
+type FeatureFlag = {
   id: number;
   featureName: string;
   description: string | null;
   isEnabled: boolean;
   requiredSubscription: string | null;
-}
+};
 
-interface FeatureFlagContextType {
-  hasAccess: (featureName: string) => boolean;
+type FeatureFlagContextType = {
   isLoading: boolean;
-  error: Error | null;
-  featureFlags: FeatureFlag[];
-}
+  hasAccess: (featureName: string) => boolean;
+  getFeatureFlag: (featureName: string) => FeatureFlag | undefined;
+  allFlags: FeatureFlag[];
+};
 
-const FeatureFlagContext = createContext<FeatureFlagContextType | null>(null);
+export const FeatureFlagContext = createContext<FeatureFlagContextType | null>(null);
 
 export function FeatureFlagProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
+  const [featureFlags, setFeatureFlags] = useState<FeatureFlag[]>([]);
   
-  // Fetch feature flags
-  const { data: featureFlags = [], isLoading, error } = useQuery({
-    queryKey: ['/api/feature-flags'],
-    queryFn: async () => {
-      const res = await apiRequest({ url: '/api/feature-flags' });
-      return await res.json() as FeatureFlag[];
-    },
-    // Don't refetch too often
-    staleTime: 5 * 60 * 1000, // 5 minutes
+  const { data: flags, isLoading } = useQuery({
+    queryKey: ["/api/subscription/feature-flags"],
+    enabled: true, // We want to load feature flags for all users
   });
-
-  // Check if a user has access to a feature
+  
+  useEffect(() => {
+    if (flags && Array.isArray(flags)) {
+      setFeatureFlags(flags as FeatureFlag[]);
+    }
+  }, [flags]);
+  
+  // Determine if a user has access to a specific feature
   const hasAccess = (featureName: string): boolean => {
-    // If not authenticated, no access
-    if (!user) return false;
+    // If flags are still loading, default to no access
+    if (isLoading || !featureFlags.length) return false;
     
-    // Find the feature flag
+    // Find the flag for this feature
     const flag = featureFlags.find(f => f.featureName === featureName);
     
     // If flag doesn't exist or is disabled, no access
     if (!flag || !flag.isEnabled) return false;
     
-    // If no specific subscription required, all users have access
+    // If feature doesn't require subscription, everyone has access
     if (!flag.requiredSubscription) return true;
     
-    // If user isn't subscribed, no access to subscription features
-    if (!user.isSubscribed) return false;
+    // If no user is logged in, no access to subscription-restricted features
+    if (!user) return false;
     
-    // Check if user's subscription tier matches the required tier
-    // Free tier can only access free features
-    if (user.subscriptionTier === 'free' && flag.requiredSubscription !== 'free') {
-      return false;
-    }
+    // If user's subscription tier meets the requirement, grant access
+    const userTier = user.subscriptionTier || 'free';
     
-    // Basic tier can access free and basic features
-    if (user.subscriptionTier === 'basic' && 
-        !['free', 'basic'].includes(flag.requiredSubscription)) {
-      return false;
-    }
+    // Simple tier hierarchy: Premium > Standard > Free
+    if (userTier === 'Premium') return true;
+    if (userTier === 'Standard' && flag.requiredSubscription !== 'Premium') return true;
+    if (userTier === 'Free' && !flag.requiredSubscription) return true;
     
-    // Premium/Elite tier can access everything
-    if (['premium', 'elite'].includes(user.subscriptionTier || '')) {
-      return true;
-    }
-    
-    // If subscriptionTier exactly matches requiredSubscription
-    return user.subscriptionTier === flag.requiredSubscription;
+    return false;
   };
-
+  
+  const getFeatureFlag = (featureName: string): FeatureFlag | undefined => {
+    return featureFlags.find(f => f.featureName === featureName);
+  };
+  
   return (
     <FeatureFlagContext.Provider
       value={{
-        hasAccess,
         isLoading,
-        error,
-        featureFlags,
+        hasAccess,
+        getFeatureFlag,
+        allFlags: featureFlags
       }}
     >
       {children}
@@ -90,11 +83,7 @@ export function FeatureFlagProvider({ children }: { children: ReactNode }) {
 export function useFeatureAccess() {
   const context = useContext(FeatureFlagContext);
   if (!context) {
-    throw new Error('useFeatureAccess must be used within a FeatureFlagProvider');
+    throw new Error("useFeatureAccess must be used within a FeatureFlagProvider");
   }
   return context;
 }
-
-// Usage example:
-// const { hasAccess } = useFeatureAccess();
-// if (hasAccess('premium-reports')) { ... }
