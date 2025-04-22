@@ -48,6 +48,7 @@ export default function Documents() {
   const [showGenerateDialog, setShowGenerateDialog] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
   const [activeTab, setActiveTab] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   // Query to fetch documents
   const { 
@@ -373,14 +374,115 @@ export default function Documents() {
               <DialogHeader>
                 <DialogTitle className="text-lg sm:text-xl break-words">{selectedDocument.title}</DialogTitle>
                 <div className="flex flex-wrap items-center gap-2 mt-2">
-                  <Badge variant="outline">{selectedDocument.type}</Badge>
-                  <span className="text-sm text-gray-500">
-                    Created: {formatDate(selectedDocument.createdAt)}
-                  </span>
+                  <Badge variant="outline" className="font-medium">{selectedDocument.type}</Badge>
+                  
+                  {selectedDocument.status && (
+                    <Badge className={
+                      selectedDocument.status === 'active' ? 'bg-green-100 text-green-800 border-green-300' : 
+                      selectedDocument.status === 'expired' ? 'bg-amber-100 text-amber-800 border-amber-300' : 
+                      selectedDocument.status === 'revoked' ? 'bg-red-100 text-red-800 border-red-300' : 
+                      selectedDocument.status === 'pending' ? 'bg-blue-100 text-blue-800 border-blue-300' : 
+                      selectedDocument.status === 'draft' ? 'bg-gray-100 text-gray-800 border-gray-300' : 
+                      ''
+                    }>
+                      {selectedDocument.status}
+                    </Badge>
+                  )}
+                  
+                  {selectedDocument.reference && (
+                    <Badge variant="outline" className="bg-zinc-100">
+                      Ref: {selectedDocument.reference}
+                    </Badge>
+                  )}
                 </div>
               </DialogHeader>
               
-              <div className="font-mono text-sm bg-gray-50 p-3 sm:p-4 rounded-md whitespace-pre-wrap overflow-x-auto">
+              {/* Document Metadata Section */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-md">
+                <div>
+                  <h4 className="text-sm font-medium text-slate-500 mb-2">Document Information</h4>
+                  <dl className="space-y-1">
+                    <div className="flex justify-between">
+                      <dt className="text-sm text-slate-500">Issue Date:</dt>
+                      <dd className="text-sm font-medium">
+                        {selectedDocument.issueDate 
+                          ? formatDate(selectedDocument.issueDate) 
+                          : formatDate(selectedDocument.createdAt)}
+                      </dd>
+                    </div>
+                    
+                    {selectedDocument.expiryDate && (
+                      <div className="flex justify-between">
+                        <dt className="text-sm text-slate-500">Expiry Date:</dt>
+                        <dd className="text-sm font-medium">
+                          {formatDate(selectedDocument.expiryDate)}
+                        </dd>
+                      </div>
+                    )}
+                    
+                    <div className="flex justify-between">
+                      <dt className="text-sm text-slate-500">Last Modified:</dt>
+                      <dd className="text-sm font-medium">
+                        {selectedDocument.lastModified 
+                          ? formatDate(selectedDocument.lastModified) 
+                          : formatDate(selectedDocument.createdAt)}
+                      </dd>
+                    </div>
+                    
+                    {selectedDocument.language && (
+                      <div className="flex justify-between">
+                        <dt className="text-sm text-slate-500">Language:</dt>
+                        <dd className="text-sm font-medium">
+                          {selectedDocument.language === 'en' ? 'English' : 
+                           selectedDocument.language === 'ar' ? 'العربية' : 
+                           selectedDocument.language}
+                        </dd>
+                      </div>
+                    )}
+                  </dl>
+                </div>
+                
+                <div>
+                  <h4 className="text-sm font-medium text-slate-500 mb-2">Authority Information</h4>
+                  <dl className="space-y-1">
+                    {selectedDocument.issuer && (
+                      <div className="flex justify-between">
+                        <dt className="text-sm text-slate-500">Issuing Authority:</dt>
+                        <dd className="text-sm font-medium">
+                          {selectedDocument.issuer}
+                        </dd>
+                      </div>
+                    )}
+                    
+                    {selectedDocument.recipientName && (
+                      <div className="flex justify-between">
+                        <dt className="text-sm text-slate-500">Recipient:</dt>
+                        <dd className="text-sm font-medium">
+                          {selectedDocument.recipientName}
+                        </dd>
+                      </div>
+                    )}
+                    
+                    {selectedDocument.recipientOrg && (
+                      <div className="flex justify-between">
+                        <dt className="text-sm text-slate-500">Recipient Organization:</dt>
+                        <dd className="text-sm font-medium">
+                          {selectedDocument.recipientOrg}
+                        </dd>
+                      </div>
+                    )}
+                    
+                    <div className="flex justify-between">
+                      <dt className="text-sm text-slate-500">Vessel ID:</dt>
+                      <dd className="text-sm font-medium">
+                        {selectedDocument.vesselId}
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+              </div>
+              
+              <div className="font-mono text-sm bg-white border p-3 sm:p-4 rounded-md whitespace-pre-wrap overflow-x-auto mt-4">
                 {selectedDocument.content}
               </div>
               

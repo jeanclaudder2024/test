@@ -115,11 +115,12 @@ export const aiService = {
       status: "active",
       reference: refNumber,
       issuer,
-      issueDate: today.toISOString(),
-      expiryDate: expiryDate.toISOString(),
       recipientName: "Authorized Personnel",
       recipientOrg: "Maritime Operations",
-      language: "en"
+      language: "en",
+      // Using string ISO format for dates since we updated the schema
+      issueDate: today.toISOString(),
+      expiryDate: expiryDate.toISOString()
     };
 
     return storage.createDocument(documentData);

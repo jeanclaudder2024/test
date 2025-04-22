@@ -99,6 +99,11 @@ export const documents = pgTable("documents", {
 export const insertDocumentSchema = createInsertSchema(documents).omit({
   id: true,
   createdAt: true,
+  lastModified: true,
+}).extend({
+  // Allow string input for dates
+  issueDate: z.string().optional(),
+  expiryDate: z.string().optional()
 });
 
 // Brokers
