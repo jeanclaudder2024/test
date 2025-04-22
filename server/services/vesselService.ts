@@ -43,14 +43,14 @@ export const vesselService = {
   },
 
   // Seed data for development
-  seedVesselData: async () => {
+  seedVesselData: async (forceRefresh: boolean = false) => {
     try {
       console.log("Checking existing vessels in database...");
       // First, get existing vessels
       const existingVessels = await storage.getVessels();
       
-      // Check if we already have vessels in the database
-      if (existingVessels.length > 0) {
+      // Check if we already have vessels in the database and not forcing refresh
+      if (existingVessels.length > 0 && !forceRefresh) {
         console.log(`Database already contains ${existingVessels.length} vessels.`);
         
         // We already have vessels, just return stats
@@ -80,9 +80,18 @@ export const vesselService = {
         };
       }
       
-      // Database empty, generate vessel dataset
+      // Database empty or forcing refresh, generate vessel dataset
+      if (forceRefresh && existingVessels.length > 0) {
+        console.log("Forcing refresh of vessel data...");
+        // Delete all existing vessels
+        for (const vessel of existingVessels) {
+          await storage.deleteVessel(vessel.id);
+        }
+        console.log(`Deleted ${existingVessels.length} existing vessels.`);
+      }
+      
       console.log("Generating large vessel dataset...");
-      const vessels = generateLargeVesselDataset(1500);
+      const vessels = generateLargeVesselDataset(2500); // Increased from 1500 to 2500
       console.log(`Generated ${vessels.length} vessels.`);
       
       // Track created vessels and IMOs to avoid duplicates

@@ -155,12 +155,10 @@ export default function SimpleLeafletMap({
     const filteredVessels = vessels
       .filter(vessel => 
         vessel.currentLat && 
-        vessel.currentLng && 
-        (vessel.vesselType?.toLowerCase().includes('oil') || 
-         vessel.vesselType?.toLowerCase().includes('tanker') ||
-         OIL_PRODUCT_TYPES.some(type => vessel.cargoType?.includes(type)))
+        vessel.currentLng 
+        // Show all vessels by removing the vessel type filter
       )
-      .slice(0, 500); // Limit to 500 for performance
+      .slice(0, 1000); // Increased limit to 1000 vessels for more coverage
       
     // Update the displayVessels state for use in the component
     setDisplayVessels(filteredVessels);
