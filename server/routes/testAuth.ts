@@ -82,3 +82,53 @@ testAuthRouter.get("/users", async (req, res) => {
     return res.status(500).json({ message: "Failed to fetch users" });
   }
 });
+
+// Create an admin user for testing
+testAuthRouter.post("/create-admin", async (req, res) => {
+  try {
+    const { username, password, email } = req.body;
+    
+    if (!username || !password) {
+      return res.status(400).json({ message: "Username and password are required" });
+    }
+    
+    // Check if user already exists
+    const existingUser = await storage.getUserByUsername(username);
+    if (existingUser) {
+      return res.status(400).json({ message: "Username already exists" });
+    }
+    
+    // Hash the password
+    const hashedPassword = await hashPassword(password);
+    
+    // Create a new user with admin role
+    const newUser = await storage.createUser({
+      username,
+      password: hashedPassword,
+      email: email || null,
+      isAdmin: true,
+      role: 'admin',
+      isSubscribed: true,
+      subscriptionTier: 'premium',
+      createdAt: new Date()
+    });
+    
+    // Return the created user without the password
+    return res.status(201).json({
+      message: "Admin user created successfully",
+      user: {
+        id: newUser.id,
+        username: newUser.username,
+        email: newUser.email,
+        isAdmin: newUser.isAdmin,
+        role: newUser.role
+      }
+    });
+  } catch (error) {
+    console.error("Error creating admin user:", error);
+    return res.status(500).json({ 
+      message: "Failed to create admin user", 
+      error: String(error) 
+    });
+  }
+});

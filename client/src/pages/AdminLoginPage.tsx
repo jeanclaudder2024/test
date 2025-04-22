@@ -28,6 +28,7 @@ export default function AdminLoginPage() {
   const [testResult, setTestResult] = useState<any>(null);
   const [testLoading, setTestLoading] = useState(false);
   const [usersLoading, setUsersLoading] = useState(false);
+  const [createAdminLoading, setCreateAdminLoading] = useState(false);
   
   // Redirect if already logged in and is admin
   useEffect(() => {
@@ -131,6 +132,60 @@ export default function AdminLoginPage() {
       setUsersLoading(false);
     }
   };
+  
+  // Create admin user for testing
+  const createAdminUser = async () => {
+    setCreateAdminLoading(true);
+    try {
+      // Use the form values for creating the admin
+      const username = loginForm.getValues("username");
+      const password = loginForm.getValues("password");
+      
+      if (!username || !password) {
+        toast({
+          title: "Missing Data",
+          description: "Please enter a username and password in the form above",
+          variant: "destructive",
+        });
+        setCreateAdminLoading(false);
+        return;
+      }
+      
+      const response = await apiRequest({
+        url: "/api/auth-test/create-admin",
+        method: "POST",
+        body: {
+          username,
+          password,
+          email: `${username}@vesselian.com`
+        }
+      });
+      
+      const result = await response.json();
+      setTestResult(result);
+      
+      toast({
+        title: "Admin Created",
+        description: `Successfully created admin user: ${result.user.username}`,
+      });
+      
+      console.log("Admin creation result:", result);
+      
+      // Refresh the users list
+      await fetchAllUsers();
+    } catch (error) {
+      console.error("Error creating admin:", error);
+      setTestResult({ error: String(error) });
+      
+      toast({
+        title: "Error Creating Admin",
+        description: `Failed to create admin: ${String(error)}`,
+        variant: "destructive",
+      });
+    } finally {
+      setCreateAdminLoading(false);
+    }
+  };
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -221,7 +276,7 @@ export default function AdminLoginPage() {
                     <Bug className="h-4 w-4" />
                     Diagnostic Tools
                   </h3>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2 justify-end">
                     <Button 
                       variant="outline" 
                       size="sm"
@@ -250,6 +305,19 @@ export default function AdminLoginPage() {
                         <Bug className="h-4 w-4 mr-1" />
                       )}
                       Test Credentials
+                    </Button>
+                    <Button 
+                      variant="default" 
+                      size="sm"
+                      onClick={() => createAdminUser()}
+                      disabled={createAdminLoading}
+                    >
+                      {createAdminLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                      ) : (
+                        <Shield className="h-4 w-4 mr-1" />
+                      )}
+                      Create Admin
                     </Button>
                   </div>
                 </div>

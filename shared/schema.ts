@@ -20,6 +20,11 @@ export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
   email: true,
+  isSubscribed: true,
+  subscriptionTier: true,
+  role: true,
+  isAdmin: true,
+  createdAt: true,
 });
 
 // Vessels
