@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useDataStream } from '@/hooks/useDataStream';
-import { Refinery } from '@/types';
+import { Refinery, Vessel } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import {
   Card,
@@ -18,7 +18,7 @@ import { Link, useRoute } from 'wouter';
 import { 
   ArrowLeft, Factory, Map, Edit, PieChart, Droplet, 
   CalendarClock, MapPin, Building, Phone, Globe, BriefcaseBusiness,
-  Flame, Activity, Clock, Calendar, AlertTriangle
+  Flame, Activity, Clock, Calendar, AlertTriangle, Ship, ExternalLink
 } from 'lucide-react';
 
 // Helper components for refinery details
@@ -53,11 +53,36 @@ const StatusBadge = ({ status }: { status: string }) => {
 export default function RefineryDetail() {
   const [, params] = useRoute('/refineries/:id');
   const refineryId = params?.id ? parseInt(params.id) : null;
-  const { refineries, loading } = useDataStream();
+  const { refineries, vessels, loading } = useDataStream();
   const { toast } = useToast();
+  const [associatedVessels, setAssociatedVessels] = useState<Vessel[]>([]);
   
   // Find the refinery from our stream data
   const refinery = refineries.find(r => r.id === refineryId);
+  
+  // Find vessels associated with this refinery
+  useEffect(() => {
+    if (refinery && vessels.length > 0) {
+      // Look for vessels that are linked to this refinery
+      // We'll look for vessel's destination/departure that matches the refinery's country
+      // or vessels that are in the same region as the refinery
+      const connected = vessels.filter(v => 
+        // Check if destination or departure port matches the refinery's country
+        (v.destinationPort?.toLowerCase().includes(refinery.country.toLowerCase()) || 
+         v.departurePort?.toLowerCase().includes(refinery.country.toLowerCase())) ||
+        // Check if vessel is in the same region as the refinery
+        (v.currentRegion === refinery.region) ||
+        // Check if latitude and longitude is close to the refinery (within about 2 degrees)
+        (v.currentLat && v.currentLng && refinery.lat && refinery.lng &&
+         Math.abs(v.currentLat - refinery.lat) < 2 && 
+         Math.abs(v.currentLng - refinery.lng) < 2)
+      );
+      
+      setAssociatedVessels(connected);
+    } else {
+      setAssociatedVessels([]);
+    }
+  }, [refinery, vessels]);
   
   // Redirect to refineries page if refinery not found and not loading
   if (!loading && !refinery) {
@@ -301,6 +326,67 @@ export default function RefineryDetail() {
                   Values based on current operations
                 </p>
               </CardFooter>
+            </Card>
+            
+            {/* Associated Vessels Card */}
+            <Card className="md:col-span-2">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center">
+                  <Ship className="h-5 w-5 mr-2 text-primary" />
+                  Connected Vessels
+                </CardTitle>
+                <CardDescription>
+                  Vessels associated with this refinery - السفن المرتبطة بهذه المصفاة
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {associatedVessels.length > 0 ? (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {associatedVessels.slice(0, 6).map(vessel => (
+                        <Link key={vessel.id} href={`/vessels/${vessel.id}`}>
+                          <div className="p-4 bg-muted/50 border border-primary/10 hover:bg-muted/80 hover:border-primary/30 transition-colors rounded-lg flex items-center justify-between group">
+                            <div className="flex items-center space-x-3">
+                              <div className="h-10 w-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0">
+                                <Ship className="h-5 w-5" />
+                              </div>
+                              <div>
+                                <h4 className="text-sm font-medium group-hover:text-primary transition-colors">{vessel.name}</h4>
+                                <p className="text-xs text-muted-foreground">
+                                  {vessel.cargoType || vessel.vesselType || 'Unknown Type'}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex flex-col items-end">
+                              <Badge variant="outline" className="mb-1">{vessel.currentRegion}</Badge>
+                              <span className="text-xs text-muted-foreground flex items-center">
+                                <ExternalLink className="h-3 w-3 mr-1" />
+                                View Details
+                              </span>
+                            </div>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                    
+                    {associatedVessels.length > 6 && (
+                      <div className="text-center pt-2">
+                        <Button variant="outline" size="sm">
+                          View All {associatedVessels.length} Vessels
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 px-4">
+                    <Ship className="h-12 w-12 mx-auto text-muted-foreground opacity-50 mb-3" />
+                    <h3 className="text-lg font-medium mb-1">No Connected Vessels</h3>
+                    <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                      No vessels are currently associated with this refinery. Vessels are linked based on destination, proximity, and region.
+                    </p>
+                  </div>
+                )}
+              </CardContent>
             </Card>
             
             <Card className="md:col-span-2">
