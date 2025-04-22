@@ -36,11 +36,17 @@ async function hashPassword(password: string) {
   return `${buf.toString("hex")}.${salt}`;
 }
 
-async function comparePasswords(supplied: string, stored: string) {
+// Export this function so it can be used in other modules
+export async function compare(supplied: string, stored: string) {
   const [hashed, salt] = stored.split(".");
   const hashedBuf = Buffer.from(hashed, "hex");
   const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
   return timingSafeEqual(hashedBuf, suppliedBuf);
+}
+
+// Keep this for backward compatibility
+async function comparePasswords(supplied: string, stored: string) {
+  return compare(supplied, stored);
 }
 
 export function setupAuth(app: Express) {

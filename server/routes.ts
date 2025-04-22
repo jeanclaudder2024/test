@@ -27,6 +27,7 @@ import { fromZodError } from "zod-validation-error";
 import { apiTesterRouter } from "./routes/apiTester";
 import { brokerRouter } from "./routes/brokerRoutes";
 import { adminRouter } from "./routes/adminRoutes";
+import { testAuthRouter } from "./routes/testAuth";
 import { seedBrokers } from "./services/seedService";
 
 export async function registerRoutes(app: Express): Promise<Server> {
