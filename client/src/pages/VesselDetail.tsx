@@ -21,11 +21,17 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatDate } from '@/lib/utils';
 import { Link, useRoute } from 'wouter';
+import { apiRequest, queryClient } from '@/lib/queryClient';
+import { useMutation } from '@tanstack/react-query';
+import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription } from '@/components/ui/form';
+import { useForm } from 'react-hook-form';
+import { Label } from '@/components/ui/label';
 import {
   ArrowLeft, Ship, Calendar, Map, Info, Edit, Plus, Navigation, Anchor,
   Flag, Droplet, Package, AlertCircle, Truck, Gauge, BarChart, History,
   Users, Clock, Compass, ArrowRight, FileText, Clipboard, Download, Globe,
-  ZoomIn, ZoomOut, Fuel, Activity, Layers, Filter, Tag
+  ZoomIn, ZoomOut, Fuel, Activity, Layers, Filter, Tag, Check, RotateCw,
+  MapPin
 } from 'lucide-react';
 
 // Define oil product categories for filtering
@@ -106,12 +112,140 @@ const ProgressTimeline = ({ events }: { events: ProgressEvent[] }) => {
   );
 };
 
+// Form component for updating vessel location
+const LocationUpdateForm = ({ 
+  vesselId, 
+  initialLat, 
+  initialLng, 
+  onSuccess 
+}: { 
+  vesselId: number, 
+  initialLat?: string, 
+  initialLng?: string, 
+  onSuccess: () => void 
+}) => {
+  const { toast } = useToast();
+  const [lat, setLat] = useState(initialLat || "");
+  const [lng, setLng] = useState(initialLng || "");
+  const [eventDescription, setEventDescription] = useState("");
+  
+  const updateLocationMutation = useMutation({
+    mutationFn: async (data: { lat: string, lng: string, eventDescription?: string }) => {
+      const response = await apiRequest(
+        "POST", 
+        `/api/vessels/${vesselId}/update-location`,
+        data
+      );
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to update location");
+      }
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Location updated",
+        description: `Vessel location updated to ${lat}, ${lng} in the ${data.region} region.`,
+      });
+      onSuccess();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to update location",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateLocationMutation.mutate({ lat, lng, eventDescription });
+  };
+  
+  return (
+    <div className="rounded-md border p-4 mt-2 bg-muted/20">
+      <h4 className="text-sm font-medium mb-3 flex items-center">
+        <MapPin className="h-4 w-4 mr-2 text-primary" />
+        تحديث الموقع - Update Location
+      </h4>
+      
+      <form onSubmit={handleSubmit} className="space-y-3">
+        <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-1">
+            <Label htmlFor="latitude">Latitude - خط العرض</Label>
+            <Input
+              id="latitude"
+              placeholder="e.g. 25.2048"
+              value={lat}
+              onChange={(e) => setLat(e.target.value)}
+              required
+            />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="longitude">Longitude - خط الطول</Label>
+            <Input
+              id="longitude"
+              placeholder="e.g. 55.2708"
+              value={lng}
+              onChange={(e) => setLng(e.target.value)}
+              required
+            />
+          </div>
+        </div>
+        
+        <div className="space-y-1">
+          <Label htmlFor="event-description">
+            Event Description (optional) - وصف الحدث
+          </Label>
+          <Input
+            id="event-description"
+            placeholder="e.g. Updated position via satellite tracking"
+            value={eventDescription}
+            onChange={(e) => setEventDescription(e.target.value)}
+          />
+        </div>
+        
+        <div className="flex space-x-2 justify-end pt-2">
+          <Button 
+            type="button" 
+            variant="outline" 
+            size="sm"
+            onClick={() => onSuccess()}
+            disabled={updateLocationMutation.isPending}
+          >
+            Cancel - إلغاء
+          </Button>
+          <Button 
+            type="submit" 
+            size="sm"
+            disabled={updateLocationMutation.isPending}
+          >
+            {updateLocationMutation.isPending ? (
+              <>
+                <RotateCw className="mr-2 h-4 w-4 animate-spin" />
+                Updating...
+              </>
+            ) : (
+              <>
+                <Check className="mr-2 h-4 w-4" />
+                Update - تحديث
+              </>
+            )}
+          </Button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
 export default function VesselDetail() {
   const [, params] = useRoute('/vessels/:id');
   const vesselId = params?.id ? parseInt(params.id) : null;
   const { vessels, loading } = useDataStream();
   const { data: progressEvents = [], isLoading: progressLoading } = useVesselProgressEvents(vesselId);
   const { toast } = useToast();
+  const [isUpdatingLocation, setIsUpdatingLocation] = useState(false);
   
   // Find the vessel from our stream data
   const vessel = vessels.find(v => v.id === vesselId);
@@ -391,6 +525,30 @@ export default function VesselDetail() {
                             label={<span className="flex items-center"><Compass className="h-4 w-4 mr-1" /> Heading</span>} 
                             value={"135° SE"} 
                           />
+                        </div>
+                        
+                        <div className="mt-4">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="w-full mb-3"
+                            onClick={() => setIsUpdatingLocation(prev => !prev)}
+                          >
+                            <MapPin className="h-4 w-4 mr-2" />
+                            {isUpdatingLocation ? 'Cancel Update' : 'Update Location'}
+                          </Button>
+                          
+                          {isUpdatingLocation && (
+                            <LocationUpdateForm 
+                              vesselId={vessel.id} 
+                              initialLat={vessel.currentLat}
+                              initialLng={vessel.currentLng}
+                              onSuccess={() => {
+                                setIsUpdatingLocation(false);
+                                queryClient.invalidateQueries({ queryKey: ['/api/vessels'] });
+                              }}
+                            />
+                          )}
                         </div>
                         
                         <div className="mt-4 bg-muted/30 rounded-md p-3">
