@@ -7,6 +7,7 @@ import { aiService } from "./services/aiService";
 import { dataService } from "./services/asiStreamService";
 import { brokerService } from "./services/brokerService";
 import { stripeService } from "./services/stripeService";
+import { updateRefineryCoordinates, seedMissingRefineries } from "./services/refineryUpdate";
 import { setupAuth } from "./auth";
 import { db } from "./db";
 import { 
@@ -167,6 +168,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (error) {
         console.error("Critical error in seed process:", error);
         res.status(500).json({ message: "Failed to seed data" });
+      }
+    });
+    
+    // Route to update refinery coordinates with accurate data
+    apiRouter.post("/refineries/update-coordinates", async (req, res) => {
+      try {
+        console.log("Starting refinery coordinates update process...");
+        
+        // Update existing refineries with accurate coordinates
+        const updateResult = await updateRefineryCoordinates();
+        console.log("Refinery coordinates updated successfully:", updateResult);
+        
+        // Seed any missing refineries from the accurate dataset
+        const seedResult = await seedMissingRefineries();
+        console.log("Missing refineries added successfully:", seedResult);
+        
+        res.json({
+          success: true,
+          message: "Refinery coordinates updated successfully",
+          data: {
+            updated: updateResult.updated,
+            total: updateResult.total,
+            added: seedResult.added
+          }
+        });
+      } catch (error) {
+        console.error("Error updating refinery coordinates:", error);
+        res.status(500).json({ message: "Failed to update refinery coordinates" });
       }
     });
   }

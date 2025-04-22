@@ -55,6 +55,7 @@ export const refineries = pgTable("refineries", {
   lng: decimal("lng", { precision: 10, scale: 6 }).notNull(),
   capacity: integer("capacity"), // in barrels per day
   status: text("status").default("active"),
+  description: text("description"),
 });
 
 export const insertRefinerySchema = createInsertSchema(refineries).omit({
