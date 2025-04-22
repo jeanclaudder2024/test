@@ -230,70 +230,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Vessel counts by region endpoint
   apiRouter.get("/stats/vessels-by-region", async (req, res) => {
     try {
-      const vessels = await vesselService.getAllVessels();
-      
-      // Group vessels by region
-      const regionCounts: Record<string, number> = {};
-      const oilVesselRegionCounts: Record<string, number> = {};
-      let totalVessels = 0;
-      let totalOilVessels = 0;
-      
-      // Function to identify oil vessels
-      const isOilVessel = (v: Vessel) => {
-        if (!v.vesselType) return false;
-        const type = v.vesselType.toLowerCase();
-        return (
-          type.includes('oil') ||
-          type.includes('tanker') ||
-          type.includes('crude') ||
-          type.includes('vlcc')
-        );
-      };
-      
-      // Count vessels by region
-      for (const vessel of vessels) {
-        if (!vessel.currentRegion) continue;
-        
-        // Count total vessels by region
-        totalVessels++;
-        if (!regionCounts[vessel.currentRegion]) {
-          regionCounts[vessel.currentRegion] = 0;
-        }
-        regionCounts[vessel.currentRegion]++;
-        
-        // Count oil vessels by region
-        if (isOilVessel(vessel)) {
-          totalOilVessels++;
-          if (!oilVesselRegionCounts[vessel.currentRegion]) {
-            oilVesselRegionCounts[vessel.currentRegion] = 0;
-          }
-          oilVesselRegionCounts[vessel.currentRegion]++;
-        }
-      }
+      const result = await vesselService.getVesselCountsByRegion();
       
       // Get region names from constants
       const regionNames = REGIONS.reduce((acc: Record<string, string>, region) => {
-        acc[region.id] = region.nameEn;
+        acc[region.id] = region.name; // Use name instead of nameEn
         return acc;
       }, {});
       
       // Format results
-      const regionCountsArray = Object.entries(regionCounts).map(([region, count]) => ({
+      const regionCountsArray = Object.entries(result.regionCounts).map(([region, count]) => ({
         region,
         regionName: regionNames[region] || region,
         count,
-        percentage: (count / totalVessels * 100).toFixed(1),
-        oilVesselCount: oilVesselRegionCounts[region] || 0
+        percentage: (count / result.totalVessels * 100).toFixed(1),
+        oilVesselCount: result.oilVesselRegionCounts[region] || 0
       })).sort((a, b) => b.count - a.count);
       
       res.json({
-        totalVessels,
-        totalOilVessels,
+        totalVessels: result.totalVessels,
+        totalOilVessels: result.totalOilVessels,
         regions: regionCountsArray
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching vessel counts by region:", error);
-      res.status(500).json({ message: "Failed to fetch vessel counts" });
+      res.status(500).json({ 
+        message: "Failed to fetch vessel counts", 
+        error: error.message 
+      });
     }
   });
 
@@ -416,10 +380,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { determineRegionFromCoordinates } = await import('./services/vesselGenerator');
       
       for (const vessel of vessels) {
-        const lat = parseFloat(vessel.currentLat);
-        const lng = parseFloat(vessel.currentLng);
+        // Handle potential null values
+        const lat = vessel.currentLat ? parseFloat(vessel.currentLat) : null;
+        const lng = vessel.currentLng ? parseFloat(vessel.currentLng) : null;
         
-        if (!isNaN(lat) && !isNaN(lng)) {
+        if (lat !== null && lng !== null && !isNaN(lat) && !isNaN(lng)) {
           const mappedRegion = determineRegionFromCoordinates(lat, lng);
           
           // Only update if region changed
@@ -434,12 +399,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: true,
         message: `Vessel regions updated successfully: ${updatedCount} of ${vessels.length} updated`
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error rebuilding vessel regions:", error);
       res.status(500).json({
         success: false,
         message: "Error updating vessel regions",
-        error: error.message
+        error: error.message || "Unknown error"
       });
     }
   });

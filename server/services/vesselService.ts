@@ -41,6 +41,57 @@ export const vesselService = {
   deleteProgressEvent: async (id: number) => {
     return storage.deleteProgressEvent(id);
   },
+  
+  // Get vessel counts by region
+  getVesselCountsByRegion: async () => {
+    const vessels = await storage.getVessels();
+    
+    // Function to identify oil vessels
+    const isOilVessel = (v: Vessel) => {
+      if (!v.vesselType) return false;
+      const type = v.vesselType.toLowerCase();
+      return (
+        type.includes('oil') ||
+        type.includes('tanker') ||
+        type.includes('crude') ||
+        type.includes('vlcc')
+      );
+    };
+    
+    // Group vessels by region
+    const regionCounts: Record<string, number> = {};
+    const oilVesselRegionCounts: Record<string, number> = {};
+    let totalVessels = 0;
+    let totalOilVessels = 0;
+    
+    // Count vessels by region
+    for (const vessel of vessels) {
+      if (!vessel.currentRegion) continue;
+      
+      // Count total vessels by region
+      totalVessels++;
+      if (!regionCounts[vessel.currentRegion]) {
+        regionCounts[vessel.currentRegion] = 0;
+      }
+      regionCounts[vessel.currentRegion]++;
+      
+      // Count oil vessels by region
+      if (isOilVessel(vessel)) {
+        totalOilVessels++;
+        if (!oilVesselRegionCounts[vessel.currentRegion]) {
+          oilVesselRegionCounts[vessel.currentRegion] = 0;
+        }
+        oilVesselRegionCounts[vessel.currentRegion]++;
+      }
+    }
+    
+    return {
+      totalVessels,
+      totalOilVessels,
+      regionCounts,
+      oilVesselRegionCounts
+    };
+  },
 
   // Seed data for development
   seedVesselData: async (forceRefresh: boolean = false) => {
@@ -70,7 +121,7 @@ export const vesselService = {
         // Update stats
         await storage.updateStats({ 
           activeVessels: existingVessels.length, 
-          totalCargo 
+          totalCargo: totalCargo.toString() // Convert to string for schema compatibility
         });
         
         return {
@@ -159,11 +210,16 @@ export const vesselService = {
           const latOffset = (Math.random() * 2 - 1) * 2; // -2 to +2 degrees
           const lngOffset = (Math.random() * 2 - 1) * 2; // -2 to +2 degrees
           
-          const baseLat = parseFloat(vessel.currentLat);
-          const baseLng = parseFloat(vessel.currentLng);
+          // Handle potential null values
+          const baseLat = vessel.currentLat ? parseFloat(vessel.currentLat) : 0;
+          const baseLng = vessel.currentLng ? parseFloat(vessel.currentLng) : 0;
           
           const lat = Math.max(-85, Math.min(85, baseLat + latOffset)).toFixed(4);
           const lng = Math.max(-180, Math.min(180, baseLng + lngOffset)).toFixed(4);
+          
+          // Check if lat is >= 0 for determining N/S
+          const latNum = parseFloat(lat);
+          const lngNum = parseFloat(lng);
           
           // Create event
           progressEvents.push({
@@ -172,7 +228,7 @@ export const vesselService = {
             event: eventType,
             lat,
             lng,
-            location: `${lat}° ${lat >= 0 ? 'N' : 'S'}, ${lng}° ${lng >= 0 ? 'E' : 'W'}`
+            location: `${lat}° ${latNum >= 0 ? 'N' : 'S'}, ${lng}° ${lngNum >= 0 ? 'E' : 'W'}`
           });
         }
       }
@@ -193,7 +249,7 @@ export const vesselService = {
       });
 
       await storage.updateStats({ 
-        totalCargo,
+        totalCargo: totalCargo.toString(), // Convert to string for schema compatibility
         activeVessels: createdVessels.length
       });
 
