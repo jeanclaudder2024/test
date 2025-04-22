@@ -10,6 +10,7 @@ import { stripeService } from "./services/stripeService";
 import { updateRefineryCoordinates, seedMissingRefineries } from "./services/refineryUpdate";
 import { setupAuth } from "./auth";
 import { db } from "./db";
+import { REGIONS } from "@shared/constants";
 import { 
   insertVesselSchema, 
   insertRefinerySchema, 
@@ -223,6 +224,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching stats:", error);
       res.status(500).json({ message: "Failed to fetch stats" });
+    }
+  });
+
+  // Vessel counts by region endpoint
+  apiRouter.get("/stats/vessels-by-region", async (req, res) => {
+    try {
+      const vessels = await vesselService.getAllVessels();
+      
+      // Group vessels by region
+      const regionCounts: Record<string, number> = {};
+      const oilVesselRegionCounts: Record<string, number> = {};
+      let totalVessels = 0;
+      let totalOilVessels = 0;
+      
+      // Function to identify oil vessels
+      const isOilVessel = (v: Vessel) => {
+        if (!v.vesselType) return false;
+        const type = v.vesselType.toLowerCase();
+        return (
+          type.includes('oil') ||
+          type.includes('tanker') ||
+          type.includes('crude') ||
+          type.includes('vlcc')
+        );
+      };
+      
+      // Count vessels by region
+      for (const vessel of vessels) {
+        if (!vessel.currentRegion) continue;
+        
+        // Count total vessels by region
+        totalVessels++;
+        if (!regionCounts[vessel.currentRegion]) {
+          regionCounts[vessel.currentRegion] = 0;
+        }
+        regionCounts[vessel.currentRegion]++;
+        
+        // Count oil vessels by region
+        if (isOilVessel(vessel)) {
+          totalOilVessels++;
+          if (!oilVesselRegionCounts[vessel.currentRegion]) {
+            oilVesselRegionCounts[vessel.currentRegion] = 0;
+          }
+          oilVesselRegionCounts[vessel.currentRegion]++;
+        }
+      }
+      
+      // Get region names from constants
+      const regionNames = REGIONS.reduce((acc: Record<string, string>, region) => {
+        acc[region.id] = region.nameEn;
+        return acc;
+      }, {});
+      
+      // Format results
+      const regionCountsArray = Object.entries(regionCounts).map(([region, count]) => ({
+        region,
+        regionName: regionNames[region] || region,
+        count,
+        percentage: (count / totalVessels * 100).toFixed(1),
+        oilVesselCount: oilVesselRegionCounts[region] || 0
+      })).sort((a, b) => b.count - a.count);
+      
+      res.json({
+        totalVessels,
+        totalOilVessels,
+        regions: regionCountsArray
+      });
+    } catch (error) {
+      console.error("Error fetching vessel counts by region:", error);
+      res.status(500).json({ message: "Failed to fetch vessel counts" });
     }
   });
 
