@@ -81,8 +81,7 @@ import {
   Send,
   Download,
   ArrowUpRight,
-  ArrowDownRight,
-  Ship
+  ArrowDownRight
 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 
@@ -1038,7 +1037,7 @@ export default function Brokers() {
                         Documents
                       </Button>
                       <Button variant="outline" className="w-full justify-start">
-                        <Ship className="h-4 w-4 mr-2" />
+                        <Globe className="h-4 w-4 mr-2" />
                         Vessels
                       </Button>
                     </div>
@@ -1077,22 +1076,10 @@ export default function Brokers() {
                           <dd>{selectedBroker.country || 'Not specified'}</dd>
                         </div>
                         
-                        {selectedBroker.address && (
+                        {selectedBroker.shippingAddress && (
                           <div className="flex justify-between">
-                            <dt className="font-medium">Address:</dt>
-                            <dd>{selectedBroker.address}</dd>
-                          </div>
-                        )}
-                        
-                        {selectedBroker.website && (
-                          <div className="flex justify-between">
-                            <dt className="font-medium">Website:</dt>
-                            <dd>
-                              <a href={selectedBroker.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex items-center">
-                                {selectedBroker.website}
-                                <ArrowUpRight className="h-3 w-3 ml-1" />
-                              </a>
-                            </dd>
+                            <dt className="font-medium">Shipping Address:</dt>
+                            <dd>{selectedBroker.shippingAddress}</dd>
                           </div>
                         )}
                       </dl>
@@ -1115,54 +1102,43 @@ export default function Brokers() {
                           <dd>{selectedBroker.company || 'Not specified'}</dd>
                         </div>
                         
-                        {selectedBroker.license && (
+                        {selectedBroker.subscriptionPlan && (
                           <div className="flex justify-between">
-                            <dt className="font-medium">License:</dt>
-                            <dd>{selectedBroker.license}</dd>
+                            <dt className="font-medium">Subscription Plan:</dt>
+                            <dd>{selectedBroker.subscriptionPlan}</dd>
                           </div>
                         )}
                         
-                        {selectedBroker.specialization && (
+                        {selectedBroker.membershipId && (
                           <div className="flex justify-between">
-                            <dt className="font-medium">Specialization:</dt>
-                            <dd>{selectedBroker.specialization}</dd>
+                            <dt className="font-medium">Membership ID:</dt>
+                            <dd>{selectedBroker.membershipId}</dd>
                           </div>
                         )}
                         
-                        {selectedBroker.createdAt && (
+                        {selectedBroker.lastLogin && (
                           <div className="flex justify-between">
-                            <dt className="font-medium">Joined:</dt>
-                            <dd>{formatDate(selectedBroker.createdAt)}</dd>
+                            <dt className="font-medium">Last Login:</dt>
+                            <dd>{formatDate(selectedBroker.lastLogin)}</dd>
                           </div>
                         )}
                         
-                        {selectedBroker.eliteMember && selectedBroker.eliteSince && (
+                        {selectedBroker.eliteMember && selectedBroker.eliteMemberSince && (
                           <div className="flex justify-between">
                             <dt className="font-medium">Elite Member Since:</dt>
-                            <dd>{formatDate(selectedBroker.eliteSince)}</dd>
+                            <dd>{formatDate(selectedBroker.eliteMemberSince)}</dd>
                           </div>
                         )}
                         
-                        {selectedBroker.eliteMember && selectedBroker.eliteExpiry && (
+                        {selectedBroker.eliteMember && selectedBroker.eliteMemberExpires && (
                           <div className="flex justify-between">
                             <dt className="font-medium">Elite Membership Expires:</dt>
-                            <dd>{formatDate(selectedBroker.eliteExpiry)}</dd>
+                            <dd>{formatDate(selectedBroker.eliteMemberExpires)}</dd>
                           </div>
                         )}
                       </dl>
                     </CardContent>
                   </Card>
-                  
-                  {selectedBroker.notes && (
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-base">Notes</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-sm">{selectedBroker.notes}</p>
-                      </CardContent>
-                    </Card>
-                  )}
                 </div>
               </div>
               
