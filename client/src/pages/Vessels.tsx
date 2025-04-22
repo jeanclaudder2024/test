@@ -23,8 +23,10 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from 'wouter';
 import { formatDate } from '@/lib/utils';
-import { Ship, Search, Plus, Filter, Droplet, Fuel, Layers, Tag } from 'lucide-react';
+import { Ship, Search, Plus, Filter, Droplet, Fuel, Layers, Tag, Anchor, AlertCircle } from 'lucide-react';
 import { OIL_PRODUCT_TYPES } from '@shared/constants';
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 // Define oil product categories for filtering
 const OIL_CATEGORIES = {
@@ -42,6 +44,8 @@ export default function Vessels() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOilTypes, setSelectedOilTypes] = useState<string[]>([]);
   const [selectedTab, setSelectedTab] = useState<string>("all");
+  const [isUpdatingDestinations, setIsUpdatingDestinations] = useState(false);
+  const { toast } = useToast();
   
   // Helper function to determine oil category
   const getOilCategory = (cargoType: string | null | undefined): string => {
@@ -94,6 +98,39 @@ export default function Vessels() {
       return matchesSearch && matchesOilType && matchesTab;
     });
   }, [vesselsWithCategories, searchTerm, selectedOilTypes, selectedTab]);
+  
+  // Function to ensure all vessels have destinations
+  const handleEnsureDestinations = async () => {
+    try {
+      setIsUpdatingDestinations(true);
+      
+      const response = await apiRequest('POST', '/api/vessels/ensure-destinations', {});
+      const result = await response.json();
+      
+      if (result.success) {
+        toast({
+          title: "Destinations updated",
+          description: result.message,
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "Update failed",
+          description: result.message || "Failed to update vessel destinations",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error updating vessel destinations:", error);
+      toast({
+        title: "Error",
+        description: "An error occurred while updating vessel destinations",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdatingDestinations(false);
+    }
+  };
 
   return (
     <div className="container mx-auto p-4">
@@ -169,6 +206,16 @@ export default function Vessels() {
               )}
             </DropdownMenuContent>
           </DropdownMenu>
+          
+          <Button 
+            variant="outline" 
+            onClick={handleEnsureDestinations} 
+            disabled={isUpdatingDestinations}
+            className="bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100"
+          >
+            <Anchor className="h-4 w-4 mr-2" />
+            {isUpdatingDestinations ? 'Updating...' : 'Ensure All Destinations'}
+          </Button>
           
           <Button>
             <Plus className="h-4 w-4 mr-2" />

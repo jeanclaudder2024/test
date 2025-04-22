@@ -450,6 +450,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Ensure all vessels have destinations (including refinery links)
+  apiRouter.post("/vessels/ensure-destinations", async (req, res) => {
+    try {
+      const result = await vesselService.ensureVesselDestinations();
+      res.json({
+        success: true,
+        message: `Updated ${result.updated} vessels out of ${result.total} total vessels with destinations.`
+      });
+    } catch (error) {
+      console.error("Error ensuring vessel destinations:", error);
+      res.status(500).json({
+        success: false,
+        message: `Error ensuring vessel destinations: ${error.message}`
+      });
+    }
+  });
+  
   // Update vessel location with accurate coordinates
   apiRouter.post("/vessels/:id/update-location", async (req, res) => {
     try {
