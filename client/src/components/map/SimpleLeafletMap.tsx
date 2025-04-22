@@ -83,6 +83,7 @@ export default function SimpleLeafletMap({
   const mapInstanceRef = useRef<any>(null);
   const [mapStyle, setMapStyle] = useState(mapStyles[0].id);
   const [isMapReady, setIsMapReady] = useState(false);
+  const [displayVessels, setDisplayVessels] = useState<Vessel[]>([]);
   
   // Load Leaflet scripts and styles
   useEffect(() => {
@@ -160,6 +161,9 @@ export default function SimpleLeafletMap({
          OIL_PRODUCT_TYPES.some(type => vessel.cargoType?.includes(type)))
       )
       .slice(0, 500); // Limit to 500 for performance
+      
+    // Update the displayVessels state for use in the component
+    setDisplayVessels(filteredVessels);
     
     filteredVessels.forEach(vessel => {
       if (!vessel.currentLat || !vessel.currentLng) return;
@@ -395,7 +399,7 @@ export default function SimpleLeafletMap({
         <div className="bg-background/90 backdrop-blur-sm text-xs px-2.5 py-1 rounded-full flex items-center shadow-sm border border-border">
           <Info className="h-3 w-3 mr-1 text-primary" />
           <span>
-            {vessels?.length || 0} vessels
+            {displayVessels?.length || 0} vessels
             {refineries.length > 0 && `, ${refineries.length} refineries`}
           </span>
         </div>
