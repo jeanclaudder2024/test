@@ -5,7 +5,8 @@ import { eq } from "drizzle-orm";
 import { 
   subscriptionPlans, 
   SubscriptionPlan,
-  featureFlags
+  featureFlags,
+  users
 } from "@shared/schema";
 import Stripe from "stripe";
 import { z } from "zod";
@@ -273,7 +274,7 @@ subscriptionRouter.post("/webhook", async (req, res) => {
         await storage.updateUser(userId, {
           isSubscribed: true,
           subscriptionTier: planName,
-          stripeSubscriptionId: session.subscription
+          stripeSubscriptionId: typeof session.subscription === 'string' ? session.subscription : null
         });
       }
       break;
@@ -283,17 +284,24 @@ subscriptionRouter.post("/webhook", async (req, res) => {
       const subscription = event.data.object;
       
       // Find user with this subscription ID
-      const users = await db.query.users.findMany({
-        where: eq(users.stripeSubscriptionId, subscription.id)
-      });
+      const usersWithSubscription = await db.select()
+        .from(subscriptionPlans)
+        .where(eq(subscriptionPlans.stripePriceId, subscription.id));
       
-      if (users.length > 0) {
-        // Update user subscription status
-        await storage.updateUser(users[0].id, {
-          isSubscribed: false,
-          subscriptionTier: 'free',
-          stripeSubscriptionId: null
-        });
+      if (usersWithSubscription.length > 0) {
+        // Find users with this subscription price
+        const userRecords = await db.select()
+          .from(users)
+          .where(eq(users.stripeSubscriptionId, subscription.id));
+        
+        // Update each user's subscription status
+        for (const user of userRecords) {
+          await storage.updateUser(user.id, {
+            isSubscribed: false,
+            subscriptionTier: 'free',
+            stripeSubscriptionId: null
+          });
+        }
       }
       break;
     }
