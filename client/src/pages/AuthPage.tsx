@@ -1,11 +1,11 @@
-import { useEffect } from "react";
-import { useLocation, Redirect } from "wouter";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
+import { useEffect } from "react";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -203,7 +203,7 @@ export default function AuthPage() {
                       onClick={() => navigate("/admin")}
                     >
                       <Shield className="h-4 w-4 mr-2 text-primary" />
-                      Access Admin Dashboard
+                      Admin Login
                     </Button>
                   </CardFooter>
                 </Card>
@@ -334,7 +334,7 @@ export default function AuthPage() {
                       onClick={() => navigate("/admin")}
                     >
                       <Shield className="h-4 w-4 mr-2 text-primary" />
-                      Access Admin Dashboard
+                      Admin Login
                     </Button>
                   </CardFooter>
                 </Card>
