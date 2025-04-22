@@ -24,6 +24,73 @@ export const vesselService = {
   updateVessel: async (id: number, vesselData: Partial<InsertVessel>) => {
     return storage.updateVessel(id, vesselData);
   },
+  
+  // Ensure all vessels have destinations assigned
+  ensureVesselDestinations: async () => {
+    try {
+      // Get all vessels without destinations
+      const allVessels = await storage.getVessels();
+      const vesselsWithoutDestination = allVessels.filter(v => !v.destinationPort || v.destinationPort === '');
+      
+      if (vesselsWithoutDestination.length === 0) {
+        console.log("All vessels already have destinations assigned.");
+        return { updated: 0, total: allVessels.length };
+      }
+      
+      console.log(`Found ${vesselsWithoutDestination.length} vessels without destinations. Assigning refinery destinations...`);
+      
+      // Get all refineries to use for destinations
+      const refineries = await storage.getRefineries();
+      if (refineries.length === 0) {
+        console.log("No refineries found. Cannot assign refinery destinations.");
+        return { updated: 0, total: allVessels.length };
+      }
+      
+      let updatedCount = 0;
+      
+      // Assign random refineries to vessels without destinations
+      for (const vessel of vesselsWithoutDestination) {
+        try {
+          // Select a random refinery that's in the same region if possible
+          let matchingRefineries = refineries.filter(r => r.region === vessel.currentRegion);
+          
+          // If no refineries in the vessel's region, use any refinery
+          if (matchingRefineries.length === 0) {
+            matchingRefineries = refineries;
+          }
+          
+          const randomRefinery = matchingRefineries[Math.floor(Math.random() * matchingRefineries.length)];
+          const destinationPort = `REF:${randomRefinery.id}:${randomRefinery.name}`;
+          
+          // Ensure ETA is set
+          let eta = vessel.eta;
+          if (!eta) {
+            const now = new Date();
+            const futureOffset = Math.floor(Math.random() * 30) + 5; // 5-35 days in future
+            const etaDate = new Date(now);
+            etaDate.setDate(etaDate.getDate() + futureOffset);
+            eta = etaDate;
+          }
+          
+          // Update the vessel
+          await storage.updateVessel(vessel.id, { 
+            destinationPort, 
+            eta 
+          });
+          
+          updatedCount++;
+        } catch (err) {
+          console.error(`Error updating vessel ${vessel.id}:`, err);
+        }
+      }
+      
+      console.log(`Updated ${updatedCount} vessels with refinery destinations.`);
+      return { updated: updatedCount, total: allVessels.length };
+    } catch (error) {
+      console.error("Error ensuring vessel destinations:", error);
+      throw error;
+    }
+  },
 
   deleteVessel: async (id: number) => {
     return storage.deleteVessel(id);
@@ -141,6 +208,15 @@ export const vesselService = {
         console.log(`Deleted ${existingVessels.length} existing vessels.`);
       }
       
+      // First, get all refineries to use for destinations
+      console.log("Getting refineries for destination assignments...");
+      const refineries = await storage.getRefineries();
+      if (refineries.length === 0) {
+        console.log("No refineries found. Please seed refineries first.");
+      } else {
+        console.log(`Found ${refineries.length} refineries for destination assignment.`);
+      }
+      
       console.log("Generating large vessel dataset...");
       const vessels = generateLargeVesselDataset(2500); // Increased from 1500 to 2500
       console.log(`Generated ${vessels.length} vessels.`);
@@ -157,6 +233,22 @@ export const vesselService = {
           
           // Add this IMO to our tracking set
           usedImoNumbers.add(vessel.imo);
+          
+          // Ensure vessel has a destination (assign a refinery randomly if refineries exist)
+          if ((!vessel.destinationPort || vessel.destinationPort === '') && refineries.length > 0) {
+            // Assign a random refinery as destination (use REF:id:name format)
+            const randomRefinery = refineries[Math.floor(Math.random() * refineries.length)];
+            vessel.destinationPort = `REF:${randomRefinery.id}:${randomRefinery.name}`;
+            
+            // Ensure ETA is set for this new destination
+            if (!vessel.eta) {
+              const now = new Date();
+              const futureOffset = Math.floor(Math.random() * 30) + 5; // 5-35 days in future
+              const etaDate = new Date(now);
+              etaDate.setDate(etaDate.getDate() + futureOffset);
+              vessel.eta = etaDate;
+            }
+          }
           
           // Save vessel to database
           const createdVessel = await storage.createVessel(vessel);
