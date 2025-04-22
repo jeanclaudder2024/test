@@ -63,7 +63,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Reset stats
         await storage.updateStats({ 
           activeVessels: 0, 
-          totalCargo: 0,
+          totalCargo: "0",
           activeRefineries: 0,
           lastUpdated: new Date()
         });
