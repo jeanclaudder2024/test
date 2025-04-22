@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useDataStream } from '@/hooks/useDataStream';
 import { Vessel } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -13,19 +13,61 @@ import {
 } from '@/components/ui/table';
 import { Link } from 'wouter';
 import { formatDate } from '@/lib/utils';
-import { Ship, Search, Plus } from 'lucide-react';
+import { Ship, Search, Plus, Filter } from 'lucide-react';
+import { FilterBar, CombinedFilters } from '@/components/filters/FilterBar';
 
 export default function Vessels() {
   const { vessels, loading } = useDataStream();
   const [searchTerm, setSearchTerm] = useState('');
+  const [filters, setFilters] = useState<CombinedFilters>({});
   
-  // Filter vessels based on search term
-  const filteredVessels = vessels.filter(vessel => 
-    vessel.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    vessel.imo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    vessel.flag.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (vessel.currentRegion && vessel.currentRegion.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  // Apply all filters to vessels
+  const filteredVessels = vessels.filter(vessel => {
+    // Text search filter
+    const matchesSearch = 
+      vessel.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      vessel.imo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      vessel.flag.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (vessel.currentRegion && vessel.currentRegion.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    if (!matchesSearch) return false;
+    
+    // Region filter
+    if (filters.region && vessel.currentRegion !== filters.region) {
+      return false;
+    }
+    
+    // Vessel type filter
+    if (filters.vesselType && vessel.vesselType !== filters.vesselType) {
+      return false;
+    }
+    
+    // Cargo type filter
+    if (filters.cargoType && vessel.cargoType !== filters.cargoType) {
+      return false;
+    }
+    
+    // Capacity filter - if min or max capacity specified
+    if (filters.minCapacity !== undefined && vessel.deadweight && vessel.deadweight < filters.minCapacity) {
+      return false;
+    }
+    
+    if (filters.maxCapacity !== undefined && vessel.deadweight && vessel.deadweight > filters.maxCapacity) {
+      return false;
+    }
+    
+    // Flag filter
+    if (filters.flag && vessel.flag !== filters.flag) {
+      return false;
+    }
+    
+    return true;
+  });
+  
+  // Handle filter changes
+  const handleFilterChange = (newFilters: CombinedFilters) => {
+    setFilters(newFilters);
+  };
 
   return (
     <div className="container mx-auto p-4">
@@ -36,7 +78,7 @@ export default function Vessels() {
             Vessels
           </h1>
           <p className="text-muted-foreground">
-            {loading ? 'Loading vessels...' : `${vessels.length} vessels in the system`}
+            {loading ? 'Loading vessels...' : `${filteredVessels.length} of ${vessels.length} vessels shown`}
           </p>
         </div>
         
@@ -57,6 +99,14 @@ export default function Vessels() {
             Add Vessel
           </Button>
         </div>
+      </div>
+      
+      {/* Filter Bar */}
+      <div className="mb-6">
+        <FilterBar 
+          onFilterChange={handleFilterChange}
+          initialFilters={filters}
+        />
       </div>
 
       {loading ? (
