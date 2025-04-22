@@ -252,7 +252,7 @@ export default function RefineryDetail() {
                 />
                 <InfoItem 
                   label={<div className="flex items-center"><CalendarClock className="h-4 w-4 mr-1" /> Last Inspection</div>} 
-                  value={"March 15, 2023"} 
+                  value={"April 18, 2025"} 
                 />
               </CardContent>
             </Card>
@@ -607,8 +607,9 @@ export default function RefineryDetail() {
                 </div>
               </CardContent>
               <CardFooter>
-                <p className="text-xs text-muted-foreground">
-                  Last updated: April 16, 2023
+                <p className="text-xs text-muted-foreground flex items-center">
+                  <CalendarClock className="h-3 w-3 mr-1 text-primary" />
+                  Last updated: April 20, 2025
                 </p>
               </CardFooter>
             </Card>

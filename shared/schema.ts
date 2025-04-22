@@ -154,3 +154,99 @@ export type Broker = typeof brokers.$inferSelect;
 
 export type InsertStats = z.infer<typeof insertStatsSchema>;
 export type Stats = typeof stats.$inferSelect;
+
+// Parts management schema
+export const parts = pgTable("parts", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  partNumber: text("part_number").notNull(),
+  description: text("description"),
+  category: text("category"),
+  price: decimal("price"),
+  quantity: integer("quantity").default(0),
+  minimumStock: integer("minimum_stock").default(5),
+  supplier: text("supplier"),
+  supplierContact: text("supplier_contact"),
+  lastPurchased: timestamp("last_purchased"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertPartSchema = createInsertSchema(parts, {
+  price: z.number().optional(),
+}).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const workOrders = pgTable("work_orders", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description"),
+  status: text("status").default("pending"),
+  priority: text("priority").default("medium"),
+  vesselId: integer("vessel_id").references(() => vessels.id),
+  refineryId: integer("refinery_id").references(() => refineries.id),
+  assignedTo: text("assigned_to"),
+  startDate: timestamp("start_date"),
+  dueDate: timestamp("due_date"),
+  completedDate: timestamp("completed_date"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertWorkOrderSchema = createInsertSchema(workOrders).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const partUsage = pgTable("part_usage", {
+  id: serial("id").primaryKey(),
+  workOrderId: integer("work_order_id").references(() => workOrders.id).notNull(),
+  partId: integer("part_id").references(() => parts.id).notNull(),
+  quantity: integer("quantity").notNull(),
+  unitPrice: decimal("unit_price"),
+  purchasedFrom: text("purchased_from"),
+  purchaseDate: timestamp("purchase_date"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertPartUsageSchema = createInsertSchema(partUsage, {
+  unitPrice: z.number().optional(),
+}).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const suppliers = pgTable("suppliers", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  contactPerson: text("contact_person"),
+  email: text("email"),
+  phone: text("phone"),
+  address: text("address"),
+  website: text("website"),
+  preferredPaymentTerms: text("preferred_payment_terms"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertSupplierSchema = createInsertSchema(suppliers).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertPart = z.infer<typeof insertPartSchema>;
+export type Part = typeof parts.$inferSelect;
+
+export type InsertWorkOrder = z.infer<typeof insertWorkOrderSchema>;
+export type WorkOrder = typeof workOrders.$inferSelect;
+
+export type InsertPartUsage = z.infer<typeof insertPartUsageSchema>;
+export type PartUsage = typeof partUsage.$inferSelect;
+
+export type InsertSupplier = z.infer<typeof insertSupplierSchema>;
+export type Supplier = typeof suppliers.$inferSelect;

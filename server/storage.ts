@@ -2,13 +2,18 @@ import { eq, and } from "drizzle-orm";
 import { db } from "./db";
 import {
   users, vessels, refineries, progressEvents, documents, brokers, stats as statsTable,
+  parts, workOrders, partUsage, suppliers,
   User, InsertUser, 
   Vessel, InsertVessel,
   Refinery, InsertRefinery,
   ProgressEvent, InsertProgressEvent,
   Document, InsertDocument,
   Broker, InsertBroker,
-  Stats, InsertStats
+  Stats, InsertStats,
+  Part, InsertPart,
+  WorkOrder, InsertWorkOrder,
+  PartUsage, InsertPartUsage,
+  Supplier, InsertSupplier
 } from "@shared/schema";
 
 // Storage interface with CRUD methods
