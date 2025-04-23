@@ -25,6 +25,39 @@ import {
   DialogTitle,
   DialogTrigger
 } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  ArrowUpRight,
+  ArrowDownRight,
+  AlertCircle,
+  Bell,
+  Calendar,
+  CheckCircle2,
+  CreditCard,
+  Edit,
+  FileText,
+  Folder,
+  FolderOpen,
+  Globe,
+  Lock,
+  LucideIcon,
+  Mail,
+  MessageSquare,
+  Paperclip,
+  Send,
+  Star,
+  Upload,
+  Building,
+  BarChart3
+} from "lucide-react";
 import {
   Form,
   FormControl,
@@ -42,13 +75,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { useToast } from '@/hooks/use-toast';
 import {
   Avatar,
@@ -60,30 +86,14 @@ import {
   Search, 
   Plus, 
   MoreHorizontal, 
-  Mail, 
   Phone, 
-  Edit, 
   Trash2,
-  CreditCard,
   FileCheck,
-  Upload,
-  Star,
   ShieldCheck,
-  MessageSquare,
-  BarChart3,
-  FileText,
-  Building,
-  Calendar,
-  CheckCircle2,
   Award,
   Shield,
-  Globe,
-  AlertCircle,
   HelpCircle,
-  Send,
-  Download,
-  ArrowUpRight,
-  ArrowDownRight
+  Download
 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 
@@ -997,8 +1007,7 @@ export default function Brokers() {
                         title: "عرض التحليلات الكاملة / View Full Analytics",
                         description: "Opening comprehensive market analytics dashboard",
                       });
-                      // For a future implementation to show an analytics dashboard:
-                      // setViewMode("analytics");
+                      window.location.href = "/trading";
                     }}
                   >
                     عرض التحليلات الكاملة / View Full Analytics
@@ -1050,8 +1059,21 @@ export default function Brokers() {
                         title: "عرض جميع الرسائل / View All Messages",
                         description: "Opening secure messaging center",
                       });
-                      // For future implementation to show messages in a dialog:
-                      // setShowMessagesDialog(true);
+                      
+                      // Create a sample broker if none exists
+                      const targetBroker = brokers.length > 0 ? brokers[0] : {
+                        id: 1,
+                        name: "Sample Broker",
+                        company: "Test Company",
+                        email: "sample@example.com",
+                        active: true
+                      };
+                      
+                      // Open the message dialog with the selected broker
+                      setSelectedBroker(targetBroker);
+                      setMessageSubject("New message");
+                      setMessageText("");
+                      setShowMessageDialog(true);
                     }}
                   >
                     عرض جميع الرسائل / View All Messages
@@ -1372,18 +1394,73 @@ export default function Brokers() {
                 </div>
                 
                 <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="subject" className="flex items-center">
-                      <FileText className="h-4 w-4 mr-2" />
-                      الموضوع / Subject
-                    </Label>
-                    <Input 
-                      id="subject" 
-                      value={messageSubject}
-                      onChange={(e) => setMessageSubject(e.target.value)}
-                      placeholder="Enter message subject"
-                      className="mt-1"
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="subject" className="flex items-center">
+                        <FileText className="h-4 w-4 mr-2" />
+                        الموضوع / Subject
+                      </Label>
+                      <Input 
+                        id="subject" 
+                        value={messageSubject}
+                        onChange={(e) => setMessageSubject(e.target.value)}
+                        placeholder="Enter message subject"
+                        className="mt-1"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="message-priority" className="flex items-center">
+                        <AlertCircle className="h-4 w-4 mr-2" />
+                        الأولوية / Priority
+                      </Label>
+                      <Select defaultValue="normal">
+                        <SelectTrigger id="message-priority" className="w-full mt-1">
+                          <SelectValue placeholder="Select priority" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="low">منخفضة / Low</SelectItem>
+                          <SelectItem value="normal">عادية / Normal</SelectItem>
+                          <SelectItem value="high">عالية / High</SelectItem>
+                          <SelectItem value="urgent">عاجلة / Urgent</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="message-category" className="flex items-center">
+                        <FolderOpen className="h-4 w-4 mr-2" />
+                        الفئة / Category
+                      </Label>
+                      <Select defaultValue="general">
+                        <SelectTrigger id="message-category" className="w-full mt-1">
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="general">عام / General</SelectItem>
+                          <SelectItem value="contract">عقود / Contracts</SelectItem>
+                          <SelectItem value="tender">مناقصات / Tenders</SelectItem>
+                          <SelectItem value="shipment">شحنات / Shipments</SelectItem>
+                          <SelectItem value="pricing">التسعير / Pricing</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div>
+                      <Label className="flex items-center">
+                        <Lock className="h-4 w-4 mr-2" />
+                        التشفير / Encryption
+                      </Label>
+                      <div className="mt-1 flex items-center justify-between p-2 border rounded-md bg-slate-50">
+                        <div className="flex items-center">
+                          <Lock className="h-4 w-4 mr-2 text-green-600" />
+                          <span className="text-sm">تشفير نهاية لنهاية / End-to-end encryption</span>
+                        </div>
+                        <Switch checked={true} />
+                      </div>
+                    </div>
                   </div>
                   
                   <div>
@@ -1398,6 +1475,52 @@ export default function Brokers() {
                       placeholder="Enter your message here..."
                       className="mt-1 min-h-[150px]"
                     />
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label className="flex items-center">
+                        <Bell className="h-4 w-4 mr-2" />
+                        إشعارات / Notifications
+                      </Label>
+                      <div className="mt-1 flex flex-col space-y-2 p-2 border rounded-md">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox id="message-notify-email" defaultChecked />
+                          <label htmlFor="message-notify-email" className="text-sm text-gray-700">
+                            البريد الإلكتروني / Email
+                          </label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox id="message-notify-sms" />
+                          <label htmlFor="message-notify-sms" className="text-sm text-gray-700">
+                            الرسائل النصية / SMS
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <Label className="flex items-center">
+                        <Paperclip className="h-4 w-4 mr-2" />
+                        المرفقات / Attachments
+                      </Label>
+                      <div className="mt-1 border-2 border-dashed rounded-md p-4 text-center">
+                        <div>
+                          <Paperclip className="h-6 w-6 mx-auto text-gray-400 mb-1" />
+                          <p className="text-sm text-gray-500">
+                            اسحب وأفلت الملفات هنا أو انقر لتحميلها / Drop files here or click to upload
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            PDF, DOCX, XLSX, PNG, JPG (max 10MB)
+                          </p>
+                        </div>
+                        <input
+                          type="file"
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                          multiple
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
