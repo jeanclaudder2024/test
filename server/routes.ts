@@ -1010,22 +1010,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
    */
   apiRouter.post("/ai/analyze-query", async (req, res) => {
     try {
-      const { query, context } = req.body;
+      const { query, context = {} } = req.body;
       
       if (!query) {
         return res.status(400).json({ error: "Query is required" });
       }
+      
+      // Get counts of vessels and refineries from DB
+      const vessels = await storage.getVessels();
+      const refineries = await storage.getRefineries();
       
       // Format a prompt for the AI with the context
       const prompt = `
 User query: "${query}"
 
 Context:
-- Available vessels: ${context.vesselsCount || 0}
-- Available refineries: ${context.refineriesCount || 0}
-${context.trackedVessel ? `- Currently tracking vessel: ${context.trackedVessel.name} (IMO: ${context.trackedVessel.imo})
-  - Current location: ${context.trackedVessel.location}
-  - Destination: ${context.trackedVessel.destination}` : '- No vessel is currently being tracked'}
+- Available vessels: ${vessels.length || 0}
+- Available refineries: ${refineries.length || 0}
+- No vessel is currently being tracked
 
 Your task is to respond to the query in a helpful and informative way. If the query is about:
 1. Vessels: Provide information about vessels, their tracking status, or vessel-related data.
