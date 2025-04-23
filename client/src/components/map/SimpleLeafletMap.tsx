@@ -208,10 +208,14 @@ export default function SimpleLeafletMap({
       language: mapLanguage === 'multilingual' ? undefined : mapLanguage
     }).addTo(map);
     
-    // Filter and add vessel markers
-    const filteredVessels = vessels
-      .filter(vessel => vessel.currentLat && vessel.currentLng)
-      .slice(0, 1000);
+    // Filter and add vessel markers (if not in empty map mode)
+    const showMarkers = !window.location.search.includes('empty=true');
+    
+    const filteredVessels = showMarkers 
+      ? vessels
+        .filter(vessel => vessel.currentLat && vessel.currentLng)
+        .slice(0, 1000)
+      : [];
       
     setDisplayVessels(filteredVessels);
     
@@ -330,8 +334,9 @@ export default function SimpleLeafletMap({
       vesselMarkersRef.current.push(marker);
     });
     
-    // Add refinery markers
-    refineries.forEach(refinery => {
+    // Add refinery markers (if not in empty map mode)
+    if (showMarkers) {
+      refineries.forEach(refinery => {
       if (!refinery.lat || !refinery.lng) return;
       
       // Get color based on refinery status
@@ -401,6 +406,7 @@ export default function SimpleLeafletMap({
       
       refineryMarkersRef.current.push(marker);
     });
+    }
     
     // Set view based on priority:
     // 1. initialCenter/initialZoom (if provided)
@@ -521,7 +527,7 @@ export default function SimpleLeafletMap({
             vesselMarkersRef.current.push(eventMarker);
           });
         }
-      };
+      }
     }
     
     // Make sure map is sized properly
