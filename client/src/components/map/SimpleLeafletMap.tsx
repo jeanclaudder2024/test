@@ -432,8 +432,8 @@ export default function SimpleLeafletMap({
       
       map.setView([lat, lng], 7);
       
-      // Draw vessel route if tracking enabled and we have progress events
-      if (showVesselRoute && progressEvents && progressEvents.length > 0) {
+      // Draw vessel route if tracking enabled, we have progress events, and we're not in empty map mode
+      if (showVesselRoute && progressEvents && progressEvents.length > 0 && showMarkers) {
         // First remove any existing route line
         if (routeLineRef.current) {
           routeLineRef.current.remove();
