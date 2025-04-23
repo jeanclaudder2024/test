@@ -143,8 +143,7 @@ export default function Vessels() {
     try {
       setIsRefreshingASI(true);
       
-      const response = await apiRequest('POST', '/api/refresh-asi-data');
-      const result = await response.json();
+      const result = await apiRequest('/api/refresh-asi-data', { method: 'POST' });
       
       if (result.success) {
         toast({
@@ -257,6 +256,16 @@ export default function Vessels() {
           >
             <Anchor className="h-4 w-4 mr-2" />
             {isUpdatingDestinations ? 'Updating...' : 'Ensure All Destinations'}
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            onClick={handleRefreshASIData} 
+            disabled={isRefreshingASI}
+            className="bg-green-50 text-green-600 border-green-200 hover:bg-green-100"
+          >
+            <AlertCircle className="h-4 w-4 mr-2" />
+            {isRefreshingASI ? 'Refreshing...' : 'Refresh ASI Stream Data'}
           </Button>
           
           <Button>
