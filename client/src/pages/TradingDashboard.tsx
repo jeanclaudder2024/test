@@ -11,7 +11,7 @@ import {
   AlertCircle, 
   Droplet, 
   Users, 
-  BarChart, 
+  BarChart as LucideBarChart, 
   ArrowUpRight, 
   ArrowDownRight, 
   FileText, 
@@ -21,7 +21,7 @@ import {
   Filter,
   RefreshCw,
   MoreHorizontal,
-  PieChart,
+  PieChart as LucidePieChart,
   Globe,
   Plus,
   X,
@@ -36,6 +36,23 @@ import {
   CardHeader, 
   CardTitle 
 } from "@/components/ui/card";
+import {
+  LineChart,
+  Line,
+  BarChart as RechartsBarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart as RechartsPieChart,
+  Pie,
+  Cell,
+  AreaChart,
+  Area
+} from 'recharts';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -600,12 +617,59 @@ export default function TradingDashboard() {
                 <CardDescription>نظرة عامة على سوق النفط</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="h-[200px] flex items-center justify-center">
-                  <div className="text-center text-muted-foreground">
-                    <BarChart3 className="h-12 w-12 mx-auto mb-2 opacity-20" />
-                    <p>Interactive market chart will appear here</p>
-                    <p className="text-sm">مخطط تفاعلي لحالة السوق</p>
-                  </div>
+                <div className="h-[200px]">
+                  {isLoadingPrices ? (
+                    <div className="h-full flex items-center justify-center">
+                      <Skeleton className="h-[180px] w-full" />
+                    </div>
+                  ) : (
+                    <div className="h-full">
+                      {/* Real Interactive Chart using Recharts */}
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart
+                          data={oilPrices.map((price, index) => ({
+                            name: price.name,
+                            price: price.price,
+                            time: new Date(price.lastUpdated).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                            index
+                          }))}
+                          margin={{ top: 10, right: 10, left: 10, bottom: 20 }}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+                          <XAxis 
+                            dataKey="name" 
+                            tick={{ fontSize: 12 }}
+                            interval={0}
+                          />
+                          <YAxis 
+                            domain={['dataMin - 1', 'dataMax + 1']}
+                            tick={{ fontSize: 12 }}
+                            tickFormatter={(value: number) => `$${value}`}
+                          />
+                          <RechartsTooltip 
+                            formatter={(value: number) => [`$${value}`, 'Price']}
+                            labelFormatter={(label: string) => `${label}`}
+                            contentStyle={{ 
+                              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                              border: '1px solid #ccc',
+                              borderRadius: '4px',
+                              padding: '8px'
+                            }}
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="price"
+                            stroke="var(--primary)"
+                            strokeWidth={2}
+                            dot={{ fill: 'var(--primary)', r: 4 }}
+                            activeDot={{ r: 6, fill: 'var(--primary)' }}
+                            isAnimationActive={true}
+                            animationDuration={1000}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
