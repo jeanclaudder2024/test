@@ -2,6 +2,115 @@ import { InsertVessel } from "@shared/schema";
 import { REGIONS, OIL_PRODUCT_TYPES } from "@shared/constants";
 
 /**
+ * Determines if a coordinate pair is likely at sea (not on land)
+ * This is a simplified check using known land mass boundaries
+ * @param lat Latitude (-90 to 90)
+ * @param lng Longitude (-180 to 180)
+ * @returns Boolean indicating if the coordinates are likely at sea
+ */
+export function isCoordinateAtSea(lat: number, lng: number): boolean {
+  // Major landmasses to exclude
+  
+  // North America
+  if (lng >= -140 && lng <= -60 && lat >= 15 && lat <= 72) {
+    // Exclude Great Lakes
+    if (
+      (lat >= 41 && lat <= 49 && lng >= -93 && lng <= -76) || // Great Lakes general area
+      (lat >= 41.5 && lat <= 44 && lng >= -87.5 && lng <= -84.5) || // Lake Michigan
+      (lat >= 41 && lat <= 43 && lng >= -83.5 && lng <= -78.5) || // Lake Erie
+      (lat >= 43 && lat <= 47.5 && lng >= -89.5 && lng <= -82) || // Lake Superior
+      (lat >= 42.5 && lat <= 45 && lng >= -80 && lng <= -76) // Lake Ontario
+    ) {
+      return true;
+    }
+    
+    // Gulf of Mexico
+    if (lat >= 18 && lat <= 30 && lng >= -98 && lng <= -80) {
+      return true;
+    }
+    
+    return false;
+  }
+  
+  // South America
+  if (lng >= -85 && lng <= -35 && lat >= -58 && lat <= 12) {
+    return false;
+  }
+  
+  // Europe and parts of Western Asia/North Africa
+  if (lng >= -15 && lng <= 40 && lat >= 30 && lat <= 75) {
+    // Mediterranean Sea
+    if (lng >= -5 && lng <= 37 && lat >= 30 && lat <= 45) {
+      return true;
+    }
+    
+    // Baltic Sea
+    if (lng >= 9 && lng <= 30 && lat >= 53 && lat <= 66) {
+      return true;
+    }
+    
+    // North Sea
+    if (lng >= -4 && lng <= 9 && lat >= 51 && lat <= 62) {
+      return true;
+    }
+    
+    return false;
+  }
+  
+  // Africa
+  if (lng >= -20 && lng <= 50 && lat >= -35 && lat <= 30) {
+    return false;
+  }
+  
+  // Asia (mainland)
+  if (lng >= 40 && lng <= 145 && lat >= 0 && lat <= 75) {
+    // Sea of Japan
+    if (lng >= 127 && lng <= 142 && lat >= 33 && lat <= 48) {
+      return true;
+    }
+    
+    // South China Sea
+    if (lng >= 105 && lng <= 122 && lat >= 5 && lat <= 25) {
+      return true;
+    }
+    
+    // Persian Gulf
+    if (lng >= 48 && lng <= 57 && lat >= 23 && lat <= 30) {
+      return true;
+    }
+    
+    return false;
+  }
+  
+  // Australia
+  if (lng >= 110 && lng <= 155 && lat >= -45 && lat <= -10) {
+    return false;
+  }
+  
+  // Russia & Arctic
+  if (lng >= 30 && lng <= 180 && lat >= 60 && lat <= 90) {
+    return false;
+  }
+  
+  // Indonesia & Philippines (archipelagos - we'll place ships around them)
+  if (lng >= 95 && lng <= 130 && lat >= -10 && lat <= 20) {
+    // Waters between the islands are fine
+    if (
+      (lat >= -5 && lat <= 0 && lng >= 105 && lng <= 110) || // Java Sea
+      (lat >= 0 && lat <= 5 && lng >= 110 && lng <= 119) || // Celebes Sea
+      (lat >= 5 && lat <= 15 && lng >= 115 && lng <= 125) // Sulu Sea
+    ) {
+      return true;
+    }
+    
+    return false;
+  }
+  
+  // By default, assume that other coordinates (mostly oceans) are at sea
+  return true;
+}
+
+/**
  * Determines the region ID from a set of latitude and longitude coordinates
  * @param lat Latitude (-90 to 90)
  * @param lng Longitude (-180 to 180)
@@ -363,8 +472,33 @@ export function generateLargeVesselDataset(count: number = 1500): InsertVessel[]
   // Generated vessels array
   const vessels: InsertVessel[] = [];
   
-  // Add original template vessels first
+  // Add original template vessels first, ensuring they're positioned at sea
   templateVessels.forEach(template => {
+    // Check if the vessel's position is at sea
+    let lat = template.position.lat;
+    let lng = template.position.lng;
+    
+    // If the position is on land, reposition to a nearby sea location
+    if (!isCoordinateAtSea(lat, lng)) {
+      // Use predefined ocean coordinates as a fallback
+      const oceanCoordinates = [
+        { lat: 35.6, lng: -40.2 },  // North Atlantic
+        { lat: -25.3, lng: 5.1 },   // South Atlantic
+        { lat: 20.4, lng: 122.5 },  // North Pacific
+        { lat: -30.8, lng: -100.2 }, // South Pacific
+        { lat: 15.5, lng: 55.3 },   // Indian Ocean
+        { lat: 36.2, lng: 20.1 }    // Mediterranean
+      ];
+      const safeCoord = oceanCoordinates[Math.floor(Math.random() * oceanCoordinates.length)];
+      lat = safeCoord.lat;
+      lng = safeCoord.lng;
+    }
+    
+    // Get appropriate region based on new coordinates if needed
+    const region = isCoordinateAtSea(template.position.lat, template.position.lng) 
+      ? template.region 
+      : determineRegionFromCoordinates(lat, lng);
+    
     vessels.push({
       name: template.name,
       imo: template.imo,
@@ -373,15 +507,15 @@ export function generateLargeVesselDataset(count: number = 1500): InsertVessel[]
       flag: template.flag,
       built: template.built,
       deadweight: template.deadweight,
-      currentLat: template.position.lat.toString(),
-      currentLng: template.position.lng.toString(),
+      currentLat: lat.toString(),
+      currentLng: lng.toString(),
       departurePort: template.departure.port,
       departureDate: new Date(template.departure.date),
       destinationPort: template.destination.port,
       eta: new Date(template.destination.eta),
       cargoType: template.cargo.type,
       cargoCapacity: template.cargo.capacity,
-      currentRegion: template.region
+      currentRegion: region
     });
   });
   
@@ -400,13 +534,36 @@ export function generateLargeVesselDataset(count: number = 1500): InsertVessel[]
     const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
     const name = `${prefix} ${suffix}`;
     
-    // Generate random position
-    const latOffset = Math.random() * 20 - 10; // -10 to +10
-    const lngOffset = Math.random() * 20 - 10; // -10 to +10
-    const baseLat = template.position.lat;
-    const baseLng = template.position.lng;
-    const lat = Math.max(-85, Math.min(85, baseLat + latOffset));
-    const lng = Math.max(-180, Math.min(180, baseLng + lngOffset));
+    // Generate random position that's at sea (not on land)
+    let lat, lng;
+    let attempts = 0;
+    const maxAttempts = 10;
+    
+    do {
+      const latOffset = Math.random() * 20 - 10; // -10 to +10
+      const lngOffset = Math.random() * 20 - 10; // -10 to +10
+      const baseLat = template.position.lat;
+      const baseLng = template.position.lng;
+      lat = Math.max(-85, Math.min(85, baseLat + latOffset));
+      lng = Math.max(-180, Math.min(180, baseLng + lngOffset));
+      attempts++;
+    } while (!isCoordinateAtSea(lat, lng) && attempts < maxAttempts);
+    
+    // If we couldn't find a sea coordinate after max attempts, use predefined safe coordinates
+    if (!isCoordinateAtSea(lat, lng)) {
+      // Use predefined ocean coordinates as a fallback
+      const oceanCoordinates = [
+        { lat: 35.6, lng: -40.2 },  // North Atlantic
+        { lat: -25.3, lng: 5.1 },   // South Atlantic
+        { lat: 20.4, lng: 122.5 },  // North Pacific
+        { lat: -30.8, lng: -100.2 }, // South Pacific
+        { lat: 15.5, lng: 55.3 },   // Indian Ocean
+        { lat: 36.2, lng: 20.1 }    // Mediterranean
+      ];
+      const safeCoord = oceanCoordinates[Math.floor(Math.random() * oceanCoordinates.length)];
+      lat = safeCoord.lat;
+      lng = safeCoord.lng;
+    }
     
     // Determine the region based on coordinates
     const mappedRegion = determineRegionFromCoordinates(lat, lng);
