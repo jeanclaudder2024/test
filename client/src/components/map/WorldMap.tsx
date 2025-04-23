@@ -517,78 +517,87 @@ export default function WorldMap({
                 click: () => onVesselClick(vessel)
               }}
             >
-              <Popup maxWidth={300} minWidth={260}>
-                <div className="p-0 overflow-hidden">
+              <Popup maxWidth={300} minWidth={260} className="custom-popup">
+                <div className="p-0 overflow-hidden rounded-md shadow-xl border border-gray-100 dark:border-gray-800">
                   {/* Vessel Image Header */}
-                  <div className="relative h-24 overflow-hidden bg-gradient-to-r from-blue-900 to-blue-700">
+                  <div className="relative h-28 overflow-hidden bg-gradient-to-r from-blue-800 via-blue-700 to-blue-600">
                     <div 
-                      className="absolute inset-0 bg-cover bg-center opacity-60"
+                      className="absolute inset-0 bg-cover bg-center opacity-50"
                       style={{
                         backgroundImage: `url('https://images.unsplash.com/photo-1572396698880-61c914c5901e?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=300&ixid=MnwxfDB8MXxyYW5kb218MHx8c2hpcHx8fHx8fDE2NDU3NjE5NTg&ixlib=rb-1.2.1&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=450')`
                       }}
                     ></div>
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-black/10"></div>
+                    
+                    {/* Shimmer effect */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer"></div>
+                    
                     <div className="absolute bottom-0 left-0 p-3 w-full">
                       <h3 className="font-bold text-white text-sm flex items-center gap-1.5">
-                        <Ship className="h-4 w-4" />
+                        <Ship className="h-4 w-4 text-blue-300" />
                         {vessel.name}
                       </h3>
                       <div className="flex items-center mt-0.5">
                         <Badge 
                           variant="outline" 
-                          className="mr-1.5 text-[10px] bg-white/20 text-white border-white/30"
+                          className="mr-1.5 text-[10px] bg-blue-600/30 text-white border-blue-400/30 backdrop-blur-sm"
                         >
                           {vessel.vesselType || 'Oil Tanker'}
                         </Badge>
-                        <span className="text-white/80 text-[10px]">{vessel.flag}</span>
+                        <span className="text-blue-100 text-[10px]">{vessel.flag}</span>
                       </div>
                     </div>
                   </div>
                   
                   {/* Vessel Info */}
-                  <div className="p-3">
-                    <div className="grid grid-cols-2 gap-2 mb-3">
-                      <div className="bg-blue-50 dark:bg-blue-950/30 rounded p-1.5">
-                        <div className="text-[10px] text-blue-500 dark:text-blue-400 font-medium">IMO NUMBER</div>
+                  <div className="p-2.5">
+                    <div className="grid grid-cols-2 gap-1.5 mb-2">
+                      <div className="bg-blue-50 dark:bg-blue-950/40 rounded p-1.5 border border-blue-100/50 dark:border-blue-800/50">
+                        <div className="text-[10px] text-blue-600 dark:text-blue-400 font-medium">IMO NUMBER</div>
                         <div className="text-sm font-medium">{vessel.imo || 'N/A'}</div>
                       </div>
-                      <div className="bg-emerald-50 dark:bg-emerald-950/30 rounded p-1.5">
-                        <div className="text-[10px] text-emerald-500 dark:text-emerald-400 font-medium">CARGO TYPE</div>
+                      <div className="bg-emerald-50 dark:bg-emerald-950/40 rounded p-1.5 border border-emerald-100/50 dark:border-emerald-800/50">
+                        <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">CARGO TYPE</div>
                         <div className="text-sm font-medium truncate">{vessel.cargoType || 'Unknown'}</div>
                       </div>
                     </div>
                     
-                    <div className="space-y-2">
-                      {vessel.departurePort && (
-                        <div className="flex items-start gap-2 text-xs">
-                          <div className="mt-0.5 h-4 w-4 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center flex-shrink-0">
-                            <span className="text-blue-600 dark:text-blue-400 text-[10px]">A</span>
-                          </div>
-                          <div>
-                            <div className="text-[10px] text-muted-foreground">DEPARTURE</div>
-                            <div className="font-medium">{vessel.departurePort}</div>
-                          </div>
-                        </div>
-                      )}
+                    {/* Connected route line */}
+                    <div className="relative mb-2">
+                      <div className="absolute left-[7px] top-[14px] h-[calc(100%-10px)] w-0.5 bg-gradient-to-b from-blue-400 to-green-400"></div>
                       
-                      {vessel.destinationPort && (
-                        <div className="flex items-start gap-2 text-xs">
-                          <div className="mt-0.5 h-4 w-4 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center flex-shrink-0">
-                            <span className="text-green-600 dark:text-green-400 text-[10px]">B</span>
+                      <div className="space-y-1.5">
+                        {vessel.departurePort && (
+                          <div className="flex items-start gap-2 text-xs">
+                            <div className="mt-0.5 h-4 w-4 rounded-full bg-blue-100 dark:bg-blue-800 border-2 border-blue-400 flex items-center justify-center flex-shrink-0 z-10">
+                              <span className="text-blue-600 dark:text-blue-400 text-[8px] font-bold">A</span>
+                            </div>
+                            <div>
+                              <div className="text-[10px] text-muted-foreground">DEPARTURE</div>
+                              <div className="font-medium">{vessel.departurePort}</div>
+                            </div>
                           </div>
-                          <div>
-                            <div className="text-[10px] text-muted-foreground">DESTINATION</div>
-                            <div className="font-medium">{vessel.destinationPort}</div>
+                        )}
+                        
+                        {vessel.destinationPort && (
+                          <div className="flex items-start gap-2 text-xs">
+                            <div className="mt-0.5 h-4 w-4 rounded-full bg-green-100 dark:bg-green-800 border-2 border-green-400 flex items-center justify-center flex-shrink-0 z-10">
+                              <span className="text-green-600 dark:text-green-400 text-[8px] font-bold">B</span>
+                            </div>
+                            <div>
+                              <div className="text-[10px] text-muted-foreground">DESTINATION</div>
+                              <div className="font-medium">{vessel.destinationPort}</div>
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
                     
                     {/* Vessel Card Actions */}
-                    <div className="flex mt-3 gap-2">
+                    <div className="flex mt-2 gap-1.5">
                       <Button 
                         variant="outline" 
-                        className="flex-1 text-xs h-8 border-green-500 text-green-600 hover:text-green-700 hover:bg-green-50 dark:border-green-700 dark:text-green-500 dark:hover:bg-green-950/50"
+                        className="flex-1 text-[11px] h-7 border-green-500 text-green-600 hover:text-green-700 hover:bg-green-50/70 dark:border-green-700 dark:text-green-500 dark:hover:bg-green-950/50"
                         onClick={() => onVesselClick(vessel)}
                       >
                         <Navigation className="h-3 w-3 mr-1" />
@@ -596,7 +605,7 @@ export default function WorldMap({
                       </Button>
                       <Button 
                         variant="default" 
-                        className="flex-1 text-xs h-8 bg-primary hover:bg-primary/90"
+                        className="flex-1 text-[11px] h-7 bg-blue-600 hover:bg-blue-700 text-white"
                         onClick={() => {
                           onVesselClick(vessel);
                           // Navigate to vessel detail page
