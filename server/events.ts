@@ -1,8 +1,14 @@
-import { WebSocketServer, WebSocket } from 'ws';
+import { WebSocketServer } from 'ws';
 import { Vessel, Refinery } from '@shared/schema';
 
-// Maintain a list of connected clients
-let connectedClients: WebSocket[] = [];
+// Cliente WebSocket conectado
+type ConnectedClient = {
+  ws: any; // Using 'any' here to avoid type conflicts
+  userId?: number;
+};
+
+// Clientes conectados
+let connectedClients: ConnectedClient[] = [];
 
 /**
  * Set up WebSocket event handlers
@@ -11,20 +17,29 @@ let connectedClients: WebSocket[] = [];
 export function setupEvents(wss: WebSocketServer): void {
   wss.on('connection', (ws) => {
     console.log('Client connected to WebSocket');
-    connectedClients.push(ws);
+    connectedClients.push({ ws });
 
-    // Setup disconnect handler
-    ws.on('close', () => {
-      console.log('Client disconnected from WebSocket');
-      connectedClients = connectedClients.filter(client => client !== ws);
+    ws.on('message', (message) => {
+      try {
+        const data = JSON.parse(message.toString());
+        
+        // Handle authentication
+        if (data.type === 'authenticate' && data.userId) {
+          const clientIndex = connectedClients.findIndex(c => c.ws === ws);
+          if (clientIndex >= 0) {
+            connectedClients[clientIndex].userId = data.userId;
+            console.log(`User ${data.userId} authenticated`);
+          }
+        }
+      } catch (error) {
+        console.error('Error processing WebSocket message:', error);
+      }
     });
 
-    // Send initial connection acknowledgment
-    ws.send(JSON.stringify({
-      type: 'connection',
-      message: 'Connected to vessel tracking WebSocket server',
-      timestamp: new Date().toISOString()
-    }));
+    ws.on('close', () => {
+      console.log('Client disconnected from WebSocket');
+      connectedClients = connectedClients.filter(client => client.ws !== ws);
+    });
   });
 }
 
@@ -33,20 +48,10 @@ export function setupEvents(wss: WebSocketServer): void {
  * @param vessel The updated vessel data
  */
 export function broadcastVesselUpdate(vessel: Vessel): void {
-  const message = JSON.stringify({
+  sendToAllClients(JSON.stringify({
     type: 'vessel_update',
-    data: {
-      id: vessel.id,
-      name: vessel.name,
-      imo: vessel.imo, 
-      currentLat: vessel.currentLat,
-      currentLng: vessel.currentLng,
-      currentRegion: vessel.currentRegion,
-      updated: new Date().toISOString()
-    }
-  });
-
-  sendToAllClients(message);
+    data: vessel
+  }));
 }
 
 /**
@@ -54,18 +59,10 @@ export function broadcastVesselUpdate(vessel: Vessel): void {
  * @param refinery The updated refinery data
  */
 export function broadcastRefineryUpdate(refinery: Refinery): void {
-  const message = JSON.stringify({
+  sendToAllClients(JSON.stringify({
     type: 'refinery_update',
-    data: {
-      id: refinery.id,
-      name: refinery.name,
-      status: refinery.status,
-      capacity: refinery.capacity,
-      updated: new Date().toISOString()
-    }
-  });
-
-  sendToAllClients(message);
+    data: refinery
+  }));
 }
 
 /**
@@ -74,8 +71,12 @@ export function broadcastRefineryUpdate(refinery: Refinery): void {
  */
 function sendToAllClients(message: string): void {
   connectedClients.forEach(client => {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(message);
+    try {
+      if (client.ws.readyState === WebSocket.OPEN) {
+        client.ws.send(message);
+      }
+    } catch (error) {
+      console.error('Error sending WebSocket message:', error);
     }
   });
 }
