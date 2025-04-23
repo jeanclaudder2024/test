@@ -27,6 +27,7 @@ import {
   stats
 } from "@shared/schema";
 import { z } from "zod";
+import { count } from "drizzle-orm";
 import { fromZodError } from "zod-validation-error";
 import { apiTesterRouter } from "./routes/apiTester";
 import { brokerRouter } from "./routes/brokerRoutes";
@@ -40,56 +41,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   const apiRouter = express.Router();
 
-  // Endpoint to clear all vessel and refinery data from the database
+  // Development-only endpoints
   if (app.get("env") === "development") {
-    apiRouter.post("/clear-data", async (req, res) => {
-      try {
-        console.log("Starting database clearing process...");
-        
-        // Delete all vessels
-        console.log("Deleting all vessels...");
-        const vesselsDeleted = await db.delete(vessels).returning();
-        console.log(`Deleted ${vesselsDeleted.length} vessels.`);
-        
-        // Delete all refineries
-        console.log("Deleting all refineries...");
-        const refineriesDeleted = await db.delete(refineries).returning();
-        console.log(`Deleted ${refineriesDeleted.length} refineries.`);
-        
-        // Delete all progress events
-        console.log("Deleting all progress events...");
-        const eventsDeleted = await db.delete(progressEvents).returning();
-        console.log(`Deleted ${eventsDeleted.length} progress events.`);
-        
-        // Delete all documents related to vessels
-        console.log("Deleting all vessel documents...");
-        const documentsDeleted = await db.delete(documents).returning();
-        console.log(`Deleted ${documentsDeleted.length} documents.`);
-        
-        // Reset stats
-        // Update via direct db query to include lastUpdated field
-        await db.update(stats).set({ 
-          activeVessels: 0, 
-          totalCargo: "0",
-          activeRefineries: 0,
-          lastUpdated: new Date()
-        });
-        
-        res.json({ 
-          success: true, 
-          message: "All vessel and refinery data has been deleted",
-          deleted: {
-            vessels: vesselsDeleted.length,
-            refineries: refineriesDeleted.length,
-            progressEvents: eventsDeleted.length,
-            documents: documentsDeleted.length
-          }
-        });
-      } catch (error) {
-        console.error("Error clearing database:", error);
-        res.status(500).json({ message: "Failed to clear data" });
-      }
-    });
     
     // Initialize with seed data in development
     // Route to refresh vessel data with force parameter
@@ -263,30 +216,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         console.log("Starting data cleanup process...");
         
+        // Get counts before deleting for reporting
+        const vesselCount = await db.select({ count: count() }).from(vessels);
+        const refineryCount = await db.select({ count: count() }).from(refineries);
+        const eventCount = await db.select({ count: count() }).from(progressEvents);
+        const docCount = await db.select({ count: count() }).from(documents);
+        
         // Clear all vessels
-        const result = await db.delete(vessels);
-        console.log(`Deleted ${result.count} vessels from database.`);
+        await db.delete(vessels);
+        console.log(`Deleted ${vesselCount[0].count} vessels from database.`);
         
         // Clear all refineries
-        const refineryResult = await db.delete(refineries);
-        console.log(`Deleted ${refineryResult.count} refineries from database.`);
+        await db.delete(refineries);
+        console.log(`Deleted ${refineryCount[0].count} refineries from database.`);
         
         // Clear all progress events
-        const eventsResult = await db.delete(progressEvents);
-        console.log(`Deleted ${eventsResult.count} progress events from database.`);
+        await db.delete(progressEvents);
+        console.log(`Deleted ${eventCount[0].count} progress events from database.`);
         
         // Clear all documents
-        const docsResult = await db.delete(documents);
-        console.log(`Deleted ${docsResult.count} documents from database.`);
+        await db.delete(documents);
+        console.log(`Deleted ${docCount[0].count} documents from database.`);
         
         res.json({
           success: true,
           message: "All vessel and refinery data cleared successfully",
           data: {
-            vessels: result.count,
-            refineries: refineryResult.count,
-            events: eventsResult.count,
-            documents: docsResult.count
+            vessels: Number(vesselCount[0].count),
+            refineries: Number(refineryCount[0].count),
+            events: Number(eventCount[0].count),
+            documents: Number(docCount[0].count)
           }
         });
       } catch (error: any) {
@@ -1183,6 +1142,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Subscription cancellation error:", error);
       res.status(500).json({ message: error.message || "Failed to cancel subscription" });
+    }
+  });
+  
+  // Global endpoint for clearing all vessel and refinery data
+  apiRouter.post("/clear-data", async (req, res) => {
+    try {
+      console.log("Starting data cleanup process...");
+      
+      // Get counts before deleting for reporting
+      const vesselCount = await db.select({ count: count() }).from(vessels);
+      const refineryCount = await db.select({ count: count() }).from(refineries);
+      const eventCount = await db.select({ count: count() }).from(progressEvents);
+      const docCount = await db.select({ count: count() }).from(documents);
+      
+      // Clear all vessels
+      await db.delete(vessels);
+      console.log(`Deleted ${vesselCount[0].count} vessels from database.`);
+      
+      // Clear all refineries
+      await db.delete(refineries);
+      console.log(`Deleted ${refineryCount[0].count} refineries from database.`);
+      
+      // Clear all progress events
+      await db.delete(progressEvents);
+      console.log(`Deleted ${eventCount[0].count} progress events from database.`);
+      
+      // Clear all documents
+      await db.delete(documents);
+      console.log(`Deleted ${docCount[0].count} documents from database.`);
+      
+      // Reset stats if they exist
+      const statsExists = await db.select().from(stats);
+      if (statsExists.length > 0) {
+        await db.update(stats).set({ 
+          activeVessels: 0, 
+          totalCargo: "0",
+          activeRefineries: 0,
+          lastUpdated: new Date()
+        });
+      }
+      
+      res.json({
+        success: true,
+        message: "All vessel and refinery data cleared successfully",
+        data: {
+          vessels: Number(vesselCount[0].count),
+          refineries: Number(refineryCount[0].count),
+          events: Number(eventCount[0].count),
+          documents: Number(docCount[0].count)
+        }
+      });
+    } catch (error: any) {
+      console.error("Error clearing data:", error);
+      res.status(500).json({ 
+        message: "Failed to clear data",
+        error: error.message || String(error)
+      });
     }
   });
 
