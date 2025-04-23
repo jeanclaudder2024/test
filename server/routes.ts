@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { vesselService } from "./services/vesselService";
 import { refineryService } from "./services/refineryService";
 import { aiService } from "./services/aiService";
+import { dataService } from "./services/asiStreamService";
 import { brokerService } from "./services/brokerService";
 import { stripeService } from "./services/stripeService";
 import { updateRefineryCoordinates, seedMissingRefineries } from "./services/refineryUpdate";
@@ -896,12 +897,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (currentTime - lastDbFetchTime > POSITION_UPDATE_INTERVAL) {
           setTimeout(async () => {
             try {
-              // Get position updates directly from the database
-              const positionUpdates = await vesselService.getAllVessels();
+              // Get position updates from ASI Stream API
+              const positionUpdates = await dataService.fetchVessels();
               
               // Map of IMO -> position updates for fast lookup
               const positionMap = new Map();
-              positionUpdates.forEach((vessel: Vessel) => {
+              positionUpdates.forEach((vessel: any) => {
                 if (vessel.imo && vessel.currentLat && vessel.currentLng) {
                   positionMap.set(vessel.imo, {
                     currentLat: vessel.currentLat,
@@ -931,7 +932,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 }
               }
             } catch (updateError) {
-              console.error("Error updating vessel positions from database:", updateError);
+              console.error("Error updating vessel positions from ASI Stream API:", updateError);
             }
           }, 100); // Run quickly after sending data to update positions
         }
