@@ -848,8 +848,7 @@ export default function Brokers() {
                         title: "عرض جميع المستندات / View All Documents",
                         description: "Navigating to document management page",
                       });
-                      // If using real navigation in the future, uncomment this:
-                      // navigate("/documents");
+                      window.location.href = "/documents";
                     }}
                   >
                     عرض جميع المستندات / View All Documents
@@ -901,8 +900,7 @@ export default function Brokers() {
                         title: "عرض جميع الشركات / View All Companies",
                         description: "Opening company directory",
                       });
-                      // If you want to implement a specific view in the future:
-                      // setViewType("companies");
+                      window.location.href = "/refineries";
                     }}
                   >
                     عرض جميع الشركات / View All Companies
@@ -954,8 +952,8 @@ export default function Brokers() {
                         title: "عرض جميع المناقصات / View All Tenders",
                         description: "Opening tender listings page",
                       });
-                      // If you want to show a dialog with all tenders in the future:
-                      // setShowTendersDialog(true);
+                      // Open a dialog to show all tenders
+                      window.location.href = "/trading";
                     }}
                   >
                     عرض جميع المناقصات / View All Tenders
@@ -1108,6 +1106,87 @@ export default function Brokers() {
                     }}
                   >
                     عرض تفاصيل العضوية / View Membership Details
+                  </Button>
+                </CardFooter>
+              </Card>
+              
+              <Card className="bg-white/80 hover:shadow-md transition-shadow">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center">
+                    <Globe className="h-5 w-5 mr-2 text-primary" />
+                    التحديثات المباشرة / Real-Time Feed
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-gray-600 mb-4">
+                    آخر أحداث السوق في الوقت الحقيقي / Latest market events in real-time
+                  </p>
+                  <div className="space-y-2">
+                    <div className="p-2 border-l-4 border-green-500 bg-green-50 rounded-r-md">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <ArrowUpRight className="h-4 w-4 mr-2 text-green-500" />
+                          <span className="text-sm font-medium">سعر خام برنت / Brent Crude</span>
+                        </div>
+                        <span className="text-xs text-gray-500">{formatDate(new Date(Date.now() - 10 * 60 * 1000), 'HH:mm')}</span>
+                      </div>
+                      <p className="text-xs mt-1 text-gray-600">
+                        ارتفع سعر خام برنت بنسبة 2.1٪ بسبب تخفيضات الإنتاج المتوقعة / Brent Crude up 2.1% on anticipated production cuts
+                      </p>
+                    </div>
+                    
+                    <div className="p-2 border-l-4 border-blue-500 bg-blue-50 rounded-r-md">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <Globe className="h-4 w-4 mr-2 text-blue-500" />
+                          <span className="text-sm font-medium">وصول ناقلة / Vessel Arrival</span>
+                        </div>
+                        <span className="text-xs text-gray-500">{formatDate(new Date(Date.now() - 35 * 60 * 1000), 'HH:mm')}</span>
+                      </div>
+                      <p className="text-xs mt-1 text-gray-600">
+                        وصلت الناقلة "ستار إكسبلورر" إلى ميناء الدمام / Vessel "Star Explorer" arrived at Dammam Port
+                      </p>
+                    </div>
+                    
+                    <div className="p-2 border-l-4 border-amber-500 bg-amber-50 rounded-r-md">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <AlertCircle className="h-4 w-4 mr-2 text-amber-500" />
+                          <span className="text-sm font-medium">مناقصة جديدة / New Tender</span>
+                        </div>
+                        <span className="text-xs text-gray-500">{formatDate(new Date(Date.now() - 120 * 60 * 1000), 'HH:mm')}</span>
+                      </div>
+                      <p className="text-xs mt-1 text-gray-600">
+                        أعلنت أرامكو السعودية عن مناقصة جديدة لـ 500 ألف برميل من الديزل منخفض الكبريت / Saudi Aramco announced new tender for 500K bbl ULSD
+                      </p>
+                    </div>
+                    
+                    <div className="p-2 border-l-4 border-red-500 bg-red-50 rounded-r-md">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <ArrowDownRight className="h-4 w-4 mr-2 text-red-500" />
+                          <span className="text-sm font-medium">سعر خام WTI / WTI Crude</span>
+                        </div>
+                        <span className="text-xs text-gray-500">{formatDate(new Date(Date.now() - 185 * 60 * 1000), 'HH:mm')}</span>
+                      </div>
+                      <p className="text-xs mt-1 text-gray-600">
+                        انخفض سعر خام غرب تكساس الوسيط بنسبة 1.2٪ بسبب ارتفاع المخزونات / WTI Crude down 1.2% on higher inventories 
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => {
+                      toast({
+                        title: "عرض جميع التحديثات / View All Updates",
+                        description: "Opening full market events log",
+                      });
+                    }}
+                  >
+                    عرض جميع التحديثات / View All Updates
                   </Button>
                 </CardFooter>
               </Card>
