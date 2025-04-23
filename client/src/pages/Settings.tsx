@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/hooks/use-language';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
@@ -28,14 +27,15 @@ import { Badge } from '@/components/ui/badge';
 import { 
   Alert,
   AlertDescription,
-  AlertTitle,
+  AlertTitle 
 } from "@/components/ui/alert";
-import { Settings as SettingsIcon, Save, Key, Bell, CloudLightning, Database, Globe, Languages, Moon, Sun, AlertTriangle } from 'lucide-react';
+import { 
+  SettingsIcon, Bell, Database, AlertCircle, Globe, Save, Languages
+} from 'lucide-react';
 
 export default function Settings() {
   const { toast } = useToast();
-  const { language, setLanguage, t } = useLanguage();
-  const [apiKey, setApiKey] = useState('');
+  const { language, t } = useLanguage();
   
   // Handle form submission
   const handleSaveGeneralSettings = (e: React.FormEvent) => {
@@ -45,8 +45,6 @@ export default function Settings() {
       description: "Your settings have been saved successfully.",
     });
   };
-  
-  // OpenAI integration is now handled through environment variables
 
   return (
     <div className="container mx-auto p-4">
@@ -272,202 +270,31 @@ export default function Settings() {
           </div>
         </TabsContent>
         
-        <TabsContent value="api">
+        <TabsContent value="notifications">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card className="md:col-span-2">
-              <form onSubmit={handleSaveApiKey}>
-                <CardHeader>
-                  <CardTitle>API Integration</CardTitle>
-                  <CardDescription>
-                    Configure external API connections and settings
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="openaiKey">OpenAI API Key</Label>
-                    <div className="flex space-x-2">
-                      <Input 
-                        id="openaiKey" 
-                        type="password" 
-                        placeholder="sk-..." 
-                        value={apiKey}
-                        onChange={(e) => setApiKey(e.target.value)}
-                      />
-                      <Button type="submit" disabled={!apiKey}>Save</Button>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Required for AI assistant functionality and document generation
-                    </p>
-                  </div>
-                  
-                  <Separator />
-                  
-                  <div className="space-y-2">
-                    <Label>API Access Settings</Label>
-                    
-                    <div className="flex items-center justify-between py-2">
-                      <div className="space-y-0.5">
-                        <div className="font-medium">Enable External API Access</div>
-                        <div className="text-sm text-muted-foreground">
-                          Allow third-party applications to access this platform's API
-                        </div>
-                      </div>
-                      <Switch id="apiAccess" defaultChecked={false} />
-                    </div>
-                    
-                    <div className="flex items-center justify-between py-2">
-                      <div className="space-y-0.5">
-                        <div className="font-medium">Rate Limiting</div>
-                        <div className="text-sm text-muted-foreground">
-                          Apply rate limits to API requests
-                        </div>
-                      </div>
-                      <Switch id="rateLimiting" defaultChecked />
-                    </div>
-                  </div>
-                </CardContent>
-              </form>
-            </Card>
-            
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>API Status</CardTitle>
-                  <CardDescription>
-                    Connection status with external services
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Notification Settings</span>
+                  <span className="text-primary/70">إعدادات الإشعارات</span>
+                </CardTitle>
+                <CardDescription className="flex justify-between">
+                  <span>Configure how and when you receive notifications</span>
+                  <span className="text-primary/70">تكوين كيفية ووقت تلقي الإشعارات</span>
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex flex-col space-y-3">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <div className="h-2.5 w-2.5 rounded-full bg-green-500 mr-2"></div>
-                      <span>Weather Service</span>
+                    <div className="space-y-0.5">
+                      <Label className="text-base">Vessel Updates</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Notification preferences for vessel position and status updates
+                      </p>
                     </div>
-                    <Badge variant="outline">Connected</Badge>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <div className="h-2.5 w-2.5 rounded-full bg-red-500 mr-2"></div>
-                      <span>OpenAI</span>
-                    </div>
-                    <Badge variant="outline">Not Connected</Badge>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <div className="h-2.5 w-2.5 rounded-full bg-green-500 mr-2"></div>
-                      <span>Mapping Service</span>
-                    </div>
-                    <Badge variant="outline">Connected</Badge>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Alert variant="destructive">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>API Key Required</AlertTitle>
-                <AlertDescription>
-                  AI features are currently disabled. Please add your OpenAI API key to enable these features.
-                </AlertDescription>
-              </Alert>
-            </div>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="notifications">
-          <Card>
-            <CardHeader>
-              <CardTitle>Notification Settings</CardTitle>
-              <CardDescription>
-                Configure how and when you receive notifications
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="font-medium mb-3">Email Notifications</h3>
-                  
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label>Vessel Updates</Label>
-                        <div className="text-sm text-muted-foreground">
-                          Updates on vessel movements and status changes
-                        </div>
-                      </div>
-                      <Switch defaultChecked />
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label>Refinery Reports</Label>
-                        <div className="text-sm text-muted-foreground">
-                          Weekly summary of refinery activities
-                        </div>
-                      </div>
-                      <Switch defaultChecked />
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label>System Alerts</Label>
-                        <div className="text-sm text-muted-foreground">
-                          Critical system notifications and warnings
-                        </div>
-                      </div>
-                      <Switch defaultChecked />
-                    </div>
-                  </div>
-                </div>
-                
-                <div>
-                  <h3 className="font-medium mb-3">In-App Notifications</h3>
-                  
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label>Real-time Updates</Label>
-                        <div className="text-sm text-muted-foreground">
-                          Show notifications for real-time events
-                        </div>
-                      </div>
-                      <Switch defaultChecked />
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label>Document Notifications</Label>
-                        <div className="text-sm text-muted-foreground">
-                          Alert when new documents are generated
-                        </div>
-                      </div>
-                      <Switch defaultChecked />
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label>Sound Alerts</Label>
-                        <div className="text-sm text-muted-foreground">
-                          Play sound for important notifications
-                        </div>
-                      </div>
-                      <Switch />
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <Separator />
-              
-              <div>
-                <h3 className="font-medium mb-3">Notification Schedule</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="emailFrequency">Email Digest Frequency</Label>
-                    <Select defaultValue="daily">
-                      <SelectTrigger id="emailFrequency">
-                        <SelectValue placeholder="Select Frequency" />
+                    <Select defaultValue="realtime">
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Select frequency" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="realtime">Real-time</SelectItem>
@@ -478,30 +305,99 @@ export default function Settings() {
                     </Select>
                   </div>
                   
-                  <div className="space-y-2">
-                    <Label htmlFor="quiet-hours">Quiet Hours</Label>
-                    <Select defaultValue="none">
-                      <SelectTrigger id="quiet-hours">
-                        <SelectValue placeholder="Select Hours" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">No quiet hours</SelectItem>
-                        <SelectItem value="night">10 PM - 7 AM</SelectItem>
-                        <SelectItem value="work">9 AM - 5 PM</SelectItem>
-                        <SelectItem value="custom">Custom</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  <Separator />
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label className="text-base">System Alerts</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Critical system notifications and security alerts
+                      </p>
+                    </div>
+                    <Switch id="systemAlerts" defaultChecked />
+                  </div>
+                  
+                  <Separator />
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label className="text-base">Marketing Communications</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Updates about new features and product announcements
+                      </p>
+                    </div>
+                    <Switch id="marketingAlerts" />
+                  </div>
+                  
+                  <Separator />
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label className="text-base">Email Notifications</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Receive notifications via email
+                      </p>
+                    </div>
+                    <Switch id="emailAlerts" defaultChecked />
                   </div>
                 </div>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button>
-                <Save className="h-4 w-4 mr-2" />
-                Save Notification Settings
-              </Button>
-            </CardFooter>
-          </Card>
+              </CardContent>
+              <CardFooter>
+                <Button className="w-full">Save Notification Preferences</Button>
+              </CardFooter>
+            </Card>
+            
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Notification Center</CardTitle>
+                  <CardDescription>Recent activity and alerts</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="border rounded-lg p-3 bg-muted/50 space-y-1">
+                    <div className="flex justify-between">
+                      <span className="font-medium">System Update</span>
+                      <span className="text-sm text-muted-foreground">Today</span>
+                    </div>
+                    <p className="text-sm">
+                      The system has been updated to version 2.3.0 with new features.
+                    </p>
+                  </div>
+                  
+                  <div className="border rounded-lg p-3 bg-muted/50 space-y-1">
+                    <div className="flex justify-between">
+                      <span className="font-medium">Vessel Alert</span>
+                      <span className="text-sm text-muted-foreground">Yesterday</span>
+                    </div>
+                    <p className="text-sm">
+                      Arctic Aurora has reached its destination port ahead of schedule.
+                    </p>
+                  </div>
+                  
+                  <div className="border rounded-lg p-3 bg-muted/50 space-y-1">
+                    <div className="flex justify-between">
+                      <span className="font-medium">Maintenance Notice</span>
+                      <span className="text-sm text-muted-foreground">3 days ago</span>
+                    </div>
+                    <p className="text-sm">
+                      Scheduled maintenance will occur on April 30th from 2-4 AM UTC.
+                    </p>
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Button variant="outline" className="w-full">View All Notifications</Button>
+                </CardFooter>
+              </Card>
+              
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Do Not Disturb</AlertTitle>
+                <AlertDescription>
+                  Enable Do Not Disturb mode to temporarily pause all notifications for a specified period.
+                </AlertDescription>
+              </Alert>
+            </div>
+          </div>
         </TabsContent>
         
         <TabsContent value="data">
@@ -510,103 +406,104 @@ export default function Settings() {
               <CardHeader>
                 <CardTitle>Data Management</CardTitle>
                 <CardDescription>
-                  Manage application data and backups
+                  Control data storage, caching, and export options
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h3 className="font-medium">Database Connections</h3>
+              <CardContent className="space-y-6">
+                <div className="space-y-3">
+                  <h3 className="font-medium">Cache Settings</h3>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="localCache">Local Data Cache</Label>
                       <p className="text-sm text-muted-foreground">
-                        Configure database connections and settings
+                        Store vessel and refinery data locally for faster access
                       </p>
                     </div>
-                    <Button variant="outline">
-                      <Database className="h-4 w-4 mr-2" />
-                      Configure
-                    </Button>
+                    <Switch id="localCache" defaultChecked />
                   </div>
-                </div>
-                
-                <Separator />
-                
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h3 className="font-medium">Data Backup</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Create and manage data backups
-                      </p>
-                    </div>
-                    <Button variant="outline">
-                      <CloudLightning className="h-4 w-4 mr-2" />
-                      Backup Now
-                    </Button>
-                  </div>
-                </div>
-                
-                <Separator />
-                
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h3 className="font-medium">Data Export</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Export data in various formats
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm">CSV</Button>
-                      <Button variant="outline" size="sm">JSON</Button>
-                      <Button variant="outline" size="sm">PDF</Button>
-                    </div>
-                  </div>
-                </div>
-                
-                <Separator />
-                
-                <div className="space-y-2">
-                  <h3 className="font-medium">Data Retention Settings</h3>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="vesselRetention">Vessel History</Label>
-                      <Select defaultValue="1year">
-                        <SelectTrigger id="vesselRetention">
-                          <SelectValue placeholder="Select Period" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="3months">3 Months</SelectItem>
-                          <SelectItem value="6months">6 Months</SelectItem>
-                          <SelectItem value="1year">1 Year</SelectItem>
-                          <SelectItem value="forever">Forever</SelectItem>
-                        </SelectContent>
-                      </Select>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="cacheExpiry">Cache Expiry</Label>
+                      <p className="text-sm text-muted-foreground">
+                        How long to keep cached data before refreshing
+                      </p>
                     </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="logsRetention">System Logs</Label>
-                      <Select defaultValue="1month">
-                        <SelectTrigger id="logsRetention">
-                          <SelectValue placeholder="Select Period" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="1week">1 Week</SelectItem>
-                          <SelectItem value="1month">1 Month</SelectItem>
-                          <SelectItem value="3months">3 Months</SelectItem>
-                          <SelectItem value="1year">1 Year</SelectItem>
-                        </SelectContent>
-                      </Select>
+                    <Select defaultValue="1h">
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Select duration" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="15m">15 minutes</SelectItem>
+                        <SelectItem value="1h">1 hour</SelectItem>
+                        <SelectItem value="6h">6 hours</SelectItem>
+                        <SelectItem value="24h">24 hours</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                
+                <Separator />
+                
+                <div className="space-y-3">
+                  <h3 className="font-medium">Data Export</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <Button variant="outline" className="justify-start">
+                      <Globe className="mr-2 h-4 w-4" />
+                      Export Vessel Data
+                    </Button>
+                    <Button variant="outline" className="justify-start">
+                      <Database className="mr-2 h-4 w-4" />
+                      Export Refinery Data
+                    </Button>
+                    <Button variant="outline" className="justify-start">
+                      <AlertCircle className="mr-2 h-4 w-4" />
+                      Export User Activity
+                    </Button>
+                    <Button variant="outline" className="justify-start">
+                      <Bell className="mr-2 h-4 w-4" />
+                      Export System Logs
+                    </Button>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Data will be exported in CSV format and may take a few minutes to generate
+                  </p>
+                </div>
+                
+                <Separator />
+                
+                <div className="space-y-3">
+                  <h3 className="font-medium">Privacy Settings</h3>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="anonymousData">Anonymous Usage Data</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Send anonymous usage statistics to help improve the application
+                      </p>
                     </div>
+                    <Switch id="anonymousData" defaultChecked />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="crashReports">Automatic Crash Reports</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Automatically send error reports when the application crashes
+                      </p>
+                    </div>
+                    <Switch id="crashReports" defaultChecked />
                   </div>
                 </div>
               </CardContent>
               <CardFooter>
-                <Button>
-                  <Save className="h-4 w-4 mr-2" />
-                  Save Data Settings
-                </Button>
+                <div className="flex flex-col sm:flex-row gap-3 w-full">
+                  <Button variant="destructive" className="sm:flex-1">
+                    Clear All Cached Data
+                  </Button>
+                  <Button className="sm:flex-1">
+                    Save Data Settings
+                  </Button>
+                </div>
               </CardFooter>
             </Card>
             
@@ -615,58 +512,56 @@ export default function Settings() {
                 <CardHeader>
                   <CardTitle>Storage Usage</CardTitle>
                   <CardDescription>
-                    Current data storage utilization
+                    Browser storage utilization
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div>
-                      <div className="flex justify-between mb-1 text-sm">
-                        <span>Database Storage</span>
-                        <span>35%</span>
-                      </div>
-                      <div className="w-full bg-muted rounded-full h-2.5">
-                        <div className="bg-primary h-2.5 rounded-full" style={{ width: '35%' }}></div>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        178 MB of 500 MB used
-                      </p>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Local Storage</span>
+                      <span className="font-medium">8.2 MB / 10 MB</span>
                     </div>
-                    
-                    <div>
-                      <div className="flex justify-between mb-1 text-sm">
-                        <span>Document Storage</span>
-                        <span>12%</span>
-                      </div>
-                      <div className="w-full bg-muted rounded-full h-2.5">
-                        <div className="bg-green-500 h-2.5 rounded-full" style={{ width: '12%' }}></div>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        245 MB of 2 GB used
-                      </p>
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <div className="bg-primary h-full rounded-full" style={{ width: "82%" }}></div>
                     </div>
-                    
-                    <div>
-                      <div className="flex justify-between mb-1 text-sm">
-                        <span>Backup Storage</span>
-                        <span>68%</span>
-                      </div>
-                      <div className="w-full bg-muted rounded-full h-2.5">
-                        <div className="bg-amber-500 h-2.5 rounded-full" style={{ width: '68%' }}></div>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        3.4 GB of 5 GB used
-                      </p>
+                    <p className="text-xs text-muted-foreground">
+                      82% of available local storage used
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Session Storage</span>
+                      <span className="font-medium">1.4 MB / 5 MB</span>
                     </div>
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <div className="bg-primary h-full rounded-full" style={{ width: "28%" }}></div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      28% of available session storage used
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>IndexedDB</span>
+                      <span className="font-medium">24.6 MB / 50 MB</span>
+                    </div>
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <div className="bg-primary h-full rounded-full" style={{ width: "49%" }}></div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      49% of available IndexedDB storage used
+                    </p>
                   </div>
                 </CardContent>
               </Card>
               
-              <Alert>
-                <Globe className="h-4 w-4" />
-                <AlertTitle>Data Privacy</AlertTitle>
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Data Deletion Warning</AlertTitle>
                 <AlertDescription>
-                  Data is stored securely and in compliance with relevant regulations. See our privacy policy for details.
+                  Clearing cached data will remove all locally stored information and may affect application performance.
                 </AlertDescription>
               </Alert>
             </div>
