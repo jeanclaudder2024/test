@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Vessel, Refinery } from '@/types';
-
 import { Stats } from '@/types';
+import { apiRequest } from '@/lib/queryClient';
 
 interface StreamData {
   vessels: Vessel[];
@@ -13,7 +13,10 @@ interface StreamData {
 }
 
 /**
- * Hook to connect to the server-sent events stream for vessel and refinery data
+ * Hook to fetch and periodically update vessel and refinery data
+ * 
+ * Instead of using SSE (Server-Sent Events) that might be causing WebSocket conflicts,
+ * this implementation uses regular polling with React Query.
  */
 export function useDataStream() {
   const [data, setData] = useState<StreamData>({
@@ -26,123 +29,72 @@ export function useDataStream() {
   });
 
   useEffect(() => {
-    const eventSource = new EventSource('/api/stream/data');
-    
-    // Handle vessel data updates
-    eventSource.addEventListener('vessels', (event: MessageEvent) => {
+    // Function to load all data
+    const loadAllData = async () => {
       try {
-        const vessels = JSON.parse(event.data);
-        setData(prev => ({
-          ...prev,
+        setData(prev => ({ ...prev, loading: true }));
+
+        // Fetch vessels
+        const vesselsPromise = apiRequest('/api/vessels')
+          .then(res => res.json())
+          .catch(error => {
+            console.error('Error fetching vessels:', error);
+            return [];
+          });
+
+        // Fetch refineries
+        const refineriesPromise = apiRequest('/api/refineries')
+          .then(res => res.json())
+          .catch(error => {
+            console.error('Error fetching refineries:', error);
+            return [];
+          });
+
+        // Fetch stats
+        const statsPromise = apiRequest('/api/stats')
+          .then(res => res.json())
+          .catch(error => {
+            console.error('Error fetching stats:', error);
+            return null;
+          });
+
+        // Wait for all requests to complete
+        const [vessels, refineries, stats] = await Promise.all([
+          vesselsPromise,
+          refineriesPromise,
+          statsPromise
+        ]);
+
+        // Update state with all data
+        setData({
           vessels,
-          loading: false,
-          lastUpdated: new Date()
-        }));
-        console.log('Received vessel data:', vessels.length, 'vessels');
-      } catch (error) {
-        console.error('Error parsing vessel data:', error);
-        setData(prev => ({
-          ...prev,
-          error: 'Failed to parse vessel data',
-          loading: false
-        }));
-      }
-    });
-    
-    // Handle refinery data updates
-    eventSource.addEventListener('refineries', (event: MessageEvent) => {
-      try {
-        const refineries = JSON.parse(event.data);
-        setData(prev => ({
-          ...prev,
           refineries,
-          loading: false,
-          lastUpdated: new Date()
-        }));
-        console.log('Received refinery data:', refineries.length, 'refineries');
-      } catch (error) {
-        console.error('Error parsing refinery data:', error);
-        setData(prev => ({
-          ...prev,
-          error: 'Failed to parse refinery data',
-          loading: false
-        }));
-      }
-    });
-    
-    // Handle stats data updates
-    eventSource.addEventListener('stats', (event: MessageEvent) => {
-      try {
-        const stats = JSON.parse(event.data);
-        setData(prev => ({
-          ...prev,
           stats,
           loading: false,
+          error: null,
           lastUpdated: new Date()
-        }));
-        console.log('Received stats data');
+        });
+
+        console.log('Data refreshed successfully');
       } catch (error) {
-        console.error('Error parsing stats data:', error);
+        console.error('Error loading data:', error);
         setData(prev => ({
           ...prev,
-          error: 'Failed to parse stats data',
-          loading: false
+          loading: false,
+          error: 'Failed to load data'
         }));
       }
-    });
-    
-    // Handle heartbeat to track connection status
-    eventSource.addEventListener('heartbeat', (event: MessageEvent) => {
-      setData(prev => ({
-        ...prev,
-        lastUpdated: new Date()
-      }));
-    });
-    
-    // Handle errors from the stream
-    eventSource.addEventListener('error', (event: MessageEvent) => {
-      try {
-        if (event.data) {
-          const errorData = JSON.parse(event.data);
-          setData(prev => ({
-            ...prev,
-            error: errorData.message || 'Unknown stream error',
-            loading: false
-          }));
-        } else {
-          setData(prev => ({
-            ...prev,
-            error: 'Connection error',
-            loading: false
-          }));
-        }
-      } catch (error) {
-        setData(prev => ({
-          ...prev,
-          error: 'Connection error',
-          loading: false
-        }));
-      }
-    });
-    
-    // Handle general connection errors
-    eventSource.onerror = () => {
-      setData(prev => ({
-        ...prev,
-        error: 'Connection to data stream lost',
-        loading: false
-      }));
-      
-      // Attempt to reconnect after 5 seconds
-      setTimeout(() => {
-        eventSource.close();
-        window.location.reload(); // Simple reconnection strategy
-      }, 5000);
     };
-    
+
+    // Load data initially
+    loadAllData();
+
+    // Set up polling interval (every 30 seconds)
+    const interval = setInterval(loadAllData, 30000);
+
     // Clean up on unmount
     return () => {
-      eventSource.close();
+      clearInterval(interval);
     };
   }, []);
   

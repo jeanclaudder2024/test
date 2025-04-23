@@ -27,8 +27,15 @@ interface RegionDistributionData {
   regions: RegionCount[];
 }
 
+// Datos por defecto para cuando no hay datos disponibles
+const defaultData: RegionDistributionData = {
+  totalVessels: 0,
+  totalOilVessels: 0,
+  regions: []
+};
+
 export default function RegionDistribution() {
-  const [data, setData] = useState<RegionDistributionData | null>(null);
+  const [data, setData] = useState<RegionDistributionData>(defaultData);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,12 +43,35 @@ export default function RegionDistribution() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const data = await apiRequest("/api/stats/vessels-by-region");
-        setData(data);
+        const response = await apiRequest("/api/stats/vessels-by-region");
+        
+        // Validar y procesar los datos recibidos
+        if (response && Array.isArray(response)) {
+          // Transformar los datos de la API al formato que espera el componente
+          const processedData: RegionDistributionData = {
+            totalVessels: response.reduce((sum, item) => sum + (item.count || 0), 0),
+            totalOilVessels: response.reduce((sum, item) => sum + (item.oilVesselCount || 0), 0),
+            regions: response.map(item => ({
+              region: item.region || 'Unknown',
+              regionName: item.regionName || item.region || 'Unknown',
+              count: item.count || 0,
+              percentage: ((item.count || 0) / response.reduce((sum, r) => sum + (r.count || 0), 0) * 100).toFixed(1),
+              oilVesselCount: item.oilVesselCount || 0
+            }))
+          };
+          setData(processedData);
+        } else {
+          // Si la respuesta no es un array, usar datos por defecto
+          console.warn("API response is not an array:", response);
+          setData(defaultData);
+        }
+        
         setError(null);
       } catch (err) {
         console.error("Error fetching region distribution:", err);
         setError("Failed to load vessel distribution data");
+        // En caso de error, usar datos por defecto
+        setData(defaultData);
       } finally {
         setLoading(false);
       }
@@ -141,7 +171,11 @@ export default function RegionDistribution() {
           
           <TabsContent value="oil" className="space-y-4 h-[320px] overflow-y-auto pr-2">
             {data.regions && data.regions.length > 0 ? data.regions.map((region) => {
-              const oilPercentage = (region.oilVesselCount / data.totalOilVessels * 100).toFixed(1);
+              // Evitar división por cero
+              const oilPercentage = data.totalOilVessels > 0 
+                ? ((region.oilVesselCount / data.totalOilVessels) * 100).toFixed(1) 
+                : '0.0';
+              
               return (
                 <div key={region.region} className="space-y-1">
                   <div className="flex justify-between items-center">
