@@ -32,7 +32,7 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
   const navItems = [
     {
       title: "Overview",
-      path: "/",
+      path: "/dashboard",
       icon: <LayoutDashboard className="h-5 w-5 mr-3" />,
       section: "DASHBOARD"
     },

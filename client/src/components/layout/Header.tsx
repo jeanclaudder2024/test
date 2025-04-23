@@ -2,11 +2,15 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { Menu, LogOut, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 import Sidebar from "./Sidebar";
 
 export default function Header() {
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const { logoutMutation } = useAuth();
+  const { toast } = useToast();
 
   const toggleMobileSidebar = () => {
     setMobileSidebarOpen(!mobileSidebarOpen);
@@ -14,6 +18,24 @@ export default function Header() {
 
   const closeMobileSidebar = () => {
     setMobileSidebarOpen(false);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logoutMutation.mutateAsync();
+      navigate('/');
+      toast({
+        title: "Logged out successfully",
+        description: "You have been logged out",
+      });
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast({
+        title: "Logout failed",
+        description: "There was an error logging out. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Helper function to get page title based on the current location
@@ -67,8 +89,18 @@ export default function Header() {
           
           <div className="flex items-center">
             <span className="mr-2 text-sm text-primary/80 font-medium hidden sm:inline">Log Out</span>
-            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full bg-primary/10 hover:bg-primary/20 transition-colors">
-              <LogOut className="h-4 w-4 text-primary" />
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-9 w-9 rounded-full bg-primary/10 hover:bg-primary/20 transition-colors"
+              onClick={handleLogout}
+              disabled={logoutMutation.isPending}
+            >
+              {logoutMutation.isPending ? (
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              ) : (
+                <LogOut className="h-4 w-4 text-primary" />
+              )}
             </Button>
           </div>
         </div>
