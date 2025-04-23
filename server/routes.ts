@@ -1059,6 +1059,105 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // OpenAI API routes
+  apiRouter.post("/ai/vessel-analysis", async (req, res) => {
+    try {
+      const { query, vesselIds } = req.body;
+      
+      if (!query) {
+        return res.status(400).json({ error: "Missing required parameter: query" });
+      }
+      
+      // Get vessels for context
+      let vessels: Vessel[] = [];
+      if (vesselIds && Array.isArray(vesselIds) && vesselIds.length > 0) {
+        // Get specific vessels if IDs provided
+        vessels = await Promise.all(
+          vesselIds.map(id => vesselService.getVesselById(parseInt(id)))
+        ).then(results => results.filter(v => v !== undefined) as Vessel[]);
+      } else {
+        // Otherwise get 10 random vessels
+        vessels = (await vesselService.getAllVessels()).slice(0, 10);
+      }
+      
+      // Generate analysis using OpenAI
+      const analysis = await openAiService.analyzeVesselsData(query, vessels);
+      
+      res.json({ analysis, vessels: vessels.map(v => v.id) });
+    } catch (error: any) {
+      console.error("Error in vessel analysis:", error);
+      res.status(500).json({ error: error.message || "Failed to analyze vessels" });
+    }
+  });
+  
+  apiRouter.get("/ai/vessel-journey/:id", async (req, res) => {
+    try {
+      const vesselId = parseInt(req.params.id);
+      const vessel = await vesselService.getVesselById(vesselId);
+      
+      if (!vessel) {
+        return res.status(404).json({ error: "Vessel not found" });
+      }
+      
+      const analysis = await openAiService.analyzeVesselJourney(vessel);
+      
+      res.json({
+        vesselId,
+        vesselName: vessel.name,
+        ...analysis
+      });
+    } catch (error: any) {
+      console.error("Error analyzing vessel journey:", error);
+      res.status(500).json({ error: error.message || "Failed to analyze vessel journey" });
+    }
+  });
+  
+  apiRouter.get("/ai/vessel-route-recommendations/:id", async (req, res) => {
+    try {
+      const vesselId = parseInt(req.params.id);
+      const includeWeather = req.query.weather !== 'false';
+      
+      const vessel = await vesselService.getVesselById(vesselId);
+      
+      if (!vessel) {
+        return res.status(404).json({ error: "Vessel not found" });
+      }
+      
+      const recommendations = await openAiService.generateRouteRecommendations(vessel, includeWeather);
+      
+      res.json({
+        vesselId,
+        vesselName: vessel.name,
+        recommendations
+      });
+    } catch (error: any) {
+      console.error("Error generating route recommendations:", error);
+      res.status(500).json({ error: error.message || "Failed to generate route recommendations" });
+    }
+  });
+  
+  apiRouter.get("/ai/vessel-inspection/:id", async (req, res) => {
+    try {
+      const vesselId = parseInt(req.params.id);
+      const vessel = await vesselService.getVesselById(vesselId);
+      
+      if (!vessel) {
+        return res.status(404).json({ error: "Vessel not found" });
+      }
+      
+      const report = await openAiService.generateInspectionReport(vessel);
+      
+      res.json({
+        vesselId,
+        vesselName: vessel.name,
+        report
+      });
+    } catch (error: any) {
+      console.error("Error generating inspection report:", error);
+      res.status(500).json({ error: error.message || "Failed to generate inspection report" });
+    }
+  });
+
   // Mount API router
   app.use("/api", apiRouter);
 

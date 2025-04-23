@@ -46,15 +46,7 @@ export default function Settings() {
     });
   };
   
-  // Handle API key save
-  const handleSaveApiKey = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    toast({
-      title: "API Key Updated",
-      description: "Your API key has been updated and is now active.",
-    });
-  };
+  // OpenAI integration is now handled through environment variables
 
   return (
     <div className="container mx-auto p-4">
@@ -74,14 +66,10 @@ export default function Settings() {
       </div>
       
       <Tabs defaultValue="general" className="space-y-4">
-        <TabsList className="grid grid-cols-2 md:grid-cols-4 w-full">
+        <TabsList className="grid grid-cols-1 md:grid-cols-3 w-full">
           <TabsTrigger value="general" className="flex items-center justify-center">
             <SettingsIcon className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
             <span>{language === "en" ? "General" : "عام"}</span>
-          </TabsTrigger>
-          <TabsTrigger value="api" className="flex items-center justify-center">
-            <Key className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
-            <span>{language === "en" ? "API Integration" : "واجهة API"}</span>
           </TabsTrigger>
           <TabsTrigger value="notifications" className="flex items-center justify-center">
             <Bell className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
