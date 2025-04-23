@@ -30,6 +30,7 @@ import { fromZodError } from "zod-validation-error";
 import { apiTesterRouter } from "./routes/apiTester";
 import { brokerRouter } from "./routes/brokerRoutes";
 import { tradingRouter } from "./routes/tradingRoutes";
+import { openaiRouter } from "./routes/openaiRoutes";
 import { seedBrokers } from "./services/seedService";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -967,6 +968,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Mount trading routes
   apiRouter.use("/trading", tradingRouter);
+  
+  // Mount OpenAI routes for AI features
+  apiRouter.use("/openai", openaiRouter);
   
   // Payment and subscription endpoints are defined below with middleware protection
 

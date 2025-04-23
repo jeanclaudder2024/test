@@ -25,11 +25,12 @@ openaiRouter.post('/generate-text', async (req, res) => {
       success: true, 
       data: generatedText 
     });
-  } catch (error) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     console.error('Error in generate-text endpoint:', error);
     res.status(500).json({ 
       success: false, 
-      message: `Failed to generate text: ${error.message}` 
+      message: `Failed to generate text: ${errorMessage}` 
     });
   }
 });
@@ -56,11 +57,12 @@ openaiRouter.post('/generate-document', async (req, res) => {
       success: true, 
       data: document 
     });
-  } catch (error) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     console.error('Error in generate-document endpoint:', error);
     res.status(500).json({ 
       success: false, 
-      message: `Failed to generate document: ${error.message}` 
+      message: `Failed to generate document: ${errorMessage}` 
     });
   }
 });
