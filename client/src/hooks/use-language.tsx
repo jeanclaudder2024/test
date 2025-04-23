@@ -116,6 +116,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Settings
     "settings.title": "Settings",
     "settings.language": "Language",
+    "settings.language_description": "Select your preferred language for the application interface",
     "settings.english": "English",
     "settings.arabic": "Arabic",
     "settings.theme": "Theme",
@@ -125,6 +126,7 @@ const translations: Record<Language, Record<string, string>> = {
     "settings.security": "Security",
     "settings.appearance": "Appearance",
     "settings.timezone": "Timezone",
+    "settings.timezone_description": "Select your preferred timezone for date and time display",
     
     // Regions
     "region.north_america": "North America",
@@ -243,6 +245,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Settings
     "settings.title": "الإعدادات",
     "settings.language": "اللغة",
+    "settings.language_description": "اختر لغتك المفضلة لواجهة التطبيق",
     "settings.english": "الإنجليزية",
     "settings.arabic": "العربية",
     "settings.theme": "السمة",

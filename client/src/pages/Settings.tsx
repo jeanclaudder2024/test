@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/hooks/use-language';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 import {
   Card,
   CardContent,
@@ -31,6 +33,7 @@ import { Settings as SettingsIcon, Save, Key, Bell, CloudLightning, Database, Gl
 
 export default function Settings() {
   const { toast } = useToast();
+  const { language, setLanguage, t } = useLanguage();
   const [apiKey, setApiKey] = useState('');
   
   // Handle form submission
@@ -59,11 +62,12 @@ export default function Settings() {
           <SettingsIcon className="h-6 w-6 text-primary" />
         </div>
         <div>
-          <h1 className="text-3xl font-bold">Settings <span className="text-primary/70 text-xl mr-2">الإعدادات</span></h1>
+          <h1 className="text-3xl font-bold">
+            {t("settings.title")}
+            {language === "en" && <span className="text-primary/70 text-xl mr-2 rtl:mr-0 rtl:ml-2">الإعدادات</span>}
+          </h1>
           <p className="text-muted-foreground">
-            Configure application preferences and integrations
-            <span className="mx-2">•</span>
-            <span className="text-right">تكوين تفضيلات التطبيق والتكاملات</span>
+            {language === "en" ? "Configure application preferences and integrations" : "تكوين تفضيلات التطبيق والتكاملات"}
           </p>
         </div>
       </div>
@@ -71,28 +75,20 @@ export default function Settings() {
       <Tabs defaultValue="general" className="space-y-4">
         <TabsList className="grid grid-cols-2 md:grid-cols-4 w-full">
           <TabsTrigger value="general" className="flex items-center justify-center">
-            <SettingsIcon className="h-4 w-4 mr-2" />
-            <span>General</span>
-            <span className="mx-1">•</span>
-            <span>عام</span>
+            <SettingsIcon className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
+            <span>{language === "en" ? "General" : "عام"}</span>
           </TabsTrigger>
           <TabsTrigger value="api" className="flex items-center justify-center">
-            <Key className="h-4 w-4 mr-2" />
-            <span>API Integration</span>
-            <span className="mx-1">•</span>
-            <span>واجهة API</span>
+            <Key className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
+            <span>{language === "en" ? "API Integration" : "واجهة API"}</span>
           </TabsTrigger>
           <TabsTrigger value="notifications" className="flex items-center justify-center">
-            <Bell className="h-4 w-4 mr-2" />
-            <span>Notifications</span>
-            <span className="mx-1">•</span>
-            <span>الإشعارات</span>
+            <Bell className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
+            <span>{language === "en" ? "Notifications" : "الإشعارات"}</span>
           </TabsTrigger>
           <TabsTrigger value="data" className="flex items-center justify-center">
-            <Database className="h-4 w-4 mr-2" />
-            <span>Data</span>
-            <span className="mx-1">•</span>
-            <span>البيانات</span>
+            <Database className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
+            <span>{language === "en" ? "Data" : "البيانات"}</span>
           </TabsTrigger>
         </TabsList>
         
@@ -101,33 +97,43 @@ export default function Settings() {
             <Card className="md:col-span-2">
               <form onSubmit={handleSaveGeneralSettings}>
                 <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <span>General Settings</span>
-                    <span className="text-primary/70">الإعدادات العامة</span>
+                  <CardTitle>
+                    {language === "en" ? (
+                      <div className="flex items-center justify-between">
+                        <span>General Settings</span>
+                        <span className="text-primary/70">الإعدادات العامة</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between">
+                        <span>الإعدادات العامة</span>
+                      </div>
+                    )}
                   </CardTitle>
-                  <CardDescription className="flex justify-between">
-                    <span>Customize the application appearance and behavior</span>
-                    <span>تخصيص مظهر وسلوك التطبيق</span>
+                  <CardDescription>
+                    {language === "en" ? (
+                      <div className="flex justify-between">
+                        <span>Customize the application appearance and behavior</span>
+                        <span className="text-primary/70">تخصيص مظهر وسلوك التطبيق</span>
+                      </div>
+                    ) : (
+                      <div>تخصيص مظهر وسلوك التطبيق</div>
+                    )}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="language" className="flex justify-between">
-                      <span>Language</span>
-                      <span>اللغة</span>
+                      <span>{t("settings.language")}</span>
+                      <span className={language === "ar" ? "font-semibold" : "text-primary/70"}>
+                        {language === "ar" ? "اللغة" : ""}
+                      </span>
                     </Label>
-                    <Select defaultValue="en">
-                      <SelectTrigger id="language">
-                        <SelectValue placeholder="Select Language • اختر اللغة" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="en">English • الإنجليزية</SelectItem>
-                        <SelectItem value="ar">Arabic • العربية</SelectItem>
-                        <SelectItem value="en-ar">Bilingual • ثنائي اللغة</SelectItem>
-                        <SelectItem value="fr">French • الفرنسية</SelectItem>
-                        <SelectItem value="de">German • الألمانية</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <div className="py-2">
+                      <LanguageSwitcher variant="button" showLabel={false} />
+                    </div>
+                    <p className="text-sm text-muted-foreground pt-1">
+                      {t("settings.language_description")}
+                    </p>
                   </div>
                   
                   <div className="space-y-2">
