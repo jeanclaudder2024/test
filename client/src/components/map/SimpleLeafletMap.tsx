@@ -97,7 +97,7 @@ export default function SimpleLeafletMap({
 
   // Load Leaflet once when the component mounts
   useEffect(() => {
-    if (window.L) {
+    if (window.L && window.L.polylineDecorator) {
       setIsMapReady(true);
       return;
     }
@@ -116,9 +116,17 @@ export default function SimpleLeafletMap({
     scriptEl.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
     scriptEl.crossOrigin = '';
     
-    scriptEl.onload = () => {
-      setIsMapReady(true);
+    // Function to load polyline-decorator after Leaflet is loaded
+    const loadPolylineDecorator = () => {
+      const decoratorScript = document.createElement('script');
+      decoratorScript.src = 'https://unpkg.com/leaflet-polylinedecorator@1.6.0/dist/leaflet.polylineDecorator.js';
+      decoratorScript.onload = () => {
+        setIsMapReady(true);
+      };
+      document.body.appendChild(decoratorScript);
     };
+    
+    scriptEl.onload = loadPolylineDecorator;
     
     document.body.appendChild(scriptEl);
     
@@ -442,15 +450,10 @@ export default function SimpleLeafletMap({
         // Add current vessel position at the end
         routeCoordinates.push([lat, lng]);
         
-        // Sort by date if multiple events (oldest first)
-        // This is important for correctly drawing the path
-        if (progressEvents.length > 1) {
-          routeCoordinates.sort((a, b) => {
-            const dateA = new Date(a.date).getTime();
-            const dateB = new Date(b.date).getTime();
-            return dateA - dateB;
-          });
-        }
+        // Create ordered array from progress events
+        // When we have multiple events, we want to ensure they're in the right order
+        // Since we already have the events in progressEvents, we use that order 
+        // instead of trying to sort the coordinates (which don't have dates attached)
         
         // Create and add the polyline
         if (routeCoordinates.length > 1) {
@@ -536,7 +539,9 @@ export default function SimpleLeafletMap({
     onRefineryClick,
     isLoading,
     initialCenter,
-    initialZoom
+    initialZoom,
+    progressEvents,
+    showVesselRoute
   ]);
   
   // Handlers for UI controls
@@ -697,6 +702,20 @@ export default function SimpleLeafletMap({
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Destination:</span>
                 <span>{trackedVessel.destinationPort.split(',')[0]}</span>
+              </div>
+            )}
+            
+            {progressEvents && progressEvents.length > 0 && (
+              <div className="flex justify-between items-center mt-2 pt-2 border-t border-border">
+                <span className="text-muted-foreground">Show Route:</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2"
+                  onClick={() => setShowVesselRoute(!showVesselRoute)}
+                >
+                  <Route className={`h-4 w-4 ${showVesselRoute ? 'text-primary' : 'text-muted-foreground'}`} />
+                </Button>
               </div>
             )}
           </div>
