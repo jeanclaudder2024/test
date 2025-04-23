@@ -784,10 +784,10 @@ export default function Brokers() {
               <div>
                 <h2 className="text-xl font-semibold flex items-center">
                   <Star className="h-5 w-5 mr-2 text-amber-500" />
-                  Elite Broker Control Panel
+                  لوحة تحكم النخبة / Elite Broker Control Panel
                 </h2>
                 <p className="text-muted-foreground">
-                  Access exclusive trading tools and premium features
+                  نظام متقدم للعمليات التجارية في سوق النفط / Advanced oil market operations system
                 </p>
               </div>
               <div className="flex items-center space-x-2 mt-2 md:mt-0">
@@ -795,47 +795,249 @@ export default function Brokers() {
                   <Star className="h-3 w-3 mr-1" /> عضو نخبة / Elite Member
                 </Badge>
                 <Badge variant="outline" className="text-amber-700 border-amber-200 bg-amber-50">
-                  اشتراك شهري / Monthly
-                </Badge>
-                <Badge variant="outline" className="text-green-700 border-green-200 bg-green-50">
-                  نشط / Active
+                  تنتهي العضوية / Expires: {formatDate(new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), 'MMM yyyy')}
                 </Badge>
               </div>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Dashboard Statistics */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <Card className="bg-white/80 hover:shadow-md transition-shadow border-l-4 border-blue-500">
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="text-sm text-muted-foreground">الشحنات النشطة / Active Shipments</p>
+                      <h3 className="text-2xl font-bold">14</h3>
+                    </div>
+                    <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                      <Globe className="h-5 w-5 text-blue-600" />
+                    </div>
+                  </div>
+                  <div className="mt-2 flex items-center text-xs text-green-600">
+                    <ArrowUpRight className="h-3 w-3 mr-1" />
+                    <span>+3 since last week</span>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-white/80 hover:shadow-md transition-shadow border-l-4 border-green-500">
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="text-sm text-muted-foreground">العقود النشطة / Active Contracts</p>
+                      <h3 className="text-2xl font-bold">8</h3>
+                    </div>
+                    <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
+                      <FileCheck className="h-5 w-5 text-green-600" />
+                    </div>
+                  </div>
+                  <div className="mt-2 flex items-center text-xs text-green-600">
+                    <ArrowUpRight className="h-3 w-3 mr-1" />
+                    <span>+2 since last month</span>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-white/80 hover:shadow-md transition-shadow border-l-4 border-amber-500">
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="text-sm text-muted-foreground">المناقصات المتاحة / Open Tenders</p>
+                      <h3 className="text-2xl font-bold">23</h3>
+                    </div>
+                    <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center">
+                      <FileText className="h-5 w-5 text-amber-600" />
+                    </div>
+                  </div>
+                  <div className="mt-2 flex items-center text-xs text-red-600">
+                    <ArrowDownRight className="h-3 w-3 mr-1" />
+                    <span>-5 expiring today</span>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-white/80 hover:shadow-md transition-shadow border-l-4 border-purple-500">
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="text-sm text-muted-foreground">الرسائل الجديدة / New Messages</p>
+                      <h3 className="text-2xl font-bold">7</h3>
+                    </div>
+                    <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
+                      <MessageSquare className="h-5 w-5 text-purple-600" />
+                    </div>
+                  </div>
+                  <div className="mt-2 flex items-center text-xs text-green-600">
+                    <ArrowUpRight className="h-3 w-3 mr-1" />
+                    <span>+4 new today</span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
+            {/* Market Overview */}
+            <Card className="bg-white/80 hover:shadow-md transition-shadow">
+              <CardHeader className="pb-2">
+                <div className="flex justify-between items-center">
+                  <CardTitle className="text-lg flex items-center">
+                    <BarChart3 className="h-5 w-5 mr-2 text-primary" />
+                    نظرة عامة على السوق / Market Overview
+                  </CardTitle>
+                  <Badge variant="outline" className="bg-blue-50 border-blue-200 text-blue-700">
+                    تحديث مباشر / Live Updates
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium">Brent Crude</span>
+                      <span className="font-bold text-green-600">$85.42</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="flex-1 bg-gray-100 rounded-full h-2">
+                        <div className="bg-green-500 h-2 rounded-full" style={{ width: '65%' }}></div>
+                      </div>
+                      <span className="text-xs text-green-600">+1.2%</span>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium">WTI Crude</span>
+                      <span className="font-bold text-green-600">$82.18</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="flex-1 bg-gray-100 rounded-full h-2">
+                        <div className="bg-green-500 h-2 rounded-full" style={{ width: '58%' }}></div>
+                      </div>
+                      <span className="text-xs text-green-600">+0.8%</span>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium">Natural Gas</span>
+                      <span className="font-bold text-red-600">$3.15</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="flex-1 bg-gray-100 rounded-full h-2">
+                        <div className="bg-red-500 h-2 rounded-full" style={{ width: '35%' }}></div>
+                      </div>
+                      <span className="text-xs text-red-600">-1.5%</span>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium">Gasoline</span>
+                      <span className="font-bold text-green-600">$2.75</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="flex-1 bg-gray-100 rounded-full h-2">
+                        <div className="bg-green-500 h-2 rounded-full" style={{ width: '72%' }}></div>
+                      </div>
+                      <span className="text-xs text-green-600">+2.1%</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="border-t pt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h4 className="text-sm font-medium mb-2 flex items-center">
+                      <ArrowUpRight className="h-4 w-4 mr-1 text-green-600" />
+                      تحليل اتجاه السوق / Market Trend Analysis
+                    </h4>
+                    <p className="text-xs text-muted-foreground">
+                      أسعار النفط الخام ترتفع بسبب انخفاض المخزونات والطلب القوي من آسيا. توقعات بارتفاع متواصل خلال الربع القادم.
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Crude oil prices rising due to lower inventories and strong Asian demand. Forecast shows continued upward trajectory in the coming quarter.
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <h4 className="text-sm font-medium mb-2 flex items-center">
+                      <AlertCircle className="h-4 w-4 mr-1 text-amber-600" />
+                      تنبيهات الأسعار / Price Alerts
+                    </h4>
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-xs">
+                        <span>WTI Crude approaching $85 resistance level</span>
+                        <Badge variant="outline" className="text-amber-700 border-amber-200 bg-amber-50 text-[10px]">Alert</Badge>
+                      </div>
+                      <div className="flex justify-between text-xs">
+                        <span>Brent-WTI spread narrowing below $3</span>
+                        <Badge variant="outline" className="text-amber-700 border-amber-200 bg-amber-50 text-[10px]">Alert</Badge>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => {
+                    toast({
+                      title: "عرض التحليلات الكاملة / View Full Analytics",
+                      description: "Opening comprehensive market analytics dashboard",
+                    });
+                  }}
+                >
+                  عرض التحليلات الكاملة / View Full Analytics
+                </Button>
+              </CardFooter>
+            </Card>
+            
+            {/* Active Deals and Trading Tools */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Available Tenders Panel */}
               <Card className="bg-white/80 hover:shadow-md transition-shadow">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-lg flex items-center">
-                    <FileText className="h-5 w-5 mr-2 text-primary" />
-                    Confidential Documents
+                    <FileCheck className="h-5 w-5 mr-2 text-primary" />
+                    مناقصات متاحة / Available Tenders
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-gray-600 mb-4">
-                    Access secure and private oil trading templates, SPAs, and bank guarantees.
+                    عروض النفط الحالية المتاحة للمناقصة / Current oil tenders available for bidding
                   </p>
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between p-2 bg-gray-50 rounded-md hover:bg-gray-100">
-                      <div className="flex items-center">
-                        <FileText className="h-4 w-4 mr-2 text-gray-500" />
-                        <span className="text-sm">Standard Trading Agreement</span>
+                    <div className="p-3 border rounded-md hover:bg-gray-50 transition-colors flex flex-col">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4 className="font-medium text-sm">Crude Oil (Brent)</h4>
+                          <p className="text-xs text-muted-foreground">Saudi Aramco</p>
+                        </div>
+                        <Badge className="bg-red-500 text-white">تنتهي قريباً / Expires Soon</Badge>
                       </div>
-                      <Badge variant="outline">PDF</Badge>
+                      <div className="mt-2 flex justify-between text-xs">
+                        <span className="text-muted-foreground">200,000 barrels</span>
+                        <span className="font-semibold">$85.10/barrel</span>
+                      </div>
+                      <Button variant="ghost" size="sm" className="mt-2 h-7 text-xs">
+                        تقديم عرض / Submit Bid
+                      </Button>
                     </div>
-                    <div className="flex items-center justify-between p-2 bg-gray-50 rounded-md hover:bg-gray-100">
-                      <div className="flex items-center">
-                        <FileText className="h-4 w-4 mr-2 text-gray-500" />
-                        <span className="text-sm">Bank Guarantee Template</span>
+                    
+                    <div className="p-3 border rounded-md hover:bg-gray-50 transition-colors flex flex-col">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4 className="font-medium text-sm">Diesel</h4>
+                          <p className="text-xs text-muted-foreground">Shell Global</p>
+                        </div>
+                        <Badge variant="outline" className="border-green-500 text-green-700">مفتوح / Open</Badge>
                       </div>
-                      <Badge variant="outline">DOCX</Badge>
-                    </div>
-                    <div className="flex items-center justify-between p-2 bg-gray-50 rounded-md hover:bg-gray-100">
-                      <div className="flex items-center">
-                        <FileText className="h-4 w-4 mr-2 text-gray-500" />
-                        <span className="text-sm">Confidential Price List Q2 2023</span>
+                      <div className="mt-2 flex justify-between text-xs">
+                        <span className="text-muted-foreground">150,000 gallons</span>
+                        <span className="font-semibold">$3.25/gallon</span>
                       </div>
-                      <Badge variant="outline">XLSX</Badge>
+                      <Button variant="ghost" size="sm" className="mt-2 h-7 text-xs">
+                        تقديم عرض / Submit Bid
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
@@ -845,14 +1047,12 @@ export default function Brokers() {
                     className="w-full"
                     onClick={() => {
                       toast({
-                        title: "عرض جميع المستندات / View All Documents",
-                        description: "Navigating to document management page",
+                        title: "عرض جميع المناقصات / View All Tenders",
+                        description: "Opening tender bidding platform",
                       });
-                      // If using real navigation in the future, uncomment this:
-                      // navigate("/documents");
                     }}
                   >
-                    عرض جميع المستندات / View All Documents
+                    عرض جميع المناقصات / View All Tenders
                   </Button>
                 </CardFooter>
               </Card>
