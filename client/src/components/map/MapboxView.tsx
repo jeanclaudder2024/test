@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import { Vessel, Refinery, Region } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { Ship, Navigation as NavigationIcon, MapPin } from 'lucide-react';
@@ -15,6 +14,13 @@ interface MapboxViewProps {
   isLoading?: boolean;
 }
 
+/**
+ * MapboxView Component - Simplified fallback version
+ * 
+ * This component provides a simplified version of MapboxView with a card displaying
+ * vessel information instead of the actual interactive map which requires
+ * react-map-gl and mapbox-gl setup.
+ */
 export default function MapboxView({
   vessels,
   refineries,
@@ -24,65 +30,8 @@ export default function MapboxView({
   onRefineryClick,
   isLoading = false
 }: MapboxViewProps) {
-  // Default to world view
-  const defaultViewport = {
-    latitude: 25,
-    longitude: 10,
-    zoom: 1.5,
-    bearing: 0,
-    pitch: 0
-  };
-
-  const [viewport, setViewport] = useState(defaultViewport);
-  const [selectedVessel, setSelectedVessel] = useState<Vessel | null>(null);
-  const [selectedRefinery, setSelectedRefinery] = useState<Refinery | null>(null);
-  const mapboxToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || "pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4M29iazA2Z2gycXA4N2pmbDZmangifQ.-g_vE53SD2WrJ6tFX7QHmA";
-
-  // Update viewport when region changes
-  useEffect(() => {
-    if (selectedRegion && regionPositions[selectedRegion]) {
-      const position = regionPositions[selectedRegion];
-      setViewport({
-        ...viewport,
-        latitude: position.lat,
-        longitude: position.lng,
-        zoom: position.zoom
-      });
-    }
-  }, [selectedRegion]);
-
-  // Update viewport when tracked vessel changes
-  useEffect(() => {
-    if (trackedVessel && trackedVessel.currentLat && trackedVessel.currentLng) {
-      setViewport({
-        ...viewport,
-        latitude: typeof trackedVessel.currentLat === 'number' ? trackedVessel.currentLat : parseFloat(String(trackedVessel.currentLat)),
-        longitude: typeof trackedVessel.currentLng === 'number' ? trackedVessel.currentLng : parseFloat(String(trackedVessel.currentLng)),
-        zoom: 8
-      });
-    }
-  }, [trackedVessel]);
-
-  // Handle vessel marker click
-  const handleVesselClick = useCallback((vessel: Vessel) => {
-    setSelectedVessel(vessel);
-    setSelectedRefinery(null); // Clear refinery selection
-    if (onVesselClick) {
-      onVesselClick(vessel);
-    }
-  }, [onVesselClick]);
-
-  // Handle refinery marker click
-  const handleRefineryClick = useCallback((refinery: Refinery) => {
-    setSelectedRefinery(refinery);
-    setSelectedVessel(null); // Clear vessel selection
-    if (onRefineryClick) {
-      onRefineryClick(refinery);
-    }
-  }, [onRefineryClick]);
-
-  // Check if vessel matches any oil product type
-  const matchesOilProductType = (vesselType: string | null) => {
+  // Helper function to check if vessel is an oil vessel
+  function isOilVessel(vesselType: string | null): boolean {
     if (!vesselType) return false;
     
     // Check exact match with oil product types
@@ -102,32 +51,18 @@ export default function MapboxView({
       vesselType.toLowerCase().includes('gasoline') ||
       vesselType.toLowerCase().includes('fuel')
     );
-  };
+  }
   
-  // Filter down vessels for better performance
+  // Filter vessels to show only oil-related ones
   const filteredVessels = vessels.filter(vessel => 
-    vessel.currentLat && vessel.currentLng && // Must have coordinates
-    matchesOilProductType(vessel.vesselType) // Only show oil vessels or vessels carrying oil products
-  ).slice(0, 500); // Limit to 500 vessels for performance
-
-  // Get vessel marker color based on type
-  const getVesselColor = (type: string) => {
-    if (type.toLowerCase().includes('lng')) return "#4ECDC4";
-    if (type.toLowerCase().includes('cargo')) return "#FFD166";
-    if (type.toLowerCase().includes('container')) return "#118AB2";
-    if (type.toLowerCase().includes('chemical')) return "#9A48D0";
-    return "#FF6B6B"; // Default to oil tanker color
-  };
-
-  // Get vessel emoji based on type
-  const getVesselEmoji = (type: string): string => {
-    if (type.toLowerCase().includes('lng')) return '🔋';
-    if (type.toLowerCase().includes('container')) return '📦';
-    if (type.toLowerCase().includes('chemical')) return '⚗️';
-    if (type.toLowerCase().includes('cargo')) return '🚢';
-    return '🛢️';
-  };
-
+    vessel.currentLat && vessel.currentLng && 
+    isOilVessel(vessel.vesselType)
+  ).slice(0, 500);
+  
+  // Select a vessel to display in the card
+  const displayedVessel = trackedVessel || (filteredVessels.length > 0 ? filteredVessels[0] : null);
+  
+  // Loading state
   if (isLoading) {
     return (
       <div className="relative h-96 md:h-[500px] bg-gray-100 flex items-center justify-center">
@@ -135,9 +70,6 @@ export default function MapboxView({
       </div>
     );
   }
-
-  // For simplicity, let's display a fallback message and show a vessel card instead
-  const displayedVessel = selectedVessel || trackedVessel || (filteredVessels.length > 0 ? filteredVessels[0] : null);
   
   return (
     <div className="relative h-96 md:h-[500px] bg-gradient-to-br from-blue-900 to-blue-700 rounded-lg overflow-hidden flex flex-col">
@@ -145,7 +77,7 @@ export default function MapboxView({
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="text-white text-center">
           <MapPin className="h-16 w-16 mx-auto mb-4 text-white opacity-40" />
-          <p className="text-xl font-bold">MapboxView requires MapGl setup</p>
+          <p className="text-xl font-bold">MapboxView requires MapGL setup</p>
           <p className="max-w-sm text-white/70 mt-2 mb-4">Switching to SimpleLeafletMap is recommended for vessel tracking</p>
         </div>
       </div>

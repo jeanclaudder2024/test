@@ -431,12 +431,6 @@ export default function WorldMap({
         zoomControl={false}
         className="h-full w-full"
         ref={mapRef}
-        whenReady={(event: { target: any }) => { 
-          // Fix TypeScript error by using the correct type
-          if (event && event.target) {
-            mapRef.current = event.target;
-          }
-        }}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
