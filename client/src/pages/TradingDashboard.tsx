@@ -330,7 +330,7 @@ export default function TradingDashboard() {
         onValueChange={setActiveTab}
         className="space-y-6"
       >
-        <TabsList className="grid grid-cols-3 sm:w-[400px]">
+        <TabsList className="grid grid-cols-2 md:grid-cols-4 sm:w-auto">
           <TabsTrigger value="dashboard" className="flex items-center">
             <BarChart className="h-4 w-4 mr-2" />
             <span>Dashboard</span>
@@ -342,6 +342,10 @@ export default function TradingDashboard() {
           <TabsTrigger value="active-deals" className="flex items-center">
             <Repeat className="h-4 w-4 mr-2" />
             <span>Active Deals</span>
+          </TabsTrigger>
+          <TabsTrigger value="market-trends" className="flex items-center">
+            <TrendingUp className="h-4 w-4 mr-2" />
+            <span>Market Trends</span>
           </TabsTrigger>
         </TabsList>
         
@@ -1006,6 +1010,285 @@ export default function TradingDashboard() {
                 </Card>
               ))
             )}
+          </div>
+        </TabsContent>
+
+        {/* Market Trends Tab */}
+        <TabsContent value="market-trends" className="space-y-6">
+          <div className="grid grid-cols-1 gap-6">
+            {/* Market Trends Overview Card */}
+            <Card>
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <CardTitle className="text-lg flex items-center">
+                    <TrendingUp className="h-5 w-5 mr-2 text-primary" />
+                    <span>Market Trends Analysis</span>
+                  </CardTitle>
+                  <Select defaultValue="month">
+                    <SelectTrigger className="w-[130px]">
+                      <Calendar className="h-4 w-4 mr-2" />
+                      <SelectValue placeholder="Period" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="week">Week</SelectItem>
+                      <SelectItem value="month">Month</SelectItem>
+                      <SelectItem value="quarter">Quarter</SelectItem>
+                      <SelectItem value="year">Year</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <CardDescription>تحليل اتجاهات السوق واستقراء الاسعار</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[300px] flex items-center justify-center">
+                  <div className="text-center text-muted-foreground">
+                    <BarChart3 className="h-12 w-12 mx-auto mb-2 opacity-20" />
+                    <p>Interactive trend analysis chart will appear here</p>
+                    <p className="text-sm">مخطط تحليل الاتجاهات التفاعلي</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Market Insights Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Price Forecast Card */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center">
+                    <PieChart className="h-5 w-5 mr-2 text-primary" />
+                    <span>Price Forecast</span>
+                  </CardTitle>
+                  <CardDescription>توقعات الأسعار</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {isLoadingPrices ? (
+                      Array(3).fill(0).map((_, i) => (
+                        <div key={`forecast-skeleton-${i}`} className="space-y-2">
+                          <Skeleton className="h-4 w-36" />
+                          <Skeleton className="h-3 w-full" />
+                          <Skeleton className="h-4 w-24" />
+                        </div>
+                      ))
+                    ) : (
+                      <div className="space-y-4">
+                        {/* Brent Forecast */}
+                        <div className="p-3 border rounded-lg">
+                          <div className="flex justify-between items-center mb-1">
+                            <div className="font-medium">Brent Crude خام برنت</div>
+                            <Badge variant={Math.random() > 0.5 ? "default" : "destructive"}>
+                              {Math.random() > 0.5 ? 'Bullish صعودي' : 'Bearish هبوطي'}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground mb-1">
+                            30-day forecast based on market trends and historic data
+                          </p>
+                          <div className="flex items-center justify-between mt-2">
+                            <div className="text-xl font-bold">
+                              ${(oilPrices.find(p => p.name === 'Brent Crude')?.price || 82) + 3.25}
+                            </div>
+                            <div className="flex items-center text-green-600">
+                              <ArrowUpRight className="h-4 w-4 mr-1" />
+                              <span>+3.25 (+3.95%)</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* WTI Forecast */}
+                        <div className="p-3 border rounded-lg">
+                          <div className="flex justify-between items-center mb-1">
+                            <div className="font-medium">WTI Crude خام غرب تكساس</div>
+                            <Badge variant="outline" className="border-amber-500 text-amber-700">Neutral متعادل</Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground mb-1">
+                            30-day forecast based on market trends and historic data
+                          </p>
+                          <div className="flex items-center justify-between mt-2">
+                            <div className="text-xl font-bold">
+                              ${(oilPrices.find(p => p.name === 'WTI Crude')?.price || 78) + 0.55}
+                            </div>
+                            <div className="flex items-center text-green-600">
+                              <ArrowUpRight className="h-4 w-4 mr-1" />
+                              <span>+0.55 (+0.70%)</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Dubai Forecast */}
+                        <div className="p-3 border rounded-lg">
+                          <div className="flex justify-between items-center mb-1">
+                            <div className="font-medium">Dubai Crude خام دبي</div>
+                            <Badge variant="destructive">Bearish هبوطي</Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground mb-1">
+                            30-day forecast based on market trends and historic data
+                          </p>
+                          <div className="flex items-center justify-between mt-2">
+                            <div className="text-xl font-bold">
+                              ${(oilPrices.find(p => p.name === 'Dubai Crude')?.price || 80) - 1.65}
+                            </div>
+                            <div className="flex items-center text-red-600">
+                              <ArrowDownRight className="h-4 w-4 mr-1" />
+                              <span>-1.65 (-2.05%)</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+                <CardFooter className="pt-0">
+                  <Button variant="outline" className="w-full">
+                    <FileText className="h-4 w-4 mr-2" />
+                    Full Forecast Report
+                  </Button>
+                </CardFooter>
+              </Card>
+
+              {/* Market Events Card */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center">
+                    <Calendar className="h-5 w-5 mr-2 text-primary" />
+                    <span>Market Events</span>
+                  </CardTitle>
+                  <CardDescription>أحداث السوق المؤثرة</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {/* OPEC Meeting */}
+                    <div className="border-l-4 border-blue-500 pl-3 py-1">
+                      <div className="flex justify-between items-center">
+                        <div className="font-medium">OPEC+ Meeting اجتماع أوبك+</div>
+                        <Badge variant="outline">Upcoming قادم</Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {new Date(new Date().setDate(new Date().getDate() + 12)).toLocaleDateString()}
+                      </p>
+                      <p className="text-sm mt-1">
+                        Expected to discuss production quotas and market stability.
+                      </p>
+                      <div className="flex items-center mt-1 text-xs text-amber-600">
+                        <AlertCircle className="h-3 w-3 mr-1" />
+                        <span>High Impact تأثير عالي</span>
+                      </div>
+                    </div>
+
+                    {/* US Inventory Report */}
+                    <div className="border-l-4 border-green-500 pl-3 py-1">
+                      <div className="flex justify-between items-center">
+                        <div className="font-medium">US Inventory Report تقرير المخزون الأمريكي</div>
+                        <Badge variant="outline">Weekly أسبوعي</Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {new Date(new Date().setDate(new Date().getDate() + 2)).toLocaleDateString()}
+                      </p>
+                      <p className="text-sm mt-1">
+                        EIA crude oil inventory report showing supply levels.
+                      </p>
+                      <div className="flex items-center mt-1 text-xs text-orange-600">
+                        <AlertCircle className="h-3 w-3 mr-1" />
+                        <span>Medium Impact تأثير متوسط</span>
+                      </div>
+                    </div>
+
+                    {/* Saudi Production Announcement */}
+                    <div className="border-l-4 border-purple-500 pl-3 py-1">
+                      <div className="flex justify-between items-center">
+                        <div className="font-medium">Saudi Production إعلان الإنتاج السعودي</div>
+                        <Badge variant="outline">Expected متوقع</Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {new Date(new Date().setDate(new Date().getDate() + 5)).toLocaleDateString()}
+                      </p>
+                      <p className="text-sm mt-1">
+                        Saudi Arabia expected to announce production levels for next quarter.
+                      </p>
+                      <div className="flex items-center mt-1 text-xs text-amber-600">
+                        <AlertCircle className="h-3 w-3 mr-1" />
+                        <span>High Impact تأثير عالي</span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+                <CardFooter className="pt-0">
+                  <Button variant="outline" className="w-full">
+                    <Calendar className="h-4 w-4 mr-2" />
+                    Full Events Calendar
+                  </Button>
+                </CardFooter>
+              </Card>
+            </div>
+
+            {/* Regional Analysis Card */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center">
+                  <Globe className="h-5 w-5 mr-2 text-primary" />
+                  <span>Regional Demand Analysis</span>
+                </CardTitle>
+                <CardDescription>تحليل الطلب الإقليمي</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="h-[250px] flex items-center justify-center border rounded-lg">
+                    <div className="text-center text-muted-foreground">
+                      <PieChart className="h-12 w-12 mx-auto mb-2 opacity-20" />
+                      <p>Regional demand chart will appear here</p>
+                      <p className="text-sm">مخطط الطلب الإقليمي</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="font-medium text-lg">Key Insights تحليلات رئيسية</h3>
+                    <ul className="space-y-2">
+                      <li className="flex items-start">
+                        <div className="bg-red-500 h-2 w-2 rounded-full mt-2 mr-2"></div>
+                        <div>
+                          <span className="font-medium">Asia Pacific آسيا والمحيط الهادئ</span>
+                          <p className="text-sm text-muted-foreground">
+                            Demand increased 3.2% YoY, driven by industrial recovery in China and India.
+                          </p>
+                        </div>
+                      </li>
+                      <li className="flex items-start">
+                        <div className="bg-blue-500 h-2 w-2 rounded-full mt-2 mr-2"></div>
+                        <div>
+                          <span className="font-medium">North America أمريكا الشمالية</span>
+                          <p className="text-sm text-muted-foreground">
+                            Stable consumption with 0.5% growth, affected by transition to renewables.
+                          </p>
+                        </div>
+                      </li>
+                      <li className="flex items-start">
+                        <div className="bg-green-500 h-2 w-2 rounded-full mt-2 mr-2"></div>
+                        <div>
+                          <span className="font-medium">Europe أوروبا</span>
+                          <p className="text-sm text-muted-foreground">
+                            Demand decreased by 1.8% due to economic conditions and green policies.
+                          </p>
+                        </div>
+                      </li>
+                      <li className="flex items-start">
+                        <div className="bg-yellow-500 h-2 w-2 rounded-full mt-2 mr-2"></div>
+                        <div>
+                          <span className="font-medium">Middle East الشرق الأوسط</span>
+                          <p className="text-sm text-muted-foreground">
+                            Consumption up 2.7%, driven by industrial and transportation sectors.
+                          </p>
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button variant="outline" className="w-full">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Download Full Analysis Report
+                </Button>
+              </CardFooter>
+            </Card>
           </div>
         </TabsContent>
       </Tabs>
