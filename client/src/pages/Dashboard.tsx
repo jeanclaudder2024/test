@@ -13,7 +13,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { REGIONS, OIL_PRODUCT_TYPES } from "@/../../shared/constants";
 import { 
   Ship, Droplet, RadioTower, Factory, 
-  Workflow, Filter, X, MapPin, Navigation 
+  Workflow, Filter, X, MapPin, Navigation,
+  EyeOff
 } from "lucide-react";
 import {
   Card,
@@ -403,15 +404,28 @@ export default function Dashboard() {
           </div>
           
           {/* Map Container */}
-          <SimpleLeafletMap 
-            vessels={filteredVessels}
-            refineries={filteredRefineries}
-            selectedRegion={selectedRegion}
-            trackedVessel={trackedVessel}
-            onVesselClick={handleVesselSelect}
-            onRefineryClick={handleRefinerySelect}
-            isLoading={loading}
-          />
+          <div className="relative">
+            <SimpleLeafletMap 
+              vessels={filteredVessels}
+              refineries={filteredRefineries}
+              selectedRegion={selectedRegion}
+              trackedVessel={trackedVessel}
+              onVesselClick={handleVesselSelect}
+              onRefineryClick={handleRefinerySelect}
+              isLoading={loading}
+            />
+            <div className="absolute top-3 left-3 z-10">
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="bg-background/80 backdrop-blur-sm text-xs px-2 py-1"
+                onClick={() => window.location.href = '/?empty=true'}
+              >
+                <EyeOff className="h-3 w-3 mr-1" />
+                Show Empty Map
+              </Button>
+            </div>
+          </div>
         </div>
       </section>
       
