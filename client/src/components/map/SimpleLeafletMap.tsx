@@ -259,85 +259,55 @@ export default function SimpleLeafletMap({
       // Add marker
       const marker = L.marker([lat, lng], { icon: customIcon })
         .bindPopup(`
-          <div style="padding: 0; margin: 0; max-width: 260px; border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,0,0,0.1);">
-            <!-- Vessel Image Header with Shimmer -->
-            <div style="position: relative; height: 90px; overflow: hidden; background: linear-gradient(to right, #1e40af, #1e6091, #1d4ed8);">
-              <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.5; background-image: url('https://images.unsplash.com/photo-1572396698880-61c914c5901e?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=300&ixid=MnwxfDB8MXxyYW5kb218MHx8c2hpcHx8fHx8fDE2NDU3NjE5NTg&ixlib=rb-1.2.1&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=450'); background-size: cover; background-position: center;"></div>
-              <div style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0.1));"></div>
-              
-              <!-- Shimmer effect -->
-              <div style="position: absolute; inset: 0; background: linear-gradient(to right, transparent, rgba(255,255,255,0.1) 50%, transparent 100%); background-size: 200% 100%; animation: shimmer 2s infinite; animation-timing-function: linear;"></div>
-              
-              <div style="position: absolute; bottom: 0; left: 0; width: 100%; padding: 12px; color: white;">
-                <h3 style="margin: 0; font-size: 14px; font-weight: bold; display: flex; align-items: center; gap: 6px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">
-                  <span style="color: #93c5fd; font-size: 16px;">⛴️</span>${vessel.name}
-                </h3>
-                <div style="display: flex; align-items: center; margin-top: 2px;">
-                  <span style="font-size: 10px; background-color: rgba(59, 130, 246, 0.3); border: 1px solid rgba(147, 197, 253, 0.3); border-radius: 4px; padding: 0 6px; margin-right: 6px; backdrop-filter: blur(4px);">${vessel.vesselType || 'Oil Tanker'}</span>
-                  <span style="font-size: 10px; color: rgba(255, 255, 255, 0.8);">${vessel.flag}</span>
-                </div>
+          <div style="padding: 12px; max-width: 240px; border-radius: 8px;">
+            <!-- Vessel Image Header -->
+            <div style="position: relative; height: 80px; margin: -12px -12px 10px -12px; overflow: hidden; border-radius: 8px 8px 0 0; background: linear-gradient(135deg, #003366, #006699);">
+              <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.8; background-image: url('https://images.unsplash.com/photo-1572396698880-61c914c5901e?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=300&ixid=MnwxfDB8MXxyYW5kb218MHx8c2hpcHx8fHx8fDE2NDU3NjE5NTg&ixlib=rb-1.2.1&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=450'); background-size: cover; background-position: center;"></div>
+              <div style="position: absolute; bottom: 0; left: 0; width: 100%; padding: 10px; background: linear-gradient(0deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%); color: white;">
+                <h3 style="margin: 0; font-size: 14px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">${vessel.name}</h3>
+                <div style="font-size: 11px; opacity: 0.9; margin-top: 2px;">${vessel.vesselType || 'Oil Tanker'}</div>
               </div>
             </div>
             
             <!-- Vessel Info -->
-            <div style="font-size: 12px; line-height: 1.5; padding: 10px;">
-              <!-- Info Cards -->
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px;">
-                <div style="background-color: #eff6ff; border: 1px solid rgba(59, 130, 246, 0.1); border-radius: 4px; padding: 6px;">
-                  <div style="font-size: 10px; color: #3b82f6; font-weight: 500;">IMO NUMBER</div>
-                  <div style="font-weight: 500;">${vessel.imo || 'N/A'}</div>
-                </div>
-                <div style="background-color: #ecfdf5; border: 1px solid rgba(16, 185, 129, 0.1); border-radius: 4px; padding: 6px;">
-                  <div style="font-size: 10px; color: #10b981; font-weight: 500;">CARGO TYPE</div>
-                  <div style="font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${vessel.cargoType || 'Unknown'}</div>
-                </div>
+            <div style="font-size: 12px; line-height: 1.5; margin-bottom: 12px;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                <div><strong>IMO:</strong> ${vessel.imo || 'Unknown'}</div>
+                <div><strong>Flag:</strong> ${vessel.flag || 'Unknown'}</div>
               </div>
-              
-              <!-- Route with connecting line -->
-              <div style="position: relative; margin-bottom: 8px;">
-                <div style="position: absolute; left: 7px; top: 14px; height: calc(100% - 10px); width: 2px; background: linear-gradient(to bottom, #3b82f6, #10b981);"></div>
-                
-                <div style="display: flex; flex-direction: column; gap: 6px;">
-                  ${vessel.departurePort ? `
-                  <div style="display: flex; align-items: start; gap: 8px;">
-                    <div style="margin-top: 2px; height: 16px; width: 16px; border-radius: 50%; background-color: #dbeafe; border: 2px solid #3b82f6; display: flex; align-items: center; justify-content: center; flex-shrink: 0; z-index: 10;">
-                      <span style="color: #3b82f6; font-size: 8px; font-weight: bold;">A</span>
-                    </div>
-                    <div>
-                      <div style="font-size: 10px; color: #64748b;">DEPARTURE</div>
-                      <div style="font-weight: 500;">${vessel.departurePort}</div>
-                    </div>
-                  </div>` : ''}
-                  
-                  ${vessel.destinationPort ? `
-                  <div style="display: flex; align-items: start; gap: 8px;">
-                    <div style="margin-top: 2px; height: 16px; width: 16px; border-radius: 50%; background-color: #dcfce7; border: 2px solid #10b981; display: flex; align-items: center; justify-content: center; flex-shrink: 0; z-index: 10;">
-                      <span style="color: #10b981; font-size: 8px; font-weight: bold;">B</span>
-                    </div>
-                    <div>
-                      <div style="font-size: 10px; color: #64748b;">DESTINATION</div>
-                      <div style="font-weight: 500;">${vessel.destinationPort}</div>
-                    </div>
-                  </div>` : ''}
+              <div style="background-color: #f1f5f9; border-radius: 4px; padding: 5px; margin-top: 4px;">
+                <div style="display: flex; align-items: center; gap: 4px;">
+                  <span style="color: #0f766e;">🛢️</span>
+                  <span><strong>Cargo:</strong> ${vessel.cargoType || 'Unknown'}</span>
                 </div>
               </div>
-              
-              <!-- Action Buttons -->
-              <div style="display: flex; gap: 6px; margin-top: 8px;">
-                <button 
-                  onclick="window.dispatchEvent(new CustomEvent('track-vessel', { detail: { id: ${vessel.id} } }))" 
-                  style="flex: 1; background-color: white; color: #16a34a; border: 1px solid #16a34a; border-radius: 4px; padding: 4px 0; font-size: 11px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
-                  <span style="font-size: 12px;">🔍</span> Track Vessel
-                </button>
-                <button 
-                  onclick="window.location.href='/vessels/${vessel.id}'" 
-                  style="flex: 1; background-color: #1d4ed8; color: white; border: none; border-radius: 4px; padding: 4px 0; font-size: 11px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
-                  <span style="font-size: 12px;">⛴️</span> View Details
-                </button>
-              </div>
+              ${vessel.departurePort ? `
+              <div style="margin-top: 6px;">
+                <div style="display: flex; align-items: center; gap: 4px;">
+                  <span style="color: #166534;">🚢</span>
+                  <span><strong>From:</strong> ${vessel.departurePort}</span>
+                </div>
+              </div>` : ''}
+              ${vessel.destinationPort ? `
+              <div style="margin-top: 4px;">
+                <div style="display: flex; align-items: center; gap: 4px;">
+                  <span style="color: #991b1b;">📍</span>
+                  <span><strong>To:</strong> ${vessel.destinationPort}</span>
+                </div>
+              </div>` : ''}
+            </div>
+            
+            <!-- Action Buttons -->
+            <div style="display: flex; gap: 6px;">
+              <button onclick="window.location.href='/vessels/${vessel.id}'" style="flex: 1; background-color: #0284c7; color: white; border: none; border-radius: 4px; padding: 6px 10px; font-size: 12px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+                <span style="font-size: 14px;">👁️</span> View Details
+              </button>
+              <button onclick="window.dispatchEvent(new CustomEvent('track-vessel', { detail: { id: ${vessel.id} } }))" style="flex: 1; background-color: #16a34a; color: white; border: none; border-radius: 4px; padding: 6px 10px; font-size: 12px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+                <span style="font-size: 14px;">🔍</span> Track
+              </button>
             </div>
           </div>
-        `, { className: 'custom-popup' })
+        `)
         .on('click', () => onVesselClick(vessel))
         .addTo(map);
       

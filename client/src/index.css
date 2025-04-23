@@ -12,37 +12,6 @@
   pointer-events: auto;
 }
 
-/* Custom popup styling - remove default padding & shadow */
-.custom-popup .leaflet-popup-content-wrapper {
-  padding: 0;
-  overflow: hidden;
-  border-radius: 8px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-}
-
-.custom-popup .leaflet-popup-content {
-  margin: 0;
-  width: auto !important;
-}
-
-.custom-popup .leaflet-popup-tip {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-}
-
-/* Add shimmer animation for cards */
-@keyframes shimmer {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
-  }
-}
-
-.animate-shimmer {
-  animation: shimmer 2s infinite;
-}
-
 /* Add a pulse animation for vessel tracking */
 @keyframes pulse {
   0% {
@@ -58,27 +27,6 @@
   100% {
     transform: scale(0.95);
     box-shadow: 0 0 0 0 rgba(255, 87, 34, 0);
-  }
-}
-
-/* Tracking line styling */
-.route-path {
-  stroke: rgba(0, 123, 255, 0.4);
-  stroke-width: 2;
-  stroke-dasharray: 5, 5;
-  opacity: 0.8;
-}
-
-.route-path-active {
-  stroke: rgba(0, 123, 255, 0.8);
-  stroke-width: 3;
-  animation: dash 5s linear infinite;
-  opacity: 0.9;
-}
-
-@keyframes dash {
-  to {
-    stroke-dashoffset: -1000;
   }
 }
 
