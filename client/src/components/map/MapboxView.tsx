@@ -248,18 +248,85 @@ export default function MapboxView({
             anchor="bottom"
             offset={25}
           >
-            <div className="p-2 max-w-[200px]">
-              <h3 className="font-bold text-sm">{selectedVessel.name}</h3>
-              <div className="text-xs mt-1">
-                <div><span className="font-semibold">Type:</span> {selectedVessel.vesselType}</div>
-                <div><span className="font-semibold">IMO:</span> {selectedVessel.imo}</div>
-                <div><span className="font-semibold">Flag:</span> {selectedVessel.flag}</div>
-                {selectedVessel.departurePort && (
-                  <div><span className="font-semibold">From:</span> {selectedVessel.departurePort}</div>
-                )}
-                {selectedVessel.destinationPort && (
-                  <div><span className="font-semibold">To:</span> {selectedVessel.destinationPort}</div>
-                )}
+            <div className="p-0 overflow-hidden max-w-[260px]">
+              {/* Vessel Image Header */}
+              <div className="relative h-24 overflow-hidden bg-gradient-to-r from-blue-900 to-blue-700">
+                <div 
+                  className="absolute inset-0 bg-cover bg-center opacity-60"
+                  style={{
+                    backgroundImage: `url('https://images.unsplash.com/photo-1572396698880-61c914c5901e?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=300&ixid=MnwxfDB8MXxyYW5kb218MHx8c2hpcHx8fHx8fDE2NDU3NjE5NTg&ixlib=rb-1.2.1&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=450')`
+                  }}
+                ></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+                <div className="absolute bottom-0 left-0 p-3 w-full">
+                  <h3 className="font-bold text-white text-sm flex items-center gap-1.5">{selectedVessel.name}</h3>
+                  <div className="flex items-center mt-0.5">
+                    <span className="bg-white/20 text-white px-1.5 py-0.5 rounded text-[10px] border border-white/30 mr-1.5">{selectedVessel.vesselType || 'Oil Tanker'}</span>
+                    <span className="text-white/80 text-[10px]">{selectedVessel.flag}</span>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Vessel Info */}
+              <div className="p-3">
+                <div className="grid grid-cols-2 gap-2 mb-2">
+                  <div className="bg-blue-50 rounded p-1.5">
+                    <div className="text-[10px] text-blue-500 font-medium">IMO NUMBER</div>
+                    <div className="text-sm font-medium">{selectedVessel.imo || 'N/A'}</div>
+                  </div>
+                  <div className="bg-emerald-50 rounded p-1.5">
+                    <div className="text-[10px] text-emerald-500 font-medium">CARGO TYPE</div>
+                    <div className="text-sm font-medium truncate">{selectedVessel.cargoType || 'Unknown'}</div>
+                  </div>
+                </div>
+                
+                <div className="space-y-2 text-xs">
+                  {selectedVessel.departurePort && (
+                    <div className="flex items-start gap-2">
+                      <div className="mt-0.5 h-4 w-4 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                        <span className="text-blue-600 text-[10px]">A</span>
+                      </div>
+                      <div>
+                        <div className="text-[10px] text-gray-500">DEPARTURE</div>
+                        <div className="font-medium">{selectedVessel.departurePort}</div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {selectedVessel.destinationPort && (
+                    <div className="flex items-start gap-2">
+                      <div className="mt-0.5 h-4 w-4 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                        <span className="text-green-600 text-[10px]">B</span>
+                      </div>
+                      <div>
+                        <div className="text-[10px] text-gray-500">DESTINATION</div>
+                        <div className="font-medium">{selectedVessel.destinationPort}</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Action Buttons */}
+                <div className="flex mt-3 gap-2">
+                  <button 
+                    className="flex-1 flex items-center justify-center gap-1 text-xs h-8 border border-green-500 text-green-600 bg-white rounded px-2 hover:bg-green-50"
+                    onClick={() => {
+                      // Handling will be in the vessel click event already
+                    }}
+                  >
+                    <span className="text-[14px]">🔍</span>
+                    Track Vessel
+                  </button>
+                  <button 
+                    className="flex-1 flex items-center justify-center gap-1 text-xs h-8 border-0 bg-blue-600 text-white rounded px-2 hover:bg-blue-700"
+                    onClick={() => {
+                      window.location.href = `/vessels/${selectedVessel.id}`;
+                    }}
+                  >
+                    <span className="text-[14px]">👁️</span>
+                    View Details
+                  </button>
+                </div>
               </div>
             </div>
           </Popup>
