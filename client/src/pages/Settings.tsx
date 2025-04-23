@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/hooks/use-language';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import {
   Card,
   CardContent,
