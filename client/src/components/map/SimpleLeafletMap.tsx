@@ -66,6 +66,27 @@ export default function SimpleLeafletMap({
   const [isMapReady, setIsMapReady] = useState(false);
   const [displayVessels, setDisplayVessels] = useState<Vessel[]>([]);
   
+  // Setup the custom event listener for tracking vessels
+  useEffect(() => {
+    const handleTrackVessel = (event: Event) => {
+      const customEvent = event as CustomEvent<{ id: number }>;
+      const vesselId = customEvent.detail?.id;
+      
+      if (vesselId) {
+        const vessel = vessels.find(v => v.id === vesselId);
+        if (vessel) {
+          onVesselClick(vessel);
+        }
+      }
+    };
+    
+    window.addEventListener('track-vessel', handleTrackVessel);
+    
+    return () => {
+      window.removeEventListener('track-vessel', handleTrackVessel);
+    };
+  }, [vessels, onVesselClick]);
+
   // Load Leaflet once when the component mounts
   useEffect(() => {
     if (window.L) {
@@ -238,15 +259,52 @@ export default function SimpleLeafletMap({
       // Add marker
       const marker = L.marker([lat, lng], { icon: customIcon })
         .bindPopup(`
-          <div style="padding: 8px; max-width: 200px;">
-            <h3 style="font-weight: bold; margin-bottom: 5px;">${vessel.name}</h3>
-            <div style="font-size: 12px; line-height: 1.5;">
-              <div><strong>Type:</strong> ${vessel.vesselType || 'Unknown'}</div>
-              <div><strong>Cargo:</strong> ${vessel.cargoType || 'Unknown'}</div>
-              <div><strong>IMO:</strong> ${vessel.imo || 'Unknown'}</div>
-              <div><strong>Flag:</strong> ${vessel.flag || 'Unknown'}</div>
-              ${vessel.departurePort ? `<div><strong>From:</strong> ${vessel.departurePort}</div>` : ''}
-              ${vessel.destinationPort ? `<div><strong>To:</strong> ${vessel.destinationPort}</div>` : ''}
+          <div style="padding: 12px; max-width: 240px; border-radius: 8px;">
+            <!-- Vessel Image Header -->
+            <div style="position: relative; height: 80px; margin: -12px -12px 10px -12px; overflow: hidden; border-radius: 8px 8px 0 0; background: linear-gradient(135deg, #003366, #006699);">
+              <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.8; background-image: url('https://images.unsplash.com/photo-1572396698880-61c914c5901e?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=300&ixid=MnwxfDB8MXxyYW5kb218MHx8c2hpcHx8fHx8fDE2NDU3NjE5NTg&ixlib=rb-1.2.1&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=450'); background-size: cover; background-position: center;"></div>
+              <div style="position: absolute; bottom: 0; left: 0; width: 100%; padding: 10px; background: linear-gradient(0deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%); color: white;">
+                <h3 style="margin: 0; font-size: 14px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">${vessel.name}</h3>
+                <div style="font-size: 11px; opacity: 0.9; margin-top: 2px;">${vessel.vesselType || 'Oil Tanker'}</div>
+              </div>
+            </div>
+            
+            <!-- Vessel Info -->
+            <div style="font-size: 12px; line-height: 1.5; margin-bottom: 12px;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                <div><strong>IMO:</strong> ${vessel.imo || 'Unknown'}</div>
+                <div><strong>Flag:</strong> ${vessel.flag || 'Unknown'}</div>
+              </div>
+              <div style="background-color: #f1f5f9; border-radius: 4px; padding: 5px; margin-top: 4px;">
+                <div style="display: flex; align-items: center; gap: 4px;">
+                  <span style="color: #0f766e;">🛢️</span>
+                  <span><strong>Cargo:</strong> ${vessel.cargoType || 'Unknown'}</span>
+                </div>
+              </div>
+              ${vessel.departurePort ? `
+              <div style="margin-top: 6px;">
+                <div style="display: flex; align-items: center; gap: 4px;">
+                  <span style="color: #166534;">🚢</span>
+                  <span><strong>From:</strong> ${vessel.departurePort}</span>
+                </div>
+              </div>` : ''}
+              ${vessel.destinationPort ? `
+              <div style="margin-top: 4px;">
+                <div style="display: flex; align-items: center; gap: 4px;">
+                  <span style="color: #991b1b;">📍</span>
+                  <span><strong>To:</strong> ${vessel.destinationPort}</span>
+                </div>
+              </div>` : ''}
+            </div>
+            
+            <!-- Action Buttons -->
+            <div style="display: flex; gap: 6px;">
+              <button onclick="window.location.href='/vessels/${vessel.id}'" style="flex: 1; background-color: #0284c7; color: white; border: none; border-radius: 4px; padding: 6px 10px; font-size: 12px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+                <span style="font-size: 14px;">👁️</span> View Details
+              </button>
+              <button onclick="window.dispatchEvent(new CustomEvent('track-vessel', { detail: { id: ${vessel.id} } }))" style="flex: 1; background-color: #16a34a; color: white; border: none; border-radius: 4px; padding: 6px 10px; font-size: 12px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+                <span style="font-size: 14px;">🔍</span> Track
+              </button>
             </div>
           </div>
         `)
