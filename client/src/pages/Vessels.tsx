@@ -46,6 +46,7 @@ export default function Vessels() {
   const [selectedTab, setSelectedTab] = useState<string>("all");
   const [isUpdatingDestinations, setIsUpdatingDestinations] = useState(false);
   const [isRefreshingASI, setIsRefreshingASI] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
   const { toast } = useToast();
   
   // Helper function to determine oil category
@@ -172,6 +173,46 @@ export default function Vessels() {
       setIsRefreshingASI(false);
     }
   };
+  
+  // Function to clear all vessel and refinery data
+  const handleClearAllData = async () => {
+    // Confirm deletion with user
+    if (!confirm("This will delete ALL vessel and refinery data from the system. This action cannot be undone. Are you sure?")) {
+      return;
+    }
+    
+    try {
+      setIsClearing(true);
+      
+      const result = await apiRequest('/api/clear-data', { method: 'POST' });
+      
+      if (result.success) {
+        toast({
+          title: "Data Cleared Successfully",
+          description: `Deleted ${result.data.vessels} vessels, ${result.data.refineries} refineries, ${result.data.events} events, and ${result.data.documents} documents.`,
+          variant: "default",
+        });
+        
+        // Force reload of page
+        window.location.reload();
+      } else {
+        toast({
+          title: "Clear Operation Failed",
+          description: result.message || "Failed to clear vessel and refinery data",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error clearing data:", error);
+      toast({
+        title: "Error",
+        description: "An error occurred while attempting to clear data",
+        variant: "destructive",
+      });
+    } finally {
+      setIsClearing(false);
+    }
+  };
 
   return (
     <div className="container mx-auto p-4">
@@ -266,6 +307,16 @@ export default function Vessels() {
           >
             <AlertCircle className="h-4 w-4 mr-2" />
             {isRefreshingASI ? 'Refreshing...' : 'Refresh ASI Stream Data'}
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            onClick={handleClearAllData} 
+            disabled={isClearing}
+            className="bg-red-50 text-red-600 border-red-200 hover:bg-red-100"
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            {isClearing ? 'Clearing...' : 'Clear All Data'}
           </Button>
           
           <Button>

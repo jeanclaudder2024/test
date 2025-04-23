@@ -258,6 +258,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     });
     
+    // Route to clear all vessel and refinery data
+    apiRouter.post("/clear-data", async (req, res) => {
+      try {
+        console.log("Starting data cleanup process...");
+        
+        // Clear all vessels
+        const result = await db.delete(vessels);
+        console.log(`Deleted ${result.count} vessels from database.`);
+        
+        // Clear all refineries
+        const refineryResult = await db.delete(refineries);
+        console.log(`Deleted ${refineryResult.count} refineries from database.`);
+        
+        // Clear all progress events
+        const eventsResult = await db.delete(progressEvents);
+        console.log(`Deleted ${eventsResult.count} progress events from database.`);
+        
+        // Clear all documents
+        const docsResult = await db.delete(documents);
+        console.log(`Deleted ${docsResult.count} documents from database.`);
+        
+        res.json({
+          success: true,
+          message: "All vessel and refinery data cleared successfully",
+          data: {
+            vessels: result.count,
+            refineries: refineryResult.count,
+            events: eventsResult.count,
+            documents: docsResult.count
+          }
+        });
+      } catch (error: any) {
+        console.error("Error clearing data:", error);
+        res.status(500).json({ 
+          message: "Failed to clear data",
+          error: error.message || String(error)
+        });
+      }
+    });
+
     // Route to update refinery coordinates with accurate data
     apiRouter.post("/refineries/update-coordinates", async (req, res) => {
       try {
