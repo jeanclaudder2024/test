@@ -1,6 +1,5 @@
 import { storage } from "../storage";
 import { InsertVessel, InsertProgressEvent, Vessel, ProgressEvent } from "@shared/schema";
-import { dataService } from "./asiStreamService";
 import { generateLargeVesselDataset } from "./vesselGenerator";
 import { OIL_PRODUCT_TYPES } from "@shared/constants";
 

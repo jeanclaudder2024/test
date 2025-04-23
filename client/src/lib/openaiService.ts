@@ -1,5 +1,3 @@
-import { apiRequest } from './queryClient';
-
 /**
  * Service for interacting with the OpenAI API endpoints
  */
@@ -11,7 +9,20 @@ export const openaiService = {
    */
   async generateText(prompt: string): Promise<string> {
     try {
-      const response = await apiRequest('POST', '/api/openai/generate-text', { prompt });
+      const response = await fetch('/api/openai/generate-text', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ prompt }),
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'Failed to generate text');
+      }
+      
       const data = await response.json();
       
       if (!data.success) {
@@ -33,10 +44,20 @@ export const openaiService = {
    */
   async generateDocument(vesselData: any, documentType: string): Promise<string> {
     try {
-      const response = await apiRequest('POST', '/api/openai/generate-document', { 
-        vesselData, 
-        documentType 
+      const response = await fetch('/api/openai/generate-document', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ vesselData, documentType }),
+        credentials: 'include',
       });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'Failed to generate document');
+      }
+      
       const data = await response.json();
       
       if (!data.success) {
@@ -57,7 +78,20 @@ export const openaiService = {
    */
   async analyzeTradingData(marketData: any): Promise<string> {
     try {
-      const response = await apiRequest('POST', '/api/openai/analyze-trading', { marketData });
+      const response = await fetch('/api/openai/analyze-trading', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ marketData }),
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'Failed to analyze trading data');
+      }
+      
       const data = await response.json();
       
       if (!data.success) {
@@ -78,7 +112,20 @@ export const openaiService = {
    */
   async analyzeVesselRoute(vesselData: any): Promise<string> {
     try {
-      const response = await apiRequest('POST', '/api/openai/analyze-route', { vesselData });
+      const response = await fetch('/api/openai/analyze-route', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ vesselData }),
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'Failed to analyze vessel route');
+      }
+      
       const data = await response.json();
       
       if (!data.success) {
@@ -100,10 +147,20 @@ export const openaiService = {
    */
   async generateStructuredData<T>(prompt: string, schema: string): Promise<T> {
     try {
-      const response = await apiRequest('POST', '/api/openai/structured-data', { 
-        prompt, 
-        schema 
+      const response = await fetch('/api/openai/structured-data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ prompt, schema }),
+        credentials: 'include',
       });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'Failed to generate structured data');
+      }
+      
       const data = await response.json();
       
       if (!data.success) {
