@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/hooks/use-language";
 
 interface SidebarProps {
   mobile?: boolean;
@@ -24,62 +25,66 @@ interface SidebarProps {
 export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
   const [location] = useLocation();
   const [collapsed, setCollapsed] = useState(false);
+  const { t } = useLanguage();
 
   const toggleSidebar = () => {
     setCollapsed(!collapsed);
   };
 
-  const navItems = [
+  const getNavItems = () => [
     {
-      title: "Overview",
+      title: t("nav.dashboard"),
       path: "/dashboard",
       icon: <LayoutDashboard className="h-5 w-5 mr-3" />,
       section: "DASHBOARD"
     },
     {
-      title: "OIL BOATS",
+      title: t("nav.vessels"),
       path: "/vessels",
       icon: <Ship className="h-5 w-5 mr-3" />,
     },
     {
-      title: "REFINERY",
+      title: t("nav.refineries"),
       path: "/refineries",
       icon: <Building2 className="h-5 w-5 mr-3" />,
     },
     {
-      title: "TRADING",
+      title: t("nav.trading"),
       path: "/trading",
       icon: <BarChart className="h-5 w-5 mr-3" />,
     },
     {
-      title: "DOCUMENTERY", // Keeping the original spelling from the design
+      title: t("nav.documents"),
       path: "/documents",
       icon: <FileText className="h-5 w-5 mr-3" />,
     },
     {
-      title: "BROKERS",
+      title: t("nav.brokers"),
       path: "/brokers",
       icon: <Users className="h-5 w-5 mr-3" />,
     }
   ];
 
-  const userItems = [
+  const getUserItems = () => [
     {
-      title: "Profile",
+      title: t("nav.profile"),
       path: "/profile",
       icon: <User className="h-5 w-5 mr-3" />,
     },
     {
-      title: "AI Assistant",
+      title: t("nav.ai_assistant"),
       path: "/ai-assistant",
       icon: <Brain className="h-5 w-5 mr-3" />,
     },
     {
-      title: "Settings",
+      title: t("nav.settings"),
       path: "/settings",
       icon: <Settings className="h-5 w-5 mr-3" />,
     }
   ];
+  
+  const navItems = getNavItems();
+  const userItems = getUserItems();
 
   const isPathActive = (path: string) => {
     if (path === "/" && location === "/") return true;
@@ -127,7 +132,7 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
       {/* Main Navigation */}
       <div className="flex-grow overflow-y-auto">
         <div className="mt-6 mb-2 px-6">
-          {!collapsed && <h2 className="font-heading uppercase text-primary/60 font-bold pb-2 text-xs tracking-wider">NAVIGATION</h2>}
+          {!collapsed && <h2 className="font-heading uppercase text-primary/60 font-bold pb-2 text-xs tracking-wider">{t("nav.navigation")}</h2>}
         </div>
         
         <nav>
@@ -163,7 +168,7 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
         <div className="mt-8">
           <div className="border-t border-primary/10 my-5 mx-6"></div>
           <div className="px-6 mb-2">
-            {!collapsed && <h2 className="font-heading uppercase text-primary/60 font-bold pb-2 text-xs tracking-wider">PROFILE</h2>}
+            {!collapsed && <h2 className="font-heading uppercase text-primary/60 font-bold pb-2 text-xs tracking-wider">{t("nav.profile")}</h2>}
           </div>
           
           {userItems.map((item, index) => (
