@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
-import { Vessel, Refinery, Region } from '@/types';
+import { Vessel, Refinery, Region, ProgressEvent } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from "@/components/ui/button";
-import { Info, Map, Navigation, Globe2 } from 'lucide-react';
+import { Info, Map, Navigation, Globe2, Route } from 'lucide-react';
 import { mapStyles, LanguageOption } from './MapStyles';
 import MapContainer from './MapContainer';
+import { useVesselProgressEvents } from '@/hooks/useVessels';
 
 // Define Leaflet types
 declare global {
@@ -61,10 +62,17 @@ export default function SimpleLeafletMap({
   const mapRef = useRef<any>(null);
   const vesselMarkersRef = useRef<any[]>([]);
   const refineryMarkersRef = useRef<any[]>([]);
+  const routeLineRef = useRef<any>(null);
   const [mapStyle, setMapStyle] = useState(mapStyles[0].id);
   const [mapLanguage, setMapLanguage] = useState<LanguageOption>('en');
   const [isMapReady, setIsMapReady] = useState(false);
   const [displayVessels, setDisplayVessels] = useState<Vessel[]>([]);
+  const [showVesselRoute, setShowVesselRoute] = useState(true);
+  
+  // Get progress events for the tracked vessel
+  const { data: progressEvents = [] } = useVesselProgressEvents(
+    trackedVessel ? trackedVessel.id : null
+  );
   
   // Setup the custom event listener for tracking vessels
   useEffect(() => {
@@ -409,6 +417,108 @@ export default function SimpleLeafletMap({
         : parseFloat(String(trackedVessel.currentLng));
       
       map.setView([lat, lng], 7);
+      
+      // Draw vessel route if tracking enabled and we have progress events
+      if (showVesselRoute && progressEvents && progressEvents.length > 0) {
+        // First remove any existing route line
+        if (routeLineRef.current) {
+          routeLineRef.current.remove();
+          routeLineRef.current = null;
+        }
+        
+        // Extract coordinates from progress events and current position
+        const routeCoordinates = progressEvents
+          .filter(event => event.lat && event.lng)
+          .map(event => {
+            const eventLat = typeof event.lat === 'number' 
+              ? event.lat 
+              : parseFloat(String(event.lat));
+            const eventLng = typeof event.lng === 'number' 
+              ? event.lng 
+              : parseFloat(String(event.lng));
+            return [eventLat, eventLng];
+          });
+        
+        // Add current vessel position at the end
+        routeCoordinates.push([lat, lng]);
+        
+        // Sort by date if multiple events (oldest first)
+        // This is important for correctly drawing the path
+        if (progressEvents.length > 1) {
+          routeCoordinates.sort((a, b) => {
+            const dateA = new Date(a.date).getTime();
+            const dateB = new Date(b.date).getTime();
+            return dateA - dateB;
+          });
+        }
+        
+        // Create and add the polyline
+        if (routeCoordinates.length > 1) {
+          const routeLine = L.polyline(routeCoordinates, {
+            color: '#FF4500', // Bright orange line
+            weight: 3,
+            opacity: 0.8,
+            lineJoin: 'round',
+            dashArray: '5, 10', // Dashed line style
+            smoothFactor: 1
+          }).addTo(map);
+          
+          routeLineRef.current = routeLine;
+          
+          // Add arrow markers along the path
+          const arrowHead = L.polylineDecorator(routeLine, {
+            patterns: [
+              {
+                offset: '10%', 
+                repeat: '25%', 
+                symbol: L.Symbol.arrowHead({
+                  pixelSize: 10,
+                  polygon: false,
+                  pathOptions: {
+                    stroke: true,
+                    color: '#FF4500',
+                    weight: 3
+                  }
+                })
+              }
+            ]
+          }).addTo(map);
+          
+          // Add event markers at each point of the route
+          progressEvents.forEach((event, index) => {
+            if (!event.lat || !event.lng) return;
+            
+            const eventLat = typeof event.lat === 'number' 
+              ? event.lat 
+              : parseFloat(String(event.lat));
+            const eventLng = typeof event.lng === 'number' 
+              ? event.lng 
+              : parseFloat(String(event.lng));
+            
+            // Create a small circular marker
+            const eventMarker = L.circleMarker([eventLat, eventLng], {
+              radius: 5,
+              fillColor: '#3b82f6',
+              color: '#fff',
+              weight: 1,
+              opacity: 1,
+              fillOpacity: 0.8
+            }).addTo(map);
+            
+            // Add event popup
+            const eventDate = new Date(event.date).toLocaleString();
+            eventMarker.bindPopup(`
+              <div style="padding: 5px;">
+                <div style="font-weight: bold; margin-bottom: 4px;">${event.event}</div>
+                <div style="font-size: 11px; color: #666;">${eventDate}</div>
+                ${event.location ? `<div style="font-size: 11px;">${event.location}</div>` : ''}
+              </div>
+            `);
+            
+            vesselMarkersRef.current.push(eventMarker);
+          });
+        }
+      };
     }
     
     // Make sure map is sized properly
