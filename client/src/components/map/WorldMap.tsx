@@ -228,12 +228,46 @@ function VesselTracker({ vessel }: { vessel: Vessel | null | undefined }) {
   const currentLat = typeof vessel.currentLat === 'number' ? vessel.currentLat : parseFloat(String(vessel.currentLat));
   const currentLng = typeof vessel.currentLng === 'number' ? vessel.currentLng : parseFloat(String(vessel.currentLng));
   
-  // Determine if we have destination coordinates
-  const hasDestination = vessel.destLat && vessel.destLng;
-  const destinationPosition = hasDestination ? [
-    typeof vessel.destLat === 'number' ? vessel.destLat : parseFloat(String(vessel.destLat)),
-    typeof vessel.destLng === 'number' ? vessel.destLng : parseFloat(String(vessel.destLng))
-  ] : null;
+  // Generate a destination position if we have a destination port
+  const hasDestination = vessel.destinationPort ? true : false;
+  
+  // Create a simulated destination position based on destination port name
+  // This is just for visualization purposes when tracking a vessel
+  let destinationPosition: [number, number] | null = null;
+  
+  if (hasDestination && vessel.destinationPort) {
+    const destination = vessel.destinationPort.toLowerCase();
+    let destLat = currentLat;
+    let destLng = currentLng;
+    
+    // Simple logic for visualization - this gives a general direction
+    // based on destination port name
+    if (destination.includes('europe') || destination.includes('rotterdam')) {
+      destLat = currentLat + 5;
+      destLng = currentLng + 10;
+    } else if (destination.includes('asia') || destination.includes('china') || destination.includes('japan')) {
+      destLat = currentLat + 5;
+      destLng = currentLng + 25;
+    } else if (destination.includes('america') || destination.includes('usa') || destination.includes('york')) {
+      destLat = currentLat + 10;
+      destLng = currentLng - 20;
+    } else if (destination.includes('middle east') || destination.includes('dubai') || destination.includes('saudi')) {
+      destLat = currentLat + 8;
+      destLng = currentLng + 15;
+    } else if (destination.includes('africa')) {
+      destLat = currentLat - 10;
+      destLng = currentLng + 5;
+    } else if (destination.includes('australia')) {
+      destLat = currentLat - 15;
+      destLng = currentLng + 25;
+    } else {
+      // Default case - move in a general forward direction
+      destLat = currentLat + 5; 
+      destLng = currentLng + 10;
+    }
+    
+    destinationPosition = [destLat, destLng];
+  }
   
   return (
     <>
@@ -445,17 +479,17 @@ export default function WorldMap({
       // If tracking a vessel, prioritize vessels nearby
       initialVessels = vessels
         .filter(filterOilVesselsOnly)
-        .slice(0, 50); // Start with just a few vessels for immediate feedback
+        .slice(0, 100); // Start with more vessels for immediate feedback
     } else if (selectedRegion) {
       // If region selected, prioritize vessels in this region
       initialVessels = vessels
         .filter(v => v.currentRegion === selectedRegion && filterOilVesselsOnly(v))
-        .slice(0, 100);
+        .slice(0, 200); // Show more vessels in a selected region
     } else {
       // Default case - show ONLY OIL VESSELS when app first runs
       initialVessels = vessels
         .filter(filterOilVesselsOnly)
-        .slice(0, 150); // Show more oil vessels initially
+        .slice(0, 300); // Show more vessels initially
     }
     
     // Set initial vessels
@@ -468,10 +502,10 @@ export default function WorldMap({
     // Get remaining vessels that weren't loaded in the initial batch
     const remainingVessels = oilVessels
       .filter(v => !initialVessels.some(iv => iv.id === v.id))
-      .slice(0, 200); // Limit total vessels for better performance
+      .slice(0, 500); // Increase number of vessels for better view
     
-    const BATCH_SIZE = 50;
-    const BATCH_DELAY = 500; // ms between batches
+    const BATCH_SIZE = 100; // Load more vessels per batch
+    const BATCH_DELAY = 300; // Decrease delay between batches for faster loading
     
     // Load in batches
     for (let i = 0; i < remainingVessels.length; i += BATCH_SIZE) {
