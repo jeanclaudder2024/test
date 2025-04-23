@@ -7,6 +7,7 @@ import { aiService } from "./services/aiService";
 import { dataService } from "./services/asiStreamService";
 import { brokerService } from "./services/brokerService";
 import { stripeService } from "./services/stripeService";
+import { openAiService } from "./services/openAiService";
 import { updateRefineryCoordinates, seedMissingRefineries } from "./services/refineryUpdate";
 import { setupAuth } from "./auth";
 import { db } from "./db";
