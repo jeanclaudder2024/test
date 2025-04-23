@@ -521,7 +521,7 @@ export default function TradingDashboard() {
       >
         <TabsList className="grid grid-cols-2 md:grid-cols-4 sm:w-auto">
           <TabsTrigger value="dashboard" className="flex items-center">
-            <BarChart className="h-4 w-4 mr-2" />
+            <LucideBarChart className="h-4 w-4 mr-2" />
             <span>Dashboard</span>
           </TabsTrigger>
           <TabsTrigger value="oil-prices" className="flex items-center">
@@ -895,7 +895,7 @@ export default function TradingDashboard() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center">
-                  <PieChart className="h-5 w-5 mr-2 text-primary" />
+                  <LucidePieChart className="h-5 w-5 mr-2 text-primary" />
                   <span>Trading Activity</span>
                 </CardTitle>
                 <CardDescription>نشاط التداول</CardDescription>
@@ -1089,7 +1089,7 @@ export default function TradingDashboard() {
             <CardContent>
               <div className="h-[300px] flex items-center justify-center">
                 <div className="text-center text-muted-foreground">
-                  <BarChart className="h-12 w-12 mx-auto mb-2 opacity-20" />
+                  <LucideBarChart className="h-12 w-12 mx-auto mb-2 opacity-20" />
                   <p>Interactive historical price chart will appear here</p>
                   <p className="text-sm">مخطط تفاعلي لأسعار النفط التاريخية</p>
                 </div>
@@ -1292,7 +1292,7 @@ export default function TradingDashboard() {
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-lg flex items-center">
-                    <PieChart className="h-5 w-5 mr-2 text-primary" />
+                    <LucidePieChart className="h-5 w-5 mr-2 text-primary" />
                     <span>Price Forecast</span>
                   </CardTitle>
                   <CardDescription>توقعات الأسعار</CardDescription>
@@ -1470,7 +1470,7 @@ export default function TradingDashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="h-[250px] flex items-center justify-center border rounded-lg">
                     <div className="text-center text-muted-foreground">
-                      <PieChart className="h-12 w-12 mx-auto mb-2 opacity-20" />
+                      <LucidePieChart className="h-12 w-12 mx-auto mb-2 opacity-20" />
                       <p>Regional demand chart will appear here</p>
                       <p className="text-sm">مخطط الطلب الإقليمي</p>
                     </div>
