@@ -124,6 +124,7 @@ function MapUpdater({ region }: { region: Region | null }) {
 // VesselTracker component to center the map on tracked vessel
 function VesselTracker({ vessel }: { vessel: Vessel | null | undefined }) {
   const map = useMap();
+  const [showTrackingLine, setShowTrackingLine] = useState(true);
   
   useEffect(() => {
     if (vessel && vessel.currentLat && vessel.currentLng) {
@@ -135,7 +136,7 @@ function VesselTracker({ vessel }: { vessel: Vessel | null | undefined }) {
   }, [vessel, map]);
   
   // Create a historical path for the tracked vessel - simulated previous positions
-  const getVesselPath = () => {
+  const getHistoricalPath = () => {
     if (!vessel?.currentLat || !vessel?.currentLng) return [];
     
     const lat = typeof vessel.currentLat === 'number' ? vessel.currentLat : parseFloat(String(vessel.currentLat));
@@ -151,66 +152,220 @@ function VesselTracker({ vessel }: { vessel: Vessel | null | undefined }) {
     ];
   };
   
-  return vessel ? (
-    <>
-      {/* Vessel tracking path line */}
-      <Polyline
-        positions={getVesselPath() as L.LatLngExpression[]}
-        color="#ff5722"
-        weight={3}
-        opacity={0.8}
-        dashArray="5,10"
-      >
-        <Tooltip permanent direction="center" className="vessel-path-tooltip">
-          <span className="text-xs font-bold">Vessel Path</span>
-        </Tooltip>
-      </Polyline>
+  // Create a future predicted path for the vessel
+  const getFuturePath = () => {
+    if (!vessel?.currentLat || !vessel?.currentLng) return [];
+    
+    const lat = typeof vessel.currentLat === 'number' ? vessel.currentLat : parseFloat(String(vessel.currentLat));
+    const lng = typeof vessel.currentLng === 'number' ? vessel.currentLng : parseFloat(String(vessel.currentLng));
+    
+    // If we have a destination port, create a path in that direction 
+    // (since we don't have actual destination coordinates)
+    if (vessel.destinationPort) {
+      // Create a simulated destination based on vessel trajectory
+      // For simulation purposes only - this creates a path in a 
+      // logical direction based on the vessel's current position
       
-      {/* Current position marker */}
-      {vessel.currentLat && vessel.currentLng && (
+      // Get a directional value based on region or destination port name
+      let destLat = lat;
+      let destLng = lng;
+      
+      // Simple logic to determine a reasonable destination direction
+      // based on current position and destination port name
+      const destination = vessel.destinationPort.toLowerCase();
+      
+      if (destination.includes('europe') || destination.includes('rotterdam')) {
+        destLat = lat + 5;
+        destLng = lng + 10;
+      } else if (destination.includes('asia') || destination.includes('china') || destination.includes('japan')) {
+        destLat = lat + 5;
+        destLng = lng + 25;
+      } else if (destination.includes('america') || destination.includes('usa') || destination.includes('york')) {
+        destLat = lat + 10;
+        destLng = lng - 20;
+      } else if (destination.includes('middle east') || destination.includes('dubai') || destination.includes('saudi')) {
+        destLat = lat + 8;
+        destLng = lng + 15;
+      } else if (destination.includes('africa')) {
+        destLat = lat - 10;
+        destLng = lng + 5;
+      } else if (destination.includes('australia')) {
+        destLat = lat - 15;
+        destLng = lng + 25;
+      } else {
+        // Default case - move in a general forward direction
+        destLat = lat + 5 + (Math.random() * 5); 
+        destLng = lng + 10 + (Math.random() * 5);
+      }
+      
+      // Calculate the direction
+      const latDiff = destLat - lat;
+      const lngDiff = destLng - lng;
+      
+      // Create intermediate points
+      return [
+        [lat, lng], // Current position
+        [lat + (latDiff * 0.2), lng + (lngDiff * 0.2)],
+        [lat + (latDiff * 0.4), lng + (lngDiff * 0.4)],
+        [lat + (latDiff * 0.6), lng + (lngDiff * 0.6)],
+        [lat + (latDiff * 0.8), lng + (lngDiff * 0.8)],
+        [destLat, destLng] // Simulated destination
+      ];
+    }
+    
+    // If we don't have destination coordinates, create a simulated path
+    // heading in a general direction based on current position
+    return [
+      [lat, lng], // Current position
+      [lat + 0.1, lng + 0.2],
+      [lat + 0.2, lng + 0.4],
+      [lat + 0.3, lng + 0.6]
+    ];
+  };
+  
+  if (!vessel) return null;
+  
+  const currentLat = typeof vessel.currentLat === 'number' ? vessel.currentLat : parseFloat(String(vessel.currentLat));
+  const currentLng = typeof vessel.currentLng === 'number' ? vessel.currentLng : parseFloat(String(vessel.currentLng));
+  
+  // Determine if we have destination coordinates
+  const hasDestination = vessel.destLat && vessel.destLng;
+  const destinationPosition = hasDestination ? [
+    typeof vessel.destLat === 'number' ? vessel.destLat : parseFloat(String(vessel.destLat)),
+    typeof vessel.destLng === 'number' ? vessel.destLng : parseFloat(String(vessel.destLng))
+  ] : null;
+  
+  return (
+    <>
+      {showTrackingLine && (
+        <>
+          {/* Past tracking line (historical path) */}
+          <Polyline
+            positions={getHistoricalPath() as L.LatLngExpression[]}
+            className="route-path-active"
+            weight={3}
+          >
+            <Tooltip permanent direction="center" className="vessel-path-tooltip">
+              <div className="px-1 py-0.5 text-[10px] font-medium">Traveled Path</div>
+            </Tooltip>
+          </Polyline>
+          
+          {/* Future tracking line (predicted path) */}
+          <Polyline
+            positions={getFuturePath() as L.LatLngExpression[]}
+            className="route-path"
+            dashArray="5,10"
+            weight={2.5}
+          >
+            <Tooltip permanent direction="center" className="vessel-path-tooltip">
+              <div className="px-1 py-0.5 text-[10px] font-medium">Projected Route</div>
+            </Tooltip>
+          </Polyline>
+        </>
+      )}
+      
+      {/* Current position marker - pulsating dot */}
+      <Marker
+        position={[currentLat, currentLng]}
+        icon={L.divIcon({
+          className: 'tracking-position-marker',
+          html: `<div class="w-5 h-5 rounded-full bg-blue-500 border-2 border-white pulse-animation"></div>`,
+          iconSize: [20, 20],
+          iconAnchor: [10, 10]
+        })}
+      >
+        <Popup className="current-position-popup">
+          <div className="text-xs font-medium">
+            <div className="font-bold mb-1">{vessel.name}</div>
+            <div>Current Position</div>
+          </div>
+        </Popup>
+      </Marker>
+      
+      {/* Destination marker (if available) */}
+      {destinationPosition && (
         <Marker
-          position={[vessel.currentLat, vessel.currentLng]}
+          position={destinationPosition as L.LatLngExpression}
           icon={L.divIcon({
-            className: 'tracking-position-marker',
-            html: `<div class="w-4 h-4 rounded-full bg-orange-500 border-2 border-white pulse-animation"></div>`,
-            iconSize: [16, 16],
+            className: 'destination-marker',
+            html: `<div class="flex items-center justify-center w-6 h-6">
+                    <div class="w-4 h-4 rounded-full bg-white border-2 border-red-500 flex items-center justify-center">
+                      <div class="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
+                    </div>
+                  </div>`,
+            iconSize: [24, 24],
+            iconAnchor: [12, 12]
           })}
         >
-          <Popup>Current position</Popup>
+          <Popup className="destination-popup">
+            <div className="text-xs font-medium">
+              <div className="font-bold mb-1">Destination</div>
+              <div>{vessel.destinationPort || 'Unknown port'}</div>
+            </div>
+          </Popup>
         </Marker>
       )}
       
-      <div className="absolute top-20 right-4 z-30 bg-white rounded-lg shadow-md p-3 max-w-[220px]">
+      {/* Tracking info card */}
+      <div className="absolute top-20 right-4 z-30 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-3 max-w-[240px] border border-gray-100 dark:border-gray-700">
         <div className="flex items-center justify-between mb-2">
           <h4 className="text-xs font-bold flex items-center">
-            <Navigation className="h-3 w-3 mr-1 text-blue-500"/>
+            <Navigation className="h-3.5 w-3.5 mr-1.5 text-blue-500"/>
             Tracking Vessel
           </h4>
-          <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 text-[10px]">LIVE</Badge>
+          <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 hover:bg-blue-100 text-[10px] px-1.5">LIVE</Badge>
         </div>
-        <div className="space-y-1 text-xs">
-          <div className="font-medium">{vessel.name}</div>
-          <div className="flex justify-between">
-            <span className="text-gray-500">Vessel Type:</span>
-            <span>{vessel.vesselType}</span>
+        <div className="space-y-1.5 text-xs">
+          <div className="font-medium text-sm">{vessel.name}</div>
+          
+          <div className="flex items-center mt-1 mb-1">
+            <div className="flex-1 h-1 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div className="h-full bg-blue-500 animate-pulse rounded-full" style={{ width: '75%' }}></div>
+            </div>
+            <span className="text-[10px] text-gray-500 dark:text-gray-400 ml-2">75%</span>
           </div>
+          
           <div className="flex justify-between">
-            <span className="text-gray-500">Position:</span>
-            <span>
-              {typeof vessel.currentLat === 'number' ? vessel.currentLat.toFixed(3) : parseFloat(String(vessel.currentLat)).toFixed(3)}, 
-              {typeof vessel.currentLng === 'number' ? vessel.currentLng.toFixed(3) : parseFloat(String(vessel.currentLng)).toFixed(3)}
+            <span className="text-gray-500 dark:text-gray-400">Vessel Type:</span>
+            <span className="font-medium">{vessel.vesselType}</span>
+          </div>
+          
+          <div className="flex justify-between">
+            <span className="text-gray-500 dark:text-gray-400">Cargo:</span>
+            <span className="font-medium">{vessel.cargoType || 'N/A'}</span>
+          </div>
+          
+          <div className="flex justify-between">
+            <span className="text-gray-500 dark:text-gray-400">Position:</span>
+            <span className="font-medium">
+              {currentLat.toFixed(2)}, {currentLng.toFixed(2)}
             </span>
           </div>
+          
           {vessel.destinationPort && (
             <div className="flex justify-between">
-              <span className="text-gray-500">Heading to:</span>
-              <span>{vessel.destinationPort.split(',')[0]}</span>
+              <span className="text-gray-500 dark:text-gray-400">Heading to:</span>
+              <span className="font-medium">{vessel.destinationPort.split(',')[0]}</span>
             </div>
           )}
         </div>
+        
+        {/* Toggle tracking line visibility */}
+        <div className="mt-3 pt-2 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center">
+          <span className="text-xs text-gray-500 dark:text-gray-400">Show path</span>
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input 
+              type="checkbox" 
+              className="sr-only peer" 
+              checked={showTrackingLine}
+              onChange={() => setShowTrackingLine(prev => !prev)}
+            />
+            <div className="w-8 h-4 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all dark:border-gray-600 peer-checked:bg-blue-500"></div>
+          </label>
+        </div>
       </div>
     </>
-  ) : null;
+  );
 }
 
 export default function WorldMap({ 
@@ -247,11 +402,43 @@ export default function WorldMap({
       );
     };
     
-    // Filter for vessels with location and oil type
+    // Function to check if a vessel is on water (not on land)
+    const isVesselOnWater = (lat: number, lng: number): boolean => {
+      // Simple checks to filter out common land areas
+      // Africa
+      if (lat > 0 && lat < 35 && lng > 0 && lng < 50) {
+        // Central Africa
+        if (lat > 5 && lat < 20 && lng > 10 && lng < 40) return false;
+        // Northern Africa
+        if (lat > 20 && lat < 30 && lng > 5 && lng < 35) return false;
+      }
+      
+      // Australia  
+      if (lat < -10 && lat > -40 && lng > 110 && lng < 155) return false;
+      
+      // South America
+      if (lat < 10 && lat > -55 && lng < -35 && lng > -80) return false;
+      
+      // North America
+      if (lat > 30 && lat < 60 && lng < -75 && lng > -125) return false;
+      
+      // Europe
+      if (lat > 35 && lat < 60 && lng > 0 && lng < 45) return false;
+      
+      // Asia
+      if (lat > 10 && lat < 60 && lng > 60 && lng < 145) return false;
+
+      return true;
+    };
+  
+    // Filter for vessels with location, oil type, and not on land
     const filterOilVesselsOnly = (v: Vessel): boolean => {
-      return Boolean(v.currentLat) && 
-             Boolean(v.currentLng) && 
-             isOilVessel(v);
+      if (!v.currentLat || !v.currentLng) return false;
+      
+      const lat = typeof v.currentLat === 'number' ? v.currentLat : parseFloat(String(v.currentLat));
+      const lng = typeof v.currentLng === 'number' ? v.currentLng : parseFloat(String(v.currentLng));
+      
+      return isOilVessel(v) && isVesselOnWater(lat, lng);
     };
     
     if (trackedVessel) {
