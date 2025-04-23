@@ -646,7 +646,20 @@ export default function Brokers() {
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Button variant="outline" className="w-full">View All Documents</Button>
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => {
+                      toast({
+                        title: "عرض جميع المستندات / View All Documents",
+                        description: "Navigating to document management page",
+                      });
+                      // If using real navigation in the future, uncomment this:
+                      // navigate("/documents");
+                    }}
+                  >
+                    عرض جميع المستندات / View All Documents
+                  </Button>
                 </CardFooter>
               </Card>
               
@@ -686,7 +699,20 @@ export default function Brokers() {
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Button variant="outline" className="w-full">View All Companies</Button>
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => {
+                      toast({
+                        title: "عرض جميع الشركات / View All Companies",
+                        description: "Opening company directory",
+                      });
+                      // If you want to implement a specific view in the future:
+                      // setViewType("companies");
+                    }}
+                  >
+                    عرض جميع الشركات / View All Companies
+                  </Button>
                 </CardFooter>
               </Card>
               
@@ -726,7 +752,20 @@ export default function Brokers() {
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Button variant="outline" className="w-full">View All Tenders</Button>
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => {
+                      toast({
+                        title: "عرض جميع المناقصات / View All Tenders",
+                        description: "Opening tender listings page",
+                      });
+                      // If you want to show a dialog with all tenders in the future:
+                      // setShowTendersDialog(true);
+                    }}
+                  >
+                    عرض جميع المناقصات / View All Tenders
+                  </Button>
                 </CardFooter>
               </Card>
               
