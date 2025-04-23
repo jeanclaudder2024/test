@@ -166,13 +166,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
               await storage.updateVessel(existingVessel.id, {
                 currentLat: vessel.currentLat,
                 currentLng: vessel.currentLng,
-                heading: vessel.heading,
-                speed: vessel.speed,
+                // No heading or speed in schema
                 eta: vessel.eta || existingVessel.eta,
                 destinationPort: vessel.destinationPort || existingVessel.destinationPort,
                 cargoType: vessel.cargoType || existingVessel.cargoType,
-                cargoVolume: vessel.cargoVolume || existingVessel.cargoVolume,
-                status: vessel.status || existingVessel.status
+                cargoCapacity: vessel.cargoCapacity || existingVessel.cargoCapacity
+                // No cargoVolume or status in schema
               });
               updated++;
             }
@@ -192,11 +191,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             errors
           }
         });
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching from ASI Stream API:", error);
         res.status(500).json({ 
           message: "Failed to fetch data from ASI Stream API",
-          error: error.message
+          error: error.message || String(error)
         });
       }
     });

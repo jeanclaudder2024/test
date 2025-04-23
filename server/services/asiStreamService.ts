@@ -164,8 +164,7 @@ export const dataService = {
           deadweight,
           currentLat,
           currentLng,
-          // No heading or speed in schema
-          operator,
+          // No heading, speed or operator in schema
           eta,
           currentRegion,
           cargoType,
@@ -180,7 +179,7 @@ export const dataService = {
       
       console.log(`Generated ${oilVessels.length} simulated oil vessels from ASI Stream API.`);
       return oilVessels;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching vessels from ASI Stream API:", error);
       // Return empty array in case of error
       return [];
@@ -200,7 +199,7 @@ export const dataService = {
       
       console.log(`Fetched ${refineries.length} real refineries from ASI Stream API.`);
       return refineries;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching refineries from ASI Stream API:", error);
       // Return empty array in case of error
       return [];

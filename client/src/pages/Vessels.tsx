@@ -45,6 +45,7 @@ export default function Vessels() {
   const [selectedOilTypes, setSelectedOilTypes] = useState<string[]>([]);
   const [selectedTab, setSelectedTab] = useState<string>("all");
   const [isUpdatingDestinations, setIsUpdatingDestinations] = useState(false);
+  const [isRefreshingASI, setIsRefreshingASI] = useState(false);
   const { toast } = useToast();
   
   // Helper function to determine oil category
@@ -134,6 +135,42 @@ export default function Vessels() {
       });
     } finally {
       setIsUpdatingDestinations(false);
+    }
+  };
+  
+  // Function to refresh data from ASI Stream API
+  const handleRefreshASIData = async () => {
+    try {
+      setIsRefreshingASI(true);
+      
+      const response = await apiRequest('POST', '/api/refresh-asi-data');
+      const result = await response.json();
+      
+      if (result.success) {
+        toast({
+          title: "ASI Stream Data Refreshed",
+          description: `Successfully fetched ${result.data.fetched} vessels. Created: ${result.data.created}, Updated: ${result.data.updated}`,
+          variant: "default",
+        });
+        
+        // Force reload of vessel data
+        window.location.reload();
+      } else {
+        toast({
+          title: "Refresh failed",
+          description: result.message || "Failed to fetch data from ASI Stream API",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error refreshing ASI Stream data:", error);
+      toast({
+        title: "Error",
+        description: "An error occurred while refreshing vessel data from ASI Stream API",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRefreshingASI(false);
     }
   };
 
