@@ -18,6 +18,7 @@ import {
   insertDocumentSchema,
   insertBrokerSchema,
   Vessel,
+  InsertVessel,
   Refinery,
   vessels,
   refineries,
@@ -113,6 +114,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (error) {
         console.error("Error refreshing vessel data:", error);
         res.status(500).json({ message: "Failed to refresh vessel data" });
+      }
+    });
+    
+    // Route to fetch fresh data from ASI Stream API
+    apiRouter.post("/asi-stream/refresh", async (req, res) => {
+      try {
+        console.log("Fetching fresh vessel data from ASI Stream API...");
+        
+        // Fetch vessels from ASI Stream API
+        const vessels = await dataService.fetchVessels();
+        console.log(`Fetched ${vessels.length} vessels from ASI Stream API.`);
+        
+        // Get all refineries (for destination assignment)
+        const refineries = await storage.getRefineries();
+        
+        // Track created/updated vessels
+        let created = 0;
+        let updated = 0;
+        let errors = 0;
+        
+        // Process each vessel
+        for (const vessel of vessels) {
+          try {
+            // Check if vessel already exists in database by IMO
+            const existingVessels = await storage.getVessels();
+            const existingVessel = existingVessels.find(v => v.imo === vessel.imo);
+            
+            // If vessel doesn't exist, assign a destination and create it
+            if (!existingVessel) {
+              // Assign random refinery as destination if none exists
+              if ((!vessel.destinationPort || vessel.destinationPort === '') && refineries.length > 0) {
+                const randomRefinery = refineries[Math.floor(Math.random() * refineries.length)];
+                vessel.destinationPort = `REF:${randomRefinery.id}:${randomRefinery.name}`;
+                
+                // Ensure ETA is set
+                if (!vessel.eta) {
+                  const now = new Date();
+                  const futureOffset = Math.floor(Math.random() * 30) + 5; // 5-35 days in future
+                  const etaDate = new Date(now);
+                  etaDate.setDate(etaDate.getDate() + futureOffset);
+                  vessel.eta = etaDate;
+                }
+              }
+              
+              // Create new vessel in database
+              await storage.createVessel(vessel);
+              created++;
+            } else {
+              // Update existing vessel with new position and data
+              await storage.updateVessel(existingVessel.id, {
+                currentLat: vessel.currentLat,
+                currentLng: vessel.currentLng,
+                heading: vessel.heading,
+                speed: vessel.speed,
+                eta: vessel.eta || existingVessel.eta,
+                destinationPort: vessel.destinationPort || existingVessel.destinationPort,
+                cargoType: vessel.cargoType || existingVessel.cargoType,
+                cargoVolume: vessel.cargoVolume || existingVessel.cargoVolume,
+                status: vessel.status || existingVessel.status
+              });
+              updated++;
+            }
+          } catch (vesselError) {
+            console.error(`Error processing vessel ${vessel.name}:`, vesselError);
+            errors++;
+          }
+        }
+        
+        res.json({
+          success: true,
+          message: "Successfully processed vessels from ASI Stream API",
+          data: {
+            fetched: vessels.length,
+            created,
+            updated,
+            errors
+          }
+        });
+      } catch (error) {
+        console.error("Error fetching from ASI Stream API:", error);
+        res.status(500).json({ 
+          message: "Failed to fetch data from ASI Stream API",
+          error: error.message
+        });
       }
     });
 
@@ -902,7 +987,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               
               // Map of IMO -> position updates for fast lookup
               const positionMap = new Map();
-              positionUpdates.forEach((vessel: any) => {
+              positionUpdates.forEach((vessel: InsertVessel) => {
                 if (vessel.imo && vessel.currentLat && vessel.currentLng) {
                   positionMap.set(vessel.imo, {
                     currentLat: vessel.currentLat,
