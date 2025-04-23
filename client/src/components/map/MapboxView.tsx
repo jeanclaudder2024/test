@@ -1,26 +1,9 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import mapboxgl from 'mapbox-gl';
+import { useState, useEffect } from 'react';
 import { Vessel, Refinery, Region } from '@/types';
 import { Badge } from '@/components/ui/badge';
-import { Ship, Navigation as NavigationIcon, Droplet } from 'lucide-react';
+import { Ship, Navigation as NavigationIcon, MapPin } from 'lucide-react';
 import { OIL_PRODUCT_TYPES } from '@/../../shared/constants';
-import 'mapbox-gl/dist/mapbox-gl.css';
-
-// Region center positions
-const regionPositions: Record<string, { lat: number; lng: number; zoom: number }> = {
-  'north-america': { lat: 40, lng: -100, zoom: 3 },
-  'south-america': { lat: -15, lng: -60, zoom: 3 },
-  'central-america': { lat: 15, lng: -85, zoom: 4 },
-  'western-europe': { lat: 50, lng: 0, zoom: 4 },
-  'eastern-europe': { lat: 50, lng: 25, zoom: 4 },
-  'middle-east': { lat: 28, lng: 45, zoom: 4 },
-  'north-africa': { lat: 25, lng: 20, zoom: 4 },
-  'southern-africa': { lat: -10, lng: 20, zoom: 3 },
-  'russia': { lat: 60, lng: 80, zoom: 3 },
-  'china': { lat: 35, lng: 105, zoom: 4 },
-  'asia-pacific': { lat: 20, lng: 110, zoom: 3 },
-  'southeast-asia-oceania': { lat: -10, lng: 130, zoom: 3 }
-};
+import { Button } from '@/components/ui/button';
 
 interface MapboxViewProps {
   vessels: Vessel[];
@@ -153,242 +136,118 @@ export default function MapboxView({
     );
   }
 
+  // For simplicity, let's display a fallback message and show a vessel card instead
+  const displayedVessel = selectedVessel || trackedVessel || (filteredVessels.length > 0 ? filteredVessels[0] : null);
+  
   return (
-    <div className="relative h-96 md:h-[500px] rounded-lg overflow-hidden">
-      <Map
-        {...viewport}
-        onMove={(evt: { viewState: ViewState }) => setViewport(evt.viewState)}
-        mapStyle="mapbox://styles/mapbox/satellite-streets-v12"
-        mapboxAccessToken={mapboxToken}
-        attributionControl={true}
-        style={{ width: '100%', height: '100%' }}
-        onClick={() => {
-          setSelectedVessel(null);
-          setSelectedRefinery(null);
-        }}
-      >
-        {/* Navigation Controls */}
-        <NavigationControl position="top-right" />
-        <FullscreenControl position="top-right" />
-        <ScaleControl position="bottom-right" />
-
-        {/* Vessel Markers */}
-        {filteredVessels.map(vessel => (
-          vessel.currentLat && vessel.currentLng && (
-            <Marker
-              key={`vessel-${vessel.id}`}
-              latitude={typeof vessel.currentLat === 'number' ? vessel.currentLat : parseFloat(String(vessel.currentLat))}
-              longitude={typeof vessel.currentLng === 'number' ? vessel.currentLng : parseFloat(String(vessel.currentLng))}
-              onClick={(e: { originalEvent: MouseEvent }) => {
-                e.originalEvent.stopPropagation();
-                handleVesselClick(vessel);
+    <div className="relative h-96 md:h-[500px] bg-gradient-to-br from-blue-900 to-blue-700 rounded-lg overflow-hidden flex flex-col">
+      {/* Map Image Placeholder */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="text-white text-center">
+          <MapPin className="h-16 w-16 mx-auto mb-4 text-white opacity-40" />
+          <p className="text-xl font-bold">MapboxView requires MapGl setup</p>
+          <p className="max-w-sm text-white/70 mt-2 mb-4">Switching to SimpleLeafletMap is recommended for vessel tracking</p>
+        </div>
+      </div>
+      
+      {/* Vessel Card */}
+      {displayedVessel && (
+        <div className="absolute bottom-4 left-4 right-4 md:right-auto md:w-80 bg-white dark:bg-gray-900 rounded-lg shadow-lg overflow-hidden">
+          <div className="relative h-24 overflow-hidden bg-gradient-to-r from-blue-900 to-blue-700">
+            <div 
+              className="absolute inset-0 bg-cover bg-center opacity-60"
+              style={{
+                backgroundImage: `url('https://images.unsplash.com/photo-1572396698880-61c914c5901e?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=300&ixid=MnwxfDB8MXxyYW5kb218MHx8c2hpcHx8fHx8fDE2NDU3NjE5NTg&ixlib=rb-1.2.1&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=450')`
               }}
-            >
-              <div 
-                className="vessel-marker relative" 
-                style={{ 
-                  borderRadius: '50%', 
-                  width: '24px', 
-                  height: '24px', 
-                  background: `rgba(255,255,255,0.8)`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  border: `2px solid ${getVesselColor(vessel.vesselType || 'Oil Tanker')}`,
-                  boxShadow: '0 0 0 2px rgba(0,0,0,0.1)',
-                  cursor: 'pointer',
-                  transform: 'translate(-50%, -50%)'
+            ></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+            <div className="absolute bottom-0 left-0 p-3 w-full">
+              <h3 className="font-bold text-white text-sm flex items-center gap-1.5">
+                <Ship className="h-4 w-4" />
+                {displayedVessel.name}
+              </h3>
+              <div className="flex items-center mt-0.5">
+                <Badge 
+                  variant="outline" 
+                  className="mr-1.5 text-[10px] bg-white/20 text-white border-white/30"
+                >
+                  {displayedVessel.vesselType || 'Oil Tanker'}
+                </Badge>
+                <span className="text-white/80 text-[10px]">{displayedVessel.flag}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="p-3">
+            <div className="grid grid-cols-2 gap-2 mb-3">
+              <div className="bg-blue-50 dark:bg-blue-950/30 rounded p-1.5">
+                <div className="text-[10px] text-blue-500 dark:text-blue-400 font-medium">IMO NUMBER</div>
+                <div className="text-sm font-medium">{displayedVessel.imo || 'N/A'}</div>
+              </div>
+              <div className="bg-emerald-50 dark:bg-emerald-950/30 rounded p-1.5">
+                <div className="text-[10px] text-emerald-500 dark:text-emerald-400 font-medium">CARGO TYPE</div>
+                <div className="text-sm font-medium truncate">{displayedVessel.cargoType || 'Unknown'}</div>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              {displayedVessel.departurePort && (
+                <div className="flex items-start gap-2 text-xs">
+                  <div className="mt-0.5 h-4 w-4 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center flex-shrink-0">
+                    <span className="text-blue-600 dark:text-blue-400 text-[10px]">A</span>
+                  </div>
+                  <div>
+                    <div className="text-[10px] text-muted-foreground">DEPARTURE</div>
+                    <div className="font-medium">{displayedVessel.departurePort}</div>
+                  </div>
+                </div>
+              )}
+              
+              {displayedVessel.destinationPort && (
+                <div className="flex items-start gap-2 text-xs">
+                  <div className="mt-0.5 h-4 w-4 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center flex-shrink-0">
+                    <span className="text-green-600 dark:text-green-400 text-[10px]">B</span>
+                  </div>
+                  <div>
+                    <div className="text-[10px] text-muted-foreground">DESTINATION</div>
+                    <div className="font-medium">{displayedVessel.destinationPort}</div>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <div className="flex mt-3 gap-2">
+              <Button 
+                variant="outline" 
+                className="flex-1 text-xs h-8 border-green-500 text-green-600 hover:text-green-700 hover:bg-green-50 dark:border-green-700 dark:text-green-500 dark:hover:bg-green-950/50"
+                onClick={() => onVesselClick(displayedVessel)}
+              >
+                <NavigationIcon className="h-3 w-3 mr-1" />
+                Track Vessel
+              </Button>
+              <Button 
+                variant="default" 
+                className="flex-1 text-xs h-8 bg-primary hover:bg-primary/90"
+                onClick={() => {
+                  onVesselClick(displayedVessel);
+                  window.location.href = `/vessels/${displayedVessel.id}`;
                 }}
               >
-                <span style={{ fontSize: '14px' }}>{getVesselEmoji(vessel.vesselType || 'Oil Tanker')}</span>
-              </div>
-            </Marker>
-          )
-        ))}
-
-        {/* Refinery Markers */}
-        {refineries.map(refinery => (
-          <Marker
-            key={`refinery-${refinery.id}`}
-            latitude={refinery.lat}
-            longitude={refinery.lng}
-            onClick={(e: { originalEvent: MouseEvent }) => {
-              e.originalEvent.stopPropagation();
-              handleRefineryClick(refinery);
-            }}
-          >
-            <div 
-              className="refinery-marker" 
-              style={{ 
-                borderRadius: '50%', 
-                width: '24px', 
-                height: '24px', 
-                background: 'rgba(255,255,255,0.9)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: '2px solid #dc3545',
-                boxShadow: '0 0 0 2px rgba(0,0,0,0.1)',
-                cursor: 'pointer',
-                transform: 'translate(-50%, -50%)'
-              }}
-            >
-              <span style={{ fontSize: '14px' }}>⛽</span>
+                <Ship className="h-3 w-3 mr-1" />
+                View Details
+              </Button>
             </div>
-          </Marker>
-        ))}
-
-        {/* Vessel Popup */}
-        {selectedVessel && selectedVessel.currentLat && selectedVessel.currentLng && (
-          <Popup
-            latitude={typeof selectedVessel.currentLat === 'number' ? selectedVessel.currentLat : parseFloat(String(selectedVessel.currentLat))}
-            longitude={typeof selectedVessel.currentLng === 'number' ? selectedVessel.currentLng : parseFloat(String(selectedVessel.currentLng))}
-            closeOnClick={false}
-            onClose={() => setSelectedVessel(null)}
-            anchor="bottom"
-            offset={25}
-          >
-            <div className="p-0 overflow-hidden max-w-[260px]">
-              {/* Vessel Image Header */}
-              <div className="relative h-24 overflow-hidden bg-gradient-to-r from-blue-900 to-blue-700">
-                <div 
-                  className="absolute inset-0 bg-cover bg-center opacity-60"
-                  style={{
-                    backgroundImage: `url('https://images.unsplash.com/photo-1572396698880-61c914c5901e?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=300&ixid=MnwxfDB8MXxyYW5kb218MHx8c2hpcHx8fHx8fDE2NDU3NjE5NTg&ixlib=rb-1.2.1&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=450')`
-                  }}
-                ></div>
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-                <div className="absolute bottom-0 left-0 p-3 w-full">
-                  <h3 className="font-bold text-white text-sm flex items-center gap-1.5">{selectedVessel.name}</h3>
-                  <div className="flex items-center mt-0.5">
-                    <span className="bg-white/20 text-white px-1.5 py-0.5 rounded text-[10px] border border-white/30 mr-1.5">{selectedVessel.vesselType || 'Oil Tanker'}</span>
-                    <span className="text-white/80 text-[10px]">{selectedVessel.flag}</span>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Vessel Info */}
-              <div className="p-3">
-                <div className="grid grid-cols-2 gap-2 mb-2">
-                  <div className="bg-blue-50 rounded p-1.5">
-                    <div className="text-[10px] text-blue-500 font-medium">IMO NUMBER</div>
-                    <div className="text-sm font-medium">{selectedVessel.imo || 'N/A'}</div>
-                  </div>
-                  <div className="bg-emerald-50 rounded p-1.5">
-                    <div className="text-[10px] text-emerald-500 font-medium">CARGO TYPE</div>
-                    <div className="text-sm font-medium truncate">{selectedVessel.cargoType || 'Unknown'}</div>
-                  </div>
-                </div>
-                
-                <div className="space-y-2 text-xs">
-                  {selectedVessel.departurePort && (
-                    <div className="flex items-start gap-2">
-                      <div className="mt-0.5 h-4 w-4 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                        <span className="text-blue-600 text-[10px]">A</span>
-                      </div>
-                      <div>
-                        <div className="text-[10px] text-gray-500">DEPARTURE</div>
-                        <div className="font-medium">{selectedVessel.departurePort}</div>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {selectedVessel.destinationPort && (
-                    <div className="flex items-start gap-2">
-                      <div className="mt-0.5 h-4 w-4 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
-                        <span className="text-green-600 text-[10px]">B</span>
-                      </div>
-                      <div>
-                        <div className="text-[10px] text-gray-500">DESTINATION</div>
-                        <div className="font-medium">{selectedVessel.destinationPort}</div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                
-                {/* Action Buttons */}
-                <div className="flex mt-3 gap-2">
-                  <button 
-                    className="flex-1 flex items-center justify-center gap-1 text-xs h-8 border border-green-500 text-green-600 bg-white rounded px-2 hover:bg-green-50"
-                    onClick={() => {
-                      // Handling will be in the vessel click event already
-                    }}
-                  >
-                    <span className="text-[14px]">🔍</span>
-                    Track Vessel
-                  </button>
-                  <button 
-                    className="flex-1 flex items-center justify-center gap-1 text-xs h-8 border-0 bg-blue-600 text-white rounded px-2 hover:bg-blue-700"
-                    onClick={() => {
-                      window.location.href = `/vessels/${selectedVessel.id}`;
-                    }}
-                  >
-                    <span className="text-[14px]">👁️</span>
-                    View Details
-                  </button>
-                </div>
-              </div>
-            </div>
-          </Popup>
-        )}
-
-        {/* Refinery Popup */}
-        {selectedRefinery && (
-          <Popup
-            latitude={selectedRefinery.lat}
-            longitude={selectedRefinery.lng}
-            closeOnClick={false}
-            onClose={() => setSelectedRefinery(null)}
-            anchor="bottom"
-            offset={25}
-          >
-            <div className="p-2 max-w-[200px]">
-              <h3 className="font-bold text-sm">{selectedRefinery.name}</h3>
-              <div className="text-xs mt-1">
-                <div><span className="font-semibold">Country:</span> {selectedRefinery.country}</div>
-                <div><span className="font-semibold">Region:</span> {selectedRefinery.region}</div>
-                <div><span className="font-semibold">Status:</span> {selectedRefinery.status}</div>
-                {selectedRefinery.capacity && (
-                  <div><span className="font-semibold">Capacity:</span> {selectedRefinery.capacity.toLocaleString()} bpd</div>
-                )}
-              </div>
-            </div>
-          </Popup>
-        )}
-      </Map>
-
-      {/* Tracked Vessel Info */}
-      {trackedVessel && trackedVessel.currentLat && trackedVessel.currentLng && (
-        <div className="absolute top-20 right-4 z-10 bg-white rounded-lg shadow-md p-3 max-w-[220px]">
-          <div className="flex items-center justify-between mb-2">
-            <h4 className="text-xs font-bold flex items-center">
-              <NavigationIcon className="h-3 w-3 mr-1 text-blue-500"/>
-              Tracking Vessel
-            </h4>
-            <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 text-[10px]">LIVE</Badge>
-          </div>
-          <div className="space-y-1 text-xs">
-            <div className="font-medium">{trackedVessel.name}</div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Vessel Type:</span>
-              <span>{trackedVessel.vesselType}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Position:</span>
-              <span>
-                {typeof trackedVessel.currentLat === 'number' ? trackedVessel.currentLat.toFixed(3) : parseFloat(String(trackedVessel.currentLat)).toFixed(3)}, 
-                {typeof trackedVessel.currentLng === 'number' ? trackedVessel.currentLng.toFixed(3) : parseFloat(String(trackedVessel.currentLng)).toFixed(3)}
-              </span>
-            </div>
-            {trackedVessel.destinationPort && (
-              <div className="flex justify-between">
-                <span className="text-gray-500">Heading to:</span>
-                <span>{trackedVessel.destinationPort.split(',')[0]}</span>
-              </div>
-            )}
           </div>
         </div>
       )}
+      
+      {/* Map Controls */}
+      <div className="absolute top-4 right-4 bg-white rounded-md shadow-sm z-30">
+        <div className="text-[10px] text-center p-2 border-b text-muted-foreground font-medium">MAP CONTROLS</div>
+        <Button variant="ghost" size="icon" className="p-2 text-gray-600 hover:bg-gray-100 hover:text-primary">
+          <MapPin className="h-5 w-5" />
+        </Button>
+      </div>
     </div>
   );
 }
