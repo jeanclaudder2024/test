@@ -73,7 +73,7 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
     }
   ];
 
-  const getUserItems = () => [
+  const getUserItems = (): NavItem[] => [
     {
       title: t("nav.profile"),
       path: "/profile",

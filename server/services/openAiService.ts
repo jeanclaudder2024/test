@@ -227,5 +227,38 @@ export const openAiService = {
       console.error("OpenAI inspection report error:", error);
       return `Error generating inspection report: ${error.message}`;
     }
+  },
+  
+  /**
+   * Generate a general AI response to a user query
+   * @param prompt The full prompt with user query and context
+   * @returns AI-generated response
+   */
+  async generateResponse(prompt: string): Promise<string> {
+    try {
+      const response = await openai.chat.completions.create({
+        model: DEFAULT_MODEL,
+        messages: [
+          {
+            role: "system",
+            content: `You are an AI assistant for a maritime oil vessel tracking platform.
+            You provide helpful, accurate, and concise information about vessels, refineries,
+            shipping routes, and oil logistics. Be professional but conversational.
+            If you don't know something, say so clearly and suggest what information would help.`
+          },
+          {
+            role: "user",
+            content: prompt
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 1000,
+      });
+
+      return response.choices[0].message.content || "I apologize, but I couldn't generate a response at this time.";
+    } catch (error: any) {
+      console.error("OpenAI general response error:", error);
+      return `Error generating response: ${error.message}`;
+    }
   }
 };
