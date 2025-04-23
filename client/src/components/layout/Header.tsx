@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { Menu, LogOut, Download, Home } from "lucide-react";
 import { useLanguage } from "@/hooks/use-language";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
@@ -89,7 +90,7 @@ export default function Header() {
             className="hidden sm:flex border border-primary/20 hover:bg-primary/10 text-primary mr-2"
             onClick={() => navigate('/')}
           >
-            <Home className="h-4 w-4 mr-2" />
+            <Home className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
             {t("action.view_home")}
           </Button>
           
@@ -98,9 +99,14 @@ export default function Header() {
             size="sm" 
             className="hidden sm:flex border border-primary/20 hover:bg-primary/10 text-primary"
           >
-            <Download className="h-4 w-4 mr-2" />
+            <Download className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
             {t("action.export")}
           </Button>
+          
+          {/* Theme Toggle */}
+          <div className="hidden sm:block">
+            <ThemeToggle />
+          </div>
           
           {/* Language Switcher */}
           <div className="hidden sm:block">

@@ -138,59 +138,51 @@ export default function Settings() {
                   
                   <div className="space-y-2">
                     <Label htmlFor="timezone" className="flex justify-between">
-                      <span>Time Zone</span>
-                      <span>المنطقة الزمنية</span>
+                      <span>{t("settings.timezone")}</span>
+                      <span className={language === "ar" ? "font-semibold" : "text-primary/70"}>
+                        {language === "ar" ? "المنطقة الزمنية" : ""}
+                      </span>
                     </Label>
                     <Select defaultValue="utc">
                       <SelectTrigger id="timezone">
-                        <SelectValue placeholder="Select Time Zone • اختر المنطقة الزمنية" />
+                        <SelectValue placeholder={language === "en" ? "Select Time Zone" : "اختر المنطقة الزمنية"} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="utc">UTC • التوقيت العالمي المنسق</SelectItem>
-                        <SelectItem value="est">Eastern Time (EST) • التوقيت الشرقي</SelectItem>
-                        <SelectItem value="gmt">Greenwich Mean Time (GMT) • توقيت غرينتش</SelectItem>
-                        <SelectItem value="ast">Arabia Standard Time (AST) • التوقيت العربي</SelectItem>
-                        <SelectItem value="cet">Central European Time (CET) • توقيت وسط أوروبا</SelectItem>
+                        <SelectItem value="utc">
+                          {language === "en" ? "UTC (Coordinated Universal Time)" : "التوقيت العالمي المنسق (UTC)"}
+                        </SelectItem>
+                        <SelectItem value="est">
+                          {language === "en" ? "Eastern Time (EST)" : "التوقيت الشرقي (EST)"}
+                        </SelectItem>
+                        <SelectItem value="gmt">
+                          {language === "en" ? "Greenwich Mean Time (GMT)" : "توقيت غرينتش (GMT)"}
+                        </SelectItem>
+                        <SelectItem value="ast">
+                          {language === "en" ? "Arabia Standard Time (AST)" : "التوقيت العربي (AST)"}
+                        </SelectItem>
+                        <SelectItem value="cet">
+                          {language === "en" ? "Central European Time (CET)" : "توقيت وسط أوروبا (CET)"}
+                        </SelectItem>
                       </SelectContent>
                     </Select>
+                    <p className="text-sm text-muted-foreground pt-1">
+                      {t("settings.timezone_description")}
+                    </p>
                   </div>
                   
                   <div className="space-y-2">
                     <Label htmlFor="theme" className="flex justify-between">
-                      <span>Theme</span>
-                      <span>المظهر</span>
+                      <span>{t("settings.theme")}</span>
+                      <span className={language === "ar" ? "font-semibold" : "text-primary/70"}>
+                        {language === "ar" ? "السمة" : ""}
+                      </span>
                     </Label>
-                    <Select defaultValue="light">
-                      <SelectTrigger id="theme">
-                        <SelectValue placeholder="Select Theme • اختر المظهر" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="light">
-                          <div className="flex items-center justify-between w-full">
-                            <div className="flex items-center">
-                              <Sun className="h-4 w-4 mr-2" />
-                              <span>Light</span>
-                            </div>
-                            <span>فاتح</span>
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="dark">
-                          <div className="flex items-center justify-between w-full">
-                            <div className="flex items-center">
-                              <Moon className="h-4 w-4 mr-2" />
-                              <span>Dark</span>
-                            </div>
-                            <span>داكن</span>
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="system">
-                          <div className="flex items-center justify-between w-full">
-                            <span>System</span>
-                            <span>النظام</span>
-                          </div>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <div className="py-2">
+                      <ThemeToggle />
+                    </div>
+                    <p className="text-sm text-muted-foreground pt-1">
+                      {t("settings.theme_description")}
+                    </p>
                   </div>
                   
                   <Separator />
