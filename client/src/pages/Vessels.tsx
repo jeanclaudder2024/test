@@ -23,7 +23,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from 'wouter';
 import { formatDate } from '@/lib/utils';
-import { Ship, Search, Plus, Filter, Droplet, Fuel, Layers, Tag, Anchor, AlertCircle, Trash2 } from 'lucide-react';
+import { Ship, Search, Plus, Filter, Droplet, Fuel, Layers, Tag, Anchor, AlertCircle, Trash2, EyeOff, Map } from 'lucide-react';
 import { OIL_PRODUCT_TYPES } from '@shared/constants';
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -322,6 +322,15 @@ export default function Vessels() {
           <Button>
             <Plus className="h-4 w-4 mr-2" />
             Add Vessel
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            onClick={() => window.open('/?empty=true', '_blank')}
+            className="bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+          >
+            <EyeOff className="h-4 w-4 mr-2" />
+            Show Empty Map
           </Button>
         </div>
       </div>
