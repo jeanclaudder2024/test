@@ -15,6 +15,7 @@ import Settings from "@/pages/Settings";
 import Subscribe from "@/pages/Subscribe";
 import LandingPage from "@/pages/LandingPage";
 import AuthPage from "@/pages/AuthPage";
+import TradingDashboard from "@/pages/TradingDashboard";
 import { useEffect } from "react";
 import { apiRequest } from "./lib/queryClient";
 import MainLayout from "@/components/layout/MainLayout";
@@ -62,6 +63,7 @@ function Router() {
         <ProtectedRoute path="/brokers" component={Brokers} />
         <ProtectedRoute path="/documents" component={Documents} />
         <ProtectedRoute path="/ai-assistant" component={AIAssistantPage} />
+        <ProtectedRoute path="/trading" component={TradingDashboard} />
         <ProtectedRoute path="/settings" component={Settings} />
         <ProtectedRoute path="/subscribe" component={Subscribe} />
         <Route component={NotFound} />

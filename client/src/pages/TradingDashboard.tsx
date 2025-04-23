@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useNavigate } from 'wouter';
+import { useLocation } from 'wouter';
 import { 
   BarChart3, 
   TrendingUp, 
@@ -86,7 +86,7 @@ export default function TradingDashboard() {
   const [oilType, setOilType] = useState('all');
   const [periodFilter, setPeriodFilter] = useState('today');
   const [refreshing, setRefreshing] = useState(false);
-  const navigate = useNavigate();
+  const [_, navigate] = useLocation(); // Use useLocation to navigate
   const { toast } = useToast();
 
   // Query to get oil prices

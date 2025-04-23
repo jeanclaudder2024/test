@@ -181,52 +181,41 @@ tradingRouter.get('/deals', async (req, res) => {
              v.cargoType?.toLowerCase().includes('petroleum');
     });
 
-    // Generate deals from vessels that have destinations to refineries
+    // Generate deals from vessels that have oil cargo
     const deals: Deal[] = oilVessels
-      .filter(vessel => {
-        // Only include vessels with valid destinations that match refineries
-        const destinationText = vessel.destination || '';
-        return destinationText.includes('REF:') || 
-               allRefineries.some(r => destinationText.toLowerCase().includes(r.name.toLowerCase()));
-      })
       .slice(0, 20) // Limit to 20 deals for performance
       .map(vessel => {
-        // Try to extract refinery info from destination
+        // Try to extract refinery info
         let refineryId = 0;
         let refineryName = '';
         
-        // Check if destination has the REF:id:name format
-        if (vessel.destination && vessel.destination.includes('REF:')) {
-          const matches = vessel.destination.match(/REF:(\d+):(.*)/);
-          if (matches && matches.length >= 3) {
-            refineryId = parseInt(matches[1]);
-            refineryName = matches[2];
-          }
-        } 
+        // Check destination field manually in a safe way
+        const destinationPort = vessel.destinationPort || '';
         
-        // If no refinery info in destination, find a suitable refinery based on location
-        if (!refineryId || !refineryName) {
-          const closestRefinery = allRefineries.find(r => 
-            vessel.destination?.toLowerCase().includes(r.name.toLowerCase()) ||
-            vessel.destination?.toLowerCase().includes(r.country.toLowerCase())
+        // Try to find matching refinery based on destination port or current region
+        const matchingRefinery = allRefineries.find(r => 
+          destinationPort.toLowerCase().includes(r.name.toLowerCase()) ||
+          destinationPort.toLowerCase().includes(r.country.toLowerCase())
+        );
+        
+        if (matchingRefinery) {
+          refineryId = matchingRefinery.id;
+          refineryName = matchingRefinery.name;
+        } else {
+          // If no match, pick a random refinery from the same region
+          const sameRegionRefineries = allRefineries.filter(r => 
+            r.region === vessel.currentRegion
           );
           
-          if (closestRefinery) {
-            refineryId = closestRefinery.id;
-            refineryName = closestRefinery.name;
+          if (sameRegionRefineries.length > 0) {
+            const randomRefinery = sameRegionRefineries[Math.floor(Math.random() * sameRegionRefineries.length)];
+            refineryId = randomRefinery.id;
+            refineryName = randomRefinery.name;
           } else {
-            // If still no match, pick a random refinery from the same region
-            const sameRegionRefineries = allRefineries.filter(r => r.region === vessel.region);
-            if (sameRegionRefineries.length > 0) {
-              const randomRefinery = sameRegionRefineries[Math.floor(Math.random() * sameRegionRefineries.length)];
-              refineryId = randomRefinery.id;
-              refineryName = randomRefinery.name;
-            } else {
-              // Fallback to any refinery
-              const randomRefinery = allRefineries[Math.floor(Math.random() * allRefineries.length)];
-              refineryId = randomRefinery.id;
-              refineryName = randomRefinery.name;
-            }
+            // Fallback to any refinery
+            const randomRefinery = allRefineries[Math.floor(Math.random() * allRefineries.length)];
+            refineryId = randomRefinery.id;
+            refineryName = randomRefinery.name;
           }
         }
         
@@ -259,7 +248,7 @@ tradingRouter.get('/deals', async (req, res) => {
           volume: vessel.deadweight || Math.round((Math.random() * 1000000) + 500000),
           price: parseFloat(price.toFixed(2)),
           status: 'active' as const,
-          eta: vessel.eta || new Date(Date.now() + (Math.random() * 10 * 24 * 60 * 60 * 1000)).toISOString(),
+          eta: (vessel.eta || new Date(Date.now() + (Math.random() * 10 * 24 * 60 * 60 * 1000)).toISOString()).toString(),
           created: new Date(Date.now() - (Math.random() * 7 * 24 * 60 * 60 * 1000)).toISOString()
         };
       });
