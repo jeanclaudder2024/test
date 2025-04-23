@@ -14,9 +14,6 @@ interface StreamData {
 
 /**
  * Hook to fetch and periodically update vessel and refinery data
- * 
- * Instead of using SSE (Server-Sent Events) that might be causing WebSocket conflicts,
- * this implementation uses regular polling with React Query.
  */
 export function useDataStream() {
   const [data, setData] = useState<StreamData>({
@@ -35,41 +32,28 @@ export function useDataStream() {
         setData(prev => ({ ...prev, loading: true }));
 
         // Fetch vessels
-        const vesselsPromise = apiRequest('/api/vessels')
-          .then(res => res.json())
-          .catch(error => {
-            console.error('Error fetching vessels:', error);
-            return [];
-          });
-
+        const vesselsResponse = await fetch('/api/vessels');
+        const vessels = await vesselsResponse.json();
+        
         // Fetch refineries
-        const refineriesPromise = apiRequest('/api/refineries')
-          .then(res => res.json())
-          .catch(error => {
-            console.error('Error fetching refineries:', error);
-            return [];
-          });
-
+        const refineriesResponse = await fetch('/api/refineries');
+        const refineries = await refineriesResponse.json();
+        
         // Fetch stats
-        const statsPromise = apiRequest('/api/stats')
-          .then(res => res.json())
-          .catch(error => {
-            console.error('Error fetching stats:', error);
-            return null;
-          });
+        const statsResponse = await fetch('/api/stats');
+        const stats = await statsResponse.json();
 
-        // Wait for all requests to complete
-        const [vessels, refineries, stats] = await Promise.all([
-          vesselsPromise,
-          refineriesPromise,
-          statsPromise
-        ]);
+        console.log('Data loaded:', { 
+          vessels: vessels?.length || 0, 
+          refineries: refineries?.length || 0,
+          stats: stats ? 'stats loaded' : 'no stats'
+        });
 
         // Update state with all data
         setData({
-          vessels,
-          refineries,
-          stats,
+          vessels: vessels || [],
+          refineries: refineries || [],
+          stats: stats || null,
           loading: false,
           error: null,
           lastUpdated: new Date()
@@ -86,11 +70,13 @@ export function useDataStream() {
       }
     };
 
+    console.log('useDataStream hook initialized, loading data...');
+    
     // Load data initially
     loadAllData();
 
-    // Set up polling interval (every 30 seconds)
-    const interval = setInterval(loadAllData, 30000);
+    // Set up polling interval (every 15 seconds)
+    const interval = setInterval(loadAllData, 15000);
 
     // Clean up on unmount
     return () => {
