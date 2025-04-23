@@ -416,13 +416,15 @@ export default function Dashboard() {
             />
             <div className="absolute top-3 left-3 z-10">
               <Button 
+                asChild
                 variant="outline" 
                 size="sm"
                 className="bg-background/80 backdrop-blur-sm text-xs px-2 py-1"
-                onClick={() => window.location.href = '/?empty=true'}
               >
-                <EyeOff className="h-3 w-3 mr-1" />
-                Show Empty Map
+                <Link to="/empty-map">
+                  <EyeOff className="h-3 w-3 mr-1" />
+                  Show Empty Map
+                </Link>
               </Button>
             </div>
           </div>
