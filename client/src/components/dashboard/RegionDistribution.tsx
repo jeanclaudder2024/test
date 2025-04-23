@@ -27,15 +27,8 @@ interface RegionDistributionData {
   regions: RegionCount[];
 }
 
-// Datos por defecto para cuando no hay datos disponibles
-const defaultData: RegionDistributionData = {
-  totalVessels: 0,
-  totalOilVessels: 0,
-  regions: []
-};
-
 export default function RegionDistribution() {
-  const [data, setData] = useState<RegionDistributionData>(defaultData);
+  const [data, setData] = useState<RegionDistributionData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,35 +36,12 @@ export default function RegionDistribution() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await apiRequest("/api/stats/vessels-by-region");
-        
-        // Validar y procesar los datos recibidos
-        if (response && Array.isArray(response)) {
-          // Transformar los datos de la API al formato que espera el componente
-          const processedData: RegionDistributionData = {
-            totalVessels: response.reduce((sum, item) => sum + (item.count || 0), 0),
-            totalOilVessels: response.reduce((sum, item) => sum + (item.oilVesselCount || 0), 0),
-            regions: response.map(item => ({
-              region: item.region || 'Unknown',
-              regionName: item.regionName || item.region || 'Unknown',
-              count: item.count || 0,
-              percentage: ((item.count || 0) / response.reduce((sum, r) => sum + (r.count || 0), 0) * 100).toFixed(1),
-              oilVesselCount: item.oilVesselCount || 0
-            }))
-          };
-          setData(processedData);
-        } else {
-          // Si la respuesta no es un array, usar datos por defecto
-          console.warn("API response is not an array:", response);
-          setData(defaultData);
-        }
-        
+        const data = await apiRequest("/api/stats/vessels-by-region");
+        setData(data);
         setError(null);
       } catch (err) {
         console.error("Error fetching region distribution:", err);
         setError("Failed to load vessel distribution data");
-        // En caso de error, usar datos por defecto
-        setData(defaultData);
       } finally {
         setLoading(false);
       }
@@ -132,7 +102,7 @@ export default function RegionDistribution() {
           Vessel Distribution
         </CardTitle>
         <CardDescription>
-          Geographic analysis of {data.totalVessels ? data.totalVessels.toLocaleString() : '0'} vessels
+          Geographic analysis of {data.totalVessels.toLocaleString()} vessels
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -146,7 +116,7 @@ export default function RegionDistribution() {
           </TabsList>
           
           <TabsContent value="all" className="space-y-4 h-[320px] overflow-y-auto pr-2">
-            {data.regions && data.regions.length > 0 ? data.regions.map((region) => (
+            {data.regions.map((region) => (
               <div key={region.region} className="space-y-1">
                 <div className="flex justify-between items-center">
                   <div className="text-sm font-medium">
@@ -162,20 +132,12 @@ export default function RegionDistribution() {
                 </div>
                 <Progress value={parseFloat(region.percentage)} className="h-2" />
               </div>
-            )) : (
-              <div className="text-center text-muted-foreground py-8">
-                No hay datos de regiones disponibles
-              </div>
-            )}
+            ))}
           </TabsContent>
           
           <TabsContent value="oil" className="space-y-4 h-[320px] overflow-y-auto pr-2">
-            {data.regions && data.regions.length > 0 ? data.regions.map((region) => {
-              // Evitar división por cero
-              const oilPercentage = data.totalOilVessels > 0 
-                ? ((region.oilVesselCount / data.totalOilVessels) * 100).toFixed(1) 
-                : '0.0';
-              
+            {data.regions.map((region) => {
+              const oilPercentage = (region.oilVesselCount / data.totalOilVessels * 100).toFixed(1);
               return (
                 <div key={region.region} className="space-y-1">
                   <div className="flex justify-between items-center">
@@ -193,11 +155,7 @@ export default function RegionDistribution() {
                   <Progress value={parseFloat(oilPercentage)} className="h-2" />
                 </div>
               );
-            }) : (
-              <div className="text-center text-muted-foreground py-8">
-                No hay datos de buques petroleros disponibles
-              </div>
-            )}
+            })}
           </TabsContent>
         </Tabs>
         
@@ -206,11 +164,11 @@ export default function RegionDistribution() {
         <div className="flex justify-between text-sm text-muted-foreground">
           <div className="flex items-center">
             <Globe className="mr-1 h-3.5 w-3.5" />
-            <span>Total: {data.totalVessels ? data.totalVessels.toLocaleString() : '0'}</span>
+            <span>Total: {data.totalVessels.toLocaleString()}</span>
           </div>
           <div className="flex items-center">
             <Droplet className="mr-1 h-3.5 w-3.5" />
-            <span>Oil Vessels: {data.totalOilVessels ? data.totalOilVessels.toLocaleString() : '0'}</span>
+            <span>Oil Vessels: {data.totalOilVessels.toLocaleString()}</span>
           </div>
         </div>
       </CardContent>

@@ -500,7 +500,7 @@ export default function Documents() {
                   <SelectValue placeholder="Select document type" />
                 </SelectTrigger>
                 <SelectContent className="max-h-[300px] overflow-y-auto">
-                  <SelectItem value="placeholder" disabled>Select document type</SelectItem>
+                  <SelectItem value="" disabled>Select document type</SelectItem>
                   
                   {/* Legal Document Category */}
                   <SelectItem value="legal-separator" disabled className="font-bold text-primary bg-muted">

@@ -17,14 +17,6 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/hooks/use-language";
 
-interface NavItem {
-  title: string;
-  path: string;
-  icon: React.ReactNode;
-  badge?: string;
-  section?: string;
-}
-
 interface SidebarProps {
   mobile?: boolean;
   onClose?: () => void;
@@ -39,7 +31,7 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
     setCollapsed(!collapsed);
   };
 
-  const getNavItems = (): NavItem[] => [
+  const getNavItems = () => [
     {
       title: t("nav.dashboard"),
       path: "/dashboard",
@@ -73,7 +65,7 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
     }
   ];
 
-  const getUserItems = (): NavItem[] => [
+  const getUserItems = () => [
     {
       title: t("nav.profile"),
       path: "/profile",
@@ -83,7 +75,6 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
       title: t("nav.ai_assistant"),
       path: "/ai-assistant",
       icon: <Brain className="h-5 w-5 mr-3" />,
-      badge: "OpenAI"
     },
     {
       title: t("nav.settings"),
@@ -166,16 +157,7 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
                       isPathActive(item.path) ? "text-primary" : "text-gray-500 dark:text-gray-400",
                       collapsed ? "mr-0" : "mr-3"
                     )}>{item.icon}</span>
-                    {!collapsed && (
-                      <div className="flex justify-between items-center w-full">
-                        <span>{item.title}</span>
-                        {item.badge && (
-                          <span className="ml-2 px-1.5 py-0.5 text-xs rounded bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                            {item.badge}
-                          </span>
-                        )}
-                      </div>
-                    )}
+                    {!collapsed && <span>{item.title}</span>}
                   </div>
                 </Link>
               </li>
@@ -209,16 +191,7 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
                   isPathActive(item.path) ? "text-primary" : "text-gray-500 dark:text-gray-400",
                   collapsed ? "mr-0" : "mr-3"
                 )}>{item.icon}</span>
-                {!collapsed && (
-                  <div className="flex justify-between items-center w-full">
-                    <span>{item.title}</span>
-                    {item.badge && (
-                      <span className="ml-2 px-1.5 py-0.5 text-xs rounded bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                        {item.badge}
-                      </span>
-                    )}
-                  </div>
-                )}
+                {!collapsed && <span>{item.title}</span>}
               </div>
             </Link>
           ))}

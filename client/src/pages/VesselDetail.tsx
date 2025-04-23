@@ -285,7 +285,7 @@ const LocationUpdateForm = ({
                 onChange={(e) => setDestinationRefineryId(e.target.value)}
                 required={destinationType === 'refinery'}
               >
-                <option value="placeholder" disabled>Select a refinery...</option>
+                <option value="">Select a refinery...</option>
                 {isLoadingRefineries ? (
                   <option disabled>Loading refineries...</option>
                 ) : (

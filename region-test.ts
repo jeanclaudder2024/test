@@ -6,7 +6,7 @@
  * @param lng Longitude (-180 to 180)
  * @returns Region ID
  */
-export function determineRegionFromCoordinates(lat: number, lng: number): string {
+function determineRegionFromCoordinates(lat: number, lng: number): string {
   // Special cases for specific countries that need precise classification
   
   // Poland (Eastern Europe)
