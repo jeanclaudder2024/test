@@ -598,13 +598,13 @@ export default function Brokers() {
               </div>
               <div className="flex items-center space-x-2 mt-2 md:mt-0">
                 <Badge className="bg-amber-500 text-white">
-                  <Star className="h-3 w-3 mr-1" /> Elite Member
+                  <Star className="h-3 w-3 mr-1" /> عضو نخبة / Elite Member
                 </Badge>
                 <Badge variant="outline" className="text-amber-700 border-amber-200 bg-amber-50">
-                  Monthly Subscription
+                  اشتراك شهري / Monthly
                 </Badge>
                 <Badge variant="outline" className="text-green-700 border-green-200 bg-green-50">
-                  Active
+                  نشط / Active
                 </Badge>
               </div>
             </div>
@@ -707,21 +707,21 @@ export default function Brokers() {
                         <Calendar className="h-4 w-4 mr-2 text-gray-500" />
                         <span className="text-sm">2M bbl Crude Oil FOB Arabian Gulf</span>
                       </div>
-                      <Badge className="bg-amber-500">Closes {formatDate(new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), 'dd MMM')}</Badge>
+                      <Badge className="bg-amber-500">يغلق / Closes {formatDate(new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), 'dd MMM')}</Badge>
                     </div>
                     <div className="flex items-center justify-between p-2 bg-gray-50 rounded-md hover:bg-gray-100">
                       <div className="flex items-center">
                         <Calendar className="h-4 w-4 mr-2 text-gray-500" />
                         <span className="text-sm">750K bbl LSFO CIF Rotterdam</span>
                       </div>
-                      <Badge className="bg-amber-500">Closes {formatDate(new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), 'dd MMM')}</Badge>
+                      <Badge className="bg-amber-500">يغلق / Closes {formatDate(new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), 'dd MMM')}</Badge>
                     </div>
                     <div className="flex items-center justify-between p-2 bg-gray-50 rounded-md hover:bg-gray-100">
                       <div className="flex items-center">
                         <Calendar className="h-4 w-4 mr-2 text-gray-500" />
                         <span className="text-sm">350K MT Low Sulfur Gasoil CIF ARA</span>
                       </div>
-                      <Badge className="bg-red-500 text-white">Closes Today</Badge>
+                      <Badge className="bg-red-500 text-white">يغلق اليوم / Closes Today</Badge>
                     </div>
                   </div>
                 </CardContent>
@@ -779,7 +779,7 @@ export default function Brokers() {
                         <MessageSquare className="h-4 w-4 mr-2 text-gray-500" />
                         <span className="text-sm">RE: Saudi Aramco Tender Response</span>
                       </div>
-                      <Badge className="bg-red-500 text-white">New</Badge>
+                      <Badge className="bg-red-500 text-white">جديد / New</Badge>
                     </div>
                     <div className="flex items-center justify-between p-2 bg-gray-50 rounded-md hover:bg-gray-100">
                       <div className="flex items-center">
@@ -817,9 +817,9 @@ export default function Brokers() {
                     </div>
                     <div className="mt-6 flex justify-between items-end">
                       <div>
-                        <div className="text-xs opacity-80">ELITE BROKER</div>
+                        <div className="text-xs opacity-80">وسيط نخبة / ELITE BROKER</div>
                         <div className="text-lg font-bold">{brokers.length > 0 ? brokers[0].name?.toUpperCase() : 'ELITE MEMBER'}</div>
-                        <div className="text-xs mt-1 opacity-80">MEMBER SINCE {formatDate(new Date(), 'yyyy')}</div>
+                        <div className="text-xs mt-1 opacity-80">عضو منذ / MEMBER SINCE {formatDate(new Date(), 'yyyy')}</div>
                       </div>
                       <div className="bg-white/20 p-2 rounded">
                         <div className="text-xs">ID</div>
@@ -827,7 +827,7 @@ export default function Brokers() {
                       </div>
                     </div>
                     <div className="mt-6 bg-white/10 p-2 rounded flex justify-between">
-                      <div className="text-xs">VALID UNTIL</div>
+                      <div className="text-xs">ساري حتى / VALID UNTIL</div>
                       <div>{formatDate(new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), 'MM/yyyy')}</div>
                     </div>
                   </div>
