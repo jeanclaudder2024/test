@@ -366,7 +366,7 @@ export default function Brokers() {
                             <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={() => handleViewBroker(broker)}>
                               <Users className="h-4 w-4 mr-2" />
-                              View Details
+                              عرض التفاصيل / View Details
                             </DropdownMenuItem>
                             <DropdownMenuItem>Send Message</DropdownMenuItem>
                             <DropdownMenuItem>Assign Vessel</DropdownMenuItem>
@@ -797,7 +797,20 @@ export default function Brokers() {
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Button variant="outline" className="w-full">View Full Analytics</Button>
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => {
+                      toast({
+                        title: "عرض التحليلات الكاملة / View Full Analytics",
+                        description: "Opening comprehensive market analytics dashboard",
+                      });
+                      // For a future implementation to show an analytics dashboard:
+                      // setViewMode("analytics");
+                    }}
+                  >
+                    عرض التحليلات الكاملة / View Full Analytics
+                  </Button>
                 </CardFooter>
               </Card>
               
@@ -837,7 +850,20 @@ export default function Brokers() {
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Button variant="outline" className="w-full">View All Messages</Button>
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => {
+                      toast({
+                        title: "عرض جميع الرسائل / View All Messages",
+                        description: "Opening secure messaging center",
+                      });
+                      // For future implementation to show messages in a dialog:
+                      // setShowMessagesDialog(true);
+                    }}
+                  >
+                    عرض جميع الرسائل / View All Messages
+                  </Button>
                 </CardFooter>
               </Card>
               
@@ -875,7 +901,20 @@ export default function Brokers() {
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Button variant="outline" className="w-full">View Membership Details</Button>
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => {
+                      toast({
+                        title: "عرض تفاصيل العضوية / View Membership Details",
+                        description: "Opening membership details and billing information",
+                      });
+                      // Future implementation to show detailed membership info:
+                      // setShowMembershipDetailsDialog(true);
+                    }}
+                  >
+                    عرض تفاصيل العضوية / View Membership Details
+                  </Button>
                 </CardFooter>
               </Card>
             </div>
