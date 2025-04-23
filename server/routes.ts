@@ -410,6 +410,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Endpoint to remove vessels on land and place all vessels in the ocean
+  apiRouter.post("/vessels/remove-vessels-on-land", async (req, res) => {
+    try {
+      console.log("Removing vessels on land and generating new vessels in the ocean...");
+      
+      // Import the isCoordinateAtSea function
+      const { isCoordinateAtSea } = await import('./services/vesselGenerator');
+      
+      // Get all existing vessels
+      const vessels = await vesselService.getAllVessels();
+      console.log(`Found ${vessels.length} vessels to check for land/sea positioning.`);
+      
+      // Count vessels on land
+      let vesselsOnLand = 0;
+      for (const vessel of vessels) {
+        // Parse coordinates
+        const lat = vessel.currentLat ? parseFloat(vessel.currentLat) : null;
+        const lng = vessel.currentLng ? parseFloat(vessel.currentLng) : null;
+        
+        if (lat !== null && lng !== null && !isNaN(lat) && !isNaN(lng)) {
+          if (!isCoordinateAtSea(lat, lng)) {
+            vesselsOnLand++;
+          }
+        }
+      }
+      
+      console.log(`Found ${vesselsOnLand} vessels on land out of ${vessels.length} total vessels.`);
+      
+      // Force a complete refresh which will use our sea-only vessel generation logic
+      const forceRefresh = true;
+      const vesselResult = await vesselService.seedVesselData(forceRefresh);
+      
+      console.log("All vessels are now placed in the ocean:");
+      console.log(`- Total vessels: ${vesselResult.vessels}`);
+      console.log(`- Oil vessels: ${vesselResult.oilVessels}`);
+      console.log(`- Total cargo capacity: ${vesselResult.totalCargo}`);
+      
+      res.json({
+        success: true,
+        message: "All vessels are now located in the ocean, land vessels have been removed",
+        data: {
+          previousTotal: vessels.length,
+          vesselsOnLand,
+          newTotal: vesselResult.vessels || 0,
+          oilVessels: vesselResult.oilVessels || 0,
+          totalCargo: vesselResult.totalCargo || 0
+        }
+      });
+    } catch (error: any) {
+      console.error("Error removing vessels on land:", error);
+      res.status(500).json({
+        success: false,
+        message: "Error removing vessels on land",
+        error: error.message || "Unknown error"
+      });
+    }
+  });
+
   // Progress events endpoints
   apiRouter.get("/vessels/:id/progress", async (req, res) => {
     try {
