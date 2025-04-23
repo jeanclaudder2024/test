@@ -1,0 +1,165 @@
+client:536 WebSocket connection to 'wss://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/?token=5YUW7MFKRjdL' failed: 
+setupWebSocket @ client:536
+(anonymous) @ client:531
+client:536 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=5YUW7MFKRjdL' is invalid.
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)
+setupWebSocket @ client:536
+fallback @ client:509
+(anonymous) @ client:555
+chunk-RPCDYKBN.js?v=4c74eb19:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+
+                
+          
+          
+          
+         Chrome is moving towards a new experience that allows users to choose to browse without third-party cookies.
+use-auth.tsx:48 
+            
+            
+           GET https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/api/user 401 (Unauthorized)
+queryFn @ use-auth.tsx:48
+fetchFn @ @tanstack_react-query.js?v=4c74eb19:840
+run @ @tanstack_react-query.js?v=4c74eb19:494
+start @ @tanstack_react-query.js?v=4c74eb19:536
+fetch @ @tanstack_react-query.js?v=4c74eb19:926
+executeFetch_fn @ @tanstack_react-query.js?v=4c74eb19:2211
+onSubscribe @ @tanstack_react-query.js?v=4c74eb19:1898
+subscribe @ @tanstack_react-query.js?v=4c74eb19:24
+(anonymous) @ @tanstack_react-query.js?v=4c74eb19:3022
+subscribeToStore @ chunk-RPCDYKBN.js?v=4c74eb19:11984
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=4c74eb19:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=4c74eb19:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=4c74eb19:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=4c74eb19:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=4c74eb19:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=4c74eb19:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=4c74eb19:19447
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=4c74eb19:18868
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=4c74eb19:9119
+commitRootImpl @ chunk-RPCDYKBN.js?v=4c74eb19:19432
+commitRoot @ chunk-RPCDYKBN.js?v=4c74eb19:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=4c74eb19:18805
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=4c74eb19:18718
+workLoop @ chunk-RPCDYKBN.js?v=4c74eb19:197
+flushWork @ chunk-RPCDYKBN.js?v=4c74eb19:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=4c74eb19:384
+App.tsx:35 Data seeded successfully
+classifier.js:1 [Report Only] Refused to compile or instantiate WebAssembly module because 'unsafe-eval' is not an allowed source of script in the following Content Security Policy directive: "script-src 'self'".
+
+RegionDistribution.tsx:119 Uncaught TypeError: Cannot read properties of undefined (reading 'map')
+    at RegionDistribution (RegionDistribution.tsx:119:27)
+    at renderWithHooks (chunk-RPCDYKBN.js?v=4c74eb19:11548:26)
+    at updateFunctionComponent (chunk-RPCDYKBN.js?v=4c74eb19:14582:28)
+    at beginWork (chunk-RPCDYKBN.js?v=4c74eb19:15924:22)
+    at HTMLUnknownElement.callCallback2 (chunk-RPCDYKBN.js?v=4c74eb19:3674:22)
+    at Object.invokeGuardedCallbackDev (chunk-RPCDYKBN.js?v=4c74eb19:3699:24)
+    at invokeGuardedCallback (chunk-RPCDYKBN.js?v=4c74eb19:3733:39)
+    at beginWork$1 (chunk-RPCDYKBN.js?v=4c74eb19:19765:15)
+    at performUnitOfWork (chunk-RPCDYKBN.js?v=4c74eb19:19198:20)
+    at workLoopSync (chunk-RPCDYKBN.js?v=4c74eb19:19137:13)
+RegionDistribution @ RegionDistribution.tsx:119
+renderWithHooks @ chunk-RPCDYKBN.js?v=4c74eb19:11548
+updateFunctionComponent @ chunk-RPCDYKBN.js?v=4c74eb19:14582
+beginWork @ chunk-RPCDYKBN.js?v=4c74eb19:15924
+callCallback2 @ chunk-RPCDYKBN.js?v=4c74eb19:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=4c74eb19:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=4c74eb19:3733
+beginWork$1 @ chunk-RPCDYKBN.js?v=4c74eb19:19765
+performUnitOfWork @ chunk-RPCDYKBN.js?v=4c74eb19:19198
+workLoopSync @ chunk-RPCDYKBN.js?v=4c74eb19:19137
+renderRootSync @ chunk-RPCDYKBN.js?v=4c74eb19:19116
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=4c74eb19:18678
+workLoop @ chunk-RPCDYKBN.js?v=4c74eb19:197
+flushWork @ chunk-RPCDYKBN.js?v=4c74eb19:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=4c74eb19:384
+RegionDistribution.tsx:119 Uncaught TypeError: Cannot read properties of undefined (reading 'map')
+    at RegionDistribution (RegionDistribution.tsx:119:27)
+    at renderWithHooks (chunk-RPCDYKBN.js?v=4c74eb19:11548:26)
+    at updateFunctionComponent (chunk-RPCDYKBN.js?v=4c74eb19:14582:28)
+    at beginWork (chunk-RPCDYKBN.js?v=4c74eb19:15924:22)
+    at HTMLUnknownElement.callCallback2 (chunk-RPCDYKBN.js?v=4c74eb19:3674:22)
+    at Object.invokeGuardedCallbackDev (chunk-RPCDYKBN.js?v=4c74eb19:3699:24)
+    at invokeGuardedCallback (chunk-RPCDYKBN.js?v=4c74eb19:3733:39)
+    at beginWork$1 (chunk-RPCDYKBN.js?v=4c74eb19:19765:15)
+    at performUnitOfWork (chunk-RPCDYKBN.js?v=4c74eb19:19198:20)
+    at workLoopSync (chunk-RPCDYKBN.js?v=4c74eb19:19137:13)
+RegionDistribution @ RegionDistribution.tsx:119
+renderWithHooks @ chunk-RPCDYKBN.js?v=4c74eb19:11548
+updateFunctionComponent @ chunk-RPCDYKBN.js?v=4c74eb19:14582
+beginWork @ chunk-RPCDYKBN.js?v=4c74eb19:15924
+callCallback2 @ chunk-RPCDYKBN.js?v=4c74eb19:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=4c74eb19:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=4c74eb19:3733
+beginWork$1 @ chunk-RPCDYKBN.js?v=4c74eb19:19765
+performUnitOfWork @ chunk-RPCDYKBN.js?v=4c74eb19:19198
+workLoopSync @ chunk-RPCDYKBN.js?v=4c74eb19:19137
+renderRootSync @ chunk-RPCDYKBN.js?v=4c74eb19:19116
+recoverFromConcurrentError @ chunk-RPCDYKBN.js?v=4c74eb19:18736
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=4c74eb19:18684
+workLoop @ chunk-RPCDYKBN.js?v=4c74eb19:197
+flushWork @ chunk-RPCDYKBN.js?v=4c74eb19:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=4c74eb19:384
+chunk-RPCDYKBN.js?v=4c74eb19:14032 The above error occurred in the <RegionDistribution> component:
+
+    at RegionDistribution (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/src/components/dashboard/RegionDistribution.tsx:34:27)
+    at div
+    at div
+    at div
+    at Dashboard (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/src/pages/Dashboard.tsx:59:47)
+    at Route (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=4c74eb19:191:16)
+    at ProtectedRoute (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/src/components/auth/ProtectedRoute.tsx:22:3)
+    at Switch (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=4c74eb19:247:17)
+    at div
+    at main
+    at div
+    at div
+    at MainLayout (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/src/components/layout/MainLayout.tsx:19:38)
+    at Router (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/src/App.tsx?v=aRnqOPCRGeB4Zg8yZ6vRQ:44:22)
+    at LanguageProvider (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/src/hooks/use-language.tsx:262:36)
+    at AuthProvider (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/src/hooks/use-auth.tsx:26:32)
+    at QueryClientProvider (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=4c74eb19:2805:3)
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+logCapturedError @ chunk-RPCDYKBN.js?v=4c74eb19:14032
+update.callback @ chunk-RPCDYKBN.js?v=4c74eb19:14052
+callCallback @ chunk-RPCDYKBN.js?v=4c74eb19:11248
+commitUpdateQueue @ chunk-RPCDYKBN.js?v=4c74eb19:11265
+commitLayoutEffectOnFiber @ chunk-RPCDYKBN.js?v=4c74eb19:17093
+commitLayoutMountEffects_complete @ chunk-RPCDYKBN.js?v=4c74eb19:17980
+commitLayoutEffects_begin @ chunk-RPCDYKBN.js?v=4c74eb19:17969
+commitLayoutEffects @ chunk-RPCDYKBN.js?v=4c74eb19:17920
+commitRootImpl @ chunk-RPCDYKBN.js?v=4c74eb19:19353
+commitRoot @ chunk-RPCDYKBN.js?v=4c74eb19:19277
+finishConcurrentRender @ chunk-RPCDYKBN.js?v=4c74eb19:18760
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=4c74eb19:18718
+workLoop @ chunk-RPCDYKBN.js?v=4c74eb19:197
+flushWork @ chunk-RPCDYKBN.js?v=4c74eb19:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=4c74eb19:384
+chunk-RPCDYKBN.js?v=4c74eb19:19413 Uncaught TypeError: Cannot read properties of undefined (reading 'map')
+    at RegionDistribution (RegionDistribution.tsx:119:27)
+    at renderWithHooks (chunk-RPCDYKBN.js?v=4c74eb19:11548:26)
+    at updateFunctionComponent (chunk-RPCDYKBN.js?v=4c74eb19:14582:28)
+    at beginWork (chunk-RPCDYKBN.js?v=4c74eb19:15924:22)
+    at beginWork$1 (chunk-RPCDYKBN.js?v=4c74eb19:19753:22)
+    at performUnitOfWork (chunk-RPCDYKBN.js?v=4c74eb19:19198:20)
+    at workLoopSync (chunk-RPCDYKBN.js?v=4c74eb19:19137:13)
+    at renderRootSync (chunk-RPCDYKBN.js?v=4c74eb19:19116:15)
+    at recoverFromConcurrentError (chunk-RPCDYKBN.js?v=4c74eb19:18736:28)
+    at performConcurrentWorkOnRoot (chunk-RPCDYKBN.js?v=4c74eb19:18684:30)
+RegionDistribution @ RegionDistribution.tsx:119
+renderWithHooks @ chunk-RPCDYKBN.js?v=4c74eb19:11548
+updateFunctionComponent @ chunk-RPCDYKBN.js?v=4c74eb19:14582
+beginWork @ chunk-RPCDYKBN.js?v=4c74eb19:15924
+beginWork$1 @ chunk-RPCDYKBN.js?v=4c74eb19:19753
+performUnitOfWork @ chunk-RPCDYKBN.js?v=4c74eb19:19198
+workLoopSync @ chunk-RPCDYKBN.js?v=4c74eb19:19137
+renderRootSync @ chunk-RPCDYKBN.js?v=4c74eb19:19116
+recoverFromConcurrentError @ chunk-RPCDYKBN.js?v=4c74eb19:18736
+performConcurrentWorkOnRoot @ chunk-RPCDYKBN.js?v=4c74eb19:18684
+workLoop @ chunk-RPCDYKBN.js?v=4c74eb19:197
+flushWork @ chunk-RPCDYKBN.js?v=4c74eb19:176
+performWorkUntilDeadline @ chunk-RPCDYKBN.js?v=4c74eb19:384

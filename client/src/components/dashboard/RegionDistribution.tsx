@@ -116,7 +116,7 @@ export default function RegionDistribution() {
           </TabsList>
           
           <TabsContent value="all" className="space-y-4 h-[320px] overflow-y-auto pr-2">
-            {data.regions.map((region) => (
+            {data.regions && data.regions.length > 0 ? data.regions.map((region) => (
               <div key={region.region} className="space-y-1">
                 <div className="flex justify-between items-center">
                   <div className="text-sm font-medium">
@@ -132,11 +132,15 @@ export default function RegionDistribution() {
                 </div>
                 <Progress value={parseFloat(region.percentage)} className="h-2" />
               </div>
-            ))}
+            )) : (
+              <div className="text-center text-muted-foreground py-8">
+                No hay datos de regiones disponibles
+              </div>
+            )}
           </TabsContent>
           
           <TabsContent value="oil" className="space-y-4 h-[320px] overflow-y-auto pr-2">
-            {data.regions.map((region) => {
+            {data.regions && data.regions.length > 0 ? data.regions.map((region) => {
               const oilPercentage = (region.oilVesselCount / data.totalOilVessels * 100).toFixed(1);
               return (
                 <div key={region.region} className="space-y-1">
@@ -155,7 +159,11 @@ export default function RegionDistribution() {
                   <Progress value={parseFloat(oilPercentage)} className="h-2" />
                 </div>
               );
-            })}
+            }) : (
+              <div className="text-center text-muted-foreground py-8">
+                No hay datos de buques petroleros disponibles
+              </div>
+            )}
           </TabsContent>
         </Tabs>
         
