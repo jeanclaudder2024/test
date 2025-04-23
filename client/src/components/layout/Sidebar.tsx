@@ -95,14 +95,16 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
     )}>
       {/* Logo Area */}
       <div className="p-4 border-b border-gray-100 flex items-center justify-between sticky top-0 backdrop-blur-sm bg-white/90 z-10">
-        {!collapsed && (
-          <h1 className="font-bold text-2xl tracking-tighter leading-none bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-primary">
-            SHIPBOAT<br />TRACKING
-          </h1>
-        )}
-        {collapsed && (
-          <span className="font-bold text-xl mx-auto bg-gradient-to-r from-blue-600 to-primary rounded-full p-2 text-white">🚢</span>
-        )}
+        <Link href="/" className="cursor-pointer">
+          {!collapsed && (
+            <h1 className="font-bold text-2xl tracking-tighter leading-none bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-primary">
+              SHIPBOAT<br />TRACKING
+            </h1>
+          )}
+          {collapsed && (
+            <span className="font-bold text-xl mx-auto bg-gradient-to-r from-blue-600 to-primary rounded-full p-2 text-white">🚢</span>
+          )}
+        </Link>
         
         {!mobile && (
           <Button

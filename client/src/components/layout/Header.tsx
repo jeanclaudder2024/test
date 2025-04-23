@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { Menu, LogOut, Download } from "lucide-react";
+import { Menu, LogOut, Download, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
@@ -78,6 +78,16 @@ export default function Header() {
         </div>
         
         <div className="flex items-center space-x-4">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="hidden sm:flex border border-primary/20 hover:bg-primary/10 text-primary mr-2"
+            onClick={() => navigate('/')}
+          >
+            <Home className="h-4 w-4 mr-2" />
+            View Home
+          </Button>
+          
           <Button 
             variant="outline" 
             size="sm" 
