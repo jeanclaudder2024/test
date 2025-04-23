@@ -102,7 +102,7 @@ export default function RegionDistribution() {
           Vessel Distribution
         </CardTitle>
         <CardDescription>
-          Geographic analysis of {data.totalVessels.toLocaleString()} vessels
+          Geographic analysis of {data.totalVessels ? data.totalVessels.toLocaleString() : '0'} vessels
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -164,11 +164,11 @@ export default function RegionDistribution() {
         <div className="flex justify-between text-sm text-muted-foreground">
           <div className="flex items-center">
             <Globe className="mr-1 h-3.5 w-3.5" />
-            <span>Total: {data.totalVessels.toLocaleString()}</span>
+            <span>Total: {data.totalVessels ? data.totalVessels.toLocaleString() : '0'}</span>
           </div>
           <div className="flex items-center">
             <Droplet className="mr-1 h-3.5 w-3.5" />
-            <span>Oil Vessels: {data.totalOilVessels.toLocaleString()}</span>
+            <span>Oil Vessels: {data.totalOilVessels ? data.totalOilVessels.toLocaleString() : '0'}</span>
           </div>
         </div>
       </CardContent>

@@ -1,4 +1,4 @@
-import { WebSocketServer } from 'ws';
+import { WebSocketServer, WebSocket } from 'ws';
 import { Vessel, Refinery } from '@shared/schema';
 
 // Cliente WebSocket conectado
