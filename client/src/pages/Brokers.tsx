@@ -861,7 +861,7 @@ export default function Brokers() {
             <div>
               <h3 className="font-semibold mb-2 flex items-center">
                 <Upload className="h-4 w-4 mr-2" />
-                Required Documents
+                المستندات المطلوبة / Required Documents
               </h3>
               
               <div className="space-y-4">
@@ -929,7 +929,7 @@ export default function Brokers() {
               <div>
                 <h3 className="font-semibold mb-2 flex items-center">
                   <CreditCard className="h-4 w-4 mr-2" />
-                  Membership Options
+                  خيارات العضوية / Membership Options
                 </h3>
                 
                 <div className="space-y-3">
@@ -960,7 +960,7 @@ export default function Brokers() {
               <div>
                 <h3 className="font-semibold mb-2 flex items-center">
                   <FileText className="h-4 w-4 mr-2" />
-                  Shipping Address
+                  عنوان الشحن / Shipping Address
                 </h3>
                 <p className="text-sm text-gray-500 mb-2">
                   For delivery of your physical membership card
@@ -977,14 +977,14 @@ export default function Brokers() {
           
           <DialogFooter className="flex flex-col sm:flex-row gap-3">
             <Button variant="outline" onClick={() => setShowUpgradeDialog(false)}>
-              Cancel
+              إلغاء / Cancel
             </Button>
             <Button 
               onClick={handleUpgradeMembership}
               className="bg-amber-600 hover:bg-amber-700 sm:flex-1"
             >
               <Star className="h-4 w-4 mr-2" />
-              Upgrade Membership
+              ترقية العضوية / Upgrade Membership
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1000,7 +1000,7 @@ export default function Brokers() {
                   <DialogTitle className="text-xl">Broker Profile</DialogTitle>
                   {selectedBroker.eliteMember && (
                     <Badge className="bg-amber-500 text-white">
-                      <Star className="h-3 w-3 mr-1" /> Elite
+                      <Star className="h-3 w-3 mr-1" /> نخبة / Elite
                     </Badge>
                   )}
                 </div>
@@ -1024,21 +1024,21 @@ export default function Brokers() {
                     </div>
                     
                     <Badge variant={selectedBroker.active ? "default" : "secondary"} className={selectedBroker.active ? "bg-green-500" : ""}>
-                      {selectedBroker.active ? "Active" : "Inactive"}
+                      {selectedBroker.active ? "نشط / Active" : "غير نشط / Inactive"}
                     </Badge>
                     
                     <div className="flex flex-col space-y-2 w-full mt-2">
                       <Button variant="outline" className="w-full justify-start">
                         <Mail className="h-4 w-4 mr-2" />
-                        Contact
+                        اتصال / Contact
                       </Button>
                       <Button variant="outline" className="w-full justify-start">
                         <FileText className="h-4 w-4 mr-2" />
-                        Documents
+                        مستندات / Documents
                       </Button>
                       <Button variant="outline" className="w-full justify-start">
                         <Globe className="h-4 w-4 mr-2" />
-                        Vessels
+                        سفن / Vessels
                       </Button>
                     </div>
                   </div>
@@ -1047,7 +1047,7 @@ export default function Brokers() {
                 <div className="md:col-span-2 space-y-6">
                   <Card>
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-base">Contact Information</CardTitle>
+                      <CardTitle className="text-base">معلومات الاتصال / Contact Information</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <dl className="space-y-2">
@@ -1088,7 +1088,7 @@ export default function Brokers() {
                   
                   <Card>
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-base">Broker Details</CardTitle>
+                      <CardTitle className="text-base">تفاصيل الوسيط / Broker Details</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <dl className="space-y-2">
@@ -1144,11 +1144,11 @@ export default function Brokers() {
               
               <DialogFooter className="mt-6">
                 <Button variant="outline" onClick={() => setShowProfileDialog(false)}>
-                  Close
+                  إغلاق / Close
                 </Button>
                 <Button>
                   <Edit className="h-4 w-4 mr-2" />
-                  Edit Profile
+                  تعديل الملف / Edit Profile
                 </Button>
               </DialogFooter>
             </>
