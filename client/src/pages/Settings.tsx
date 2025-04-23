@@ -59,19 +59,41 @@ export default function Settings() {
           <SettingsIcon className="h-6 w-6 text-primary" />
         </div>
         <div>
-          <h1 className="text-3xl font-bold">Settings</h1>
+          <h1 className="text-3xl font-bold">Settings <span className="text-primary/70 text-xl mr-2">الإعدادات</span></h1>
           <p className="text-muted-foreground">
             Configure application preferences and integrations
+            <span className="mx-2">•</span>
+            <span className="text-right">تكوين تفضيلات التطبيق والتكاملات</span>
           </p>
         </div>
       </div>
       
       <Tabs defaultValue="general" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="general">General</TabsTrigger>
-          <TabsTrigger value="api">API Integration</TabsTrigger>
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          <TabsTrigger value="data">Data Management</TabsTrigger>
+        <TabsList className="grid grid-cols-2 md:grid-cols-4 w-full">
+          <TabsTrigger value="general" className="flex items-center justify-center">
+            <SettingsIcon className="h-4 w-4 mr-2" />
+            <span>General</span>
+            <span className="mx-1">•</span>
+            <span>عام</span>
+          </TabsTrigger>
+          <TabsTrigger value="api" className="flex items-center justify-center">
+            <Key className="h-4 w-4 mr-2" />
+            <span>API Integration</span>
+            <span className="mx-1">•</span>
+            <span>واجهة API</span>
+          </TabsTrigger>
+          <TabsTrigger value="notifications" className="flex items-center justify-center">
+            <Bell className="h-4 w-4 mr-2" />
+            <span>Notifications</span>
+            <span className="mx-1">•</span>
+            <span>الإشعارات</span>
+          </TabsTrigger>
+          <TabsTrigger value="data" className="flex items-center justify-center">
+            <Database className="h-4 w-4 mr-2" />
+            <span>Data</span>
+            <span className="mx-1">•</span>
+            <span>البيانات</span>
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="general">
@@ -79,64 +101,88 @@ export default function Settings() {
             <Card className="md:col-span-2">
               <form onSubmit={handleSaveGeneralSettings}>
                 <CardHeader>
-                  <CardTitle>General Settings</CardTitle>
-                  <CardDescription>
-                    Customize the application appearance and behavior
+                  <CardTitle className="flex items-center justify-between">
+                    <span>General Settings</span>
+                    <span className="text-primary/70">الإعدادات العامة</span>
+                  </CardTitle>
+                  <CardDescription className="flex justify-between">
+                    <span>Customize the application appearance and behavior</span>
+                    <span>تخصيص مظهر وسلوك التطبيق</span>
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="language">Language</Label>
+                    <Label htmlFor="language" className="flex justify-between">
+                      <span>Language</span>
+                      <span>اللغة</span>
+                    </Label>
                     <Select defaultValue="en">
                       <SelectTrigger id="language">
-                        <SelectValue placeholder="Select Language" />
+                        <SelectValue placeholder="Select Language • اختر اللغة" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="en">English</SelectItem>
-                        <SelectItem value="fr">French</SelectItem>
-                        <SelectItem value="de">German</SelectItem>
-                        <SelectItem value="es">Spanish</SelectItem>
-                        <SelectItem value="ja">Japanese</SelectItem>
+                        <SelectItem value="en">English • الإنجليزية</SelectItem>
+                        <SelectItem value="ar">Arabic • العربية</SelectItem>
+                        <SelectItem value="en-ar">Bilingual • ثنائي اللغة</SelectItem>
+                        <SelectItem value="fr">French • الفرنسية</SelectItem>
+                        <SelectItem value="de">German • الألمانية</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="timezone">Time Zone</Label>
+                    <Label htmlFor="timezone" className="flex justify-between">
+                      <span>Time Zone</span>
+                      <span>المنطقة الزمنية</span>
+                    </Label>
                     <Select defaultValue="utc">
                       <SelectTrigger id="timezone">
-                        <SelectValue placeholder="Select Time Zone" />
+                        <SelectValue placeholder="Select Time Zone • اختر المنطقة الزمنية" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="utc">UTC</SelectItem>
-                        <SelectItem value="est">Eastern Time (EST)</SelectItem>
-                        <SelectItem value="cet">Central European Time (CET)</SelectItem>
-                        <SelectItem value="gmt">Greenwich Mean Time (GMT)</SelectItem>
-                        <SelectItem value="jst">Japan Standard Time (JST)</SelectItem>
+                        <SelectItem value="utc">UTC • التوقيت العالمي المنسق</SelectItem>
+                        <SelectItem value="est">Eastern Time (EST) • التوقيت الشرقي</SelectItem>
+                        <SelectItem value="gmt">Greenwich Mean Time (GMT) • توقيت غرينتش</SelectItem>
+                        <SelectItem value="ast">Arabia Standard Time (AST) • التوقيت العربي</SelectItem>
+                        <SelectItem value="cet">Central European Time (CET) • توقيت وسط أوروبا</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="theme">Theme</Label>
+                    <Label htmlFor="theme" className="flex justify-between">
+                      <span>Theme</span>
+                      <span>المظهر</span>
+                    </Label>
                     <Select defaultValue="light">
                       <SelectTrigger id="theme">
-                        <SelectValue placeholder="Select Theme" />
+                        <SelectValue placeholder="Select Theme • اختر المظهر" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="light">
-                          <div className="flex items-center">
-                            <Sun className="h-4 w-4 mr-2" />
-                            Light
+                          <div className="flex items-center justify-between w-full">
+                            <div className="flex items-center">
+                              <Sun className="h-4 w-4 mr-2" />
+                              <span>Light</span>
+                            </div>
+                            <span>فاتح</span>
                           </div>
                         </SelectItem>
                         <SelectItem value="dark">
-                          <div className="flex items-center">
-                            <Moon className="h-4 w-4 mr-2" />
-                            Dark
+                          <div className="flex items-center justify-between w-full">
+                            <div className="flex items-center">
+                              <Moon className="h-4 w-4 mr-2" />
+                              <span>Dark</span>
+                            </div>
+                            <span>داكن</span>
                           </div>
                         </SelectItem>
-                        <SelectItem value="system">System</SelectItem>
+                        <SelectItem value="system">
+                          <div className="flex items-center justify-between w-full">
+                            <span>System</span>
+                            <span>النظام</span>
+                          </div>
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -145,9 +191,13 @@ export default function Settings() {
                   
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <Label htmlFor="autoRefresh">Auto Refresh Data</Label>
-                      <div className="text-sm text-muted-foreground">
-                        Automatically refresh vessel and refinery data
+                      <Label htmlFor="autoRefresh" className="flex gap-2">
+                        <span>Auto Refresh Data</span>
+                        <span className="text-primary/70">تحديث البيانات تلقائيًا</span>
+                      </Label>
+                      <div className="text-sm text-muted-foreground flex justify-between">
+                        <span>Automatically refresh vessel and refinery data</span>
+                        <span>تحديث بيانات السفن والمصافي تلقائيًا</span>
                       </div>
                     </div>
                     <Switch id="autoRefresh" defaultChecked />
@@ -155,18 +205,23 @@ export default function Settings() {
                   
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <Label htmlFor="confirmations">Confirmation Dialogs</Label>
-                      <div className="text-sm text-muted-foreground">
-                        Show confirmation before performing destructive actions
+                      <Label htmlFor="confirmations" className="flex gap-2">
+                        <span>Confirmation Dialogs</span>
+                        <span className="text-primary/70">حوارات التأكيد</span>
+                      </Label>
+                      <div className="text-sm text-muted-foreground flex justify-between">
+                        <span>Show confirmation before performing destructive actions</span>
+                        <span>عرض التأكيد قبل تنفيذ الإجراءات الحساسة</span>
                       </div>
                     </div>
                     <Switch id="confirmations" defaultChecked />
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Button type="submit">
-                    <Save className="h-4 w-4 mr-2" />
-                    Save Changes
+                  <Button type="submit" className="flex items-center gap-2">
+                    <Save className="h-4 w-4" />
+                    <span>Save Changes</span>
+                    <span className="text-xs opacity-75">حفظ التغييرات</span>
                   </Button>
                 </CardFooter>
               </form>
@@ -175,37 +230,55 @@ export default function Settings() {
             <div className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Account Information</CardTitle>
-                  <CardDescription>
-                    Details about your user account
+                  <CardTitle className="flex items-center justify-between">
+                    <span>Account Information</span>
+                    <span className="text-primary/70">معلومات الحساب</span>
+                  </CardTitle>
+                  <CardDescription className="flex justify-between">
+                    <span>Details about your user account</span>
+                    <span>تفاصيل حسابك</span>
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-2">
+                <CardContent className="space-y-3">
                   <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Username:</span>
+                    <span className="text-sm text-muted-foreground flex gap-1">
+                      <span>Username:</span>
+                      <span className="text-primary/70">اسم المستخدم:</span>
+                    </span>
                     <span className="font-medium">admin</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Role:</span>
+                    <span className="text-sm text-muted-foreground flex gap-1">
+                      <span>Role:</span>
+                      <span className="text-primary/70">الدور:</span>
+                    </span>
                     <span className="font-medium">Administrator</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Last Login:</span>
+                    <span className="text-sm text-muted-foreground flex gap-1">
+                      <span>Last Login:</span>
+                      <span className="text-primary/70">آخر تسجيل دخول:</span>
+                    </span>
                     <span className="font-medium">Today, 9:42 AM</span>
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Button variant="outline" className="w-full">
-                    Change Password
+                  <Button variant="outline" className="w-full flex items-center justify-center gap-2">
+                    <span>Change Password</span>
+                    <span className="text-xs opacity-75">تغيير كلمة المرور</span>
                   </Button>
                 </CardFooter>
               </Card>
               
               <Alert>
                 <Languages className="h-4 w-4" />
-                <AlertTitle>Language Settings</AlertTitle>
-                <AlertDescription>
-                  Some translations may be incomplete. If you notice any issues, please contact support.
+                <AlertTitle className="flex justify-between items-center">
+                  <span>Language Settings</span>
+                  <span className="text-primary/70">إعدادات اللغة</span>
+                </AlertTitle>
+                <AlertDescription className="flex flex-col">
+                  <span>Some translations may be incomplete. If you notice any issues, please contact support.</span>
+                  <span className="text-primary/70 text-sm mt-1">قد تكون بعض الترجمات غير مكتملة. إذا لاحظت أي مشاكل، يرجى الاتصال بالدعم.</span>
                 </AlertDescription>
               </Alert>
             </div>
