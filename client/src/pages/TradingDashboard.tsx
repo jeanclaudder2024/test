@@ -21,7 +21,11 @@ import {
   Filter,
   RefreshCw,
   MoreHorizontal,
-  PieChart
+  PieChart,
+  Globe,
+  Plus,
+  X,
+  Check
 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import { 
@@ -52,6 +56,19 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 // Oil price type
 type OilPrice = {
@@ -81,11 +98,38 @@ type Deal = {
   created: string;
 };
 
+// Trading types
+type DealStatus = 'pending' | 'active' | 'completed' | 'cancelled';
+
+// New Deal form type
+type NewDealForm = {
+  vesselId: number;
+  brokerId: number;
+  refineryId: number;
+  cargoType: string;
+  volume: number;
+  price: number;
+  eta: string;
+  status: DealStatus;
+};
+
 export default function TradingDashboard() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [oilType, setOilType] = useState('all');
   const [periodFilter, setPeriodFilter] = useState('today');
   const [refreshing, setRefreshing] = useState(false);
+  const [showNewDealDialog, setShowNewDealDialog] = useState(false);
+  const [liveTradingMode, setLiveTradingMode] = useState(false);
+  const [newDealForm, setNewDealForm] = useState<NewDealForm>({
+    vesselId: 0,
+    brokerId: 0,
+    refineryId: 0,
+    cargoType: 'Crude Oil',
+    volume: 1000000,
+    price: 80.0,
+    eta: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    status: 'pending'
+  });
   const [_, navigate] = useLocation(); // Use useLocation to navigate
   const { toast } = useToast();
 
@@ -285,6 +329,34 @@ export default function TradingDashboard() {
     return <Repeat className="h-4 w-4 text-gray-600" />;
   };
 
+  // Handle form input changes
+  const handleFormChange = (field: keyof NewDealForm, value: any) => {
+    setNewDealForm(prev => ({ ...prev, [field]: value }));
+  };
+
+  // Handle deal creation
+  const handleCreateDeal = () => {
+    // In a real app, this would make an API call to create the deal
+    toast({
+      title: "New Deal Created",
+      description: `Created new deal for ${formatVolume(newDealForm.volume)} of ${newDealForm.cargoType}`,
+      variant: "default"
+    });
+    setShowNewDealDialog(false);
+  };
+
+  // Toggle live trading mode
+  const toggleLiveTrading = () => {
+    setLiveTradingMode(!liveTradingMode);
+    toast({
+      title: liveTradingMode ? "Live Trading Disabled" : "Live Trading Enabled",
+      description: liveTradingMode ? 
+        "Switched to standard trading view" : 
+        "Real-time market updates are now active",
+      variant: "default"
+    });
+  };
+
   return (
     <div className="container mx-auto py-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
@@ -321,6 +393,106 @@ export default function TradingDashboard() {
               <SelectItem value="quarter">This Quarter</SelectItem>
             </SelectContent>
           </Select>
+
+          <Dialog open={showNewDealDialog} onOpenChange={setShowNewDealDialog}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                New Deal
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>Create New Oil Deal صفقة جديدة</DialogTitle>
+                <DialogDescription>
+                  Fill in the details to create a new trading deal.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="cargoType">Cargo Type نوع الشحنة</Label>
+                    <Select 
+                      value={newDealForm.cargoType}
+                      onValueChange={(val) => handleFormChange('cargoType', val)}
+                    >
+                      <SelectTrigger id="cargoType">
+                        <SelectValue placeholder="Select cargo type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Crude Oil">Crude Oil</SelectItem>
+                        <SelectItem value="Light Crude">Light Crude</SelectItem>
+                        <SelectItem value="Heavy Crude">Heavy Crude</SelectItem>
+                        <SelectItem value="Condensate">Condensate</SelectItem>
+                        <SelectItem value="Brent Blend">Brent Blend</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="volume">Volume (in barrels) الحجم</Label>
+                    <Input 
+                      id="volume" 
+                      type="number" 
+                      value={newDealForm.volume}
+                      onChange={(e) => handleFormChange('volume', Number(e.target.value))}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="price">Price (USD/barrel) السعر</Label>
+                    <Input 
+                      id="price" 
+                      type="number" 
+                      value={newDealForm.price}
+                      onChange={(e) => handleFormChange('price', Number(e.target.value))}
+                      step="0.01"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="eta">Estimated Arrival تاريخ الوصول</Label>
+                    <Input 
+                      id="eta" 
+                      type="date" 
+                      value={newDealForm.eta} 
+                      onChange={(e) => handleFormChange('eta', e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="status">Deal Status حالة الصفقة</Label>
+                  <Select 
+                    value={newDealForm.status}
+                    onValueChange={(val) => handleFormChange('status', val as DealStatus)}
+                  >
+                    <SelectTrigger id="status">
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">Pending (معلق)</SelectItem>
+                      <SelectItem value="active">Active (نشط)</SelectItem>
+                      <SelectItem value="completed">Completed (مكتمل)</SelectItem>
+                      <SelectItem value="cancelled">Cancelled (ملغي)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="notes">Additional Notes ملاحظات إضافية</Label>
+                  <Textarea id="notes" placeholder="Enter any additional deal information..." />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setShowNewDealDialog(false)}>
+                  <X className="h-4 w-4 mr-2" />
+                  Cancel
+                </Button>
+                <Button type="submit" onClick={handleCreateDeal}>
+                  <Check className="h-4 w-4 mr-2" />
+                  Create Deal
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
       
