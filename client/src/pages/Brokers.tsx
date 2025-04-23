@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Broker } from '@/types';
+import { queryClient, apiRequest } from '@/lib/queryClient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -13,6 +14,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Dialog,
@@ -91,8 +93,13 @@ export default function Brokers() {
   const [searchTerm, setSearchTerm] = useState('');
   const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
   const [showProfileDialog, setShowProfileDialog] = useState(false);
+  const [showMessageDialog, setShowMessageDialog] = useState(false);
   const [selectedBroker, setSelectedBroker] = useState<Broker | null>(null);
   const [selectedSubscription, setSelectedSubscription] = useState('monthly');
+  const [messageText, setMessageText] = useState('');
+  const [messageSubject, setMessageSubject] = useState('');
+  const [messageStatus, setMessageStatus] = useState<Record<number, string>>({});
+  const [lastContactTime, setLastContactTime] = useState<Record<number, string>>({});
   const [selectedFiles, setSelectedFiles] = useState<{
     passport: File | null;
     photo: File | null;
@@ -102,11 +109,37 @@ export default function Brokers() {
   });
   const [shippingAddress, setShippingAddress] = useState('');
   const { toast } = useToast();
-  
+
   // Query to get brokers
   const { data: brokers = [], isLoading } = useQuery<Broker[]>({
     queryKey: ['/api/brokers'],
   });
+  
+  // Initialize message statuses
+  useEffect(() => {
+    // Simulate random message statuses for each broker
+    if (brokers && brokers.length > 0) {
+      const statuses: Record<number, string> = {};
+      const times: Record<number, string> = {};
+      
+      brokers.forEach(broker => {
+        const statusOptions = ['unread', 'read', 'replied', 'none'];
+        const randomStatus = statusOptions[Math.floor(Math.random() * statusOptions.length)];
+        statuses[broker.id] = randomStatus;
+        
+        // Generate random last contact times (between now and 7 days ago)
+        const randomDays = Math.floor(Math.random() * 7);
+        const randomHours = Math.floor(Math.random() * 24);
+        const date = new Date();
+        date.setDate(date.getDate() - randomDays);
+        date.setHours(date.getHours() - randomHours);
+        times[broker.id] = date.toISOString();
+      });
+      
+      setMessageStatus(statuses);
+      setLastContactTime(times);
+    }
+  }, [brokers]);
   
   // Mutations for broker actions
   const upgradeMutation = useMutation({
@@ -188,6 +221,129 @@ export default function Brokers() {
   const handleViewBroker = (broker: Broker) => {
     setSelectedBroker(broker);
     setShowProfileDialog(true);
+  };
+
+  // Message sending mutation
+  const sendMessageMutation = useMutation({
+    mutationFn: async (data: {
+      brokerId: number,
+      subject: string,
+      message: string
+    }) => {
+      // In a real app, this would send a message to the API
+      // For now, we'll use a simulated response
+      return { success: true, messageId: Date.now().toString() };
+    },
+    onSuccess: (_, variables) => {
+      // Update the message status for this broker
+      setMessageStatus(prev => ({
+        ...prev,
+        [variables.brokerId]: 'sent'
+      }));
+      
+      // Update the last contact time
+      setLastContactTime(prev => ({
+        ...prev,
+        [variables.brokerId]: new Date().toISOString()
+      }));
+      
+      toast({
+        title: "رسالة أرسلت / Message Sent",
+        description: `Your message to ${selectedBroker?.name} has been sent successfully.`,
+        variant: "default"
+      });
+      
+      // Reset the message form
+      setMessageText('');
+      setMessageSubject('');
+      setShowMessageDialog(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "فشل الإرسال / Sending Failed",
+        description: `Error: ${error.message}`,
+        variant: "destructive"
+      });
+    }
+  });
+  
+  // Function to handle sending messages
+  const handleSendMessage = (brokerId: number) => {
+    if (!messageSubject.trim()) {
+      toast({
+        title: "الموضوع مطلوب / Subject Required",
+        description: "Please enter a subject for your message.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!messageText.trim()) {
+      toast({
+        title: "الرسالة مطلوبة / Message Required",
+        description: "Please enter your message text.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    sendMessageMutation.mutate({
+      brokerId,
+      subject: messageSubject,
+      message: messageText
+    });
+  };
+  
+  // Function to open message dialog
+  const handleMessageBroker = (broker: Broker) => {
+    setSelectedBroker(broker);
+    // Set a default subject if the broker is replying to an existing message
+    if (messageStatus[broker.id] === 'unread') {
+      setMessageSubject('RE: Your recent inquiry');
+    } else {
+      setMessageSubject('');
+    }
+    setMessageText('');
+    setShowMessageDialog(true);
+  };
+  
+  // Function to get status badge for message
+  const getMessageStatusBadge = (brokerId: number) => {
+    const status = messageStatus[brokerId];
+    
+    if (!status || status === 'none') {
+      return null;
+    }
+    
+    switch(status) {
+      case 'unread':
+        return <Badge className="bg-red-500 text-white">جديد / New</Badge>;
+      case 'read':
+        return <Badge variant="outline" className="border-blue-500 text-blue-700">مقروء / Read</Badge>;
+      case 'replied':
+        return <Badge variant="outline" className="border-green-500 text-green-700">تم الرد / Replied</Badge>;
+      case 'sent':
+        return <Badge variant="outline" className="border-purple-500 text-purple-700">أرسلت / Sent</Badge>;
+      default:
+        return null;
+    }
+  };
+  
+  // Function to format last contact time
+  const getLastContactTime = (brokerId: number) => {
+    const timestamp = lastContactTime[brokerId];
+    if (!timestamp) return null;
+    
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    
+    if (diffHours < 24) {
+      return `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`;
+    } else {
+      const diffDays = Math.floor(diffHours / 24);
+      return `${diffDays} ${diffDays === 1 ? 'day' : 'days'} ago`;
+    }
   };
 
   // Function to handle membership upgrade
@@ -349,10 +505,36 @@ export default function Brokers() {
                         <span>{broker.country || 'Not specified'}</span>
                       </div>
                       
+                      {/* Message Status */}
+                      {messageStatus[broker.id] && messageStatus[broker.id] !== 'none' && (
+                        <div className="flex justify-between items-center pt-1 text-sm">
+                          <div className="flex items-center">
+                            <MessageSquare className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
+                            <span className="text-muted-foreground">Message Status:</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {getMessageStatusBadge(broker.id)}
+                            {getLastContactTime(broker.id) && (
+                              <span className="text-xs text-muted-foreground">
+                                {getLastContactTime(broker.id)}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      
                       <div className="flex justify-between pt-2">
-                        <Button variant="outline" size="sm">
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleMessageBroker(broker)}
+                          className="relative"
+                        >
+                          <Mail className="h-4 w-4 mr-2" />
+                          <span>Message</span>
+                          {messageStatus[broker.id] === 'unread' && (
+                            <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full"></span>
+                          )}
                         </Button>
                         
                         <DropdownMenu>
@@ -368,15 +550,27 @@ export default function Brokers() {
                               <Users className="h-4 w-4 mr-2" />
                               عرض التفاصيل / View Details
                             </DropdownMenuItem>
-                            <DropdownMenuItem>Send Message</DropdownMenuItem>
-                            <DropdownMenuItem>Assign Vessel</DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => handleMessageBroker(broker)}
+                              className="relative"
+                            >
+                              <Mail className="h-4 w-4 mr-2" />
+                              إرسال رسالة / Send Message
+                              {messageStatus[broker.id] === 'unread' && (
+                                <span className="absolute right-2 top-1/2 -translate-y-1/2 h-2 w-2 bg-red-500 rounded-full"></span>
+                              )}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <Globe className="h-4 w-4 mr-2" />
+                              تعيين سفينة / Assign Vessel
+                            </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
                               className="text-destructive focus:text-destructive"
                               onClick={() => handleDelete(broker.id)}
                             >
                               <Trash2 className="h-4 w-4 mr-2" />
-                              Delete Broker
+                              حذف الوسيط / Delete Broker
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -1065,6 +1259,94 @@ export default function Brokers() {
               ترقية العضوية / Upgrade Membership
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Message Dialog */}
+      <Dialog open={showMessageDialog} onOpenChange={setShowMessageDialog}>
+        <DialogContent className="max-w-2xl">
+          {selectedBroker && (
+            <>
+              <DialogHeader>
+                <div className="flex items-center justify-between">
+                  <DialogTitle className="text-xl flex items-center">
+                    <Mail className="h-5 w-5 mr-2 text-primary" />
+                    إرسال رسالة / Send Message
+                  </DialogTitle>
+                </div>
+                <DialogDescription>
+                  إرسال رسالة مشفرة إلى {selectedBroker.name} / Send an encrypted message to {selectedBroker.name}
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="space-y-4 mt-4">
+                <div className="flex items-center space-x-4">
+                  <Avatar className="h-10 w-10">
+                    <AvatarFallback className="bg-primary text-primary-foreground">
+                      {selectedBroker.name?.split(' ').map(n => n[0]).join('')}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <div className="font-medium">{selectedBroker.name}</div>
+                    <div className="text-sm text-muted-foreground">{selectedBroker.company}</div>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="subject" className="flex items-center">
+                      <FileText className="h-4 w-4 mr-2" />
+                      الموضوع / Subject
+                    </Label>
+                    <Input 
+                      id="subject" 
+                      value={messageSubject}
+                      onChange={(e) => setMessageSubject(e.target.value)}
+                      placeholder="Enter message subject"
+                      className="mt-1"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="message" className="flex items-center">
+                      <MessageSquare className="h-4 w-4 mr-2" />
+                      نص الرسالة / Message Text
+                    </Label>
+                    <Textarea 
+                      id="message"
+                      value={messageText}
+                      onChange={(e) => setMessageText(e.target.value)}
+                      placeholder="Enter your message here..."
+                      className="mt-1 min-h-[150px]"
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <DialogFooter className="flex flex-col sm:flex-row gap-3">
+                <Button variant="outline" onClick={() => setShowMessageDialog(false)}>
+                  إلغاء / Cancel
+                </Button>
+                <Button 
+                  onClick={() => handleSendMessage(selectedBroker.id)}
+                  className="sm:flex-1"
+                  disabled={sendMessageMutation.isPending}
+                >
+                  {sendMessageMutation.isPending ? (
+                    <>
+                      <span className="animate-spin mr-2">⏳</span>
+                      جاري الإرسال / Sending...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4 mr-2" />
+                      إرسال الرسالة / Send Message
+                    </>
+                  )}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
         </DialogContent>
       </Dialog>
 
