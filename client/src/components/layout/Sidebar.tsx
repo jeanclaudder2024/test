@@ -132,7 +132,7 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
       {/* Main Navigation */}
       <div className="flex-grow overflow-y-auto">
         <div className="mt-6 mb-2 px-6">
-          {!collapsed && <h2 className="font-heading uppercase text-primary/60 font-bold pb-2 text-xs tracking-wider">{t("nav.navigation")}</h2>}
+          {!collapsed && <h2 className="font-heading uppercase text-primary/60 dark:text-primary/70 font-bold pb-2 text-xs tracking-wider">{t("nav.navigation")}</h2>}
         </div>
         
         <nav>
@@ -154,7 +154,7 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
                   >
                     <span className={cn(
                       "flex items-center justify-center",
-                      isPathActive(item.path) ? "text-primary" : "text-gray-500",
+                      isPathActive(item.path) ? "text-primary" : "text-gray-500 dark:text-gray-400",
                       collapsed ? "mr-0" : "mr-3"
                     )}>{item.icon}</span>
                     {!collapsed && <span>{item.title}</span>}
@@ -166,9 +166,9 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
         </nav>
         
         <div className="mt-8">
-          <div className="border-t border-primary/10 my-5 mx-6"></div>
+          <div className="border-t border-primary/10 dark:border-primary/20 my-5 mx-6"></div>
           <div className="px-6 mb-2">
-            {!collapsed && <h2 className="font-heading uppercase text-primary/60 font-bold pb-2 text-xs tracking-wider">{t("nav.profile")}</h2>}
+            {!collapsed && <h2 className="font-heading uppercase text-primary/60 dark:text-primary/70 font-bold pb-2 text-xs tracking-wider">{t("nav.profile")}</h2>}
           </div>
           
           {userItems.map((item, index) => (
@@ -181,14 +181,14 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
                 className={cn(
                   "flex items-center py-3 px-4 rounded-lg my-1 mx-2 transition-all duration-200", 
                   isPathActive(item.path) 
-                    ? "bg-primary/10 text-primary font-medium" 
-                    : "text-gray-700 hover:bg-gray-100/80",
+                    ? "bg-primary/10 text-primary font-medium dark:bg-primary/20" 
+                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-100/80 dark:hover:bg-gray-800/60",
                   collapsed && "justify-center px-2"
                 )}
               >
                 <span className={cn(
                   "flex items-center justify-center",
-                  isPathActive(item.path) ? "text-primary" : "text-gray-500",
+                  isPathActive(item.path) ? "text-primary" : "text-gray-500 dark:text-gray-400",
                   collapsed ? "mr-0" : "mr-3"
                 )}>{item.icon}</span>
                 {!collapsed && <span>{item.title}</span>}
