@@ -850,10 +850,10 @@ export default function Brokers() {
           <DialogHeader>
             <DialogTitle className="text-2xl flex items-center">
               <Star className="h-5 w-5 mr-2 text-amber-500" />
-              Upgrade to Elite Broker Membership
+              ترقية إلى عضوية الوسيط النخبة / Upgrade to Elite Broker Membership
             </DialogTitle>
             <DialogDescription>
-              Complete the following steps to activate your elite membership benefits.
+              أكمل الخطوات التالية لتفعيل مزايا عضوية النخبة الخاصة بك / Complete the following steps to activate your elite membership benefits.
             </DialogDescription>
           </DialogHeader>
           
@@ -963,7 +963,7 @@ export default function Brokers() {
                   عنوان الشحن / Shipping Address
                 </h3>
                 <p className="text-sm text-gray-500 mb-2">
-                  For delivery of your physical membership card
+                  لتوصيل بطاقة العضوية المادية الخاصة بك / For delivery of your physical membership card
                 </p>
                 <Textarea 
                   placeholder="Enter your full shipping address with postal code" 
@@ -997,7 +997,7 @@ export default function Brokers() {
             <>
               <DialogHeader>
                 <div className="flex items-center justify-between">
-                  <DialogTitle className="text-xl">Broker Profile</DialogTitle>
+                  <DialogTitle className="text-xl">ملف الوسيط / Broker Profile</DialogTitle>
                   {selectedBroker.eliteMember && (
                     <Badge className="bg-amber-500 text-white">
                       <Star className="h-3 w-3 mr-1" /> نخبة / Elite
@@ -1005,7 +1005,7 @@ export default function Brokers() {
                   )}
                 </div>
                 <DialogDescription>
-                  Profile details and contact information
+                  تفاصيل الملف ومعلومات الاتصال / Profile details and contact information
                 </DialogDescription>
               </DialogHeader>
               
