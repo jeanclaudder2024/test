@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { Menu, LogOut, Download, Home } from "lucide-react";
+import { useLanguage } from "@/hooks/use-language";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
@@ -11,6 +13,7 @@ export default function Header() {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const { logoutMutation } = useAuth();
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const toggleMobileSidebar = () => {
     setMobileSidebarOpen(!mobileSidebarOpen);
@@ -40,14 +43,16 @@ export default function Header() {
 
   // Helper function to get page title based on the current location
   const getPageTitle = () => {
-    if (location === "/") return "Dashboard";
-    if (location.startsWith("/vessels")) return "Vessels";
-    if (location.startsWith("/refineries")) return "Refineries";
-    if (location.startsWith("/documents")) return "Documents";
-    if (location.startsWith("/brokers")) return "Brokers";
-    if (location.startsWith("/profile")) return "Profile";
-    if (location.startsWith("/ai-assistant")) return "AI Assistant";
-    return "Dashboard";
+    if (location === "/") return t("nav.dashboard");
+    if (location.startsWith("/vessels")) return t("nav.vessels");
+    if (location.startsWith("/refineries")) return t("nav.refineries");
+    if (location.startsWith("/documents")) return t("nav.documents");
+    if (location.startsWith("/brokers")) return t("nav.brokers");
+    if (location.startsWith("/profile")) return t("nav.profile");
+    if (location.startsWith("/ai-assistant")) return t("nav.ai_assistant");
+    if (location.startsWith("/trading")) return t("nav.trading");
+    if (location.startsWith("/settings")) return t("nav.settings");
+    return t("nav.dashboard");
   };
 
   return (
@@ -85,7 +90,7 @@ export default function Header() {
             onClick={() => navigate('/')}
           >
             <Home className="h-4 w-4 mr-2" />
-            View Home
+            {t("action.view_home")}
           </Button>
           
           <Button 
@@ -94,11 +99,16 @@ export default function Header() {
             className="hidden sm:flex border border-primary/20 hover:bg-primary/10 text-primary"
           >
             <Download className="h-4 w-4 mr-2" />
-            Export Data
+            {t("action.export")}
           </Button>
           
+          {/* Language Switcher */}
+          <div className="hidden sm:block">
+            <LanguageSwitcher variant="icon" />
+          </div>
+          
           <div className="flex items-center">
-            <span className="mr-2 text-sm text-primary/80 font-medium hidden sm:inline">Log Out</span>
+            <span className="mr-2 text-sm text-primary/80 font-medium hidden sm:inline">{t("action.logout")}</span>
             <Button 
               variant="ghost" 
               size="icon" 

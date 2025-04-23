@@ -20,6 +20,7 @@ import { useEffect } from "react";
 import { apiRequest } from "./lib/queryClient";
 import MainLayout from "@/components/layout/MainLayout";
 import { AuthProvider } from "@/hooks/use-auth";
+import { LanguageProvider } from "@/hooks/use-language";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 function Router() {
@@ -76,8 +77,10 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <Router />
-        <Toaster />
+        <LanguageProvider>
+          <Router />
+          <Toaster />
+        </LanguageProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
