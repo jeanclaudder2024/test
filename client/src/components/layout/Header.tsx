@@ -70,7 +70,7 @@ export default function Header() {
       )}
 
       {/* App Header */}
-      <header className="backdrop-blur-sm bg-white/80 border-b border-gray-100 py-3 px-6 flex justify-between items-center">
+      <header className="backdrop-blur-sm bg-white/80 dark:bg-gray-900/80 border-b border-gray-100 dark:border-gray-800 py-3 px-6 flex justify-between items-center">
         <div className="flex items-center">
           <Button
             variant="ghost"

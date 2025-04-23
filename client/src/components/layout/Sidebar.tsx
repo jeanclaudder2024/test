@@ -94,12 +94,12 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
 
   return (
     <aside className={cn(
-      "backdrop-blur-sm bg-white/80 border-r border-gray-100 flex-shrink-0 flex flex-col h-full transition-all duration-300 overflow-y-auto",
+      "backdrop-blur-sm bg-white/80 dark:bg-gray-900/80 border-r border-gray-100 dark:border-gray-800 flex-shrink-0 flex flex-col h-full transition-all duration-300 overflow-y-auto",
       mobile ? "fixed inset-y-0 left-0 z-50 w-64 h-screen" : "hidden md:flex",
       collapsed ? "w-16" : "w-64"
     )}>
       {/* Logo Area */}
-      <div className="p-4 border-b border-gray-100 flex items-center justify-between sticky top-0 backdrop-blur-sm bg-white/90 z-10">
+      <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between sticky top-0 backdrop-blur-sm bg-white/90 dark:bg-gray-900/90 z-10">
         <Link href="/" className="cursor-pointer">
           {!collapsed && (
             <h1 className="font-bold text-2xl tracking-tighter leading-none bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-primary">
@@ -147,8 +147,8 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
                     className={cn(
                       "flex items-center py-3 px-4 rounded-lg my-1 mx-2 transition-all duration-200",
                       isPathActive(item.path) 
-                        ? "bg-primary/10 text-primary font-medium" 
-                        : "text-gray-700 hover:bg-gray-100/80",
+                        ? "bg-primary/10 text-primary font-medium dark:bg-primary/20" 
+                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100/80 dark:hover:bg-gray-800/60",
                       collapsed && "justify-center px-2"
                     )}
                   >

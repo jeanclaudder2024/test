@@ -78,6 +78,53 @@
     --sidebar-ring: 348 83.3% 47.1%;
   }
   
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    
+    --secondary: 348 83.3% 47.1%;
+    --secondary-foreground: 210 40% 98%;
+    
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    
+    --accent: 174.7 100% 29.4%;
+    --accent-foreground: 210 40% 98%;
+    
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    
+    /* Charts colors adjusted for dark mode */
+    --chart-1: 210 40% 90%;
+    --chart-2: 348 83.3% 60%;
+    --chart-3: 174.7 100% 40%;
+    --chart-4: 217.2 91.2% 70%;
+    --chart-5: 47.9 95.8% 60%;
+    
+    /* Sidebar */
+    --sidebar-background: 222.2 84% 4.9%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 348 83.3% 47.1%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 217.2 32.6% 17.5%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217.2 32.6% 17.5%;
+    --sidebar-ring: 348 83.3% 47.1%;
+  }
+  
   * {
     @apply border-border;
   }
@@ -90,11 +137,20 @@
 /* Custom components */
 @layer components {
   .ocean-bg {
-    @apply bg-[#b3e5fc];
+    @apply bg-[#b3e5fc] dark:bg-[#193549];
   }
   
   .land-bg {
-    @apply bg-[#e8f5e9];
+    @apply bg-[#e8f5e9] dark:bg-[#1c2833];
+  }
+  
+  /* Map dark mode adjustments */
+  .dark .leaflet-tile {
+    filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7);
+  }
+  
+  .dark .leaflet-container {
+    background: #193549;
   }
   
   /* Enhanced vessel markers */
@@ -144,15 +200,15 @@
   }
   
   .nav-link {
-    @apply flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100;
+    @apply flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800;
   }
   
   .nav-link-active {
-    @apply flex items-center px-4 py-2 bg-red-50 text-secondary border-l-4 border-secondary;
+    @apply flex items-center px-4 py-2 bg-red-50 dark:bg-gray-800 text-secondary dark:text-secondary border-l-4 border-secondary;
   }
   
   .leaflet-popup-content-wrapper {
-    @apply rounded-md shadow-lg border border-gray-200;
+    @apply rounded-md shadow-lg border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white;
   }
   
   .leaflet-popup-content {
@@ -160,7 +216,15 @@
   }
   
   .leaflet-popup-tip {
-    @apply bg-white;
+    @apply bg-white dark:bg-gray-800;
+  }
+  
+  .dark .leaflet-control-zoom a {
+    @apply bg-gray-800 text-white border-gray-700;
+  }
+  
+  .dark .leaflet-control-zoom a:hover {
+    @apply bg-gray-700;
   }
   
   /* Vessel tracking path and pulse animation */
