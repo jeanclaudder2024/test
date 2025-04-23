@@ -89,11 +89,12 @@ openaiRouter.post('/analyze-trading', async (req, res) => {
       success: true, 
       data: analysis 
     });
-  } catch (error) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     console.error('Error in analyze-trading endpoint:', error);
     res.status(500).json({ 
       success: false, 
-      message: `Failed to analyze trading data: ${error.message}` 
+      message: `Failed to analyze trading data: ${errorMessage}` 
     });
   }
 });
@@ -120,11 +121,12 @@ openaiRouter.post('/analyze-route', async (req, res) => {
       success: true, 
       data: routeAnalysis 
     });
-  } catch (error) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     console.error('Error in analyze-route endpoint:', error);
     res.status(500).json({ 
       success: false, 
-      message: `Failed to analyze vessel route: ${error.message}` 
+      message: `Failed to analyze vessel route: ${errorMessage}` 
     });
   }
 });
@@ -151,11 +153,12 @@ openaiRouter.post('/structured-data', async (req, res) => {
       success: true, 
       data 
     });
-  } catch (error) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     console.error('Error in structured-data endpoint:', error);
     res.status(500).json({ 
       success: false, 
-      message: `Failed to generate structured data: ${error.message}` 
+      message: `Failed to generate structured data: ${errorMessage}` 
     });
   }
 });

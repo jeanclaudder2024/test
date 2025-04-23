@@ -87,126 +87,133 @@ export default function AIAssistantPage() {
     setProcessing(true);
     
     try {
-      // For demonstration, we'll simulate AI responses based on query content
-      // In a real implementation, this would be an API call to the OpenAI service
+      // Use the OpenAI service for real AI-powered responses
+      const { openaiService } = await import('@/lib/openaiService');
       
-      setTimeout(() => {
-        // Check query for specific patterns to provide relevant responses
-        const lowerQuery = query.toLowerCase();
-        let response: AIQueryResponse;
+      // Build context for AI
+      const context = {
+        vessels: vessels.length,
+        refineries: refineries.length,
+        trackedVessel: trackedVessel ? {
+          name: trackedVessel.name,
+          vesselType: trackedVessel.vesselType,
+          currentRegion: trackedVessel.currentRegion,
+          currentLocation: trackedVessel.currentLat && trackedVessel.currentLng 
+            ? `${trackedVessel.currentLat.toFixed(2)}°, ${trackedVessel.currentLng.toFixed(2)}°` 
+            : 'unknown',
+          destination: trackedVessel.destinationPort || 'unknown',
+          eta: trackedVessel.eta || 'unknown'
+        } : null
+      };
+      
+      // Check for vessel name in query
+      const lowerQuery = query.toLowerCase();
+      const vesselNameMatch = query.match(/vessel\s+([A-Za-z0-9\s]+)/) || 
+                             query.match(/ship\s+([A-Za-z0-9\s]+)/) || 
+                             query.match(/where is ([A-Za-z0-9\s]+)/);
+      
+      // Check for region name in query
+      const regionMatch = query.match(/refineries in ([A-Za-z\s]+)/) || 
+                         query.match(/refineries\s+([A-Za-z\s]+)/);
+      
+      // Find vessel if mentioned
+      let matchedVessel = null;
+      if (vesselNameMatch && vesselNameMatch[1]) {
+        const name = vesselNameMatch[1].trim();
+        matchedVessel = vessels.find(v => 
+          v.name.toLowerCase().includes(name.toLowerCase()) || 
+          (v.imo && v.imo.toLowerCase().includes(name.toLowerCase()))
+        );
         
-        // Check for vessel queries
-        if (lowerQuery.includes('vessel') || lowerQuery.includes('ship') || lowerQuery.includes('tanker')) {
-          const vesselNameMatch = query.match(/vessel\s+([A-Za-z0-9\s]+)/) || 
-                                 query.match(/ship\s+([A-Za-z0-9\s]+)/) || 
-                                 query.match(/where is ([A-Za-z0-9\s]+)/);
-          
-          if (vesselNameMatch && vesselNameMatch[1]) {
-            const name = vesselNameMatch[1].trim();
-            const foundVessel = vessels.find(v => 
-              v.name.toLowerCase().includes(name.toLowerCase()) || 
-              v.imo.toLowerCase().includes(name.toLowerCase())
-            );
-            
-            if (foundVessel) {
-              // Start tracking this vessel
-              setTrackedVessel(foundVessel);
-              
-              response = {
-                type: 'vessel',
-                content: `I found vessel ${foundVessel.name}. It's a ${foundVessel.vesselType} currently ${(foundVessel.currentLat && foundVessel.currentLng) ? 'located at coordinates ' + foundVessel.currentLat.toFixed(2) + '°, ' + foundVessel.currentLng.toFixed(2) + '°' : 'with unknown location'}.${foundVessel.destinationPort ? ' Heading to ' + foundVessel.destinationPort + '.' : ''}`,
-                vessel: foundVessel
-              };
-            } else {
-              response = {
-                type: 'text',
-                content: `I couldn't find a vessel named "${name}" in our system. Please check the name or try another vessel.`
-              };
-            }
-          } else if (lowerQuery.includes('list') || lowerQuery.includes('show all')) {
-            const vesselList = vessels.slice(0, 5).map(v => v.name).join(', ');
-            response = {
-              type: 'text',
-              content: `Here are some vessels in our fleet: ${vesselList}. You can ask for details about any specific vessel.`
-            };
-          } else {
-            response = {
-              type: 'text',
-              content: `We have ${vessels.length} vessels in our system. You can ask about a specific vessel by name or IMO number, or ask to list vessels by type or region.`
-            };
-          }
-        } 
-        // Check for refinery queries
-        else if (lowerQuery.includes('refinery') || lowerQuery.includes('refineries')) {
-          const regionMatch = query.match(/refineries in ([A-Za-z\s]+)/) || 
-                             query.match(/refineries\s+([A-Za-z\s]+)/);
-          
-          if (regionMatch && regionMatch[1]) {
-            const region = regionMatch[1].trim();
-            const matchingRefineries = refineries.filter(r => 
-              r.region.toLowerCase().includes(region.toLowerCase()) || 
-              r.country.toLowerCase().includes(region.toLowerCase())
-            );
-            
-            if (matchingRefineries.length > 0) {
-              const refinery = matchingRefineries[0]; // Take the first match
-              
-              // Show this region on the map
-              setSelectedRegion(refinery.region as Region);
-              
-              response = {
-                type: 'refinery',
-                content: `I found ${matchingRefineries.length} refineries in ${region}. Here's one of them: ${refinery.name} in ${refinery.country}. It has a capacity of ${refinery.capacity?.toLocaleString() || 'unknown'} bpd and is currently ${refinery.status}.`,
-                refinery: refinery
-              };
-            } else {
-              response = {
-                type: 'text',
-                content: `I couldn't find any refineries in "${region}". Available regions include North America, Europe, Asia, Africa, and MEA.`
-              };
-            }
-          } else {
-            response = {
-              type: 'text',
-              content: `We have information on ${refineries.length} refineries worldwide. You can ask about refineries in a specific region, such as "Show refineries in Europe".`
-            };
+        if (matchedVessel) {
+          // Start tracking this vessel
+          setTrackedVessel(matchedVessel);
+        }
+      }
+      
+      // Find refineries if region mentioned
+      let matchedRefineries = [];
+      let matchedRefinery = null;
+      if (regionMatch && regionMatch[1]) {
+        const region = regionMatch[1].trim();
+        matchedRefineries = refineries.filter(r => 
+          (r.region && r.region.toLowerCase().includes(region.toLowerCase())) || 
+          (r.country && r.country.toLowerCase().includes(region.toLowerCase()))
+        );
+        
+        if (matchedRefineries.length > 0) {
+          matchedRefinery = matchedRefineries[0];
+          // Show this region on the map
+          if (matchedRefinery.region) {
+            setSelectedRegion(matchedRefinery.region as Region);
           }
         }
-        // Check for tracking requests
-        else if (lowerQuery.includes('track') || lowerQuery.includes('follow')) {
-          if (trackedVessel) {
-            response = {
-              type: 'vessel',
-              content: `I'm already tracking ${trackedVessel.name}. You can see its current position on the map.`,
-              vessel: trackedVessel
-            };
-          } else {
-            response = {
-              type: 'text',
-              content: "To track a vessel, please specify which vessel you want to track. For example, 'Track vessel Oceanic Pioneer'."
-            };
-          }
+      }
+      
+      // Check for tracking requests
+      const isTrackingRequest = lowerQuery.includes('track') || lowerQuery.includes('follow');
+      
+      // Prepare prompt with context
+      let promptContext = `
+You are an AI Assistant for the Vesselian maritime platform. You have access to vessel and refinery data.
+Current context:
+- Total vessels: ${context.vessels}
+- Total refineries: ${context.refineries}
+${context.trackedVessel ? `- Currently tracking vessel: ${context.trackedVessel.name} (${context.trackedVessel.vesselType}) in ${context.trackedVessel.currentRegion} at position ${context.trackedVessel.currentLocation}, heading to ${context.trackedVessel.destination}` : ''}
+${matchedVessel ? `- Found vessel: ${matchedVessel.name} (${matchedVessel.vesselType}) in region ${matchedVessel.currentRegion}, at position ${matchedVessel.currentLat?.toFixed(2)}°, ${matchedVessel.currentLng?.toFixed(2)}°, destination: ${matchedVessel.destinationPort || 'unknown'}` : ''}
+${matchedRefinery ? `- Found refinery: ${matchedRefinery.name} in ${matchedRefinery.country}, region ${matchedRefinery.region}, capacity ${matchedRefinery.capacity?.toLocaleString() || 'unknown'} bpd, status: ${matchedRefinery.status}` : ''}
+${matchedRefineries.length > 0 ? `- Found ${matchedRefineries.length} refineries matching the query` : ''}
+${isTrackingRequest && trackedVessel ? `- Already tracking vessel: ${trackedVessel.name}` : ''}
+${isTrackingRequest && !trackedVessel && !matchedVessel ? '- User wants to track a vessel but hasn\'t specified which one' : ''}
+
+User query: ${query}
+
+Please provide a helpful response in a conversational tone. If the query is about a specific vessel or refinery that was found, include details about it.
+`;
+
+      // Get response from OpenAI
+      const aiResponse = await openaiService.generateText(promptContext);
+      
+      // Determine response type
+      let response: AIQueryResponse;
+      
+      if (matchedVessel) {
+        response = {
+          type: 'vessel',
+          content: aiResponse,
+          vessel: matchedVessel
+        };
+      } else if (matchedRefinery) {
+        response = {
+          type: 'refinery',
+          content: aiResponse,
+          refinery: matchedRefinery
+        };
+      } else if (isTrackingRequest && trackedVessel) {
+        response = {
+          type: 'vessel',
+          content: aiResponse,
+          vessel: trackedVessel
+        };
+      } else {
+        response = {
+          type: 'text',
+          content: aiResponse
+        };
+      }
+      
+      // Add response to conversation
+      setConversation(prev => [
+        ...prev,
+        {
+          type: 'assistant',
+          content: response.content,
+          response: response,
+          timestamp: new Date()
         }
-        // Default response
-        else {
-          response = {
-            type: 'text',
-            content: "I can help you with information about vessels and refineries. You can ask about vessel locations, refinery details, or tracking specific vessels. Try asking something like 'Where is vessel Oceanic Pioneer?' or 'Show refineries in Europe'."
-          };
-        }
-        
-        setConversation(prev => [
-          ...prev,
-          {
-            type: 'assistant',
-            content: response.content,
-            response: response,
-            timestamp: new Date()
-          }
-        ]);
-        
-        setProcessing(false);
-      }, 1500);
+      ]);
+      
+      setProcessing(false);
       
       // Clear the input
       setQuery('');
