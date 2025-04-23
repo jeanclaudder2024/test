@@ -1079,6 +1079,9 @@ Please respond directly, in a conversational tone, and mention if you need more 
     }
   });
 
+  // Documents routes
+  app.use("/api/documents", documentRouter);
+  
   // Mount API router
   app.use("/api", apiRouter);
 
