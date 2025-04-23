@@ -667,21 +667,21 @@ export default function Brokers() {
                         <Building className="h-4 w-4 mr-2 text-gray-500" />
                         <span className="text-sm">Saudi Aramco</span>
                       </div>
-                      <Badge className="bg-green-500">Connected</Badge>
+                      <Badge className="bg-green-500">متصل / Connected</Badge>
                     </div>
                     <div className="flex items-center justify-between p-2 bg-gray-50 rounded-md hover:bg-gray-100">
                       <div className="flex items-center">
                         <Building className="h-4 w-4 mr-2 text-gray-500" />
                         <span className="text-sm">Shell Trading</span>
                       </div>
-                      <Badge className="bg-green-500">Connected</Badge>
+                      <Badge className="bg-green-500">متصل / Connected</Badge>
                     </div>
                     <div className="flex items-center justify-between p-2 bg-gray-50 rounded-md hover:bg-gray-100">
                       <div className="flex items-center">
                         <Building className="h-4 w-4 mr-2 text-gray-500" />
-                        <span className="text-sm">BP Supply and Trading</span>
+                        <span className="text-sm">ADNOC Distribution</span>
                       </div>
-                      <Badge variant="outline">Request Access</Badge>
+                      <Badge variant="outline">طلب وصول / Request Access</Badge>
                     </div>
                   </div>
                 </CardContent>
@@ -705,23 +705,23 @@ export default function Brokers() {
                     <div className="flex items-center justify-between p-2 bg-gray-50 rounded-md hover:bg-gray-100">
                       <div className="flex items-center">
                         <Calendar className="h-4 w-4 mr-2 text-gray-500" />
-                        <span className="text-sm">1M bbl Crude Oil FOB Rotterdam</span>
+                        <span className="text-sm">2M bbl Crude Oil FOB Arabian Gulf</span>
                       </div>
-                      <Badge className="bg-amber-500">Closes in 2d</Badge>
+                      <Badge className="bg-amber-500">Closes {formatDate(new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), 'dd MMM')}</Badge>
                     </div>
                     <div className="flex items-center justify-between p-2 bg-gray-50 rounded-md hover:bg-gray-100">
                       <div className="flex items-center">
                         <Calendar className="h-4 w-4 mr-2 text-gray-500" />
-                        <span className="text-sm">500K bbl LSFO CIF Singapore</span>
+                        <span className="text-sm">750K bbl LSFO CIF Rotterdam</span>
                       </div>
-                      <Badge className="bg-amber-500">Closes in 5d</Badge>
+                      <Badge className="bg-amber-500">Closes {formatDate(new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), 'dd MMM')}</Badge>
                     </div>
                     <div className="flex items-center justify-between p-2 bg-gray-50 rounded-md hover:bg-gray-100">
                       <div className="flex items-center">
                         <Calendar className="h-4 w-4 mr-2 text-gray-500" />
-                        <span className="text-sm">200K MT Diesel 10ppm CIF ARA</span>
+                        <span className="text-sm">350K MT Low Sulfur Gasoil CIF ARA</span>
                       </div>
-                      <Badge className="bg-red-500 text-white">Closing Today</Badge>
+                      <Badge className="bg-red-500 text-white">Closes Today</Badge>
                     </div>
                   </div>
                 </CardContent>
@@ -747,13 +747,13 @@ export default function Brokers() {
                   <div className="mt-4 grid grid-cols-2 gap-2">
                     <div className="bg-gray-50 p-2 rounded-md">
                       <div className="text-xs text-gray-500">Brent Crude</div>
-                      <div className="text-lg font-semibold">$84.27</div>
-                      <div className="text-xs text-green-500">+1.24%</div>
+                      <div className="text-lg font-semibold">$89.76</div>
+                      <div className="text-xs text-green-500">+1.82%</div>
                     </div>
                     <div className="bg-gray-50 p-2 rounded-md">
                       <div className="text-xs text-gray-500">WTI Crude</div>
-                      <div className="text-lg font-semibold">$80.12</div>
-                      <div className="text-xs text-green-500">+0.98%</div>
+                      <div className="text-lg font-semibold">$86.34</div>
+                      <div className="text-xs text-green-500">+1.45%</div>
                     </div>
                   </div>
                 </CardContent>
@@ -786,14 +786,14 @@ export default function Brokers() {
                         <MessageSquare className="h-4 w-4 mr-2 text-gray-500" />
                         <span className="text-sm">Contract Negotiation - Shell</span>
                       </div>
-                      <span className="text-xs text-gray-500">Yesterday</span>
+                      <span className="text-xs text-gray-500">{formatDate(new Date(Date.now() - 24 * 60 * 60 * 1000), 'dd MMM')}</span>
                     </div>
                     <div className="flex items-center justify-between p-2 bg-gray-50 rounded-md hover:bg-gray-100">
                       <div className="flex items-center">
                         <MessageSquare className="h-4 w-4 mr-2 text-gray-500" />
                         <span className="text-sm">Q2 Pricing Discussion</span>
                       </div>
-                      <span className="text-xs text-gray-500">3 days ago</span>
+                      <span className="text-xs text-gray-500">{formatDate(new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), 'dd MMM')}</span>
                     </div>
                   </div>
                 </CardContent>
@@ -812,18 +812,18 @@ export default function Brokers() {
                 <CardContent>
                   <div className="bg-gradient-to-br from-amber-600 to-amber-900 p-4 rounded-xl text-white shadow-lg">
                     <div className="flex justify-between">
-                      <div className="text-xl font-bold">GloboOil</div>
+                      <div className="text-xl font-bold">Vesselian</div>
                       <Star className="h-6 w-6" />
                     </div>
                     <div className="mt-6 flex justify-between items-end">
                       <div>
                         <div className="text-xs opacity-80">ELITE BROKER</div>
-                        <div className="text-lg font-bold">JOHN SMITH</div>
-                        <div className="text-xs mt-1 opacity-80">MEMBER SINCE 2023</div>
+                        <div className="text-lg font-bold">{brokers.length > 0 ? brokers[0].name?.toUpperCase() : 'ELITE MEMBER'}</div>
+                        <div className="text-xs mt-1 opacity-80">MEMBER SINCE {formatDate(new Date(), 'yyyy')}</div>
                       </div>
                       <div className="bg-white/20 p-2 rounded">
                         <div className="text-xs">ID</div>
-                        <div className="font-mono">#EB24601</div>
+                        <div className="font-mono">#{brokers.length > 0 ? `EB${brokers[0].id}${Date.now().toString().slice(-5)}` : 'EB12345'}</div>
                       </div>
                     </div>
                     <div className="mt-6 bg-white/10 p-2 rounded flex justify-between">
