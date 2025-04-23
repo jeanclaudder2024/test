@@ -10,7 +10,8 @@ import {
   Brain,
   ChevronRight,
   ChevronLeft,
-  Settings
+  Settings,
+  BarChart
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -44,6 +45,11 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
       title: "REFINERY",
       path: "/refineries",
       icon: <Building2 className="h-5 w-5 mr-3" />,
+    },
+    {
+      title: "TRADING",
+      path: "/trading",
+      icon: <BarChart className="h-5 w-5 mr-3" />,
     },
     {
       title: "DOCUMENTERY", // Keeping the original spelling from the design
