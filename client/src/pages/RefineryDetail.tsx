@@ -61,92 +61,28 @@ export default function RefineryDetail() {
   // Find the refinery from our stream data
   const refinery = refineries.find(r => r.id === refineryId);
   
-  // Find vessels associated with this refinery
+  // Fetch vessels from API that are associated with this refinery
   useEffect(() => {
-    if (refinery && vessels.length > 0) {
-      // Look for vessels that are linked to this refinery using multiple methods
-      
-      // Method 1: Direct port matching - check destination or departure port against refinery country and city
-      const byPort = vessels.filter(v => {
-        // Check if destination or departure port includes refinery country or city name
-        const destinationMatch = v.destinationPort?.toLowerCase().includes(refinery.country.toLowerCase()) ||
-                                 (refinery.name && v.destinationPort?.toLowerCase().includes(refinery.name.toLowerCase()));
-        
-        const departureMatch = v.departurePort?.toLowerCase().includes(refinery.country.toLowerCase()) ||
-                               (refinery.name && v.departurePort?.toLowerCase().includes(refinery.name.toLowerCase()));
-        
-        return destinationMatch || departureMatch;
-      });
-      
-      // Method 2: Region matching - vessels in the same region as refinery
-      const byRegion = vessels.filter(v => 
-        v.currentRegion === refinery.region &&
-        // Only include oil vessels for region matches to ensure relevance
-        (v.cargoType?.toLowerCase().includes('crude') || 
-         v.cargoType?.toLowerCase().includes('oil') ||
-         v.vesselType?.toLowerCase().includes('tanker'))
-      );
-      
-      // Method 3: Geographic proximity - vessels within reasonable distance of refinery
-      // Reduced distance to be more precise (from 5 to 3 degrees)
-      const byProximity = vessels.filter(v => 
-        v.currentLat && v.currentLng && refinery.lat && refinery.lng &&
-        Math.abs(v.currentLat - refinery.lat) < 3 && 
-        Math.abs(v.currentLng - refinery.lng) < 3
-      );
-      
-      // Method 4: Cargo type relevance - prioritize oil tankers
-      const oilVessels = vessels.filter(v =>
-        (v.cargoType?.toLowerCase().includes('crude') || 
-         v.cargoType?.toLowerCase().includes('oil') ||
-         v.vesselType?.toLowerCase().includes('tanker')) &&
-        v.currentRegion === refinery.region
-      );
-      
-      // Combine results with prioritization, removing duplicates
-      // Add proximity vessels first, then port matches, then oil vessels, then general region matches
-      const allConnected = [...byProximity, ...byPort, ...oilVessels, ...byRegion];
-      const uniqueIds = new Set();
-      const uniqueVessels = allConnected.filter(vessel => {
-        if (uniqueIds.has(vessel.id)) return false;
-        uniqueIds.add(vessel.id);
-        return true;
-      });
-      
-      // Always ensure we have at least 6 vessels to display
-      if (uniqueVessels.length < 6) {
-        // Get additional oil vessels from the region if we don't have enough
-        const additionalVessels = vessels
-          .filter(v => 
-            !uniqueIds.has(v.id) && 
-            v.currentRegion === refinery.region &&
-            (v.cargoType?.toLowerCase().includes('crude') || 
-             v.cargoType?.toLowerCase().includes('oil') ||
-             v.vesselType?.toLowerCase().includes('tanker'))
-          )
-          .slice(0, 6 - uniqueVessels.length);
-          
-        const combinedVessels = [...uniqueVessels, ...additionalVessels];
-        
-        // If we still don't have enough, add any vessels from the region
-        if (combinedVessels.length < 6) {
-          const moreVessels = vessels
-            .filter(v => !uniqueIds.has(v.id) && v.currentRegion === refinery.region)
-            .slice(0, 6 - combinedVessels.length);
-            
-          setAssociatedVessels([...combinedVessels, ...moreVessels].slice(0, 10)); // Limit to 10 max
-        } else {
-          setAssociatedVessels(combinedVessels.slice(0, 10)); // Limit to 10 max
+    if (refineryId) {
+      const fetchAssociatedVessels = async () => {
+        try {
+          const response = await fetch(`/api/refineries/${refineryId}/vessels`);
+          if (response.ok) {
+            const data = await response.json();
+            setAssociatedVessels(data);
+          } else {
+            console.error('Failed to fetch associated vessels:', await response.text());
+          }
+        } catch (error) {
+          console.error('Error fetching associated vessels:', error);
         }
-      } else {
-        // If we have enough vessels, use them but limit to 10 for display
-        setAssociatedVessels(uniqueVessels.slice(0, 10));
-      }
+      };
+      
+      fetchAssociatedVessels();
     } else {
       setAssociatedVessels([]);
     }
-    
-  }, [refinery, vessels, refineryId]);
+  }, [refineryId]);
   
   // Log for debugging when associated vessels change
   useEffect(() => {
@@ -327,7 +263,6 @@ export default function RefineryDetail() {
                       vessels={associatedVessels.slice(0, 6)} // Show associated vessels on the map
                       refineries={[refinery]}
                       selectedRegion={null}
-                      trackedVessel={null}
                       onRefineryClick={() => {}}
                       onVesselClick={(vessel) => {
                         // Navigate to vessel details on click

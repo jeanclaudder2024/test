@@ -689,6 +689,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch refinery" });
     }
   });
+  
+  // Get vessels associated with a specific refinery
+  apiRouter.get("/refineries/:id/vessels", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const refinery = await refineryService.getRefineryById(id);
+      
+      if (!refinery) {
+        return res.status(404).json({ message: "Refinery not found" });
+      }
+      
+      // Get all vessels
+      const vessels = await storage.getVessels();
+      
+      // Association methods
+      // 1. Direct port matching - check destination or departure port against refinery country and city
+      const byPort = vessels.filter(v => {
+        const destinationMatch = v.destinationPort?.toLowerCase().includes(refinery.country.toLowerCase()) ||
+                             (refinery.name && v.destinationPort?.toLowerCase().includes(refinery.name.toLowerCase()));
+        
+        const departureMatch = v.departurePort?.toLowerCase().includes(refinery.country.toLowerCase()) ||
+                           (refinery.name && v.departurePort?.toLowerCase().includes(refinery.name.toLowerCase()));
+        
+        return destinationMatch || departureMatch;
+      });
+      
+      // 2. Geographic proximity - vessels within reasonable distance of refinery
+      const byProximity = vessels.filter(v => {
+        // Handle null/undefined values and convert to numbers to ensure proper comparison
+        const vesselLat = typeof v.currentLat === 'number' ? v.currentLat : Number(v.currentLat);
+        const vesselLng = typeof v.currentLng === 'number' ? v.currentLng : Number(v.currentLng);
+        const refineryLat = typeof refinery.lat === 'number' ? refinery.lat : Number(refinery.lat);
+        const refineryLng = typeof refinery.lng === 'number' ? refinery.lng : Number(refinery.lng);
+        
+        // Check if vessel is within 3 degrees of refinery
+        return !isNaN(vesselLat) && !isNaN(vesselLng) && 
+               !isNaN(refineryLat) && !isNaN(refineryLng) &&
+               Math.abs(vesselLat - refineryLat) < 3 && 
+               Math.abs(vesselLng - refineryLng) < 3;
+      });
+      
+      // 3. Region matching with cargo relevance - oil tankers in the same region
+      const oilVessels = vessels.filter(v =>
+        (v.cargoType?.toLowerCase().includes('crude') || 
+         v.cargoType?.toLowerCase().includes('oil') ||
+         v.vesselType?.toLowerCase().includes('tanker')) &&
+        v.currentRegion === refinery.region
+      );
+      
+      // Combine results with prioritization, removing duplicates
+      const allConnected = [...byPort, ...byProximity, ...oilVessels];
+      const uniqueIds = new Set();
+      const uniqueVessels = allConnected.filter(vessel => {
+        if (uniqueIds.has(vessel.id)) return false;
+        uniqueIds.add(vessel.id);
+        return true;
+      });
+      
+      // Return the associated vessels
+      res.json(uniqueVessels);
+    } catch (error) {
+      console.error("Error fetching vessels for refinery:", error);
+      res.status(500).json({ message: "Failed to fetch vessels for refinery" });
+    }
+  });
 
   apiRouter.post("/refineries", async (req, res) => {
     try {
