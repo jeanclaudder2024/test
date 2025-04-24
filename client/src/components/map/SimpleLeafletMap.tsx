@@ -329,8 +329,7 @@ export default function SimpleLeafletMap({
     // Set view based on priority:
     // 1. initialCenter/initialZoom (if provided)
     // 2. Selected region
-    // 3. Tracked vessel
-    // 4. Default view (already set when map was created)
+    // 3. Default view (already set when map was created)
     if (initialCenter && initialZoom) {
       // Use the provided initial center and zoom
       map.setView(initialCenter, initialZoom);
@@ -339,16 +338,6 @@ export default function SimpleLeafletMap({
       if (position) {
         map.setView([position.lat, position.lng], position.zoom);
       }
-    } else if (trackedVessel?.currentLat && trackedVessel?.currentLng) {
-      const lat = typeof trackedVessel.currentLat === 'number'
-        ? trackedVessel.currentLat
-        : parseFloat(String(trackedVessel.currentLat));
-      
-      const lng = typeof trackedVessel.currentLng === 'number'
-        ? trackedVessel.currentLng
-        : parseFloat(String(trackedVessel.currentLng));
-      
-      map.setView([lat, lng], 7);
     }
     
     // Make sure map is sized properly
@@ -361,7 +350,6 @@ export default function SimpleLeafletMap({
     vessels,
     refineries,
     selectedRegion,
-    trackedVessel,
     onVesselClick,
     onRefineryClick,
     isLoading,
@@ -496,42 +484,7 @@ export default function SimpleLeafletMap({
         </div>
       </div>
       
-      {/* Tracked vessel info */}
-      {trackedVessel && trackedVessel.currentLat && trackedVessel.currentLng && (
-        <div className="absolute top-12 right-3 z-10 bg-background/90 backdrop-blur-sm rounded-lg shadow-md p-3 border border-border max-w-[220px]">
-          <div className="flex items-center justify-between mb-2">
-            <h4 className="text-xs font-medium flex items-center gap-1">
-              <Navigation className="h-3 w-3 text-primary"/>
-              Tracking Vessel
-            </h4>
-            <Badge variant="outline" className="text-[10px] h-4 px-1.5 bg-primary/10 text-primary border-primary/20">LIVE</Badge>
-          </div>
-          <div className="space-y-1 text-xs">
-            <div className="font-medium">{trackedVessel.name}</div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Type:</span>
-              <span>{trackedVessel.vesselType || 'Unknown'}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Position:</span>
-              <span>
-                {typeof trackedVessel.currentLat === 'number' 
-                  ? trackedVessel.currentLat.toFixed(3) 
-                  : parseFloat(String(trackedVessel.currentLat)).toFixed(3)}, 
-                {typeof trackedVessel.currentLng === 'number' 
-                  ? trackedVessel.currentLng.toFixed(3) 
-                  : parseFloat(String(trackedVessel.currentLng)).toFixed(3)}
-              </span>
-            </div>
-            {trackedVessel.destinationPort && (
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Destination:</span>
-                <span>{trackedVessel.destinationPort.split(',')[0]}</span>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      {/* Tracking functionality removed */}
     </div>
   );
 }
