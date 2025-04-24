@@ -333,7 +333,7 @@ export default function SimpleLeafletMap({
         // Only show cargo vessels that are at sea
         return isCargoVessel && isCoordinateAtSea(lat, lng);
       })
-      .slice(0, 350); // Limit to 350 vessels to prevent lag and crashes
+      .slice(0, 500); // Show more cargo vessels - up to 500
       
     setDisplayVessels(filteredVessels);
     
