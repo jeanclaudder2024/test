@@ -34,6 +34,7 @@ import { apiTesterRouter } from "./routes/apiTester";
 import { brokerRouter } from "./routes/brokerRoutes";
 import { tradingRouter } from "./routes/tradingRoutes";
 import { vesselDistributionRouter } from "./routes/vesselDistributionRoutes";
+import { aiRouter } from "./routes/aiRoutes";
 import { seedBrokers } from "./services/seedService";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -1343,6 +1344,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/trading', tradingRouter);
   app.use('/api/vessels/distribution', vesselDistributionRouter);
   app.use('/api/tester', apiTesterRouter);
+  app.use('/api/ai', aiRouter);
   
   // Mount API router for general endpoints
   app.use("/api", apiRouter);

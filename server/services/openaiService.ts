@@ -25,13 +25,13 @@ export async function getVesselInsights(vessel: Vessel): Promise<{
       IMO: ${vessel.imo}
       Type: ${vessel.vesselType}
       Flag: ${vessel.flag}
-      Cargo Type: ${vessel.cargoType || "Unknown"}
-      Cargo Capacity: ${vessel.cargoCapacity || "Unknown"}
-      Current Position: ${vessel.currentLat}, ${vessel.currentLng}
-      Current Region: ${vessel.currentRegion}
-      Departure Port: ${vessel.departurePort || "Unknown"} (${vessel.departureDate || "Unknown"})
-      Destination Port: ${vessel.destinationPort || "Unknown"}
-      ETA: ${vessel.eta || "Unknown"}
+      Cargo Type: ${vessel.cargoType ?? "Unknown"}
+      Cargo Capacity: ${vessel.cargoCapacity ?? "Unknown"}
+      Current Position: ${vessel.currentLat ?? "Unknown"}, ${vessel.currentLng ?? "Unknown"}
+      Current Region: ${vessel.currentRegion ?? "Unknown"}
+      Departure Port: ${vessel.departurePort ?? "Unknown"} (${vessel.departureDate ?? "Unknown"})
+      Destination Port: ${vessel.destinationPort ?? "Unknown"}
+      ETA: ${vessel.eta ?? "Unknown"}
       
       Please provide the following insights in a structured JSON format:
       1. routeAnalysis: A detailed analysis of the vessel's route including maritime considerations
@@ -93,8 +93,8 @@ export async function getRefineryInsights(refinery: Refinery): Promise<{
       Country: ${refinery.country}
       Region: ${refinery.region}
       Status: ${refinery.status}
-      Capacity: ${refinery.capacity || "Unknown"} barrels per day
-      Coordinates: ${refinery.lat}, ${refinery.lng}
+      Capacity: ${refinery.capacity ?? "Unknown"} barrels per day
+      Coordinates: ${refinery.lat ?? "Unknown"}, ${refinery.lng ?? "Unknown"}
       
       Please provide the following insights in a structured JSON format:
       1. operationalAnalysis: Analysis of the refinery's operational status and capacity in the global context
