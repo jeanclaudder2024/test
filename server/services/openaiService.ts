@@ -67,7 +67,7 @@ export async function getVesselInsights(vessel: Vessel): Promise<{
       response_format: { type: "json_object" },
     });
 
-    const result = JSON.parse(response.choices[0].message.content);
+    const result = safeJsonParse(response);
     
     return {
       routeAnalysis: result.routeAnalysis || "Analysis not available",
@@ -130,7 +130,7 @@ export async function getRefineryInsights(refinery: Refinery): Promise<{
       response_format: { type: "json_object" },
     });
 
-    const result = JSON.parse(response.choices[0].message.content);
+    const result = safeJsonParse(response);
     
     return {
       operationalAnalysis: result.operationalAnalysis || "Analysis not available",
@@ -228,7 +228,7 @@ export async function getMarketAnalysis(vessels: Vessel[], refineries: Refinery[
       response_format: { type: "json_object" },
     });
 
-    const result = JSON.parse(response.choices[0].message.content);
+    const result = safeJsonParse(response);
     
     return {
       marketTrends: result.marketTrends || "Analysis not available",
@@ -305,7 +305,7 @@ export async function getRoutingOptimization(vessel: Vessel): Promise<{
       response_format: { type: "json_object" },
     });
 
-    const result = JSON.parse(response.choices[0].message.content);
+    const result = safeJsonParse(response);
     
     return {
       optimalRoute: result.optimalRoute || "Route optimization not available",
@@ -394,7 +394,7 @@ export async function answerMaritimeQuery(
       response_format: { type: "json_object" },
     });
 
-    const result = JSON.parse(response.choices[0].message.content);
+    const result = safeJsonParse(response);
     
     return {
       answer: result.answer || "I'm unable to answer that question at the moment.",
@@ -508,7 +508,7 @@ export async function generateAIDashboard(vessels: Vessel[], refineries: Refiner
       response_format: { type: "json_object" },
     });
 
-    const result = JSON.parse(response.choices[0].message.content);
+    const result = safeJsonParse(response);
     
     return {
       headline: result.headline || "Global Oil Shipping Dashboard",
