@@ -8,7 +8,6 @@ import { aiService } from "./services/aiService";
 import { dataService } from "./services/asiStreamService";
 import { brokerService } from "./services/brokerService";
 import { stripeService } from "./services/stripeService";
-import { openAIService } from "./services/openaiService";
 import { updateRefineryCoordinates, seedMissingRefineries } from "./services/refineryUpdate";
 import { seedAllData, regenerateGlobalVessels } from "./services/seedService";
 import { setupAuth } from "./auth";
@@ -34,7 +33,6 @@ import { apiTesterRouter } from "./routes/apiTester";
 import { brokerRouter } from "./routes/brokerRoutes";
 import { tradingRouter } from "./routes/tradingRoutes";
 import { vesselDistributionRouter } from "./routes/vesselDistributionRoutes";
-import { aiRouter } from "./routes/aiRoutes";
 import { seedBrokers } from "./services/seedService";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -1344,7 +1342,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/trading', tradingRouter);
   app.use('/api/vessels/distribution', vesselDistributionRouter);
   app.use('/api/tester', apiTesterRouter);
-  app.use('/api/ai', aiRouter);
   
   // Mount API router for general endpoints
   app.use("/api", apiRouter);

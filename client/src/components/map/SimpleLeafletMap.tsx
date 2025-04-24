@@ -404,20 +404,13 @@ export default function SimpleLeafletMap({
       };
       
       // Create custom icon with pulsing animation for better visibility
-      // Get current vessel heading (or default to 0 for north)
-      const heading = vessel.heading || 0;
-      
-      // Add AIS signal indicator
-      const aisActive = Math.random() > 0.2; // Most vessels have active AIS, some don't
-
       const customIcon = L.divIcon({
         html: `
-          <div class="vessel-marker-container enhanced-vessel-marker">
+          <div class="vessel-marker-container">
             <div class="vessel-marker-pulse" style="border-color: ${getVesselColor()};"></div>
-            <div class="vessel-wake" style="transform: rotate(${heading + 180}deg)"></div>
             <div class="vessel-marker" style="
-              width: 30px;
-              height: 30px;
+              width: 26px;
+              height: 26px;
               border-radius: 50%;
               background: rgba(255,255,255,0.95);
               display: flex;
@@ -425,21 +418,18 @@ export default function SimpleLeafletMap({
               justify-content: center;
               border: 2px solid ${getVesselColor()};
               box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-              font-size: 16px;
+              font-size: 14px;
               text-align: center;
               z-index: 900;
               position: relative;
             ">
-              <span class="vessel-icon" style="transform: rotate(${heading}deg)">
-                ${getVesselEmoji()}
-              </span>
-              <div class="ais-signal ${aisActive ? '' : 'inactive'}"></div>
+              ${getVesselEmoji()}
             </div>
           </div>
         `,
         className: 'vessel-marker-wrapper',
-        iconSize: [40, 40],
-        iconAnchor: [20, 20]
+        iconSize: [36, 36],
+        iconAnchor: [18, 18]
       });
       
       // Add marker with enhanced popup
@@ -752,12 +742,6 @@ export default function SimpleLeafletMap({
                     }
                     
                     // Create the route line
-                    // Determine route class based on vessel type
-                    const vesselTypeClass = vessel.vesselType?.toLowerCase().includes('oil') ? 'oil-tanker' :
-                                          vessel.vesselType?.toLowerCase().includes('cargo') ? 'cargo' :
-                                          vessel.vesselType?.toLowerCase().includes('container') ? 'container' : '';
-                    
-                    // Create a more professional looking route line
                     const routeLine = L.polyline(
                       curvePoints,
                       {
@@ -765,10 +749,7 @@ export default function SimpleLeafletMap({
                         weight: 3,
                         opacity: 0.7,
                         dashArray: '10, 10',
-                        className: `vessel-route-line ${vesselTypeClass} pro-vessel-route-line`,
-                        lineCap: 'round',
-                        lineJoin: 'round',
-                        smoothFactor: 1.5
+                        className: 'vessel-route-line'
                       }
                     ).addTo(map);
                     
