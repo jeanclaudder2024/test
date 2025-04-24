@@ -330,7 +330,7 @@ export default function SimpleLeafletMap({
         // Only show vessels that are at sea
         return isCoordinateAtSea(lat, lng);
       })
-      .slice(0, 5000); // Increased from 1000 to 5000 to show all regenerated vessels
+      .slice(0, 350); // Limit to 350 vessels to prevent lag and crashes
       
     setDisplayVessels(filteredVessels);
     

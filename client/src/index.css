@@ -354,13 +354,65 @@
       opacity: 1;
     }
     100% {
-      transform: scale(2.5);
+      transform: scale(2.0);
       opacity: 0;
     }
   }
   
   .vessel-boat div:first-child {
     animation: ripple 2s ease-out infinite;
+  }
+  
+  /* Performance optimized vessel marker animations */
+  .vessel-marker-pulse {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 3px solid;
+    animation: vessel-pulse 2s ease-out infinite;
+    transform-origin: center;
+    will-change: transform, opacity;
+  }
+  
+  @keyframes vessel-pulse {
+    0% {
+      transform: scale(0.9);
+      opacity: 0.8;
+    }
+    70% {
+      transform: scale(1.5);
+      opacity: 0.2;
+    }
+    100% {
+      transform: scale(1.8);
+      opacity: 0;
+    }
+  }
+  
+  /* Hardware acceleration for map elements */
+  .vessel-marker-container,
+  .refinery-marker-container,
+  .vessel-marker,
+  .refinery-marker,
+  .leaflet-marker-icon {
+    transform: translateZ(0);
+    will-change: transform;
+    backface-visibility: hidden;
+  }
+  
+  /* Simplified refinery glow for better performance */
+  .refinery-marker-glow {
+    position: absolute;
+    top: -6px;
+    left: -6px;
+    right: -6px;
+    bottom: -6px;
+    border-radius: 50%;
+    filter: blur(6px);
+    z-index: -1;
   }
   
   /* Make leaflet tooltips more visible */
