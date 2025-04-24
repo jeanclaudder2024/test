@@ -16,7 +16,6 @@ import Subscribe from "@/pages/Subscribe";
 import LandingPage from "@/pages/LandingPage";
 import AuthPage from "@/pages/AuthPage";
 import TradingDashboard from "@/pages/TradingDashboard";
-import EmptyMap from "@/pages/EmptyMap";
 import { useEffect } from "react";
 import { apiRequest } from "./lib/queryClient";
 import MainLayout from "@/components/layout/MainLayout";
@@ -43,18 +42,11 @@ function Router() {
     seedData();
   }, []);
 
-  // Check if the URL has empty=true parameter for the empty map view
-  const urlParams = new URLSearchParams(window.location.search);
-  const showEmptyMap = urlParams.get('empty') === 'true';
-  
-  // For landing page, auth page, and empty map, don't use MainLayout (no sidebar/header)
-  if (location === "/" || location === "/auth" || location === "/empty-map" || showEmptyMap) {
+  // For landing page and auth page, don't use MainLayout (no sidebar/header)
+  if (location === "/" || location === "/auth") {
     return (
       <Switch>
-        <Route path="/">
-          {showEmptyMap ? <EmptyMap /> : <LandingPage />}
-        </Route>
-        <Route path="/empty-map" component={EmptyMap} />
+        <Route path="/" component={LandingPage} />
         <Route path="/auth" component={AuthPage} />
       </Switch>
     );
