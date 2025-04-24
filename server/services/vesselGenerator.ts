@@ -9,18 +9,20 @@ import { REGIONS, OIL_PRODUCT_TYPES } from "@shared/constants";
  * @returns Boolean indicating if the coordinates are likely at sea
  */
 export function isCoordinateAtSea(lat: number, lng: number): boolean {
+  // Input validation
+  if (typeof lat !== 'number' || typeof lng !== 'number' || 
+      isNaN(lat) || isNaN(lng) ||
+      lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+    console.warn(`Invalid coordinates: ${lat}, ${lng}`);
+    return false; // Invalid coordinates
+  }
+
   // Major landmasses to exclude
   
   // North America
-  if (lng >= -140 && lng <= -60 && lat >= 15 && lat <= 72) {
-    // Exclude Great Lakes
-    if (
-      (lat >= 41 && lat <= 49 && lng >= -93 && lng <= -76) || // Great Lakes general area
-      (lat >= 41.5 && lat <= 44 && lng >= -87.5 && lng <= -84.5) || // Lake Michigan
-      (lat >= 41 && lat <= 43 && lng >= -83.5 && lng <= -78.5) || // Lake Erie
-      (lat >= 43 && lat <= 47.5 && lng >= -89.5 && lng <= -82) || // Lake Superior
-      (lat >= 42.5 && lat <= 45 && lng >= -80 && lng <= -76) // Lake Ontario
-    ) {
+  if (lng >= -170 && lng <= -50 && lat >= 15 && lat <= 80) {
+    // Hudson Bay
+    if (lat >= 50 && lat <= 64 && lng >= -95 && lng <= -78) {
       return true;
     }
     
@@ -29,11 +31,32 @@ export function isCoordinateAtSea(lat: number, lng: number): boolean {
       return true;
     }
     
+    // Gulf of St. Lawrence
+    if (lat >= 45 && lat <= 50 && lng >= -67 && lng <= -60) {
+      return true;
+    }
+    
+    // Great Lakes - these are NOT sea
+    if (
+      (lat >= 41 && lat <= 49 && lng >= -93 && lng <= -76) || // Great Lakes general area
+      (lat >= 41.5 && lat <= 44 && lng >= -87.5 && lng <= -84.5) || // Lake Michigan
+      (lat >= 41 && lat <= 43 && lng >= -83.5 && lng <= -78.5) || // Lake Erie
+      (lat >= 43 && lat <= 47.5 && lng >= -89.5 && lng <= -82) || // Lake Superior
+      (lat >= 42.5 && lat <= 45 && lng >= -80 && lng <= -76) // Lake Ontario
+    ) {
+      return false;
+    }
+    
+    // Rest of North America
     return false;
   }
   
   // South America
   if (lng >= -85 && lng <= -35 && lat >= -58 && lat <= 12) {
+    // Amazon River (not ocean)
+    if (lat >= -3 && lat <= 2 && lng >= -67 && lng <= -50) {
+      return false;
+    }
     return false;
   }
   
@@ -54,11 +77,26 @@ export function isCoordinateAtSea(lat: number, lng: number): boolean {
       return true;
     }
     
+    // Black Sea
+    if (lng >= 27 && lng <= 42 && lat >= 40 && lat <= 48) {
+      return true;
+    }
+    
     return false;
   }
   
   // Africa
-  if (lng >= -20 && lng <= 50 && lat >= -35 && lat <= 30) {
+  if (lng >= -20 && lng <= 50 && lat >= -35 && lat <= 35) {
+    // Red Sea
+    if (lng >= 32 && lng <= 44 && lat >= 12 && lat <= 30) {
+      return true;
+    }
+    
+    // Lake Victoria (not ocean)
+    if (lat >= -3 && lat <= 1 && lng >= 31 && lng <= 35) {
+      return false;
+    }
+    
     return false;
   }
   
@@ -79,16 +117,34 @@ export function isCoordinateAtSea(lat: number, lng: number): boolean {
       return true;
     }
     
+    // Caspian Sea
+    if (lng >= 46 && lng <= 55 && lat >= 36 && lat <= 47) {
+      return true;
+    }
+    
+    // Bay of Bengal
+    if (lng >= 80 && lng <= 95 && lat >= 5 && lat <= 22) {
+      return true;
+    }
+    
     return false;
   }
   
   // Australia
   if (lng >= 110 && lng <= 155 && lat >= -45 && lat <= -10) {
+    // Great Barrier Reef area
+    if (lng >= 142 && lng <= 155 && lat >= -24 && lat <= -10) {
+      return true;
+    }
     return false;
   }
   
   // Russia & Arctic
   if (lng >= 30 && lng <= 180 && lat >= 60 && lat <= 90) {
+    // Sea of Okhotsk
+    if (lng >= 140 && lng <= 160 && lat >= 50 && lat <= 60) {
+      return true;
+    }
     return false;
   }
   
@@ -98,11 +154,24 @@ export function isCoordinateAtSea(lat: number, lng: number): boolean {
     if (
       (lat >= -5 && lat <= 0 && lng >= 105 && lng <= 110) || // Java Sea
       (lat >= 0 && lat <= 5 && lng >= 110 && lng <= 119) || // Celebes Sea
-      (lat >= 5 && lat <= 15 && lng >= 115 && lng <= 125) // Sulu Sea
+      (lat >= 5 && lat <= 15 && lng >= 115 && lng <= 125) || // Sulu Sea
+      (lat >= -10 && lat <= -5 && lng >= 115 && lng <= 120) || // Flores Sea
+      (lat >= -5 && lat <= 0 && lng >= 120 && lng <= 125) // Banda Sea
     ) {
       return true;
     }
     
+    return false;
+  }
+  
+  // Middle East major inland bodies of water
+  // Dead Sea
+  if (lat >= 31 && lat <= 32 && lng >= 35 && lng <= 36) {
+    return false; // Not a sea for shipping
+  }
+  
+  // Antarctica
+  if (lat <= -60) {
     return false;
   }
   
