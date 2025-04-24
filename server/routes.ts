@@ -8,6 +8,7 @@ import { dataService } from "./services/asiStreamService";
 import { brokerService } from "./services/brokerService";
 import { stripeService } from "./services/stripeService";
 import { updateRefineryCoordinates, seedMissingRefineries } from "./services/refineryUpdate";
+import { seedAllData, regenerateGlobalVessels } from "./services/seedService";
 import { setupAuth } from "./auth";
 import { db } from "./db";
 import { REGIONS } from "@shared/constants";
@@ -519,6 +520,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({
         success: false,
         message: "Error removing vessels on land",
+        error: error.message || "Unknown error"
+      });
+    }
+  });
+  
+  // Endpoint to regenerate vessels with global distribution
+  apiRouter.post("/vessels/regenerate-global", async (req, res) => {
+    try {
+      console.log("Starting global vessel regeneration process...");
+      
+      // Get vessel count from request or use default 5000
+      const count = req.body.count ? parseInt(req.body.count) : 5000;
+      console.log(`Regenerating global vessel distribution with ${count} vessels...`);
+      
+      // Call the regeneration function
+      const result = await regenerateGlobalVessels(count);
+      console.log("Global vessel regeneration complete:", result);
+      
+      // Get updated vessel counts by region for verification
+      const regionStats = await vesselService.getVesselCountsByRegion();
+      const updatedVessels = await vesselService.getAllVessels();
+      
+      // Get oil vessel count 
+      const oilVessels = updatedVessels.filter(vessel => {
+        const cargoType = vessel.cargoType || '';
+        return cargoType.includes('OIL') || 
+               cargoType.includes('CRUDE') || 
+               cargoType.includes('PETROL') || 
+               cargoType.includes('DIESEL') || 
+               cargoType.includes('FUEL') || 
+               cargoType.includes('GAS');
+      });
+      
+      // Calculate total cargo
+      const totalCargo = updatedVessels.reduce((sum, vessel) => {
+        return sum + (Number(vessel.cargoCapacity) || 0);
+      }, 0);
+      
+      res.json({
+        success: true,
+        message: `Global vessel regeneration completed with ${result.count} vessels`,
+        data: {
+          vesselCount: result.count,
+          globalDistribution: result.globalDistribution,
+          regionCounts: regionStats.regionCounts,
+          oilVessels: oilVessels.length,
+          totalCargo: totalCargo
+        }
+      });
+    } catch (error: any) {
+      console.error("Error regenerating vessels globally:", error);
+      res.status(500).json({
+        success: false,
+        message: "Error regenerating vessels globally",
         error: error.message || "Unknown error"
       });
     }
