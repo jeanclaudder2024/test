@@ -177,6 +177,47 @@ export async function seedBrokers(): Promise<{ count: number, seeded: boolean }>
 }
 
 /**
+ * Regenerate all vessels with global distribution
+ * This function will delete all existing vessels and create new ones with improved global distribution
+ */
+export async function regenerateGlobalVessels(count: number = 5000): Promise<{
+  count: number;
+  globalDistribution: boolean;
+}> {
+  console.log("Starting vessel global redistribution...");
+  
+  // Delete all existing vessels
+  console.log("Removing existing vessels...");
+  await db.delete(vessels);
+  
+  // Generate new vessels with global distribution
+  console.log(`Generating ${count} vessels with global distribution...`);
+  const vesselData = generateLargeVesselDataset(count)
+    .filter(vessel => {
+      // Ensure vessels are only in the ocean
+      return isCoordinateAtSea(parseFloat(vessel.currentLat || "0"), parseFloat(vessel.currentLng || "0"));
+    });
+  
+  // Insert vessels in smaller batches to avoid memory issues
+  const batchSize = 500;
+  let insertedCount = 0;
+  
+  for (let i = 0; i < vesselData.length; i += batchSize) {
+    const batch = vesselData.slice(i, i + batchSize);
+    await db.insert(vessels).values(batch);
+    insertedCount += batch.length;
+    console.log(`Inserted batch of ${batch.length} vessels. Total so far: ${insertedCount}`);
+  }
+  
+  console.log(`Successfully redistributed ${insertedCount} vessels globally`);
+  
+  return {
+    count: insertedCount,
+    globalDistribution: true
+  };
+}
+
+/**
  * Run all seed operations
  */
 export async function seedAllData(): Promise<{
