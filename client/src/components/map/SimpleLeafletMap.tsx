@@ -409,6 +409,8 @@ export default function SimpleLeafletMap({
               padding: 8px;
               margin: -8px -8px 8px -8px;
               background-color: rgba(255,255,255,0.9);
+              backdrop-filter: blur(10px);
+              -webkit-backdrop-filter: blur(10px);
               border-top-left-radius: 8px;
               border-top-right-radius: 8px;
               display: flex;
@@ -482,23 +484,167 @@ export default function SimpleLeafletMap({
                 border-top: 1px solid #eee;
                 margin-top: 8px;
                 padding-top: 8px;
-                text-align: center;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 4px;
               ">
                 <span style="
                   background-color: ${getVesselColor()};
                   color: white;
-                  padding: 4px 8px;
+                  padding: 3px 6px;
                   border-radius: 12px;
                   font-size: 10px;
                   display: inline-block;
                 ">
                   ${vessel.currentRegion || 'Unknown Region'}
                 </span>
+                
+                <div style="display: flex; gap: 4px; margin-top: 4px; width: 100%;">
+                  <button 
+                    class="vessel-view-details-btn"
+                    vessel-id="${vessel.id}"
+                    style="
+                      flex: 1;
+                      background-color: ${getVesselColor()};
+                      color: white;
+                      border: none;
+                      padding: 5px 8px;
+                      border-radius: 4px;
+                      font-size: 11px;
+                      font-weight: 500;
+                      cursor: pointer;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      gap: 4px;
+                    "
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    View Details
+                  </button>
+                  
+                  <button 
+                    class="vessel-track-btn"
+                    vessel-id="${vessel.id}"
+                    style="
+                      flex: 1;
+                      background-color: #f8f9fa;
+                      color: #555;
+                      border: 1px solid #ddd;
+                      padding: 5px 8px;
+                      border-radius: 4px;
+                      font-size: 11px;
+                      font-weight: 500;
+                      cursor: pointer;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      gap: 4px;
+                    "
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s-8-4.5-8-11.8a8 8 0 0 1 16 0c0 7.3-8 11.8-8 11.8Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                    Track Vessel
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        `)
-        .on('click', () => onVesselClick(vessel))
+        `, { 
+          minWidth: 220,
+          maxWidth: 280,
+          className: 'vessel-popup-container'
+        })
+        .on('click', () => {})
+        .on('popupopen', function() {
+          // Add event listeners to buttons after popup is open
+          setTimeout(() => {
+            const popup = marker.getPopup();
+            const container = popup.getElement();
+            
+            const viewDetailsBtn = container?.querySelector('.vessel-view-details-btn');
+            if (viewDetailsBtn) {
+              viewDetailsBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (onVesselClick) {
+                  onVesselClick(vessel);
+                }
+                marker.closePopup();
+              });
+            }
+            
+            const trackBtn = container?.querySelector('.vessel-track-btn');
+            if (trackBtn) {
+              trackBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                
+                // Create a notification
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                  position: fixed;
+                  top: 20px;
+                  right: 20px;
+                  background-color: ${getVesselColor()};
+                  color: white;
+                  padding: 12px 16px;
+                  border-radius: 8px;
+                  z-index: 9999;
+                  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                  font-size: 14px;
+                  max-width: 300px;
+                  opacity: 0;
+                  transform: translateY(-20px);
+                  transition: opacity 0.2s, transform 0.3s;
+                  display: flex;
+                  align-items: center;
+                  gap: 10px;
+                `;
+                
+                // Add tracking icon
+                const icon = document.createElement('div');
+                icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s-8-4.5-8-11.8a8 8 0 0 1 16 0c0 7.3-8 11.8-8 11.8Z"></path><circle cx="12" cy="10" r="3"></circle></svg>';
+                notification.appendChild(icon);
+                
+                // Add message
+                const message = document.createElement('div');
+                message.textContent = `Now tracking vessel ${vessel.name}`;
+                notification.appendChild(message);
+                
+                document.body.appendChild(notification);
+                
+                // Show notification with animation
+                setTimeout(() => {
+                  notification.style.opacity = '1';
+                  notification.style.transform = 'translateY(0)';
+                }, 50);
+                
+                // Track this vessel - center map on vessel
+                if (map) {
+                  map.setView([lat, lng], Math.max(map.getZoom(), 6));
+                }
+                
+                // Add subtle highlight effect to the marker
+                const markerEl = marker.getElement();
+                if (markerEl) {
+                  markerEl.classList.add('tracking-active');
+                }
+                
+                // Remove notification after 3 seconds
+                setTimeout(() => {
+                  notification.style.opacity = '0';
+                  notification.style.transform = 'translateY(-20px)';
+                  
+                  setTimeout(() => {
+                    document.body.removeChild(notification);
+                  }, 300);
+                }, 3000);
+                
+                marker.closePopup();
+              });
+            }
+          }, 100);
+        })
         .addTo(map);
       
       vesselMarkersRef.current.push(marker);

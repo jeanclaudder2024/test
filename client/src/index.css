@@ -12,6 +12,21 @@
   justify-content: center;
 }
 
+.vessel-marker-wrapper.tracking-active .vessel-marker-container {
+  z-index: 1000;
+}
+
+.vessel-marker-wrapper.tracking-active .vessel-marker {
+  transform: scale(1.1) !important;
+  box-shadow: 0 0 0 4px rgba(255,255,255,0.4), 0 0 0 8px rgba(255,255,255,0.2) !important;
+  transition: all 0.3s ease !important;
+}
+
+.vessel-marker-wrapper.tracking-active .vessel-marker-pulse {
+  animation: pulse 1.2s ease-out infinite !important;
+  border-width: 4px !important;
+}
+
 .vessel-marker-pulse {
   position: absolute;
   width: 40px;
