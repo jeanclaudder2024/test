@@ -59,6 +59,7 @@ export default function SimpleLeafletMap({
   const mapRef = useRef<any>(null);
   const vesselMarkersRef = useRef<any[]>([]);
   const refineryMarkersRef = useRef<any[]>([]);
+  const tileLayerRef = useRef<any>(null);
   const [mapStyle, setMapStyle] = useState(mapStyles[0].id);
   const [mapLanguage, setMapLanguage] = useState<LanguageOption>('en');
   const [isMapReady, setIsMapReady] = useState(false);
@@ -181,6 +182,30 @@ export default function SimpleLeafletMap({
     });
     refineryMarkersRef.current = [];
   };
+  
+  // Handle map view updates separately (region selection and initialCenter/initialZoom)
+  useEffect(() => {
+    if (!isMapReady || !mapRef.current) return;
+    
+    const map = mapRef.current;
+    
+    // Set view based on priority:
+    // 1. Initial center and zoom passed by parent
+    // 2. Selected region
+    // 3. Default center and zoom
+    if (initialCenter && initialZoom) {
+      // Use the provided initial center and zoom
+      map.setView(initialCenter, initialZoom);
+    } else if (selectedRegion) {
+      const position = regionPositions[selectedRegion];
+      if (position) {
+        map.setView([position.lat, position.lng], position.zoom);
+      }
+    }
+    
+    // Make sure map is sized properly after view changes
+    map.invalidateSize();
+  }, [isMapReady, selectedRegion, initialCenter, initialZoom]);
   
   // Handle marker updates separately
   useEffect(() => {
