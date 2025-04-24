@@ -331,9 +331,9 @@ export function generateLargeVesselDataset(count: number = 1500): InsertVessel[]
       built: 2013,
       deadweight: 84800,
       position: {
-        lat: 53.8647,
-        lng: -0.4431
-      },
+        lat: 35.6,
+        lng: -40.2
+      }, // North Atlantic
       departure: {
         port: "Hammerfest, Norway",
         date: "2023-03-12T14:30:00Z"
@@ -359,9 +359,9 @@ export function generateLargeVesselDataset(count: number = 1500): InsertVessel[]
       built: 2016,
       deadweight: 299999,
       position: {
-        lat: 36.1344,
-        lng: 5.4548
-      },
+        lat: -25.3,
+        lng: 5.1
+      }, // South Atlantic
       departure: {
         port: "Ras Tanura, Saudi Arabia",
         date: "2023-03-15T00:00:00Z"
@@ -387,9 +387,9 @@ export function generateLargeVesselDataset(count: number = 1500): InsertVessel[]
       built: 2018,
       deadweight: 199000,
       position: {
-        lat: 30.0328,
-        lng: 32.5498
-      },
+        lat: 35.8,
+        lng: -140.2
+      }, // North Pacific (US side)
       departure: {
         port: "Singapore",
         date: "2023-03-10T11:00:00Z"
@@ -415,9 +415,9 @@ export function generateLargeVesselDataset(count: number = 1500): InsertVessel[]
       built: 2008,
       deadweight: 37500,
       position: {
-        lat: 51.3542,
-        lng: 3.0201
-      },
+        lat: 15.5, 
+        lng: 55.3
+      }, // Arabian Sea
       departure: {
         port: "Antwerp, Belgium",
         date: "2023-03-19T08:15:00Z"
@@ -443,9 +443,9 @@ export function generateLargeVesselDataset(count: number = 1500): InsertVessel[]
       built: 2010,
       deadweight: 180000,
       position: {
-        lat: -32.9266,
-        lng: 151.7817
-      },
+        lat: -30.8, 
+        lng: -100.2
+      }, // South Pacific
       departure: {
         port: "Newcastle, Australia",
         date: "2023-03-18T09:30:00Z"
@@ -620,14 +620,55 @@ export function generateLargeVesselDataset(count: number = 1500): InsertVessel[]
     
     // If we couldn't find a sea coordinate after max attempts, use predefined safe coordinates
     if (!isCoordinateAtSea(lat, lng)) {
-      // Use predefined ocean coordinates as a fallback
+      // Use expanded list of ocean coordinates as a fallback with better global distribution
       const oceanCoordinates = [
+        // Atlantic Ocean
         { lat: 35.6, lng: -40.2 },  // North Atlantic
+        { lat: 25.3, lng: -50.4 },  // Central Atlantic
         { lat: -25.3, lng: 5.1 },   // South Atlantic
-        { lat: 20.4, lng: 122.5 },  // North Pacific
+        { lat: 40.2, lng: -30.5 },  // Northeast Atlantic
+        { lat: -15.6, lng: -15.7 }, // Southeast Atlantic
+        
+        // Pacific Ocean
+        { lat: 20.4, lng: 122.5 },  // North Pacific (Asia side)
+        { lat: 35.8, lng: -140.2 }, // North Pacific (US side)
         { lat: -30.8, lng: -100.2 }, // South Pacific
-        { lat: 15.5, lng: 55.3 },   // Indian Ocean
-        { lat: 36.2, lng: 20.1 }    // Mediterranean
+        { lat: 5.3, lng: -115.7 },  // Central Pacific
+        { lat: -20.3, lng: 175.4 }, // South Pacific (Australia side)
+        { lat: -36.8, lng: 150.4 }, // Tasman Sea
+        
+        // Indian Ocean
+        { lat: 15.5, lng: 55.3 },   // Arabian Sea
+        { lat: -20.4, lng: 80.5 },  // Central Indian Ocean
+        { lat: -35.2, lng: 90.8 },  // Southern Indian Ocean
+        { lat: -30.5, lng: 45.3 },  // Southwest Indian Ocean
+        
+        // Mediterranean & Other Seas
+        { lat: 36.2, lng: 20.1 },   // Mediterranean
+        { lat: 33.5, lng: 28.3 },   // Eastern Mediterranean
+        { lat: 40.8, lng: 4.2 },    // Western Mediterranean
+        { lat: 55.3, lng: 3.4 },    // North Sea
+        { lat: 57.8, lng: -5.1 },   // Irish Sea
+        
+        // Red Sea & Persian Gulf
+        { lat: 20.5, lng: 38.2 },   // Red Sea
+        { lat: 26.7, lng: 52.3 },   // Persian Gulf
+        
+        // Asian Waters
+        { lat: 22.5, lng: 119.8 },  // South China Sea
+        { lat: 34.2, lng: 129.5 },  // Sea of Japan
+        { lat: 13.4, lng: 110.2 },  // Gulf of Thailand
+        
+        // Americas Coastal Waters
+        { lat: 25.8, lng: -80.2 },  // Gulf of Mexico
+        { lat: 10.5, lng: -65.3 },  // Caribbean Sea
+        { lat: -35.8, lng: -65.2 }, // South American East Coast
+        { lat: -45.5, lng: -75.4 }, // Chilean Coast
+        
+        // Australia Region
+        { lat: -25.3, lng: 135.2 }, // North Australia Waters
+        { lat: -32.5, lng: 115.8 }, // West Australia Coast
+        { lat: -38.3, lng: 145.2 }  // Southeast Australia
       ];
       const safeCoord = oceanCoordinates[Math.floor(Math.random() * oceanCoordinates.length)];
       lat = safeCoord.lat;
