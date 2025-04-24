@@ -7,6 +7,17 @@ const MODEL = "gpt-4o";
 // Initialize OpenAI client
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+// Helper function to safely parse JSON from OpenAI response
+function safeJsonParse(response: any) {
+  try {
+    const content = response.choices[0]?.message?.content || "{}";
+    return JSON.parse(content);
+  } catch (error) {
+    console.error("Error parsing OpenAI response:", error);
+    return {};
+  }
+}
+
 /**
  * Get AI insights about a vessel's route, cargo, and estimated times
  * @param vessel The vessel to analyze
