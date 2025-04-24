@@ -136,15 +136,7 @@ export default function Dashboard() {
     }
   }, [vessels, selectedVessel]);
   
-  // Keep tracked vessel updated with real-time data
-  useEffect(() => {
-    if (trackedVessel && vessels.length > 0) {
-      const updatedTrackedVessel = vessels.find(v => v.id === trackedVessel.id);
-      if (updatedTrackedVessel) {
-        setTrackedVessel(updatedTrackedVessel);
-      }
-    }
-  }, [vessels, trackedVessel]);
+  // Tracking functionality removed
 
   // Use the REGIONS constant for region selection
 
@@ -404,7 +396,6 @@ export default function Dashboard() {
             vessels={filteredVessels}
             refineries={filteredRefineries}
             selectedRegion={selectedRegion}
-            trackedVessel={trackedVessel}
             onVesselClick={handleVesselSelect}
             onRefineryClick={handleRefinerySelect}
             isLoading={loading}

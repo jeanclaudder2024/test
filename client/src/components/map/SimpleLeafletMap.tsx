@@ -33,7 +33,6 @@ interface SimpleLeafletMapProps {
   vessels: Vessel[];
   refineries: Refinery[];
   selectedRegion: Region | null;
-  trackedVessel?: Vessel | null;
   onVesselClick: (vessel: Vessel) => void;
   onRefineryClick?: (refinery: Refinery) => void;
   isLoading?: boolean;
@@ -48,7 +47,6 @@ export default function SimpleLeafletMap({
   vessels,
   refineries,
   selectedRegion,
-  trackedVessel,
   onVesselClick,
   onRefineryClick,
   isLoading = false,
