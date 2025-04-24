@@ -1,5 +1,6 @@
 import express, { type Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
+import WebSocket, { WebSocketServer } from 'ws';
 import { storage } from "./storage";
 import { vesselService } from "./services/vesselService";
 import { refineryService } from "./services/refineryService";
@@ -1313,5 +1314,173 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api", apiRouter);
 
   const httpServer = createServer(app);
+  
+  // Setup WebSocket server for real-time data
+  const wss = new WebSocketServer({ 
+    server: httpServer,
+    path: '/ws'
+  });
+  
+  // Set up WebSocket connections
+  console.log("Setting up WebSocket server for real-time vessel data");
+  
+  // Store connected clients
+  const clients = new Set<WebSocket>();
+  
+  // Handle new WebSocket connections
+  wss.on('connection', (ws) => {
+    console.log('WebSocket client connected');
+    clients.add(ws);
+    
+    // Send initial data when client connects
+    const sendInitialData = async () => {
+      try {
+        // Get vessel and refinery data
+        const vessels = await storage.getVessels();
+        const refineries = await storage.getRefineries();
+        
+        // Filter for cargo vessels only that are at sea
+        const filteredVessels = vessels.filter(vessel => {
+          // Check if vessel has valid coordinates
+          if (!vessel.currentLat || !vessel.currentLng) return false;
+          
+          const lat = typeof vessel.currentLat === 'number' 
+            ? vessel.currentLat 
+            : parseFloat(String(vessel.currentLat));
+            
+          const lng = typeof vessel.currentLng === 'number'
+            ? vessel.currentLng
+            : parseFloat(String(vessel.currentLng));
+            
+          if (isNaN(lat) || isNaN(lng)) return false;
+          
+          // Filter for cargo vessels only
+          const isCargoVessel = vessel.vesselType?.toLowerCase().includes('cargo') || false;
+          
+          // Check if vessel is at sea (simple check)
+          if (isCargoVessel) {
+            // Very simple check - avoid major land masses
+            if (lat >= 25 && lat <= 73 && lng >= -140 && lng <= -60) return false; // North America
+            if (lat >= -55 && lat <= 13 && lng >= -81 && lng <= -35) return false; // South America
+            if (lat >= 35 && lat <= 72 && lng >= -10 && lng <= 40) return false; // Europe
+            if (lat >= -35 && lat <= 37 && lng >= -18 && lng <= 52) return false; // Africa
+            if (lat >= 12 && lat <= 42 && lng >= 35 && lng <= 65) return false; // Middle East
+            if (lat >= 20 && lat <= 48 && lng >= 105 && lng <= 145) return false; // East Asia
+            if (lat >= -45 && lat <= -10 && lng >= 110 && lng <= 155) return false; // Australia
+            if (lat <= -60) return false; // Antarctica
+            
+            return true; // Most coordinates away from major landmasses are sea
+          }
+          
+          return false;
+        }).slice(0, 500); // Limit to 500 vessels for performance
+        
+        // Send the initial data to the client
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({
+            type: 'initial',
+            vessels: filteredVessels,
+            refineries: refineries
+          }));
+        }
+      } catch (error) {
+        console.error("Error sending initial data:", error);
+      }
+    };
+    
+    // Send initial data
+    sendInitialData();
+    
+    // Handle client messages (like filter requests)
+    ws.on('message', async (message) => {
+      try {
+        const data = JSON.parse(message.toString());
+        
+        // Handle different message types
+        if (data.type === 'filter') {
+          const { region, vesselType } = data;
+          
+          // Apply filters and return filtered data
+          let vessels = await storage.getVessels();
+          
+          // Apply region filter
+          if (region && region !== 'all') {
+            vessels = vessels.filter(v => v.currentRegion === region);
+          }
+          
+          // Apply vessel type filter
+          if (vesselType && vesselType !== 'all') {
+            vessels = vessels.filter(v => 
+              v.vesselType?.toLowerCase().includes(vesselType.toLowerCase())
+            );
+          }
+          
+          // Send filtered data back to this specific client
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({
+              type: 'filtered',
+              vessels: vessels.slice(0, 500) // Limit for performance
+            }));
+          }
+        }
+      } catch (error) {
+        console.error("Error processing WebSocket message:", error);
+      }
+    });
+    
+    // Handle client disconnection
+    ws.on('close', () => {
+      console.log('WebSocket client disconnected');
+      clients.delete(ws);
+    });
+  });
+  
+  // Periodically broadcast vessel position updates to all connected clients
+  setInterval(async () => {
+    if (clients.size === 0) return; // Skip if no clients are connected
+    
+    try {
+      // Get updated vessel data
+      const vessels = await storage.getVessels();
+      
+      // Filter for cargo vessels only that are at sea (simplified check)
+      const filteredVessels = vessels
+        .filter(vessel => {
+          if (!vessel.currentLat || !vessel.currentLng) return false;
+          
+          const lat = typeof vessel.currentLat === 'number' 
+            ? vessel.currentLat 
+            : parseFloat(String(vessel.currentLat));
+            
+          const lng = typeof vessel.currentLng === 'number'
+            ? vessel.currentLng
+            : parseFloat(String(vessel.currentLng));
+            
+          if (isNaN(lat) || isNaN(lng)) return false;
+          
+          // Filter for cargo vessels only
+          return vessel.vesselType?.toLowerCase().includes('cargo') || false;
+        })
+        .slice(0, 500); // Limit to 500 vessels for performance
+      
+      // Prepare data update
+      const update = {
+        type: 'update',
+        vessels: filteredVessels,
+        timestamp: new Date().toISOString()
+      };
+      
+      // Broadcast to all connected clients
+      const message = JSON.stringify(update);
+      for (const client of clients) {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(message);
+        }
+      }
+    } catch (error) {
+      console.error("Error broadcasting vessel updates:", error);
+    }
+  }, 10000); // Send updates every 10 seconds
+  
   return httpServer;
 }
