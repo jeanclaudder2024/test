@@ -233,13 +233,12 @@ export default function RefineryDetail() {
                     {refinery.capacity && (
                       <Progress
                         value={(refinery.capacity / 1000000) * 100} // Assuming max around 1M barrels
-                        className="h-2"
-                        indicatorClassName={
-                          refinery.status?.toLowerCase().includes('active') ? 'bg-green-500' :
-                          refinery.status?.toLowerCase().includes('maintenance') ? 'bg-orange-500' :
-                          refinery.status?.toLowerCase().includes('planned') ? 'bg-blue-500' :
-                          'bg-primary'
-                        }
+                        className={`h-2 ${
+                          refinery.status?.toLowerCase().includes('active') ? '[--progress-foreground:theme(colors.green.500)]' :
+                          refinery.status?.toLowerCase().includes('maintenance') ? '[--progress-foreground:theme(colors.orange.500)]' :
+                          refinery.status?.toLowerCase().includes('planned') ? '[--progress-foreground:theme(colors.blue.500)]' :
+                          ''
+                        }`}
                       />
                     )}
                     <p className="text-xs text-muted-foreground mt-1">
@@ -729,12 +728,13 @@ export default function RefineryDetail() {
                                   </div>
                                   <Progress
                                     value={vessel.cargoCapacity > 500000 ? 100 : (vessel.cargoCapacity / 5000)}
-                                    className="h-1.5"
-                                    indicatorClassName={vessel.cargoType?.toLowerCase().includes('crude') ? 'bg-amber-500' :
-                                      vessel.cargoType?.toLowerCase().includes('gas') ? 'bg-emerald-500' :
-                                      vessel.cargoType?.toLowerCase().includes('diesel') ? 'bg-indigo-500' :
-                                      vessel.cargoType?.toLowerCase().includes('fuel') ? 'bg-orange-500' :
-                                      'bg-blue-500'}
+                                    className={`h-1.5 ${
+                                      vessel.cargoType?.toLowerCase().includes('crude') ? '[--progress-foreground:theme(colors.amber.500)]' :
+                                      vessel.cargoType?.toLowerCase().includes('gas') ? '[--progress-foreground:theme(colors.emerald.500)]' :
+                                      vessel.cargoType?.toLowerCase().includes('diesel') ? '[--progress-foreground:theme(colors.indigo.500)]' :
+                                      vessel.cargoType?.toLowerCase().includes('fuel') ? '[--progress-foreground:theme(colors.orange.500)]' :
+                                      '[--progress-foreground:theme(colors.blue.500)]'
+                                    }`}
                                   />
                                 </div>
                               )}
@@ -777,7 +777,7 @@ export default function RefineryDetail() {
                     </p>
                     <Button variant="outline" size="sm" className="mt-6 border-primary/20">
                       <div className="flex items-center">
-                        <Globe2 className="h-4 w-4 mr-2" />
+                        <Globe className="h-4 w-4 mr-2" />
                         View on Global Map
                       </div>
                     </Button>
