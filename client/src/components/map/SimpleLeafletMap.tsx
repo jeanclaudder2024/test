@@ -682,13 +682,11 @@ export default function SimpleLeafletMap({
               </div>
               ` : ''}
               
-              ${refinery.owner ? `
               <div style="display: flex; align-items: center; margin-bottom: 4px;">
                 <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">👤</span>
-                <span style="font-weight: 500; margin-right: 4px; color: #555;">Owner:</span>
-                <span style="flex: 1;">${refinery.owner}</span>
+                <span style="font-weight: 500; margin-right: 4px; color: #555;">Country:</span>
+                <span style="flex: 1;">${refinery.country}</span>
               </div>
-              ` : ''}
               
               <div style="
                 border-top: 1px solid #eee;
@@ -734,33 +732,15 @@ export default function SimpleLeafletMap({
       refineryMarkersRef.current.push(marker);
     });
     
-    // Set view based on priority:
-    // 1. initialCenter/initialZoom (if provided)
-    // 2. Selected region
-    // 3. Default view (already set when map was created)
-    if (initialCenter && initialZoom) {
-      // Use the provided initial center and zoom
-      map.setView(initialCenter, initialZoom);
-    } else if (selectedRegion) {
-      const position = regionPositions[selectedRegion];
-      if (position) {
-        map.setView([position.lat, position.lng], position.zoom);
-      }
-    }
-    
-    // Make sure map is sized properly
-    map.invalidateSize();
+    // Map sizing is handled in the view update effect
     
   }, [
     isMapReady,
     vessels,
     refineries,
-    selectedRegion,
     onVesselClick,
     onRefineryClick,
-    isLoading,
-    initialCenter,
-    initialZoom
+    isLoading
   ]);
   
   // Handlers for UI controls
