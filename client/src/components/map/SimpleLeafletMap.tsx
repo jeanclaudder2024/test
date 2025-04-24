@@ -104,10 +104,10 @@ export default function SimpleLeafletMap({
     };
   }, []);
   
-  // Initialize and update the map when dependencies change
+  // Initialize map only once
   useEffect(() => {
-    // Don't proceed until Leaflet is loaded and we're not in loading state
-    if (!isMapReady || isLoading) return;
+    // Don't proceed until Leaflet is loaded
+    if (!isMapReady) return;
     
     const L = window.L;
     if (!L) return;
@@ -115,31 +115,10 @@ export default function SimpleLeafletMap({
     const mapContainer = document.getElementById(MAP_CONTAINER_ID);
     if (!mapContainer) return;
     
-    // Function to clear all existing markers
-    const clearMarkers = () => {
-      // Clear vessel markers
-      vesselMarkersRef.current.forEach(marker => {
-        if (marker && typeof marker.remove === 'function') {
-          marker.remove();
-        }
-      });
-      vesselMarkersRef.current = [];
-      
-      // Clear refinery markers
-      refineryMarkersRef.current.forEach(marker => {
-        if (marker && typeof marker.remove === 'function') {
-          marker.remove();
-        }
-      });
-      refineryMarkersRef.current = [];
-    };
-    
-    // If map exists, just update it; otherwise create a new one
-    let map = mapRef.current;
-    
-    if (!map) {
+    // Only create the map if it doesn't exist yet
+    if (!mapRef.current) {
       // Create new map
-      map = L.map(mapContainer, {
+      const map = L.map(mapContainer, {
         center: [0, 0],
         zoom: 2,
         minZoom: 2,
@@ -148,26 +127,73 @@ export default function SimpleLeafletMap({
       });
       
       mapRef.current = map;
-    } else {
-      // Clear existing markers before updating
-      clearMarkers();
       
-      // Remove existing layer
-      map.eachLayer((layer: any) => {
-        if (layer && layer._url) { // Check if it's a tile layer
-          map.removeLayer(layer);
-        }
-      });
+      // Initial tile layer will be added in the next effect
     }
+  }, [isMapReady]);
+  
+  // Handle map style and language changes separately
+  useEffect(() => {
+    if (!isMapReady || !mapRef.current) return;
     
-    // Add tile layer based on selected style
+    const L = window.L;
+    if (!L) return;
+    
+    const map = mapRef.current;
+    
+    // Remove existing tile layers
+    map.eachLayer((layer: any) => {
+      if (layer && layer._url) { // Check if it's a tile layer
+        map.removeLayer(layer);
+      }
+    });
+    
+    // Add new tile layer based on current style and language
     const selectedMapStyle = mapStyles.find(style => style.id === mapStyle) || mapStyles[0];
     
-    L.tileLayer(selectedMapStyle.url, {
+    // Keep track of the current tile layer
+    const tileLayer = L.tileLayer(selectedMapStyle.url, {
       attribution: selectedMapStyle.attribution,
       maxZoom: 19,
       language: mapLanguage === 'multilingual' ? undefined : mapLanguage
     }).addTo(map);
+    
+    // Store reference to current tile layer
+    tileLayerRef.current = tileLayer;
+    
+  }, [isMapReady, mapStyle, mapLanguage]);
+  
+  // Function to clear all existing markers
+  const clearMarkers = () => {
+    // Clear vessel markers
+    vesselMarkersRef.current.forEach(marker => {
+      if (marker && typeof marker.remove === 'function') {
+        marker.remove();
+      }
+    });
+    vesselMarkersRef.current = [];
+    
+    // Clear refinery markers
+    refineryMarkersRef.current.forEach(marker => {
+      if (marker && typeof marker.remove === 'function') {
+        marker.remove();
+      }
+    });
+    refineryMarkersRef.current = [];
+  };
+  
+  // Handle marker updates separately
+  useEffect(() => {
+    // Don't proceed if map isn't ready or we're loading
+    if (!isMapReady || isLoading || !mapRef.current) return;
+    
+    const L = window.L;
+    if (!L) return;
+    
+    const map = mapRef.current;
+    
+    // Clear existing markers before updating
+    clearMarkers();
     
     // Function to check if a coordinate is likely at sea (not on land)
     // This uses a more detailed approach to identify major shipping lanes and seas
@@ -702,8 +728,6 @@ export default function SimpleLeafletMap({
     
   }, [
     isMapReady,
-    mapStyle,
-    mapLanguage,
     vessels,
     refineries,
     selectedRegion,
