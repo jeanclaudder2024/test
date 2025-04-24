@@ -475,7 +475,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Generate new vessels specifically at sea
       const newVesselData = generateLargeVesselDataset(deletedCount + 10) // Generate a few extra to account for filtering
-        .filter(vessel => isCoordinateAtSea(vessel.latitude, vessel.longitude))
+        .filter(vessel => isCoordinateAtSea(
+          parseFloat(vessel.currentLat || "0"), 
+          parseFloat(vessel.currentLng || "0")
+        ))
         .slice(0, deletedCount); // Ensure we only get exactly the number we need
       
       // Insert the new vessels

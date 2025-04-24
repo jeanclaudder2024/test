@@ -318,9 +318,9 @@ interface VesselTemplate {
  * @returns Array of vessel data ready to be inserted
  */
 export function generateLargeVesselDataset(count: number = 1500): InsertVessel[] {
-  // Template vessels that serve as base models
+  // Template vessels that serve as base models with global distribution
   const templateVessels: VesselTemplate[] = [
-    // LNG Carriers
+    // North Atlantic (Western Europe / North America)
     {
       id: "V00234",
       name: "Arctic Aurora",
@@ -333,7 +333,7 @@ export function generateLargeVesselDataset(count: number = 1500): InsertVessel[]
       position: {
         lat: 35.6,
         lng: -40.2
-      }, // North Atlantic
+      },
       departure: {
         port: "Hammerfest, Norway",
         date: "2023-03-12T14:30:00Z"
@@ -347,6 +347,62 @@ export function generateLargeVesselDataset(count: number = 1500): InsertVessel[]
         capacity: 155000
       },
       region: "western-europe"
+    },
+    // Mediterranean Sea
+    {
+      id: "V00891",
+      name: "Mediterranean Pioneer",
+      imo: "9721784",
+      mmsi: "538992147",
+      vessel_type: "Products Tanker",
+      flag: "Greece",
+      built: 2017,
+      deadweight: 74999,
+      position: {
+        lat: 36.2,
+        lng: 12.7
+      },
+      departure: {
+        port: "Alexandria, Egypt",
+        date: "2023-02-28T10:15:00Z"
+      },
+      destination: {
+        port: "Barcelona, Spain",
+        eta: "2023-03-06T16:00:00Z"
+      },
+      cargo: {
+        type: "GASOLINE",
+        capacity: 75000
+      },
+      region: "mediterranean"
+    },
+    // Indian Ocean
+    {
+      id: "V01287",
+      name: "Indian Ocean Navigator",
+      imo: "9832456",
+      mmsi: "574899321",
+      vessel_type: "VLCC",
+      flag: "Singapore",
+      built: 2019,
+      deadweight: 320000,
+      position: {
+        lat: -5.8,
+        lng: 75.3
+      },
+      departure: {
+        port: "Jebel Ali, UAE",
+        date: "2023-03-02T08:45:00Z"
+      },
+      destination: {
+        port: "Mumbai, India",
+        eta: "2023-03-08T14:30:00Z"
+      },
+      cargo: {
+        type: "ARABIAN HEAVY CRUDE",
+        capacity: 300000
+      },
+      region: "asia-pacific"
     },
     // Crude Oil Tanker
     {
@@ -549,14 +605,61 @@ export function generateLargeVesselDataset(count: number = 1500): InsertVessel[]
     
     // If the position is on land, reposition to a nearby sea location
     if (!isCoordinateAtSea(lat, lng)) {
-      // Use predefined ocean coordinates as a fallback
+      // Use predefined ocean coordinates covering all major oceans and regions
       const oceanCoordinates = [
-        { lat: 35.6, lng: -40.2 },  // North Atlantic
-        { lat: -25.3, lng: 5.1 },   // South Atlantic
-        { lat: 20.4, lng: 122.5 },  // North Pacific
-        { lat: -30.8, lng: -100.2 }, // South Pacific
-        { lat: 15.5, lng: 55.3 },   // Indian Ocean
-        { lat: 36.2, lng: 20.1 }    // Mediterranean
+        // North Atlantic
+        { lat: 35.6, lng: -40.2 },   // Central North Atlantic
+        { lat: 40.2, lng: -30.5 },   // East of Newfoundland
+        { lat: 25.7, lng: -50.9 },   // Bermuda/Sargasso Sea area
+        { lat: 50.3, lng: -35.8 },   // Labrador Sea
+        
+        // South Atlantic
+        { lat: -25.3, lng: 5.1 },    // Central South Atlantic  
+        { lat: -35.7, lng: -20.4 },  // South Atlantic west
+        { lat: -40.2, lng: 10.5 },   // Cape region
+        { lat: -15.9, lng: -10.2 },  // Mid-South Atlantic
+        
+        // North Pacific
+        { lat: 20.4, lng: 122.5 },   // South China Sea
+        { lat: 35.8, lng: -140.2 },  // East of Japan
+        { lat: 45.2, lng: -150.7 },  // North Pacific
+        { lat: 30.1, lng: -130.4 },  // Eastern Pacific
+        
+        // South Pacific
+        { lat: -30.8, lng: -100.2 }, // Southeast Pacific
+        { lat: -15.3, lng: -145.5 }, // Tahiti region
+        { lat: -25.7, lng: 170.9 },  // East of Australia
+        { lat: -40.5, lng: -120.3 }, // Deep South Pacific
+        
+        // Indian Ocean
+        { lat: 15.5, lng: 55.3 },    // Arabian Sea
+        { lat: -5.8, lng: 75.3 },    // Central Indian Ocean
+        { lat: -30.2, lng: 80.9 },   // Southern Indian Ocean
+        { lat: 5.7, lng: 90.1 },     // Bay of Bengal
+        
+        // Mediterranean
+        { lat: 36.2, lng: 20.1 },    // Central Mediterranean
+        { lat: 38.5, lng: 5.4 },     // Western Mediterranean
+        { lat: 34.9, lng: 28.7 },    // Eastern Mediterranean
+        
+        // Baltic & North Sea
+        { lat: 57.4, lng: 19.6 },    // Baltic Sea
+        { lat: 55.7, lng: 2.3 },     // North Sea
+        
+        // Caribbean and Gulf of Mexico
+        { lat: 20.1, lng: -75.8 },   // Caribbean Sea
+        { lat: 25.8, lng: -90.4 },   // Gulf of Mexico
+        
+        // Red Sea and Gulf of Aden
+        { lat: 16.5, lng: 41.2 },    // Red Sea
+        { lat: 12.7, lng: 48.9 },    // Gulf of Aden
+        
+        // South China Sea & East Asian Waters
+        { lat: 10.3, lng: 114.5 },   // South China Sea
+        { lat: 30.8, lng: 127.9 },   // East China Sea
+        
+        // Black Sea
+        { lat: 43.4, lng: 34.2 }     // Black Sea
       ];
       const safeCoord = oceanCoordinates[Math.floor(Math.random() * oceanCoordinates.length)];
       lat = safeCoord.lat;
