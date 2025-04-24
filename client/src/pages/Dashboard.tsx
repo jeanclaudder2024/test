@@ -91,7 +91,7 @@ export default function Dashboard() {
   // Handle vessel selection
   const handleVesselSelect = (vessel: Vessel) => {
     setSelectedVessel(vessel);
-    setTrackedVessel(vessel); // Start tracking the vessel on the map
+    // Don't automatically track vessel - user must click Track button
     setSelectedRefinery(null); // Clear refinery selection when selecting vessel
   };
   
@@ -424,7 +424,10 @@ export default function Dashboard() {
             {/* Vessel or Refinery Details Card */}
             <div className="lg:col-span-2">
               {selectedVessel ? (
-                <VesselInfo vessel={selectedVessel} />
+                <VesselInfo 
+                  vessel={selectedVessel} 
+                  onTrack={(vessel) => setTrackedVessel(vessel)}
+                />
               ) : selectedRefinery && (
                 <Card>
                   <CardHeader className="pb-2">

@@ -1,13 +1,15 @@
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Vessel } from "@/types";
-import { Package, MapPin, Box } from "lucide-react";
+import { Package, MapPin, Box, Navigation } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 
 interface VesselInfoProps {
   vessel: Vessel;
+  onTrack?: (vessel: Vessel) => void;
 }
 
-export default function VesselInfo({ vessel }: VesselInfoProps) {
+export default function VesselInfo({ vessel, onTrack }: VesselInfoProps) {
   return (
     <Card className="overflow-hidden">
       <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
@@ -99,6 +101,18 @@ export default function VesselInfo({ vessel }: VesselInfoProps) {
           </div>
         </div>
       </CardContent>
+      {onTrack && (
+        <CardFooter className="p-4 border-t border-gray-200 bg-gray-50">
+          <Button 
+            className="flex items-center gap-2" 
+            onClick={() => onTrack(vessel)}
+            variant="outline"
+          >
+            <Navigation className="h-4 w-4" />
+            Track on Map
+          </Button>
+        </CardFooter>
+      )}
     </Card>
   );
 }
