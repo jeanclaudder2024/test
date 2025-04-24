@@ -40,6 +40,7 @@ export default function Dashboard() {
   const [selectedRegion, setSelectedRegion] = useState<Region | null>(null);
   const [selectedVessel, setSelectedVessel] = useState<Vessel | null>(null);
   const [selectedRefinery, setSelectedRefinery] = useState<Refinery | null>(null);
+  const [associatedVessels, setAssociatedVessels] = useState<Vessel[]>([]);
   
   // Filters - Default to showing all vessel types (empty array means no filtering)
   const [vesselTypeFilters, setVesselTypeFilters] = useState<string[]>([]);
@@ -107,6 +108,26 @@ export default function Dashboard() {
   const handleRefinerySelect = (refinery: Refinery) => {
     setSelectedRefinery(refinery);
     setSelectedVessel(null); // Clear vessel selection when selecting refinery
+    
+    // Fetch vessels associated with this refinery
+    const fetchAssociatedVessels = async () => {
+      try {
+        const response = await fetch(`/api/refineries/${refinery.id}/vessels`);
+        if (response.ok) {
+          const data = await response.json();
+          setAssociatedVessels(data);
+          console.log(`Fetched ${data.length} vessels associated with refinery ${refinery.name}`);
+        } else {
+          console.error('Failed to fetch associated vessels:', await response.text());
+          setAssociatedVessels([]);
+        }
+      } catch (error) {
+        console.error('Error fetching associated vessels:', error);
+        setAssociatedVessels([]);
+      }
+    };
+    
+    fetchAssociatedVessels();
   };
 
   // Toggle vessel type filter
@@ -448,12 +469,16 @@ export default function Dashboard() {
           
           {/* Map Container */}
           <SimpleLeafletMap 
-            vessels={filteredVessels}
-            refineries={filteredRefineries}
+            vessels={selectedRefinery ? associatedVessels : filteredVessels}
+            refineries={selectedRefinery ? [selectedRefinery] : filteredRefineries}
             selectedRegion={selectedRegion}
             onVesselClick={handleVesselSelect}
             onRefineryClick={handleRefinerySelect}
             isLoading={loading}
+            initialCenter={selectedRefinery && selectedRefinery.lat && selectedRefinery.lng 
+              ? [Number(selectedRefinery.lat), Number(selectedRefinery.lng)]
+              : undefined}
+            initialZoom={selectedRefinery ? 6 : undefined}
           />
         </div>
       </section>
@@ -521,18 +546,12 @@ export default function Dashboard() {
                     <div className="flex justify-between items-center">
                       <h4 className="text-sm font-medium">Connected Vessels</h4>
                       <Badge variant="outline" className="text-xs">
-                        {filteredVessels.filter(v => 
-                          v.destinationPort?.includes(selectedRefinery.country) || 
-                          v.departurePort?.includes(selectedRefinery.country)
-                        ).length || 0}
+                        {associatedVessels.length || 0}
                       </Badge>
                     </div>
                     
                     <div className="mt-2">
-                      {filteredVessels.filter(v => 
-                        v.destinationPort?.includes(selectedRefinery.country) || 
-                        v.departurePort?.includes(selectedRefinery.country)
-                      ).slice(0, 3).map(v => (
+                      {associatedVessels.slice(0, 3).map(v => (
                         <div key={v.id} className="flex items-center justify-between py-1 border-b border-gray-100 last:border-0">
                           <div className="flex items-center">
                             <Ship className="h-3 w-3 mr-2 text-blue-500" />
@@ -542,10 +561,7 @@ export default function Dashboard() {
                         </div>
                       ))}
                       
-                      {filteredVessels.filter(v => 
-                        v.destinationPort?.includes(selectedRefinery.country) || 
-                        v.departurePort?.includes(selectedRefinery.country)
-                      ).length === 0 && (
+                      {associatedVessels.length === 0 && (
                         <div className="text-sm text-gray-500 py-1">
                           No vessels currently connected to this refinery
                         </div>
