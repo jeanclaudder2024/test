@@ -597,7 +597,7 @@ export default function SimpleLeafletMap({
             
             const viewDetailsBtn = container?.querySelector('.vessel-view-details-btn');
             if (viewDetailsBtn) {
-              viewDetailsBtn.addEventListener('click', (e) => {
+              viewDetailsBtn.addEventListener('click', (e: MouseEvent) => {
                 e.stopPropagation();
                 if (onVesselClick) {
                   onVesselClick(vessel);
@@ -608,7 +608,7 @@ export default function SimpleLeafletMap({
             
             const trackBtn = container?.querySelector('.vessel-track-btn');
             if (trackBtn) {
-              trackBtn.addEventListener('click', (e) => {
+              trackBtn.addEventListener('click', (e: MouseEvent) => {
                 e.stopPropagation();
                 
                 // Create a notification

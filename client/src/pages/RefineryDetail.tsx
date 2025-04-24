@@ -270,7 +270,11 @@ export default function RefineryDetail() {
                         </div>
                         <div className="flex items-center text-sm">
                           <MapPin className="h-4 w-4 mr-2 text-primary/60" />
-                          <span>{refinery.lat.toFixed(4)}, {refinery.lng.toFixed(4)}</span>
+                          <span>
+                            {refinery.lat !== null && refinery.lng !== null 
+                              ? `${Number(refinery.lat).toFixed(4)}, ${Number(refinery.lng).toFixed(4)}`
+                              : 'Coordinates unavailable'}
+                          </span>
                         </div>
                       </div>
                     </div>
