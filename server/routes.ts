@@ -1303,7 +1303,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Mount API router
+  // Mount specialized routers
+  app.use('/api/broker', brokerRouter);
+  app.use('/api/trading', tradingRouter);
+  app.use('/api/vessels/distribution', vesselDistributionRouter);
+  app.use('/api/tester', apiTesterRouter);
+  
+  // Mount API router for general endpoints
   app.use("/api", apiRouter);
 
   const httpServer = createServer(app);
