@@ -10,7 +10,7 @@ import { useVesselProgressEvents } from "@/hooks/useVessels";
 import { Button } from "@/components/ui/button";
 import { useDataStream } from "@/hooks/useDataStream";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { REGIONS, OIL_PRODUCT_TYPES } from "@/../../shared/constants";
+import { REGIONS, OIL_PRODUCT_TYPES, VESSEL_TYPES } from "@/../../shared/constants";
 import { 
   Ship, Droplet, RadioTower, Factory, 
   Workflow, Filter, X, MapPin, Navigation 
@@ -51,6 +51,9 @@ export default function Dashboard() {
 
   // Create list of unique refinery statuses for filtering
   const refineryStatuses = Array.from(new Set(refineries.map(r => r.status || 'Unknown')));
+  
+  // Get unique vessel types for filtering
+  const uniqueVesselTypes = Array.from(new Set(vessels.map(v => v.vesselType || 'Unknown')));
   
   // Apply all filters
   const filteredVessels = vessels.filter(vessel => {
