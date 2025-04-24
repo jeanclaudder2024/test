@@ -59,6 +59,7 @@ export default function SimpleLeafletMap({
   const mapRef = useRef<any>(null);
   const vesselMarkersRef = useRef<any[]>([]);
   const refineryMarkersRef = useRef<any[]>([]);
+  const routeLinesRef = useRef<any[]>([]);
   const tileLayerRef = useRef<any>(null);
   const [mapStyle, setMapStyle] = useState(mapStyles[0].id);
   const [mapLanguage, setMapLanguage] = useState<LanguageOption>('en');
@@ -133,6 +134,17 @@ export default function SimpleLeafletMap({
         }
       });
       refineryMarkersRef.current = [];
+      
+      // Clear route lines and associated markers
+      routeLinesRef.current.forEach(item => {
+        if (item.line && typeof item.line.remove === 'function') {
+          item.line.remove();
+        }
+        if (item.marker && typeof item.marker.remove === 'function') {
+          item.marker.remove();
+        }
+      });
+      routeLinesRef.current = [];
     };
     
     // If map exists, just update it; otherwise create a new one
@@ -622,6 +634,147 @@ export default function SimpleLeafletMap({
                 // Track this vessel - center map on vessel
                 if (map) {
                   map.setView([lat, lng], Math.max(map.getZoom(), 6));
+                  
+                  // Always draw a route path when tracking a vessel
+                  if (vessel.destinationPort) {
+                    // Create a destination point based on vessel's course
+                    // We'll draw a simulated path in the general direction the vessel might be heading
+                    
+                    // Determine a reasonable distance (around 500-1000km) in the general direction
+                    // Use cardinal direction based on region or random if not available
+                    
+                    // This creates a point roughly 500-800km away in a direction that makes sense
+                    // for the vessel's current location
+                    const getDestinationPoint = () => {
+                      // Define angle based on region
+                      let angle = 0; // Default east
+                      
+                      // Try to make the angle somewhat logical based on region
+                      const region = vessel.currentRegion?.toLowerCase() || '';
+                      
+                      if (region.includes('north america')) {
+                        if (lng < -100) angle = 270; // West coast - head west
+                        else if (lng > -75) angle = 90; // East coast - head east
+                        else angle = 180; // Center - head south
+                      } 
+                      else if (region.includes('europe')) {
+                        if (lng < 0) angle = 270; // Western Europe - head west
+                        else angle = 90; // Eastern Europe - head east
+                      }
+                      else if (region.includes('asia')) {
+                        if (lat > 30) angle = 90; // Northern Asia - head east
+                        else angle = 180; // Southern Asia - head south
+                      }
+                      else if (region.includes('middle east')) {
+                        angle = 135; // Head southeast
+                      }
+                      else if (region.includes('africa')) {
+                        if (lat > 0) angle = 0; // Northern Africa - head north
+                        else angle = 180; // Southern Africa - head south
+                      }
+                      else if (region.includes('australia')) {
+                        angle = 0; // Head north
+                      }
+                      else if (region.includes('south america')) {
+                        angle = 0; // Head north
+                      }
+                      else {
+                        // Random angle if no region info
+                        angle = Math.floor(Math.random() * 360);
+                      }
+                      
+                      // Convert angle to radians
+                      const angleRad = angle * Math.PI / 180;
+                      
+                      // Distance in degrees (roughly 5-8 degrees = 500-800km)
+                      const distance = 5 + Math.random() * 3;
+                      
+                      // Calculate new point
+                      const destLat = lat + distance * Math.cos(angleRad);
+                      const destLng = lng + distance * Math.sin(angleRad);
+                      
+                      return [destLat, destLng];
+                    };
+                    
+                    const destinationPoint = getDestinationPoint();
+                    
+                    // Create a curved path for more natural looking routes
+                    // We'll use a simple curve with a control point
+                    const midLat = (lat + destinationPoint[0]) / 2;
+                    const midLng = (lng + destinationPoint[1]) / 2;
+                    
+                    // Add some curve variation
+                    const curveVariation = Math.random() * 1.5;
+                    const controlPoint = [
+                      midLat + curveVariation * Math.sin((lng + lat) / 20), 
+                      midLng + curveVariation * Math.cos((lng + lat) / 20)
+                    ];
+                    
+                    // Create a curved path using a Bézier curve approximation with points
+                    const curvePoints = [];
+                    const steps = 20;
+                    for (let i = 0; i <= steps; i++) {
+                      const t = i / steps;
+                      // Quadratic Bézier curve formula
+                      const lat_ = (1-t)*(1-t)*lat + 2*(1-t)*t*controlPoint[0] + t*t*destinationPoint[0];
+                      const lng_ = (1-t)*(1-t)*lng + 2*(1-t)*t*controlPoint[1] + t*t*destinationPoint[1];
+                      curvePoints.push([lat_, lng_]);
+                    }
+                    
+                    // Create the route line
+                    const routeLine = L.polyline(
+                      curvePoints,
+                      {
+                        color: getVesselColor(),
+                        weight: 3,
+                        opacity: 0.7,
+                        dashArray: '10, 10',
+                        className: 'vessel-route-line'
+                      }
+                    ).addTo(map);
+                    
+                    // Store reference to remove later
+                    routeLinesRef.current.push({
+                      vesselId: vessel.id,
+                      line: routeLine
+                    });
+                    
+                    // Add animated dash effect
+                    const lineElement = routeLine.getElement();
+                    if (lineElement) {
+                      lineElement.classList.add('animated-dash');
+                    }
+                    
+                    // Add destination marker with label
+                    const destinationMarker = L.circleMarker(
+                      destinationPoint, 
+                      {
+                        radius: 5,
+                        color: getVesselColor(),
+                        fillColor: getVesselColor(),
+                        fillOpacity: 0.7,
+                        weight: 2
+                      }
+                    ).addTo(map);
+                    
+                    // Add destination label
+                    const destinationLabel = L.tooltip({
+                      permanent: true,
+                      direction: 'top',
+                      className: 'destination-label',
+                      offset: [0, -10]
+                    })
+                    .setContent(`<div style="color:${getVesselColor()};font-weight:bold;font-size:12px;">${vessel.destinationPort}</div>`)
+                    .setLatLng(destinationPoint);
+                    
+                    destinationMarker.bindTooltip(destinationLabel).openTooltip();
+                    
+                    // Add to references for cleanup
+                    routeLinesRef.current.push({
+                      vesselId: vessel.id,
+                      marker: destinationMarker
+                    });
+                  }
                 }
                 
                 // Add subtle highlight effect to the marker
