@@ -169,9 +169,56 @@ export default function SimpleLeafletMap({
       language: mapLanguage === 'multilingual' ? undefined : mapLanguage
     }).addTo(map);
     
+    // Function to check if a coordinate is likely at sea (not on land)
+    const isCoordinateAtSea = (lat: number, lng: number): boolean => {
+      // Major land mass boundary checks (simplified)
+      
+      // North America
+      if (lat >= 15 && lat <= 73 && lng >= -170 && lng <= -50) {
+        // Exclude Gulf of Mexico and parts of the Caribbean
+        if (lat >= 18 && lat <= 30 && lng >= -98 && lng <= -80) return true;
+        return false;
+      }
+      
+      // South America
+      if (lat >= -60 && lat <= 15 && lng >= -90 && lng <= -30) return false;
+      
+      // Europe & Africa
+      if (lat >= 30 && lat <= 75 && lng >= -10 && lng <= 40) return false;
+      if (lat >= -35 && lat <= 30 && lng >= -20 && lng <= 55) return false;
+      
+      // Asia
+      if (lat >= 0 && lat <= 75 && lng >= 55 && lng <= 180) return false;
+      
+      // Australia
+      if (lat >= -45 && lat <= -10 && lng >= 110 && lng <= 155) return false;
+      
+      // Antarctica
+      if (lat <= -60) return false;
+      
+      // If not on a major landmass, probably at sea
+      return true;
+    };
+    
     // Filter and add vessel markers
     const filteredVessels = vessels
-      .filter(vessel => vessel.currentLat && vessel.currentLng)
+      .filter(vessel => {
+        // Check if vessel has valid coordinates
+        if (!vessel.currentLat || !vessel.currentLng) return false;
+        
+        const lat = typeof vessel.currentLat === 'number' 
+          ? vessel.currentLat 
+          : parseFloat(String(vessel.currentLat));
+          
+        const lng = typeof vessel.currentLng === 'number'
+          ? vessel.currentLng
+          : parseFloat(String(vessel.currentLng));
+          
+        if (isNaN(lat) || isNaN(lng)) return false;
+        
+        // Only show vessels that are at sea
+        return isCoordinateAtSea(lat, lng);
+      })
       .slice(0, 1000);
       
     setDisplayVessels(filteredVessels);
