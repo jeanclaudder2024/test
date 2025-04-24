@@ -415,15 +415,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("Removing vessels on land and generating new vessels in the ocean...");
       
-      // Import the isCoordinateAtSea function
-      const { isCoordinateAtSea } = await import('./services/vesselGenerator');
+      // Import required functions
+      const { isCoordinateAtSea, generateLargeVesselDataset } = await import('./services/vesselGenerator');
       
       // Get all existing vessels
       const vessels = await vesselService.getAllVessels();
       console.log(`Found ${vessels.length} vessels to check for land/sea positioning.`);
       
-      // Count vessels on land
-      let vesselsOnLand = 0;
+      // Identify vessels on land
+      const vesselsOnLand: Vessel[] = [];
+      const vesselsAtSea: Vessel[] = [];
+      
       for (const vessel of vessels) {
         // Parse coordinates
         const lat = vessel.currentLat ? parseFloat(vessel.currentLat) : null;
@@ -431,31 +433,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         if (lat !== null && lng !== null && !isNaN(lat) && !isNaN(lng)) {
           if (!isCoordinateAtSea(lat, lng)) {
-            vesselsOnLand++;
+            vesselsOnLand.push(vessel);
+          } else {
+            vesselsAtSea.push(vessel);
           }
+        } else {
+          // Vessels with invalid coordinates are considered on land
+          vesselsOnLand.push(vessel);
         }
       }
       
-      console.log(`Found ${vesselsOnLand} vessels on land out of ${vessels.length} total vessels.`);
+      console.log(`Found ${vesselsOnLand.length} vessels on land out of ${vessels.length} total vessels.`);
       
-      // Force a complete refresh which will use our sea-only vessel generation logic
-      const forceRefresh = true;
-      const vesselResult = await vesselService.seedVesselData(forceRefresh);
+      if (vesselsOnLand.length === 0) {
+        console.log("No vessels on land found. No changes needed.");
+        return res.json({
+          success: true,
+          message: "All vessels are already in the ocean. No changes needed.",
+          data: {
+            totalVessels: vessels.length,
+            vesselsAtSea: vessels.length,
+            vesselsOnLand: 0
+          }
+        });
+      }
       
-      console.log("All vessels are now placed in the ocean:");
-      console.log(`- Total vessels: ${vesselResult.vessels}`);
-      console.log(`- Oil vessels: ${vesselResult.oilVessels}`);
-      console.log(`- Total cargo capacity: ${vesselResult.totalCargo}`);
+      // Delete vessels on land
+      console.log(`Deleting ${vesselsOnLand.length} vessels on land...`);
+      let deletedCount = 0;
+      
+      for (const vessel of vesselsOnLand) {
+        await vesselService.deleteVessel(vessel.id);
+        deletedCount++;
+      }
+      
+      console.log(`Deleted ${deletedCount} vessels on land.`);
+      
+      // Generate new vessels at sea to replace the deleted ones
+      console.log(`Generating ${deletedCount} new vessels in the ocean...`);
+      
+      // Generate new vessels specifically at sea
+      const newVesselData = generateLargeVesselDataset(deletedCount + 10) // Generate a few extra to account for filtering
+        .filter(vessel => isCoordinateAtSea(vessel.latitude, vessel.longitude))
+        .slice(0, deletedCount); // Ensure we only get exactly the number we need
+      
+      // Insert the new vessels
+      let insertedCount = 0;
+      for (const vessel of newVesselData) {
+        await vesselService.createVessel(vessel);
+        insertedCount++;
+      }
+      
+      console.log(`Generated and inserted ${insertedCount} new vessels in the ocean.`);
+      
+      // Get updated counts
+      const oilVessels = await db.select({ count: vessels.id })
+        .from(vessels)
+        .where(vessels.cargoType.like('%OIL%')
+          .or(vessels.cargoType.like('%CRUDE%'))
+          .or(vessels.cargoType.like('%PETROL%'))
+          .or(vessels.cargoType.like('%DIESEL%'))
+          .or(vessels.cargoType.like('%FUEL%'))
+          .or(vessels.cargoType.like('%GAS%')));
+      
+      const cargoSum = await db.select({
+        sum: vessels.cargoCapacity
+      }).from(vessels);
+      
+      const finalVessels = await vesselService.getAllVessels();
       
       res.json({
         success: true,
-        message: "All vessels are now located in the ocean, land vessels have been removed",
+        message: "Vessels on land have been removed and replaced with vessels in the ocean",
         data: {
           previousTotal: vessels.length,
-          vesselsOnLand,
-          newTotal: vesselResult.vessels || 0,
-          oilVessels: vesselResult.oilVessels || 0,
-          totalCargo: vesselResult.totalCargo || 0
+          deleted: deletedCount,
+          inserted: insertedCount,
+          newTotal: finalVessels.length,
+          oilVessels: oilVessels.length,
+          totalCargo: cargoSum[0]?.sum || 0
         }
       });
     } catch (error: any) {

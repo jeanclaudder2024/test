@@ -4,6 +4,7 @@ import { generateLargeVesselDataset } from "./vesselGenerator";
 import { getAccurateRefineries } from "./refineryCoordinates";
 import { isCoordinateAtSea } from "./vesselGenerator";
 import { REGIONS } from "@shared/constants";
+import { sql, ilike } from "drizzle-orm";
 
 /**
  * Add seed data for vessels if no vessels exist or if fewer than expected
@@ -27,12 +28,12 @@ export async function seedVessels(minDesiredVessels: number = 2500): Promise<{
     // Count oil vessels and total cargo for reporting
     const oilVessels = await db.select({ count: vessels.id })
       .from(vessels)
-      .where(vessels.cargoType.like('%OIL%')
-        .or(vessels.cargoType.like('%CRUDE%'))
-        .or(vessels.cargoType.like('%PETROL%'))
-        .or(vessels.cargoType.like('%DIESEL%'))
-        .or(vessels.cargoType.like('%FUEL%'))
-        .or(vessels.cargoType.like('%GAS%')));
+      .where(sql`${vessels.cargoType} ILIKE ${'%OIL%'} 
+        OR ${vessels.cargoType} ILIKE ${'%CRUDE%'} 
+        OR ${vessels.cargoType} ILIKE ${'%PETROL%'} 
+        OR ${vessels.cargoType} ILIKE ${'%DIESEL%'} 
+        OR ${vessels.cargoType} ILIKE ${'%FUEL%'} 
+        OR ${vessels.cargoType} ILIKE ${'%GAS%'}`);
     
     const cargoSum = await db.select({
       sum: vessels.cargoCapacity
@@ -54,7 +55,7 @@ export async function seedVessels(minDesiredVessels: number = 2500): Promise<{
   const vesselData = generateLargeVesselDataset(vesselCount)
     .filter(vessel => {
       // Ensure vessels are only in the ocean
-      return isCoordinateAtSea(vessel.latitude, vessel.longitude);
+      return isCoordinateAtSea(parseFloat(vessel.currentLat || "0"), parseFloat(vessel.currentLng || "0"));
     });
   
   // Insert vessels in smaller batches to avoid memory issues
@@ -73,12 +74,12 @@ export async function seedVessels(minDesiredVessels: number = 2500): Promise<{
   // Count oil vessels for reporting
   const oilVessels = await db.select({ count: vessels.id })
     .from(vessels)
-    .where(vessels.cargoType.like('%OIL%')
-      .or(vessels.cargoType.like('%CRUDE%'))
-      .or(vessels.cargoType.like('%PETROL%'))
-      .or(vessels.cargoType.like('%DIESEL%'))
-      .or(vessels.cargoType.like('%FUEL%'))
-      .or(vessels.cargoType.like('%GAS%')));
+    .where(sql`${vessels.cargoType} ILIKE ${'%OIL%'} 
+      OR ${vessels.cargoType} ILIKE ${'%CRUDE%'} 
+      OR ${vessels.cargoType} ILIKE ${'%PETROL%'} 
+      OR ${vessels.cargoType} ILIKE ${'%DIESEL%'} 
+      OR ${vessels.cargoType} ILIKE ${'%FUEL%'} 
+      OR ${vessels.cargoType} ILIKE ${'%GAS%'}`);
   
   const cargoSum = await db.select({
     sum: vessels.cargoCapacity
@@ -109,7 +110,7 @@ export async function seedRefineries(): Promise<{ count: number, seeded: boolean
     // Count active refineries for reporting
     const activeRefineries = await db.select({ count: refineries.id })
       .from(refineries)
-      .where(refineries.status.equals('active'));
+      .where(sql`${refineries.status} = ${'active'}`);
     
     return { 
       count: existingCount, 
@@ -127,7 +128,7 @@ export async function seedRefineries(): Promise<{ count: number, seeded: boolean
   // Count active refineries for reporting
   const activeRefineries = await db.select({ count: refineries.id })
     .from(refineries)
-    .where(refineries.status.equals('active'));
+    .where(sql`${refineries.status} = ${'active'}`);
   
   return { 
     count: refineryData.length, 
