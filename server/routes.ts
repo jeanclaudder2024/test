@@ -877,11 +877,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get all vessels
       const vessels = await storage.getVessels();
       
-      // Association methods
-      // 1. Direct port matching - check destination or departure port against refinery country and city
-      const byPort = vessels.filter(v => {
-        const destinationMatch = v.destinationPort?.toLowerCase().includes(refinery.country.toLowerCase()) ||
-                             (refinery.name && v.destinationPort?.toLowerCase().includes(refinery.name.toLowerCase()));
+      // Filter for cargo vessels only (consistent with map display)
+      const cargoVessels = vessels.filter(v => 
+        v.vesselType?.toLowerCase().includes('cargo') || 
+        v.vesselType?.toLowerCase().includes('tanker') ||
+        v.vesselType?.toLowerCase().includes('container')
+      );
+      
+      // Association methods (improved)
+      // 1. Direct port matching - check destination or departure port against refinery country and name 
+      const byPort = cargoVessels.filter(v => {
+        const destinationMatch = (v.destinationPort?.toLowerCase().includes(refinery.country.toLowerCase()) ||
+                                (refinery.name && v.destinationPort?.toLowerCase().includes(refinery.name.toLowerCase()))) ||
+                                v.destinationPort?.toLowerCase().includes('ref:' + refinery.id);
         
         const departureMatch = v.departurePort?.toLowerCase().includes(refinery.country.toLowerCase()) ||
                            (refinery.name && v.departurePort?.toLowerCase().includes(refinery.name.toLowerCase()));
@@ -889,31 +897,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return destinationMatch || departureMatch;
       });
       
-      // 2. Geographic proximity - vessels within reasonable distance of refinery
-      const byProximity = vessels.filter(v => {
+      // 2. Geographic proximity - vessels within reasonable distance of refinery (~500km approximation)
+      const byProximity = cargoVessels.filter(v => {
         // Handle null/undefined values and convert to numbers to ensure proper comparison
         const vesselLat = typeof v.currentLat === 'number' ? v.currentLat : Number(v.currentLat);
         const vesselLng = typeof v.currentLng === 'number' ? v.currentLng : Number(v.currentLng);
         const refineryLat = typeof refinery.lat === 'number' ? refinery.lat : Number(refinery.lat);
         const refineryLng = typeof refinery.lng === 'number' ? refinery.lng : Number(refinery.lng);
         
-        // Check if vessel is within 3 degrees of refinery
-        return !isNaN(vesselLat) && !isNaN(vesselLng) && 
-               !isNaN(refineryLat) && !isNaN(refineryLng) &&
-               Math.abs(vesselLat - refineryLat) < 3 && 
-               Math.abs(vesselLng - refineryLng) < 3;
+        if (isNaN(vesselLat) || isNaN(vesselLng) || isNaN(refineryLat) || isNaN(refineryLng)) {
+          return false;
+        }
+        
+        // Use squared distance for better performance (avoid sqrt)
+        const latDiff = vesselLat - refineryLat;
+        const lngDiff = vesselLng - refineryLng;
+        const squaredDistance = latDiff * latDiff + lngDiff * lngDiff;
+        
+        // Rough approximation for ~500km radius (about 4.5 degrees at equator)
+        return squaredDistance < 25; // ~5 degrees squared
       });
       
-      // 3. Region matching with cargo relevance - oil tankers in the same region
-      const oilVessels = vessels.filter(v =>
-        (v.cargoType?.toLowerCase().includes('crude') || 
-         v.cargoType?.toLowerCase().includes('oil') ||
-         v.vesselType?.toLowerCase().includes('tanker')) &&
-        v.currentRegion === refinery.region
-      );
+      // 3. Region matching with cargo relevance - oil tankers and cargo ships in the same region
+      const regionVessels = cargoVessels.filter(v => {
+        const isOilRelated = v.cargoType?.toLowerCase().includes('crude') || 
+                           v.cargoType?.toLowerCase().includes('oil') ||
+                           v.cargoType?.toLowerCase().includes('gas') ||
+                           v.cargoType?.toLowerCase().includes('diesel') ||
+                           v.cargoType?.toLowerCase().includes('fuel') ||
+                           v.vesselType?.toLowerCase().includes('tanker');
+                           
+        const isInRegion = v.currentRegion === refinery.region;
+        
+        return isOilRelated && isInRegion;
+      });
       
-      // Combine results with prioritization, removing duplicates
-      const allConnected = [...byPort, ...byProximity, ...oilVessels];
+      // 4. Look for vessels that have this refinery ID in their destination (format "REF:id:name")
+      const byRefineryReference = cargoVessels.filter(v => {
+        return v.destinationPort?.includes(`REF:${refinery.id}:`);
+      });
+      
+      // Prioritize vessels with higher relevance and proximity first
+      // Combine in priority order (more specific matches first)
+      const allConnected = [
+        ...byRefineryReference, // Most specifically connected
+        ...byPort,              // Explicit port connection  
+        ...byProximity,         // Geographic proximity
+        ...regionVessels        // Same region and oil-related
+      ];
+      
+      // Remove duplicates while preserving prioritization order
       const uniqueIds = new Set();
       const uniqueVessels = allConnected.filter(vessel => {
         if (uniqueIds.has(vessel.id)) return false;
@@ -921,8 +954,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return true;
       });
       
-      // Return the associated vessels
-      res.json(uniqueVessels);
+      // Return the associated vessels (limit to 20 vessels max)
+      res.json(uniqueVessels.slice(0, 20));
     } catch (error) {
       console.error("Error fetching vessels for refinery:", error);
       res.status(500).json({ message: "Failed to fetch vessels for refinery" });
