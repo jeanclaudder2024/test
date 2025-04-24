@@ -2,8 +2,10 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { Vessel, Refinery, Region } from '@/types';
 import { Badge } from '@/components/ui/badge';
-import { Ship, Navigation as NavigationIcon, Droplet } from 'lucide-react';
+import { Ship, Navigation as NavigationIcon, Droplet, ExternalLink, Radar, MapPin, Info, Flag, Calendar } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { OIL_PRODUCT_TYPES } from '@/../../shared/constants';
+import Map, { Marker, Popup, NavigationControl, FullscreenControl, ScaleControl, ViewStateChangeEvent, ViewState } from 'react-map-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 // Region center positions
@@ -247,19 +249,87 @@ export default function MapboxView({
             onClose={() => setSelectedVessel(null)}
             anchor="bottom"
             offset={25}
+            maxWidth="260px"
           >
-            <div className="p-2 max-w-[200px]">
-              <h3 className="font-bold text-sm">{selectedVessel.name}</h3>
-              <div className="text-xs mt-1">
-                <div><span className="font-semibold">Type:</span> {selectedVessel.vesselType}</div>
-                <div><span className="font-semibold">IMO:</span> {selectedVessel.imo}</div>
-                <div><span className="font-semibold">Flag:</span> {selectedVessel.flag}</div>
+            <div className="p-3 max-w-[260px] bg-white/80 backdrop-blur-sm rounded-lg shadow-sm">
+              {/* Header with vessel name and badge */}
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-bold text-sm text-primary flex items-center">
+                  <Ship className="h-3.5 w-3.5 mr-1.5" />
+                  {selectedVessel.name}
+                </h3>
+                <Badge 
+                  variant="outline" 
+                  className="text-[10px] bg-primary/10 dark:bg-primary/20 text-primary border-0 px-1.5 py-0"
+                >
+                  {selectedVessel.vesselType}
+                </Badge>
+              </div>
+
+              {/* Vessel details with icons */}
+              <div className="text-xs space-y-1.5 mb-3 text-gray-700 dark:text-gray-300">
+                <div className="flex items-center">
+                  <Info className="h-3 w-3 mr-1.5 text-primary/70" />
+                  <span className="font-medium">IMO:</span>
+                  <span className="ml-1">{selectedVessel.imo}</span>
+                </div>
+                
+                <div className="flex items-center">
+                  <Flag className="h-3 w-3 mr-1.5 text-primary/70" />
+                  <span className="font-medium">Flag:</span>
+                  <span className="ml-1">{selectedVessel.flag}</span>
+                </div>
+                
                 {selectedVessel.departurePort && (
-                  <div><span className="font-semibold">From:</span> {selectedVessel.departurePort}</div>
+                  <div className="flex items-start">
+                    <Calendar className="h-3 w-3 mr-1.5 text-primary/70 mt-0.5" />
+                    <div>
+                      <span className="font-medium">Departed:</span>
+                      <span className="ml-1">{selectedVessel.departurePort}</span>
+                    </div>
+                  </div>
                 )}
+                
                 {selectedVessel.destinationPort && (
-                  <div><span className="font-semibold">To:</span> {selectedVessel.destinationPort}</div>
+                  <div className="flex items-start">
+                    <MapPin className="h-3 w-3 mr-1.5 text-primary/70 mt-0.5" />
+                    <div>
+                      <span className="font-medium">Destination:</span>
+                      <span className="ml-1">{selectedVessel.destinationPort}</span>
+                    </div>
+                  </div>
                 )}
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex space-x-2">
+                <Button 
+                  size="sm" 
+                  className="text-xs h-8 flex-1 bg-primary/90 hover:bg-primary"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.location.href = `/vessels/${selectedVessel.id}`;
+                  }}
+                >
+                  <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
+                  View Details
+                </Button>
+                
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="text-xs h-8 flex-1 border-primary/20 text-primary hover:bg-primary/10"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // Set as tracked vessel
+                    if (onVesselClick) {
+                      onVesselClick(selectedVessel);
+                    }
+                  }}
+                >
+                  <Radar className="h-3.5 w-3.5 mr-1.5" />
+                  Track
+                </Button>
               </div>
             </div>
           </Popup>
