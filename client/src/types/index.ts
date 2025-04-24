@@ -24,6 +24,10 @@ export interface Vessel {
   cargoType?: string;
   cargoCapacity?: number;
   currentRegion?: string;
+  heading?: number;      // Ship's heading in degrees (0-359)
+  speed?: number;        // Ship's speed in knots
+  lastUpdate?: string;   // Last AIS update timestamp
+  status?: string;       // Navigation status: "underway", "anchored", etc.
 }
 
 export interface Refinery {
