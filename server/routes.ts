@@ -952,10 +952,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log("Refreshing data from database...");
           lastDbFetchTime = currentTime;
           
-          // Step 1: Get optimized data from database (limit to most relevant vessels)
-          const MAX_VESSELS_PER_RESPONSE = 350; // Reduced for better performance
+          // Step 1: Get optimized data from database
+          const MAX_VESSELS_PER_RESPONSE = 5000; // Increased to show all vessels
           
-          // Get vessels (limited for better performance)
+          // Get vessels
           let vessels = await vesselService.getAllVessels();
           
           // Filter for oil vessels specifically to make the app smoother
@@ -970,12 +970,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
             );
           };
           
-          // Prioritize vessels:
-          // 1. Only oil vessels (most important to show)
+          // Filter vessels:
+          // 1. Include all vessel types
           // 2. Only vessels with current location data
-          // 3. Limited for better performance
+          // 3. Only vessels that are likely at sea
           vessels = vessels
-            .filter(v => v.currentLat && v.currentLng && isOilVessel(v))
+            .filter(v => v.currentLat && v.currentLng)
+            .filter(v => {
+              // Check if vessel is in the ocean using the improved isCoordinateAtSea function
+              const lat = parseFloat(v.currentLat as string);
+              const lng = parseFloat(v.currentLng as string);
+              return !isNaN(lat) && !isNaN(lng) && 
+                vesselService.isCoordinateAtSea(lat, lng);
+            })
             .slice(0, MAX_VESSELS_PER_RESPONSE);
           
           // Update the cache

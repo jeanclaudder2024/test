@@ -1,10 +1,13 @@
 import { storage } from "../storage";
 import { InsertVessel, InsertProgressEvent, Vessel, ProgressEvent } from "@shared/schema";
 import { dataService } from "./asiStreamService";
-import { generateLargeVesselDataset } from "./vesselGenerator";
+import { generateLargeVesselDataset, isCoordinateAtSea } from "./vesselGenerator";
 import { OIL_PRODUCT_TYPES } from "@shared/constants";
 
 export const vesselService = {
+  // Use the exported function from vesselGenerator to check if coordinates are at sea
+  isCoordinateAtSea,
+  
   getAllVessels: async () => {
     return storage.getVessels();
   },
