@@ -817,17 +817,24 @@ export default function SimpleLeafletMap({
         return "#6b7280"; // gray default
       };
       
-      // Get emoji based on country/region
-      const getRefineryEmoji = () => {
-        if (refinery.country?.includes("Saudi")) return '🏭';
-        if (refinery.country?.includes("UAE")) return '⛽';
-        if (refinery.country?.includes("Kuwait")) return '💧';
-        if (refinery.country?.includes("Qatar")) return '🔥';
-        if (refinery.region?.includes("Middle East")) return '🛢️';
-        if (refinery.region?.includes("Africa")) return '⛰️';
-        if (refinery.region?.includes("Europe")) return '🏢';
-        if (refinery.region?.includes("Asia")) return '🌊';
-        return '🏭';
+      // Create SVG icon based on refinery icon image
+      const getRefineryIcon = () => {
+        return `
+          <svg width="28" height="28" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M128 42.667C128 19.103 147.103 0 170.667 0H256V85.333H128V42.667Z" fill="#f8b195"/>
+            <path d="M128 85.333H256V128H128V85.333Z" fill="#f67280"/>
+            <path d="M179.2 170.667C163.2 170.667 149.333 159.147 149.333 144.841C149.333 130.56 163.2 128 179.2 128H204.8C220.8 128 234.667 130.56 234.667 144.841C234.667 159.147 220.8 170.667 204.8 170.667H179.2Z" fill="#1a1a1a"/>
+            <path d="M128 170.667H256V384H128V170.667Z" fill="#f8b195"/>
+            <path d="M128 384H256V426.667H128V384Z" fill="#f67280"/>
+            <path d="M113.067 426.667H270.933C278.933 426.667 285.333 433.067 285.333 441.067V498.133C285.333 505.6 278.933 512 270.933 512H113.067C105.067 512 98.667 505.6 98.667 498.133V441.067C98.667 433.067 105.067 426.667 113.067 426.667Z" fill="#c06c84"/>
+            <path d="M396.8 362.667H332.8C323.733 362.667 317.867 352.427 322.587 344.8L354.56 292.267C355.84 290.133 356.267 287.573 356.267 285.013V98.133C356.267 92.16 361.173 87.253 367.147 87.253H377.067C391.52 87.253 406.187 87.093 406.187 107.947V285.013C406.187 287.573 406.613 290.133 407.893 292.267L439.867 344.8C444.587 352.427 438.72 362.667 429.653 362.667Z" fill="#a5c6e7"/>
+            <path d="M311.467 277.333H247.467C238.4 277.333 232.533 267.093 237.253 259.467L269.227 206.933C270.507 204.8 270.933 202.24 270.933 199.68C270.933 193.707 275.84 188.8 281.813 188.8C284.373 188.8 286.933 189.227 289.067 190.507L341.6 222.48C349.227 227.2 349.227 238.933 341.6 243.627L289.067 275.627C286.933 276.907 284.373 277.333 281.813 277.333H311.467Z" fill="#9399d4"/>
+            <path d="M469.333 362.667V469.333C469.333 475.307 464.427 480.213 458.453 480.213H448.533C442.56 480.213 437.653 475.307 437.653 469.333V362.667H469.333Z" fill="#a5c6e7"/>
+            <path d="M416 426.667C422.667 426.667 428.373 432.373 428.373 439.04V448.96C428.373 455.627 422.667 461.333 416 461.333C409.333 461.333 403.627 455.627 403.627 448.96V439.04C403.627 432.373 409.333 426.667 416 426.667Z" fill="#5c9ade"/>
+            <path d="M416 384C422.667 384 428.373 389.707 428.373 396.373V406.293C428.373 412.96 422.667 418.667 416 418.667C409.333 418.667 403.627 412.96 403.627 406.293V396.373C403.627 389.707 409.333 384 416 384Z" fill="#5c9ade"/>
+            <path d="M512 0H396.8V42.667H512V0Z" fill="#a5c6e7"/>
+          </svg>
+        `;
       };
       
       const refineryIcon = L.divIcon({
@@ -835,21 +842,21 @@ export default function SimpleLeafletMap({
           <div class="refinery-marker-container">
             <div class="refinery-marker-glow" style="background-color: ${getRefineryColor()}33;"></div>
             <div class="refinery-marker" style="
-              width: 32px;
-              height: 32px;
-              border-radius: 50%;
+              width: 42px;
+              height: 42px;
+              border-radius: 8px;
               background: rgba(255,255,255,0.98);
               display: flex;
               align-items: center;
               justify-content: center;
               border: 3px solid ${getRefineryColor()};
               box-shadow: 0 3px 6px rgba(0,0,0,0.3);
-              font-size: 16px;
               text-align: center;
               z-index: 910;
               position: relative;
+              padding: 2px;
             ">
-              ${getRefineryEmoji()}
+              ${getRefineryIcon()}
             </div>
           </div>
         `,
@@ -858,286 +865,205 @@ export default function SimpleLeafletMap({
         iconAnchor: [20, 20]
       });
       
-      const marker = L.marker([refinery.lat, refinery.lng], { icon: refineryIcon })
-        .bindPopup(`
-          <div class="refinery-popup">
-            <div class="refinery-popup-header" style="
-              border-bottom: 2px solid ${getRefineryColor()};
-              padding: 8px;
-              margin: -8px -8px 8px -8px;
-              background-color: rgba(255,255,255,0.9);
-              border-top-left-radius: 8px;
-              border-top-right-radius: 8px;
-              display: flex;
-              align-items: center;
-              gap: 8px;
-            ">
-              <div style="
-                width: 24px;
-                height: 24px;
-                border-radius: 50%;
-                background: white;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                border: 2px solid ${getRefineryColor()};
-                font-size: 14px;
-              ">${getRefineryEmoji()}</div>
-              <h3 style="
-                font-weight: bold;
-                margin: 0;
-                font-size: 14px;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                flex: 1;
-              ">${refinery.name}</h3>
-            </div>
-            
-            <div style="padding: 0 8px 8px; font-size: 12px; line-height: 1.6;">
-              <div style="display: flex; align-items: center; margin-bottom: 4px;">
-                <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">🏢</span>
-                <span style="font-weight: 500; margin-right: 4px; color: #555;">Company:</span>
-                <span style="flex: 1;">${refinery.name}</span>
-              </div>
-              
-              <div style="display: flex; align-items: center; margin-bottom: 4px;">
-                <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">🌍</span>
-                <span style="font-weight: 500; margin-right: 4px; color: #555;">Country:</span>
-                <span style="flex: 1;">${refinery.country || 'Unknown'}</span>
-              </div>
-              
-              <div style="display: flex; align-items: center; margin-bottom: 4px;">
-                <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">🌐</span>
-                <span style="font-weight: 500; margin-right: 4px; color: #555;">Region:</span>
-                <span style="flex: 1;">${refinery.region || 'Unknown'}</span>
-              </div>
-              
-              <div style="display: flex; align-items: center; margin-bottom: 4px;">
-                <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">📊</span>
-                <span style="font-weight: 500; margin-right: 4px; color: #555;">Status:</span>
-                <span style="
-                  flex: 1;
-                  color: ${getRefineryColor()};
-                  font-weight: 500;
-                ">${refinery.status || 'Unknown'}</span>
-              </div>
-              
-              ${refinery.capacity ? `
-              <div style="display: flex; align-items: center; margin-bottom: 4px;">
-                <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">⚡</span>
-                <span style="font-weight: 500; margin-right: 4px; color: #555;">Capacity:</span>
-                <span style="flex: 1;">${refinery.capacity.toLocaleString()} bpd</span>
-              </div>
-              ` : ''}
-              
-              <div style="display: flex; align-items: center; margin-bottom: 4px;">
-                <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">👤</span>
-                <span style="font-weight: 500; margin-right: 4px; color: #555;">Country:</span>
-                <span style="flex: 1;">${refinery.country}</span>
-              </div>
-              
-              <div style="
-                border-top: 1px solid #eee;
-                margin-top: 8px;
-                padding-top: 8px;
-                display: flex;
-                justify-content: center;
-                gap: 6px;
-              ">
-                <button style="
-                  background-color: ${getRefineryColor()};
-                  color: white;
-                  padding: 3px 6px;
-                  border-radius: 4px;
-                  font-size: 10px;
-                  border: none;
-                  cursor: pointer;
-                ">
-                  View Details
-                </button>
-                <button style="
-                  background-color: #f8f9fa;
-                  color: #555;
-                  padding: 3px 6px;
-                  border-radius: 4px;
-                  font-size: 10px;
-                  border: 1px solid #ddd;
-                  cursor: pointer;
-                ">
-                  View Associated Vessels
-                </button>
-              </div>
-            </div>
+      // Create the popup content with buttons that have proper onclick handlers
+      const popupContent = document.createElement('div');
+      popupContent.className = 'refinery-popup';
+      popupContent.innerHTML = `
+        <div class="refinery-popup-header" style="
+          border-bottom: 2px solid ${getRefineryColor()};
+          padding: 8px;
+          margin: -8px -8px 8px -8px;
+          background-color: rgba(255,255,255,0.9);
+          border-top-left-radius: 8px;
+          border-top-right-radius: 8px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        ">
+          <div style="
+            width: 26px;
+            height: 26px;
+            border-radius: 4px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid ${getRefineryColor()};
+            padding: 1px;
+          ">${getRefineryIcon()}</div>
+          <h3 style="
+            font-weight: bold;
+            margin: 0;
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+          ">${refinery.name}</h3>
+        </div>
+        
+        <div style="padding: 0 8px 8px; font-size: 12px; line-height: 1.6;">
+          <div style="display: flex; align-items: center; margin-bottom: 4px;">
+            <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">🏢</span>
+            <span style="font-weight: 500; margin-right: 4px; color: #555;">Company:</span>
+            <span style="flex: 1;">${refinery.name}</span>
           </div>
-        `)
+          
+          <div style="display: flex; align-items: center; margin-bottom: 4px;">
+            <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">🌍</span>
+            <span style="font-weight: 500; margin-right: 4px; color: #555;">Country:</span>
+            <span style="flex: 1;">${refinery.country || 'Unknown'}</span>
+          </div>
+          
+          <div style="display: flex; align-items: center; margin-bottom: 4px;">
+            <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">🌐</span>
+            <span style="font-weight: 500; margin-right: 4px; color: #555;">Region:</span>
+            <span style="flex: 1;">${refinery.region || 'Unknown'}</span>
+          </div>
+          
+          <div style="display: flex; align-items: center; margin-bottom: 4px;">
+            <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">📊</span>
+            <span style="font-weight: 500; margin-right: 4px; color: #555;">Status:</span>
+            <span style="
+              flex: 1;
+              color: ${getRefineryColor()};
+              font-weight: 500;
+            ">${refinery.status || 'Unknown'}</span>
+          </div>
+          
+          ${refinery.capacity ? `
+          <div style="display: flex; align-items: center; margin-bottom: 4px;">
+            <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">⚡</span>
+            <span style="font-weight: 500; margin-right: 4px; color: #555;">Capacity:</span>
+            <span style="flex: 1;">${refinery.capacity.toLocaleString()} bpd</span>
+          </div>
+          ` : ''}
+          
+          <div style="
+            border-top: 1px solid #eee;
+            margin-top: 8px;
+            padding-top: 8px;
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+          ">
+            <button id="view-details-btn-${refinery.id}" style="
+              background-color: ${getRefineryColor()};
+              color: white;
+              padding: 3px 6px;
+              border-radius: 4px;
+              font-size: 10px;
+              border: none;
+              cursor: pointer;
+            ">
+              View Details
+            </button>
+            <button id="view-vessels-btn-${refinery.id}" style="
+              background-color: #f8f9fa;
+              color: #555;
+              padding: 3px 6px;
+              border-radius: 4px;
+              font-size: 10px;
+              border: 1px solid #ddd;
+              cursor: pointer;
+            ">
+              View Associated Vessels
+            </button>
+          </div>
+        </div>
+      `;
+      
+      const marker = L.marker([refinery.lat, refinery.lng], { icon: refineryIcon })
+        .bindPopup(popupContent)
         .on('click', () => {
           if (onRefineryClick) {
             onRefineryClick(refinery);
           }
         })
-        .addTo(map);
-      
-      refineryMarkersRef.current.push(marker);
-    });
-    
-    // Add refinery markers if available
-    refineries.forEach(refinery => {
-      if (!refinery.lat || !refinery.lng) return;
-      
-      const lat = typeof refinery.lat === 'number'
-        ? refinery.lat
-        : parseFloat(String(refinery.lat));
-        
-      const lng = typeof refinery.lng === 'number'
-        ? refinery.lng
-        : parseFloat(String(refinery.lng));
-        
-      if (isNaN(lat) || isNaN(lng)) return;
-      
-      // Get refinery color based on status
-      const getRefineryColor = () => {
-        const status = refinery.status?.toLowerCase() || 'active';
-        if (status === 'active') return "#10b981"; // green
-        if (status === 'maintenance') return "#f59e0b"; // amber
-        if (status === 'planned') return "#3b82f6"; // blue
-        if (status === 'shutdown') return "#ef4444"; // red
-        return "#6b7280"; // Default gray
-      };
-      
-      // Create custom icon for the refinery
-      const customIcon = L.divIcon({
-        html: `
-          <div class="refinery-marker-container">
-            <div class="refinery-marker-glow" style="background: ${getRefineryColor()}"></div>
-            <div class="refinery-marker" style="
-              width: 32px;
-              height: 32px;
-              border-radius: 4px;
-              background: white;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              border: 3px solid ${getRefineryColor()};
-              box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-              font-size: 16px;
-              text-align: center;
-              transform: rotate(45deg);
-              position: relative;
-              z-index: 800;
-            ">
-              <span style="transform: rotate(-45deg);">⚙️</span>
-            </div>
-          </div>
-        `,
-        className: 'refinery-marker-wrapper',
-        iconSize: [40, 40],
-        iconAnchor: [20, 20]
-      });
-      
-      // Add marker with popup
-      const marker = L.marker([lat, lng], { icon: customIcon })
-        .bindPopup(`
-          <div class="refinery-popup">
-            <div class="refinery-popup-header" style="
-              border-bottom: 2px solid ${getRefineryColor()};
-              padding: 8px;
-              margin: -8px -8px 8px -8px;
-              background-color: rgba(255,255,255,0.9);
-              border-top-left-radius: 8px;
-              border-top-right-radius: 8px;
-              display: flex;
-              align-items: center;
-              gap: 8px;
-            ">
-              <div style="
-                width: 24px;
-                height: 24px;
-                border-radius: 4px;
-                background: white;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                border: 2px solid ${getRefineryColor()};
-                font-size: 14px;
-                transform: rotate(45deg);
-              "><span style="transform: rotate(-45deg);">⚙️</span></div>
-              <h3 style="
-                font-weight: bold;
-                margin: 0;
-                font-size: 14px;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                flex: 1;
-              ">${refinery.name}</h3>
-            </div>
+        .on('popupopen', () => {
+          // Add click event listeners to the buttons after the popup is opened
+          setTimeout(() => {
+            const viewDetailsBtn = document.getElementById(`view-details-btn-${refinery.id}`);
+            const viewVesselsBtn = document.getElementById(`view-vessels-btn-${refinery.id}`);
             
-            <div style="padding: 0 8px 8px; font-size: 12px; line-height: 1.6;">
-              <div style="display: flex; align-items: center; margin-bottom: 4px;">
-                <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">🏭</span>
-                <span style="font-weight: 500; margin-right: 4px; color: #555;">Status:</span>
-                <span style="flex: 1;">${refinery.status || 'Unknown'}</span>
-              </div>
-              
-              <div style="display: flex; align-items: center; margin-bottom: 4px;">
-                <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">🌍</span>
-                <span style="font-weight: 500; margin-right: 4px; color: #555;">Region:</span>
-                <span style="flex: 1;">${refinery.region || 'Unknown'}</span>
-              </div>
-              
-              ${refinery.capacity ? `
-              <div style="display: flex; align-items: center; margin-bottom: 4px;">
-                <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">⚡</span>
-                <span style="font-weight: 500; margin-right: 4px; color: #555;">Capacity:</span>
-                <span style="flex: 1;">${refinery.capacity.toLocaleString()} bpd</span>
-              </div>
-              ` : ''}
-              
-              <div style="display: flex; align-items: center; margin-bottom: 4px;">
-                <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">👤</span>
-                <span style="font-weight: 500; margin-right: 4px; color: #555;">Country:</span>
-                <span style="flex: 1;">${refinery.country}</span>
-              </div>
-              
-              <div style="
-                border-top: 1px solid #eee;
-                margin-top: 8px;
-                padding-top: 8px;
-                display: flex;
-                justify-content: center;
-                gap: 6px;
-              ">
-                <button style="
-                  background-color: ${getRefineryColor()};
-                  color: white;
-                  padding: 3px 6px;
-                  border-radius: 4px;
-                  font-size: 10px;
-                  border: none;
-                  cursor: pointer;
-                ">
-                  View Details
-                </button>
-                <button style="
-                  background-color: #f8f9fa;
-                  color: #555;
-                  padding: 3px 6px;
-                  border-radius: 4px;
-                  font-size: 10px;
-                  border: 1px solid #ddd;
-                  cursor: pointer;
-                ">
-                  View Associated Vessels
-                </button>
-              </div>
-            </div>
-          </div>
-        `)
-        .on('click', () => {
-          if (onRefineryClick) {
-            onRefineryClick(refinery);
-          }
+            if (viewDetailsBtn) {
+              viewDetailsBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (onRefineryClick) {
+                  onRefineryClick(refinery);
+                  marker.closePopup();
+                }
+              });
+            }
+            
+            if (viewVesselsBtn) {
+              viewVesselsBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                // Add a nice notification
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                  position: fixed;
+                  top: 20px;
+                  left: 50%;
+                  transform: translateX(-50%);
+                  background-color: rgba(255, 255, 255, 0.95);
+                  color: #333;
+                  padding: 10px 20px;
+                  border-radius: 8px;
+                  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                  z-index: 10000;
+                  font-size: 14px;
+                  text-align: center;
+                  border-left: 4px solid ${getRefineryColor()};
+                  font-weight: 500;
+                  transition: all 0.3s ease;
+                  backdrop-filter: blur(10px);
+                  -webkit-backdrop-filter: blur(10px);
+                `;
+                notification.innerHTML = `Showing vessels for refinery: ${refinery.name}`;
+                document.body.appendChild(notification);
+                
+                // Create a filter to show only vessels near this refinery
+                // This could be expanded to use an actual API call for associated vessels
+                const refineryLat = typeof refinery.lat === 'number' 
+                  ? refinery.lat 
+                  : parseFloat(String(refinery.lat));
+                  
+                const refineryLng = typeof refinery.lng === 'number'
+                  ? refinery.lng
+                  : parseFloat(String(refinery.lng));
+                
+                // Zoom to refinery to see regional vessels
+                if (map) {
+                  map.setView([refineryLat, refineryLng], 6);
+                  
+                  // Highlight the refinery marker
+                  const markerEl = marker.getElement();
+                  if (markerEl) {
+                    markerEl.classList.add('highlight-marker');
+                    
+                    // Remove highlight after 5 seconds
+                    setTimeout(() => {
+                      markerEl.classList.remove('highlight-marker');
+                    }, 5000);
+                  }
+                }
+                
+                // Close popup after clicking
+                marker.closePopup();
+                
+                // Remove notification after 3 seconds
+                setTimeout(() => {
+                  notification.style.opacity = '0';
+                  notification.style.transform = 'translate(-50%, -20px)';
+                  
+                  setTimeout(() => {
+                    document.body.removeChild(notification);
+                  }, 300);
+                }, 3000);
+              });
+            }
+          }, 100);
         })
         .addTo(map);
       
