@@ -105,10 +105,10 @@ export default function SimpleLeafletMap({
     };
   }, []);
   
-  // Initialize map only once
+  // Initialize and update the map when dependencies change
   useEffect(() => {
-    // Don't proceed until Leaflet is loaded
-    if (!isMapReady) return;
+    // Don't proceed until Leaflet is loaded and we're not in loading state
+    if (!isMapReady || isLoading) return;
     
     const L = window.L;
     if (!L) return;
@@ -116,10 +116,31 @@ export default function SimpleLeafletMap({
     const mapContainer = document.getElementById(MAP_CONTAINER_ID);
     if (!mapContainer) return;
     
-    // Only create the map if it doesn't exist yet
-    if (!mapRef.current) {
+    // Function to clear all existing markers
+    const clearMarkers = () => {
+      // Clear vessel markers
+      vesselMarkersRef.current.forEach(marker => {
+        if (marker && typeof marker.remove === 'function') {
+          marker.remove();
+        }
+      });
+      vesselMarkersRef.current = [];
+      
+      // Clear refinery markers
+      refineryMarkersRef.current.forEach(marker => {
+        if (marker && typeof marker.remove === 'function') {
+          marker.remove();
+        }
+      });
+      refineryMarkersRef.current = [];
+    };
+    
+    // If map exists, just update it; otherwise create a new one
+    let map = mapRef.current;
+    
+    if (!map) {
       // Create new map
-      const map = L.map(mapContainer, {
+      map = L.map(mapContainer, {
         center: [0, 0],
         zoom: 2,
         minZoom: 2,
@@ -128,97 +149,26 @@ export default function SimpleLeafletMap({
       });
       
       mapRef.current = map;
+    } else {
+      // Clear existing markers before updating
+      clearMarkers();
       
-      // Initial tile layer will be added in the next effect
+      // Remove existing tile layer
+      map.eachLayer((layer: any) => {
+        if (layer && layer._url) { // Check if it's a tile layer
+          map.removeLayer(layer);
+        }
+      });
     }
-  }, [isMapReady]);
-  
-  // Handle map style and language changes separately
-  useEffect(() => {
-    if (!isMapReady || !mapRef.current) return;
     
-    const L = window.L;
-    if (!L) return;
-    
-    const map = mapRef.current;
-    
-    // Remove existing tile layers
-    map.eachLayer((layer: any) => {
-      if (layer && layer._url) { // Check if it's a tile layer
-        map.removeLayer(layer);
-      }
-    });
-    
-    // Add new tile layer based on current style and language
+    // Add tile layer based on selected style
     const selectedMapStyle = mapStyles.find(style => style.id === mapStyle) || mapStyles[0];
     
-    // Keep track of the current tile layer
-    const tileLayer = L.tileLayer(selectedMapStyle.url, {
+    L.tileLayer(selectedMapStyle.url, {
       attribution: selectedMapStyle.attribution,
       maxZoom: 19,
       language: mapLanguage === 'multilingual' ? undefined : mapLanguage
     }).addTo(map);
-    
-    // Store reference to current tile layer
-    tileLayerRef.current = tileLayer;
-    
-  }, [isMapReady, mapStyle, mapLanguage]);
-  
-  // Function to clear all existing markers
-  const clearMarkers = () => {
-    // Clear vessel markers
-    vesselMarkersRef.current.forEach(marker => {
-      if (marker && typeof marker.remove === 'function') {
-        marker.remove();
-      }
-    });
-    vesselMarkersRef.current = [];
-    
-    // Clear refinery markers
-    refineryMarkersRef.current.forEach(marker => {
-      if (marker && typeof marker.remove === 'function') {
-        marker.remove();
-      }
-    });
-    refineryMarkersRef.current = [];
-  };
-  
-  // Handle map view updates separately (region selection and initialCenter/initialZoom)
-  useEffect(() => {
-    if (!isMapReady || !mapRef.current) return;
-    
-    const map = mapRef.current;
-    
-    // Set view based on priority:
-    // 1. Initial center and zoom passed by parent
-    // 2. Selected region
-    // 3. Default center and zoom
-    if (initialCenter && initialZoom) {
-      // Use the provided initial center and zoom
-      map.setView(initialCenter, initialZoom);
-    } else if (selectedRegion) {
-      const position = regionPositions[selectedRegion];
-      if (position) {
-        map.setView([position.lat, position.lng], position.zoom);
-      }
-    }
-    
-    // Make sure map is sized properly after view changes
-    map.invalidateSize();
-  }, [isMapReady, selectedRegion, initialCenter, initialZoom]);
-  
-  // Handle marker updates separately
-  useEffect(() => {
-    // Don't proceed if map isn't ready or we're loading
-    if (!isMapReady || isLoading || !mapRef.current) return;
-    
-    const L = window.L;
-    if (!L) return;
-    
-    const map = mapRef.current;
-    
-    // Clear existing markers before updating
-    clearMarkers();
     
     // Function to check if a coordinate is likely at sea (not on land)
     // This uses a more detailed approach to identify major shipping lanes and seas
@@ -732,15 +682,198 @@ export default function SimpleLeafletMap({
       refineryMarkersRef.current.push(marker);
     });
     
-    // Map sizing is handled in the view update effect
+    // Add refinery markers if available
+    refineries.forEach(refinery => {
+      if (!refinery.lat || !refinery.lng) return;
+      
+      const lat = typeof refinery.lat === 'number'
+        ? refinery.lat
+        : parseFloat(String(refinery.lat));
+        
+      const lng = typeof refinery.lng === 'number'
+        ? refinery.lng
+        : parseFloat(String(refinery.lng));
+        
+      if (isNaN(lat) || isNaN(lng)) return;
+      
+      // Get refinery color based on status
+      const getRefineryColor = () => {
+        const status = refinery.status?.toLowerCase() || 'active';
+        if (status === 'active') return "#10b981"; // green
+        if (status === 'maintenance') return "#f59e0b"; // amber
+        if (status === 'planned') return "#3b82f6"; // blue
+        if (status === 'shutdown') return "#ef4444"; // red
+        return "#6b7280"; // Default gray
+      };
+      
+      // Create custom icon for the refinery
+      const customIcon = L.divIcon({
+        html: `
+          <div class="refinery-marker-container">
+            <div class="refinery-marker-glow" style="background: ${getRefineryColor()}"></div>
+            <div class="refinery-marker" style="
+              width: 32px;
+              height: 32px;
+              border-radius: 4px;
+              background: white;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              border: 3px solid ${getRefineryColor()};
+              box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+              font-size: 16px;
+              text-align: center;
+              transform: rotate(45deg);
+              position: relative;
+              z-index: 800;
+            ">
+              <span style="transform: rotate(-45deg);">⚙️</span>
+            </div>
+          </div>
+        `,
+        className: 'refinery-marker-wrapper',
+        iconSize: [40, 40],
+        iconAnchor: [20, 20]
+      });
+      
+      // Add marker with popup
+      const marker = L.marker([lat, lng], { icon: customIcon })
+        .bindPopup(`
+          <div class="refinery-popup">
+            <div class="refinery-popup-header" style="
+              border-bottom: 2px solid ${getRefineryColor()};
+              padding: 8px;
+              margin: -8px -8px 8px -8px;
+              background-color: rgba(255,255,255,0.9);
+              border-top-left-radius: 8px;
+              border-top-right-radius: 8px;
+              display: flex;
+              align-items: center;
+              gap: 8px;
+            ">
+              <div style="
+                width: 24px;
+                height: 24px;
+                border-radius: 4px;
+                background: white;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border: 2px solid ${getRefineryColor()};
+                font-size: 14px;
+                transform: rotate(45deg);
+              "><span style="transform: rotate(-45deg);">⚙️</span></div>
+              <h3 style="
+                font-weight: bold;
+                margin: 0;
+                font-size: 14px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                flex: 1;
+              ">${refinery.name}</h3>
+            </div>
+            
+            <div style="padding: 0 8px 8px; font-size: 12px; line-height: 1.6;">
+              <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">🏭</span>
+                <span style="font-weight: 500; margin-right: 4px; color: #555;">Status:</span>
+                <span style="flex: 1;">${refinery.status || 'Unknown'}</span>
+              </div>
+              
+              <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">🌍</span>
+                <span style="font-weight: 500; margin-right: 4px; color: #555;">Region:</span>
+                <span style="flex: 1;">${refinery.region || 'Unknown'}</span>
+              </div>
+              
+              ${refinery.capacity ? `
+              <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">⚡</span>
+                <span style="font-weight: 500; margin-right: 4px; color: #555;">Capacity:</span>
+                <span style="flex: 1;">${refinery.capacity.toLocaleString()} bpd</span>
+              </div>
+              ` : ''}
+              
+              <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">👤</span>
+                <span style="font-weight: 500; margin-right: 4px; color: #555;">Country:</span>
+                <span style="flex: 1;">${refinery.country}</span>
+              </div>
+              
+              <div style="
+                border-top: 1px solid #eee;
+                margin-top: 8px;
+                padding-top: 8px;
+                display: flex;
+                justify-content: center;
+                gap: 6px;
+              ">
+                <button style="
+                  background-color: ${getRefineryColor()};
+                  color: white;
+                  padding: 3px 6px;
+                  border-radius: 4px;
+                  font-size: 10px;
+                  border: none;
+                  cursor: pointer;
+                ">
+                  View Details
+                </button>
+                <button style="
+                  background-color: #f8f9fa;
+                  color: #555;
+                  padding: 3px 6px;
+                  border-radius: 4px;
+                  font-size: 10px;
+                  border: 1px solid #ddd;
+                  cursor: pointer;
+                ">
+                  View Associated Vessels
+                </button>
+              </div>
+            </div>
+          </div>
+        `)
+        .on('click', () => {
+          if (onRefineryClick) {
+            onRefineryClick(refinery);
+          }
+        })
+        .addTo(map);
+      
+      refineryMarkersRef.current.push(marker);
+    });
+    
+    // Set view based on priority:
+    // 1. initialCenter/initialZoom (if provided)
+    // 2. Selected region
+    // 3. Default view (already set when map was created)
+    if (initialCenter && initialZoom) {
+      // Use the provided initial center and zoom
+      map.setView(initialCenter, initialZoom);
+    } else if (selectedRegion) {
+      const position = regionPositions[selectedRegion];
+      if (position) {
+        map.setView([position.lat, position.lng], position.zoom);
+      }
+    }
+    
+    // Make sure map is sized properly
+    map.invalidateSize();
     
   }, [
     isMapReady,
     vessels,
     refineries,
+    selectedRegion,
+    mapStyle,
+    mapLanguage,
     onVesselClick,
     onRefineryClick,
-    isLoading
+    isLoading,
+    initialCenter,
+    initialZoom
   ]);
   
   // Handlers for UI controls
