@@ -311,7 +311,7 @@ export default function SimpleLeafletMap({
       return true;
     };
     
-    // Filter and add vessel markers
+    // Filter and add vessel markers - only show cargo vessels
     const filteredVessels = vessels
       .filter(vessel => {
         // Check if vessel has valid coordinates
@@ -327,8 +327,11 @@ export default function SimpleLeafletMap({
           
         if (isNaN(lat) || isNaN(lng)) return false;
         
-        // Only show vessels that are at sea
-        return isCoordinateAtSea(lat, lng);
+        // Filter for cargo vessels only
+        const isCargoVessel = vessel.vesselType?.toLowerCase().includes('cargo') || false;
+        
+        // Only show cargo vessels that are at sea
+        return isCargoVessel && isCoordinateAtSea(lat, lng);
       })
       .slice(0, 350); // Limit to 350 vessels to prevent lag and crashes
       
