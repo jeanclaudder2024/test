@@ -170,33 +170,144 @@ export default function SimpleLeafletMap({
     }).addTo(map);
     
     // Function to check if a coordinate is likely at sea (not on land)
+    // This uses a more detailed approach to identify major shipping lanes and seas
     const isCoordinateAtSea = (lat: number, lng: number): boolean => {
-      // Major land mass boundary checks (simplified)
+      // Step 1: Major land mass boundary checks
       
-      // North America
-      if (lat >= 15 && lat <= 73 && lng >= -170 && lng <= -50) {
-        // Exclude Gulf of Mexico and parts of the Caribbean
+      // North America - Main landmass
+      if (lat >= 25 && lat <= 73 && lng >= -140 && lng <= -60) {
+        // Exclude known sea areas within this bounding box
+        
+        // Hudson Bay
+        if (lat >= 51 && lat <= 63 && lng >= -95 && lng <= -78) return true;
+        
+        // Gulf of Mexico and parts of the Caribbean
         if (lat >= 18 && lat <= 30 && lng >= -98 && lng <= -80) return true;
+        
+        // Great Lakes region (to exclude)
+        if (lat >= 41 && lat <= 49 && lng >= -93 && lng <= -76) return false;
+        
         return false;
       }
       
-      // South America
-      if (lat >= -60 && lat <= 15 && lng >= -90 && lng <= -30) return false;
+      // Central America - Narrow land bridge
+      if (lat >= 7 && lat <= 22 && lng >= -110 && lng <= -75) {
+        // Caribbean Sea
+        if (lat >= 11 && lat <= 20 && lng >= -85 && lng <= -65) return true;
+        return false;
+      }
       
-      // Europe & Africa
-      if (lat >= 30 && lat <= 75 && lng >= -10 && lng <= 40) return false;
-      if (lat >= -35 && lat <= 30 && lng >= -20 && lng <= 55) return false;
+      // South America - Main landmass with more precise boundaries
+      if (lat >= -55 && lat <= 13 && lng >= -81 && lng <= -35) {
+        // Amazon River (major shipping lane)
+        if (lat >= -3 && lat <= 0 && lng >= -60 && lng <= -49) return true;
+        return false;
+      }
       
-      // Asia
-      if (lat >= 0 && lat <= 75 && lng >= 55 && lng <= 180) return false;
+      // Europe - More precise boundaries
+      if (lat >= 35 && lat <= 72 && lng >= -10 && lng <= 40) {
+        // Mediterranean Sea
+        if (lat >= 30 && lat <= 45 && lng >= -5 && lng <= 36) return true;
+        
+        // Baltic Sea
+        if (lat >= 53 && lat <= 66 && lng >= 10 && lng <= 30) return true;
+        
+        // North Sea
+        if (lat >= 51 && lat <= 62 && lng >= -2 && lng <= 10) return true;
+        
+        // English Channel
+        if (lat >= 48 && lat <= 52 && lng >= -5 && lng <= 2) return true;
+        
+        return false;
+      }
+      
+      // Africa - More precise boundaries
+      if (lat >= -35 && lat <= 37 && lng >= -18 && lng <= 52) {
+        // Red Sea
+        if (lat >= 12 && lat <= 30 && lng >= 32 && lng <= 44) return true;
+        
+        // Gulf of Aden
+        if (lat >= 10 && lat <= 15 && lng >= 43 && lng <= 52) return true;
+        
+        return false;
+      }
+      
+      // Asia - Split into regions for more precision
+      // Middle East
+      if (lat >= 12 && lat <= 42 && lng >= 35 && lng <= 65) {
+        // Persian Gulf - major oil shipping area
+        if (lat >= 24 && lat <= 30 && lng >= 48 && lng <= 57) return true;
+        
+        // Arabian Sea
+        if (lat >= 10 && lat <= 25 && lng >= 55 && lng <= 75) return true;
+        
+        return false;
+      }
+      
+      // East Asia
+      if (lat >= 20 && lat <= 48 && lng >= 105 && lng <= 145) {
+        // South China Sea
+        if (lat >= 5 && lat <= 25 && lng >= 105 && lng <= 122) return true;
+        
+        // East China Sea
+        if (lat >= 25 && lat <= 34 && lng >= 118 && lng <= 130) return true;
+        
+        // Sea of Japan
+        if (lat >= 35 && lat <= 47 && lng >= 128 && lng <= 142) return true;
+        
+        return false;
+      }
+      
+      // Southeast Asia - Island region, mostly sea
+      if (lat >= -10 && lat <= 20 && lng >= 95 && lng <= 140) {
+        // Major islands to exclude
+        // Sumatra
+        if (lat >= -6 && lat <= 6 && lng >= 95 && lng <= 107) return false;
+        
+        // Java
+        if (lat >= -9 && lat <= -6 && lng >= 105 && lng <= 116) return false;
+        
+        // Borneo
+        if (lat >= -4 && lat <= 8 && lng >= 108 && lng <= 119) return false;
+        
+        // Philippines - main islands
+        if (lat >= 5 && lat <= 19 && lng >= 117 && lng <= 126) return false;
+        
+        // Straits of Malacca - important shipping lane
+        if (lat >= 1 && lat <= 6 && lng >= 98 && lng <= 104) return true;
+        
+        return true; // Most of SE Asia is sea
+      }
       
       // Australia
-      if (lat >= -45 && lat <= -10 && lng >= 110 && lng <= 155) return false;
+      if (lat >= -45 && lat <= -10 && lng >= 110 && lng <= 155) {
+        // Great Barrier Reef area
+        if (lat >= -25 && lat <= -10 && lng >= 142 && lng <= 155) return true;
+        return false;
+      }
       
       // Antarctica
       if (lat <= -60) return false;
       
-      // If not on a major landmass, probably at sea
+      // Major shipping lanes and areas that should always be sea
+      
+      // North Atlantic shipping lanes
+      if (lat >= 30 && lat <= 50 && lng >= -70 && lng <= -10) return true;
+      
+      // South Atlantic
+      if (lat >= -40 && lat <= 0 && lng >= -40 && lng <= 10) return true;
+      
+      // Indian Ocean
+      if (lat >= -35 && lat <= 25 && lng >= 55 && lng <= 100) return true;
+      
+      // North Pacific shipping lanes
+      if (lat >= 25 && lat <= 60 && lng >= 145 && lng <= -130) return true;
+      
+      // South Pacific
+      if (lat >= -50 && lat <= 0 && lng >= 160 && lng <= -80) return true;
+      
+      // If not matched in any of the above rules, use general check
+      // Most coordinates away from major landmasses are sea
       return true;
     };
     
@@ -256,42 +367,130 @@ export default function SimpleLeafletMap({
         return '🛢️'; // Default oil tanker emoji
       };
       
-      // Create custom icon
+      // Create custom icon with pulsing animation for better visibility
       const customIcon = L.divIcon({
         html: `
-          <div style="
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.9);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 2px solid ${getVesselColor()};
-            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-            font-size: 14px;
-            text-align: center;
-          ">
-            ${getVesselEmoji()}
+          <div class="vessel-marker-container">
+            <div class="vessel-marker-pulse" style="border-color: ${getVesselColor()};"></div>
+            <div class="vessel-marker" style="
+              width: 26px;
+              height: 26px;
+              border-radius: 50%;
+              background: rgba(255,255,255,0.95);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              border: 2px solid ${getVesselColor()};
+              box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+              font-size: 14px;
+              text-align: center;
+              z-index: 900;
+              position: relative;
+            ">
+              ${getVesselEmoji()}
+            </div>
           </div>
         `,
-        className: 'vessel-marker',
-        iconSize: [24, 24],
-        iconAnchor: [12, 12]
+        className: 'vessel-marker-wrapper',
+        iconSize: [36, 36],
+        iconAnchor: [18, 18]
       });
       
-      // Add marker
+      // Add marker with enhanced popup
       const marker = L.marker([lat, lng], { icon: customIcon })
         .bindPopup(`
-          <div style="padding: 8px; max-width: 200px;">
-            <h3 style="font-weight: bold; margin-bottom: 5px;">${vessel.name}</h3>
-            <div style="font-size: 12px; line-height: 1.5;">
-              <div><strong>Type:</strong> ${vessel.vesselType || 'Unknown'}</div>
-              <div><strong>Cargo:</strong> ${vessel.cargoType || 'Unknown'}</div>
-              <div><strong>IMO:</strong> ${vessel.imo || 'Unknown'}</div>
-              <div><strong>Flag:</strong> ${vessel.flag || 'Unknown'}</div>
-              ${vessel.departurePort ? `<div><strong>From:</strong> ${vessel.departurePort}</div>` : ''}
-              ${vessel.destinationPort ? `<div><strong>To:</strong> ${vessel.destinationPort}</div>` : ''}
+          <div class="vessel-popup">
+            <div class="vessel-popup-header" style="
+              border-bottom: 2px solid ${getVesselColor()};
+              padding: 8px;
+              margin: -8px -8px 8px -8px;
+              background-color: rgba(255,255,255,0.9);
+              border-top-left-radius: 8px;
+              border-top-right-radius: 8px;
+              display: flex;
+              align-items: center;
+              gap: 8px;
+            ">
+              <div style="
+                width: 24px;
+                height: 24px;
+                border-radius: 50%;
+                background: white;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border: 2px solid ${getVesselColor()};
+                font-size: 14px;
+              ">${getVesselEmoji()}</div>
+              <h3 style="
+                font-weight: bold;
+                margin: 0;
+                font-size: 14px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                flex: 1;
+              ">${vessel.name}</h3>
+            </div>
+            
+            <div style="padding: 0 8px 8px; font-size: 12px; line-height: 1.6;">
+              <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">🚢</span>
+                <span style="font-weight: 500; margin-right: 4px; color: #555;">Type:</span>
+                <span style="flex: 1;">${vessel.vesselType || 'Unknown'}</span>
+              </div>
+              
+              <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">🛢️</span>
+                <span style="font-weight: 500; margin-right: 4px; color: #555;">Cargo:</span>
+                <span style="flex: 1;">${vessel.cargoType || 'Unknown'}</span>
+              </div>
+              
+              <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">🔢</span>
+                <span style="font-weight: 500; margin-right: 4px; color: #555;">IMO:</span>
+                <span style="flex: 1;">${vessel.imo || 'Unknown'}</span>
+              </div>
+              
+              <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">🏳️</span>
+                <span style="font-weight: 500; margin-right: 4px; color: #555;">Flag:</span>
+                <span style="flex: 1;">${vessel.flag || 'Unknown'}</span>
+              </div>
+              
+              ${vessel.departurePort ? `
+              <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">🔙</span>
+                <span style="font-weight: 500; margin-right: 4px; color: #555;">From:</span>
+                <span style="flex: 1;">${vessel.departurePort}</span>
+              </div>
+              ` : ''}
+              
+              ${vessel.destinationPort ? `
+              <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">🔜</span>
+                <span style="font-weight: 500; margin-right: 4px; color: #555;">To:</span>
+                <span style="flex: 1;">${vessel.destinationPort}</span>
+              </div>
+              ` : ''}
+              
+              <div style="
+                border-top: 1px solid #eee;
+                margin-top: 8px;
+                padding-top: 8px;
+                text-align: center;
+              ">
+                <span style="
+                  background-color: ${getVesselColor()};
+                  color: white;
+                  padding: 4px 8px;
+                  border-radius: 12px;
+                  font-size: 10px;
+                  display: inline-block;
+                ">
+                  ${vessel.currentRegion || 'Unknown Region'}
+                </span>
+              </div>
             </div>
           </div>
         `)
@@ -330,36 +529,144 @@ export default function SimpleLeafletMap({
       
       const refineryIcon = L.divIcon({
         html: `
-          <div style="
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.9);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 3px solid ${getRefineryColor()};
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            font-size: 15px;
-            text-align: center;
-          ">
-            ${getRefineryEmoji()}
+          <div class="refinery-marker-container">
+            <div class="refinery-marker-glow" style="background-color: ${getRefineryColor()}33;"></div>
+            <div class="refinery-marker" style="
+              width: 32px;
+              height: 32px;
+              border-radius: 50%;
+              background: rgba(255,255,255,0.98);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              border: 3px solid ${getRefineryColor()};
+              box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+              font-size: 16px;
+              text-align: center;
+              z-index: 910;
+              position: relative;
+            ">
+              ${getRefineryEmoji()}
+            </div>
           </div>
         `,
-        className: 'refinery-marker',
-        iconSize: [28, 28],
-        iconAnchor: [14, 14]
+        className: 'refinery-marker-wrapper',
+        iconSize: [40, 40],
+        iconAnchor: [20, 20]
       });
       
       const marker = L.marker([refinery.lat, refinery.lng], { icon: refineryIcon })
         .bindPopup(`
-          <div style="padding: 8px; max-width: 200px;">
-            <h3 style="font-weight: bold; margin-bottom: 5px;">${refinery.name}</h3>
-            <div style="font-size: 12px; line-height: 1.5;">
-              <div><strong>Country:</strong> ${refinery.country || 'Unknown'}</div>
-              <div><strong>Region:</strong> ${refinery.region || 'Unknown'}</div>
-              <div><strong>Status:</strong> ${refinery.status || 'Unknown'}</div>
-              ${refinery.capacity ? `<div><strong>Capacity:</strong> ${refinery.capacity.toLocaleString()} bpd</div>` : ''}
+          <div class="refinery-popup">
+            <div class="refinery-popup-header" style="
+              border-bottom: 2px solid ${getRefineryColor()};
+              padding: 8px;
+              margin: -8px -8px 8px -8px;
+              background-color: rgba(255,255,255,0.9);
+              border-top-left-radius: 8px;
+              border-top-right-radius: 8px;
+              display: flex;
+              align-items: center;
+              gap: 8px;
+            ">
+              <div style="
+                width: 24px;
+                height: 24px;
+                border-radius: 50%;
+                background: white;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border: 2px solid ${getRefineryColor()};
+                font-size: 14px;
+              ">${getRefineryEmoji()}</div>
+              <h3 style="
+                font-weight: bold;
+                margin: 0;
+                font-size: 14px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                flex: 1;
+              ">${refinery.name}</h3>
+            </div>
+            
+            <div style="padding: 0 8px 8px; font-size: 12px; line-height: 1.6;">
+              <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">🏢</span>
+                <span style="font-weight: 500; margin-right: 4px; color: #555;">Company:</span>
+                <span style="flex: 1;">${refinery.name}</span>
+              </div>
+              
+              <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">🌍</span>
+                <span style="font-weight: 500; margin-right: 4px; color: #555;">Country:</span>
+                <span style="flex: 1;">${refinery.country || 'Unknown'}</span>
+              </div>
+              
+              <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">🌐</span>
+                <span style="font-weight: 500; margin-right: 4px; color: #555;">Region:</span>
+                <span style="flex: 1;">${refinery.region || 'Unknown'}</span>
+              </div>
+              
+              <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">📊</span>
+                <span style="font-weight: 500; margin-right: 4px; color: #555;">Status:</span>
+                <span style="
+                  flex: 1;
+                  color: ${getRefineryColor()};
+                  font-weight: 500;
+                ">${refinery.status || 'Unknown'}</span>
+              </div>
+              
+              ${refinery.capacity ? `
+              <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">⚡</span>
+                <span style="font-weight: 500; margin-right: 4px; color: #555;">Capacity:</span>
+                <span style="flex: 1;">${refinery.capacity.toLocaleString()} bpd</span>
+              </div>
+              ` : ''}
+              
+              ${refinery.owner ? `
+              <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">👤</span>
+                <span style="font-weight: 500; margin-right: 4px; color: #555;">Owner:</span>
+                <span style="flex: 1;">${refinery.owner}</span>
+              </div>
+              ` : ''}
+              
+              <div style="
+                border-top: 1px solid #eee;
+                margin-top: 8px;
+                padding-top: 8px;
+                display: flex;
+                justify-content: center;
+                gap: 6px;
+              ">
+                <button style="
+                  background-color: ${getRefineryColor()};
+                  color: white;
+                  padding: 3px 6px;
+                  border-radius: 4px;
+                  font-size: 10px;
+                  border: none;
+                  cursor: pointer;
+                ">
+                  View Details
+                </button>
+                <button style="
+                  background-color: #f8f9fa;
+                  color: #555;
+                  padding: 3px 6px;
+                  border-radius: 4px;
+                  font-size: 10px;
+                  border: 1px solid #ddd;
+                  cursor: pointer;
+                ">
+                  View Associated Vessels
+                </button>
+              </div>
             </div>
           </div>
         `)

@@ -2,6 +2,89 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Map marker animations and styling */
+.vessel-marker-container {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vessel-marker-pulse {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 3px solid;
+  opacity: 0;
+  transform: scale(0.5);
+  animation: pulse 2s ease-out infinite;
+  z-index: 899;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+/* Refinery marker styling */
+.refinery-marker-container {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.refinery-marker-glow {
+  position: absolute;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  box-shadow: 0 0 15px 5px;
+  opacity: 0.6;
+  z-index: 909;
+}
+
+/* Popup styling for both vessel and refinery popups */
+.leaflet-popup-content-wrapper {
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+  background-color: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.leaflet-popup-tip {
+  backdrop-filter: blur(10px);
+  background-color: rgba(255, 255, 255, 0.85);
+}
+
+/* Map cluster styling for vessel grouping */
+.marker-cluster {
+  background-color: rgba(255, 255, 255, 0.8);
+  border: 2px solid rgba(0, 120, 255, 0.5);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.marker-cluster div {
+  background-color: rgba(0, 120, 255, 0.2);
+  color: #333;
+  font-weight: bold;
+}
+
 /* Custom map styling */
 .google-map-container {
   touch-action: pan-x pan-y; /* Allow touch panning but prevent zooming with pinch */
@@ -12,23 +95,7 @@
   pointer-events: auto;
 }
 
-/* Add a pulse animation for vessel tracking */
-@keyframes pulse {
-  0% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(255, 87, 34, 0.7);
-  }
-  
-  70% {
-    transform: scale(1);
-    box-shadow: 0 0 0 10px rgba(255, 87, 34, 0);
-  }
-  
-  100% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(255, 87, 34, 0);
-  }
-}
+/* Pulse animation is defined at the top of the file */
 
 @layer base {
   :root {
@@ -260,10 +327,10 @@
   
   /* Vessel tracking path and pulse animation */
   .pulse-animation {
-    animation: pulse 1.5s infinite;
+    animation: pulse-legacy 1.5s infinite;
   }
   
-  @keyframes pulse {
+  @keyframes pulse-legacy {
     0% {
       transform: scale(0.95);
       box-shadow: 0 0 0 0 rgba(255, 87, 34, 0.7);
