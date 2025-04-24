@@ -1,9 +1,9 @@
 import { db } from "../db";
 import { progressEvents, vessels, refineries, brokers, documents } from "@shared/schema";
-import { generateLargeVesselDataset } from "./vesselGenerator";
+import { generateLargeVesselDataset, determineRegionFromCoordinates } from "./vesselGenerator";
 import { getAccurateRefineries } from "./refineryCoordinates";
 import { isCoordinateAtSea } from "./vesselGenerator";
-import { REGIONS } from "@shared/constants";
+import { REGIONS, OIL_PRODUCT_TYPES } from "@shared/constants";
 import { sql, ilike, eq } from "drizzle-orm";
 
 /**
