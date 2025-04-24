@@ -541,6 +541,36 @@ export default function Dashboard() {
                       </div>
                     </div>
                     
+                    <Button 
+                      variant="secondary" 
+                      size="sm" 
+                      className="mt-4 w-full"
+                      onClick={() => {
+                        // Fetch vessels associated with this refinery
+                        const fetchAssociatedVessels = async () => {
+                          try {
+                            const response = await fetch(`/api/refineries/${selectedRefinery.id}/vessels`);
+                            if (response.ok) {
+                              const data = await response.json();
+                              setAssociatedVessels(data);
+                              console.log(`Showing ${data.length} vessels associated with refinery ${selectedRefinery.name}`);
+                            } else {
+                              console.error('Failed to fetch associated vessels:', await response.text());
+                              setAssociatedVessels([]);
+                            }
+                          } catch (error) {
+                            console.error('Error fetching associated vessels:', error);
+                            setAssociatedVessels([]);
+                          }
+                        };
+                        
+                        fetchAssociatedVessels();
+                      }}
+                    >
+                      <Ship className="mr-2 h-4 w-4" />
+                      Show Associated Vessels
+                    </Button>
+                    
                     <Separator className="my-3" />
                     
                     <div className="flex justify-between items-center">
