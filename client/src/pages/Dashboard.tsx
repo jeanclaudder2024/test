@@ -60,11 +60,16 @@ export default function Dashboard() {
     // Apply region filter
     const passesRegionFilter = !selectedRegion || vessel.currentRegion === selectedRegion;
     
-    // Apply cargo/oil product type filter
-    const passesTypeFilter = vesselTypeFilters.length === 0 || 
+    // Apply cargo/oil product type filter for cargo type
+    const passesCargoTypeFilter = vesselTypeFilters.length === 0 || 
       vesselTypeFilters.includes(vessel.cargoType || 'Unknown');
     
-    return passesRegionFilter && passesTypeFilter;
+    // Apply vessel type filter for vessel type
+    const passesVesselTypeFilter = vesselTypeFilters.length === 0 || 
+      vesselTypeFilters.includes(vessel.vesselType || 'Unknown');
+    
+    // Pass if either cargo type or vessel type matches the filter
+    return passesRegionFilter && (passesCargoTypeFilter || passesVesselTypeFilter);
   });
     
   const filteredRefineries = refineries.filter(refinery => {
@@ -310,6 +315,49 @@ export default function Dashboard() {
               </div>
             </div>
             
+            {/* Vessel Types Filters */}
+            <div>
+              <h4 className="text-sm font-medium mb-2">Vessel Types</h4>
+              <div className="grid grid-cols-1 gap-2 max-h-[300px] overflow-y-auto pr-2">
+                {VESSEL_TYPES.map(vesselType => {
+                  const count = vessels.filter(v => v.vesselType === vesselType).length;
+                  return (
+                    <div key={vesselType} className="flex items-center space-x-2">
+                      <Checkbox 
+                        id={`vessel-type-${vesselType}`} 
+                        checked={vesselTypeFilters.includes(vesselType)}
+                        onCheckedChange={() => toggleVesselTypeFilter(vesselType)}
+                      />
+                      <Label htmlFor={`vessel-type-${vesselType}`} className="text-sm flex items-center justify-between w-full">
+                        <span>{vesselType}</span>
+                        <Badge variant="outline" className="ml-1">{count}</Badge>
+                      </Label>
+                    </div>
+                  );
+                })}
+                
+                {/* Show additional vessel types found in the data */}
+                {uniqueVesselTypes
+                  .filter(type => !VESSEL_TYPES.includes(type) && type !== 'Unknown')
+                  .map(vesselType => {
+                    const count = vessels.filter(v => v.vesselType === vesselType).length;
+                    return (
+                      <div key={vesselType} className="flex items-center space-x-2">
+                        <Checkbox 
+                          id={`vessel-type-${vesselType}`} 
+                          checked={vesselTypeFilters.includes(vesselType)}
+                          onCheckedChange={() => toggleVesselTypeFilter(vesselType)}
+                        />
+                        <Label htmlFor={`vessel-type-${vesselType}`} className="text-sm flex items-center justify-between w-full">
+                          <span>{vesselType}</span>
+                          <Badge variant="outline" className="ml-1">{count}</Badge>
+                        </Label>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+
             {/* Refinery Status Filters */}
             <div>
               <h4 className="text-sm font-medium mb-2">Refinery Status</h4>
