@@ -82,17 +82,7 @@ export default function MapboxView({
     }
   }, [selectedRegion]);
 
-  // Update viewport when tracked vessel changes
-  useEffect(() => {
-    if (trackedVessel && trackedVessel.currentLat && trackedVessel.currentLng) {
-      setViewport({
-        ...viewport,
-        latitude: typeof trackedVessel.currentLat === 'number' ? trackedVessel.currentLat : parseFloat(String(trackedVessel.currentLat)),
-        longitude: typeof trackedVessel.currentLng === 'number' ? trackedVessel.currentLng : parseFloat(String(trackedVessel.currentLng)),
-        zoom: 8
-      });
-    }
-  }, [trackedVessel]);
+  // Removed tracking vessel effect
 
   // Handle vessel marker click
   const handleVesselClick = useCallback((vessel: Vessel) => {
@@ -326,34 +316,18 @@ export default function MapboxView({
                 )}
               </div>
 
-              {/* Action buttons */}
-              <div className="flex space-x-2">
+              {/* Action button */}
+              <div className="flex">
                 <Button 
                   size="sm" 
-                  className="text-xs h-8 flex-1 bg-primary/90 hover:bg-primary"
+                  className="text-xs h-8 w-full bg-primary/90 hover:bg-primary"
                   onClick={(e) => {
                     e.stopPropagation();
                     window.location.href = `/vessels/${selectedVessel.id}`;
                   }}
                 >
                   <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
-                  View Details
-                </Button>
-                
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  className="text-xs h-8 flex-1 border-primary/20 text-primary hover:bg-primary/10"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    // Set as tracked vessel
-                    if (onVesselClick) {
-                      onVesselClick(selectedVessel);
-                    }
-                  }}
-                >
-                  <Radar className="h-3.5 w-3.5 mr-1.5" />
-                  Track
+                  View Vessel Details
                 </Button>
               </div>
             </div>
@@ -426,66 +400,7 @@ export default function MapboxView({
         )}
       </Map>
 
-      {/* Tracked Vessel Info */}
-      {trackedVessel && trackedVessel.currentLat && trackedVessel.currentLng && (
-        <div className="absolute top-20 right-4 z-10 bg-white/90 backdrop-blur-sm rounded-lg shadow-md p-4 max-w-[260px] border border-blue-100 dark:border-blue-900/30">
-          <div className="flex items-center justify-between mb-3">
-            <h4 className="text-xs font-bold flex items-center text-blue-600 dark:text-blue-400">
-              <NavigationIcon className="h-3.5 w-3.5 mr-1.5"/>
-              Tracking Vessel
-            </h4>
-            <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300 hover:bg-blue-100 text-[10px] px-2 py-0 flex items-center">
-              <span className="h-1.5 w-1.5 rounded-full bg-blue-500 mr-1 animate-pulse"></span>
-              LIVE
-            </Badge>
-          </div>
-          
-          <div className="text-xs space-y-2 mb-2">
-            <div className="font-medium text-sm mb-2 text-blue-800 dark:text-blue-300 border-b border-blue-100 dark:border-blue-900/40 pb-1">
-              {trackedVessel.name}
-            </div>
-            
-            <div className="flex items-start">
-              <Ship className="h-3 w-3 mr-1.5 text-blue-500/70 mt-0.5" />
-              <div className="flex justify-between w-full">
-                <span className="font-medium">Vessel Type:</span>
-                <span className="ml-1 text-gray-700 dark:text-gray-300">{trackedVessel.vesselType}</span>
-              </div>
-            </div>
-            
-            <div className="flex items-start">
-              <MapPin className="h-3 w-3 mr-1.5 text-blue-500/70 mt-0.5" />
-              <div className="flex flex-col w-full">
-                <span className="font-medium mb-0.5">Position:</span>
-                <span className="text-gray-700 dark:text-gray-300 bg-blue-50 dark:bg-blue-900/20 px-1.5 py-0.5 rounded text-[10px] font-mono">
-                  {typeof trackedVessel.currentLat === 'number' ? trackedVessel.currentLat.toFixed(4) : parseFloat(String(trackedVessel.currentLat)).toFixed(4)}, 
-                  {typeof trackedVessel.currentLng === 'number' ? trackedVessel.currentLng.toFixed(4) : parseFloat(String(trackedVessel.currentLng)).toFixed(4)}
-                </span>
-              </div>
-            </div>
-            
-            {trackedVessel.destinationPort && (
-              <div className="flex items-start">
-                <Radar className="h-3 w-3 mr-1.5 text-blue-500/70 mt-0.5" />
-                <div className="flex justify-between w-full">
-                  <span className="font-medium">Heading to:</span>
-                  <span className="ml-1 text-gray-700 dark:text-gray-300">{trackedVessel.destinationPort.split(',')[0]}</span>
-                </div>
-              </div>
-            )}
-          </div>
-          
-          <Button
-            size="sm"
-            variant="outline"
-            className="text-xs h-7 w-full border-blue-200 text-blue-600 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-900/30 mt-1"
-            onClick={() => window.location.href = `/vessels/${trackedVessel.id}`}
-          >
-            <ExternalLink className="h-3 w-3 mr-1.5" />
-            View Details
-          </Button>
-        </div>
-      )}
+      {/* Removed tracking vessel panel */}
     </div>
   );
 }

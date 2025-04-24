@@ -40,7 +40,6 @@ export default function Dashboard() {
   const [selectedRegion, setSelectedRegion] = useState<Region | null>(null);
   const [selectedVessel, setSelectedVessel] = useState<Vessel | null>(null);
   const [selectedRefinery, setSelectedRefinery] = useState<Refinery | null>(null);
-  const [trackedVessel, setTrackedVessel] = useState<Vessel | null>(null);
   
   // Filters - Default to showing all vessel types (empty array means no filtering)
   const [vesselTypeFilters, setVesselTypeFilters] = useState<string[]>([]);
@@ -89,7 +88,6 @@ export default function Dashboard() {
   // Handle vessel selection
   const handleVesselSelect = (vessel: Vessel) => {
     setSelectedVessel(vessel);
-    setTrackedVessel(vessel); // Start tracking the vessel on the map
     setSelectedRefinery(null); // Clear refinery selection when selecting vessel
   };
   
@@ -97,7 +95,6 @@ export default function Dashboard() {
   const handleRefinerySelect = (refinery: Refinery) => {
     setSelectedRefinery(refinery);
     setSelectedVessel(null); // Clear vessel selection when selecting refinery
-    setTrackedVessel(null); // Stop tracking any vessel when selecting refinery
   };
 
   // Toggle vessel type filter
