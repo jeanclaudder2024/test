@@ -219,7 +219,7 @@ export default function SimpleLeafletMap({
         // Only show vessels that are at sea
         return isCoordinateAtSea(lat, lng);
       })
-      .slice(0, 1000);
+      .slice(0, 5000); // Increased from 1000 to 5000 to show all regenerated vessels
       
     setDisplayVessels(filteredVessels);
     
