@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { Link } from "wouter";
 import SimpleLeafletMap from "@/components/map/SimpleLeafletMap";
 import VesselInfo from "@/components/vessels/VesselInfo";
 import ProgressTimeline from "@/components/vessels/ProgressTimeline";
@@ -14,8 +13,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { REGIONS, OIL_PRODUCT_TYPES } from "@/../../shared/constants";
 import { 
   Ship, Droplet, RadioTower, Factory, 
-  Workflow, Filter, X, MapPin, Navigation,
-  EyeOff
+  Workflow, Filter, X, MapPin, Navigation 
 } from "lucide-react";
 import {
   Card,
@@ -91,7 +89,7 @@ export default function Dashboard() {
   // Handle vessel selection
   const handleVesselSelect = (vessel: Vessel) => {
     setSelectedVessel(vessel);
-    // Don't automatically track vessel - user must click Track button
+    setTrackedVessel(vessel); // Start tracking the vessel on the map
     setSelectedRefinery(null); // Clear refinery selection when selecting vessel
   };
   
@@ -424,10 +422,7 @@ export default function Dashboard() {
             {/* Vessel or Refinery Details Card */}
             <div className="lg:col-span-2">
               {selectedVessel ? (
-                <VesselInfo 
-                  vessel={selectedVessel} 
-                  onTrack={(vessel) => setTrackedVessel(vessel)}
-                />
+                <VesselInfo vessel={selectedVessel} />
               ) : selectedRefinery && (
                 <Card>
                   <CardHeader className="pb-2">

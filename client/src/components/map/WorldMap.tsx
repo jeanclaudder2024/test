@@ -431,6 +431,12 @@ export default function WorldMap({
         zoomControl={false}
         className="h-full w-full"
         ref={mapRef}
+        whenReady={(event) => { 
+          // Fix TypeScript error by using the correct type
+          if (event && event.target) {
+            mapRef.current = event.target;
+          }
+        }}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -517,96 +523,58 @@ export default function WorldMap({
                 click: () => onVesselClick(vessel)
               }}
             >
-              <Popup maxWidth={300} minWidth={260}>
-                <div className="p-0 overflow-hidden">
-                  {/* Vessel Image Header */}
-                  <div className="relative h-24 overflow-hidden bg-gradient-to-r from-blue-900 to-blue-700">
-                    <div 
-                      className="absolute inset-0 bg-cover bg-center opacity-60"
-                      style={{
-                        backgroundImage: `url('https://images.unsplash.com/photo-1572396698880-61c914c5901e?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=300&ixid=MnwxfDB8MXxyYW5kb218MHx8c2hpcHx8fHx8fDE2NDU3NjE5NTg&ixlib=rb-1.2.1&q=80&utm_campaign=api-credit&utm_medium=referral&utm_source=unsplash_source&w=450')`
-                      }}
-                    ></div>
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-                    <div className="absolute bottom-0 left-0 p-3 w-full">
-                      <h3 className="font-bold text-white text-sm flex items-center gap-1.5">
-                        <Ship className="h-4 w-4" />
-                        {vessel.name}
-                      </h3>
-                      <div className="flex items-center mt-0.5">
-                        <Badge 
-                          variant="outline" 
-                          className="mr-1.5 text-[10px] bg-white/20 text-white border-white/30"
-                        >
-                          {vessel.vesselType || 'Oil Tanker'}
-                        </Badge>
-                        <span className="text-white/80 text-[10px]">{vessel.flag}</span>
-                      </div>
+              <Popup>
+                <div className="text-sm p-1">
+                  <h3 className="font-medium flex items-center">
+                    <Ship className="h-4 w-4 mr-1 text-primary" />
+                    {vessel.name}
+                  </h3>
+                  <p className="text-gray-600 text-xs">{vessel.vesselType} | {vessel.flag}</p>
+                  <div className="flex flex-col space-y-1 mt-2">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-600">IMO:</span>
+                      <span className="font-medium">{vessel.imo}</span>
                     </div>
+                    {vessel.cargoType && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-gray-600">Cargo:</span>
+                        <span className="font-medium">{vessel.cargoType}</span>
+                      </div>
+                    )}
+                    {vessel.departurePort && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-gray-600">From:</span>
+                        <span className="font-medium">{vessel.departurePort}</span>
+                      </div>
+                    )}
+                    {vessel.destinationPort && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-gray-600">To:</span>
+                        <span className="font-medium">{vessel.destinationPort}</span>
+                      </div>
+                    )}
                   </div>
-                  
-                  {/* Vessel Info */}
-                  <div className="p-3">
-                    <div className="grid grid-cols-2 gap-2 mb-3">
-                      <div className="bg-blue-50 dark:bg-blue-950/30 rounded p-1.5">
-                        <div className="text-[10px] text-blue-500 dark:text-blue-400 font-medium">IMO NUMBER</div>
-                        <div className="text-sm font-medium">{vessel.imo || 'N/A'}</div>
-                      </div>
-                      <div className="bg-emerald-50 dark:bg-emerald-950/30 rounded p-1.5">
-                        <div className="text-[10px] text-emerald-500 dark:text-emerald-400 font-medium">CARGO TYPE</div>
-                        <div className="text-sm font-medium truncate">{vessel.cargoType || 'Unknown'}</div>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      {vessel.departurePort && (
-                        <div className="flex items-start gap-2 text-xs">
-                          <div className="mt-0.5 h-4 w-4 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center flex-shrink-0">
-                            <span className="text-blue-600 dark:text-blue-400 text-[10px]">A</span>
-                          </div>
-                          <div>
-                            <div className="text-[10px] text-muted-foreground">DEPARTURE</div>
-                            <div className="font-medium">{vessel.departurePort}</div>
-                          </div>
-                        </div>
-                      )}
-                      
-                      {vessel.destinationPort && (
-                        <div className="flex items-start gap-2 text-xs">
-                          <div className="mt-0.5 h-4 w-4 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center flex-shrink-0">
-                            <span className="text-green-600 dark:text-green-400 text-[10px]">B</span>
-                          </div>
-                          <div>
-                            <div className="text-[10px] text-muted-foreground">DESTINATION</div>
-                            <div className="font-medium">{vessel.destinationPort}</div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    
-                    {/* Vessel Card Actions */}
-                    <div className="flex mt-3 gap-2">
-                      <Button 
-                        variant="outline" 
-                        className="flex-1 text-xs h-8 border-green-500 text-green-600 hover:text-green-700 hover:bg-green-50 dark:border-green-700 dark:text-green-500 dark:hover:bg-green-950/50"
-                        onClick={() => onVesselClick(vessel)}
-                      >
-                        <Navigation className="h-3 w-3 mr-1" />
-                        Track Vessel
-                      </Button>
-                      <Button 
-                        variant="default" 
-                        className="flex-1 text-xs h-8 bg-primary hover:bg-primary/90"
-                        onClick={() => {
-                          onVesselClick(vessel);
-                          // Navigate to vessel detail page
-                          window.location.href = `/vessels/${vessel.id}`;
-                        }}
-                      >
-                        <Ship className="h-3 w-3 mr-1" />
-                        View Details
-                      </Button>
-                    </div>
+                  <div className="flex mt-2 gap-2">
+                    <Button 
+                      variant="outline" 
+                      className="flex-1 text-xs h-7"
+                      onClick={() => onVesselClick(vessel)}
+                    >
+                      <Ship className="h-3 w-3 mr-1" />
+                      Track
+                    </Button>
+                    <Button 
+                      variant="default" 
+                      className="flex-1 text-xs h-7 bg-blue-600 hover:bg-blue-700"
+                      onClick={() => {
+                        onVesselClick(vessel);
+                        // Navigate to vessel detail page
+                        window.location.href = `/vessels/${vessel.id}`;
+                      }}
+                    >
+                      <Navigation className="h-3 w-3 mr-1" />
+                      Details
+                    </Button>
                   </div>
                 </div>
               </Popup>

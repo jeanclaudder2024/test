@@ -1,7 +1,6 @@
 import { storage } from "../storage";
 import { InsertRefinery, Refinery } from "@shared/schema";
 import { generateRefineryDataset } from "./refineryGenerator";
-import { dataService } from "./asiStreamService";
 
 export const refineryService = {
   getAllRefineries: async () => {
@@ -49,10 +48,10 @@ export const refineryService = {
         };
       }
       
-      // Database empty, fetch real refineries from ASI Stream API
-      console.log("No refineries in database. Fetching real refinery data from ASI Stream API...");
-      const refineries = await dataService.fetchRefineries();
-      console.log(`Fetched ${refineries.length} real refineries from ASI Stream API.`);
+      // Database empty, generate refineries from our dataset
+      console.log("No refineries in database. Generating refinery data...");
+      const refineries = generateRefineryDataset();
+      console.log(`Generated ${refineries.length} refineries from dataset.`);
       
       // Create refineries
       const createdRefineries: Refinery[] = [];

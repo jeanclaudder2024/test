@@ -18,7 +18,6 @@ import {
   insertDocumentSchema,
   insertBrokerSchema,
   Vessel,
-  InsertVessel,
   Refinery,
   vessels,
   refineries,
@@ -27,12 +26,10 @@ import {
   stats
 } from "@shared/schema";
 import { z } from "zod";
-import { count } from "drizzle-orm";
 import { fromZodError } from "zod-validation-error";
 import { apiTesterRouter } from "./routes/apiTester";
 import { brokerRouter } from "./routes/brokerRoutes";
 import { tradingRouter } from "./routes/tradingRoutes";
-import { openaiRouter } from "./routes/openaiRoutes";
 import { seedBrokers } from "./services/seedService";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -41,8 +38,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   const apiRouter = express.Router();
 
-  // Development-only endpoints
+  // Endpoint to clear all vessel and refinery data from the database
   if (app.get("env") === "development") {
+    apiRouter.post("/clear-data", async (req, res) => {
+      try {
+        console.log("Starting database clearing process...");
+        
+        // Delete all vessels
+        console.log("Deleting all vessels...");
+        const vesselsDeleted = await db.delete(vessels).returning();
+        console.log(`Deleted ${vesselsDeleted.length} vessels.`);
+        
+        // Delete all refineries
+        console.log("Deleting all refineries...");
+        const refineriesDeleted = await db.delete(refineries).returning();
+        console.log(`Deleted ${refineriesDeleted.length} refineries.`);
+        
+        // Delete all progress events
+        console.log("Deleting all progress events...");
+        const eventsDeleted = await db.delete(progressEvents).returning();
+        console.log(`Deleted ${eventsDeleted.length} progress events.`);
+        
+        // Delete all documents related to vessels
+        console.log("Deleting all vessel documents...");
+        const documentsDeleted = await db.delete(documents).returning();
+        console.log(`Deleted ${documentsDeleted.length} documents.`);
+        
+        // Reset stats
+        // Update via direct db query to include lastUpdated field
+        await db.update(stats).set({ 
+          activeVessels: 0, 
+          totalCargo: "0",
+          activeRefineries: 0,
+          lastUpdated: new Date()
+        });
+        
+        res.json({ 
+          success: true, 
+          message: "All vessel and refinery data has been deleted",
+          deleted: {
+            vessels: vesselsDeleted.length,
+            refineries: refineriesDeleted.length,
+            progressEvents: eventsDeleted.length,
+            documents: documentsDeleted.length
+          }
+        });
+      } catch (error) {
+        console.error("Error clearing database:", error);
+        res.status(500).json({ message: "Failed to clear data" });
+      }
+    });
     
     // Initialize with seed data in development
     // Route to refresh vessel data with force parameter
@@ -67,89 +112,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (error) {
         console.error("Error refreshing vessel data:", error);
         res.status(500).json({ message: "Failed to refresh vessel data" });
-      }
-    });
-    
-    // Route to fetch fresh data from ASI Stream API
-    apiRouter.post("/asi-stream/refresh", async (req, res) => {
-      try {
-        console.log("Fetching fresh vessel data from ASI Stream API...");
-        
-        // Fetch vessels from ASI Stream API
-        const vessels = await dataService.fetchVessels();
-        console.log(`Fetched ${vessels.length} vessels from ASI Stream API.`);
-        
-        // Get all refineries (for destination assignment)
-        const refineries = await storage.getRefineries();
-        
-        // Track created/updated vessels
-        let created = 0;
-        let updated = 0;
-        let errors = 0;
-        
-        // Process each vessel
-        for (const vessel of vessels) {
-          try {
-            // Check if vessel already exists in database by IMO
-            const existingVessels = await storage.getVessels();
-            const existingVessel = existingVessels.find(v => v.imo === vessel.imo);
-            
-            // If vessel doesn't exist, assign a destination and create it
-            if (!existingVessel) {
-              // Assign random refinery as destination if none exists
-              if ((!vessel.destinationPort || vessel.destinationPort === '') && refineries.length > 0) {
-                const randomRefinery = refineries[Math.floor(Math.random() * refineries.length)];
-                vessel.destinationPort = `REF:${randomRefinery.id}:${randomRefinery.name}`;
-                
-                // Ensure ETA is set
-                if (!vessel.eta) {
-                  const now = new Date();
-                  const futureOffset = Math.floor(Math.random() * 30) + 5; // 5-35 days in future
-                  const etaDate = new Date(now);
-                  etaDate.setDate(etaDate.getDate() + futureOffset);
-                  vessel.eta = etaDate;
-                }
-              }
-              
-              // Create new vessel in database
-              await storage.createVessel(vessel);
-              created++;
-            } else {
-              // Update existing vessel with new position and data
-              await storage.updateVessel(existingVessel.id, {
-                currentLat: vessel.currentLat,
-                currentLng: vessel.currentLng,
-                // No heading or speed in schema
-                eta: vessel.eta || existingVessel.eta,
-                destinationPort: vessel.destinationPort || existingVessel.destinationPort,
-                cargoType: vessel.cargoType || existingVessel.cargoType,
-                cargoCapacity: vessel.cargoCapacity || existingVessel.cargoCapacity
-                // No cargoVolume or status in schema
-              });
-              updated++;
-            }
-          } catch (vesselError) {
-            console.error(`Error processing vessel ${vessel.name}:`, vesselError);
-            errors++;
-          }
-        }
-        
-        res.json({
-          success: true,
-          message: "Successfully processed vessels from ASI Stream API",
-          data: {
-            fetched: vessels.length,
-            created,
-            updated,
-            errors
-          }
-        });
-      } catch (error: any) {
-        console.error("Error fetching from ASI Stream API:", error);
-        res.status(500).json({ 
-          message: "Failed to fetch data from ASI Stream API",
-          error: error.message || String(error)
-        });
       }
     });
 
@@ -211,40 +173,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     });
     
-    // Route to refresh ASI Stream data
-    apiRouter.post("/refresh-asi-data", async (req, res) => {
-      try {
-        console.log("Fetching fresh vessel data from ASI Stream API...");
-        
-        // Fetch vessels from ASI Stream API
-        const vessels = await dataService.fetchVessels();
-        console.log(`Fetched ${vessels.length} vessels from ASI Stream API.`);
-        
-        // Process results
-        let created = 0;
-        let updated = 0;
-        
-        // Handle the vessels
-        // ... (implementation would go here)
-        
-        res.json({
-          success: true,
-          message: "Successfully processed vessels from ASI Stream API",
-          data: {
-            fetched: vessels.length,
-            created,
-            updated
-          }
-        });
-      } catch (error: any) {
-        console.error("Error fetching from ASI Stream API:", error);
-        res.status(500).json({ 
-          message: "Failed to fetch data from ASI Stream API",
-          error: error.message || String(error)
-        });
-      }
-    });
-
     // Route to update refinery coordinates with accurate data
     apiRouter.post("/refineries/update-coordinates", async (req, res) => {
       try {
@@ -968,12 +896,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (currentTime - lastDbFetchTime > POSITION_UPDATE_INTERVAL) {
           setTimeout(async () => {
             try {
-              // Get position updates from ASI Stream API
+              // Get position updates from database, no longer using API
               const positionUpdates = await dataService.fetchVessels();
               
               // Map of IMO -> position updates for fast lookup
               const positionMap = new Map();
-              positionUpdates.forEach((vessel: InsertVessel) => {
+              positionUpdates.forEach(vessel => {
                 if (vessel.imo && vessel.currentLat && vessel.currentLng) {
                   positionMap.set(vessel.imo, {
                     currentLat: vessel.currentLat,
@@ -1003,7 +931,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 }
               }
             } catch (updateError) {
-              console.error("Error updating vessel positions from ASI Stream API:", updateError);
+              console.error("Error updating vessel positions from database:", updateError);
             }
           }, 100); // Run quickly after sending data to update positions
         }
@@ -1039,9 +967,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Mount trading routes
   apiRouter.use("/trading", tradingRouter);
-  
-  // Mount OpenAI routes for AI features
-  apiRouter.use("/openai", openaiRouter);
   
   // Payment and subscription endpoints are defined below with middleware protection
 
@@ -1130,63 +1055,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Subscription cancellation error:", error);
       res.status(500).json({ message: error.message || "Failed to cancel subscription" });
-    }
-  });
-  
-  // Global endpoint for clearing all vessel and refinery data
-  apiRouter.post("/clear-data", async (req, res) => {
-    try {
-      console.log("Starting data cleanup process...");
-      
-      // Get counts before deleting for reporting
-      const vesselCount = await db.select({ count: count() }).from(vessels);
-      const refineryCount = await db.select({ count: count() }).from(refineries);
-      const eventCount = await db.select({ count: count() }).from(progressEvents);
-      const docCount = await db.select({ count: count() }).from(documents);
-      
-      // Clear all vessels
-      await db.delete(vessels);
-      console.log(`Deleted ${vesselCount[0].count} vessels from database.`);
-      
-      // Clear all refineries
-      await db.delete(refineries);
-      console.log(`Deleted ${refineryCount[0].count} refineries from database.`);
-      
-      // Clear all progress events
-      await db.delete(progressEvents);
-      console.log(`Deleted ${eventCount[0].count} progress events from database.`);
-      
-      // Clear all documents
-      await db.delete(documents);
-      console.log(`Deleted ${docCount[0].count} documents from database.`);
-      
-      // Reset stats if they exist
-      const statsExists = await db.select().from(stats);
-      if (statsExists.length > 0) {
-        await db.update(stats).set({ 
-          activeVessels: 0, 
-          totalCargo: "0",
-          activeRefineries: 0,
-          lastUpdated: new Date()
-        });
-      }
-      
-      res.json({
-        success: true,
-        message: "All vessel and refinery data cleared successfully",
-        data: {
-          vessels: Number(vesselCount[0].count),
-          refineries: Number(refineryCount[0].count),
-          events: Number(eventCount[0].count),
-          documents: Number(docCount[0].count)
-        }
-      });
-    } catch (error: any) {
-      console.error("Error clearing data:", error);
-      res.status(500).json({ 
-        message: "Failed to clear data",
-        error: error.message || String(error)
-      });
     }
   });
 

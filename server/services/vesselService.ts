@@ -1,7 +1,7 @@
 import { storage } from "../storage";
 import { InsertVessel, InsertProgressEvent, Vessel, ProgressEvent } from "@shared/schema";
-import { generateLargeVesselDataset } from "./vesselGenerator";
 import { dataService } from "./asiStreamService";
+import { generateLargeVesselDataset } from "./vesselGenerator";
 import { OIL_PRODUCT_TYPES } from "@shared/constants";
 
 export const vesselService = {
@@ -217,9 +217,9 @@ export const vesselService = {
         console.log(`Found ${refineries.length} refineries for destination assignment.`);
       }
       
-      console.log("Fetching oil vessels from ASI Stream API...");
-      const vessels = await dataService.fetchVessels();
-      console.log(`Fetched ${vessels.length} oil vessels from ASI Stream API.`);
+      console.log("Generating large vessel dataset...");
+      const vessels = generateLargeVesselDataset(2500); // Increased from 1500 to 2500
+      console.log(`Generated ${vessels.length} vessels.`);
       
       // Track created vessels and IMOs to avoid duplicates
       const createdVessels: Vessel[] = [];
