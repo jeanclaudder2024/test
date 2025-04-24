@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useDataStream } from '@/hooks/useDataStream';
 import { Vessel } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,15 @@ import {
   TableHeader, 
   TableRow 
 } from '@/components/ui/table';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -45,6 +54,8 @@ export default function Vessels() {
   const [selectedOilTypes, setSelectedOilTypes] = useState<string[]>([]);
   const [selectedTab, setSelectedTab] = useState<string>("all");
   const [isUpdatingDestinations, setIsUpdatingDestinations] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [vesselsPerPage] = useState(50); // Show 50 vessels per page
   const { toast } = useToast();
   
   // Helper function to determine oil category
@@ -98,6 +109,35 @@ export default function Vessels() {
       return matchesSearch && matchesOilType && matchesTab;
     });
   }, [vesselsWithCategories, searchTerm, selectedOilTypes, selectedTab]);
+  
+  // Get current page vessels
+  const indexOfLastVessel = currentPage * vesselsPerPage;
+  const indexOfFirstVessel = indexOfLastVessel - vesselsPerPage;
+  const currentVessels = filteredVessels.slice(indexOfFirstVessel, indexOfLastVessel);
+  const totalPages = Math.ceil(filteredVessels.length / vesselsPerPage);
+  
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedOilTypes, selectedTab]);
+  
+  // Pagination handlers
+  const goToPage = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+  
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      goToPage(currentPage - 1);
+    }
+  };
+  
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      goToPage(currentPage + 1);
+    }
+  };
   
   // Function to ensure all vessels have destinations
   const handleEnsureDestinations = async () => {
@@ -311,7 +351,7 @@ export default function Vessels() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredVessels.map((vessel) => (
+              {currentVessels.map((vessel) => (
                 <TableRow key={vessel.id}>
                   <TableCell className="font-medium">{vessel.name}</TableCell>
                   <TableCell>{vessel.imo}</TableCell>
@@ -383,6 +423,88 @@ export default function Vessels() {
               ))}
             </TableBody>
           </Table>
+          
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="py-4 border-t bg-card">
+              <div className="flex justify-between items-center px-4">
+                <div className="text-sm text-muted-foreground">
+                  Showing {Math.min(indexOfFirstVessel + 1, filteredVessels.length)} to {Math.min(indexOfLastVessel, filteredVessels.length)} of {filteredVessels.length} vessels
+                </div>
+                
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        onClick={goToPreviousPage} 
+                        className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                      />
+                    </PaginationItem>
+                    
+                    {/* Show first page */}
+                    {currentPage > 3 && (
+                      <PaginationItem>
+                        <PaginationLink onClick={() => goToPage(1)}>1</PaginationLink>
+                      </PaginationItem>
+                    )}
+                    
+                    {/* Show ellipsis if needed */}
+                    {currentPage > 4 && (
+                      <PaginationItem>
+                        <PaginationEllipsis />
+                      </PaginationItem>
+                    )}
+                    
+                    {/* Show previous page if not first page */}
+                    {currentPage > 1 && (
+                      <PaginationItem>
+                        <PaginationLink onClick={() => goToPage(currentPage - 1)}>
+                          {currentPage - 1}
+                        </PaginationLink>
+                      </PaginationItem>
+                    )}
+                    
+                    {/* Current page */}
+                    <PaginationItem>
+                      <PaginationLink isActive>{currentPage}</PaginationLink>
+                    </PaginationItem>
+                    
+                    {/* Show next page if not last page */}
+                    {currentPage < totalPages && (
+                      <PaginationItem>
+                        <PaginationLink onClick={() => goToPage(currentPage + 1)}>
+                          {currentPage + 1}
+                        </PaginationLink>
+                      </PaginationItem>
+                    )}
+                    
+                    {/* Show ellipsis if needed */}
+                    {currentPage < totalPages - 3 && (
+                      <PaginationItem>
+                        <PaginationEllipsis />
+                      </PaginationItem>
+                    )}
+                    
+                    {/* Show last page */}
+                    {currentPage < totalPages - 2 && (
+                      <PaginationItem>
+                        <PaginationLink onClick={() => goToPage(totalPages)}>
+                          {totalPages}
+                        </PaginationLink>
+                      </PaginationItem>
+                    )}
+                    
+                    <PaginationItem>
+                      <PaginationNext 
+                        onClick={goToNextPage} 
+                        className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
