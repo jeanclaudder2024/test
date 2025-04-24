@@ -31,14 +31,20 @@ export function useDataStream() {
     // Handle vessel data updates
     eventSource.addEventListener('vessels', (event: MessageEvent) => {
       try {
-        const vessels = JSON.parse(event.data);
+        const allVessels = JSON.parse(event.data);
+        
+        // Filter to only include cargo vessels
+        const cargoVessels = allVessels.filter((vessel: Vessel) => 
+          vessel.vesselType?.toLowerCase().includes('cargo')
+        );
+        
         setData(prev => ({
           ...prev,
-          vessels,
+          vessels: cargoVessels,
           loading: false,
           lastUpdated: new Date()
         }));
-        console.log('Received vessel data:', vessels.length, 'vessels');
+        console.log('Received vessel data:', cargoVessels.length, 'cargo vessels out of', allVessels.length, 'total vessels');
       } catch (error) {
         console.error('Error parsing vessel data:', error);
         setData(prev => ({

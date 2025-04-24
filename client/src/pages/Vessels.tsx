@@ -88,6 +88,10 @@ export default function Vessels() {
   // Filter vessels based on search term and selected oil types
   const filteredVessels = useMemo(() => {
     return vesselsWithCategories.filter(vessel => {
+      // Only show cargo vessels
+      const isCargoVessel = vessel.vesselType?.toLowerCase().includes('cargo') || false;
+      if (!isCargoVessel) return false;
+      
       // Search term filter
       const matchesSearch = 
         vessel.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

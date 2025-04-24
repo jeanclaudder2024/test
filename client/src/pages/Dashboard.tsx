@@ -57,6 +57,10 @@ export default function Dashboard() {
   
   // Apply all filters
   const filteredVessels = vessels.filter(vessel => {
+    // Only show cargo vessels
+    const isCargoVessel = vessel.vesselType?.toLowerCase().includes('cargo') || false;
+    if (!isCargoVessel) return false;
+    
     // Apply region filter
     const passesRegionFilter = !selectedRegion || vessel.currentRegion === selectedRegion;
     
