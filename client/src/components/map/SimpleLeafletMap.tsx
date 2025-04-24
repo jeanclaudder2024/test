@@ -117,7 +117,7 @@ export default function SimpleLeafletMap({
     const mapContainer = document.getElementById(MAP_CONTAINER_ID);
     if (!mapContainer) return;
     
-    // Function to clear all existing markers
+    // Function to clear all existing markers and lines
     const clearMarkers = () => {
       // Clear vessel markers
       vesselMarkersRef.current.forEach(marker => {
@@ -145,6 +145,26 @@ export default function SimpleLeafletMap({
         }
       });
       routeLinesRef.current = [];
+      
+      // Remove any highlight classes from DOM
+      document.querySelectorAll('.highlight-marker, .nearby-vessel-highlight').forEach(el => {
+        el.classList.remove('highlight-marker', 'nearby-vessel-highlight');
+      });
+    };
+    
+    // Function to clear just vessel-refinery connection lines
+    // This is used when showing associated vessels for a different refinery
+    const clearConnectionLines = () => {
+      // Only clear lines with the vessel-refinery-connection class
+      routeLinesRef.current = routeLinesRef.current.filter(item => {
+        if (item.line && item.line.options && item.line.options.className === 'vessel-refinery-connection') {
+          if (typeof item.line.remove === 'function') {
+            item.line.remove();
+          }
+          return false; // remove from array
+        }
+        return true; // keep other lines
+      });
     };
     
     // If map exists, just update it; otherwise create a new one
@@ -999,6 +1019,15 @@ export default function SimpleLeafletMap({
             if (viewVesselsBtn) {
               viewVesselsBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
+                
+                // First, clear any previous connection lines
+                clearConnectionLines();
+                
+                // Reset any previous highlights
+                document.querySelectorAll('.highlight-marker, .nearby-vessel-highlight').forEach(el => {
+                  el.classList.remove('highlight-marker', 'nearby-vessel-highlight');
+                });
+                
                 // Add a nice notification
                 const notification = document.createElement('div');
                 notification.style.cssText = `
@@ -1023,8 +1052,7 @@ export default function SimpleLeafletMap({
                 notification.innerHTML = `Showing vessels for refinery: ${refinery.name}`;
                 document.body.appendChild(notification);
                 
-                // Create a filter to show only vessels near this refinery
-                // This could be expanded to use an actual API call for associated vessels
+                // Get coordinates for this refinery
                 const refineryLat = typeof refinery.lat === 'number' 
                   ? refinery.lat 
                   : parseFloat(String(refinery.lat));
@@ -1033,8 +1061,28 @@ export default function SimpleLeafletMap({
                   ? refinery.lng
                   : parseFloat(String(refinery.lng));
                 
-                // Zoom to refinery to see regional vessels
+                // Find vessels that are near this refinery (within ~500km)
+                const nearbyVessels = displayVessels.filter(vessel => {
+                  if (!vessel.currentLat || !vessel.currentLng) return false;
+                  
+                  const vesselLat = typeof vessel.currentLat === 'number'
+                    ? vessel.currentLat
+                    : parseFloat(String(vessel.currentLat));
+                    
+                  const vesselLng = typeof vessel.currentLng === 'number'
+                    ? vessel.currentLng
+                    : parseFloat(String(vessel.currentLng));
+                    
+                  // Calculate approximate distance (rough calculation)
+                  const latDiff = Math.abs(vesselLat - refineryLat);
+                  const lngDiff = Math.abs(vesselLng - refineryLng);
+                  
+                  // Rough approximation for ~500km
+                  return (latDiff*latDiff + lngDiff*lngDiff) < 25;
+                });
+                
                 if (map) {
+                  // First zoom to refinery
                   map.setView([refineryLat, refineryLng], 6);
                   
                   // Highlight the refinery marker
@@ -1042,11 +1090,115 @@ export default function SimpleLeafletMap({
                   if (markerEl) {
                     markerEl.classList.add('highlight-marker');
                     
-                    // Remove highlight after 5 seconds
+                    // Remove highlight after 30 seconds
                     setTimeout(() => {
                       markerEl.classList.remove('highlight-marker');
-                    }, 5000);
+                    }, 30000);
                   }
+                  
+                  // Highlight associated vessels and draw connection lines
+                  nearbyVessels.forEach(vessel => {
+                    // Find this vessel's marker
+                    const vesselMarker = vesselMarkersRef.current.find(m => {
+                      return m._latlng && 
+                        vessel.currentLat && 
+                        vessel.currentLng && 
+                        m._latlng.lat === parseFloat(String(vessel.currentLat)) && 
+                        m._latlng.lng === parseFloat(String(vessel.currentLng));
+                    });
+                    
+                    if (vesselMarker) {
+                      const vesselMarkerEl = vesselMarker.getElement();
+                      if (vesselMarkerEl) {
+                        vesselMarkerEl.classList.add('nearby-vessel-highlight');
+                        
+                        // Remove highlight after 30 seconds
+                        setTimeout(() => {
+                          vesselMarkerEl.classList.remove('nearby-vessel-highlight');
+                        }, 30000);
+                      }
+                      
+                      // Create a line connecting the vessel to the refinery
+                      const vesselLat = typeof vessel.currentLat === 'number'
+                        ? vessel.currentLat
+                        : parseFloat(String(vessel.currentLat));
+                        
+                      const vesselLng = typeof vessel.currentLng === 'number'
+                        ? vessel.currentLng
+                        : parseFloat(String(vessel.currentLng));
+                      
+                      // Draw a curved line from vessel to refinery
+                      const midLat = (vesselLat + refineryLat) / 2;
+                      const midLng = (vesselLng + refineryLng) / 2;
+                      
+                      // Add some curve variation
+                      const curveVariation = Math.random() * 0.7 - 0.35;  // Random between -0.35 and 0.35
+                      const controlPoint = [
+                        midLat + curveVariation, 
+                        midLng + curveVariation
+                      ];
+                      
+                      // Create a curved path using a Bézier curve approximation
+                      const curvePoints = [];
+                      const steps = 20;
+                      for (let i = 0; i <= steps; i++) {
+                        const t = i / steps;
+                        // Quadratic Bézier curve formula
+                        const lat_ = (1-t)*(1-t)*vesselLat + 2*(1-t)*t*controlPoint[0] + t*t*refineryLat;
+                        const lng_ = (1-t)*(1-t)*vesselLng + 2*(1-t)*t*controlPoint[1] + t*t*refineryLng;
+                        curvePoints.push([lat_, lng_]);
+                      }
+                      
+                      // Create connection line
+                      const connectionLine = L.polyline(
+                        curvePoints,
+                        {
+                          color: getRefineryColor(),
+                          weight: 2,
+                          opacity: 0.6,
+                          dashArray: '5, 8',
+                          className: 'vessel-refinery-connection'
+                        }
+                      ).addTo(map);
+                      
+                      // Store reference to remove later
+                      routeLinesRef.current.push({
+                        vesselId: vessel.id,
+                        line: connectionLine
+                      });
+                    }
+                  });
+                  
+                  // Show notification of how many vessels were found
+                  const countNotification = document.createElement('div');
+                  countNotification.style.cssText = `
+                    position: fixed;
+                    bottom: 20px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background-color: rgba(0, 0, 0, 0.8);
+                    color: white;
+                    padding: 10px 20px;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                    z-index: 10000;
+                    font-size: 14px;
+                    text-align: center;
+                    font-weight: 500;
+                    transition: all 0.3s ease;
+                  `;
+                  countNotification.innerHTML = `Found ${nearbyVessels.length} vessels associated with ${refinery.name}`;
+                  document.body.appendChild(countNotification);
+                  
+                  // Remove count notification after 10 seconds
+                  setTimeout(() => {
+                    countNotification.style.opacity = '0';
+                    countNotification.style.transform = 'translate(-50%, 20px)';
+                    
+                    setTimeout(() => {
+                      document.body.removeChild(countNotification);
+                    }, 300);
+                  }, 10000);
                 }
                 
                 // Close popup after clicking

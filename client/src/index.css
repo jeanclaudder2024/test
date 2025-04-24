@@ -523,4 +523,37 @@
       filter: brightness(1);
     }
   }
+  
+  /* Highlight effect for nearby vessels */
+  .nearby-vessel-highlight {
+    animation: vessel-highlight 1.5s ease-in-out infinite;
+    z-index: 950 !important;
+  }
+  
+  @keyframes vessel-highlight {
+    0% {
+      transform: scale(1);
+      filter: brightness(1) drop-shadow(0 0 0 rgba(255, 255, 255, 0));
+    }
+    50% {
+      transform: scale(1.15);
+      filter: brightness(1.4) drop-shadow(0 0 10px rgba(255, 255, 255, 0.9));
+    }
+    100% {
+      transform: scale(1);
+      filter: brightness(1) drop-shadow(0 0 0 rgba(255, 255, 255, 0));
+    }
+  }
+  
+  /* Animation for vessel-refinery connection lines */
+  .vessel-refinery-connection {
+    animation: line-dash 20s linear infinite;
+    stroke-dasharray: 5, 8;
+  }
+  
+  @keyframes line-dash {
+    to {
+      stroke-dashoffset: -1000;
+    }
+  }
 }
