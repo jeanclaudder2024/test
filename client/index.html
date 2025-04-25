@@ -3,6 +3,55 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+    <!-- Leaflet JavaScript -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+     <style>
+      /* Add basic marker styles */
+      .vessel-marker-container {
+        position: relative;
+      }
+      .vessel-marker-pulse {
+        position: absolute;
+        border-radius: 50%;
+        height: 36px;
+        width: 36px;
+        border: 3px solid #FF6B6B;
+        animation: pulse 2s infinite;
+        box-sizing: border-box;
+        top: -5px;
+        left: -5px;
+        z-index: 899;
+      }
+      @keyframes pulse {
+        0% {
+          transform: scale(0.8);
+          opacity: 0.8;
+        }
+        70% {
+          transform: scale(1.2);
+          opacity: 0;
+        }
+        100% {
+          transform: scale(0.8);
+          opacity: 0;
+        }
+      }
+      /* Map popup styles */
+      .leaflet-popup-content-wrapper {
+        border-radius: 8px !important;
+        padding: 0 !important;
+      }
+      .leaflet-popup-content {
+        margin: 0 !important;
+        padding: 8px !important;
+      }
+     </style>
   </head>
   <body>
     <div id="root"></div>
