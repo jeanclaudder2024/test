@@ -476,7 +476,10 @@ export default function Dashboard() {
             onRefineryClick={handleRefinerySelect}
             isLoading={loading}
             initialCenter={selectedRefinery && selectedRefinery.lat && selectedRefinery.lng 
-              ? [parseFloat(selectedRefinery.lat as string), parseFloat(selectedRefinery.lng as string)]
+              ? [
+                  typeof selectedRefinery.lat === 'string' ? parseFloat(selectedRefinery.lat) : selectedRefinery.lat,
+                  typeof selectedRefinery.lng === 'string' ? parseFloat(selectedRefinery.lng) : selectedRefinery.lng
+                ]
               : undefined}
             initialZoom={selectedRefinery ? 6 : undefined}
           />
@@ -533,7 +536,8 @@ export default function Dashboard() {
                         <span className="font-medium flex items-center">
                           <MapPin className="h-3 w-3 mr-1" /> 
                           {selectedRefinery.lat && selectedRefinery.lng 
-                            ? `${parseFloat(selectedRefinery.lat as string).toFixed(4)}, ${parseFloat(selectedRefinery.lng as string).toFixed(4)}`
+                            ? `${(typeof selectedRefinery.lat === 'string' ? parseFloat(selectedRefinery.lat) : selectedRefinery.lat).toFixed(4)}, 
+                               ${(typeof selectedRefinery.lng === 'string' ? parseFloat(selectedRefinery.lng) : selectedRefinery.lng).toFixed(4)}`
                             : 'Coordinates unavailable'}
                         </span>
                       </div>

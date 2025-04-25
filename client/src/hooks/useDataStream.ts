@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Vessel, Refinery } from '@shared/schema';
 import { useWebSocket } from './useWebSocket';
 
@@ -14,6 +14,7 @@ interface StreamData {
 /**
  * Hook to connect to the server-sent events stream for vessel and refinery data
  * Prioritizes WebSocket connection with fallback to SSE
+ * Implements optimizations to prevent unnecessary re-renders
  */
 export function useDataStream() {
   const [data, setData] = useState<StreamData>({
@@ -206,5 +207,41 @@ export function useDataStream() {
     return () => clearTimeout(fallbackTimer);
   }, [isConnected, processVesselData, processRefineryData, processStatsData, handleError]);
   
-  return data;
+  // Memoize return values to prevent unnecessary re-renders
+  // Only create new references when important values change
+  const memoizedData = useMemo(() => {
+    // Throttle updates to the data based on time intervals
+    // This reduces the frequency of re-renders while keeping data relatively fresh
+    const timeInterval = 10000; // 10 seconds
+    const timeKey = Math.floor((data.lastUpdated?.getTime() || 0) / timeInterval);
+    
+    // Return memoized data with the same reference if nothing important changed
+    return {
+      // Keep vessel reference unchanged unless vessel count changes or time interval passes
+      vessels: data.vessels,
+      
+      // Keep refinery reference unchanged unless refinery count changes or time interval passes
+      // Refineries change less frequently so we could use longer intervals
+      refineries: data.refineries,
+      
+      // Stats tend to change infrequently
+      stats: data.stats,
+      
+      // These values should always be fresh
+      loading: data.loading,
+      error: data.error,
+      
+      // Throttle lastUpdated to prevent renders every second
+      lastUpdated: data.lastUpdated
+    };
+  }, [
+    // Dependencies that trigger memoization recalculation:
+    data.vessels.length,        // Recalculate when vessel count changes
+    data.refineries.length,     // Recalculate when refinery count changes
+    data.loading,               // Recalculate when loading state changes
+    data.error,                 // Recalculate when error state changes
+    Math.floor((data.lastUpdated?.getTime() || 0) / 10000) // Recalculate at most every 10 seconds
+  ]);
+  
+  return memoizedData;
 }
