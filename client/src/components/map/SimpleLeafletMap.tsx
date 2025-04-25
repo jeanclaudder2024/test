@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useMemo } from 'react';
+import { useEffect, useRef, useState, useMemo, memo } from 'react';
 import { Vessel, Refinery, Region } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from "@/components/ui/button";
@@ -43,7 +43,7 @@ interface SimpleLeafletMapProps {
 // Create a unique ID for this map instance
 const MAP_CONTAINER_ID = 'leaflet-map-container';
 
-export default function SimpleLeafletMap({
+function SimpleLeafletMap({
   vessels,
   refineries,
   selectedRegion,
@@ -1384,3 +1384,42 @@ export default function SimpleLeafletMap({
     </div>
   );
 }
+
+// Create a memoized version of the component to prevent unnecessary re-renders
+// This will only re-render if props have actually changed
+export default memo(SimpleLeafletMap, (prevProps, nextProps) => {
+  // Custom comparison logic to determine if re-render is needed
+  // Return true if props are "equal" (meaning NO re-render needed)
+  
+  // Skip render if loading state hasn't changed and is true
+  if (prevProps.isLoading && nextProps.isLoading) {
+    return true; // Don't re-render while loading
+  }
+  
+  // Check if vessel count and IDs are the same
+  const prevVesselIds = new Set(prevProps.vessels.map(v => v.id));
+  const nextVesselIds = new Set(nextProps.vessels.map(v => v.id));
+  
+  // Check if refinery count and IDs are the same
+  const prevRefineryIds = new Set(prevProps.refineries.map(r => r.id));
+  const nextRefineryIds = new Set(nextProps.refineries.map(r => r.id));
+  
+  // Check if the region is the same
+  const sameRegion = 
+    (!prevProps.selectedRegion && !nextProps.selectedRegion) || 
+    (prevProps.selectedRegion === nextProps.selectedRegion);
+  
+  // Only re-render if something significant changed
+  const vesselsChanged = 
+    prevVesselIds.size !== nextVesselIds.size || 
+    prevProps.vessels.some(v => !nextVesselIds.has(v.id)) ||
+    nextProps.vessels.some(v => !prevVesselIds.has(v.id));
+    
+  const refineriesChanged = 
+    prevRefineryIds.size !== nextRefineryIds.size || 
+    prevProps.refineries.some(r => !nextRefineryIds.has(r.id)) ||
+    nextProps.refineries.some(r => !prevRefineryIds.has(r.id));
+  
+  // Only re-render if something important changed
+  return !(vesselsChanged || refineriesChanged || !sameRegion || prevProps.isLoading !== nextProps.isLoading);
+});

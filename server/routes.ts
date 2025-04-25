@@ -1084,8 +1084,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     // Keep track of last update time to reduce database queries
     let lastDbFetchTime = 0;
-    const DB_REFRESH_INTERVAL = 30000; // 30 seconds - refresh database data
-    const POSITION_UPDATE_INTERVAL = 5000; // 5 seconds - update positions more frequently
+    const DB_REFRESH_INTERVAL = 60000; // 60 seconds - reduced frequency of database refreshes
+    const POSITION_UPDATE_INTERVAL = 10000; // 10 seconds - reduced frequency of position updates
     
     // Cache the data to reduce database load
     let cachedVessels: Vessel[] = [];
@@ -1228,8 +1228,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Send initial data with full DB refresh
     sendData(true);
     
-    // Send position updates more frequently, with DB refresh every 30 seconds
-    const intervalId = setInterval(() => sendData(false), 5000);
+    // Send position updates less frequently - reduced from 5000ms to 15000ms (15s)
+    // This matches our updated POSITION_UPDATE_INTERVAL of 10s, with a bit of buffer time
+    const intervalId = setInterval(() => sendData(false), 15000);
     
     // Handle client disconnect
     req.on('close', () => {
@@ -1513,7 +1514,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error broadcasting vessel updates:", error);
     }
-  }, 10000); // Send updates every 10 seconds
+  }, 20000); // Send updates every 20 seconds - reduced from 10 seconds
   
   return httpServer;
 }
