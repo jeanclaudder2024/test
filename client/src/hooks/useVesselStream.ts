@@ -31,8 +31,8 @@ export function useVesselStream() {
       try {
         console.log('Fetching vessel and refinery data...');
         
-        // Fetch vessels
-        const vesselsData = await apiRequest('/api/vessels?limit=500');
+        // Fetch vessels - specifically cargo vessels with increased limit
+        const vesselsData = await apiRequest('/api/vessels?limit=1500&type=cargo');
         
         // Fetch refineries
         const refineriesData = await apiRequest('/api/refineries');
