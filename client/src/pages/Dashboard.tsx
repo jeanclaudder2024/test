@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import SimpleLeafletMap from "@/components/map/SimpleLeafletMap";
 import VesselInfo from "@/components/vessels/VesselInfo";
 import ProgressTimeline from "@/components/vessels/ProgressTimeline";
 import StatsCards from "@/components/dashboard/StatsCards";
 import RegionDistribution from "@/components/dashboard/RegionDistribution";
 import AIAssistant from "@/components/ai/AIAssistant";
+import ConnectionStatusBar from "@/components/ConnectionStatusBar";
 import { Region, RegionData, Vessel, Refinery } from "@/types";
 import { useVesselProgressEvents } from "@/hooks/useVessels";
 import { Button } from "@/components/ui/button";
@@ -187,13 +188,25 @@ export default function Dashboard() {
 
   return (
     <div className="w-full">
+      {/* Connection Status Alert */}
+      <ConnectionStatusBar 
+        error={error} 
+        isConnected={!loading} 
+        lastUpdated={lastUpdated}
+        onReconnect={() => window.location.reload()} 
+      />
+      
       {/* Header Stats Summary */}
       <div className="p-4 md:p-6 pb-0">
         <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
           <div>
             <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-500">Maritime Operations Dashboard</h1>
-            <p className="text-gray-500 text-sm mt-1">
-              {lastUpdated ? `Last updated: ${formatDate(lastUpdated, 'PPpp')}` : 'Real-time tracking data'}
+            <p className="text-gray-500 text-sm mt-1 flex items-center">
+              <span className={`inline-block h-2 w-2 rounded-full mr-2 ${error ? 'bg-red-500' : 'bg-green-500 animate-pulse'}`}></span>
+              <span>
+                {error ? 'Connection error - Data may be stale' : 'Connected - '}
+                {lastUpdated ? `Last updated: ${formatDate(lastUpdated, 'PPpp')}` : 'Awaiting data...'}
+              </span>
             </p>
           </div>
           
