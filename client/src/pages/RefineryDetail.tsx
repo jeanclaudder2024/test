@@ -272,7 +272,11 @@ export default function RefineryDetail() {
                           <MapPin className="h-4 w-4 mr-2 text-primary/60" />
                           <span>
                             {refinery.lat && refinery.lng 
-                              ? `${parseFloat(refinery.lat as string).toFixed(4)}, ${parseFloat(refinery.lng as string).toFixed(4)}`
+                              ? `${typeof refinery.lat === 'number' 
+                                   ? refinery.lat.toFixed(4) 
+                                   : parseFloat(String(refinery.lat) || '0').toFixed(4)}, ${typeof refinery.lng === 'number'
+                                   ? refinery.lng.toFixed(4)
+                                   : parseFloat(String(refinery.lng) || '0').toFixed(4)}`
                               : 'Coordinates unavailable'}
                           </span>
                         </div>
@@ -398,7 +402,14 @@ export default function RefineryDetail() {
                         window.location.href = `/vessels/${vessel.id}`;
                       }}
                       isLoading={false}
-                      initialCenter={[parseFloat(refinery.lat as string), parseFloat(refinery.lng as string)]}
+                      initialCenter={[
+                        typeof refinery.lat === 'number' 
+                          ? refinery.lat 
+                          : parseFloat(String(refinery.lat) || '0'),
+                        typeof refinery.lng === 'number'
+                          ? refinery.lng
+                          : parseFloat(String(refinery.lng) || '0')
+                      ]}
                       initialZoom={7} // Slightly zoomed out to show nearby vessels
                     />
                   ) : (
