@@ -1367,54 +1367,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     // Send initial data when client connects
     const sendInitialData = async () => {
+      console.log("Sending initial data to new client connection");
+      
       try {
         // Get vessel and refinery data
         const vessels = await storage.getVessels();
         const refineries = await storage.getRefineries();
         
-        // Filter for cargo vessels only that are at sea
-        const filteredVessels = vessels.filter(vessel => {
-          // Check if vessel has valid coordinates
-          if (!vessel.currentLat || !vessel.currentLng) return false;
-          
-          const lat = typeof vessel.currentLat === 'number' 
-            ? vessel.currentLat 
-            : parseFloat(String(vessel.currentLat));
+        // Filter for cargo vessels only with valid coordinates
+        const filteredVessels = vessels
+          .filter(vessel => {
+            // Check if vessel has valid coordinates
+            if (!vessel.currentLat || !vessel.currentLng) return false;
             
-          const lng = typeof vessel.currentLng === 'number'
-            ? vessel.currentLng
-            : parseFloat(String(vessel.currentLng));
+            // Parse coordinates to numbers if they're strings
+            const lat = typeof vessel.currentLat === 'number' 
+              ? vessel.currentLat 
+              : parseFloat(String(vessel.currentLat));
+              
+            const lng = typeof vessel.currentLng === 'number'
+              ? vessel.currentLng
+              : parseFloat(String(vessel.currentLng));
+              
+            if (isNaN(lat) || isNaN(lng)) return false;
             
-          if (isNaN(lat) || isNaN(lng)) return false;
-          
-          // Filter for cargo vessels only
-          const isCargoVessel = vessel.vesselType?.toLowerCase().includes('cargo') || false;
-          
-          // Check if vessel is at sea (simple check)
-          if (isCargoVessel) {
-            // Very simple check - avoid major land masses
-            if (lat >= 25 && lat <= 73 && lng >= -140 && lng <= -60) return false; // North America
-            if (lat >= -55 && lat <= 13 && lng >= -81 && lng <= -35) return false; // South America
-            if (lat >= 35 && lat <= 72 && lng >= -10 && lng <= 40) return false; // Europe
-            if (lat >= -35 && lat <= 37 && lng >= -18 && lng <= 52) return false; // Africa
-            if (lat >= 12 && lat <= 42 && lng >= 35 && lng <= 65) return false; // Middle East
-            if (lat >= 20 && lat <= 48 && lng >= 105 && lng <= 145) return false; // East Asia
-            if (lat >= -45 && lat <= -10 && lng >= 110 && lng <= 155) return false; // Australia
-            if (lat <= -60) return false; // Antarctica
-            
-            return true; // Most coordinates away from major landmasses are sea
-          }
-          
-          return false;
-        }).slice(0, 500); // Limit to 500 vessels for performance
+            // Filter for cargo vessels only
+            return vessel.vesselType?.toLowerCase().includes('cargo') || false;
+          })
+          .slice(0, 1000); // Increase limit for better data coverage
         
-        // Send the initial data to the client
+        // Send vessel data first
         if (ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify({
-            type: 'initial',
-            vessels: filteredVessels,
-            refineries: refineries
-          }));
+          const vesselData = {
+            type: 'vessels',
+            data: filteredVessels,
+            timestamp: new Date().toISOString()
+          };
+          
+          ws.send(JSON.stringify(vesselData));
+          console.log(`Sent initial vessel data: ${filteredVessels.length} vessels`);
+          
+          // Send refinery data after a small delay
+          setTimeout(() => {
+            if (ws.readyState === WebSocket.OPEN) {
+              const refineryData = {
+                type: 'refineries',
+                data: refineries,
+                timestamp: new Date().toISOString()
+              };
+              
+              ws.send(JSON.stringify(refineryData));
+              console.log(`Sent initial refinery data: ${refineries.length} refineries`);
+            }
+          }, 500);
         }
       } catch (error) {
         console.error("Error sending initial data:", error);
@@ -1468,13 +1473,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
   
-  // Periodically broadcast vessel position updates to all connected clients
-  setInterval(async () => {
+  // Function to refresh and broadcast data periodically
+  const refreshAndBroadcastData = async () => {
     if (clients.size === 0) return; // Skip if no clients are connected
     
+    console.log("Refreshing data from database...");
+    
     try {
-      // Get updated vessel data
+      // Get all updated data
       const vessels = await storage.getVessels();
+      const refineries = await storage.getRefineries();
       
       // Filter for cargo vessels only that are at sea (simplified check)
       const filteredVessels = vessels
@@ -1494,26 +1502,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Filter for cargo vessels only
           return vessel.vesselType?.toLowerCase().includes('cargo') || false;
         })
-        .slice(0, 500); // Limit to 500 vessels for performance
+        .slice(0, 1000); // Increase limit for better data coverage
       
-      // Prepare data update
-      const update = {
-        type: 'update',
-        vessels: filteredVessels,
+      // Send vessels data update
+      const vesselUpdate = {
+        type: 'vessels',
+        data: filteredVessels,
         timestamp: new Date().toISOString()
       };
       
-      // Broadcast to all connected clients
-      const message = JSON.stringify(update);
+      // Send refineries data update
+      const refineryUpdate = {
+        type: 'refineries',
+        data: refineries,
+        timestamp: new Date().toISOString()
+      };
+      
+      // Broadcast vessels to all connected clients
+      const vesselMessage = JSON.stringify(vesselUpdate);
+      let activeClients = 0;
+      
       for (const client of clients) {
         if (client.readyState === WebSocket.OPEN) {
-          client.send(message);
+          client.send(vesselMessage);
+          activeClients++;
         }
       }
+      
+      // Wait briefly before sending refineries to avoid overwhelming clients
+      setTimeout(() => {
+        // Broadcast refineries to all connected clients
+        const refineryMessage = JSON.stringify(refineryUpdate);
+        
+        for (const client of clients) {
+          if (client.readyState === WebSocket.OPEN) {
+            client.send(refineryMessage);
+          }
+        }
+        
+        console.log(`Broadcast complete: Sent ${filteredVessels.length} vessels and ${refineries.length} refineries to ${activeClients} clients`);
+      }, 1000);
     } catch (error) {
-      console.error("Error broadcasting vessel updates:", error);
+      console.error("Error broadcasting data updates:", error);
     }
-  }, 10000); // Send updates every 10 seconds
+  };
+  
+  // Run the refresh immediately and then periodically
+  refreshAndBroadcastData();
+  setInterval(refreshAndBroadcastData, 15000); // Send updates every 15 seconds
   
   return httpServer;
 }
