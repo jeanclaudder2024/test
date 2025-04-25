@@ -66,32 +66,21 @@ function SimpleLeafletMap({
   const [isMapReady, setIsMapReady] = useState(false);
   const [displayVessels, setDisplayVessels] = useState<Vessel[]>([]);
   
-  // Load Leaflet once when the component mounts
+  // Set map as ready since Leaflet is now loaded from HTML
   useEffect(() => {
+    console.log('Checking for Leaflet availability:', !!window.L);
     if (window.L) {
       setIsMapReady(true);
-      return;
+    } else {
+      console.error('Leaflet not found on window object! Map will not render correctly.');
+      // We'll try again after a short delay just in case
+      const checkAgain = setTimeout(() => {
+        console.log('Checking for Leaflet again:', !!window.L);
+        if (window.L) setIsMapReady(true);
+      }, 1000);
+      
+      return () => clearTimeout(checkAgain);
     }
-    
-    // Add Leaflet CSS
-    const linkEl = document.createElement('link');
-    linkEl.rel = 'stylesheet';
-    linkEl.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-    linkEl.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
-    linkEl.crossOrigin = '';
-    document.head.appendChild(linkEl);
-    
-    // Add Leaflet script
-    const scriptEl = document.createElement('script');
-    scriptEl.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-    scriptEl.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
-    scriptEl.crossOrigin = '';
-    
-    scriptEl.onload = () => {
-      setIsMapReady(true);
-    };
-    
-    document.body.appendChild(scriptEl);
     
     return () => {
       // Cleanup function runs on unmount
@@ -109,10 +98,18 @@ function SimpleLeafletMap({
   // Initialize and update the map when dependencies change
   useEffect(() => {
     // Don't proceed until Leaflet is loaded and we're not in loading state
-    if (!isMapReady || isLoading) return;
+    if (!isMapReady || isLoading) {
+      console.log('Not ready to initialize map:', {isMapReady, isLoading});
+      return;
+    }
     
     const L = window.L;
-    if (!L) return;
+    if (!L) {
+      console.error('Leaflet not found on window object after initial check!');
+      return;
+    }
+    
+    console.log('Initializing map with vessels:', vessels.length, 'refineries:', refineries.length);
     
     const mapContainer = document.getElementById(MAP_CONTAINER_ID);
     if (!mapContainer) return;
@@ -348,7 +345,10 @@ function SimpleLeafletMap({
     const filteredVessels = vessels
       .filter(vessel => {
         // Check if vessel has valid coordinates
-        if (!vessel.currentLat || !vessel.currentLng) return false;
+        if (!vessel.currentLat || !vessel.currentLng) {
+          console.log('Vessel missing coordinates:', vessel.name);
+          return false;
+        }
         
         const lat = typeof vessel.currentLat === 'number' 
           ? vessel.currentLat 
@@ -358,7 +358,10 @@ function SimpleLeafletMap({
           ? vessel.currentLng
           : parseFloat(String(vessel.currentLng));
           
-        if (isNaN(lat) || isNaN(lng)) return false;
+        if (isNaN(lat) || isNaN(lng)) {
+          console.log('Invalid coordinates for vessel:', vessel.name, vessel.currentLat, vessel.currentLng);
+          return false;
+        }
         
         // Filter for cargo vessels only
         const isCargoVessel = vessel.vesselType?.toLowerCase().includes('cargo') || false;
@@ -367,6 +370,8 @@ function SimpleLeafletMap({
         return isCargoVessel && isCoordinateAtSea(lat, lng);
       })
       .slice(0, 500); // Show more cargo vessels - up to 500
+      
+    console.log('Filtered vessels for map:', filteredVessels.length);
       
     setDisplayVessels(filteredVessels);
     
