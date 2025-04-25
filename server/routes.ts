@@ -1,6 +1,5 @@
 import express, { type Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
-import WebSocket, { WebSocketServer } from 'ws';
 import { storage } from "./storage";
 import { vesselService } from "./services/vesselService";
 import { refineryService } from "./services/refineryService";
@@ -315,53 +314,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Count oil vessels
       const oilVessels = vessels.filter(vessel => {
         const cargoType = vessel.cargoType || '';
-        return cargoType.includes('OIL') || 
-               cargoType.includes('CRUDE') || 
-               cargoType.includes('PETROL') || 
-               cargoType.includes('DIESEL') || 
-               cargoType.includes('FUEL') || 
-               cargoType.includes('GAS');
+        return cargoType.toLowerCase().includes('crude') 
+          || cargoType.toLowerCase().includes('oil')
+          || cargoType.toLowerCase().includes('petroleum')
+          || cargoType.toLowerCase().includes('gas')
+          || cargoType.toLowerCase().includes('lng')
+          || cargoType.toLowerCase().includes('diesel')
+          || cargoType.toLowerCase().includes('fuel');
       });
       
-      // Calculate total cargo
-      const totalCargo = vessels.reduce((sum, vessel) => {
-        return sum + (vessel.cargoCapacity || 0);
-      }, 0);
+      // Count oil vessels by region
+      const oilVesselRegionCounts: Record<string, number> = {};
+      oilVessels.forEach(vessel => {
+        const region = vessel.currentRegion || 'unknown';
+        oilVesselRegionCounts[region] = (oilVesselRegionCounts[region] || 0) + 1;
+      });
       
-      // Count vessel types
-      const vesselTypeCounts: Record<string, number> = {};
+      // Calculate total cargo capacity by region
+      const cargoByRegion: Record<string, number> = {};
       vessels.forEach(vessel => {
-        const type = vessel.vesselType || 'unknown';
-        vesselTypeCounts[type] = (vesselTypeCounts[type] || 0) + 1;
-      });
-      
-      // Return statistics
-      res.json({
-        success: true,
-        message: "Vessel distribution statistics",
-        data: {
-          totalVessels: vessels.length,
-          regionCounts,
-          oilVessels: oilVessels.length,
-          totalCargo,
-          vesselTypeCounts
+        if (vessel.cargoCapacity && vessel.currentRegion) {
+          const region = vessel.currentRegion;
+          cargoByRegion[region] = (cargoByRegion[region] || 0) + Number(vessel.cargoCapacity);
         }
       });
-    } catch (error: any) {
-      console.error("Error getting vessel distribution statistics:", error);
-      res.status(500).json({ 
-        success: false, 
-        message: "Failed to fetch vessel distribution statistics",
-        error: error.message || "Unknown error" 
+      
+      res.json({
+        totalVessels: vessels.length,
+        totalOilVessels: oilVessels.length,
+        regionCounts,
+        oilVesselRegionCounts,
+        cargoByRegion
       });
+    } catch (error) {
+      console.error("Error fetching vessel distribution:", error);
+      res.status(500).json({ message: "Failed to fetch vessel distribution" });
     }
   });
 
   apiRouter.get("/vessels/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const vessel = await vesselService.getVesselById(id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid vessel ID" });
+      }
       
+      const vessel = await storage.getVesselById(id);
       if (!vessel) {
         return res.status(404).json({ message: "Vessel not found" });
       }
@@ -373,10 +371,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // SSE endpoint for real-time data
+  apiRouter.get("/stream/data", (req, res) => {
+    // Set headers for SSE
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+    
+    // Send initial event to establish connection
+    res.write("event: connected\n");
+    res.write(`data: ${JSON.stringify({ timestamp: new Date().toISOString() })}\n\n`);
+    
+    // Function to send data
+    const sendData = async (initial: boolean = true) => {
+      try {
+        // Get current data
+        const vessels = await storage.getVessels();
+        const refineries = await storage.getRefineries();
+        
+        // Filter vessels (optional)
+        const filteredVessels = vessels
+          .filter(v => v.vesselType?.toLowerCase().includes('cargo') || false)
+          .slice(0, 500);
+        
+        // Send vessel data
+        res.write("event: vessels\n");
+        res.write(`data: ${JSON.stringify(filteredVessels)}\n\n`);
+        
+        // Send refinery data
+        res.write("event: refineries\n");
+        res.write(`data: ${JSON.stringify(refineries)}\n\n`);
+        
+        // Get and send stats
+        const statsData = await storage.getStats();
+        if (statsData) {
+          res.write("event: stats\n");
+          res.write(`data: ${JSON.stringify(statsData)}\n\n`);
+        }
+        
+      } catch (error) {
+        console.error("Error sending SSE data:", error);
+        res.write("event: error\n");
+        res.write(`data: ${JSON.stringify({ message: "Error fetching data" })}\n\n`);
+      }
+    };
+    
+    // Send initial data
+    sendData(true);
+    
+    // Set up interval to send data periodically
+    const intervalId = setInterval(() => sendData(false), 5000);
+    
+    // Handle client disconnect
+    req.on('close', () => {
+      clearInterval(intervalId);
+      res.end();
+    });
+  });
+
   apiRouter.post("/vessels", async (req, res) => {
     try {
       const vesselData = insertVesselSchema.parse(req.body);
-      const vessel = await vesselService.createVessel(vesselData);
+      const vessel = await storage.createVessel(vesselData);
       res.status(201).json(vessel);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -390,24 +446,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  apiRouter.put("/vessels/:id", async (req, res) => {
+  apiRouter.patch("/vessels/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const vesselData = insertVesselSchema.partial().parse(req.body);
-      const vessel = await vesselService.updateVessel(id, vesselData);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid vessel ID" });
+      }
       
-      if (!vessel) {
+      // Allow partial updates with a subset of vessel fields
+      const vesselUpdate = req.body;
+      const updatedVessel = await storage.updateVessel(id, vesselUpdate);
+      
+      if (!updatedVessel) {
         return res.status(404).json({ message: "Vessel not found" });
       }
       
-      res.json(vessel);
+      res.json(updatedVessel);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ 
-          message: "Invalid vessel data", 
-          errors: fromZodError(error).details 
-        });
-      }
       console.error("Error updating vessel:", error);
       res.status(500).json({ message: "Failed to update vessel" });
     }
@@ -416,417 +471,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
   apiRouter.delete("/vessels/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const success = await vesselService.deleteVessel(id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid vessel ID" });
+      }
       
-      if (!success) {
+      const deleted = await storage.deleteVessel(id);
+      if (!deleted) {
         return res.status(404).json({ message: "Vessel not found" });
       }
       
-      res.status(204).send();
+      res.json({ success: true });
     } catch (error) {
       console.error("Error deleting vessel:", error);
       res.status(500).json({ message: "Failed to delete vessel" });
     }
   });
 
-  // Rebuild vessel regions with accurate classification
-  apiRouter.post("/vessels/rebuild-regions", async (req, res) => {
+  // Endpoint to move vessels to random positions for demo
+  apiRouter.post("/vessels/randomize-positions", async (req, res) => {
     try {
-      console.log("Starting vessel region classification rebuild...");
-      // Get all existing vessels
-      const vessels = await vesselService.getAllVessels();
-      console.log(`Found ${vessels.length} vessels to update regions.`);
-      
-      // Update each vessel's region based on coordinates
+      console.log("Randomizing vessel positions...");
+      const vessels = await storage.getVessels();
       let updatedCount = 0;
-      const { determineRegionFromCoordinates } = await import('./services/vesselGenerator');
       
       for (const vessel of vessels) {
-        // Handle potential null values
-        const lat = vessel.currentLat ? parseFloat(vessel.currentLat) : null;
-        const lng = vessel.currentLng ? parseFloat(vessel.currentLng) : null;
+        // Skip vessels with no ID (shouldn't happen but just in case)
+        if (!vessel.id) continue;
         
-        if (lat !== null && lng !== null && !isNaN(lat) && !isNaN(lng)) {
-          const mappedRegion = determineRegionFromCoordinates(lat, lng);
-          
-          // Only update if region changed
-          if (vessel.currentRegion !== mappedRegion) {
-            await vesselService.updateVessel(vessel.id, { currentRegion: mappedRegion });
-            updatedCount++;
-          }
-        }
-      }
-      
-      res.json({
-        success: true,
-        message: `Vessel regions updated successfully: ${updatedCount} of ${vessels.length} updated`
-      });
-    } catch (error: any) {
-      console.error("Error rebuilding vessel regions:", error);
-      res.status(500).json({
-        success: false,
-        message: "Error updating vessel regions",
-        error: error.message || "Unknown error"
-      });
-    }
-  });
-
-  // Endpoint to remove vessels on land and place all vessels in the ocean
-  apiRouter.post("/vessels/remove-vessels-on-land", async (req, res) => {
-    try {
-      console.log("Removing vessels on land and generating new vessels in the ocean...");
-      
-      // Import required functions
-      const { isCoordinateAtSea, generateLargeVesselDataset } = await import('./services/vesselGenerator');
-      
-      // Get all existing vessels
-      const vessels = await vesselService.getAllVessels();
-      console.log(`Found ${vessels.length} vessels to check for land/sea positioning.`);
-      
-      // Identify vessels on land
-      const vesselsOnLand: Vessel[] = [];
-      const vesselsAtSea: Vessel[] = [];
-      
-      for (const vessel of vessels) {
-        // Parse coordinates
-        const lat = vessel.currentLat ? parseFloat(vessel.currentLat) : null;
-        const lng = vessel.currentLng ? parseFloat(vessel.currentLng) : null;
+        // Generate random coordinates
+        const lat = (Math.random() * 180 - 90).toFixed(6);
+        const lng = (Math.random() * 360 - 180).toFixed(6);
         
-        if (lat !== null && lng !== null && !isNaN(lat) && !isNaN(lng)) {
-          if (!isCoordinateAtSea(lat, lng)) {
-            vesselsOnLand.push(vessel);
-          } else {
-            vesselsAtSea.push(vessel);
-          }
-        } else {
-          // Vessels with invalid coordinates are considered on land
-          vesselsOnLand.push(vessel);
-        }
-      }
-      
-      console.log(`Found ${vesselsOnLand.length} vessels on land out of ${vessels.length} total vessels.`);
-      
-      if (vesselsOnLand.length === 0) {
-        console.log("No vessels on land found. No changes needed.");
-        return res.json({
-          success: true,
-          message: "All vessels are already in the ocean. No changes needed.",
-          data: {
-            totalVessels: vessels.length,
-            vesselsAtSea: vessels.length,
-            vesselsOnLand: 0
-          }
+        // Update the vessel position
+        await storage.updateVessel(vessel.id, {
+          currentLat: lat,
+          currentLng: lng
         });
+        
+        updatedCount++;
       }
-      
-      // Delete vessels on land
-      console.log(`Deleting ${vesselsOnLand.length} vessels on land...`);
-      let deletedCount = 0;
-      
-      for (const vessel of vesselsOnLand) {
-        await vesselService.deleteVessel(vessel.id);
-        deletedCount++;
-      }
-      
-      console.log(`Deleted ${deletedCount} vessels on land.`);
-      
-      // Generate new vessels at sea to replace the deleted ones
-      console.log(`Generating ${deletedCount} new vessels in the ocean...`);
-      
-      // Generate new vessels specifically at sea
-      const newVesselData = generateLargeVesselDataset(deletedCount + 10) // Generate a few extra to account for filtering
-        .filter(vessel => isCoordinateAtSea(
-          parseFloat(vessel.currentLat || "0"), 
-          parseFloat(vessel.currentLng || "0")
-        ))
-        .slice(0, deletedCount); // Ensure we only get exactly the number we need
-      
-      // Insert the new vessels
-      let insertedCount = 0;
-      for (const vessel of newVesselData) {
-        await vesselService.createVessel(vessel);
-        insertedCount++;
-      }
-      
-      console.log(`Generated and inserted ${insertedCount} new vessels in the ocean.`);
-      
-      // Get updated counts using the schema definition      
-      const oilVessels = await db.select({ count: vessels.id })
-        .from(vessels)
-        .where(vessels.cargoType.like('%OIL%')
-          .or(vessels.cargoType.like('%CRUDE%'))
-          .or(vessels.cargoType.like('%PETROL%'))
-          .or(vessels.cargoType.like('%DIESEL%'))
-          .or(vessels.cargoType.like('%FUEL%'))
-          .or(vessels.cargoType.like('%GAS%')));
-      
-      const cargoSum = await db.select({
-        sum: vessels.cargoCapacity
-      }).from(vessels);
-      
-      const finalVessels = await vesselService.getAllVessels();
       
       res.json({
         success: true,
-        message: "Vessels on land have been removed and replaced with vessels in the ocean",
-        data: {
-          previousTotal: vessels.length,
-          deleted: deletedCount,
-          inserted: insertedCount,
-          newTotal: finalVessels.length,
-          oilVessels: oilVessels.length,
-          totalCargo: cargoSum[0]?.sum || 0
-        }
+        updatedVessels: updatedCount,
+        message: `${updatedCount} vessels have been moved to random positions`
       });
-    } catch (error: any) {
-      console.error("Error removing vessels on land:", error);
-      res.status(500).json({
-        success: false,
-        message: "Error removing vessels on land",
-        error: error.message || "Unknown error"
-      });
-    }
-  });
-  
-  // Endpoint to regenerate vessels with global distribution
-  apiRouter.post("/vessels/regenerate-global", async (req, res) => {
-    try {
-      console.log("Starting global vessel regeneration process...");
-      
-      // Get vessel count from request or use default 5000
-      const count = req.body.count ? parseInt(req.body.count) : 5000;
-      console.log(`Regenerating global vessel distribution with ${count} vessels...`);
-      
-      // Call the regeneration function
-      const result = await regenerateGlobalVessels(count);
-      console.log("Global vessel regeneration complete:", result);
-      
-      // Get updated vessel counts by region for verification
-      const regionStats = await vesselService.getVesselCountsByRegion();
-      const updatedVessels = await vesselService.getAllVessels();
-      
-      // Get oil vessel count 
-      const oilVessels = updatedVessels.filter(vessel => {
-        const cargoType = vessel.cargoType || '';
-        return cargoType.includes('OIL') || 
-               cargoType.includes('CRUDE') || 
-               cargoType.includes('PETROL') || 
-               cargoType.includes('DIESEL') || 
-               cargoType.includes('FUEL') || 
-               cargoType.includes('GAS');
-      });
-      
-      // Calculate total cargo
-      const totalCargo = updatedVessels.reduce((sum, vessel) => {
-        return sum + (Number(vessel.cargoCapacity) || 0);
-      }, 0);
-      
-      res.json({
-        success: true,
-        message: `Global vessel regeneration completed with ${result.count} vessels`,
-        data: {
-          vesselCount: result.count,
-          globalDistribution: result.globalDistribution,
-          regionCounts: regionStats.regionCounts,
-          oilVessels: oilVessels.length,
-          totalCargo: totalCargo
-        }
-      });
-    } catch (error: any) {
-      console.error("Error regenerating vessels globally:", error);
-      res.status(500).json({
-        success: false,
-        message: "Error regenerating vessels globally",
-        error: error.message || "Unknown error"
-      });
-    }
-  });
-
-  // Progress events endpoints
-  apiRouter.get("/vessels/:id/progress", async (req, res) => {
-    try {
-      const vesselId = parseInt(req.params.id);
-      const events = await vesselService.getVesselProgressEvents(vesselId);
-      res.json(events);
     } catch (error) {
-      console.error("Error fetching progress events:", error);
-      res.status(500).json({ message: "Failed to fetch progress events" });
-    }
-  });
-
-  apiRouter.post("/vessels/:id/progress", async (req, res) => {
-    try {
-      const vesselId = parseInt(req.params.id);
-      
-      // Check if vessel exists
-      const vessel = await vesselService.getVesselById(vesselId);
-      if (!vessel) {
-        return res.status(404).json({ message: "Vessel not found" });
-      }
-      
-      const eventData = insertProgressEventSchema.parse({
-        ...req.body,
-        vesselId
-      });
-      
-      const event = await vesselService.addProgressEvent(eventData);
-      res.status(201).json(event);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ 
-          message: "Invalid progress event data", 
-          errors: fromZodError(error).details 
-        });
-      }
-      console.error("Error creating progress event:", error);
-      res.status(500).json({ message: "Failed to create progress event" });
-    }
-  });
-  
-  // Ensure all vessels have destinations (including refinery links)
-  apiRouter.post("/vessels/ensure-destinations", async (req, res) => {
-    try {
-      const result = await vesselService.ensureVesselDestinations();
-      res.json({
-        success: true,
-        message: `Updated ${result.updated} vessels out of ${result.total} total vessels with destinations.`
-      });
-    } catch (error: any) {
-      console.error("Error ensuring vessel destinations:", error);
-      res.status(500).json({
-        success: false,
-        message: `Error ensuring vessel destinations: ${error.message || String(error)}`
-      });
-    }
-  });
-  
-  // Update vessel location with accurate coordinates
-  apiRouter.post("/vessels/:id/update-location", async (req, res) => {
-    try {
-      const vesselId = parseInt(req.params.id);
-      const { lat, lng, eventDescription, destinationRefineryId, destinationPort } = req.body;
-      
-      // Validate inputs
-      if (!lat || !lng || isNaN(parseFloat(lat)) || isNaN(parseFloat(lng))) {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid coordinates provided. Both lat and lng must be valid numbers."
-        });
-      }
-      
-      // Convert to numbers and validate ranges
-      const latitude = parseFloat(lat);
-      const longitude = parseFloat(lng);
-      
-      if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
-        return res.status(400).json({
-          success: false,
-          message: "Coordinates out of range. Latitude must be between -90 and 90, longitude between -180 and 180."
-        });
-      }
-      
-      // Get the vessel to make sure it exists
-      const vessel = await vesselService.getVesselById(vesselId);
-      if (!vessel) {
-        return res.status(404).json({
-          success: false,
-          message: "Vessel not found"
-        });
-      }
-      
-      // Get destination refinery information if provided
-      let destinationRefineryName = null;
-      let formattedDestination = null;
-      
-      if (destinationRefineryId) {
-        const destinationRefinery = await refineryService.getRefineryById(parseInt(destinationRefineryId));
-        if (destinationRefinery) {
-          destinationRefineryName = destinationRefinery.name;
-          // Format destination to include refinery reference (REF:id:name)
-          formattedDestination = `REF:${destinationRefinery.id}:${destinationRefinery.name}`;
-        }
-      } else if (destinationPort) {
-        // Regular port destination
-        formattedDestination = destinationPort;
-      }
-      
-      // Import function to determine region from coordinates
-      const { determineRegionFromCoordinates } = await import('./services/vesselGenerator');
-      const newRegion = determineRegionFromCoordinates(latitude, longitude);
-      
-      // Prepare vessel update data
-      const vesselUpdateData: any = {
-        currentLat: latitude.toString(),
-        currentLng: longitude.toString(),
-        currentRegion: newRegion
-      };
-      
-      // Update destination if provided
-      if (formattedDestination) {
-        vesselUpdateData.destinationPort = formattedDestination;
-      }
-      
-      // Update vessel location and destination
-      const updatedVessel = await vesselService.updateVessel(vesselId, vesselUpdateData);
-      
-      // Format destination information for event description and response
-      let destinationInfo = "At sea";
-      let destinationType = "none";
-      
-      if (updatedVessel && updatedVessel.destinationPort) {
-        if (updatedVessel.destinationPort.startsWith('REF:')) {
-          // Extract refinery name from the format REF:id:name
-          const parts = updatedVessel.destinationPort.split(':');
-          const refineryName = parts.length > 2 ? parts[2] : updatedVessel.destinationPort;
-          destinationInfo = `Refinery: ${refineryName}`;
-          destinationType = "refinery";
-        } else {
-          destinationInfo = `Port: ${updatedVessel.destinationPort}`;
-          destinationType = "port";
-        }
-      }
-      
-      // Create progress event if there's a description
-      if (eventDescription) {
-        await vesselService.addProgressEvent({
-          vesselId,
-          date: new Date(),
-          event: eventDescription,
-          lat: latitude.toString(),
-          lng: longitude.toString(),
-          location: destinationInfo
-        });
-      }
-      
-      // Check if destination has changed
-      const previousDestination = vessel.destinationPort || "";
-      const newDestination = updatedVessel && updatedVessel.destinationPort ? updatedVessel.destinationPort : "";
-      
-      if (previousDestination !== newDestination) {
-        await vesselService.addProgressEvent({
-          vesselId,
-          date: new Date(),
-          event: `Destination changed to ${destinationInfo}`,
-          lat: latitude.toString(),
-          lng: longitude.toString(),
-          location: destinationInfo
-        });
-      }
-      
-      res.json({
-        success: true,
-        message: "Vessel location updated successfully",
-        vessel: updatedVessel,
-        region: newRegion,
-        destination: destinationInfo
-      });
-    } catch (error: any) {
-      console.error("Error updating vessel location:", error);
-      res.status(500).json({
-        success: false,
-        message: "Failed to update vessel location",
-        error: error.message
-      });
+      console.error("Error randomizing vessel positions:", error);
+      res.status(500).json({ message: "Failed to randomize vessel positions" });
     }
   });
 
@@ -835,13 +527,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const region = req.query.region as string | undefined;
       
+      // Apply filters based on query parameters
+      let refineries;
       if (region) {
-        const refineries = await refineryService.getRefineryByRegion(region);
-        res.json(refineries);
+        refineries = await storage.getRefineryByRegion(region);
       } else {
-        const refineries = await refineryService.getAllRefineries();
-        res.json(refineries);
+        refineries = await storage.getRefineries();
       }
+      
+      res.json(refineries);
     } catch (error) {
       console.error("Error fetching refineries:", error);
       res.status(500).json({ message: "Failed to fetch refineries" });
@@ -851,8 +545,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   apiRouter.get("/refineries/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const refinery = await refineryService.getRefineryById(id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid refinery ID" });
+      }
       
+      const refinery = await storage.getRefineryById(id);
       if (!refinery) {
         return res.status(404).json({ message: "Refinery not found" });
       }
@@ -863,13 +560,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch refinery" });
     }
   });
-  
-  // Get vessels associated with a specific refinery
+
+  // Get vessels associated with a refinery (within proximity)
   apiRouter.get("/refineries/:id/vessels", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const refinery = await refineryService.getRefineryById(id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid refinery ID" });
+      }
       
+      // Get the refinery
+      const refinery = await storage.getRefineryById(id);
       if (!refinery) {
         return res.status(404).json({ message: "Refinery not found" });
       }
@@ -877,76 +578,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get all vessels
       const vessels = await storage.getVessels();
       
-      // Filter for cargo vessels only (consistent with map display)
-      const cargoVessels = vessels.filter(v => 
-        v.vesselType?.toLowerCase().includes('cargo') || 
-        v.vesselType?.toLowerCase().includes('tanker') ||
-        v.vesselType?.toLowerCase().includes('container')
-      );
+      // Find vessels within proximity
+      const SEARCH_RADIUS_KM = 500;  // Increased radius for better results
       
-      // Association methods (improved)
-      // 1. Direct port matching - check destination or departure port against refinery country and name 
-      const byPort = cargoVessels.filter(v => {
-        const destinationMatch = (v.destinationPort?.toLowerCase().includes(refinery.country.toLowerCase()) ||
-                                (refinery.name && v.destinationPort?.toLowerCase().includes(refinery.name.toLowerCase()))) ||
-                                v.destinationPort?.toLowerCase().includes('ref:' + refinery.id);
-        
-        const departureMatch = v.departurePort?.toLowerCase().includes(refinery.country.toLowerCase()) ||
-                           (refinery.name && v.departurePort?.toLowerCase().includes(refinery.name.toLowerCase()));
-        
-        return destinationMatch || departureMatch;
-      });
+      const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+        const R = 6371; // Earth's radius in km
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = 
+          Math.sin(dLat/2) * Math.sin(dLat/2) +
+          Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+          Math.sin(dLon/2) * Math.sin(dLon/2); 
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+        return R * c;
+      };
       
-      // 2. Geographic proximity - vessels within reasonable distance of refinery (~500km approximation)
-      const byProximity = cargoVessels.filter(v => {
-        // Handle null/undefined values and convert to numbers to ensure proper comparison
-        const vesselLat = typeof v.currentLat === 'number' ? v.currentLat : Number(v.currentLat);
-        const vesselLng = typeof v.currentLng === 'number' ? v.currentLng : Number(v.currentLng);
-        const refineryLat = typeof refinery.lat === 'number' ? refinery.lat : Number(refinery.lat);
-        const refineryLng = typeof refinery.lng === 'number' ? refinery.lng : Number(refinery.lng);
+      // Parse refinery coordinates
+      const refineryLat = parseFloat(refinery.lat);
+      const refineryLng = parseFloat(refinery.lng);
+      
+      // Find vessels within radius
+      const allConnected = vessels.filter(vessel => {
+        // Parse vessel coordinates, skipping any with invalid coordinates
+        const vesselLat = parseFloat(vessel.currentLat || '0');
+        const vesselLng = parseFloat(vessel.currentLng || '0');
         
-        if (isNaN(vesselLat) || isNaN(vesselLng) || isNaN(refineryLat) || isNaN(refineryLng)) {
+        // Skip vessels with invalid coordinates
+        if (isNaN(vesselLat) || isNaN(vesselLng) || 
+            (vesselLat === 0 && vesselLng === 0)) {
           return false;
         }
         
-        // Use squared distance for better performance (avoid sqrt)
-        const latDiff = vesselLat - refineryLat;
-        const lngDiff = vesselLng - refineryLng;
-        const squaredDistance = latDiff * latDiff + lngDiff * lngDiff;
+        // Calculate distance
+        const distance = calculateDistance(
+          refineryLat, refineryLng, 
+          vesselLat, vesselLng
+        );
         
-        // Rough approximation for ~500km radius (about 4.5 degrees at equator)
-        return squaredDistance < 25; // ~5 degrees squared
+        // Include vessels within the radius
+        return distance <= SEARCH_RADIUS_KM;
       });
       
-      // 3. Region matching with cargo relevance - oil tankers and cargo ships in the same region
-      const regionVessels = cargoVessels.filter(v => {
-        const isOilRelated = v.cargoType?.toLowerCase().includes('crude') || 
-                           v.cargoType?.toLowerCase().includes('oil') ||
-                           v.cargoType?.toLowerCase().includes('gas') ||
-                           v.cargoType?.toLowerCase().includes('diesel') ||
-                           v.cargoType?.toLowerCase().includes('fuel') ||
-                           v.vesselType?.toLowerCase().includes('tanker');
-                           
-        const isInRegion = v.currentRegion === refinery.region;
-        
-        return isOilRelated && isInRegion;
-      });
-      
-      // 4. Look for vessels that have this refinery ID in their destination (format "REF:id:name")
-      const byRefineryReference = cargoVessels.filter(v => {
-        return v.destinationPort?.includes(`REF:${refinery.id}:`);
-      });
-      
-      // Prioritize vessels with higher relevance and proximity first
-      // Combine in priority order (more specific matches first)
-      const allConnected = [
-        ...byRefineryReference, // Most specifically connected
-        ...byPort,              // Explicit port connection  
-        ...byProximity,         // Geographic proximity
-        ...regionVessels        // Same region and oil-related
-      ];
-      
-      // Remove duplicates while preserving prioritization order
+      // Ensure unique vessels only
       const uniqueIds = new Set();
       const uniqueVessels = allConnected.filter(vessel => {
         if (uniqueIds.has(vessel.id)) return false;
@@ -1014,43 +687,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // AI Assistant endpoints
-  apiRouter.post("/ai/query", async (req, res) => {
-    try {
-      const { query } = req.body;
-      
-      if (!query || typeof query !== 'string') {
-        return res.status(400).json({ message: "Query is required" });
-      }
-      
-      const result = await aiService.processQuery(query);
-      res.json(result);
-    } catch (error) {
-      console.error("Error processing AI query:", error);
-      res.status(500).json({ message: "Failed to process query" });
-    }
-  });
-
-  apiRouter.post("/ai/generate-document", async (req, res) => {
+  // Endpoint to generate a document with Cohere AI
+  apiRouter.post("/documents/generate", async (req, res) => {
     try {
       const { vesselId, documentType } = req.body;
       
       if (!vesselId || !documentType) {
-        return res.status(400).json({ message: "vesselId and documentType are required" });
+        return res.status(400).json({ 
+          message: "Missing required fields: vesselId and documentType are required" 
+        });
       }
       
-      const document = await aiService.generateDocument(vesselId, documentType);
-      res.json(document);
+      // Get the vessel details
+      const vessel = await storage.getVesselById(parseInt(vesselId));
+      
+      if (!vessel) {
+        return res.status(404).json({ message: "Vessel not found" });
+      }
+      
+      // Generate the document using AI
+      const generatedDocument = await aiService.generateShippingDocument(vessel, documentType);
+      
+      res.json(generatedDocument);
     } catch (error) {
       console.error("Error generating document:", error);
-      res.status(500).json({ message: "Failed to generate document" });
+      res.status(500).json({ 
+        message: "Failed to generate document", 
+        error: error instanceof Error ? error.message : "Unknown error" 
+      });
     }
   });
 
   // Broker endpoints
   apiRouter.get("/brokers", async (req, res) => {
     try {
-      const brokers = await storage.getBrokers();
+      const brokers = await brokerService.getBrokers();
       res.json(brokers);
     } catch (error) {
       console.error("Error fetching brokers:", error);
@@ -1058,10 +729,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  apiRouter.get("/brokers/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid broker ID" });
+      }
+      
+      const broker = await brokerService.getBrokerById(id);
+      if (!broker) {
+        return res.status(404).json({ message: "Broker not found" });
+      }
+      
+      res.json(broker);
+    } catch (error) {
+      console.error("Error fetching broker:", error);
+      res.status(500).json({ message: "Failed to fetch broker" });
+    }
+  });
+
   apiRouter.post("/brokers", async (req, res) => {
     try {
       const brokerData = insertBrokerSchema.parse(req.body);
-      const broker = await storage.createBroker(brokerData);
+      const broker = await brokerService.createBroker(brokerData);
       res.status(201).json(broker);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -1075,481 +765,102 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Stream API endpoints - Optimized for database first approach
-  apiRouter.get("/stream/data", (req, res) => {
-    // Set headers for Server-Sent Events
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-    
-    // Keep track of last update time to reduce database queries
-    let lastDbFetchTime = 0;
-    const DB_REFRESH_INTERVAL = 30000; // 30 seconds - refresh database data
-    const POSITION_UPDATE_INTERVAL = 5000; // 5 seconds - update positions more frequently
-    
-    // Cache the data to reduce database load
-    let cachedVessels: Vessel[] = [];
-    let cachedRefineries: Refinery[] = [];
-    let cachedStats: any = null;
-    
-    // Main data sending function
-    const sendData = async (forceDbRefresh = false) => {
-      try {
-        const currentTime = Date.now();
-        const shouldRefreshDb = forceDbRefresh || (currentTime - lastDbFetchTime > DB_REFRESH_INTERVAL);
-        
-        // --- OPTIMIZED DATABASE-FIRST APPROACH ---
-        if (shouldRefreshDb) {
-          console.log("Refreshing data from database...");
-          lastDbFetchTime = currentTime;
-          
-          // Step 1: Get optimized data from database
-          const MAX_VESSELS_PER_RESPONSE = 5000; // Increased to show all vessels
-          
-          // Get vessels
-          let vessels = await vesselService.getAllVessels();
-          
-          // Filter for oil vessels specifically to make the app smoother
-          const isOilVessel = (v: Vessel) => {
-            if (!v.vesselType) return false;
-            const type = v.vesselType.toLowerCase();
-            return (
-              type.includes('oil') ||
-              type.includes('tanker') ||
-              type.includes('crude') ||
-              type.includes('vlcc')
-            );
-          };
-          
-          // Filter vessels:
-          // 1. Include all vessel types
-          // 2. Only vessels with current location data
-          // 3. Only vessels that are likely at sea
-          vessels = vessels
-            .filter(v => v.currentLat && v.currentLng)
-            .filter(v => {
-              // Check if vessel is in the ocean using the improved isCoordinateAtSea function
-              const lat = parseFloat(v.currentLat as string);
-              const lng = parseFloat(v.currentLng as string);
-              return !isNaN(lat) && !isNaN(lng) && 
-                vesselService.isCoordinateAtSea(lat, lng);
-            })
-            .slice(0, MAX_VESSELS_PER_RESPONSE);
-          
-          // Update the cache
-          cachedVessels = vessels;
-          
-          // Step 2: Get all refineries (there are fewer refineries, so we can get all)
-          cachedRefineries = await refineryService.getAllRefineries();
-          
-          // Get updated stats
-          const stats = await storage.getStats();
-          if (stats) {
-            // Convert BigInt values to numbers
-            cachedStats = {
-              ...stats,
-              id: Number(stats.id),
-              activeVessels: Number(stats.activeVessels),
-              totalCargo: Number(stats.totalCargo),
-              activeRefineries: Number(stats.activeRefineries),
-              activeBrokers: Number(stats.activeBrokers),
-              lastUpdated: stats.lastUpdated
-            };
-          }
-        }
-        
-        // Step 3: Send optimized data to client from cache
-        res.write(`event: vessels\n`);
-        res.write(`data: ${JSON.stringify(cachedVessels)}\n\n`);
-        
-        res.write(`event: refineries\n`);
-        res.write(`data: ${JSON.stringify(cachedRefineries)}\n\n`);
-        
-        if (cachedStats) {
-          res.write(`event: stats\n`);
-          res.write(`data: ${JSON.stringify(cachedStats)}\n\n`);
-        }
-        
-        // Step 4: Update positions in background (no need to wait)
-        // This runs asynchronously and updates the vessel positions in cache
-        if (currentTime - lastDbFetchTime > POSITION_UPDATE_INTERVAL) {
-          setTimeout(async () => {
-            try {
-              // Get position updates from database, no longer using API
-              const positionUpdates = await dataService.fetchVessels();
-              
-              // Map of IMO -> position updates for fast lookup
-              const positionMap = new Map();
-              positionUpdates.forEach(vessel => {
-                if (vessel.imo && vessel.currentLat && vessel.currentLng) {
-                  positionMap.set(vessel.imo, {
-                    currentLat: vessel.currentLat,
-                    currentLng: vessel.currentLng,
-                    eta: vessel.eta,
-                    destinationPort: vessel.destinationPort
-                  });
-                }
-              });
-              
-              // Update cached vessels with new positions
-              cachedVessels = cachedVessels.map(vessel => {
-                const update = positionMap.get(vessel.imo);
-                if (update) {
-                  return { ...vessel, ...update };
-                }
-                return vessel;
-              });
-              
-              // Batch update vessels in database (in background)
-              for (const vessel of cachedVessels) {
-                const update = positionMap.get(vessel.imo);
-                if (update) {
-                  // Don't wait for this to complete
-                  vesselService.updateVessel(vessel.id, update)
-                    .catch(err => console.error(`Error updating vessel ${vessel.id}:`, err));
-                }
-              }
-            } catch (updateError) {
-              console.error("Error updating vessel positions from database:", updateError);
-            }
-          }, 100); // Run quickly after sending data to update positions
-        }
-        
-        // Send a heartbeat to keep the connection alive
-        res.write(`event: heartbeat\n`);
-        res.write(`data: ${Date.now()}\n\n`);
-      } catch (error) {
-        console.error("Error streaming data:", error);
-        res.write(`event: error\n`);
-        res.write(`data: ${JSON.stringify({ message: "Error fetching data" })}\n\n`);
+  // Elite membership endpoints
+  apiRouter.post("/brokers/:id/upgrade", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid broker ID" });
       }
-    };
-    
-    // Send initial data with full DB refresh
-    sendData(true);
-    
-    // Send position updates more frequently, with DB refresh every 30 seconds
-    const intervalId = setInterval(() => sendData(false), 5000);
-    
-    // Handle client disconnect
-    req.on('close', () => {
-      clearInterval(intervalId);
-      res.end();
-    });
+      
+      // Get the membership duration and level from the request
+      const { duration, level } = req.body;
+      
+      if (!duration || !level) {
+        return res.status(400).json({ 
+          message: "Missing required fields: duration and level are required" 
+        });
+      }
+      
+      // Upgrade the broker to elite membership
+      const result = await brokerService.upgradeToBrokerElite(id, duration, level);
+      
+      if (!result.success) {
+        return res.status(400).json({ message: result.message });
+      }
+      
+      res.json({
+        success: true,
+        message: `Broker has been upgraded to Elite ${level} for ${duration} months`,
+        broker: result.broker
+      });
+    } catch (error) {
+      console.error("Error upgrading broker:", error);
+      res.status(500).json({ message: "Failed to upgrade broker" });
+    }
   });
   
-  // Mount API tester routes for testing large datasets
-  apiRouter.use("/test", apiTesterRouter);
-  
-  // Mount broker routes
-  apiRouter.use("/brokers", brokerRouter);
-  
-  // Mount trading routes
-  apiRouter.use("/trading", tradingRouter);
-  
-  // Payment and subscription endpoints are defined below with middleware protection
+  apiRouter.post("/brokers/:id/check-elite", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid broker ID" });
+      }
+      
+      const isElite = await brokerService.checkEliteMembership(id);
+      
+      res.json({
+        id,
+        isElite,
+        message: isElite 
+          ? "Broker has an active Elite membership" 
+          : "Broker does not have an active Elite membership"
+      });
+    } catch (error) {
+      console.error("Error checking elite status:", error);
+      res.status(500).json({ message: "Failed to check elite status" });
+    }
+  });
 
-  // Stripe webhook endpoint
-  app.post("/webhook", express.raw({ type: 'application/json' }), async (req, res) => {
-    const signature = req.headers['stripe-signature'] as string;
-    
+  // Stripe payment endpoints
+  apiRouter.post("/payment/create-intent", async (req, res) => {
     try {
-      // Make sure we have the necessary values
-      if (!signature || !process.env.STRIPE_WEBHOOK_SECRET) {
-        return res.status(400).json({ message: "Stripe signature or webhook secret missing" });
-      }
+      const { amount, currency = "usd" } = req.body;
       
-      // Parse and validate the webhook event
-      const event = await stripeService.parseWebhookEvent(
-        req.body,
-        signature,
-        process.env.STRIPE_WEBHOOK_SECRET
-      );
-      
-      // Handle the event
-      await stripeService.handleWebhookEvent(event);
-      
-      res.json({ received: true });
-    } catch (error: any) {
-      console.error("Webhook Error:", error.message);
-      res.status(400).send(`Webhook Error: ${error.message}`);
-    }
-  });
-  
-  // Stripe payment endpoints - protected with authentication
-  apiRouter.post("/create-payment-intent", (req, res, next) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Authentication required" });
-    }
-    next();
-  }, async (req, res) => {
-    try {
-      const { amount } = req.body;
-      
-      if (!amount || isNaN(amount)) {
+      if (!amount || typeof amount !== 'number') {
         return res.status(400).json({ message: "Valid amount is required" });
       }
       
-      const result = await stripeService.createPaymentIntent(amount);
-      res.json(result);
-    } catch (error: any) {
-      console.error("Payment intent error:", error);
-      res.status(500).json({ message: error.message || "Failed to create payment intent" });
+      const paymentIntent = await stripeService.createPaymentIntent(amount, currency);
+      
+      res.json({
+        clientSecret: paymentIntent.client_secret
+      });
+    } catch (error) {
+      console.error("Error creating payment intent:", error);
+      res.status(500).json({ 
+        message: "Failed to create payment intent",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
     }
   });
   
-  apiRouter.post("/get-or-create-subscription", (req, res, next) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Authentication required" });
-    }
-    next();
-  }, async (req, res) => {
-    try {
-      // Use PRICE_ID from environment or a default price ID from request
-      const priceId = process.env.STRIPE_PRICE_ID || req.body.priceId;
-      
-      if (!priceId) {
-        return res.status(400).json({ message: "Price ID is required" });
-      }
-      
-      const userId = req.user!.id;
-      const result = await stripeService.getOrCreateSubscription(userId, priceId);
-      res.json(result);
-    } catch (error: any) {
-      console.error("Subscription error:", error);
-      res.status(500).json({ message: error.message || "Failed to process subscription" });
-    }
-  });
+  // API routes for vessel distribution data
+  app.use("/api/distribution", vesselDistributionRouter);
   
-  apiRouter.post("/cancel-subscription", (req, res, next) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Authentication required" });
-    }
-    next();
-  }, async (req, res) => {
-    try {
-      const userId = req.user!.id;
-      const result = await stripeService.cancelSubscription(userId);
-      res.json(result);
-    } catch (error: any) {
-      console.error("Subscription cancellation error:", error);
-      res.status(500).json({ message: error.message || "Failed to cancel subscription" });
-    }
-  });
+  // API routes for trading data
+  app.use("/api/trading", tradingRouter);
+  
+  // API routes for broker-related operations
+  app.use("/api/broker", brokerRouter);
 
-  // Mount specialized routers
-  app.use('/api/broker', brokerRouter);
-  app.use('/api/trading', tradingRouter);
-  app.use('/api/vessels/distribution', vesselDistributionRouter);
-  app.use('/api/tester', apiTesterRouter);
-  
+  // API tester routes (performance testing, etc.)
+  app.use("/api/tester", apiTesterRouter);
+
   // Mount API router for general endpoints
   app.use("/api", apiRouter);
 
   const httpServer = createServer(app);
-  
-  // Setup WebSocket server for real-time data
-  const wss = new WebSocketServer({ 
-    server: httpServer,
-    path: '/ws'
-  });
-  
-  // Set up WebSocket connections
-  console.log("Setting up WebSocket server for real-time vessel data");
-  
-  // Store connected clients
-  const clients = new Set<WebSocket>();
-  
-  // Handle new WebSocket connections
-  wss.on('connection', (ws) => {
-    console.log('WebSocket client connected');
-    clients.add(ws);
-    
-    // Send initial data when client connects
-    const sendInitialData = async () => {
-      console.log("Sending initial data to new client connection");
-      
-      try {
-        // Get vessel and refinery data
-        const vessels = await storage.getVessels();
-        const refineries = await storage.getRefineries();
-        
-        // Filter for cargo vessels only with valid coordinates
-        const filteredVessels = vessels
-          .filter(vessel => {
-            // Check if vessel has valid coordinates
-            if (!vessel.currentLat || !vessel.currentLng) return false;
-            
-            // Parse coordinates to numbers if they're strings
-            const lat = typeof vessel.currentLat === 'number' 
-              ? vessel.currentLat 
-              : parseFloat(String(vessel.currentLat));
-              
-            const lng = typeof vessel.currentLng === 'number'
-              ? vessel.currentLng
-              : parseFloat(String(vessel.currentLng));
-              
-            if (isNaN(lat) || isNaN(lng)) return false;
-            
-            // Filter for cargo vessels only
-            return vessel.vesselType?.toLowerCase().includes('cargo') || false;
-          })
-          .slice(0, 1000); // Increase limit for better data coverage
-        
-        // Send vessel data first
-        if (ws.readyState === WebSocket.OPEN) {
-          const vesselData = {
-            type: 'vessels',
-            data: filteredVessels,
-            timestamp: new Date().toISOString()
-          };
-          
-          ws.send(JSON.stringify(vesselData));
-          console.log(`Sent initial vessel data: ${filteredVessels.length} vessels`);
-          
-          // Send refinery data after a small delay
-          setTimeout(() => {
-            if (ws.readyState === WebSocket.OPEN) {
-              const refineryData = {
-                type: 'refineries',
-                data: refineries,
-                timestamp: new Date().toISOString()
-              };
-              
-              ws.send(JSON.stringify(refineryData));
-              console.log(`Sent initial refinery data: ${refineries.length} refineries`);
-            }
-          }, 500);
-        }
-      } catch (error) {
-        console.error("Error sending initial data:", error);
-      }
-    };
-    
-    // Send initial data
-    sendInitialData();
-    
-    // Handle client messages (like filter requests)
-    ws.on('message', async (message) => {
-      try {
-        const data = JSON.parse(message.toString());
-        
-        // Handle different message types
-        if (data.type === 'filter') {
-          const { region, vesselType } = data;
-          
-          // Apply filters and return filtered data
-          let vessels = await storage.getVessels();
-          
-          // Apply region filter
-          if (region && region !== 'all') {
-            vessels = vessels.filter(v => v.currentRegion === region);
-          }
-          
-          // Apply vessel type filter
-          if (vesselType && vesselType !== 'all') {
-            vessels = vessels.filter(v => 
-              v.vesselType?.toLowerCase().includes(vesselType.toLowerCase())
-            );
-          }
-          
-          // Send filtered data back to this specific client
-          if (ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({
-              type: 'filtered',
-              vessels: vessels.slice(0, 500) // Limit for performance
-            }));
-          }
-        }
-      } catch (error) {
-        console.error("Error processing WebSocket message:", error);
-      }
-    });
-    
-    // Handle client disconnection
-    ws.on('close', () => {
-      console.log('WebSocket client disconnected');
-      clients.delete(ws);
-    });
-  });
-  
-  // Function to refresh and broadcast data periodically
-  const refreshAndBroadcastData = async () => {
-    if (clients.size === 0) return; // Skip if no clients are connected
-    
-    console.log("Refreshing data from database...");
-    
-    try {
-      // Get all updated data
-      const vessels = await storage.getVessels();
-      const refineries = await storage.getRefineries();
-      
-      // Filter for cargo vessels only that are at sea (simplified check)
-      const filteredVessels = vessels
-        .filter(vessel => {
-          if (!vessel.currentLat || !vessel.currentLng) return false;
-          
-          const lat = typeof vessel.currentLat === 'number' 
-            ? vessel.currentLat 
-            : parseFloat(String(vessel.currentLat));
-            
-          const lng = typeof vessel.currentLng === 'number'
-            ? vessel.currentLng
-            : parseFloat(String(vessel.currentLng));
-            
-          if (isNaN(lat) || isNaN(lng)) return false;
-          
-          // Filter for cargo vessels only
-          return vessel.vesselType?.toLowerCase().includes('cargo') || false;
-        })
-        .slice(0, 1000); // Increase limit for better data coverage
-      
-      // Send vessels data update
-      const vesselUpdate = {
-        type: 'vessels',
-        data: filteredVessels,
-        timestamp: new Date().toISOString()
-      };
-      
-      // Send refineries data update
-      const refineryUpdate = {
-        type: 'refineries',
-        data: refineries,
-        timestamp: new Date().toISOString()
-      };
-      
-      // Broadcast vessels to all connected clients
-      const vesselMessage = JSON.stringify(vesselUpdate);
-      let activeClients = 0;
-      
-      for (const client of clients) {
-        if (client.readyState === WebSocket.OPEN) {
-          client.send(vesselMessage);
-          activeClients++;
-        }
-      }
-      
-      // Wait briefly before sending refineries to avoid overwhelming clients
-      setTimeout(() => {
-        // Broadcast refineries to all connected clients
-        const refineryMessage = JSON.stringify(refineryUpdate);
-        
-        for (const client of clients) {
-          if (client.readyState === WebSocket.OPEN) {
-            client.send(refineryMessage);
-          }
-        }
-        
-        console.log(`Broadcast complete: Sent ${filteredVessels.length} vessels and ${refineries.length} refineries to ${activeClients} clients`);
-      }, 1000);
-    } catch (error) {
-      console.error("Error broadcasting data updates:", error);
-    }
-  };
-  
-  // Run the refresh immediately and then periodically
-  refreshAndBroadcastData();
-  setInterval(refreshAndBroadcastData, 15000); // Send updates every 15 seconds
-  
+
   return httpServer;
 }

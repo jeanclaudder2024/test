@@ -1,0 +1,206 @@
+1346-  app.use("/api", apiRouter);
+1347-
+1348-  const httpServer = createServer(app);
+1349-  
+1350-  // Setup WebSocket server for real-time data
+1351:  const wss = new WebSocketServer({ 
+1352-    server: httpServer,
+1353-    path: '/ws'
+1354-  });
+1355-  
+1356-  // Set up WebSocket connections
+1357-  console.log("Setting up WebSocket server for real-time vessel data");
+1358-  
+1359-  // Store connected clients
+1360-  const clients = new Set<WebSocket>();
+1361-  
+1362-  // Handle new WebSocket connections
+1363-  wss.on('connection', (ws) => {
+1364-    console.log('WebSocket client connected');
+1365-    clients.add(ws);
+1366-    
+1367-    // Send initial data when client connects
+1368-    const sendInitialData = async () => {
+1369-      console.log("Sending initial data to new client connection");
+1370-      
+1371-      try {
+1372-        // Get vessel and refinery data
+1373-        const vessels = await storage.getVessels();
+1374-        const refineries = await storage.getRefineries();
+1375-        
+1376-        // Filter for cargo vessels only with valid coordinates
+1377-        const filteredVessels = vessels
+1378-          .filter(vessel => {
+1379-            // Check if vessel has valid coordinates
+1380-            if (!vessel.currentLat || !vessel.currentLng) return false;
+1381-            
+1382-            // Parse coordinates to numbers if they're strings
+1383-            const lat = typeof vessel.currentLat === 'number' 
+1384-              ? vessel.currentLat 
+1385-              : parseFloat(String(vessel.currentLat));
+1386-              
+1387-            const lng = typeof vessel.currentLng === 'number'
+1388-              ? vessel.currentLng
+1389-              : parseFloat(String(vessel.currentLng));
+1390-              
+1391-            if (isNaN(lat) || isNaN(lng)) return false;
+1392-            
+1393-            // Filter for cargo vessels only
+1394-            return vessel.vesselType?.toLowerCase().includes('cargo') || false;
+1395-          })
+1396-          .slice(0, 1000); // Increase limit for better data coverage
+1397-        
+1398-        // Send vessel data first
+1399-        if (ws.readyState === WebSocket.OPEN) {
+1400-          const vesselData = {
+1401-            type: 'vessels',
+1402-            data: filteredVessels,
+1403-            timestamp: new Date().toISOString()
+1404-          };
+1405-          
+1406-          ws.send(JSON.stringify(vesselData));
+1407-          console.log(`Sent initial vessel data: ${filteredVessels.length} vessels`);
+1408-          
+1409-          // Send refinery data after a small delay
+1410-          setTimeout(() => {
+1411-            if (ws.readyState === WebSocket.OPEN) {
+1412-              const refineryData = {
+1413-                type: 'refineries',
+1414-                data: refineries,
+1415-                timestamp: new Date().toISOString()
+1416-              };
+1417-              
+1418-              ws.send(JSON.stringify(refineryData));
+1419-              console.log(`Sent initial refinery data: ${refineries.length} refineries`);
+1420-            }
+1421-          }, 500);
+1422-        }
+1423-      } catch (error) {
+1424-        console.error("Error sending initial data:", error);
+1425-      }
+1426-    };
+1427-    
+1428-    // Send initial data
+1429-    sendInitialData();
+1430-    
+1431-    // Handle client messages (like filter requests)
+1432-    ws.on('message', async (message) => {
+1433-      try {
+1434-        const data = JSON.parse(message.toString());
+1435-        
+1436-        // Handle different message types
+1437-        if (data.type === 'filter') {
+1438-          const { region, vesselType } = data;
+1439-          
+1440-          // Apply filters and return filtered data
+1441-          let vessels = await storage.getVessels();
+1442-          
+1443-          // Apply region filter
+1444-          if (region && region !== 'all') {
+1445-            vessels = vessels.filter(v => v.currentRegion === region);
+1446-          }
+1447-          
+1448-          // Apply vessel type filter
+1449-          if (vesselType && vesselType !== 'all') {
+1450-            vessels = vessels.filter(v => 
+1451-              v.vesselType?.toLowerCase().includes(vesselType.toLowerCase())
+1452-            );
+1453-          }
+1454-          
+1455-          // Send filtered data back to this specific client
+1456-          if (ws.readyState === WebSocket.OPEN) {
+1457-            ws.send(JSON.stringify({
+1458-              type: 'filtered',
+1459-              vessels: vessels.slice(0, 500) // Limit for performance
+1460-            }));
+1461-          }
+1462-        }
+1463-      } catch (error) {
+1464-        console.error("Error processing WebSocket message:", error);
+1465-      }
+1466-    });
+1467-    
+1468-    // Handle client disconnection
+1469-    ws.on('close', () => {
+1470-      console.log('WebSocket client disconnected');
+1471-      clients.delete(ws);
+1472-    });
+1473-  });
+1474-  
+1475-  // Function to refresh and broadcast data periodically
+1476-  const refreshAndBroadcastData = async () => {
+1477-    if (clients.size === 0) return; // Skip if no clients are connected
+1478-    
+1479-    console.log("Refreshing data from database...");
+1480-    
+1481-    try {
+1482-      // Get all updated data
+1483-      const vessels = await storage.getVessels();
+1484-      const refineries = await storage.getRefineries();
+1485-      
+1486-      // Filter for cargo vessels only that are at sea (simplified check)
+1487-      const filteredVessels = vessels
+1488-        .filter(vessel => {
+1489-          if (!vessel.currentLat || !vessel.currentLng) return false;
+1490-          
+1491-          const lat = typeof vessel.currentLat === 'number' 
+1492-            ? vessel.currentLat 
+1493-            : parseFloat(String(vessel.currentLat));
+1494-            
+1495-          const lng = typeof vessel.currentLng === 'number'
+1496-            ? vessel.currentLng
+1497-            : parseFloat(String(vessel.currentLng));
+1498-            
+1499-          if (isNaN(lat) || isNaN(lng)) return false;
+1500-          
+1501-          // Filter for cargo vessels only
+1502-          return vessel.vesselType?.toLowerCase().includes('cargo') || false;
+1503-        })
+1504-        .slice(0, 1000); // Increase limit for better data coverage
+1505-      
+1506-      // Send vessels data update
+1507-      const vesselUpdate = {
+1508-        type: 'vessels',
+1509-        data: filteredVessels,
+1510-        timestamp: new Date().toISOString()
+1511-      };
+1512-      
+1513-      // Send refineries data update
+1514-      const refineryUpdate = {
+1515-        type: 'refineries',
+1516-        data: refineries,
+1517-        timestamp: new Date().toISOString()
+1518-      };
+1519-      
+1520-      // Broadcast vessels to all connected clients
+1521-      const vesselMessage = JSON.stringify(vesselUpdate);
+1522-      let activeClients = 0;
+1523-      
+1524-      for (const client of clients) {
+1525-        if (client.readyState === WebSocket.OPEN) {
+1526-          client.send(vesselMessage);
+1527-          activeClients++;
+1528-        }
+1529-      }
+1530-      
+1531-      // Wait briefly before sending refineries to avoid overwhelming clients
+1532-      setTimeout(() => {
+1533-        // Broadcast refineries to all connected clients
+1534-        const refineryMessage = JSON.stringify(refineryUpdate);
+1535-        
+1536-        for (const client of clients) {
+1537-          if (client.readyState === WebSocket.OPEN) {
+1538-            client.send(refineryMessage);
+1539-          }
+1540-        }
+1541-        
+1542-        console.log(`Broadcast complete: Sent ${filteredVessels.length} vessels and ${refineries.length} refineries to ${activeClients} clients`);
+1543-      }, 1000);
+1544-    } catch (error) {
+1545-      console.error("Error broadcasting data updates:", error);
+1546-    }
+1547-  };
+1548-  
+1549-  // Run the refresh immediately and then periodically
+1550-  refreshAndBroadcastData();
+1551-  setInterval(refreshAndBroadcastData, 15000); // Send updates every 15 seconds

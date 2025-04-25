@@ -32,12 +32,10 @@ export function useVesselStream() {
         console.log('Fetching vessel and refinery data...');
         
         // Fetch vessels
-        const vesselsResponse = await apiRequest('GET', '/api/vessels?limit=500');
-        const vesselsData = await vesselsResponse.json();
+        const vesselsData = await apiRequest('/api/vessels?limit=500');
         
         // Fetch refineries
-        const refineriesResponse = await apiRequest('GET', '/api/refineries');
-        const refineriesData = await refineriesResponse.json();
+        const refineriesData = await apiRequest('/api/refineries');
         
         console.log(`Received ${vesselsData.length} vessels and ${refineriesData.length} refineries`);
         
