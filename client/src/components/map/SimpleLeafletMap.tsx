@@ -346,6 +346,7 @@ export default function SimpleLeafletMap({
     };
     
     // Filter and add vessel markers - only show cargo vessels
+    console.log(`Processing ${vessels.length} vessels for display on map`);
     const filteredVessels = vessels
       .filter(vessel => {
         // Check if vessel has valid coordinates
@@ -825,6 +826,7 @@ export default function SimpleLeafletMap({
     });
     
     // Add refinery markers
+    console.log(`Processing ${refineries.length} refineries for display on map`);
     refineries.forEach(refinery => {
       if (!refinery.lat || !refinery.lng) return;
       
