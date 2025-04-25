@@ -26,53 +26,92 @@ export function useVesselStream() {
 
   // Handle incoming messages from WebSocket
   const handleMessage = useCallback((message: any) => {
-    if (!message || !message.type) return;
-
     try {
-      // Update state based on message type
-      switch (message.type) {
-        case 'vessels':
-          console.log(`Received vessel data: ${message.data.length} vessels`);
+      // Legacy format support - handle arrays directly
+      if (Array.isArray(message)) {
+        // If first item has vesselType, it's vessel data
+        if (message.length > 0 && 'vesselType' in message[0]) {
+          console.log(`Received vessel data (legacy format): ${message.length} vessels`);
           setData(prev => ({
             ...prev,
-            vessels: message.data,
+            vessels: message as Vessel[],
             loading: false,
             lastUpdated: new Date()
           }));
-          break;
-          
-        case 'refineries':
-          console.log(`Received refinery data: ${message.data.length} refineries`);
+          return;
+        }
+        
+        // If first item has country, it's refinery data
+        if (message.length > 0 && 'country' in message[0]) {
+          console.log(`Received refinery data (legacy format): ${message.length} refineries`);
           setData(prev => ({
             ...prev,
-            refineries: message.data,
+            refineries: message as Refinery[],
             loading: false,
             lastUpdated: new Date()
           }));
-          break;
-          
-        case 'stats':
-          console.log('Received stats data');
-          setData(prev => ({
-            ...prev,
-            stats: message.data,
-            loading: false,
-            lastUpdated: new Date()
-          }));
-          break;
-          
-        case 'error':
-          console.error('Received error from server:', message.error);
-          setData(prev => ({
-            ...prev,
-            error: message.error,
-            loading: false
-          }));
-          break;
-          
-        default:
-          console.log('Received unknown message type:', message.type);
+          return;
+        }
+        
+        console.log('Received unknown array data:', message.length, 'items');
+        return;
       }
+      
+      // New formatted message handling
+      if (message && typeof message === 'object' && 'type' in message) {
+        // Update state based on message type
+        switch (message.type) {
+          case 'vessels':
+            if (Array.isArray(message.data)) {
+              console.log(`Received vessel data: ${message.data.length} vessels`);
+              setData(prev => ({
+                ...prev,
+                vessels: message.data,
+                loading: false,
+                lastUpdated: new Date()
+              }));
+            }
+            break;
+            
+          case 'refineries':
+            if (Array.isArray(message.data)) {
+              console.log(`Received refinery data: ${message.data.length} refineries`);
+              setData(prev => ({
+                ...prev,
+                refineries: message.data,
+                loading: false,
+                lastUpdated: new Date()
+              }));
+            }
+            break;
+            
+          case 'stats':
+            console.log('Received stats data');
+            setData(prev => ({
+              ...prev,
+              stats: message.data,
+              loading: false,
+              lastUpdated: new Date()
+            }));
+            break;
+            
+          case 'error':
+            console.error('Received error from server:', message.data?.message || 'Unknown error');
+            setData(prev => ({
+              ...prev,
+              error: message.data?.message || 'Unknown error',
+              loading: false
+            }));
+            break;
+            
+          default:
+            console.log('Received unknown message type:', message.type);
+        }
+        return;
+      }
+      
+      // Unknown message format
+      console.warn('Received unknown message format:', message);
     } catch (err) {
       console.error('Error processing WebSocket message:', err);
       setData(prev => ({
