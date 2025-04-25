@@ -271,8 +271,8 @@ export default function RefineryDetail() {
                         <div className="flex items-center text-sm">
                           <MapPin className="h-4 w-4 mr-2 text-primary/60" />
                           <span>
-                            {refinery.lat !== null && refinery.lng !== null 
-                              ? `${Number(refinery.lat).toFixed(4)}, ${Number(refinery.lng).toFixed(4)}`
+                            {refinery.lat && refinery.lng 
+                              ? `${parseFloat(refinery.lat as string).toFixed(4)}, ${parseFloat(refinery.lng as string).toFixed(4)}`
                               : 'Coordinates unavailable'}
                           </span>
                         </div>
@@ -398,7 +398,7 @@ export default function RefineryDetail() {
                         window.location.href = `/vessels/${vessel.id}`;
                       }}
                       isLoading={false}
-                      initialCenter={[refinery.lat, refinery.lng]}
+                      initialCenter={[parseFloat(refinery.lat as string), parseFloat(refinery.lng as string)]}
                       initialZoom={7} // Slightly zoomed out to show nearby vessels
                     />
                   ) : (
