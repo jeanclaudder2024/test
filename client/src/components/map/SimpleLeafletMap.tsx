@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
-import { Vessel, Refinery, Region } from '@/types';
+import { type Vessel, type Refinery } from '@shared/schema';
+import { type Region } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from "@/components/ui/button";
 import { Info, Map, Navigation, Globe2 } from 'lucide-react';
@@ -1227,8 +1228,22 @@ export default function SimpleLeafletMap({
     // 2. Selected region
     // 3. Default view (already set when map was created)
     if (initialCenter && initialZoom) {
-      // Use the provided initial center and zoom
-      map.setView(initialCenter, initialZoom);
+      try {
+        // Make sure we have valid coordinates
+        const validLat = typeof initialCenter[0] === 'number' ? initialCenter[0] : parseFloat(initialCenter[0] as any);
+        const validLng = typeof initialCenter[1] === 'number' ? initialCenter[1] : parseFloat(initialCenter[1] as any);
+        
+        if (!isNaN(validLat) && !isNaN(validLng)) {
+          console.log('Setting map view to:', [validLat, validLng], initialZoom);
+          map.setView([validLat, validLng], initialZoom);
+        } else {
+          console.error('Invalid coordinates:', initialCenter);
+          map.setView([0, 0], 2); // Default to world view if invalid
+        }
+      } catch (err) {
+        console.error('Error setting map view:', err);
+        map.setView([0, 0], 2); // Default to world view on error
+      }
     } else if (selectedRegion) {
       const position = regionPositions[selectedRegion];
       if (position) {

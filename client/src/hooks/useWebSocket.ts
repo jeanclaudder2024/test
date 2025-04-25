@@ -36,8 +36,43 @@ export function useWebSocket(options: WebSocketOptions = {}) {
       
       newSocket.onmessage = (event) => {
         try {
-          const data = JSON.parse(event.data);
-          if (options.onMessage) options.onMessage(data);
+          const message = JSON.parse(event.data);
+          
+          // Handle formatted messages with type and data
+          if (message && typeof message === 'object') {
+            // Log heartbeats but don't forward them to consumers
+            if (message.type === 'heartbeat') {
+              console.log('WebSocket heartbeat received:', message.timestamp);
+              return;
+            }
+            
+            // Handle error messages
+            if (message.type === 'error') {
+              console.error('WebSocket server error:', message.data);
+              return;
+            }
+            
+            // Handle connection confirmations
+            if (message.type === 'connected') {
+              console.log('WebSocket connection confirmed:', message.data);
+              return;
+            }
+            
+            // Process regular data messages
+            if (options.onMessage) {
+              // For backward compatibility, if we get a raw array without type, 
+              // pass it directly
+              if (Array.isArray(message)) {
+                options.onMessage(message);
+              } else {
+                // Otherwise pass the typed data
+                options.onMessage(message);
+              }
+            }
+          } else {
+            // Handle legacy messages
+            if (options.onMessage) options.onMessage(message);
+          }
         } catch (err) {
           console.error('Error parsing WebSocket message:', err);
         }
