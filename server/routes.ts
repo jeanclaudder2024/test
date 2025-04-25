@@ -550,7 +550,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Generated and inserted ${insertedCount} new vessels in the ocean.`);
       
-      // Get updated counts
+      // Get updated counts using the schema definition      
       const oilVessels = await db.select({ count: vessels.id })
         .from(vessels)
         .where(vessels.cargoType.like('%OIL%')
