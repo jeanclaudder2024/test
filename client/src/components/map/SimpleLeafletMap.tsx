@@ -1,33 +1,31 @@
-import { useEffect, useRef, useState, useMemo, memo } from 'react';
-import { Vessel, Refinery, Region } from '@/types';
-import { Badge } from '@/components/ui/badge';
-import { Button } from "@/components/ui/button";
-import { Info, Map, Navigation, Globe2 } from 'lucide-react';
-import { mapStyles, LanguageOption } from './MapStyles';
+import { useEffect, useState, useRef, memo } from 'react';
+import { Vessel, Refinery } from '@shared/schema';
+import { REGIONS } from '@shared/constants';
 import MapContainer from './MapContainer';
+import { 
+  getVesselIcon, 
+  getRefineryIcon, 
+  mapStyles, 
+  LanguageOption 
+} from './MapStyles';
+import { 
+  Map, 
+  Info, 
+  Globe2,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
-// Define Leaflet types
-declare global {
-  interface Window {
-    L: any;
-  }
-}
+type Region = typeof REGIONS[number];
 
-// Region center positions
-const regionPositions: Record<string, { lat: number; lng: number; zoom: number }> = {
-  'north-america': { lat: 40, lng: -100, zoom: 3 },
-  'south-america': { lat: -15, lng: -60, zoom: 3 },
-  'central-america': { lat: 15, lng: -85, zoom: 4 },
-  'western-europe': { lat: 50, lng: 0, zoom: 4 },
-  'eastern-europe': { lat: 50, lng: 25, zoom: 4 },
-  'middle-east': { lat: 28, lng: 45, zoom: 4 },
-  'north-africa': { lat: 25, lng: 20, zoom: 4 },
-  'southern-africa': { lat: -10, lng: 20, zoom: 3 },
-  'russia': { lat: 60, lng: 80, zoom: 3 },
-  'china': { lat: 35, lng: 105, zoom: 4 },
-  'asia-pacific': { lat: 20, lng: 110, zoom: 3 },
-  'southeast-asia-oceania': { lat: -10, lng: 130, zoom: 3 }
-};
+/**
+ * SimpleLeafletMap Component
+ * 
+ * A simplified leaflet map component that renders vessel and refinery markers.
+ * This version uses standard leaflet instead of react-leaflet for better
+ * performance with a large number of markers and animations.
+ */
+
+const MAP_CONTAINER_ID = 'leaflet-map-container';
 
 interface SimpleLeafletMapProps {
   vessels: Vessel[];
@@ -40,8 +38,12 @@ interface SimpleLeafletMapProps {
   initialZoom?: number;             // Optional initial zoom level
 }
 
-// Create a unique ID for this map instance
-const MAP_CONTAINER_ID = 'leaflet-map-container';
+// Declare the window interface to access the L (Leaflet) global
+declare global {
+  interface Window {
+    L: any;
+  }
+}
 
 function SimpleLeafletMap({
   vessels,
@@ -53,58 +55,64 @@ function SimpleLeafletMap({
   initialCenter,
   initialZoom
 }: SimpleLeafletMapProps) {
-  // Generate a stable instance ID for this component
-  const instanceId = useMemo(() => `map-${Math.random().toString(36).substring(2, 9)}`, []);
-  
-  const mapRef = useRef<any>(null);
-  const vesselMarkersRef = useRef<any[]>([]);
-  const refineryMarkersRef = useRef<any[]>([]);
-  const routeLinesRef = useRef<any[]>([]);
-  const tileLayerRef = useRef<any>(null);
-  const [mapStyle, setMapStyle] = useState(mapStyles[0].id);
-  const [mapLanguage, setMapLanguage] = useState<LanguageOption>('en');
+  // State for map controls
+  const [mapStyle, setMapStyle] = useState('carto-voyager'); // Default map style
+  const [mapLanguage, setMapLanguage] = useState<LanguageOption>('en'); // Default language
   const [isMapReady, setIsMapReady] = useState(false);
   const [displayVessels, setDisplayVessels] = useState<Vessel[]>([]);
   
-  // Set map as ready since Leaflet is now loaded from HTML
+  // Refs to store Leaflet objects
+  const mapRef = useRef<any>(null); // Leaflet map instance
+  const vesselMarkersRef = useRef<any[]>([]); // Array to store vessel markers
+  const refineryMarkersRef = useRef<any[]>([]); // Array to store refinery markers
+  const routeLinesRef = useRef<any[]>([]); // Array to store route lines and labels
+  
+  // Function to handle map style changes
+  const handleStyleChange = (style: string) => {
+    setMapStyle(style);
+  };
+  
+  // Function to handle map language changes
+  const handleLanguageChange = (language: LanguageOption) => {
+    setMapLanguage(language);
+  };
+  
+  // Effect to check if Leaflet is loaded
   useEffect(() => {
-    console.log('Checking for Leaflet availability:', !!window.L);
-    if (window.L) {
-      setIsMapReady(true);
-    } else {
-      console.error('Leaflet not found on window object! Map will not render correctly.');
-      // We'll try again after a short delay just in case
-      const checkAgain = setTimeout(() => {
-        console.log('Checking for Leaflet again:', !!window.L);
-        if (window.L) setIsMapReady(true);
-      }, 1000);
-      
-      return () => clearTimeout(checkAgain);
-    }
+    let leafletCheckInterval: number;
+    let checkCount = 0;
     
-    return () => {
-      // Cleanup function runs on unmount
-      if (mapRef.current) {
-        try {
-          mapRef.current.remove();
-          mapRef.current = null;
-        } catch (err) {
-          console.error('Error cleaning up map:', err);
+    const checkLeaflet = () => {
+      console.log('Checking for Leaflet...');
+      if (window.L) {
+        console.log('Leaflet found on window object!');
+        setIsMapReady(true);
+        clearInterval(leafletCheckInterval);
+      } else {
+        checkCount++;
+        console.log(`Leaflet not found, check ${checkCount}/20`);
+        if (checkCount >= 20) {
+          // After 10 seconds, give up
+          console.error('Leaflet not found after multiple checks. Please make sure Leaflet is properly loaded.');
+          clearInterval(leafletCheckInterval);
         }
       }
     };
+    
+    // Check immediately and then every 500ms
+    checkLeaflet();
+    leafletCheckInterval = window.setInterval(checkLeaflet, 500);
+    
+    // Cleanup interval on unmount
+    return () => {
+      clearInterval(leafletCheckInterval);
+    };
   }, []);
   
-  // Initialize and update the map when dependencies change
+  // Main effect to initialize and update the map
   useEffect(() => {
-    // Don't proceed until Leaflet is loaded and we're not in loading state
-    if (!isMapReady || isLoading) {
-      console.log('Not ready to initialize map:', {isMapReady, isLoading});
-      return;
-    }
-    
-    const L = window.L;
-    if (!L) {
+    if (!isMapReady || !window.L) {
+      // Wait for Leaflet to be loaded
       console.error('Leaflet not found on window object after initial check!');
       return;
     }
@@ -112,7 +120,17 @@ function SimpleLeafletMap({
     console.log('Initializing map with vessels:', vessels.length, 'refineries:', refineries.length);
     
     const mapContainer = document.getElementById(MAP_CONTAINER_ID);
-    if (!mapContainer) return;
+    if (!mapContainer) {
+      console.error('Map container element not found with ID:', MAP_CONTAINER_ID);
+      // Try to find the element by data attribute as a fallback
+      const containerByData = document.querySelector('[data-map-container="true"]');
+      if (containerByData) {
+        console.log('Found map container by data attribute');
+      } else {
+        console.error('Could not find map container by any method');
+      }
+      return;
+    }
     
     // Function to clear all existing markers and lines
     const clearMarkers = () => {
@@ -169,6 +187,7 @@ function SimpleLeafletMap({
     
     if (!map) {
       // Create new map
+      const L = window.L;
       map = L.map(mapContainer, {
         center: [0, 0],
         zoom: 2,
@@ -191,6 +210,7 @@ function SimpleLeafletMap({
     }
     
     // Add tile layer based on selected style
+    const L = window.L;
     const selectedMapStyle = mapStyles.find(style => style.id === mapStyle) || mapStyles[0];
     
     L.tileLayer(selectedMapStyle.url, {
@@ -341,7 +361,7 @@ function SimpleLeafletMap({
       return true;
     };
     
-    // Filter and add vessel markers - only show cargo vessels
+    // Filter and add vessel markers - show all vessels with valid coordinates
     const filteredVessels = vessels
       .filter(vessel => {
         // Check if vessel has valid coordinates
@@ -363,13 +383,11 @@ function SimpleLeafletMap({
           return false;
         }
         
-        // Filter for cargo vessels only
-        const isCargoVessel = vessel.vesselType?.toLowerCase().includes('cargo') || false;
-        
-        // Only show cargo vessels that are at sea
-        return isCargoVessel && isCoordinateAtSea(lat, lng);
+        // We want to show all vessel types, not just cargo vessels
+        // Only show vessels that are at sea
+        return isCoordinateAtSea(lat, lng);
       })
-      .slice(0, 500); // Show more cargo vessels - up to 500
+      .slice(0, 500); // Show up to 500 vessels for performance
       
     console.log('Filtered vessels for map:', filteredVessels.length);
       
@@ -422,406 +440,92 @@ function SimpleLeafletMap({
               align-items: center;
               justify-content: center;
               border: 2px solid ${getVesselColor()};
-              box-shadow: 0 2px 4px rgba(0,0,0,0.3);
               font-size: 14px;
-              text-align: center;
-              z-index: 900;
-              position: relative;
+              box-shadow: 0 0 15px rgba(0,0,0,0.2);
+              z-index: 10;
             ">
               ${getVesselEmoji()}
             </div>
           </div>
         `,
-        className: 'vessel-marker-wrapper',
-        iconSize: [36, 36],
-        iconAnchor: [18, 18]
+        className: `vessel-marker-icon vessel-type-${vessel.vesselType?.toLowerCase().replace(/\s+/g, '-') || 'unknown'}`,
+        iconSize: [26, 26],
+        iconAnchor: [13, 13],
+        popupAnchor: [0, -13]
       });
       
-      // Add marker with enhanced popup
-      const marker = L.marker([lat, lng], { icon: customIcon })
-        .bindPopup(`
-          <div class="vessel-popup">
-            <div class="vessel-popup-header" style="
-              border-bottom: 2px solid ${getVesselColor()};
-              padding: 8px;
-              margin: -8px -8px 8px -8px;
-              background-color: rgba(255,255,255,0.9);
-              backdrop-filter: blur(10px);
-              -webkit-backdrop-filter: blur(10px);
-              border-top-left-radius: 8px;
-              border-top-right-radius: 8px;
-              display: flex;
-              align-items: center;
-              gap: 8px;
-            ">
-              <div style="
-                width: 24px;
-                height: 24px;
-                border-radius: 50%;
-                background: white;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                border: 2px solid ${getVesselColor()};
-                font-size: 14px;
-              ">${getVesselEmoji()}</div>
-              <h3 style="
-                font-weight: bold;
-                margin: 0;
-                font-size: 14px;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                flex: 1;
-              ">${vessel.name}</h3>
+      // Create popup content with vessel details
+      const popupContent = `
+        <div class="vessel-popup" style="width: 220px; font-family: system-ui, sans-serif;">
+          <div style="font-weight: 600; font-size: 14px; margin-bottom: 5px; color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px;">
+            ${vessel.name || 'Unknown Vessel'}
+          </div>
+          <div style="font-size: 12px; margin-bottom: 10px; color: #64748b;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+              <span>Type:</span>
+              <span style="font-weight: 500; color: #334155;">${vessel.vesselType || 'Unknown'}</span>
             </div>
-            
-            <div style="padding: 0 8px 8px; font-size: 12px; line-height: 1.6;">
-              <div style="display: flex; align-items: center; margin-bottom: 4px;">
-                <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">🚢</span>
-                <span style="font-weight: 500; margin-right: 4px; color: #555;">Type:</span>
-                <span style="flex: 1;">${vessel.vesselType || 'Unknown'}</span>
-              </div>
-              
-              <div style="display: flex; align-items: center; margin-bottom: 4px;">
-                <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">🛢️</span>
-                <span style="font-weight: 500; margin-right: 4px; color: #555;">Cargo:</span>
-                <span style="flex: 1;">${vessel.cargoType || 'Unknown'}</span>
-              </div>
-              
-              <div style="display: flex; align-items: center; margin-bottom: 4px;">
-                <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">🔢</span>
-                <span style="font-weight: 500; margin-right: 4px; color: #555;">IMO:</span>
-                <span style="flex: 1;">${vessel.imo || 'Unknown'}</span>
-              </div>
-              
-              <div style="display: flex; align-items: center; margin-bottom: 4px;">
-                <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">🏳️</span>
-                <span style="font-weight: 500; margin-right: 4px; color: #555;">Flag:</span>
-                <span style="flex: 1;">${vessel.flag || 'Unknown'}</span>
-              </div>
-              
-              ${vessel.departurePort ? `
-              <div style="display: flex; align-items: center; margin-bottom: 4px;">
-                <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">🔙</span>
-                <span style="font-weight: 500; margin-right: 4px; color: #555;">From:</span>
-                <span style="flex: 1;">${vessel.departurePort}</span>
-              </div>
-              ` : ''}
-              
-              ${vessel.destinationPort ? `
-              <div style="display: flex; align-items: center; margin-bottom: 4px;">
-                <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">🔜</span>
-                <span style="font-weight: 500; margin-right: 4px; color: #555;">To:</span>
-                <span style="flex: 1;">${vessel.destinationPort}</span>
-              </div>
-              ` : ''}
-              
-              <div style="
-                border-top: 1px solid #eee;
-                margin-top: 8px;
-                padding-top: 8px;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                flex-wrap: wrap;
-                gap: 4px;
-              ">
-                <span style="
-                  background-color: ${getVesselColor()};
-                  color: white;
-                  padding: 3px 6px;
-                  border-radius: 12px;
-                  font-size: 10px;
-                  display: inline-block;
-                ">
-                  ${vessel.currentRegion || 'Unknown Region'}
-                </span>
-                
-                <div style="display: flex; gap: 4px; margin-top: 4px; width: 100%;">
-                  <button 
-                    class="vessel-view-details-btn"
-                    vessel-id="${vessel.id}"
-                    style="
-                      flex: 1;
-                      background-color: ${getVesselColor()};
-                      color: white;
-                      border: none;
-                      padding: 5px 8px;
-                      border-radius: 4px;
-                      font-size: 11px;
-                      font-weight: 500;
-                      cursor: pointer;
-                      display: flex;
-                      align-items: center;
-                      justify-content: center;
-                      gap: 4px;
-                    "
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                    View Details
-                  </button>
-                  
-                  <button 
-                    class="vessel-track-btn"
-                    vessel-id="${vessel.id}"
-                    style="
-                      flex: 1;
-                      background-color: #f8f9fa;
-                      color: #555;
-                      border: 1px solid #ddd;
-                      padding: 5px 8px;
-                      border-radius: 4px;
-                      font-size: 11px;
-                      font-weight: 500;
-                      cursor: pointer;
-                      display: flex;
-                      align-items: center;
-                      justify-content: center;
-                      gap: 4px;
-                    "
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s-8-4.5-8-11.8a8 8 0 0 1 16 0c0 7.3-8 11.8-8 11.8Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                    Track Vessel
-                  </button>
-                </div>
-              </div>
+            ${vessel.cargoType ? `
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+              <span>Cargo:</span>
+              <span style="font-weight: 500; color: #334155;">${vessel.cargoType || 'Unknown'}</span>
+            </div>
+            ` : ''}
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+              <span>Flag:</span>
+              <span style="font-weight: 500; color: #334155;">${vessel.flag || 'Unknown'}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+              <span>IMO:</span>
+              <span style="font-weight: 500; color: #334155;">${vessel.imo || 'Unknown'}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+              <span>Built:</span>
+              <span style="font-weight: 500; color: #334155;">${vessel.built || 'Unknown'}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span>Region:</span>
+              <span style="font-weight: 500; color: #334155;">${vessel.currentRegion || 'Unknown'}</span>
             </div>
           </div>
-        `, { 
-          minWidth: 220,
-          maxWidth: 280,
-          className: 'vessel-popup-container'
+          <div>
+            <button id="vessel-details-btn-${vessel.id}" style="
+              width: 100%;
+              padding: 6px 12px;
+              background: #0ea5e9;
+              color: white;
+              border: none;
+              border-radius: 4px;
+              font-size: 12px;
+              font-weight: 500;
+              cursor: pointer;
+              transition: background-color 0.2s;
+              box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            ">
+              View Details
+            </button>
+          </div>
+        </div>
+      `;
+      
+      // Create marker with popup
+      const marker = L.marker([lat, lng], { icon: customIcon })
+        .bindPopup(popupContent)
+        .on('click', () => {
+          onVesselClick(vessel);
         })
-        .on('click', () => {})
-        .on('popupopen', function() {
-          // Add event listeners to buttons after popup is open
+        .on('popupopen', () => {
+          // Add click event listeners to the button after the popup is opened
           setTimeout(() => {
-            const popup = marker.getPopup();
-            const container = popup.getElement();
-            
-            const viewDetailsBtn = container?.querySelector('.vessel-view-details-btn');
-            if (viewDetailsBtn) {
-              viewDetailsBtn.addEventListener('click', (e: MouseEvent) => {
+            const detailsBtn = document.getElementById(`vessel-details-btn-${vessel.id}`);
+            if (detailsBtn) {
+              detailsBtn.addEventListener('click', (e: MouseEvent) => {
                 e.stopPropagation();
-                if (onVesselClick) {
-                  onVesselClick(vessel);
-                }
+                onVesselClick(vessel);
                 marker.closePopup();
               });
             }
-            
-            const trackBtn = container?.querySelector('.vessel-track-btn');
-            if (trackBtn) {
-              trackBtn.addEventListener('click', (e: MouseEvent) => {
-                e.stopPropagation();
-                
-                // Create a notification
-                const notification = document.createElement('div');
-                notification.style.cssText = `
-                  position: fixed;
-                  top: 20px;
-                  right: 20px;
-                  background-color: ${getVesselColor()};
-                  color: white;
-                  padding: 12px 16px;
-                  border-radius: 8px;
-                  z-index: 9999;
-                  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                  font-size: 14px;
-                  max-width: 300px;
-                  opacity: 0;
-                  transform: translateY(-20px);
-                  transition: opacity 0.2s, transform 0.3s;
-                  display: flex;
-                  align-items: center;
-                  gap: 10px;
-                `;
-                
-                // Add tracking icon
-                const icon = document.createElement('div');
-                icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s-8-4.5-8-11.8a8 8 0 0 1 16 0c0 7.3-8 11.8-8 11.8Z"></path><circle cx="12" cy="10" r="3"></circle></svg>';
-                notification.appendChild(icon);
-                
-                // Add message
-                const message = document.createElement('div');
-                message.textContent = `Now tracking vessel ${vessel.name}`;
-                notification.appendChild(message);
-                
-                document.body.appendChild(notification);
-                
-                // Show notification with animation
-                setTimeout(() => {
-                  notification.style.opacity = '1';
-                  notification.style.transform = 'translateY(0)';
-                }, 50);
-                
-                // Track this vessel - center map on vessel
-                if (map) {
-                  map.setView([lat, lng], Math.max(map.getZoom(), 6));
-                  
-                  // Always draw a route path when tracking a vessel
-                  if (vessel.destinationPort) {
-                    // Create a destination point based on vessel's course
-                    // We'll draw a simulated path in the general direction the vessel might be heading
-                    
-                    // Determine a reasonable distance (around 500-1000km) in the general direction
-                    // Use cardinal direction based on region or random if not available
-                    
-                    // This creates a point roughly 500-800km away in a direction that makes sense
-                    // for the vessel's current location
-                    const getDestinationPoint = () => {
-                      // Define angle based on region
-                      let angle = 0; // Default east
-                      
-                      // Try to make the angle somewhat logical based on region
-                      const region = vessel.currentRegion?.toLowerCase() || '';
-                      
-                      if (region.includes('north america')) {
-                        if (lng < -100) angle = 270; // West coast - head west
-                        else if (lng > -75) angle = 90; // East coast - head east
-                        else angle = 180; // Center - head south
-                      } 
-                      else if (region.includes('europe')) {
-                        if (lng < 0) angle = 270; // Western Europe - head west
-                        else angle = 90; // Eastern Europe - head east
-                      }
-                      else if (region.includes('asia')) {
-                        if (lat > 30) angle = 90; // Northern Asia - head east
-                        else angle = 180; // Southern Asia - head south
-                      }
-                      else if (region.includes('middle east')) {
-                        angle = 135; // Head southeast
-                      }
-                      else if (region.includes('africa')) {
-                        if (lat > 0) angle = 0; // Northern Africa - head north
-                        else angle = 180; // Southern Africa - head south
-                      }
-                      else if (region.includes('australia')) {
-                        angle = 0; // Head north
-                      }
-                      else if (region.includes('south america')) {
-                        angle = 0; // Head north
-                      }
-                      else {
-                        // Random angle if no region info
-                        angle = Math.floor(Math.random() * 360);
-                      }
-                      
-                      // Convert angle to radians
-                      const angleRad = angle * Math.PI / 180;
-                      
-                      // Distance in degrees (roughly 5-8 degrees = 500-800km)
-                      const distance = 5 + Math.random() * 3;
-                      
-                      // Calculate new point
-                      const destLat = lat + distance * Math.cos(angleRad);
-                      const destLng = lng + distance * Math.sin(angleRad);
-                      
-                      return [destLat, destLng];
-                    };
-                    
-                    const destinationPoint = getDestinationPoint();
-                    
-                    // Create a curved path for more natural looking routes
-                    // We'll use a simple curve with a control point
-                    const midLat = (lat + destinationPoint[0]) / 2;
-                    const midLng = (lng + destinationPoint[1]) / 2;
-                    
-                    // Add some curve variation
-                    const curveVariation = Math.random() * 1.5;
-                    const controlPoint = [
-                      midLat + curveVariation * Math.sin((lng + lat) / 20), 
-                      midLng + curveVariation * Math.cos((lng + lat) / 20)
-                    ];
-                    
-                    // Create a curved path using a Bézier curve approximation with points
-                    const curvePoints = [];
-                    const steps = 20;
-                    for (let i = 0; i <= steps; i++) {
-                      const t = i / steps;
-                      // Quadratic Bézier curve formula
-                      const lat_ = (1-t)*(1-t)*lat + 2*(1-t)*t*controlPoint[0] + t*t*destinationPoint[0];
-                      const lng_ = (1-t)*(1-t)*lng + 2*(1-t)*t*controlPoint[1] + t*t*destinationPoint[1];
-                      curvePoints.push([lat_, lng_]);
-                    }
-                    
-                    // Create the route line
-                    const routeLine = L.polyline(
-                      curvePoints,
-                      {
-                        color: getVesselColor(),
-                        weight: 3,
-                        opacity: 0.7,
-                        dashArray: '10, 10',
-                        className: 'vessel-route-line'
-                      }
-                    ).addTo(map);
-                    
-                    // Store reference to remove later
-                    routeLinesRef.current.push({
-                      vesselId: vessel.id,
-                      line: routeLine
-                    });
-                    
-                    // Add animated dash effect
-                    const lineElement = routeLine.getElement();
-                    if (lineElement) {
-                      lineElement.classList.add('animated-dash');
-                    }
-                    
-                    // Add destination marker with label
-                    const destinationMarker = L.circleMarker(
-                      destinationPoint, 
-                      {
-                        radius: 5,
-                        color: getVesselColor(),
-                        fillColor: getVesselColor(),
-                        fillOpacity: 0.7,
-                        weight: 2
-                      }
-                    ).addTo(map);
-                    
-                    // Add destination label
-                    const destinationLabel = L.tooltip({
-                      permanent: true,
-                      direction: 'top',
-                      className: 'destination-label',
-                      offset: [0, -10]
-                    })
-                    .setContent(`<div style="color:${getVesselColor()};font-weight:bold;font-size:12px;">${vessel.destinationPort}</div>`)
-                    .setLatLng(destinationPoint);
-                    
-                    destinationMarker.bindTooltip(destinationLabel).openTooltip();
-                    
-                    // Add to references for cleanup
-                    routeLinesRef.current.push({
-                      vesselId: vessel.id,
-                      marker: destinationMarker
-                    });
-                  }
-                }
-                
-                // Add subtle highlight effect to the marker
-                const markerEl = marker.getElement();
-                if (markerEl) {
-                  markerEl.classList.add('tracking-active');
-                }
-                
-                // Remove notification after 3 seconds
-                setTimeout(() => {
-                  notification.style.opacity = '0';
-                  notification.style.transform = 'translateY(-20px)';
-                  
-                  setTimeout(() => {
-                    document.body.removeChild(notification);
-                  }, 300);
-                }, 3000);
-                
-                marker.closePopup();
-              });
-            }
-          }, 100);
+          }, 10);
         })
         .addTo(map);
       
@@ -832,164 +536,78 @@ function SimpleLeafletMap({
     refineries.forEach(refinery => {
       if (!refinery.lat || !refinery.lng) return;
       
-      // Get color based on refinery status
-      const getRefineryColor = () => {
-        const status = refinery.status?.toLowerCase() || '';
-        if (status.includes('active') || status.includes('operational')) return "#22c55e"; // green
-        if (status.includes('maintenance')) return "#f59e0b"; // amber
-        if (status.includes('planned')) return "#3b82f6"; // blue
-        if (status.includes('shutdown')) return "#ef4444"; // red
-        return "#6b7280"; // gray default
-      };
+      // Ensure coordinates are numbers
+      const lat = typeof refinery.lat === 'number' 
+        ? refinery.lat 
+        : parseFloat(String(refinery.lat));
+        
+      const lng = typeof refinery.lng === 'number'
+        ? refinery.lng
+        : parseFloat(String(refinery.lng));
       
-      // Create SVG icon based on refinery icon image
-      const getRefineryIcon = () => {
-        return `
-          <svg width="28" height="28" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M128 42.667C128 19.103 147.103 0 170.667 0H256V85.333H128V42.667Z" fill="#f8b195"/>
-            <path d="M128 85.333H256V128H128V85.333Z" fill="#f67280"/>
-            <path d="M179.2 170.667C163.2 170.667 149.333 159.147 149.333 144.841C149.333 130.56 163.2 128 179.2 128H204.8C220.8 128 234.667 130.56 234.667 144.841C234.667 159.147 220.8 170.667 204.8 170.667H179.2Z" fill="#1a1a1a"/>
-            <path d="M128 170.667H256V384H128V170.667Z" fill="#f8b195"/>
-            <path d="M128 384H256V426.667H128V384Z" fill="#f67280"/>
-            <path d="M113.067 426.667H270.933C278.933 426.667 285.333 433.067 285.333 441.067V498.133C285.333 505.6 278.933 512 270.933 512H113.067C105.067 512 98.667 505.6 98.667 498.133V441.067C98.667 433.067 105.067 426.667 113.067 426.667Z" fill="#c06c84"/>
-            <path d="M396.8 362.667H332.8C323.733 362.667 317.867 352.427 322.587 344.8L354.56 292.267C355.84 290.133 356.267 287.573 356.267 285.013V98.133C356.267 92.16 361.173 87.253 367.147 87.253H377.067C391.52 87.253 406.187 87.093 406.187 107.947V285.013C406.187 287.573 406.613 290.133 407.893 292.267L439.867 344.8C444.587 352.427 438.72 362.667 429.653 362.667Z" fill="#a5c6e7"/>
-            <path d="M311.467 277.333H247.467C238.4 277.333 232.533 267.093 237.253 259.467L269.227 206.933C270.507 204.8 270.933 202.24 270.933 199.68C270.933 193.707 275.84 188.8 281.813 188.8C284.373 188.8 286.933 189.227 289.067 190.507L341.6 222.48C349.227 227.2 349.227 238.933 341.6 243.627L289.067 275.627C286.933 276.907 284.373 277.333 281.813 277.333H311.467Z" fill="#9399d4"/>
-            <path d="M469.333 362.667V469.333C469.333 475.307 464.427 480.213 458.453 480.213H448.533C442.56 480.213 437.653 475.307 437.653 469.333V362.667H469.333Z" fill="#a5c6e7"/>
-            <path d="M416 426.667C422.667 426.667 428.373 432.373 428.373 439.04V448.96C428.373 455.627 422.667 461.333 416 461.333C409.333 461.333 403.627 455.627 403.627 448.96V439.04C403.627 432.373 409.333 426.667 416 426.667Z" fill="#5c9ade"/>
-            <path d="M416 384C422.667 384 428.373 389.707 428.373 396.373V406.293C428.373 412.96 422.667 418.667 416 418.667C409.333 418.667 403.627 412.96 403.627 406.293V396.373C403.627 389.707 409.333 384 416 384Z" fill="#5c9ade"/>
-            <path d="M512 0H396.8V42.667H512V0Z" fill="#a5c6e7"/>
-          </svg>
-        `;
-      };
+      if (isNaN(lat) || isNaN(lng)) return;
       
-      const refineryIcon = L.divIcon({
-        html: `
-          <div class="refinery-marker-container">
-            <div class="refinery-marker-glow" style="background-color: ${getRefineryColor()}33;"></div>
-            <div class="refinery-marker" style="
-              width: 42px;
-              height: 42px;
-              border-radius: 8px;
-              background: rgba(255,255,255,0.98);
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              border: 3px solid ${getRefineryColor()};
-              box-shadow: 0 3px 6px rgba(0,0,0,0.3);
-              text-align: center;
-              z-index: 910;
-              position: relative;
-              padding: 2px;
-            ">
-              ${getRefineryIcon()}
+      // Create custom icon for refinery
+      const refineryIcon = getRefineryIcon(refinery.status || '', false);
+      
+      // Create popup content with refinery details
+      const popupContent = `
+        <div class="refinery-popup" style="width: 240px; font-family: system-ui, sans-serif;">
+          <div style="font-weight: 600; font-size: 14px; margin-bottom: 5px; color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px;">
+            ${refinery.name || 'Unknown Refinery'}
+          </div>
+          <div style="font-size: 12px; margin-bottom: 10px; color: #64748b;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+              <span>Country:</span>
+              <span style="font-weight: 500; color: #334155;">${refinery.country || 'Unknown'}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+              <span>Region:</span>
+              <span style="font-weight: 500; color: #334155;">${refinery.region || 'Unknown'}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+              <span>Status:</span>
+              <span style="font-weight: 500; color: ${
+                refinery.status === 'operational' ? '#10b981' : 
+                refinery.status === 'maintenance' ? '#f59e0b' : 
+                refinery.status === 'offline' ? '#ef4444' : '#94a3b8'
+              };">${refinery.status || 'Unknown'}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span>Capacity:</span>
+              <span style="font-weight: 500; color: #334155;">${
+                refinery.capacity 
+                  ? `${(refinery.capacity / 1000).toLocaleString()} k barrels/day` 
+                  : 'Unknown'
+              }</span>
             </div>
           </div>
-        `,
-        className: 'refinery-marker-wrapper',
-        iconSize: [40, 40],
-        iconAnchor: [20, 20]
-      });
-      
-      // Create the popup content with buttons that have proper onclick handlers
-      const popupContent = document.createElement('div');
-      popupContent.className = 'refinery-popup';
-      popupContent.innerHTML = `
-        <div class="refinery-popup-header" style="
-          border-bottom: 2px solid ${getRefineryColor()};
-          padding: 8px;
-          margin: -8px -8px 8px -8px;
-          background-color: rgba(255,255,255,0.9);
-          border-top-left-radius: 8px;
-          border-top-right-radius: 8px;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        ">
-          <div style="
-            width: 26px;
-            height: 26px;
-            border-radius: 4px;
-            background: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 2px solid ${getRefineryColor()};
-            padding: 1px;
-          ">${getRefineryIcon()}</div>
-          <h3 style="
-            font-weight: bold;
-            margin: 0;
-            font-size: 14px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            flex: 1;
-          ">${refinery.name}</h3>
-        </div>
-        
-        <div style="padding: 0 8px 8px; font-size: 12px; line-height: 1.6;">
-          <div style="display: flex; align-items: center; margin-bottom: 4px;">
-            <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">🏢</span>
-            <span style="font-weight: 500; margin-right: 4px; color: #555;">Company:</span>
-            <span style="flex: 1;">${refinery.name}</span>
-          </div>
-          
-          <div style="display: flex; align-items: center; margin-bottom: 4px;">
-            <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">🌍</span>
-            <span style="font-weight: 500; margin-right: 4px; color: #555;">Country:</span>
-            <span style="flex: 1;">${refinery.country || 'Unknown'}</span>
-          </div>
-          
-          <div style="display: flex; align-items: center; margin-bottom: 4px;">
-            <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">🌐</span>
-            <span style="font-weight: 500; margin-right: 4px; color: #555;">Region:</span>
-            <span style="flex: 1;">${refinery.region || 'Unknown'}</span>
-          </div>
-          
-          <div style="display: flex; align-items: center; margin-bottom: 4px;">
-            <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">📊</span>
-            <span style="font-weight: 500; margin-right: 4px; color: #555;">Status:</span>
-            <span style="
-              flex: 1;
-              color: ${getRefineryColor()};
-              font-weight: 500;
-            ">${refinery.status || 'Unknown'}</span>
-          </div>
-          
-          ${refinery.capacity ? `
-          <div style="display: flex; align-items: center; margin-bottom: 4px;">
-            <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">⚡</span>
-            <span style="font-weight: 500; margin-right: 4px; color: #555;">Capacity:</span>
-            <span style="flex: 1;">${refinery.capacity.toLocaleString()} bpd</span>
-          </div>
-          ` : ''}
-          
-          <div style="
-            border-top: 1px solid #eee;
-            margin-top: 8px;
-            padding-top: 8px;
-            display: flex;
-            justify-content: center;
-            gap: 6px;
-          ">
+          <div style="display: flex; gap: 8px;">
             <button id="view-details-btn-${refinery.id}" style="
-              background-color: ${getRefineryColor()};
+              flex: 1;
+              padding: 6px 12px;
+              background: #0ea5e9;
               color: white;
-              padding: 3px 6px;
-              border-radius: 4px;
-              font-size: 10px;
               border: none;
+              border-radius: 4px;
+              font-size: 12px;
+              font-weight: 500;
+              box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+              border: 1px solid #0ea5e9;
               cursor: pointer;
             ">
               View Details
             </button>
             <button id="view-vessels-btn-${refinery.id}" style="
-              background-color: #f8f9fa;
-              color: #555;
-              padding: 3px 6px;
-              border-radius: 4px;
-              font-size: 10px;
+              flex: 1;
+              padding: 6px 8px;
+              background: white;
+              color: #0f172a;
               border: 1px solid #ddd;
+              border-radius: 4px;
+              font-size: 12px;
+              font-weight: 500;
+              box-shadow: 0 1px 2px rgba(0,0,0,0.05);
               cursor: pointer;
             ">
               View Associated Vessels
@@ -1025,39 +643,9 @@ function SimpleLeafletMap({
               viewVesselsBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 
-                // First, clear any previous connection lines
+                // First clear any existing connection lines
                 clearConnectionLines();
                 
-                // Reset any previous highlights
-                document.querySelectorAll('.highlight-marker, .nearby-vessel-highlight').forEach(el => {
-                  el.classList.remove('highlight-marker', 'nearby-vessel-highlight');
-                });
-                
-                // Add a nice notification
-                const notification = document.createElement('div');
-                notification.style.cssText = `
-                  position: fixed;
-                  top: 20px;
-                  left: 50%;
-                  transform: translateX(-50%);
-                  background-color: rgba(255, 255, 255, 0.95);
-                  color: #333;
-                  padding: 10px 20px;
-                  border-radius: 8px;
-                  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-                  z-index: 10000;
-                  font-size: 14px;
-                  text-align: center;
-                  border-left: 4px solid ${getRefineryColor()};
-                  font-weight: 500;
-                  transition: all 0.3s ease;
-                  backdrop-filter: blur(10px);
-                  -webkit-backdrop-filter: blur(10px);
-                `;
-                notification.innerHTML = `Showing vessels for refinery: ${refinery.name}`;
-                document.body.appendChild(notification);
-                
-                // Get coordinates for this refinery
                 const refineryLat = typeof refinery.lat === 'number' 
                   ? refinery.lat 
                   : parseFloat(String(refinery.lat));
@@ -1066,8 +654,9 @@ function SimpleLeafletMap({
                   ? refinery.lng
                   : parseFloat(String(refinery.lng));
                 
-                // Find vessels that are near this refinery (within ~500km)
-                const nearbyVessels = displayVessels.filter(vessel => {
+                // Find vessels within 500km of this refinery
+                // We use a simple distance calculation - not perfect for the globe but good enough
+                const nearbyVessels = filteredVessels.filter(vessel => {
                   if (!vessel.currentLat || !vessel.currentLng) return false;
                   
                   const vesselLat = typeof vessel.currentLat === 'number'
@@ -1078,11 +667,14 @@ function SimpleLeafletMap({
                     ? vessel.currentLng
                     : parseFloat(String(vessel.currentLng));
                     
-                  // Calculate approximate distance (rough calculation)
+                  if (isNaN(vesselLat) || isNaN(vesselLng)) return false;
+                  
+                  // Simple spherical distance calculation
                   const latDiff = Math.abs(vesselLat - refineryLat);
                   const lngDiff = Math.abs(vesselLng - refineryLng);
                   
-                  // Rough approximation for ~500km
+                  // Approximation: 1 degree is roughly 111km at the equator
+                  // We're looking for vessels within about 500km (~4.5 degrees)
                   return (latDiff*latDiff + lngDiff*lngDiff) < 25;
                 });
                 
@@ -1094,180 +686,157 @@ function SimpleLeafletMap({
                   const markerEl = marker.getElement();
                   if (markerEl) {
                     markerEl.classList.add('highlight-marker');
-                    
-                    // Remove highlight after 30 seconds
-                    setTimeout(() => {
-                      markerEl.classList.remove('highlight-marker');
-                    }, 30000);
                   }
                   
-                  // Highlight associated vessels and draw connection lines
+                  // Draw connections to nearby vessels
                   nearbyVessels.forEach(vessel => {
-                    // Find this vessel's marker
+                    if (!vessel.currentLat || !vessel.currentLng) return;
+                    
+                    const vesselLat = typeof vessel.currentLat === 'number'
+                      ? vessel.currentLat
+                      : parseFloat(String(vessel.currentLat));
+                      
+                    const vesselLng = typeof vessel.currentLng === 'number'
+                      ? vessel.currentLng
+                      : parseFloat(String(vessel.currentLng));
+                    
+                    if (isNaN(vesselLat) || isNaN(vesselLng)) return;
+                    
+                    // Get vessel marker element to highlight it
                     const vesselMarker = vesselMarkersRef.current.find(m => {
-                      return m._latlng && 
-                        vessel.currentLat && 
-                        vessel.currentLng && 
-                        m._latlng.lat === parseFloat(String(vessel.currentLat)) && 
-                        m._latlng.lng === parseFloat(String(vessel.currentLng));
+                      if (!m._latlng) return false;
+                      return m._latlng.lat === vesselLat && m._latlng.lng === vesselLng;
                     });
                     
                     if (vesselMarker) {
-                      const vesselMarkerEl = vesselMarker.getElement();
-                      if (vesselMarkerEl) {
-                        vesselMarkerEl.classList.add('nearby-vessel-highlight');
-                        
-                        // Remove highlight after 30 seconds
-                        setTimeout(() => {
-                          vesselMarkerEl.classList.remove('nearby-vessel-highlight');
-                        }, 30000);
+                      const vesselEl = vesselMarker.getElement();
+                      if (vesselEl) {
+                        vesselEl.classList.add('nearby-vessel-highlight');
                       }
                       
-                      // Create a line connecting the vessel to the refinery
-                      const vesselLat = typeof vessel.currentLat === 'number'
-                        ? vessel.currentLat
-                        : parseFloat(String(vessel.currentLat));
-                        
-                      const vesselLng = typeof vessel.currentLng === 'number'
-                        ? vessel.currentLng
-                        : parseFloat(String(vessel.currentLng));
-                      
-                      // Draw a curved line from vessel to refinery
-                      const midLat = (vesselLat + refineryLat) / 2;
-                      const midLng = (vesselLng + refineryLng) / 2;
-                      
-                      // Add some curve variation
-                      const curveVariation = Math.random() * 0.7 - 0.35;  // Random between -0.35 and 0.35
-                      const controlPoint = [
-                        midLat + curveVariation, 
-                        midLng + curveVariation
+                      // Create curved connection line
+                      const latlngs = [
+                        [refineryLat, refineryLng],
+                        [vesselLat, vesselLng],
                       ];
                       
-                      // Create a curved path using a Bézier curve approximation
-                      const curvePoints = [];
-                      const steps = 20;
-                      for (let i = 0; i <= steps; i++) {
-                        const t = i / steps;
-                        // Quadratic Bézier curve formula
-                        const lat_ = (1-t)*(1-t)*vesselLat + 2*(1-t)*t*controlPoint[0] + t*t*refineryLat;
-                        const lng_ = (1-t)*(1-t)*vesselLng + 2*(1-t)*t*controlPoint[1] + t*t*refineryLng;
-                        curvePoints.push([lat_, lng_]);
-                      }
+                      // Draw a curved line
+                      const line = L.polyline(latlngs, {
+                        color: '#10b981',
+                        weight: 2,
+                        opacity: 0.7,
+                        dashArray: '5, 5',
+                        className: 'vessel-refinery-connection'
+                      }).addTo(map);
                       
-                      // Create connection line
-                      const connectionLine = L.polyline(
-                        curvePoints,
-                        {
-                          color: getRefineryColor(),
-                          weight: 2,
-                          opacity: 0.6,
-                          dashArray: '5, 8',
-                          className: 'vessel-refinery-connection'
-                        }
-                      ).addTo(map);
-                      
-                      // Store reference to remove later
-                      routeLinesRef.current.push({
-                        vesselId: vessel.id,
-                        line: connectionLine
-                      });
+                      // Add the connection line to the ref for later cleanup
+                      routeLinesRef.current.push({ line, marker: null });
                     }
                   });
                   
-                  // Show notification of how many vessels were found
-                  const countNotification = document.createElement('div');
-                  countNotification.style.cssText = `
-                    position: fixed;
-                    bottom: 20px;
-                    left: 50%;
-                    transform: translateX(-50%);
-                    background-color: rgba(0, 0, 0, 0.8);
-                    color: white;
-                    padding: 10px 20px;
-                    border-radius: 8px;
-                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-                    z-index: 10000;
-                    font-size: 14px;
-                    text-align: center;
-                    font-weight: 500;
-                    transition: all 0.3s ease;
-                  `;
-                  countNotification.innerHTML = `Found ${nearbyVessels.length} vessels associated with ${refinery.name}`;
-                  document.body.appendChild(countNotification);
-                  
-                  // Remove count notification after 10 seconds
-                  setTimeout(() => {
-                    countNotification.style.opacity = '0';
-                    countNotification.style.transform = 'translate(-50%, 20px)';
+                  // If there are nearby vessels, show a notification
+                  if (nearbyVessels.length > 0) {
+                    // Create a notification that shows how many vessels are connected
+                    const notification = L.control({ position: 'bottomright' });
                     
+                    notification.onAdd = function() {
+                      const div = L.DomUtil.create('div', 'map-notification');
+                      div.innerHTML = `
+                        <div style="
+                          background: rgba(0, 0, 0, 0.7);
+                          color: white;
+                          padding: 10px 15px;
+                          border-radius: 6px;
+                          font-size: 14px;
+                          margin-bottom: 10px;
+                          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+                        ">
+                          <strong>${nearbyVessels.length}</strong> vessels associated with this refinery
+                        </div>
+                      `;
+                      return div;
+                    };
+                    
+                    notification.addTo(map);
+                    
+                    // Store control for later removal
+                    const notificationControl = { 
+                      line: notification,
+                      marker: null
+                    };
+                    routeLinesRef.current.push(notificationControl);
+                    
+                    // Remove after 5 seconds
                     setTimeout(() => {
-                      document.body.removeChild(countNotification);
-                    }, 300);
-                  }, 10000);
+                      if (map.hasLayer(notification)) {
+                        map.removeControl(notification);
+                        routeLinesRef.current = routeLinesRef.current.filter(item => item !== notificationControl);
+                      }
+                    }, 5000);
+                  }
                 }
                 
-                // Close popup after clicking
+                // Close the popup
                 marker.closePopup();
-                
-                // Remove notification after 3 seconds
-                setTimeout(() => {
-                  notification.style.opacity = '0';
-                  notification.style.transform = 'translate(-50%, -20px)';
-                  
-                  setTimeout(() => {
-                    document.body.removeChild(notification);
-                  }, 300);
-                }, 3000);
               });
             }
-          }, 100);
+          }, 10);
         })
         .addTo(map);
       
       refineryMarkersRef.current.push(marker);
     });
     
-    // Set view based on priority:
-    // 1. initialCenter/initialZoom (if provided)
-    // 2. Selected region
-    // 3. Default view (already set when map was created)
+    // Set initial center and zoom from props if provided
     if (initialCenter && initialZoom) {
-      // Use the provided initial center and zoom
       map.setView(initialCenter, initialZoom);
     } else if (selectedRegion) {
-      const position = regionPositions[selectedRegion];
-      if (position) {
-        map.setView([position.lat, position.lng], position.zoom);
+      // Center on selected region
+      const region = REGIONS.find(r => r.name === selectedRegion.name);
+      if (region && region.center) {
+        map.setView(region.center, region.zoom || 4);
+      }
+    } else if (refineries.length === 1 && refineries[0].lat && refineries[0].lng) {
+      // If only one refinery is provided, center on it
+      const lat = typeof refineries[0].lat === 'number' 
+        ? refineries[0].lat 
+        : parseFloat(String(refineries[0].lat));
+        
+      const lng = typeof refineries[0].lng === 'number'
+        ? refineries[0].lng
+        : parseFloat(String(refineries[0].lng));
+        
+      if (!isNaN(lat) && !isNaN(lng)) {
+        map.setView([lat, lng], 7);
       }
     }
     
-    // Make sure map is sized properly
-    map.invalidateSize();
-    
+    // Return cleanup function
+    return () => {
+      // Cleanup function runs on unmount
+      if (mapRef.current) {
+        try {
+          mapRef.current.remove();
+          mapRef.current = null;
+        } catch (err) {
+          console.error('Error cleaning up map:', err);
+        }
+      }
+    };
   }, [
-    isMapReady,
-    vessels,
-    refineries,
-    selectedRegion,
-    mapStyle,
+    isMapReady, 
+    vessels, 
+    refineries, 
+    selectedRegion, 
+    onVesselClick, 
+    onRefineryClick, 
+    mapStyle, 
     mapLanguage,
-    onVesselClick,
-    onRefineryClick,
-    isLoading,
     initialCenter,
     initialZoom
   ]);
   
-  // Handlers for UI controls
-  const handleStyleChange = (newStyle: string) => {
-    setMapStyle(newStyle);
-  };
-  
-  const handleLanguageChange = (newLanguage: LanguageOption) => {
-    setMapLanguage(newLanguage);
-  };
-  
-  // Show loading state
+  // Handle loading state
   if (isLoading) {
     return (
       <div className="relative h-[500px] rounded-lg bg-slate-100 flex items-center justify-center">
@@ -1278,8 +847,15 @@ function SimpleLeafletMap({
   
   return (
     <div className="relative h-[500px] rounded-lg overflow-hidden border border-border bg-card">
+      {/* Debug info for development */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="absolute top-0 left-0 z-30 bg-black/70 text-white text-xs p-1 rounded-br">
+          Vessels: {vessels.length} | Displayed: {displayVessels.length} | Refineries: {refineries.length}
+        </div>
+      )}
+      
       {/* Stable Map Container - key prevents remounting */}
-      <div className="absolute inset-0 w-full h-full z-0">
+      <div className="absolute inset-0 w-full h-full z-0" style={{ width: '100%', height: '100%' }}>
         <MapContainer id={MAP_CONTAINER_ID} className="w-full h-full" />
       </div>
       
@@ -1384,47 +960,9 @@ function SimpleLeafletMap({
           </span>
         </div>
       </div>
-      
-      {/* Tracking functionality removed */}
     </div>
   );
 }
 
 // Create a memoized version of the component to prevent unnecessary re-renders
-// This will only re-render if props have actually changed
-export default memo(SimpleLeafletMap, (prevProps, nextProps) => {
-  // Custom comparison logic to determine if re-render is needed
-  // Return true if props are "equal" (meaning NO re-render needed)
-  
-  // Skip render if loading state hasn't changed and is true
-  if (prevProps.isLoading && nextProps.isLoading) {
-    return true; // Don't re-render while loading
-  }
-  
-  // Check if vessel count and IDs are the same
-  const prevVesselIds = new Set(prevProps.vessels.map(v => v.id));
-  const nextVesselIds = new Set(nextProps.vessels.map(v => v.id));
-  
-  // Check if refinery count and IDs are the same
-  const prevRefineryIds = new Set(prevProps.refineries.map(r => r.id));
-  const nextRefineryIds = new Set(nextProps.refineries.map(r => r.id));
-  
-  // Check if the region is the same
-  const sameRegion = 
-    (!prevProps.selectedRegion && !nextProps.selectedRegion) || 
-    (prevProps.selectedRegion === nextProps.selectedRegion);
-  
-  // Only re-render if something significant changed
-  const vesselsChanged = 
-    prevVesselIds.size !== nextVesselIds.size || 
-    prevProps.vessels.some(v => !nextVesselIds.has(v.id)) ||
-    nextProps.vessels.some(v => !prevVesselIds.has(v.id));
-    
-  const refineriesChanged = 
-    prevRefineryIds.size !== nextRefineryIds.size || 
-    prevProps.refineries.some(r => !nextRefineryIds.has(r.id)) ||
-    nextProps.refineries.some(r => !prevRefineryIds.has(r.id));
-  
-  // Only re-render if something important changed
-  return !(vesselsChanged || refineriesChanged || !sameRegion || prevProps.isLoading !== nextProps.isLoading);
-});
+export default memo(SimpleLeafletMap);
