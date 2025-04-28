@@ -32,10 +32,10 @@ export function useVesselStream() {
         console.log('Fetching vessel and refinery data...');
         
         // Return empty arrays instead of fetching vessels and refineries
-        const vesselsData = [];
+        const vesselsData: Vessel[] = [];
         
         // Return empty array for refineries
-        const refineriesData = [];
+        const refineriesData: Refinery[] = [];
         
         console.log(`Received ${vesselsData.length} vessels and ${refineriesData.length} refineries`);
         

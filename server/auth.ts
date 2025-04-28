@@ -2,14 +2,23 @@ import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { Express } from "express";
 import session from "express-session";
-import { scrypt, randomBytes, timingSafeEqual } from "crypto";
-import { promisify } from "util";
-import { storage } from "./storage";
 import { User } from "@shared/schema";
 import createMemoryStore from "memorystore";
 
 const MemoryStore = createMemoryStore(session);
-const scryptAsync = promisify(scrypt);
+
+// Mock user for testing - database-independent
+const mockUser: Express.User = {
+  id: 1,
+  username: "test",
+  password: "password",
+  email: "test@example.com",
+  stripeCustomerId: null,
+  stripeSubscriptionId: null,
+  isSubscribed: true,
+  subscriptionTier: "premium",
+  createdAt: new Date()
+};
 
 declare global {
   namespace Express {
@@ -26,19 +35,6 @@ declare global {
       createdAt?: Date | null;
     }
   }
-}
-
-async function hashPassword(password: string) {
-  const salt = randomBytes(16).toString("hex");
-  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
-  return `${buf.toString("hex")}.${salt}`;
-}
-
-async function comparePasswords(supplied: string, stored: string) {
-  const [hashed, salt] = stored.split(".");
-  const hashedBuf = Buffer.from(hashed, "hex");
-  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-  return timingSafeEqual(hashedBuf, suppliedBuf);
 }
 
 export function setupAuth(app: Express) {
@@ -64,18 +60,11 @@ export function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
-  // Passport local strategy
+  // Mock authentication strategy - always succeeds
   passport.use(
-    new LocalStrategy(async (username, password, done) => {
-      try {
-        const user = await storage.getUserByUsername(username);
-        if (!user || !(await comparePasswords(password, user.password))) {
-          return done(null, false);
-        }
-        return done(null, user);
-      } catch (error) {
-        return done(error);
-      }
+    new LocalStrategy((username, password, done) => {
+      // Always succeed authentication with mock user
+      return done(null, mockUser);
     }),
   );
 
@@ -83,62 +72,51 @@ export function setupAuth(app: Express) {
     done(null, user.id);
   });
 
-  passport.deserializeUser(async (id: number, done) => {
-    try {
-      const user = await storage.getUser(id);
-      done(null, user);
-    } catch (error) {
-      done(error);
-    }
+  passport.deserializeUser((id: number, done) => {
+    // Always return mock user
+    done(null, mockUser);
   });
 
   // Register authentication routes
-  app.post("/api/register", async (req, res, next) => {
-    try {
-      // Check if user already exists
-      const existingUser = await storage.getUserByUsername(req.body.username);
-      if (existingUser) {
-        return res.status(400).json({ message: "Username already exists" });
+  app.post("/api/register", (req, res) => {
+    // Always succeed with mock user
+    req.login(mockUser, (err) => {
+      if (err) {
+        return res.status(500).json({ message: "Failed to register user" });
       }
-
-      // Create new user with hashed password
-      const user = await storage.createUser({
-        ...req.body,
-        password: await hashPassword(req.body.password),
+      
+      res.status(201).json({
+        id: mockUser.id,
+        username: mockUser.username,
+        email: mockUser.email,
+        isSubscribed: mockUser.isSubscribed,
+        subscriptionTier: mockUser.subscriptionTier,
       });
-
-      // Log in the newly registered user
-      req.login(user, (err) => {
-        if (err) return next(err);
-        res.status(201).json({
-          id: user.id,
-          username: user.username,
-          email: user.email,
-          isSubscribed: user.isSubscribed,
-          subscriptionTier: user.subscriptionTier,
-        });
-      });
-    } catch (error) {
-      console.error("Registration error:", error);
-      res.status(500).json({ message: "Failed to register user" });
-    }
-  });
-
-  app.post("/api/login", passport.authenticate("local"), (req, res) => {
-    // Send user data (excluding password)
-    const user = req.user as User;
-    res.status(200).json({
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      isSubscribed: user.isSubscribed,
-      subscriptionTier: user.subscriptionTier,
     });
   });
 
-  app.post("/api/logout", (req, res, next) => {
+  app.post("/api/login", (req, res) => {
+    // Always succeed login with mock user
+    req.login(mockUser, (err) => {
+      if (err) {
+        return res.status(500).json({ message: "Failed to login" });
+      }
+      
+      res.status(200).json({
+        id: mockUser.id,
+        username: mockUser.username,
+        email: mockUser.email,
+        isSubscribed: mockUser.isSubscribed,
+        subscriptionTier: mockUser.subscriptionTier,
+      });
+    });
+  });
+
+  app.post("/api/logout", (req, res) => {
     req.logout((err) => {
-      if (err) return next(err);
+      if (err) {
+        return res.status(500).json({ message: "Failed to logout" });
+      }
       res.sendStatus(200);
     });
   });
@@ -148,13 +126,12 @@ export function setupAuth(app: Express) {
       return res.status(401).json({ message: "Not authenticated" });
     }
     
-    const user = req.user as User;
     res.json({
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      isSubscribed: user.isSubscribed,
-      subscriptionTier: user.subscriptionTier,
+      id: mockUser.id,
+      username: mockUser.username,
+      email: mockUser.email,
+      isSubscribed: mockUser.isSubscribed,
+      subscriptionTier: mockUser.subscriptionTier,
     });
   });
 }
