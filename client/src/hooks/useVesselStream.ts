@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Vessel, Refinery } from '@shared/schema';
 import { apiRequest } from '@/lib/queryClient';
+import { ACCURATE_REFINERIES, convertToRefineries, generateConnectedPorts } from '@/data/refineryData';
 
 interface VesselStreamData {
   vessels: Vessel[];
@@ -12,8 +13,8 @@ interface VesselStreamData {
 }
 
 /**
- * Hook to handle vessel and refinery data using regular fetch requests
- * instead of WebSockets or SSE
+ * Hook to handle vessel and refinery data using hardcoded refinery locations
+ * instead of database calls
  */
 export function useVesselStream() {
   const [data, setData] = useState<VesselStreamData>({
@@ -26,22 +27,22 @@ export function useVesselStream() {
   });
 
   useEffect(() => {
-    // Function to fetch data from the API
+    // Function to prepare data from static sources
     const fetchData = async () => {
       try {
         console.log('Fetching vessel and refinery data...');
         
-        // Return empty arrays instead of fetching vessels and refineries
-        const vesselsData: Vessel[] = [];
+        // Convert static refinery data to app format
+        const refineriesData = convertToRefineries(ACCURATE_REFINERIES);
         
-        // Return empty array for refineries
-        const refineriesData: Refinery[] = [];
+        // Generate ports connected to refineries
+        const portsData = generateConnectedPorts(refineriesData);
         
-        console.log(`Received ${vesselsData.length} vessels and ${refineriesData.length} refineries`);
+        console.log(`Loaded ${refineriesData.length} refineries and ${portsData.length} connected ports`);
         
-        // Update state with the fetched data
+        // Update state with the prepared data
         setData({
-          vessels: vesselsData,
+          vessels: portsData,
           refineries: refineriesData,
           stats: null, // We can add stats later if needed
           loading: false,
@@ -49,10 +50,10 @@ export function useVesselStream() {
           lastUpdated: new Date()
         });
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Error preparing data:', error);
         setData(prev => ({
           ...prev,
-          error: 'Failed to fetch data from server',
+          error: 'Failed to prepare refinery data',
           loading: false
         }));
       }
@@ -62,7 +63,7 @@ export function useVesselStream() {
     fetchData();
     
     // Set up interval for polling
-    const intervalId = setInterval(fetchData, 10000); // Fetch every 10 seconds
+    const intervalId = setInterval(fetchData, 30000); // Update every 30 seconds
     
     // Clean up interval on unmount
     return () => clearInterval(intervalId);
