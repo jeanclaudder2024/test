@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react';
 import { Vessel, Refinery } from '@shared/schema';
 import { apiRequest } from '@/lib/queryClient';
 import { ACCURATE_REFINERIES, convertToRefineries, generateConnectedPorts } from '@/data/refineryData';
+import { getVesselsAtRefineryPorts } from '@/services/asiStreamService';
 
 interface VesselStreamData {
   vessels: Vessel[];
   refineries: Refinery[];
+  ports: Vessel[];
   stats: any | null;
   loading: boolean;
   error: string | null;
@@ -14,12 +16,13 @@ interface VesselStreamData {
 
 /**
  * Hook to handle vessel and refinery data using hardcoded refinery locations
- * instead of database calls
+ * and AsiStream service for vessels at ports
  */
 export function useVesselStream() {
   const [data, setData] = useState<VesselStreamData>({
     vessels: [],
     refineries: [],
+    ports: [],
     stats: null,
     loading: true,
     error: null,
@@ -38,13 +41,17 @@ export function useVesselStream() {
         // Generate ports connected to refineries
         const portsData = generateConnectedPorts(refineriesData);
         
-        console.log(`Loaded ${refineriesData.length} refineries and ${portsData.length} connected ports`);
+        // Get vessels at each port using AsiStream service
+        const vesselsAtPorts = getVesselsAtRefineryPorts(ACCURATE_REFINERIES);
+        
+        console.log(`Loaded ${refineriesData.length} refineries, ${portsData.length} connected ports, and ${vesselsAtPorts.length} vessels`);
         
         // Update state with the prepared data
         setData({
-          vessels: portsData,
+          vessels: [...portsData, ...vesselsAtPorts],
           refineries: refineriesData,
-          stats: null, // We can add stats later if needed
+          ports: portsData,
+          stats: null, 
           loading: false,
           error: null,
           lastUpdated: new Date()
@@ -53,7 +60,7 @@ export function useVesselStream() {
         console.error('Error preparing data:', error);
         setData(prev => ({
           ...prev,
-          error: 'Failed to prepare refinery data',
+          error: 'Failed to prepare vessel and refinery data',
           loading: false
         }));
       }
