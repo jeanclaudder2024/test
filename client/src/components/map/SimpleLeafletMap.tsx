@@ -997,11 +997,19 @@ export default function SimpleLeafletMap({
       `;
       
       const marker = L.marker([refinery.lat, refinery.lng], { icon: refineryIcon })
-        .bindPopup(popupContent)
+        .bindPopup(popupContent, {
+          // إضافة خيارات لتجنب إغلاق النافذة المنبثقة تلقائياً
+          autoClose: false,  // عدم إغلاق النافذة عند النقر في مكان آخر
+          closeOnEscapeKey: true, // إغلاق بمفتاح Escape
+          closeButton: true // تظهر زر الإغلاق
+        })
         .on('click', () => {
-          if (onRefineryClick) {
-            onRefineryClick(refinery);
-          }
+          // إضافة تأخير بسيط قبل استدعاء الوظيفة لمنع اختفاء النافذة
+          setTimeout(() => {
+            if (onRefineryClick) {
+              onRefineryClick(refinery);
+            }
+          }, 100);
         })
         .on('popupopen', () => {
           // Add click event listeners to the buttons after the popup is opened

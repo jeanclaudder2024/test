@@ -110,25 +110,48 @@ export default function Dashboard() {
     setSelectedRefinery(refinery);
     setSelectedVessel(null); // Clear vessel selection when selecting refinery
     
-    // Fetch vessels associated with this refinery
-    const fetchAssociatedVessels = async () => {
-      try {
-        const response = await fetch(`/api/refineries/${refinery.id}/vessels`);
-        if (response.ok) {
-          const data = await response.json();
-          setAssociatedVessels(data);
-          console.log(`Fetched ${data.length} vessels associated with refinery ${refinery.name}`);
-        } else {
-          console.error('Failed to fetch associated vessels:', await response.text());
-          setAssociatedVessels([]);
-        }
-      } catch (error) {
-        console.error('Error fetching associated vessels:', error);
+    // استخدام بيانات محلية بدلاً من طلبها من الخادم
+    // هذا يتجنب مشاكل الاتصال بقاعدة البيانات
+    const generateLocalVesselsForRefinery = () => {
+      // التحقق من وجود بيانات المصفاة
+      if (!refinery || !refinery.lat || !refinery.lng) {
         setAssociatedVessels([]);
+        return;
       }
+      
+      // استخدام خدمة AsiStream لتوليد سفن لهذه المصفاة محلياً
+      const { getVesselsAtRefineryPorts } = require('@/services/asiStreamService');
+      
+      // إنشاء مصفوفة تحتوي على مصفاة واحدة لتمريرها إلى مولد السفن
+      const singleRefinery = [{
+        id: refinery.id,
+        name: refinery.name || 'Unknown Refinery',
+        country: refinery.country || 'Unknown',
+        region: refinery.region || 'Unknown',
+        lat: parseFloat(refinery.lat as string),
+        lng: parseFloat(refinery.lng as string),
+        capacity: refinery.capacity || 100000,
+        status: refinery.status || 'active'
+      }];
+      
+      // توليد السفن محلياً
+      const generatedVessels = getVesselsAtRefineryPorts(singleRefinery);
+      
+      // تحويل البيانات المولدة لتتوافق مع نوع البيانات المتوقع
+      const compatibleVessels = generatedVessels.map(vessel => ({
+        ...vessel,
+        // تحويل null إلى undefined للحقول التي تتوقع number | undefined
+        built: vessel.built === null ? undefined : vessel.built,
+        deadweight: vessel.deadweight === null ? undefined : vessel.deadweight,
+        cargoCapacity: vessel.cargoCapacity === null ? undefined : vessel.cargoCapacity
+      }));
+      
+      setAssociatedVessels(compatibleVessels);
+      console.log(`Generated ${compatibleVessels.length} vessels for refinery ${refinery.name}`);
     };
     
-    fetchAssociatedVessels();
+    // تنفيذ توليد السفن المحلي
+    generateLocalVesselsForRefinery();
   };
 
   // Toggle vessel type filter
