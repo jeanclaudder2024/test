@@ -69,8 +69,8 @@ export function useVesselStream() {
     // Initial fetch
     fetchData();
     
-    // Set up interval for polling
-    const intervalId = setInterval(fetchData, 30000); // Update every 30 seconds
+    // Set up interval for polling with a longer delay
+    const intervalId = setInterval(fetchData, 5 * 60 * 1000); // Update every 5 minutes
     
     // Clean up interval on unmount
     return () => clearInterval(intervalId);
