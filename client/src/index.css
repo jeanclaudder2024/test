@@ -2,6 +2,40 @@
 @tailwind components;
 @tailwind utilities;
 
+/* أنماط للنافذة المنبثقة للمصافي */
+.refinery-popup {
+  z-index: 1000 !important;
+  box-shadow: 0 6px 30px rgba(0, 0, 0, 0.15) !important;
+  border-radius: 8px !important;
+  border: none !important;
+  padding: 4px !important;
+  animation: popup-appear 0.3s ease-out;
+}
+
+.refinery-popup .leaflet-popup-content-wrapper {
+  border-radius: 6px !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+}
+
+.refinery-popup .leaflet-popup-tip {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+}
+
+@keyframes popup-appear {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Map marker animations and styling */
 .vessel-marker-container {
   position: relative;
