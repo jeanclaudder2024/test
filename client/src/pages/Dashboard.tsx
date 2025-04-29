@@ -8,6 +8,8 @@ import AIAssistant from "@/components/ai/AIAssistant";
 import { type Region, type RegionData } from "@/types";
 import { type Vessel, type Refinery } from "@shared/schema";
 import { useVesselProgressEvents } from "@/hooks/useVessels";
+// استيراد خدمة توليد السفن لمحطات النفط
+import { getVesselsAtRefineryPorts } from "@/services/asiStreamService";
 import { Button } from "@/components/ui/button";
 import { useDataStream } from "@/hooks/useDataStream";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -110,48 +112,59 @@ export default function Dashboard() {
     setSelectedRefinery(refinery);
     setSelectedVessel(null); // Clear vessel selection when selecting refinery
     
-    // استخدام بيانات محلية بدلاً من طلبها من الخادم
-    // هذا يتجنب مشاكل الاتصال بقاعدة البيانات
-    const generateLocalVesselsForRefinery = () => {
-      // التحقق من وجود بيانات المصفاة
-      if (!refinery || !refinery.lat || !refinery.lng) {
-        setAssociatedVessels([]);
-        return;
-      }
-      
-      // استخدام خدمة AsiStream لتوليد سفن لهذه المصفاة محلياً
-      const { getVesselsAtRefineryPorts } = require('@/services/asiStreamService');
-      
-      // إنشاء مصفوفة تحتوي على مصفاة واحدة لتمريرها إلى مولد السفن
-      const singleRefinery = [{
-        id: refinery.id,
-        name: refinery.name || 'Unknown Refinery',
-        country: refinery.country || 'Unknown',
-        region: refinery.region || 'Unknown',
-        lat: parseFloat(refinery.lat as string),
-        lng: parseFloat(refinery.lng as string),
-        capacity: refinery.capacity || 100000,
-        status: refinery.status || 'active'
-      }];
-      
-      // توليد السفن محلياً
-      const generatedVessels = getVesselsAtRefineryPorts(singleRefinery);
-      
-      // تحويل البيانات المولدة لتتوافق مع نوع البيانات المتوقع
-      const compatibleVessels = generatedVessels.map(vessel => ({
-        ...vessel,
-        // تحويل null إلى undefined للحقول التي تتوقع number | undefined
-        built: vessel.built === null ? undefined : vessel.built,
-        deadweight: vessel.deadweight === null ? undefined : vessel.deadweight,
-        cargoCapacity: vessel.cargoCapacity === null ? undefined : vessel.cargoCapacity
-      }));
-      
-      setAssociatedVessels(compatibleVessels);
-      console.log(`Generated ${compatibleVessels.length} vessels for refinery ${refinery.name}`);
-    };
+    // إنشاء بيانات سفن وهمية مرتبطة بالمصفاة المختارة
+    const vesselCount = 3 + Math.floor(Math.random() * 3); // توليد 3-5 سفن
+    const mockVessels: Vessel[] = [];
     
-    // تنفيذ توليد السفن المحلي
-    generateLocalVesselsForRefinery();
+    // إنشاء سفن وهمية بناءً على بيانات المصفاة
+    for (let i = 0; i < vesselCount; i++) {
+      // إنشاء اسم السفينة
+      const vesselNames = [
+        'Pacific Crown', 'Oriental Jade', 'Gulf Explorer', 'Atlantic Pioneer', 
+        'Nordic Prince', 'Desert Voyager', 'Ocean Guardian', 'Liberty Star'
+      ];
+      const name = vesselNames[Math.floor(Math.random() * vesselNames.length)];
+      
+      // إنشاء نوع السفينة
+      const vesselTypes = ['crude oil tanker', 'oil/chemical tanker', 'oil products tanker'];
+      const vesselType = vesselTypes[Math.floor(Math.random() * vesselTypes.length)];
+      
+      // إنشاء العلم
+      const flags = ['Liberia', 'Panama', 'Marshall Islands', 'Bahamas', 'Malta', 'Singapore'];
+      const flag = flags[Math.floor(Math.random() * flags.length)];
+      
+      // توليد إحداثيات قريبة من المصفاة
+      const refineryLat = parseFloat(String(refinery.lat));
+      const refineryLng = parseFloat(String(refinery.lng));
+      const latOffset = (Math.random() * 0.1 - 0.05);
+      const lngOffset = (Math.random() * 0.1 - 0.05);
+      
+      // إنشاء كائن السفينة
+      mockVessels.push({
+        id: refinery.id * 100 + i,
+        name,
+        vesselType,
+        flag,
+        imo: `IMO${9000000 + refinery.id * 100 + i}`,
+        mmsi: `${200000000 + refinery.id * 100 + i}`,
+        built: 1990 + Math.floor(Math.random() * 30),
+        deadweight: 50000 + Math.floor(Math.random() * 50000),
+        currentLat: (refineryLat + latOffset).toString(),
+        currentLng: (refineryLng + lngOffset).toString(),
+        destinationPort: `Port of ${refinery.name}`,
+        departurePort: 'Various Ports',
+        cargoType: 'crude_oil',
+        cargoCapacity: 50000 + Math.floor(Math.random() * 150000),
+        eta: new Date(Date.now() + 86400000 * Math.floor(Math.random() * 5)),
+        departureDate: new Date(Date.now() - 86400000 * Math.floor(Math.random() * 10)),
+        currentRegion: refinery.region,
+        progress: Math.round(Math.random() * 100),
+        status: Math.random() > 0.5 ? 'loading' : 'unloading'
+      });
+    }
+    
+    setAssociatedVessels(mockVessels);
+    console.log(`Generated ${mockVessels.length} vessels for refinery ${refinery.name}`);
   };
 
   // Toggle vessel type filter
