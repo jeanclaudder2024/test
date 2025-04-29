@@ -139,15 +139,16 @@ export default function Dashboard() {
       const latOffset = (Math.random() * 0.1 - 0.05);
       const lngOffset = (Math.random() * 0.1 - 0.05);
       
-      // إنشاء كائن السفينة
-      mockVessels.push({
+      // إنشاء كائن السفينة متوافق مع نوع Vessel المحدد في السكيما
+      const vesselObj = {
         id: refinery.id * 100 + i,
         name,
         vesselType,
         flag,
         imo: `IMO${9000000 + refinery.id * 100 + i}`,
         mmsi: `${200000000 + refinery.id * 100 + i}`,
-        built: 1990 + Math.floor(Math.random() * 30),
+        // القيم المحددة مع مراعاة أن built و deadweight تقبل undefined بدلاً من null
+        built: 1990 + Math.floor(Math.random() * 30), 
         deadweight: 50000 + Math.floor(Math.random() * 50000),
         currentLat: (refineryLat + latOffset).toString(),
         currentLng: (refineryLng + lngOffset).toString(),
@@ -157,10 +158,13 @@ export default function Dashboard() {
         cargoCapacity: 50000 + Math.floor(Math.random() * 150000),
         eta: new Date(Date.now() + 86400000 * Math.floor(Math.random() * 5)),
         departureDate: new Date(Date.now() - 86400000 * Math.floor(Math.random() * 10)),
-        currentRegion: refinery.region,
-        progress: Math.round(Math.random() * 100),
-        status: Math.random() > 0.5 ? 'loading' : 'unloading'
-      });
+        currentRegion: refinery.region
+        // حذف التالي لأنها غير موجودة في التعريف الأصلي:
+        // progress: Math.round(Math.random() * 100),
+        // status: Math.random() > 0.5 ? 'loading' : 'unloading'
+      };
+      
+      mockVessels.push(vesselObj as Vessel);
     }
     
     setAssociatedVessels(mockVessels);
