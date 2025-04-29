@@ -85,29 +85,25 @@ export function generateRealisticVesselsForPort(refineryData: RefineryData, port
     const statusOptions = ['loading', 'unloading', 'waiting', 'maintenance'];
     const status = statusOptions[Math.floor(Math.random() * statusOptions.length)];
     
-    // Create vessel object
+    // Create vessel object that matches the schema definition
     const vessel: Vessel = {
       id: uniqueId,
       name: vesselName,
       imo: `IMO${9000000 + uniqueId}`,
       mmsi: `${200000000 + uniqueId}`,
-      vessel_type: vesselType,
+      vesselType: vesselType,
       flag: flag,
       built: buildYear,
       deadweight: Math.round(deadweight),
-      lat: (refineryData.lat + latOffset).toString(),
-      lng: (refineryData.lng + lngOffset).toString(),
-      destination: `Port of ${refineryData.name}`,
-      destination_port: `Port of ${refineryData.name}`,
-      departure_port: 'Various Ports',
+      currentLat: (refineryData.lat + latOffset).toString(),
+      currentLng: (refineryData.lng + lngOffset).toString(),
+      destinationPort: `Port of ${refineryData.name}`,
+      departurePort: 'Various Ports',
       cargoType: 'crude_oil',
       cargoCapacity: cargoCapacity,
       eta: new Date(),
-      departure_date: new Date(Date.now() - 86400000 * Math.floor(Math.random() * 10)),
-      region: refineryData.region,
-      status: status,
-      createdAt: new Date(),
-      updatedAt: new Date()
+      departureDate: new Date(Date.now() - 86400000 * Math.floor(Math.random() * 10)),
+      currentRegion: refineryData.region
     };
     
     vessels.push(vessel);

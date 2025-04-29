@@ -739,23 +739,19 @@ export function generateConnectedPorts(refineries: Refinery[]): Vessel[] {
       name: `Port of ${refinery.name}`,
       imo: `PORT${10000 + index}`,
       mmsi: `${9000000 + index}`,
-      vessel_type: 'port',
+      vesselType: 'port',
       flag: refinery.country,
       built: 1990 + Math.floor(Math.random() * 30),
       deadweight: 0,
-      lat: (parseFloat(refinery.lat) + latOffset).toString(),
-      lng: (parseFloat(refinery.lng) + lngOffset).toString(),
-      destination: refinery.name,
-      destination_port: refinery.name,
-      departure_port: 'Various',
+      currentLat: (parseFloat(refinery.lat) + latOffset).toString(),
+      currentLng: (parseFloat(refinery.lng) + lngOffset).toString(),
+      destinationPort: refinery.name,
+      departurePort: 'Various',
       cargoType: 'crude_oil',
       cargoCapacity: 0,
-      eta: new Date().toISOString(),
-      departure_date: new Date().toISOString(),
-      region: refinery.region,
-      status: 'operational',
-      createdAt: new Date(),
-      updatedAt: new Date()
+      eta: new Date(),
+      departureDate: new Date(),
+      currentRegion: refinery.region
     };
   });
 }
