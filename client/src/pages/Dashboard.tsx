@@ -524,16 +524,14 @@ export default function Dashboard() {
           </div>
           
           {/* Map Container */}
-          <SimpleLeafletMap 
-            vessels={selectedRefinery ? associatedVessels : filteredVessels}
-            refineries={selectedRefinery ? [selectedRefinery] : filteredRefineries}
-            selectedRegion={selectedRegion}
+          <MapContainer 
             onVesselClick={handleVesselSelect}
             onRefineryClick={handleRefinerySelect}
-            isLoading={loading}
-            initialCenter={selectedRefinery && selectedRefinery.lat && selectedRefinery.lng 
-              ? [parseFloat(selectedRefinery.lat as string), parseFloat(selectedRefinery.lng as string)]
-              : undefined}
+            filterRegion={selectedRegion}
+            filterVesselTypes={vesselTypeFilters}
+            filterRefineryStatuses={refineryStatusFilters}
+            selectedRefineryId={selectedRefinery?.id}
+            selectedVesselId={selectedVessel?.id}
             initialZoom={selectedRefinery ? 6 : undefined}
           />
         </div>
