@@ -1,234 +1,152 @@
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { Vessel, Refinery } from '@shared/schema';
-import { REGIONS } from '@/../../shared/constants';
-import { Loader2 } from 'lucide-react';
 import EnhancedMap from './EnhancedMap';
+import { useDataStream } from '@/hooks/useDataStream';
+import { Card, CardContent } from '@/components/ui/card';
+import { Loader2 } from 'lucide-react';
 
 interface MapContainerProps {
   onVesselClick: (vessel: Vessel) => void;
   onRefineryClick: (refinery: Refinery) => void;
-  initialCenter?: [number, number];
-  initialZoom?: number;
   filterRegion?: string | null;
   filterVesselTypes?: string[];
   filterRefineryStatuses?: string[];
   selectedRefineryId?: number | null;
   selectedVesselId?: number | null;
+  initialCenter?: [number, number];
+  initialZoom?: number;
 }
 
 export default function MapContainer({
   onVesselClick,
   onRefineryClick,
-  initialCenter,
-  initialZoom,
-  filterRegion = null,
+  filterRegion,
   filterVesselTypes = [],
   filterRefineryStatuses = [],
-  selectedRefineryId = null,
-  selectedVesselId = null
+  selectedRefineryId,
+  selectedVesselId,
+  initialCenter,
+  initialZoom
 }: MapContainerProps) {
-  // State for generating ports from refineries
-  const [ports, setPorts] = useState<Vessel[]>([]);
+  // Get data from the data stream
+  const { vessels = [], refineries = [], loading } = useDataStream();
   
-  // Fetch vessels data
-  const {
-    data: vessels = [],
-    isLoading: vesselsLoading,
-    error: vesselsError
-  } = useQuery<Vessel[]>({
-    queryKey: ['/api/vessels'],
-    staleTime: 1000 * 60, // 1 minute
-  });
-  
-  // Fetch refineries data
-  const {
-    data: refineries = [],
-    isLoading: refineriesLoading,
-    error: refineriesError
-  } = useQuery<Refinery[]>({
-    queryKey: ['/api/refineries'],
-    staleTime: 1000 * 60 * 5, // 5 minutes
-  });
-  
-  // Create ports from refineries (for demonstration)
+  // Local state
+  const [filteredVessels, setFilteredVessels] = useState<Vessel[]>([]);
+  const [filteredRefineries, setFilteredRefineries] = useState<Refinery[]>([]);
+  const [associatedVessels, setAssociatedVessels] = useState<Vessel[]>([]);
+
+  // Apply filters and update local state
   useEffect(() => {
-    if (refineries.length > 0) {
-      // Convert refineries to port vessels
-      const portsFromRefineries = refineries.map((refinery, index) => {
-        const portId = 1000000 + index; // Ensure unique IDs for ports
-        return {
-          id: portId,
-          name: `${refinery.name} Port`,
-          vesselType: 'port',
-          lat: typeof refinery.lat === 'string' ? refinery.lat : String(refinery.lat),
-          lng: typeof refinery.lng === 'string' ? refinery.lng : String(refinery.lng),
-          currentRegion: refinery.region,
-          mmsi: `PORT-${portId}`,
-          imo: `PORT-${portId}`,
-          flag: refinery.country,
-          refineryId: refinery.id,
-          cargoType: null,
-          cargoCapacity: null,
-          speed: null,
-          heading: null,
-          destination: null,
-          eta: null,
-          lastPort: null,
-          currentStatus: 'active',
-          shipOwner: refinery.name,
-          yearBuilt: null,
-          grossTonnage: null,
-          createdAt: null,
-          updatedAt: null
-        } as Vessel;
-      });
+    // Filter vessels based on region and type
+    const vesselFiltered = vessels.filter(vessel => {
+      // Filter by region
+      const passesRegionFilter = !filterRegion || vessel.currentRegion === filterRegion;
       
-      setPorts(portsFromRefineries);
+      // Filter by vessel type
+      const passesTypeFilter = filterVesselTypes.length === 0 || 
+        filterVesselTypes.includes(vessel.vesselType || 'Unknown') ||
+        filterVesselTypes.includes(vessel.cargoType || 'Unknown');
+      
+      return passesRegionFilter && passesTypeFilter;
+    });
+    
+    setFilteredVessels(vesselFiltered);
+    
+    // Filter refineries based on region and status
+    const refineryFiltered = refineries.filter(refinery => {
+      // Filter by region
+      const passesRegionFilter = !filterRegion || refinery.region === filterRegion;
+      
+      // Filter by status
+      const passesStatusFilter = filterRefineryStatuses.length === 0 ||
+        filterRefineryStatuses.includes(refinery.status || 'Unknown');
+      
+      return passesRegionFilter && passesStatusFilter;
+    });
+    
+    setFilteredRefineries(refineryFiltered);
+    
+    // If a refinery is selected, find vessels in its vicinity
+    if (selectedRefineryId) {
+      const selectedRefinery = refineries.find(r => r.id === selectedRefineryId);
+      if (selectedRefinery) {
+        const nearbyVessels = findVesselsNearRefinery(selectedRefinery, vessels);
+        setAssociatedVessels(nearbyVessels);
+      }
+    } else {
+      setAssociatedVessels([]);
     }
-  }, [refineries]);
-  
-  // Apply filters to vessels
-  const filteredVessels = vessels.filter(vessel => {
-    // Region filter
-    if (filterRegion && vessel.currentRegion !== filterRegion) {
-      return false;
-    }
+  }, [vessels, refineries, filterRegion, filterVesselTypes, filterRefineryStatuses, selectedRefineryId]);
+
+  // Function to find vessels near a refinery
+  const findVesselsNearRefinery = (refinery: Refinery, allVessels: Vessel[]): Vessel[] => {
+    // Maximum distance in degrees (approximately 300km at the equator)
+    const MAX_DISTANCE = 3; 
     
-    // Vessel type filter
-    if (filterVesselTypes.length > 0 && !filterVesselTypes.includes(vessel.vesselType || '')) {
-      return false;
-    }
+    if (!refinery.lat || !refinery.lng) return [];
+
+    const refineryLat = typeof refinery.lat === 'string' ? parseFloat(refinery.lat) : refinery.lat;
+    const refineryLng = typeof refinery.lng === 'string' ? parseFloat(refinery.lng) : refinery.lng;
     
-    return true;
-  });
-  
-  // Apply filters to refineries
-  const filteredRefineries = refineries.filter(refinery => {
-    // Region filter
-    if (filterRegion && refinery.region !== filterRegion) {
-      return false;
-    }
-    
-    // Status filter
-    if (filterRefineryStatuses.length > 0 && !filterRefineryStatuses.includes(refinery.status || '')) {
-      return false;
-    }
-    
-    return true;
-  });
-  
-  // Get vessels associated with a specific refinery
-  const getVesselsForRefinery = (refineryId: number) => {
-    if (!refineryId) return [];
-    
-    const selectedRefinery = refineries.find(r => r.id === refineryId);
-    if (!selectedRefinery) return [];
-    
-    // Get refinery coordinates
-    const refineryLat = typeof selectedRefinery.lat === 'string' 
-      ? parseFloat(selectedRefinery.lat) 
-      : selectedRefinery.lat || 0;
+    return allVessels.filter(vessel => {
+      if (!vessel.currentLat || !vessel.currentLng) return false;
       
-    const refineryLng = typeof selectedRefinery.lng === 'string' 
-      ? parseFloat(selectedRefinery.lng) 
-      : selectedRefinery.lng || 0;
-    
-    // Find vessels within ~500km of the refinery
-    return vessels.filter(vessel => {
-      if (!vessel.lat || !vessel.lng) return false;
+      const vesselLat = typeof vessel.currentLat === 'string' ? parseFloat(vessel.currentLat) : vessel.currentLat;
+      const vesselLng = typeof vessel.currentLng === 'string' ? parseFloat(vessel.currentLng) : vessel.currentLng;
       
-      const vesselLat = typeof vessel.lat === 'string' ? parseFloat(vessel.lat) : vessel.lat;
-      const vesselLng = typeof vessel.lng === 'string' ? parseFloat(vessel.lng) : vessel.lng;
+      // Simple distance calculation for demonstration
+      const distance = Math.sqrt(
+        Math.pow(vesselLat - refineryLat, 2) + 
+        Math.pow(vesselLng - refineryLng, 2)
+      );
       
-      if (isNaN(vesselLat) || isNaN(vesselLng)) return false;
-      
-      // Calculate distance using the Haversine formula
-      const R = 6371; // Earth's radius in km
-      const dLat = (vesselLat - refineryLat) * Math.PI / 180;
-      const dLon = (vesselLng - refineryLng) * Math.PI / 180;
-      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                Math.cos(refineryLat * Math.PI / 180) * Math.cos(vesselLat * Math.PI / 180) * 
-                Math.sin(dLon/2) * Math.sin(dLon/2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-      const distance = R * c;
-      
-      // Find vessels within 500km
-      return distance <= 500;
+      return distance <= MAX_DISTANCE;
     });
   };
+
+  // Determine which vessels to display
+  const vesselsToDisplay = selectedRefineryId ? associatedVessels : filteredVessels;
   
-  // Calculate center if we have a selected entity
-  const calculateInitialCenter = (): [number, number] | undefined => {
-    if (!initialCenter) {
-      if (selectedRefineryId) {
-        const refinery = refineries.find(r => r.id === selectedRefineryId);
-        if (refinery && refinery.lat && refinery.lng) {
-          const lat = typeof refinery.lat === 'string' ? parseFloat(refinery.lat) : refinery.lat;
-          const lng = typeof refinery.lng === 'string' ? parseFloat(refinery.lng) : refinery.lng;
-          return [lat, lng];
-        }
-      } else if (selectedVesselId) {
-        const vessel = vessels.find(v => v.id === selectedVesselId);
-        if (vessel && vessel.lat && vessel.lng) {
-          const lat = typeof vessel.lat === 'string' ? parseFloat(vessel.lat) : vessel.lat;
-          const lng = typeof vessel.lng === 'string' ? parseFloat(vessel.lng) : vessel.lng;
-          return [lat, lng];
-        }
+  // Determine which refineries to display
+  const refineriesToDisplay = selectedRefineryId 
+    ? refineries.filter(r => r.id === selectedRefineryId) 
+    : filteredRefineries;
+  
+  // Get center coordinates if a refinery is selected
+  const getMapCenter = (): [number, number] | undefined => {
+    if (selectedRefineryId) {
+      const selectedRefinery = refineries.find(r => r.id === selectedRefineryId);
+      if (selectedRefinery && selectedRefinery.lat && selectedRefinery.lng) {
+        return [
+          typeof selectedRefinery.lat === 'string' ? parseFloat(selectedRefinery.lat) : selectedRefinery.lat,
+          typeof selectedRefinery.lng === 'string' ? parseFloat(selectedRefinery.lng) : selectedRefinery.lng
+        ];
       }
     }
     return initialCenter;
   };
-  
-  // Calculate vessels to display
-  const vesselsToDisplay = selectedRefineryId
-    ? getVesselsForRefinery(selectedRefineryId)
-    : filteredVessels;
-  
-  // Calculate refineries to display
-  const refineriesToDisplay = selectedRefineryId
-    ? refineries.filter(r => r.id === selectedRefineryId)
-    : filteredRefineries;
-  
-  // Determine if we're loading
-  const isLoading = vesselsLoading || refineriesLoading;
-  
-  // Handle errors
-  if (vesselsError || refineriesError) {
-    return (
-      <div className="p-6 bg-red-50 border border-red-200 rounded-lg">
-        <h3 className="text-lg font-semibold text-red-600 mb-2">Error Loading Map Data</h3>
-        <p className="text-red-700">
-          {vesselsError ? 'Error loading vessels: ' + (vesselsError as Error).message : ''}
-        </p>
-        <p className="text-red-700">
-          {refineriesError ? 'Error loading refineries: ' + (refineriesError as Error).message : ''}
-        </p>
-      </div>
-    );
-  }
-  
+
   return (
-    <div className="w-full relative">
-      {isLoading && (
-        <div className="absolute inset-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm z-50 flex items-center justify-center">
-          <div className="flex flex-col items-center">
-            <Loader2 className="w-8 h-8 animate-spin text-primary mb-2" />
-            <p className="text-sm text-gray-600 dark:text-gray-300">Loading marine traffic data...</p>
+    <Card className="h-[600px] relative overflow-hidden">
+      <CardContent className="p-0 h-full">
+        {loading ? (
+          <div className="flex items-center justify-center h-full">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <span className="ml-2 text-gray-600">Loading map data...</span>
           </div>
-        </div>
-      )}
-      
-      <EnhancedMap
-        vessels={vesselsToDisplay}
-        refineries={refineriesToDisplay}
-        ports={ports}
-        onVesselClick={onVesselClick}
-        onRefineryClick={onRefineryClick}
-        isLoading={isLoading}
-        initialCenter={calculateInitialCenter()}
-        initialZoom={initialZoom}
-      />
-    </div>
+        ) : (
+          <EnhancedMap
+            vessels={vesselsToDisplay}
+            refineries={refineriesToDisplay}
+            onVesselClick={onVesselClick}
+            onRefineryClick={onRefineryClick}
+            isLoading={loading}
+            initialCenter={getMapCenter()}
+            initialZoom={selectedRefineryId ? 7 : initialZoom}
+          />
+        )}
+      </CardContent>
+    </Card>
   );
 }

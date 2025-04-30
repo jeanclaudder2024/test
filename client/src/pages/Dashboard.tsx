@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import SimpleLeafletMap from "@/components/map/SimpleLeafletMap";
+import MapContainer from "@/components/map/MapContainer";
 import VesselInfo from "@/components/vessels/VesselInfo";
 import ProgressTimeline from "@/components/vessels/ProgressTimeline";
 import StatsCards from "@/components/dashboard/StatsCards";

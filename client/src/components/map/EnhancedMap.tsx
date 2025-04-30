@@ -227,11 +227,16 @@ export default function EnhancedMap({
     
     // Process vessels
     vessels.forEach(vessel => {
-      if (!vessel.lat || !vessel.lng) return;
+      // Check for either lat/lng or currentLat/currentLng
+      const hasCoordinates = (vessel.lat && vessel.lng) || (vessel.currentLat && vessel.currentLng);
+      if (!hasCoordinates) return;
       
-      // Parse coordinates
-      const lat = typeof vessel.lat === 'string' ? parseFloat(vessel.lat) : vessel.lat;
-      const lng = typeof vessel.lng === 'string' ? parseFloat(vessel.lng) : vessel.lng;
+      // Parse coordinates - prioritize lat/lng but fall back to currentLat/currentLng
+      const latValue = vessel.lat || vessel.currentLat;
+      const lngValue = vessel.lng || vessel.currentLng;
+      
+      const lat = typeof latValue === 'string' ? parseFloat(latValue) : latValue;
+      const lng = typeof lngValue === 'string' ? parseFloat(lngValue) : lngValue;
       
       if (isNaN(lat) || isNaN(lng)) return;
       
