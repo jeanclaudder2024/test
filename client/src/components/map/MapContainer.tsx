@@ -1,152 +1,310 @@
-import { useState, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import 'leaflet.markercluster/dist/MarkerCluster.css';
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import { Vessel, Refinery } from '@shared/schema';
-import EnhancedMap from './EnhancedMap';
-import { useDataStream } from '@/hooks/useDataStream';
-import { Card, CardContent } from '@/components/ui/card';
-import { Loader2 } from 'lucide-react';
+import vesselIcon from '@/assets/vessel.svg';
+import vesselSelectedIcon from '@/assets/vessel-selected.svg';
+import refineryIcon from '@/assets/refinery.svg';
+import refinerySelectedIcon from '@/assets/refinery-selected.svg';
 
+// Define props interface
 interface MapContainerProps {
+  vessels: Vessel[];
+  refineries: Refinery[];
   onVesselClick: (vessel: Vessel) => void;
   onRefineryClick: (refinery: Refinery) => void;
-  filterRegion?: string | null;
-  filterVesselTypes?: string[];
-  filterRefineryStatuses?: string[];
-  selectedRefineryId?: number | null;
-  selectedVesselId?: number | null;
-  initialCenter?: [number, number];
+  selectedVesselId?: number;
+  selectedRefineryId?: number;
   initialZoom?: number;
+  filterRegion?: string;
 }
 
-export default function MapContainer({
+const MapContainer = ({
+  vessels,
+  refineries,
   onVesselClick,
   onRefineryClick,
-  filterRegion,
-  filterVesselTypes = [],
-  filterRefineryStatuses = [],
-  selectedRefineryId,
   selectedVesselId,
-  initialCenter,
-  initialZoom
-}: MapContainerProps) {
-  // Get data from the data stream
-  const { vessels = [], refineries = [], loading } = useDataStream();
+  selectedRefineryId,
+  initialZoom = 3,
+  filterRegion
+}: MapContainerProps) => {
+  // Reference to the map div
+  const mapRef = useRef<HTMLDivElement>(null);
+  const [map, setMap] = useState<L.Map | null>(null);
   
-  // Local state
-  const [filteredVessels, setFilteredVessels] = useState<Vessel[]>([]);
-  const [filteredRefineries, setFilteredRefineries] = useState<Refinery[]>([]);
-  const [associatedVessels, setAssociatedVessels] = useState<Vessel[]>([]);
-
-  // Apply filters and update local state
+  // References to marker layers
+  const vesselLayerRef = useRef<L.LayerGroup | null>(null);
+  const refineryLayerRef = useRef<L.LayerGroup | null>(null);
+  
+  // Create custom icons
+  const createVesselIcon = (selected: boolean) => {
+    return L.icon({
+      iconUrl: selected ? vesselSelectedIcon : vesselIcon,
+      iconSize: selected ? [35, 35] : [25, 25],
+      iconAnchor: selected ? [17.5, 17.5] : [12.5, 12.5],
+      popupAnchor: [0, -10],
+    });
+  };
+  
+  const createRefineryIcon = (selected: boolean) => {
+    return L.icon({
+      iconUrl: selected ? refinerySelectedIcon : refineryIcon,
+      iconSize: selected ? [35, 35] : [25, 25],
+      iconAnchor: selected ? [17.5, 17.5] : [12.5, 12.5],
+      popupAnchor: [0, -10],
+    });
+  };
+  
+  // Initialize the map
   useEffect(() => {
-    // Filter vessels based on region and type
-    const vesselFiltered = vessels.filter(vessel => {
-      // Filter by region
-      const passesRegionFilter = !filterRegion || vessel.currentRegion === filterRegion;
+    if (mapRef.current && !map) {
+      // Create the map instance
+      const mapInstance = L.map(mapRef.current, {
+        center: [20, 0], // Center the map on the equator
+        zoom: initialZoom,
+        zoomControl: true,
+        attributionControl: true,
+      });
       
-      // Filter by vessel type
-      const passesTypeFilter = filterVesselTypes.length === 0 || 
-        filterVesselTypes.includes(vessel.vesselType || 'Unknown') ||
-        filterVesselTypes.includes(vessel.cargoType || 'Unknown');
+      // Add the tile layer
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(mapInstance);
       
-      return passesRegionFilter && passesTypeFilter;
-    });
-    
-    setFilteredVessels(vesselFiltered);
-    
-    // Filter refineries based on region and status
-    const refineryFiltered = refineries.filter(refinery => {
-      // Filter by region
-      const passesRegionFilter = !filterRegion || refinery.region === filterRegion;
+      // Create vessel marker layer
+      const vesselLayer = L.layerGroup().addTo(mapInstance);
+      vesselLayerRef.current = vesselLayer;
       
-      // Filter by status
-      const passesStatusFilter = filterRefineryStatuses.length === 0 ||
-        filterRefineryStatuses.includes(refinery.status || 'Unknown');
+      // Create refinery marker layer
+      const refineryLayer = L.layerGroup().addTo(mapInstance);
+      refineryLayerRef.current = refineryLayer;
       
-      return passesRegionFilter && passesStatusFilter;
-    });
-    
-    setFilteredRefineries(refineryFiltered);
-    
-    // If a refinery is selected, find vessels in its vicinity
-    if (selectedRefineryId) {
-      const selectedRefinery = refineries.find(r => r.id === selectedRefineryId);
-      if (selectedRefinery) {
-        const nearbyVessels = findVesselsNearRefinery(selectedRefinery, vessels);
-        setAssociatedVessels(nearbyVessels);
-      }
-    } else {
-      setAssociatedVessels([]);
+      // Save the map instance to state
+      setMap(mapInstance);
+      
+      // Clean up on unmount
+      return () => {
+        mapInstance.remove();
+      };
     }
-  }, [vessels, refineries, filterRegion, filterVesselTypes, filterRefineryStatuses, selectedRefineryId]);
-
-  // Function to find vessels near a refinery
-  const findVesselsNearRefinery = (refinery: Refinery, allVessels: Vessel[]): Vessel[] => {
-    // Maximum distance in degrees (approximately 300km at the equator)
-    const MAX_DISTANCE = 3; 
-    
-    if (!refinery.lat || !refinery.lng) return [];
-
-    const refineryLat = typeof refinery.lat === 'string' ? parseFloat(refinery.lat) : refinery.lat;
-    const refineryLng = typeof refinery.lng === 'string' ? parseFloat(refinery.lng) : refinery.lng;
-    
-    return allVessels.filter(vessel => {
-      if (!vessel.currentLat || !vessel.currentLng) return false;
-      
-      const vesselLat = typeof vessel.currentLat === 'string' ? parseFloat(vessel.currentLat) : vessel.currentLat;
-      const vesselLng = typeof vessel.currentLng === 'string' ? parseFloat(vessel.currentLng) : vessel.currentLng;
-      
-      // Simple distance calculation for demonstration
-      const distance = Math.sqrt(
-        Math.pow(vesselLat - refineryLat, 2) + 
-        Math.pow(vesselLng - refineryLng, 2)
-      );
-      
-      return distance <= MAX_DISTANCE;
-    });
-  };
-
-  // Determine which vessels to display
-  const vesselsToDisplay = selectedRefineryId ? associatedVessels : filteredVessels;
+  }, [mapRef, map, initialZoom]);
   
-  // Determine which refineries to display
-  const refineriesToDisplay = selectedRefineryId 
-    ? refineries.filter(r => r.id === selectedRefineryId) 
-    : filteredRefineries;
+  // Update markers when vessel data changes
+  useEffect(() => {
+    if (map && vesselLayerRef.current && vessels) {
+      // Clear existing markers
+      vesselLayerRef.current.clearLayers();
+      
+      // Add vessel markers
+      vessels.forEach(vessel => {
+        if (vessel.currentLat && vessel.currentLng) {
+          try {
+            const lat = parseFloat(vessel.currentLat);
+            const lng = parseFloat(vessel.currentLng);
+            
+            if (isNaN(lat) || isNaN(lng)) return;
+            
+            // Create marker with appropriate icon
+            const isSelected = vessel.id === selectedVesselId;
+            const marker = L.marker([lat, lng], {
+              icon: createVesselIcon(isSelected),
+              title: vessel.name,
+              riseOnHover: true,
+              riseOffset: 250
+            });
+            
+            // Add popup with basic vessel info
+            marker.bindPopup(`
+              <div style="min-width: 180px;">
+                <h3 style="margin-bottom: 8px; font-weight: bold;">${vessel.name}</h3>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                  <span style="font-weight: 500;">Type:</span>
+                  <span>${vessel.vesselType}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                  <span style="font-weight: 500;">IMO:</span>
+                  <span>${vessel.imo}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                  <span style="font-weight: 500;">Flag:</span>
+                  <span>${vessel.flag}</span>
+                </div>
+                <button 
+                  style="
+                    background-color: #3B82F6; 
+                    color: white; 
+                    border: none; 
+                    padding: 8px 12px; 
+                    border-radius: 4px; 
+                    margin-top: 8px;
+                    cursor: pointer;
+                    width: 100%;
+                    font-weight: 500;
+                  "
+                  class="vessel-details-btn"
+                  data-vessel-id="${vessel.id}"
+                >
+                  View Details
+                </button>
+              </div>
+            `);
+            
+            // Add click event to marker
+            marker.on('click', () => {
+              onVesselClick(vessel);
+            });
+            
+            // Add click event to the details button in the popup
+            marker.on('popupopen', () => {
+              const btn = document.querySelector(`.vessel-details-btn[data-vessel-id="${vessel.id}"]`);
+              if (btn) {
+                btn.addEventListener('click', (e) => {
+                  e.preventDefault();
+                  onVesselClick(vessel);
+                  map.closePopup();
+                });
+              }
+            });
+            
+            // If selected, make sure it's visible and centered
+            if (isSelected) {
+              map.setView([lat, lng], Math.max(map.getZoom() || initialZoom, 6));
+            }
+            
+            // Add marker to layer
+            vesselLayerRef.current?.addLayer(marker);
+          } catch (error) {
+            console.error('Error creating vessel marker:', error);
+          }
+        }
+      });
+    }
+  }, [map, vessels, selectedVesselId, onVesselClick, initialZoom]);
   
-  // Get center coordinates if a refinery is selected
-  const getMapCenter = (): [number, number] | undefined => {
-    if (selectedRefineryId) {
-      const selectedRefinery = refineries.find(r => r.id === selectedRefineryId);
-      if (selectedRefinery && selectedRefinery.lat && selectedRefinery.lng) {
-        return [
-          typeof selectedRefinery.lat === 'string' ? parseFloat(selectedRefinery.lat) : selectedRefinery.lat,
-          typeof selectedRefinery.lng === 'string' ? parseFloat(selectedRefinery.lng) : selectedRefinery.lng
-        ];
+  // Update markers when refinery data changes
+  useEffect(() => {
+    if (map && refineryLayerRef.current && refineries) {
+      // Clear existing markers
+      refineryLayerRef.current.clearLayers();
+      
+      // Add refinery markers
+      refineries.forEach(refinery => {
+        if (refinery.lat && refinery.lng) {
+          try {
+            const lat = parseFloat(refinery.lat);
+            const lng = parseFloat(refinery.lng);
+            
+            if (isNaN(lat) || isNaN(lng)) return;
+            
+            // Create marker with appropriate icon
+            const isSelected = refinery.id === selectedRefineryId;
+            const marker = L.marker([lat, lng], {
+              icon: createRefineryIcon(isSelected),
+              title: refinery.name,
+              riseOnHover: true,
+              riseOffset: 250
+            });
+            
+            // Add popup with basic refinery info
+            marker.bindPopup(`
+              <div style="min-width: 180px;">
+                <h3 style="margin-bottom: 8px; font-weight: bold;">${refinery.name}</h3>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                  <span style="font-weight: 500;">Country:</span>
+                  <span>${refinery.country}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                  <span style="font-weight: 500;">Region:</span>
+                  <span>${refinery.region}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                  <span style="font-weight: 500;">Status:</span>
+                  <span>${refinery.status || 'Unknown'}</span>
+                </div>
+                <button 
+                  style="
+                    background-color: #F59E0B; 
+                    color: white; 
+                    border: none; 
+                    padding: 8px 12px; 
+                    border-radius: 4px; 
+                    margin-top: 8px;
+                    cursor: pointer;
+                    width: 100%;
+                    font-weight: 500;
+                  "
+                  class="refinery-details-btn"
+                  data-refinery-id="${refinery.id}"
+                >
+                  View Details
+                </button>
+              </div>
+            `);
+            
+            // Add click event to marker
+            marker.on('click', () => {
+              onRefineryClick(refinery);
+            });
+            
+            // Add click event to the details button in the popup
+            marker.on('popupopen', () => {
+              const btn = document.querySelector(`.refinery-details-btn[data-refinery-id="${refinery.id}"]`);
+              if (btn) {
+                btn.addEventListener('click', (e) => {
+                  e.preventDefault();
+                  onRefineryClick(refinery);
+                  map.closePopup();
+                });
+              }
+            });
+            
+            // If selected, make sure it's visible and centered
+            if (isSelected) {
+              map.setView([lat, lng], Math.max(map.getZoom() || initialZoom, 6));
+            }
+            
+            // Add marker to layer
+            refineryLayerRef.current?.addLayer(marker);
+          } catch (error) {
+            console.error('Error creating refinery marker:', error);
+          }
+        }
+      });
+    }
+  }, [map, refineries, selectedRefineryId, onRefineryClick, initialZoom]);
+  
+  // When filterRegion changes, zoom to that region
+  useEffect(() => {
+    if (map && filterRegion) {
+      // Define region coordinates - these are approximate center points
+      const regionCoordinates: Record<string, [number, number, number]> = {
+        'North America': [40, -100, 4],
+        'South America': [-20, -60, 4],
+        'Europe': [50, 10, 4],
+        'Middle East': [25, 45, 5],
+        'Africa': [0, 20, 4],
+        'Asia': [30, 100, 4],
+        'Southeast Asia': [10, 115, 5],
+        'Australia': [-25, 135, 4],
+        'Caribbean': [20, -75, 6],
+        'Mediterranean': [38, 15, 5],
+        'Baltic': [58, 20, 6]
+      };
+      
+      if (regionCoordinates[filterRegion]) {
+        const [lat, lng, zoom] = regionCoordinates[filterRegion];
+        map.setView([lat, lng], zoom);
       }
     }
-    return initialCenter;
-  };
-
+  }, [map, filterRegion]);
+  
   return (
-    <Card className="h-[600px] relative overflow-hidden">
-      <CardContent className="p-0 h-full">
-        {loading ? (
-          <div className="flex items-center justify-center h-full">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <span className="ml-2 text-gray-600">Loading map data...</span>
-          </div>
-        ) : (
-          <EnhancedMap
-            vessels={vesselsToDisplay}
-            refineries={refineriesToDisplay}
-            onVesselClick={onVesselClick}
-            onRefineryClick={onRefineryClick}
-            isLoading={loading}
-            initialCenter={getMapCenter()}
-            initialZoom={selectedRefineryId ? 7 : initialZoom}
-          />
-        )}
-      </CardContent>
-    </Card>
+    <div ref={mapRef} style={{ width: '100%', height: '100%' }} />
   );
-}
+};
+
+export default MapContainer;

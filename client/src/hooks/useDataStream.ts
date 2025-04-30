@@ -1,55 +1,70 @@
-import { useState, useEffect } from 'react';
-import { type Vessel, type Refinery } from '@shared/schema';
-import { useVesselStream } from './useVesselStream';
-
-interface StreamData {
-  vessels: Vessel[];
-  refineries: Refinery[];
-  stats: any | null;
-  loading: boolean;
-  error: string | null;
-  lastUpdated: Date | null;
-}
+import { useState, useEffect, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import axios from 'axios';
+import { Vessel, Refinery } from '@shared/schema';
 
 /**
- * Hook to connect to the server-sent events stream for vessel and refinery data
- * Uses the more robust useVesselStream hook as the data source
+ * Custom hook to stream vessel and refinery data from the API
  */
-export function useDataStream() {
-  // Use our more robust vessel stream hook that handles both WebSocket and SSE
-  const streamData = useVesselStream();
+export const useDataStream = () => {
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   
-  // If needed, we'll filter the data here to only show relevant vessels
-  const [data, setData] = useState<StreamData>({
-    vessels: [],
-    refineries: [],
-    stats: null,
-    loading: true,
-    error: null,
-    lastUpdated: null
+  // Fetch vessels
+  const vesselsQuery = useQuery({
+    queryKey: ['/api/vessels'],
+    queryFn: async () => {
+      try {
+        const response = await axios.get('/api/vessels');
+        return response.data as Vessel[];
+      } catch (error) {
+        console.error('Error fetching vessels:', error);
+        return [];
+      }
+    },
+    staleTime: 60 * 1000, // 1 minute
   });
   
-  // Update our filtered data whenever the stream data changes
-  useEffect(() => {
-    // Filter to only include cargo vessels
-    const cargoVessels = streamData.vessels.filter((vessel: Vessel) => 
-      vessel.vesselType?.toLowerCase().includes('cargo')
-    );
-    
-    setData({
-      vessels: cargoVessels,
-      refineries: streamData.refineries,
-      stats: streamData.stats,
-      loading: streamData.loading,
-      error: streamData.error,
-      lastUpdated: streamData.lastUpdated
-    });
-    
-    if (cargoVessels.length > 0) {
-      console.log('Filtered data to', cargoVessels.length, 'cargo vessels out of', 
-                 streamData.vessels.length, 'total vessels');
-    }
-  }, [streamData]);
+  // Fetch refineries
+  const refineriesQuery = useQuery({
+    queryKey: ['/api/refineries'],
+    queryFn: async () => {
+      try {
+        const response = await axios.get('/api/refineries');
+        return response.data as Refinery[];
+      } catch (error) {
+        console.error('Error fetching refineries:', error);
+        return [];
+      }
+    },
+    staleTime: 60 * 1000, // 1 minute
+  });
   
-  return data;
-}
+  // Update last updated timestamp when data refreshes
+  useEffect(() => {
+    if (vesselsQuery.isSuccess || refineriesQuery.isSuccess) {
+      setLastUpdated(new Date());
+    }
+  }, [vesselsQuery.dataUpdatedAt, refineriesQuery.dataUpdatedAt]);
+  
+  // Refetch both queries
+  const refetch = useCallback(() => {
+    vesselsQuery.refetch();
+    refineriesQuery.refetch();
+  }, [vesselsQuery, refineriesQuery]);
+  
+  // Loading state based on both queries
+  const loading = vesselsQuery.isLoading || refineriesQuery.isLoading || 
+                  vesselsQuery.isFetching || refineriesQuery.isFetching;
+  
+  // Error state based on both queries
+  const error = vesselsQuery.error || refineriesQuery.error;
+  
+  return {
+    vessels: vesselsQuery.data || [],
+    refineries: refineriesQuery.data || [],
+    loading,
+    error,
+    refetch,
+    lastUpdated,
+  };
+};

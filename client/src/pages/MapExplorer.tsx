@@ -1,531 +1,555 @@
 import { useState, useEffect } from 'react';
-import { Vessel, Refinery } from '@shared/schema';
-import MapContainer from '@/components/map/MapContainer';
 import { useDataStream } from '@/hooks/useDataStream';
-import { VesselDetailPanel } from '@/components/vessels/VesselDetailPanel';
-import { RefineryDetailPanel } from '@/components/refineries/RefineryDetailPanel';
-import { REGIONS, VESSEL_TYPES, OIL_PRODUCT_TYPES, REFINERY_STATUSES } from '@shared/constants';
-import { apiRequest } from '@/lib/queryClient';
-import axios from 'axios';
-import { useToast } from '@/hooks/use-toast';
-
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardFooter
-} from '@/components/ui/card';
+import MapContainer from '@/components/map/MapContainer';
+import { Vessel, Refinery } from '@shared/schema';
+import { Loader2, Filter, RefreshCw, Ship, Building2, Globe, X, ChevronRight, ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Separator } from '@/components/ui/separator';
+import { Card, CardContent } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
-import {
-  Filter,
-  X,
-  Ship,
-  Factory,
-  RefreshCw,
-  Map,
-  Layers,
-  SlidersHorizontal,
-  Info
-} from 'lucide-react';
+import { format } from 'date-fns';
+import { REGIONS, VESSEL_TYPES, OIL_PRODUCT_TYPES } from '@shared/constants';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
-// Interface for vessels near a refinery
-interface NearbyVessels {
-  refineryId: number;
-  vessels: Vessel[];
-}
-
-export default function MapExplorer() {
-  // Get data from the data stream
-  const { vessels = [], refineries = [], loading, error, lastUpdated } = useDataStream();
-  const { toast } = useToast();
-
-  // State for selected items
+const MapExplorer = () => {
+  // Fetch data using our data stream hook
+  const { vessels, refineries, loading, error, refetch, lastUpdated } = useDataStream();
+  
+  // Selected item states
+  const [selectedVesselId, setSelectedVesselId] = useState<number | null>(null);
+  const [selectedRefineryId, setSelectedRefineryId] = useState<number | null>(null);
   const [selectedVessel, setSelectedVessel] = useState<Vessel | null>(null);
   const [selectedRefinery, setSelectedRefinery] = useState<Refinery | null>(null);
-  const [nearbyVessels, setNearbyVessels] = useState<NearbyVessels[]>([]);
-
+  
   // Filter states
-  const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
-  const [vesselTypeFilters, setVesselTypeFilters] = useState<string[]>([]);
-  const [cargoTypeFilters, setCargoTypeFilters] = useState<string[]>([]);
-  const [refineryStatusFilters, setRefineryStatusFilters] = useState<string[]>([]);
-  const [isFilterSidebarOpen, setIsFilterSidebarOpen] = useState(false);
-  const [mapKey, setMapKey] = useState(Date.now()); // Used to force map re-render
-
-  // Get nearby vessels for a refinery
-  const fetchVesselsNearRefinery = async (refineryId: number) => {
-    try {
-      const response = await axios.get(`/api/vessels/near-refinery/${refineryId}`);
-      return {
-        refineryId,
-        vessels: response.data
-      };
-    } catch (error) {
-      console.error(`Error fetching vessels near refinery ID ${refineryId}:`, error);
-      // Generate fallback vessels for the refinery if API fails
-      const refinery = refineries.find(r => r.id === refineryId);
-      if (refinery) {
-        // Generate 2-5 random vessels near this refinery
-        const vesselCount = 2 + Math.floor(Math.random() * 4);
-        const mockVessels: Vessel[] = [];
-        
-        for (let i = 0; i < vesselCount; i++) {
-          // Generate vessel names
-          const vesselNames = [
-            'Pacific Crown', 'Oriental Jade', 'Gulf Explorer', 'Atlantic Pioneer', 
-            'Nordic Prince', 'Desert Voyager', 'Ocean Guardian', 'Liberty Star',
-            'Arabian Sea', 'Mediterranean Pride', 'Caspian Eagle', 'Persian Gulf'
-          ];
-          const name = vesselNames[Math.floor(Math.random() * vesselNames.length)];
-          
-          // Generate vessel types
-          const types = VESSEL_TYPES.filter(t => t.toLowerCase().includes('tanker'));
-          const vesselType = types[Math.floor(Math.random() * types.length)];
-          
-          // Generate cargo types
-          const cargoType = OIL_PRODUCT_TYPES[Math.floor(Math.random() * OIL_PRODUCT_TYPES.length)];
-          
-          // Generate coordinates near refinery
-          const refineryLat = typeof refinery.lat === 'string' ? parseFloat(refinery.lat) : refinery.lat || 0;
-          const refineryLng = typeof refinery.lng === 'string' ? parseFloat(refinery.lng) : refinery.lng || 0;
-          const latOffset = (Math.random() * 0.2 - 0.1); // Random offset ±0.1 degrees
-          const lngOffset = (Math.random() * 0.2 - 0.1);
-          
-          // Create vessel object
-          const vessel: Vessel = {
-            id: refinery.id * 1000 + i,
-            name,
-            imo: `IMO${9000000 + refinery.id * 100 + i}`,
-            mmsi: `${300000000 + refinery.id * 100 + i}`,
-            vesselType,
-            flag: ['Panama', 'Liberia', 'Marshall Islands', 'Singapore'][Math.floor(Math.random() * 4)],
-            built: 1990 + Math.floor(Math.random() * 30),
-            deadweight: 50000 + Math.floor(Math.random() * 100000),
-            currentLat: (refineryLat + latOffset).toString(),
-            currentLng: (refineryLng + lngOffset).toString(),
-            destinationPort: refinery.name,
-            departurePort: 'Various Ports',
-            cargoType,
-            cargoCapacity: 50000 + Math.floor(Math.random() * 150000),
-            eta: new Date(Date.now() + 86400000 * Math.floor(Math.random() * 5)),
-            departureDate: new Date(Date.now() - 86400000 * Math.floor(Math.random() * 10)),
-            currentRegion: refinery.region,
-            heading: Math.floor(Math.random() * 360),
-            speed: Math.floor(Math.random() * 20),
-            status: Math.random() > 0.5 ? 'In Transit' : 'At Port',
-            destination: refinery.name
-          };
-          
-          mockVessels.push(vessel);
-        }
-        
-        console.log(`Generated ${mockVessels.length} vessels for refinery ${refinery.name}`);
-        return {
-          refineryId,
-          vessels: mockVessels
-        };
-      }
-      return { refineryId, vessels: [] };
+  const [showFilterPanel, setShowFilterPanel] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedRegion, setSelectedRegion] = useState<string>('');
+  const [selectedVesselTypes, setSelectedVesselTypes] = useState<string[]>([]);
+  const [selectedOilTypes, setSelectedOilTypes] = useState<string[]>([]);
+  const [detailPanelVisible, setDetailPanelVisible] = useState(true);
+  
+  // Filtered data
+  const [filteredVessels, setFilteredVessels] = useState<Vessel[]>([]);
+  const [filteredRefineries, setFilteredRefineries] = useState<Refinery[]>([]);
+  
+  // Apply filters to vessels and refineries
+  useEffect(() => {
+    if (!vessels || !refineries) return;
+    
+    // Filter vessels
+    let filteredVesselsList = [...vessels];
+    
+    // Apply search term
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      filteredVesselsList = filteredVesselsList.filter(vessel => 
+        vessel.name.toLowerCase().includes(searchLower) || 
+        vessel.imo.toLowerCase().includes(searchLower) ||
+        vessel.mmsi.toLowerCase().includes(searchLower)
+      );
     }
-  };
-
-  // Handle selecting a vessel
-  const handleVesselSelect = (vessel: Vessel) => {
-    setSelectedVessel(vessel);
-    setSelectedRefinery(null);
-  };
-
-  // Handle selecting a refinery
-  const handleRefinerySelect = async (refinery: Refinery) => {
-    setSelectedRefinery(refinery);
-    setSelectedVessel(null);
-
-    // Check if we already have nearby vessels for this refinery
-    const existing = nearbyVessels.find(nv => nv.refineryId === refinery.id);
-    if (!existing) {
-      // Fetch nearby vessels for this refinery
-      const nearby = await fetchVesselsNearRefinery(refinery.id);
-      setNearbyVessels(prev => [...prev, nearby]);
-    }
-  };
-
-  // Toggle vessel type filter
-  const toggleVesselTypeFilter = (type: string) => {
-    setVesselTypeFilters(prev => 
-      prev.includes(type) 
-        ? prev.filter(t => t !== type)
-        : [...prev, type]
-    );
-  };
-
-  // Toggle cargo type filter
-  const toggleCargoTypeFilter = (type: string) => {
-    setCargoTypeFilters(prev => 
-      prev.includes(type) 
-        ? prev.filter(t => t !== type)
-        : [...prev, type]
-    );
-  };
-
-  // Toggle refinery status filter
-  const toggleRefineryStatusFilter = (status: string) => {
-    setRefineryStatusFilters(prev => 
-      prev.includes(status) 
-        ? prev.filter(s => s !== status)
-        : [...prev, status]
-    );
-  };
-
-  // Clear all filters
-  const clearAllFilters = () => {
-    setSelectedRegion(null);
-    setVesselTypeFilters([]);
-    setCargoTypeFilters([]);
-    setRefineryStatusFilters([]);
-  };
-
-  // Refresh the map
-  const refreshMap = () => {
-    setMapKey(Date.now()); // Force map re-render
-    toast({
-      title: "Map refreshed",
-      description: "Latest vessel and refinery data loaded",
-    });
-  };
-
-  // Function to get vessels for the current map view
-  const getVesselsForMap = () => {
-    let filteredVessels = vessels;
     
     // Apply region filter
     if (selectedRegion) {
-      filteredVessels = filteredVessels.filter(v => v.currentRegion === selectedRegion);
+      filteredVesselsList = filteredVesselsList.filter(
+        vessel => vessel.currentRegion === selectedRegion
+      );
     }
     
     // Apply vessel type filter
-    if (vesselTypeFilters.length > 0) {
-      filteredVessels = filteredVessels.filter(v => 
-        vesselTypeFilters.includes(v.vesselType || 'Unknown')
+    if (selectedVesselTypes.length > 0) {
+      filteredVesselsList = filteredVesselsList.filter(
+        vessel => selectedVesselTypes.includes(vessel.vesselType)
       );
     }
     
-    // Apply cargo type filter
-    if (cargoTypeFilters.length > 0) {
-      filteredVessels = filteredVessels.filter(v => 
-        cargoTypeFilters.includes(v.cargoType || 'Unknown')
+    // Apply oil type filter
+    if (selectedOilTypes.length > 0) {
+      filteredVesselsList = filteredVesselsList.filter(
+        vessel => vessel.cargoType && selectedOilTypes.includes(vessel.cargoType)
       );
     }
     
-    return filteredVessels;
-  };
-
-  // Function to get refineries for the current map view
-  const getRefineriesToMap = () => {
-    let filteredRefineries = refineries;
+    setFilteredVessels(filteredVesselsList);
+    
+    // Filter refineries
+    let filteredRefineryList = [...refineries];
+    
+    // Apply search term
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      filteredRefineryList = filteredRefineryList.filter(refinery => 
+        refinery.name.toLowerCase().includes(searchLower) || 
+        refinery.country.toLowerCase().includes(searchLower)
+      );
+    }
     
     // Apply region filter
     if (selectedRegion) {
-      filteredRefineries = filteredRefineries.filter(r => r.region === selectedRegion);
-    }
-    
-    // Apply status filter
-    if (refineryStatusFilters.length > 0) {
-      filteredRefineries = filteredRefineries.filter(r => 
-        refineryStatusFilters.includes(r.status || 'Unknown')
+      filteredRefineryList = filteredRefineryList.filter(
+        refinery => refinery.region === selectedRegion
       );
     }
     
-    return filteredRefineries;
+    setFilteredRefineries(filteredRefineryList);
+    
+  }, [vessels, refineries, searchTerm, selectedRegion, selectedVesselTypes, selectedOilTypes]);
+  
+  // Handle vessel selection
+  const handleVesselClick = (vessel: Vessel) => {
+    setSelectedVesselId(vessel.id);
+    setSelectedVessel(vessel);
+    setSelectedRefineryId(null);
+    setSelectedRefinery(null);
+    setDetailPanelVisible(true);
   };
-
-  // Count of active filters
-  const activeFilterCount = 
-    (selectedRegion ? 1 : 0) + 
-    vesselTypeFilters.length + 
-    cargoTypeFilters.length + 
-    refineryStatusFilters.length;
-
+  
+  // Handle refinery selection
+  const handleRefineryClick = (refinery: Refinery) => {
+    setSelectedRefineryId(refinery.id);
+    setSelectedRefinery(refinery);
+    setSelectedVesselId(null);
+    setSelectedVessel(null);
+    setDetailPanelVisible(true);
+  };
+  
+  // Toggle vessel type filter
+  const toggleVesselTypeFilter = (type: string) => {
+    setSelectedVesselTypes(prev => 
+      prev.includes(type) 
+        ? prev.filter(t => t !== type) 
+        : [...prev, type]
+    );
+  };
+  
+  // Toggle oil type filter
+  const toggleOilTypeFilter = (type: string) => {
+    setSelectedOilTypes(prev => 
+      prev.includes(type) 
+        ? prev.filter(t => t !== type) 
+        : [...prev, type]
+    );
+  };
+  
+  // Reset filters
+  const resetFilters = () => {
+    setSearchTerm('');
+    setSelectedRegion('');
+    setSelectedVesselTypes([]);
+    setSelectedOilTypes([]);
+  };
+  
   return (
-    <div className="flex flex-col h-screen">
-      {/* Top navigation bar */}
-      <div className="flex items-center justify-between p-4 border-b">
-        <div>
-          <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-500">
-            Maritime Map Explorer
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Explore vessels, refineries and ports worldwide
-          </p>
+    <div className="flex flex-col h-full">
+      {/* Header with controls */}
+      <div className="p-4 border-b flex justify-between items-center bg-muted/30">
+        <div className="flex items-center gap-2">
+          <Globe className="h-5 w-5 text-primary" />
+          <h1 className="font-bold text-xl">Map Explorer</h1>
+          {loading && <Loader2 className="ml-2 h-4 w-4 animate-spin text-muted-foreground" />}
         </div>
         
         <div className="flex items-center gap-2">
-          <Button 
-            variant="outline"
-            size="sm"
-            onClick={refreshMap}
-            className="flex items-center gap-1"
-          >
-            <RefreshCw className="h-4 w-4" />
-            Refresh
-          </Button>
+          <div className="hidden md:flex items-center bg-background rounded-md border px-3 py-1">
+            <Input 
+              className="border-0 bg-transparent h-8 focus-visible:ring-0 focus-visible:ring-offset-0 pl-0"
+              placeholder="Search vessels and refineries..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
           
-          <Button
-            variant={activeFilterCount > 0 ? "default" : "outline"}
+          <Button 
+            variant="outline" 
             size="sm"
-            onClick={() => setIsFilterSidebarOpen(true)}
+            onClick={() => setShowFilterPanel(!showFilterPanel)}
             className={cn(
-              "flex items-center gap-1",
-              activeFilterCount > 0 && "bg-primary text-white"
+              "gap-2", 
+              showFilterPanel && "bg-primary/10 border-primary/30"
             )}
           >
             <Filter className="h-4 w-4" />
-            Filters
-            {activeFilterCount > 0 && (
-              <Badge variant="secondary" className="ml-1 bg-white/20">
-                {activeFilterCount}
-              </Badge>
+            <span className="hidden sm:inline">Filters</span>
+            {(selectedRegion || selectedVesselTypes.length > 0 || selectedOilTypes.length > 0) && (
+              <Badge variant="secondary" className="ml-1">{
+                selectedVesselTypes.length + selectedOilTypes.length + (selectedRegion ? 1 : 0)
+              }</Badge>
             )}
           </Button>
           
-          <Select value={selectedRegion || ''} onValueChange={(value) => setSelectedRegion(value || null)}>
-            <SelectTrigger className="w-[180px] h-9">
-              <SelectValue placeholder="All Regions" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">All Regions</SelectItem>
-              {REGIONS.map(region => (
-                <SelectItem key={region.id} value={region.id}>
-                  {region.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => refetch()}
+            disabled={loading}
+            className="gap-2"
+          >
+            <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+            <span className="hidden sm:inline">Refresh</span>
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setDetailPanelVisible(!detailPanelVisible)}
+            className="hidden sm:flex gap-1"
+          >
+            {detailPanelVisible ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+            <span>{detailPanelVisible ? "Hide" : "Show"} Details</span>
+          </Button>
         </div>
       </div>
       
-      {/* Main content area with map and detail panel */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Map container */}
-        <div className="flex-1 relative">
-          <MapContainer 
-            key={mapKey}
-            vessels={getVesselsForMap()}
-            refineries={getRefineriesToMap()}
-            onVesselClick={handleVesselSelect}
-            onRefineryClick={handleRefinerySelect}
-            selectedVesselId={selectedVessel?.id}
-            selectedRefineryId={selectedRefinery?.id}
-            className="w-full h-full"
-          />
-          
-          {/* Loading overlay */}
-          {loading && (
-            <div className="absolute inset-0 bg-black/10 backdrop-blur-sm flex items-center justify-center">
-              <div className="bg-white p-4 rounded-lg shadow-lg flex items-center gap-3">
-                <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full"></div>
-                <span>Loading map data...</span>
-              </div>
-            </div>
-          )}
-        </div>
-        
-        {/* Sidebar for vessel or refinery details */}
-        {(selectedVessel || selectedRefinery) && (
-          <div className="w-80 border-l bg-card overflow-y-auto relative">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="absolute top-2 right-2 z-10"
-              onClick={() => {
-                setSelectedVessel(null);
-                setSelectedRefinery(null);
-              }}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-            
-            {selectedVessel && (
-              <VesselDetailPanel vessel={selectedVessel} />
-            )}
-            
-            {selectedRefinery && (
-              <RefineryDetailPanel 
-                refinery={selectedRefinery} 
-                nearbyVessels={nearbyVessels.find(nv => nv.refineryId === selectedRefinery.id)?.vessels || []}
-                onVesselClick={handleVesselSelect}
-              />
-            )}
+      {/* Mobile Search */}
+      <div className="p-4 md:hidden">
+        <Input 
+          className="w-full"
+          placeholder="Search vessels and refineries..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          prefixIcon={<Globe className="h-4 w-4 text-muted-foreground" />}
+        />
+      </div>
+      
+      {/* Filter Panel */}
+      {showFilterPanel && (
+        <div className="p-4 border-b bg-background/70 backdrop-blur-sm">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="font-semibold">Filters</h2>
+            <Button variant="ghost" size="sm" onClick={resetFilters}>Reset</Button>
           </div>
-        )}
-      </div>
-      
-      {/* Filter sidebar */}
-      <Sheet open={isFilterSidebarOpen} onOpenChange={setIsFilterSidebarOpen}>
-        <SheetContent side="left" className="w-80 sm:w-96">
-          <SheetHeader className="mb-5">
-            <SheetTitle className="flex items-center justify-between">
-              <span>Map Filters</span>
-              {activeFilterCount > 0 && (
-                <Button variant="ghost" size="sm" onClick={clearAllFilters}>
-                  Clear All
-                </Button>
-              )}
-            </SheetTitle>
-          </SheetHeader>
           
-          <div className="space-y-6">
-            {/* Region filter */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Region Filter */}
             <div>
-              <h3 className="text-sm font-medium mb-3 flex items-center">
-                <Map className="h-4 w-4 mr-2 text-muted-foreground" />
-                Region Filter
-              </h3>
-              <Select value={selectedRegion || ''} onValueChange={(value) => setSelectedRegion(value || null)}>
-                <SelectTrigger>
+              <Label className="block mb-2">Region</Label>
+              <Select value={selectedRegion} onValueChange={setSelectedRegion}>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="All Regions" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">All Regions</SelectItem>
                   {REGIONS.map(region => (
-                    <SelectItem key={region.id} value={region.id}>
-                      {region.name} - {region.nameAr}
-                    </SelectItem>
+                    <SelectItem key={region} value={region}>{region}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             
-            <Separator />
+            {/* Vessel Types */}
+            <div>
+              <Label className="block mb-2">Vessel Types</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {VESSEL_TYPES.slice(0, 4).map(type => (
+                  <div key={type} className="flex items-center space-x-2">
+                    <Checkbox 
+                      id={`vessel-type-${type}`} 
+                      checked={selectedVesselTypes.includes(type)}
+                      onCheckedChange={() => toggleVesselTypeFilter(type)}
+                    />
+                    <label
+                      htmlFor={`vessel-type-${type}`}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      {type}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
             
-            {/* Vessel type filters */}
-            <Accordion type="multiple" defaultValue={['vesselTypes']}>
-              <AccordionItem value="vesselTypes">
-                <AccordionTrigger className="text-sm font-medium">
-                  <div className="flex items-center">
-                    <Ship className="h-4 w-4 mr-2 text-muted-foreground" />
-                    Vessel Types
-                    {vesselTypeFilters.length > 0 && (
-                      <Badge variant="secondary" className="ml-2">
-                        {vesselTypeFilters.length}
-                      </Badge>
-                    )}
+            {/* Oil Product Types */}
+            <div>
+              <Label className="block mb-2">Cargo Types</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {OIL_PRODUCT_TYPES.slice(0, 4).map(type => (
+                  <div key={type} className="flex items-center space-x-2">
+                    <Checkbox 
+                      id={`oil-type-${type}`} 
+                      checked={selectedOilTypes.includes(type)}
+                      onCheckedChange={() => toggleOilTypeFilter(type)}
+                    />
+                    <label
+                      htmlFor={`oil-type-${type}`}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      {type}
+                    </label>
                   </div>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <div className="space-y-2 mt-2">
-                    {VESSEL_TYPES.map(type => (
-                      <div key={type} className="flex items-center space-x-2">
-                        <Checkbox 
-                          id={`vessel-type-${type}`}
-                          checked={vesselTypeFilters.includes(type)}
-                          onCheckedChange={() => toggleVesselTypeFilter(type)}
-                        />
-                        <Label htmlFor={`vessel-type-${type}`}>{type}</Label>
-                      </div>
-                    ))}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-            
-            {/* Cargo type filters */}
-            <Accordion type="multiple">
-              <AccordionItem value="cargoTypes">
-                <AccordionTrigger className="text-sm font-medium">
-                  <div className="flex items-center">
-                    <Layers className="h-4 w-4 mr-2 text-muted-foreground" />
-                    Cargo Types
-                    {cargoTypeFilters.length > 0 && (
-                      <Badge variant="secondary" className="ml-2">
-                        {cargoTypeFilters.length}
-                      </Badge>
-                    )}
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <div className="space-y-2 mt-2">
-                    {OIL_PRODUCT_TYPES.map(type => (
-                      <div key={type} className="flex items-center space-x-2">
-                        <Checkbox 
-                          id={`cargo-type-${type}`}
-                          checked={cargoTypeFilters.includes(type)}
-                          onCheckedChange={() => toggleCargoTypeFilter(type)}
-                        />
-                        <Label htmlFor={`cargo-type-${type}`}>{type.replace('_', ' ')}</Label>
-                      </div>
-                    ))}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-            
-            {/* Refinery status filters */}
-            <Accordion type="multiple">
-              <AccordionItem value="refineryStatuses">
-                <AccordionTrigger className="text-sm font-medium">
-                  <div className="flex items-center">
-                    <Factory className="h-4 w-4 mr-2 text-muted-foreground" />
-                    Refinery Statuses
-                    {refineryStatusFilters.length > 0 && (
-                      <Badge variant="secondary" className="ml-2">
-                        {refineryStatusFilters.length}
-                      </Badge>
-                    )}
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <div className="space-y-2 mt-2">
-                    {REFINERY_STATUSES.map(status => (
-                      <div key={status} className="flex items-center space-x-2">
-                        <Checkbox 
-                          id={`refinery-status-${status}`}
-                          checked={refineryStatusFilters.includes(status)}
-                          onCheckedChange={() => toggleRefineryStatusFilter(status)}
-                        />
-                        <Label htmlFor={`refinery-status-${status}`}>{status}</Label>
-                      </div>
-                    ))}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-            
-            <div className="mt-6">
-              <Button className="w-full" onClick={() => setIsFilterSidebarOpen(false)}>
-                Apply Filters
-              </Button>
+                ))}
+              </div>
             </div>
           </div>
-        </SheetContent>
-      </Sheet>
+        </div>
+      )}
+      
+      {/* Main Content */}
+      <div className="flex flex-1 h-full overflow-hidden">
+        {/* Map Container */}
+        <div className="flex-1 h-full overflow-hidden">
+          {error ? (
+            <div className="h-full flex items-center justify-center">
+              <div className="text-center">
+                <p className="text-destructive text-lg font-semibold">Error loading data</p>
+                <p className="text-muted-foreground mb-4">Unable to load map data</p>
+                <Button onClick={() => refetch()}>Retry</Button>
+              </div>
+            </div>
+          ) : (
+            <MapContainer 
+              vessels={filteredVessels}
+              refineries={filteredRefineries}
+              onVesselClick={handleVesselClick}
+              onRefineryClick={handleRefineryClick}
+              selectedVesselId={selectedVesselId || undefined}
+              selectedRefineryId={selectedRefineryId || undefined}
+            />
+          )}
+        </div>
+        
+        {/* Detail Panel */}
+        {detailPanelVisible && (
+          <div className="w-full md:w-96 border-l overflow-y-auto h-full bg-background">
+            {/* No selection state */}
+            {!selectedVessel && !selectedRefinery && (
+              <div className="p-6 text-center">
+                <div className="rounded-full bg-muted p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                  <Globe className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <h3 className="font-semibold text-lg mb-2">No item selected</h3>
+                <p className="text-muted-foreground text-sm mb-4">
+                  Click on a vessel or refinery on the map to view detailed information
+                </p>
+                
+                <div className="border-t pt-4 mt-6">
+                  <p className="text-sm text-muted-foreground mb-2">Quick Stats</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="text-center">
+                      <div className="flex items-center justify-center gap-2 text-primary font-bold">
+                        <Ship className="h-4 w-4" />
+                        {filteredVessels.length}
+                      </div>
+                      <span className="text-xs text-muted-foreground">Vessels</span>
+                    </div>
+                    <div className="text-center">
+                      <div className="flex items-center justify-center gap-2 text-primary font-bold">
+                        <Building2 className="h-4 w-4" />
+                        {filteredRefineries.length}
+                      </div>
+                      <span className="text-xs text-muted-foreground">Refineries</span>
+                    </div>
+                  </div>
+                </div>
+                
+                {lastUpdated && (
+                  <div className="mt-6 text-xs text-muted-foreground">
+                    Last updated: {format(lastUpdated, 'MMM d, yyyy HH:mm:ss')}
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {/* Vessel Detail View */}
+            {selectedVessel && (
+              <div className="p-4">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="font-bold text-lg flex items-center gap-2">
+                    <Ship className="h-5 w-5 text-primary" />
+                    <span>Vessel Details</span>
+                  </h2>
+                  <Button variant="ghost" size="icon" onClick={() => {
+                    setSelectedVessel(null);
+                    setSelectedVesselId(null);
+                  }}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                <div className="space-y-4">
+                  <Card>
+                    <CardContent className="p-4">
+                      <h3 className="text-xl font-bold mb-1">{selectedVessel.name}</h3>
+                      <div className="flex gap-2 mb-3">
+                        <Badge variant="secondary">{selectedVessel.vesselType}</Badge>
+                        <Badge variant="outline">{selectedVessel.flag}</Badge>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-y-2 text-sm">
+                        <div>
+                          <span className="text-muted-foreground">IMO:</span>
+                          <span className="ml-2 font-medium">{selectedVessel.imo}</span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">MMSI:</span>
+                          <span className="ml-2 font-medium">{selectedVessel.mmsi}</span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Built:</span>
+                          <span className="ml-2 font-medium">{selectedVessel.built || 'Unknown'}</span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">DWT:</span>
+                          <span className="ml-2 font-medium">
+                            {selectedVessel.deadweight 
+                              ? `${(selectedVessel.deadweight / 1000).toFixed(1)}k MT` 
+                              : 'Unknown'}
+                          </span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardContent className="p-4">
+                      <h4 className="font-semibold mb-3">Cargo Information</h4>
+                      <div className="space-y-2 text-sm">
+                        <div>
+                          <span className="text-muted-foreground">Cargo Type:</span>
+                          <span className="ml-2 font-medium">{selectedVessel.cargoType || 'Unknown'}</span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Cargo Capacity:</span>
+                          <span className="ml-2 font-medium">
+                            {selectedVessel.cargoCapacity 
+                              ? `${(selectedVessel.cargoCapacity / 1000).toFixed(1)}k MT` 
+                              : 'Unknown'}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Departure Port:</span>
+                          <span className="ml-2 font-medium">{selectedVessel.departurePort || 'Unknown'}</span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Destination Port:</span>
+                          <span className="ml-2 font-medium">{selectedVessel.destinationPort || 'Unknown'}</span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">ETA:</span>
+                          <span className="ml-2 font-medium">
+                            {selectedVessel.eta 
+                              ? format(new Date(selectedVessel.eta), 'MMM d, yyyy') 
+                              : 'Unknown'}
+                          </span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardContent className="p-4">
+                      <h4 className="font-semibold mb-3">Current Location</h4>
+                      <div className="space-y-2 text-sm">
+                        <div>
+                          <span className="text-muted-foreground">Coordinates:</span>
+                          <span className="ml-2 font-medium">
+                            {selectedVessel.currentLat && selectedVessel.currentLng
+                              ? `${parseFloat(selectedVessel.currentLat).toFixed(4)}, ${parseFloat(selectedVessel.currentLng).toFixed(4)}`
+                              : 'Unknown'
+                            }
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Region:</span>
+                          <span className="ml-2 font-medium">{selectedVessel.currentRegion || 'Unknown'}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            )}
+            
+            {/* Refinery Detail View */}
+            {selectedRefinery && (
+              <div className="p-4">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="font-bold text-lg flex items-center gap-2">
+                    <Building2 className="h-5 w-5 text-amber-600" />
+                    <span>Refinery Details</span>
+                  </h2>
+                  <Button variant="ghost" size="icon" onClick={() => {
+                    setSelectedRefinery(null);
+                    setSelectedRefineryId(null);
+                  }}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                <div className="space-y-4">
+                  <Card>
+                    <CardContent className="p-4">
+                      <h3 className="text-xl font-bold mb-1">{selectedRefinery.name}</h3>
+                      <div className="flex gap-2 mb-3">
+                        <Badge variant="secondary">{selectedRefinery.country}</Badge>
+                        {selectedRefinery.status && (
+                          <Badge 
+                            variant={selectedRefinery.status === 'Active' ? 'default' : 'destructive'}
+                          >
+                            {selectedRefinery.status}
+                          </Badge>
+                        )}
+                      </div>
+                      
+                      <div className="text-sm space-y-2">
+                        <div>
+                          <span className="text-muted-foreground">Region:</span>
+                          <span className="ml-2 font-medium">{selectedRefinery.region}</span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Capacity:</span>
+                          <span className="ml-2 font-medium">
+                            {selectedRefinery.capacity 
+                              ? `${(selectedRefinery.capacity / 1000).toFixed(1)}k bpd`
+                              : 'Unknown'
+                            }
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Coordinates:</span>
+                          <span className="ml-2 font-medium">
+                            {`${parseFloat(selectedRefinery.lat).toFixed(4)}, ${parseFloat(selectedRefinery.lng).toFixed(4)}`}
+                          </span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  {selectedRefinery.description && (
+                    <Card>
+                      <CardContent className="p-4">
+                        <h4 className="font-semibold mb-2">Description</h4>
+                        <p className="text-sm">{selectedRefinery.description}</p>
+                      </CardContent>
+                    </Card>
+                  )}
+                  
+                  <div>
+                    <Button 
+                      className="w-full" 
+                      variant="outline" 
+                      onClick={() => {
+                        // The API endpoint will be implemented to fetch vessels near this refinery
+                        // For now, we're just filtering visible vessels that are nearby
+                        console.log(`Fetching vessels near refinery ID ${selectedRefinery.id}`);
+                      }}
+                    >
+                      <Ship className="mr-2 h-4 w-4" />
+                      View Vessels Near This Refinery
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
-}
+};
+
+export default MapExplorer;
