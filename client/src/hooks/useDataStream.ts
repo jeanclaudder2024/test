@@ -1,36 +1,34 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
 import { Vessel, Refinery } from '@shared/schema';
+import { fetchVesselsFromAPI, fetchRefineries } from '@/services/marineTrafficService';
 
 /**
- * Custom hook to stream vessel and refinery data from the API
+ * Custom hook to stream vessel and refinery data directly from the Marine Traffic API
  */
 export const useDataStream = () => {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   
-  // Fetch vessels
+  // Fetch vessels directly from Marine Traffic API
   const vesselsQuery = useQuery({
-    queryKey: ['/api/vessels'],
+    queryKey: ['marine-traffic-vessels'],
     queryFn: async () => {
       try {
-        const response = await axios.get('/api/vessels');
-        return response.data as Vessel[];
+        return await fetchVesselsFromAPI();
       } catch (error) {
-        console.error('Error fetching vessels:', error);
+        console.error('Error fetching vessels from Marine Traffic API:', error);
         return [];
       }
     },
     staleTime: 60 * 1000, // 1 minute
   });
   
-  // Fetch refineries
+  // Fetch refineries from our fallback data
   const refineriesQuery = useQuery({
-    queryKey: ['/api/refineries'],
+    queryKey: ['refineries'],
     queryFn: async () => {
       try {
-        const response = await axios.get('/api/refineries');
-        return response.data as Refinery[];
+        return await fetchRefineries();
       } catch (error) {
         console.error('Error fetching refineries:', error);
         return [];
