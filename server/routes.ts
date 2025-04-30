@@ -4,7 +4,8 @@ import { storage } from "./storage";
 import { vesselService } from "./services/vesselService";
 import { refineryService } from "./services/refineryService";
 import { aiService } from "./services/aiService";
-import { dataService } from "./services/asiStreamService";
+// Replace dataService from asiStreamService with marineTrafficService
+import { marineTrafficService } from "./services/marineTrafficService";
 import { brokerService } from "./services/brokerService";
 import { stripeService } from "./services/stripeService";
 import { updateRefineryCoordinates, seedMissingRefineries } from "./services/refineryUpdate";
@@ -261,6 +262,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: "Failed to fetch vessel counts", 
         error: error.message 
       });
+    }
+  });
+
+  // Marine Traffic API endpoints
+  apiRouter.get("/vessels/marine-traffic", async (req, res) => {
+    try {
+      if (!marineTrafficService.isConfigured()) {
+        return res.status(503).json({ 
+          message: "Marine Traffic API is not configured. Please set MARINE_TRAFFIC_API_KEY environment variable." 
+        });
+      }
+      
+      const vessels = await marineTrafficService.fetchVessels();
+      res.json(vessels);
+    } catch (error) {
+      console.error("Error fetching vessels from Marine Traffic:", error);
+      res.status(500).json({ message: "Failed to fetch vessels from Marine Traffic API" });
+    }
+  });
+  
+  // Endpoint to get vessels near a refinery using Marine Traffic API
+  apiRouter.get("/vessels/near-refinery/:id", async (req, res) => {
+    try {
+      const refineryId = parseInt(req.params.id);
+      if (isNaN(refineryId)) {
+        return res.status(400).json({ message: "Invalid refinery ID" });
+      }
+      
+      // Get the refinery
+      const refinery = await storage.getRefineryById(refineryId);
+      if (!refinery) {
+        return res.status(404).json({ message: "Refinery not found" });
+      }
+      
+      // Try to fetch vessels from the database that are near this refinery
+      // This calculates distance based on coordinates
+      const allVessels = await storage.getVessels();
+      
+      // Parse refinery coordinates
+      const refineryLat = typeof refinery.lat === 'number' 
+        ? refinery.lat 
+        : parseFloat(String(refinery.lat));
+        
+      const refineryLng = typeof refinery.lng === 'number'
+        ? refinery.lng
+        : parseFloat(String(refinery.lng));
+      
+      // Filter vessels that are within ~500km of the refinery
+      const nearbyVessels = allVessels.filter(vessel => {
+        if (!vessel.currentLat || !vessel.currentLng) return false;
+        
+        const vesselLat = typeof vessel.currentLat === 'number'
+          ? vessel.currentLat
+          : parseFloat(String(vessel.currentLat));
+          
+        const vesselLng = typeof vessel.currentLng === 'number'
+          ? vessel.currentLng
+          : parseFloat(String(vessel.currentLng));
+          
+        // Calculate approximate distance using a simple formula
+        // This is a rough calculation, but good enough for this purpose
+        const latDiff = Math.abs(vesselLat - refineryLat);
+        const lngDiff = Math.abs(vesselLng - refineryLng);
+        
+        // Rough approximation for ~500km
+        return (latDiff*latDiff + lngDiff*lngDiff) < 25;
+      });
+      
+      res.json(nearbyVessels);
+    } catch (error) {
+      console.error(`Error fetching vessels near refinery:`, error);
+      res.status(500).json({ message: "Failed to fetch vessels near refinery" });
     }
   });
 
