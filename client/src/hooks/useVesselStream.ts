@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Vessel, Refinery } from '@shared/schema';
 import { apiRequest } from '@/lib/queryClient';
 import { ACCURATE_REFINERIES, convertToRefineries, generateConnectedPorts } from '@/data/refineryData';
-import { getVesselsAtRefineryPorts } from '@/services/asiStreamService';
+import { getVesselsForRefinery } from '@/services/marineTrafficService';
 
 interface VesselStreamData {
   vessels: Vessel[];
@@ -41,14 +41,16 @@ export function useVesselStream() {
         // Generate ports connected to refineries
         const portsData = generateConnectedPorts(refineriesData);
         
-        // Get vessels at each port using AsiStream service
-        const vesselsAtPorts = getVesselsAtRefineryPorts(ACCURATE_REFINERIES);
+        // Get vessels at each refinery using MarineTraffic service
+        const vesselsPromises = ACCURATE_REFINERIES.map(refinery => getVesselsForRefinery(refinery));
+        const vesselsResults = await Promise.all(vesselsPromises);
+        const vesselsAtRefineries = vesselsResults.flat();
         
-        console.log(`Loaded ${refineriesData.length} refineries, ${portsData.length} connected ports, and ${vesselsAtPorts.length} vessels`);
+        console.log(`Loaded ${refineriesData.length} refineries, ${portsData.length} connected ports, and ${vesselsAtRefineries.length} vessels from Marine Traffic`);
         
         // Update state with the prepared data
         setData({
-          vessels: [...portsData, ...vesselsAtPorts],
+          vessels: [...portsData, ...vesselsAtRefineries],
           refineries: refineriesData,
           ports: portsData,
           stats: null, 

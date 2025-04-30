@@ -68,8 +68,18 @@ export async function fetchVesselsNearRefinery(refineryId: number): Promise<Vess
  * This is used as a fallback when MarineTraffic API calls fail or are not configured
  */
 export function generateVesselsForRefinery(refinery: RefineryData): Vessel[] {
+  // Create a unique hash from the refinery name to use as a stable ID base
+  const hashFromName = refinery.name.split('').reduce((a, b) => {
+    a = ((a << 5) - a) + b.charCodeAt(0);
+    return a & a;
+  }, 0);
+  
+  // Use absolute value and ensure it's a positive number
+  const baseId = Math.abs(hashFromName);
+  
   // Determine how many vessels to generate - between 2 and 5 per refinery
-  const vesselCount = 2 + Math.floor(Math.random() * 4);
+  // Using the hash ensures we get the same number for the same refinery name
+  const vesselCount = 2 + (baseId % 4); 
   const vessels: Vessel[] = [];
   
   // Generate realistic vessel names for oil tankers
@@ -86,21 +96,22 @@ export function generateVesselsForRefinery(refinery: RefineryData): Vessel[] {
   
   // Generate vessels for this refinery
   for (let i = 0; i < vesselCount; i++) {
-    // Create unique ID based on refinery and vessel index
-    const uniqueId = (refinery.id * 100) + i + 1;
+    // Create unique ID based on hash and vessel index
+    const uniqueId = baseId + i + 1;
     
     // Calculate position near the refinery (within 2-5km)
-    const latOffset = (Math.random() * 0.05) * (Math.random() > 0.5 ? 1 : -1);
-    const lngOffset = (Math.random() * 0.05) * (Math.random() > 0.5 ? 1 : -1);
+    // Use deterministic offsets based on the uniqueId and index
+    const latOffset = (Math.sin(uniqueId * (i+1)) * 0.05);
+    const lngOffset = (Math.cos(uniqueId * (i+1)) * 0.05);
     
-    // Choose random vessel name and details
-    const vesselName = vesselNames[Math.floor(Math.random() * vesselNames.length)];
-    const vesselType = OIL_TANKER_TYPES[Math.floor(Math.random() * OIL_TANKER_TYPES.length)];
-    const flag = flags[Math.floor(Math.random() * flags.length)];
+    // Choose vessel name and details based on uniqueId to ensure consistency
+    const vesselName = vesselNames[(uniqueId + i) % vesselNames.length];
+    const vesselType = OIL_TANKER_TYPES[(uniqueId + i) % OIL_TANKER_TYPES.length];
+    const flag = flags[(uniqueId + i) % flags.length];
     
-    // Generate random capacities and build years
-    const cargoCapacity = 50000 + Math.floor(Math.random() * 250000);
-    const buildYear = 1990 + Math.floor(Math.random() * 30);
+    // Generate capacities and build years
+    const cargoCapacity = 50000 + ((uniqueId + i) % 250000);
+    const buildYear = 1990 + ((uniqueId + i) % 30);
     const deadweight = cargoCapacity * 1.2;
     
     // Parse refinery coordinates
@@ -128,8 +139,8 @@ export function generateVesselsForRefinery(refinery: RefineryData): Vessel[] {
       departurePort: 'Various Ports',
       cargoType: 'crude_oil',
       cargoCapacity: cargoCapacity,
-      eta: new Date(Date.now() + 86400000 * Math.floor(Math.random() * 5)),
-      departureDate: new Date(Date.now() - 86400000 * Math.floor(Math.random() * 10)),
+      eta: new Date(Date.now() + 86400000 * ((uniqueId + i) % 5)),
+      departureDate: new Date(Date.now() - 86400000 * ((uniqueId + i) % 10)),
       currentRegion: refinery.region
     };
     
@@ -145,15 +156,27 @@ export function generateVesselsForRefinery(refinery: RefineryData): Vessel[] {
  */
 export async function getVesselsForRefinery(refinery: RefineryData): Promise<Vessel[]> {
   try {
+    // Create a unique hash from the refinery name to use as a stable ID
+    const hashFromName = refinery.name.split('').reduce((a, b) => {
+      a = ((a << 5) - a) + b.charCodeAt(0);
+      return a & a;
+    }, 0);
+    
+    // Use absolute value and ensure it's a positive number
+    const refineryId = Math.abs(hashFromName);
+    
     // First try to get real data from the API
-    if (refinery && refinery.id) {
-      const realVessels = await fetchVesselsNearRefinery(refinery.id);
+    try {
+      const realVessels = await fetchVesselsNearRefinery(refineryId);
       
       // If we got real data, use it
       if (realVessels && realVessels.length > 0) {
         console.log(`Fetched ${realVessels.length} real vessels for refinery ${refinery.name}`);
         return realVessels;
       }
+    } catch (apiError) {
+      console.warn(`Could not fetch vessels from API for ${refinery.name}:`, apiError);
+      // Continue to fallback if API fails
     }
     
     // If no real data, generate fallback data
