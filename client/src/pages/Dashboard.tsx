@@ -489,23 +489,38 @@ export default function Dashboard() {
       {/* Map Section */}
       <section className="p-4 md:p-6 pt-0">
         <div className="backdrop-blur-sm bg-white/80 rounded-xl shadow-sm overflow-hidden border border-primary/10">
-          {/* Region Selector Tabs */}
-          <div className="border-b border-primary/10 flex overflow-x-auto">
-            {REGIONS.map((region) => (
-              <Button
-                key={region.id}
-                variant="ghost"
-                className={`px-5 py-3 text-sm font-medium transition-all duration-200 ${
-                  selectedRegion === region.id
-                    ? 'text-primary bg-primary/5 border-b-2 border-primary'
-                    : 'text-gray-600 hover:text-primary hover:bg-primary/5'
-                }`}
-                onClick={() => handleRegionSelect(region.id)}
+          {/* Map Header with Controls */}
+          <div className="border-b border-primary/10 p-4 flex justify-between items-center">
+            <div className="flex items-center">
+              <Navigation className="w-5 h-5 mr-2 text-primary" />
+              <h3 className="font-medium text-primary">Marine Traffic Tracking System</h3>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              {selectedRegion && (
+                <Badge variant="outline" className="bg-primary/5 text-primary flex items-center">
+                  {REGIONS.find(r => r.id === selectedRegion)?.name || 'Unknown Region'}
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-4 w-4 ml-1 p-0" 
+                    onClick={() => setSelectedRegion(null)}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </Badge>
+              )}
+              
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-xs h-8"
+                onClick={() => setShowFiltersPanel(!showFiltersPanel)}
               >
-                <span className="mr-2">{region.name}</span>
-                <span className="text-xs opacity-75">{region.nameAr}</span>
+                <Filter className="mr-1 h-3 w-3" />
+                Filters
               </Button>
-            ))}
+            </div>
           </div>
           
           {/* Map Container */}
