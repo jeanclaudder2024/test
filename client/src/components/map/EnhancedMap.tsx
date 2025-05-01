@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Vessel, Refinery } from '@shared/schema';
+import { Station } from '@/services/stationService';
 import { REGIONS } from '@/../../shared/constants';
 import { Loader2, Navigation, X } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
@@ -34,6 +35,7 @@ declare module 'leaflet' {
     vessel?: Vessel;
     refinery?: Refinery;
     port?: Vessel;
+    station?: Station;
   }
 }
 
@@ -44,9 +46,11 @@ interface EnhancedMapProps {
   vessels: Vessel[];
   refineries: Refinery[];
   ports?: Vessel[]; // Optional ports
+  stations?: Station[]; // Optional stations from stations.json
   onVesselClick: (vessel: Vessel) => void;
   onRefineryClick?: (refinery: Refinery) => void;
   onPortClick?: (port: Vessel) => void;
+  onStationClick?: (station: Station) => void; // Optional handler for station click events
   isLoading?: boolean;
   initialCenter?: [number, number]; // Optional [lat, lng] initial center
   initialZoom?: number;             // Optional initial zoom level
@@ -56,9 +60,11 @@ export default function EnhancedMap({
   vessels,
   refineries,
   ports = [],
+  stations = [],
   onVesselClick,
   onRefineryClick,
   onPortClick,
+  onStationClick,
   isLoading = false,
   initialCenter,
   initialZoom = 3
@@ -68,6 +74,7 @@ export default function EnhancedMap({
   const vesselMarkersRef = useRef<L.Marker[]>([]);
   const refineryMarkersRef = useRef<L.Marker[]>([]);
   const portMarkersRef = useRef<L.Marker[]>([]);
+  const stationMarkersRef = useRef<L.Marker[]>([]);
   const connectionLinesRef = useRef<L.Polyline[]>([]);
   const markerClustersRef = useRef<L.MarkerClusterGroup | null>(null);
   
@@ -77,6 +84,7 @@ export default function EnhancedMap({
   const [selectedVesselId, setSelectedVesselId] = useState<number | null>(null);
   const [selectedRefineryId, setSelectedRefineryId] = useState<number | null>(null);
   const [selectedPortId, setSelectedPortId] = useState<number | null>(null);
+  const [selectedStationId, setSelectedStationId] = useState<string | null>(null);
   
   // Clear all connection lines
   const clearConnectionLines = () => {
@@ -179,6 +187,7 @@ export default function EnhancedMap({
           vesselMarkersRef.current = [];
           refineryMarkersRef.current = [];
           portMarkersRef.current = [];
+          stationMarkersRef.current = [];
           connectionLinesRef.current = [];
           setMapReady(false);
         }
@@ -213,6 +222,14 @@ export default function EnhancedMap({
       }
     });
     portMarkersRef.current = [];
+    
+    // Clear existing station markers
+    stationMarkersRef.current.forEach(marker => {
+      if (mapRef.current) {
+        marker.remove();
+      }
+    });
+    stationMarkersRef.current = [];
     
     // Clear connection lines
     clearConnectionLines();
