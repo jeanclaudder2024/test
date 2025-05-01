@@ -842,6 +842,145 @@ export default function EnhancedMap({
       refineryMarkersRef.current.push(marker);
     });
     
+    // Process stations
+    console.log(`Processing ${stations.length} stations for display on map`);
+    
+    stations.forEach(station => {
+      // Skip stations with invalid coordinates
+      if (!station.latitude || !station.longitude || 
+          station.latitude === "0.00" || station.longitude === "0.00") return;
+
+      // Parse coordinates
+      const lat = parseFloat(station.latitude);
+      const lng = parseFloat(station.longitude);
+      
+      if (isNaN(lat) || isNaN(lng)) return;
+      
+      // Create icon for station
+      const stationIcon = L.icon({
+        iconUrl: selectedStationId === station.id ? stationSelectedSvgUrl : stationSvgUrl,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16],
+        popupAnchor: [0, -16],
+        className: `station-marker-icon${station.isActive ? ' active-station' : ' inactive-station'}`
+      });
+
+      // Create popup content
+      const popupContent = document.createElement('div');
+      popupContent.className = 'station-popup';
+      popupContent.innerHTML = `
+        <div class="station-popup-header" style="
+          border-bottom: 2px solid ${station.isActive ? '#2563EB' : '#6B7280'};
+          padding: 8px;
+          margin: -8px -8px 8px -8px;
+          background-color: rgba(255,255,255,0.9);
+          border-top-left-radius: 8px;
+          border-top-right-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        ">
+          <div style="
+            font-weight: bold;
+            font-size: 14px;
+            color: #1F2937;
+          ">${station.displayName}</div>
+          <div style="
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            background-color: ${station.isActive ? '#DBEAFE' : '#F3F4F6'};
+            color: ${station.isActive ? '#1E40AF' : '#4B5563'};
+          ">${station.isActive ? 'Active' : 'Inactive'}</div>
+        </div>
+        <div style="margin-bottom: 8px;">
+          <div style="font-size: 13px; margin-bottom: 4px;">
+            <span style="font-weight: bold; color: #4B5563;">ID:</span> ${station.id}
+          </div>
+          <div style="font-size: 13px; margin-bottom: 4px;">
+            <span style="font-weight: bold; color: #4B5563;">Location:</span> ${station.location || 'N/A'}
+          </div>
+          <div style="font-size: 13px; margin-bottom: 4px;">
+            <span style="font-weight: bold; color: #4B5563;">Country:</span> ${station.country.toUpperCase()}
+          </div>
+          <div style="font-size: 13px; margin-bottom: 4px;">
+            <span style="font-weight: bold; color: #4B5563;">Coordinates:</span> ${lat.toFixed(4)}, ${lng.toFixed(4)}
+          </div>
+          <div style="font-size: 13px;">
+            <span style="font-weight: bold; color: #4B5563;">Last Updated:</span> ${new Date(parseInt(station.unix_time) * 1000).toLocaleString()}
+          </div>
+        </div>
+        <div style="
+          display: flex;
+          justify-content: center;
+          gap: 8px;
+          margin-top: 12px;
+        ">
+          <button id="view-details-btn" style="
+            background-color: #2563EB;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 6px 12px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+          ">View Details</button>
+        </div>
+      `;
+      
+      // Create marker
+      const marker = L.marker([lat, lng], { 
+        icon: stationIcon,
+        station: station,
+        riseOnHover: true,
+        zIndexOffset: 300 // Higher than vessels/refineries
+      });
+      
+      // Add popup
+      marker.bindPopup(popupContent, {
+        minWidth: 280,
+        maxWidth: 320,
+        className: 'station-popup-container'
+      });
+      
+      // Add event listeners to the popup's buttons
+      marker.on('popupopen', () => {
+        const popup = marker.getPopup();
+        if (popup && popup.getElement()) {
+          const viewDetailsBtn = popup.getElement().querySelector('#view-details-btn');
+          
+          if (viewDetailsBtn) {
+            viewDetailsBtn.addEventListener('click', (e: MouseEvent) => {
+              e.preventDefault();
+              if (onStationClick) {
+                onStationClick(station);
+                setSelectedStationId(station.id);
+                marker.closePopup();
+              }
+            });
+          }
+        }
+      });
+      
+      // Handle selection state
+      if (selectedStationId === station.id) {
+        marker.setIcon(L.icon({
+          iconUrl: stationSelectedSvgUrl,
+          iconSize: [32, 32],
+          iconAnchor: [16, 16],
+          popupAnchor: [0, -16],
+          className: 'station-marker-icon selected-station'
+        }));
+      }
+      
+      // Add marker to map directly (not to cluster)
+      marker.addTo(map);
+      
+      // Store in ref for later cleanup
+      stationMarkersRef.current.push(marker);
+    });
+
     // Process ports (similar to refineries but different styling)
     ports.forEach(port => {
       if (!port.lat || !port.lng) return;
