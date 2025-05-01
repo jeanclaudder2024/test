@@ -9,6 +9,10 @@ import 'leaflet.markercluster';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 
+// Import station SVG assets
+import stationSvgUrl from '@assets/station.svg';
+import stationSelectedSvgUrl from '@assets/station-selected.svg';
+
 // Add MarkerClusterGroup interface to Leaflet
 declare module 'leaflet' {
   interface MarkerClusterGroupOptions {
@@ -1162,7 +1166,7 @@ export default function EnhancedMap({
         }
       }
     }
-  }, [vessels, refineries, ports, onVesselClick, onRefineryClick, onPortClick, mapReady, selectedVesselId, selectedRefineryId, initialCenter, initialZoom]);
+  }, [vessels, refineries, ports, stations, onVesselClick, onRefineryClick, onPortClick, onStationClick, mapReady, selectedVesselId, selectedRefineryId, selectedStationId, initialCenter, initialZoom]);
 
   // Render component
   if (mapError) {
