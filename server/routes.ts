@@ -20,13 +20,16 @@ import {
   insertProgressEventSchema,
   insertDocumentSchema,
   insertBrokerSchema,
+  insertPortSchema,
   Vessel,
   Refinery,
+  Port,
   vessels,
   refineries,
   progressEvents,
   documents,
-  stats
+  stats,
+  ports
 } from "@shared/schema";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
@@ -927,6 +930,102 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting vessel:", error);
       res.status(500).json({ message: "Failed to delete vessel" });
+    }
+  });
+
+  // Port API endpoints
+  apiRouter.get("/ports", async (req, res) => {
+    try {
+      // Filter by region if specified in the query parameters
+      const { region } = req.query;
+      
+      let ports;
+      if (region && typeof region === 'string') {
+        ports = await storage.getPortsByRegion(region);
+      } else {
+        ports = await storage.getPorts();
+      }
+      
+      res.json(ports);
+    } catch (error) {
+      console.error("Error fetching ports:", error);
+      res.status(500).json({ message: "Failed to fetch ports" });
+    }
+  });
+
+  apiRouter.get("/ports/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid port ID" });
+      }
+      
+      const port = await storage.getPortById(id);
+      if (!port) {
+        return res.status(404).json({ message: "Port not found" });
+      }
+      
+      res.json(port);
+    } catch (error) {
+      console.error("Error fetching port:", error);
+      res.status(500).json({ message: "Failed to fetch port" });
+    }
+  });
+
+  apiRouter.post("/ports", async (req, res) => {
+    try {
+      // Parse and validate port data
+      const portData = insertPortSchema.parse(req.body);
+      const port = await storage.createPort(portData);
+      res.status(201).json(port);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      console.error("Error creating port:", error);
+      res.status(500).json({ message: "Failed to create port" });
+    }
+  });
+
+  apiRouter.patch("/ports/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid port ID" });
+      }
+      
+      // Allow partial updates with a subset of port fields
+      const portUpdate = req.body;
+      const updatedPort = await storage.updatePort(id, portUpdate);
+      
+      if (!updatedPort) {
+        return res.status(404).json({ message: "Port not found" });
+      }
+      
+      res.json(updatedPort);
+    } catch (error) {
+      console.error("Error updating port:", error);
+      res.status(500).json({ message: "Failed to update port" });
+    }
+  });
+
+  apiRouter.delete("/ports/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid port ID" });
+      }
+      
+      const deleted = await storage.deletePort(id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Port not found" });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting port:", error);
+      res.status(500).json({ message: "Failed to delete port" });
     }
   });
 

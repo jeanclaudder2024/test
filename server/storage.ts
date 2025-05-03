@@ -163,6 +163,39 @@ export class DatabaseStorage implements IStorage {
     return true;
   }
 
+  // Port methods implementation
+  async getPorts(): Promise<Port[]> {
+    return await db.select().from(ports);
+  }
+
+  async getPortById(id: number): Promise<Port | undefined> {
+    const [port] = await db.select().from(ports).where(eq(ports.id, id));
+    return port || undefined;
+  }
+
+  async getPortsByRegion(region: string): Promise<Port[]> {
+    return await db.select().from(ports).where(eq(ports.region, region));
+  }
+
+  async createPort(insertPort: InsertPort): Promise<Port> {
+    const [port] = await db.insert(ports).values(insertPort).returning();
+    return port;
+  }
+
+  async updatePort(id: number, portUpdate: Partial<InsertPort>): Promise<Port | undefined> {
+    const [updatedPort] = await db
+      .update(ports)
+      .set(portUpdate)
+      .where(eq(ports.id, id))
+      .returning();
+    return updatedPort || undefined;
+  }
+
+  async deletePort(id: number): Promise<boolean> {
+    const result = await db.delete(ports).where(eq(ports.id, id));
+    return true;
+  }
+
   async getProgressEventsByVesselId(vesselId: number): Promise<ProgressEvent[]> {
     return await db
       .select()
