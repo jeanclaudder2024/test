@@ -114,7 +114,14 @@ refineryPortRouter.post("/connections", async (req: Request, res: Response) => {
         parseFloat(port.lat.toString()), 
         parseFloat(port.lng.toString())
       );
-      connectionData.distance = distance;
+      connectionData.distance = distance.toString();
+    } else if (typeof connectionData.distance === 'number') {
+      connectionData.distance = connectionData.distance.toString();
+    }
+
+    // Convert capacity to string if it's a number
+    if (typeof connectionData.capacity === 'number') {
+      connectionData.capacity = connectionData.capacity.toString();
     }
 
     // Create the connection
@@ -156,9 +163,19 @@ refineryPortRouter.patch("/connections/:id", async (req: Request, res: Response)
     }
 
     const updateData = validationResult.data;
+    
+    // Convert numeric values to strings for database compatibility
+    const stringifiedData: Record<string, any> = {};
+    for (const [key, value] of Object.entries(updateData)) {
+      if (typeof value === 'number') {
+        stringifiedData[key] = value.toString();
+      } else {
+        stringifiedData[key] = value;
+      }
+    }
 
     // Update the connection
-    const updatedConnection = await storage.updateRefineryPortConnection(id, updateData);
+    const updatedConnection = await storage.updateRefineryPortConnection(id, stringifiedData);
     res.json(updatedConnection);
   } catch (error) {
     console.error("Error updating refinery-port connection:", error);
@@ -248,12 +265,14 @@ refineryPortRouter.post("/connect-all", async (req: Request, res: Response) => {
       
       // Create new connection
       try {
+        const capacity = refinery.capacity ? refinery.capacity * 0.8 : 100000;
+        
         const newConnection: InsertRefineryPortConnection = {
           refineryId: refinery.id,
           portId: closestPort.id,
-          distance: closestDistance,
+          distance: closestDistance.toString(),
           connectionType: "pipeline",
-          capacity: refinery.capacity ? refinery.capacity * 0.8 : 100000, // 80% of refinery capacity
+          capacity: capacity.toString(), // 80% of refinery capacity
           status: "active"
         };
         
