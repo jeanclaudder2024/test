@@ -207,6 +207,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Continue with what we have
         }
         
+        // Seed port data
+        let portResult = { ports: 0, seeded: false };
+        try {
+          console.log("Seeding port data...");
+          portResult = await portService.seedPortData();
+          console.log("Port data seeded successfully:", portResult);
+        } catch (portError) {
+          console.error("Error seeding port data:", portError);
+          // Continue with what we have
+        }
+        
         // Return whatever data we managed to seed
         res.json({ 
           success: true, 
@@ -217,7 +228,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             totalCargo: vesselResult.totalCargo || 0,
             refineries: refineryResult.refineries || 0,
             active: refineryResult.active || 0,
-            brokers: brokerResult.count || 0
+            brokers: brokerResult.count || 0,
+            ports: portResult.ports || 0
           }
         });
       } catch (error) {
@@ -374,6 +386,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: "Failed to fetch vessel counts", 
         error: error.message 
       });
+    }
+  });
+
+  // Ports endpoints
+  apiRouter.get("/ports", async (req, res) => {
+    try {
+      console.log("API request for ports received");
+      
+      // Get port data from API with database fallback
+      let ports: Port[] = [];
+      
+      // First try to get ports from MyShipTracking API
+      if (marineTrafficService.isConfigured()) {
+        try {
+          console.log("Attempting to fetch ports from MyShipTracking API...");
+          const apiPorts = await marineTrafficService.fetchPorts();
+          
+          if (apiPorts && apiPorts.length > 0) {
+            ports = apiPorts as Port[];
+            console.log(`Retrieved ${ports.length} ports from MyShipTracking API`);
+          } else {
+            console.log("API returned 0 ports, falling back to database");
+          }
+        } catch (apiError) {
+          console.error("Error fetching ports from API:", apiError);
+          console.log("Falling back to database for port data");
+        }
+      } else {
+        console.log("MyShipTracking API not configured, using database for port data");
+      }
+      
+      // If API call failed or returned no data, use database
+      if (ports.length === 0) {
+        try {
+          ports = await portService.getAllPorts();
+          console.log(`Retrieved ${ports.length} ports from database`);
+        } catch (dbError) {
+          console.error("Database error when fetching ports:", dbError);
+          res.status(500).json({ message: "Failed to fetch port data from any source" });
+          return;
+        }
+      }
+      
+      res.json(ports);
+    } catch (error) {
+      console.error("Error handling port request:", error);
+      res.status(500).json({ message: "Failed to fetch port data" });
+    }
+  });
+  
+  // Port detail endpoint
+  apiRouter.get("/ports/:id", async (req, res) => {
+    try {
+      const portId = parseInt(req.params.id);
+      if (isNaN(portId)) {
+        return res.status(400).json({ message: "Invalid port ID" });
+      }
+      
+      // Get port from database
+      const port = await portService.getPortById(portId);
+      
+      if (!port) {
+        return res.status(404).json({ message: "Port not found" });
+      }
+      
+      res.json(port);
+    } catch (error) {
+      console.error(`Error getting port ${req.params.id}:`, error);
+      res.status(500).json({ message: "Failed to fetch port data" });
+    }
+  });
+  
+  // Ports by region endpoint
+  apiRouter.get("/ports/region/:region", async (req, res) => {
+    try {
+      const region = req.params.region;
+      if (!region) {
+        return res.status(400).json({ message: "Region parameter is required" });
+      }
+      
+      // Get ports from database
+      const ports = await portService.getPortsByRegion(region);
+      
+      res.json(ports);
+    } catch (error) {
+      console.error(`Error getting ports for region ${req.params.region}:`, error);
+      res.status(500).json({ message: "Failed to fetch port data by region" });
     }
   });
 
