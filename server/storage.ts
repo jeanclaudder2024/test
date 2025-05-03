@@ -1,7 +1,7 @@
 import { eq, and } from "drizzle-orm";
 import { db } from "./db";
 import {
-  users, vessels, refineries, progressEvents, documents, brokers, stats as statsTable, ports,
+  users, vessels, refineries, progressEvents, documents, brokers, stats as statsTable, ports, refineryPortConnections,
   User, InsertUser, 
   Vessel, InsertVessel,
   Refinery, InsertRefinery,
@@ -9,7 +9,8 @@ import {
   Document, InsertDocument,
   Broker, InsertBroker,
   Stats, InsertStats,
-  Port, InsertPort
+  Port, InsertPort,
+  RefineryPortConnection, InsertRefineryPortConnection
 } from "@shared/schema";
 
 // Storage interface with CRUD methods
@@ -360,6 +361,55 @@ export class DatabaseStorage implements IStorage {
         .returning();
       return newStats;
     }
+  }
+
+  // Refinery-Port Connection methods
+  async getRefineryPortConnections(): Promise<RefineryPortConnection[]> {
+    return await db.select().from(refineryPortConnections);
+  }
+
+  async getRefineryPortConnectionById(id: number): Promise<RefineryPortConnection | undefined> {
+    const [connection] = await db
+      .select()
+      .from(refineryPortConnections)
+      .where(eq(refineryPortConnections.id, id));
+    return connection || undefined;
+  }
+
+  async getRefineryPortConnectionsByRefineryId(refineryId: number): Promise<RefineryPortConnection[]> {
+    return await db
+      .select()
+      .from(refineryPortConnections)
+      .where(eq(refineryPortConnections.refineryId, refineryId));
+  }
+
+  async getRefineryPortConnectionsByPortId(portId: number): Promise<RefineryPortConnection[]> {
+    return await db
+      .select()
+      .from(refineryPortConnections)
+      .where(eq(refineryPortConnections.portId, portId));
+  }
+
+  async createRefineryPortConnection(connection: InsertRefineryPortConnection): Promise<RefineryPortConnection> {
+    const [newConnection] = await db
+      .insert(refineryPortConnections)
+      .values(connection)
+      .returning();
+    return newConnection;
+  }
+
+  async updateRefineryPortConnection(id: number, connectionUpdate: Partial<InsertRefineryPortConnection>): Promise<RefineryPortConnection | undefined> {
+    const [updatedConnection] = await db
+      .update(refineryPortConnections)
+      .set(connectionUpdate)
+      .where(eq(refineryPortConnections.id, id))
+      .returning();
+    return updatedConnection || undefined;
+  }
+
+  async deleteRefineryPortConnection(id: number): Promise<boolean> {
+    await db.delete(refineryPortConnections).where(eq(refineryPortConnections.id, id));
+    return true;
   }
 }
 
