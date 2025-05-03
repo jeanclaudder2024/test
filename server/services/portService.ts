@@ -4,6 +4,40 @@ import { REGIONS } from "@shared/constants";
 import { marineTrafficService } from "./marineTrafficService";
 
 /**
+ * Helper function to ensure all port data has proper types and required fields
+ */
+function ensurePortDataHasRequiredFields(portData: any): any {
+  // Make a copy to avoid modifying the original
+  const updatedPort = { ...portData };
+  
+  // Ensure lat/lng are strings
+  if (updatedPort.lat && typeof updatedPort.lat !== 'string') {
+    updatedPort.lat = String(updatedPort.lat);
+  }
+  
+  if (updatedPort.lng && typeof updatedPort.lng !== 'string') {
+    updatedPort.lng = String(updatedPort.lng);
+  }
+  
+  // Ensure type field exists and is set to 'oil' for oil ports
+  if (!updatedPort.type) {
+    updatedPort.type = 'oil';
+  }
+  
+  // Ensure status has a value if missing
+  if (!updatedPort.status) {
+    updatedPort.status = 'active';
+  }
+  
+  // Ensure a lastUpdated value is present
+  if (!updatedPort.lastUpdated) {
+    updatedPort.lastUpdated = new Date();
+  }
+  
+  return updatedPort;
+}
+
+/**
  * Generate a list of major shipping ports for initial database seeding with current 2025 data
  * These ports represent major oil shipping hubs around the world with updated capacities and details
  */
@@ -289,7 +323,10 @@ export const portService = {
       
       // Process all ports in the new 2025 data
       const now = new Date();
-      for (const newPortData of majorPortsData) {
+      for (const portDataRaw of majorPortsData) {
+        // Apply formatting function to ensure data consistency
+        const newPortData = ensurePortDataHasRequiredFields(portDataRaw);
+        
         // Check if we have a port with similar name
         const existingPort = portMap.get(newPortData.name.toLowerCase()) || 
                             Array.from(portMap.values()).find((p: Port) => 
@@ -298,17 +335,16 @@ export const portService = {
         
         if (existingPort) {
           // Update the existing port with 2025 data
-          // Convert lat/lng to correct numeric format
           const updatedPort: Partial<Port> = {
             name: newPortData.name,
             country: newPortData.country,
             region: newPortData.region,
-            lat: typeof newPortData.lat === 'string' ? newPortData.lat : String(newPortData.lat),
-            lng: typeof newPortData.lng === 'string' ? newPortData.lng : String(newPortData.lng),
+            lat: newPortData.lat,
+            lng: newPortData.lng,
             capacity: newPortData.capacity,
             status: newPortData.status,
             description: newPortData.description,
-            type: 'oil'
+            type: newPortData.type
           };
           
           await storage.updatePort(existingPort.id, updatedPort);
@@ -316,17 +352,16 @@ export const portService = {
           console.log(`Updated port: ${existingPort.name} -> ${newPortData.name}`);
         } else {
           // This is a new port, add it
-          // Convert lat/lng to correct numeric format
           const newPort: InsertPort = {
             name: newPortData.name,
             country: newPortData.country,
             region: newPortData.region,
-            lat: typeof newPortData.lat === 'string' ? newPortData.lat : String(newPortData.lat),
-            lng: typeof newPortData.lng === 'string' ? newPortData.lng : String(newPortData.lng),
+            lat: newPortData.lat,
+            lng: newPortData.lng,
             capacity: newPortData.capacity,
             status: newPortData.status,
             description: newPortData.description,
-            type: 'oil'
+            type: newPortData.type
           };
           
           await storage.createPort(newPort);
@@ -378,18 +413,21 @@ export const portService = {
       }
       
       // If API failed or not configured, use majorPortsData
-      for (const portData of majorPortsData) {
-        // Convert lat/lng to the correct format
+      for (const portDataRaw of majorPortsData) {
+        // Apply formatting function to ensure data consistency
+        const portData = ensurePortDataHasRequiredFields(portDataRaw);
+        
+        // Create a new port with the standardized data
         const newPort: InsertPort = {
           name: portData.name,
           country: portData.country,
           region: portData.region,
-          lat: typeof portData.lat === 'string' ? portData.lat : String(portData.lat),
-          lng: typeof portData.lng === 'string' ? portData.lng : String(portData.lng),
+          lat: portData.lat,
+          lng: portData.lng,
           capacity: portData.capacity,
           status: portData.status,
           description: portData.description,
-          type: 'oil'
+          type: portData.type
         };
         await storage.createPort(newPort);
       }
