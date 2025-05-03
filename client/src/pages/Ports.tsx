@@ -289,7 +289,7 @@ export default function Ports() {
                     </div>
                     <p className="text-3xl font-bold mt-2">
                       {ports 
-                        ? ports.reduce((sum, port) => sum + (port.capacity || 0), 0).toLocaleString()
+                        ? ports.reduce((sum: number, port: Port) => sum + (port.capacity || 0), 0).toLocaleString()
                         : 0
                       }
                     </p>
@@ -306,8 +306,8 @@ export default function Ports() {
                 <h3 className="font-semibold mb-4">Ports by Region</h3>
                 {ports ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    {REGIONS.map(region => {
-                      const regionPorts = ports.filter(p => p.region === region);
+                    {REGIONS.map((region: string) => {
+                      const regionPorts = ports.filter((p: Port) => p.region === region);
                       return (
                         <Card key={region} className="overflow-hidden">
                           <div className={`h-1 ${getRegionColor(region)}`} />
@@ -318,7 +318,7 @@ export default function Ports() {
                             </div>
                             <div className="mt-2 text-sm text-muted-foreground">
                               {regionPorts.length > 0 
-                                ? `${regionPorts.filter(p => p.status === 'active').length} active ports` 
+                                ? `${regionPorts.filter((p: Port) => p.status === 'active').length} active ports` 
                                 : 'No ports in this region'}
                             </div>
                           </CardContent>
