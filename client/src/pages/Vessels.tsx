@@ -51,19 +51,21 @@ const OIL_CATEGORIES = {
 };
 
 export default function Vessels() {
+  // For direct API access using the API endpoint
+  const [apiVessels, setApiVessels] = useState<Vessel[]>([]);
+  const [apiLoading, setApiLoading] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [selectedRegion, setSelectedRegion] = useState<string>("global");
+  // Track which data source is being used
+  const [dataSource, setDataSource] = useState<'websocket' | 'myshiptracking' | 'marine-traffic' | 'polling'>('websocket');
+  
   // Use the WebSocket hook with fallback to REST API
   const { 
     vessels: realTimeVessels, 
     loading: wsLoading, 
     connected: wsConnected,
     connectionType
-  } = useVesselWebSocket("global");
-  
-  // For direct API access using the API endpoint
-  const [apiVessels, setApiVessels] = useState<Vessel[]>([]);
-  const [apiLoading, setApiLoading] = useState(false);
-  const [fetchError, setFetchError] = useState<string | null>(null);
-  const [selectedRegion, setSelectedRegion] = useState<string>("global");
+  } = useVesselWebSocket(selectedRegion);
   
   // Combined vessels from both sources
   const [vessels, setVessels] = useState<Vessel[]>([]);
@@ -158,9 +160,6 @@ export default function Vessels() {
     // Clean up interval on unmount
     return () => clearInterval(intervalId);
   }, [selectedRegion]);
-  
-  // Track which data source is being used
-  const [dataSource, setDataSource] = useState<'websocket' | 'myshiptracking' | 'marine-traffic' | 'polling'>('websocket');
   
   // Combine vessels from real-time WebSocket and API
   useEffect(() => {
@@ -432,11 +431,11 @@ export default function Vessels() {
               
               {REGIONS.map((region) => (
                 <DropdownMenuCheckboxItem
-                  key={region}
-                  checked={selectedRegion === region}
-                  onCheckedChange={() => setSelectedRegion(region)}
+                  key={region.id}
+                  checked={selectedRegion === region.id}
+                  onCheckedChange={() => setSelectedRegion(region.id)}
                 >
-                  {region.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                  {region.name}
                 </DropdownMenuCheckboxItem>
               ))}
             </DropdownMenuContent>
