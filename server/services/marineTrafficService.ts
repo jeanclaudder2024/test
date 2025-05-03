@@ -30,6 +30,9 @@ const ENDPOINTS = {
   PORT_CALLS: '/ports/calls'
 }
 
+// Log API key status for debugging
+console.log(`MyShipTracking API configuration status: ${API_KEY ? 'API Key present' : 'API Key missing'}`);
+
 // Types for MyShipTracking API responses
 interface MyShipTrackingVessel {
   mmsi: string;
@@ -138,11 +141,18 @@ async function fetchVesselsFromAPI(): Promise<InsertVessel[]> {
   }
   
   try {
+    console.log(`Attempting to fetch vessel data from MyShipTracking API...`);
+    
     // Get vessel positions for oil tankers
     const headers = {
       'Authorization': `Bearer ${API_KEY}`,
+      'Accept': 'application/json',
       'Content-Type': 'application/json'
     };
+    
+    // Log some of the request details for debugging
+    console.log(`API Request URL: ${API_BASE_URL}${ENDPOINTS.VESSEL_POSITIONS}`);
+    console.log(`Authorization Header: Bearer ${API_KEY.substring(0, 4)}...${API_KEY.substring(API_KEY.length - 4)}`);
     
     // Query parameters for tankers only
     const params = {
@@ -150,13 +160,29 @@ async function fetchVesselsFromAPI(): Promise<InsertVessel[]> {
       limit: 100 // Limit to 100 vessels to avoid excessive API usage
     };
     
+    // Try the request with a timeout
     const response = await axios.get(`${API_BASE_URL}${ENDPOINTS.VESSEL_POSITIONS}`, { 
       headers,
-      params 
+      params,
+      timeout: 10000 // 10 seconds timeout
     });
     
-    if (!response.data || response.data.error) {
-      console.error('Error fetching vessel data from MyShipTracking:', response.data?.error || 'Unknown error');
+    // Log the response status for debugging
+    console.log(`MyShipTracking API response status: ${response.status}`);
+    
+    if (!response.data) {
+      console.error('Empty response from MyShipTracking API');
+      return [];
+    }
+    
+    if (response.data.error) {
+      console.error('Error fetching vessel data from MyShipTracking:', response.data.error);
+      return [];
+    }
+    
+    // Check if the response is a 404 HTML page
+    if (typeof response.data === 'string' && response.data.includes('<!DOCTYPE html>')) {
+      console.error('API returned HTML instead of JSON. Possible 404 or unauthorized access.');
       return [];
     }
     
