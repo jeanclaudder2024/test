@@ -332,7 +332,11 @@ export default function Vessels() {
           </h1>
           <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
             <p className="text-muted-foreground">
-              {loading ? 'Loading vessels...' : `${vessels.length} vessels in the system`}
+              {loading ? 'Loading vessels...' : 
+                totalCount ? 
+                  `${totalCount.toLocaleString()} vessels in the system (showing page ${page} of ${totalPages})` : 
+                  `${vessels.length} vessels in the system`
+              }
             </p>
             
             {/* Connection and data source status indicators */}
@@ -523,6 +527,108 @@ export default function Vessels() {
           </Button>
         </div>
       </div>
+      
+      {/* WebSocket Pagination Controls - only show when we have pagination metadata */}
+      {wsConnected && totalCount > 0 && totalPages > 1 && (
+        <div className="mb-6 p-4 border rounded-md bg-blue-50">
+          <div className="flex flex-col sm:flex-row justify-between items-center mb-2">
+            <h3 className="text-base font-medium flex items-center mb-2 sm:mb-0">
+              <Wifi className="h-4 w-4 mr-2 text-blue-600" />
+              WebSocket Data Pagination
+            </h3>
+            
+            <div className="flex items-center">
+              <label className="text-sm mr-2">Page Size:</label>
+              <select 
+                className="text-sm border rounded-md px-2 py-1"
+                value={pageSize}
+                onChange={(e) => changePageSize(Number(e.target.value))}
+              >
+                <option value="50">50</option>
+                <option value="100">100</option>
+                <option value="200">200</option>
+                <option value="500">500</option>
+              </select>
+            </div>
+          </div>
+          
+          <p className="text-sm text-muted-foreground mb-4">
+            Navigate through all {totalCount.toLocaleString()} vessels in real-time using the WebSocket connection.
+            Currently viewing page {page} of {totalPages}.
+          </p>
+          
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => handleWsPageChange(page > 1 ? page - 1 : 1)}
+                  className={page === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                />
+              </PaginationItem>
+              
+              {/* First page */}
+              {page > 2 && (
+                <PaginationItem>
+                  <PaginationLink onClick={() => handleWsPageChange(1)}>1</PaginationLink>
+                </PaginationItem>
+              )}
+              
+              {/* Ellipsis for skipped pages */}
+              {page > 3 && (
+                <PaginationItem>
+                  <PaginationEllipsis />
+                </PaginationItem>
+              )}
+              
+              {/* Previous page */}
+              {page > 1 && (
+                <PaginationItem>
+                  <PaginationLink onClick={() => handleWsPageChange(page - 1)}>
+                    {page - 1}
+                  </PaginationLink>
+                </PaginationItem>
+              )}
+              
+              {/* Current page */}
+              <PaginationItem>
+                <PaginationLink isActive>{page}</PaginationLink>
+              </PaginationItem>
+              
+              {/* Next page */}
+              {page < totalPages && (
+                <PaginationItem>
+                  <PaginationLink onClick={() => handleWsPageChange(page + 1)}>
+                    {page + 1}
+                  </PaginationLink>
+                </PaginationItem>
+              )}
+              
+              {/* Ellipsis for skipped pages */}
+              {page < totalPages - 2 && (
+                <PaginationItem>
+                  <PaginationEllipsis />
+                </PaginationItem>
+              )}
+              
+              {/* Last page */}
+              {page < totalPages - 1 && (
+                <PaginationItem>
+                  <PaginationLink onClick={() => handleWsPageChange(totalPages)}>
+                    {totalPages}
+                  </PaginationLink>
+                </PaginationItem>
+              )}
+              
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => handleWsPageChange(page < totalPages ? page + 1 : totalPages)}
+                  className={page === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
       
       {/* Oil Category Tabs */}
       <div className="mb-6">

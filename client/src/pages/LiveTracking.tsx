@@ -12,8 +12,24 @@ export default function LiveTracking() {
   const [selectedRegion, setSelectedRegion] = useState<string>('global');
   const [activeTab, setActiveTab] = useState<string>('map');
   
-  // Get vessel counts for badge display
-  const { vessels, isConnected, lastUpdated, refreshData } = useVesselWebSocket({ region: selectedRegion });
+  // Get vessel data with WebSocket pagination support
+  const { 
+    vessels, 
+    connected: isConnected, 
+    lastUpdated, 
+    refreshData,
+    page,
+    pageSize,
+    totalPages,
+    totalCount,
+    goToPage,
+    changePageSize,
+    connectionType
+  } = useVesselWebSocket({ 
+    region: selectedRegion,
+    page: 1,
+    pageSize: 500
+  });
   
   return (
     <div className="container mx-auto p-4">
@@ -25,14 +41,30 @@ export default function LiveTracking() {
           </h1>
           <p className="text-muted-foreground">
             {isConnected 
-              ? `Tracking ${vessels.length} vessels in real-time` 
+              ? totalCount 
+                ? `Tracking ${totalCount.toLocaleString()} vessels in real-time (page ${page} of ${totalPages})` 
+                : `Tracking ${vessels.length} vessels in real-time`
               : 'Connecting to vessel tracking service...'}
           </p>
-          {lastUpdated && (
-            <p className="text-xs text-muted-foreground">
-              Last updated: {new Date(lastUpdated).toLocaleString()}
-            </p>
-          )}
+          <div className="flex flex-wrap gap-2 items-center mt-1">
+            {lastUpdated && (
+              <p className="text-xs text-muted-foreground">
+                Last updated: {new Date(lastUpdated).toLocaleString()}
+              </p>
+            )}
+            
+            {connectionType && (
+              <Badge variant="outline" className="text-xs">
+                Connection: {connectionType}
+              </Badge>
+            )}
+            
+            {totalCount > 0 && (
+              <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                Page Size: {pageSize}
+              </Badge>
+            )}
+          </div>
         </div>
         
         <div className="flex flex-wrap gap-4 mt-4 md:mt-0">
@@ -59,7 +91,7 @@ export default function LiveTracking() {
             
             <Button 
               variant="outline" 
-              onClick={refreshData}
+              onClick={() => refreshData()}
               className="flex items-center gap-2"
             >
               <Anchor className="h-4 w-4" />
@@ -98,6 +130,68 @@ export default function LiveTracking() {
               <CardDescription>
                 Interactive map showing real-time vessel positions by region
               </CardDescription>
+              
+              {/* Only show pagination controls if we have more than one page */}
+              {totalPages > 1 && (
+                <div className="mt-2 flex flex-col space-y-2">
+                  <div className="flex justify-between items-center">
+                    <div className="text-sm text-muted-foreground">
+                      Page {page} of {totalPages} ({totalCount.toLocaleString()} vessels total)
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <label className="text-sm text-muted-foreground">Page Size:</label>
+                      <select 
+                        className="text-sm border rounded-md px-2 py-1"
+                        value={pageSize}
+                        onChange={(e) => changePageSize(Number(e.target.value))}
+                      >
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                        <option value="200">200</option>
+                        <option value="500">500</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-center">
+                    <div className="flex space-x-1">
+                      <Button 
+                        variant="outline"
+                        size="sm"
+                        onClick={() => goToPage(1)} 
+                        disabled={page === 1}
+                      >
+                        First
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => goToPage(page > 1 ? page - 1 : 1)} 
+                        disabled={page === 1}
+                      >
+                        Previous
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => goToPage(page < totalPages ? page + 1 : totalPages)} 
+                        disabled={page === totalPages}
+                      >
+                        Next
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        size="sm"
+                        onClick={() => goToPage(totalPages)} 
+                        disabled={page === totalPages}
+                      >
+                        Last
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </CardHeader>
             <CardContent>
               <LiveVesselMap initialRegion={selectedRegion} height="700px" />
