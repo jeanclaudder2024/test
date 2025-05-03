@@ -10,7 +10,6 @@ import Refineries from "@/pages/Refineries";
 import RefineryDetail from "@/pages/RefineryDetail";
 import Ports from "@/pages/Ports";
 import PortDetail from "@/pages/PortDetail";
-import PortImport from "@/pages/PortImport";
 import Brokers from "@/pages/Brokers";
 import Documents from "@/pages/Documents";
 import AIAssistantPage from "@/pages/AIAssistant";
@@ -69,7 +68,6 @@ function Router() {
         <ProtectedRoute path="/refineries/:id" component={RefineryDetail} />
         <ProtectedRoute path="/ports" component={Ports} />
         <ProtectedRoute path="/ports/:id" component={PortDetail} />
-        <ProtectedRoute path="/port-import" component={PortImport} />
         <ProtectedRoute path="/brokers" component={Brokers} />
         <ProtectedRoute path="/documents" component={Documents} />
         <ProtectedRoute path="/ai-assistant" component={AIAssistantPage} />

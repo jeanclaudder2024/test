@@ -73,12 +73,6 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
       icon: <Anchor className="h-5 w-5 mr-3" />,
     },
     {
-      title: "Port Import",
-      path: "/port-import",
-      icon: <Database className="h-5 w-5 mr-3" />,
-      badge: "ADMIN",
-    },
-    {
       title: t("nav.trading"),
       path: "/trading",
       icon: <BarChart className="h-5 w-5 mr-3" />,
