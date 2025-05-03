@@ -84,16 +84,45 @@ export default function Vessels() {
       setApiLoading(true);
       setFetchError(null);
       
-      const response = await axios.get('/api/vessels/marine-traffic');
-      console.log('Fetched vessels from API:', response.data.length);
+      // First try MyShipTracking API
+      try {
+        console.log('Fetching vessels from MyShipTracking API...');
+        const response = await axios.get('/api/vessels/myshiptracking');
+        
+        if (response.data && response.data.length > 0) {
+          console.log('Fetched vessels from MyShipTracking API:', response.data.length);
+          setApiVessels(response.data);
+          setFetchError(null);
+          setDataSource('myshiptracking');
+          setApiLoading(false);
+          return; // Success - exit function
+        } else {
+          console.warn('MyShipTracking API returned empty response');
+        }
+      } catch (myshipError) {
+        console.error('Error fetching from MyShipTracking API:', myshipError);
+      }
       
-      setApiVessels(response.data);
-      setFetchError(null);
-    } catch (error) {
-      console.error('Error fetching vessels from API:', error);
-      setFetchError('Failed to fetch vessels from API');
+      // If MyShipTracking failed, try marine-traffic API
+      try {
+        console.log('Trying Marine Traffic API...');
+        const marineResponse = await axios.get('/api/vessels/marine-traffic');
+        
+        if (marineResponse.data && marineResponse.data.length > 0) {
+          console.log('Fetched vessels from Marine Traffic API:', marineResponse.data.length);
+          setApiVessels(marineResponse.data);
+          setFetchError(null);
+          setDataSource('marine-traffic');
+          setApiLoading(false);
+          return; // Success - exit function
+        } else {
+          console.warn('Marine Traffic API returned empty response');
+        }
+      } catch (marineError) {
+        console.error('Error fetching from Marine Traffic API:', marineError);
+      }
       
-      // Try fallback endpoint if primary fails
+      // If all external APIs failed, try polling endpoint as final fallback
       try {
         console.log('Trying fallback REST polling endpoint...');
         const fallbackResponse = await axios.get('/api/vessels/polling', {
@@ -104,11 +133,17 @@ export default function Vessels() {
           console.log('Fetched vessels from fallback endpoint:', fallbackResponse.data.vessels.length);
           setApiVessels(fallbackResponse.data.vessels);
           setFetchError(null);
+          setDataSource('polling');
+        } else {
+          setFetchError('Failed to fetch vessels from all data sources');
         }
       } catch (fallbackError) {
         console.error('Error with fallback endpoint:', fallbackError);
         setFetchError('Failed to fetch vessels from all endpoints');
       }
+    } catch (error) {
+      console.error('Unexpected error in fetchVesselsFromAPI:', error);
+      setFetchError('Failed to fetch vessels from API');
     } finally {
       setApiLoading(false);
     }
@@ -124,6 +159,9 @@ export default function Vessels() {
     return () => clearInterval(intervalId);
   }, [selectedRegion]);
   
+  // Track which data source is being used
+  const [dataSource, setDataSource] = useState<'websocket' | 'myshiptracking' | 'marine-traffic' | 'polling'>('websocket');
+  
   // Combine vessels from real-time WebSocket and API
   useEffect(() => {
     // Determine which source to use
@@ -133,10 +171,14 @@ export default function Vessels() {
       // WebSocket is connected and has data - prefer this
       combinedVessels = realTimeVessels;
       console.log('Using WebSocket vessels:', realTimeVessels.length);
+      setDataSource('websocket');
     } else if (apiVessels.length > 0) {
       // Fall back to API data if WebSocket isn't connected
       combinedVessels = apiVessels;
       console.log('Using API vessels:', apiVessels.length);
+      
+      // The data source is set in fetchVesselsFromAPI function when the data is fetched
+      // We're not changing it here to preserve which API was actually successful
     }
     
     setVessels(combinedVessels);
@@ -279,8 +321,9 @@ export default function Vessels() {
               {loading ? 'Loading vessels...' : `${vessels.length} vessels in the system`}
             </p>
             
-            {/* Connection status indicator */}
-            <div className="flex items-center">
+            {/* Connection and data source status indicators */}
+            <div className="flex items-center flex-wrap gap-1">
+              {/* WebSocket/REST API connection status */}
               <Badge 
                 variant="outline" 
                 className={`ml-2 flex items-center gap-1 ${
@@ -302,6 +345,33 @@ export default function Vessels() {
                 )}
               </Badge>
               
+              {/* Data source indicator */}
+              {dataSource && (
+                <Badge 
+                  variant="outline" 
+                  className={`ml-2 flex items-center gap-1 ${
+                    dataSource === 'myshiptracking' 
+                      ? 'bg-green-50 text-green-700 border-green-200'
+                      : dataSource === 'websocket'
+                        ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                        : dataSource === 'marine-traffic'
+                          ? 'bg-blue-50 text-blue-700 border-blue-200'
+                          : 'bg-amber-50 text-amber-700 border-amber-200'
+                  }`}
+                >
+                  <Ship className="h-3 w-3 mr-1" />
+                  {dataSource === 'myshiptracking' 
+                    ? 'MyShipTracking API' 
+                    : dataSource === 'websocket'
+                      ? 'WebSocket Data'
+                      : dataSource === 'marine-traffic'
+                        ? 'Marine Traffic API'
+                        : 'Polling Fallback'
+                  }
+                </Badge>
+              )}
+              
+              {/* Error indicator */}
               {fetchError && (
                 <Badge variant="outline" className="ml-2 bg-red-50 text-red-700 border-red-200 flex items-center gap-1">
                   <AlertCircle className="h-3 w-3 text-red-600" />
@@ -309,6 +379,7 @@ export default function Vessels() {
                 </Badge>
               )}
               
+              {/* Connection type from the hook */}
               {connectionType && (
                 <Badge variant="outline" className="ml-2 bg-blue-50 text-blue-700 border-blue-200">
                   {connectionType}
