@@ -570,6 +570,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch vessels" });
     }
   });
+  
+  // Create a specific API endpoint for polling vessel data as WebSocket fallback
+  apiRouter.get("/vessels/polling", async (req, res) => {
+    try {
+      console.log('REST API polling request received');
+      
+      // Get region from query parameter if present
+      const region = req.query.region as string | undefined;
+      
+      // Fetch vessels
+      let vessels;
+      if (region && region !== 'global') {
+        vessels = await vesselService.getVesselsByRegion(region);
+        console.log(`Fetched ${vessels.length} vessels for region: ${region}`);
+      } else {
+        vessels = await vesselService.getAllVessels();
+        console.log(`Fetched ${vessels.length} vessels globally`);
+      }
+      
+      // Limit to 100 vessels to avoid overwhelming the client
+      const limitedVessels = vessels.slice(0, 100);
+      
+      // Return with timestamp
+      res.json({
+        vessels: limitedVessels,
+        timestamp: new Date().toISOString(),
+        count: limitedVessels.length
+      });
+      
+      console.log(`Sent ${limitedVessels.length} vessels to client via REST API polling`);
+    } catch (error) {
+      console.error('Error in vessel polling API:', error);
+      res.status(500).json({ 
+        error: 'Failed to fetch vessels',
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
 
   // API endpoint to get vessel region distribution statistics
   apiRouter.get("/vessels/distribution", async (req, res) => {
