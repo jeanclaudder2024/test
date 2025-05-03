@@ -438,11 +438,12 @@ async function fetchPortsFromAPI(): Promise<InsertPort[]> {
   try {
     console.log(`Attempting to fetch port data from MyShipTracking API...`);
     
-    // Headers for API requests
+    // Headers for API requests - try with API key in header
     const headers = {
-      'Authorization': `Bearer ${API_KEY}`,
+      'Authorization': `${API_KEY}`, // Try without Bearer prefix
       'Accept': 'application/json',
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'X-API-KEY': API_KEY // Alternative API key header format
     };
     
     // Log some of the request details for debugging
@@ -452,7 +453,10 @@ async function fetchPortsFromAPI(): Promise<InsertPort[]> {
     const response = await axios.get(`${API_BASE_URL}${ENDPOINTS.PORTS}`, { 
       headers,
       params: {
-        limit: 100 // Limit to 100 ports to avoid excessive API usage
+        limit: 100, // Limit to 100 ports to avoid excessive API usage
+        api_key: API_KEY, // Also try API key as query parameter
+        apikey: API_KEY, // Alternative query parameter name
+        key: API_KEY // Another alternative
       },
       timeout: 10000 // 10 seconds timeout
     });

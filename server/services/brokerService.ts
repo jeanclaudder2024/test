@@ -70,34 +70,55 @@ export const brokerService = {
    */
   upgradeToEliteMembership: async (
     brokerId: number, 
-    subscription: 'monthly' | 'annual',
-    shippingAddress: string
-  ): Promise<Broker | undefined> => {
+    duration: string,
+    level: string
+  ): Promise<{ success: boolean; message: string; broker?: Broker }> => {
     try {
       // Generate a membership ID
       const membershipId = `EB${Math.floor(10000 + Math.random() * 90000)}`;
       
-      // Set membership period based on subscription type
+      // Set membership period based on duration
       const now = new Date();
       const expiryDate = new Date();
-      if (subscription === 'annual') {
-        expiryDate.setFullYear(expiryDate.getFullYear() + 1);
-      } else {
-        expiryDate.setMonth(expiryDate.getMonth() + 1);
+      
+      // Parse duration - expected format '3' for 3 months, '12' for 12 months, etc.
+      const months = parseInt(duration);
+      if (isNaN(months) || months <= 0) {
+        return {
+          success: false,
+          message: "Invalid duration specified. Please provide a valid number of months."
+        };
       }
       
+      expiryDate.setMonth(expiryDate.getMonth() + months);
+      
       // Update broker with elite membership details
-      return await storage.updateBroker(brokerId, {
+      const broker = await storage.updateBroker(brokerId, {
         eliteMember: true,
         eliteMemberSince: now,
         eliteMemberExpires: expiryDate,
         membershipId,
-        shippingAddress,
-        subscriptionPlan: subscription
+        subscriptionPlan: level
       });
+      
+      if (!broker) {
+        return {
+          success: false,
+          message: "Failed to update broker. Broker not found."
+        };
+      }
+      
+      return {
+        success: true,
+        message: `Broker has been upgraded to Elite ${level} for ${months} months`,
+        broker
+      };
     } catch (error) {
       console.error(`Error upgrading broker ${brokerId} to elite membership:`, error);
-      throw new Error("Failed to upgrade broker to elite membership");
+      return {
+        success: false,
+        message: "Failed to upgrade broker to elite membership due to an internal error."
+      };
     }
   },
   
