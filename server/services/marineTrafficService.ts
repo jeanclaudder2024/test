@@ -169,8 +169,12 @@ async function fetchVesselsFromAPI(): Promise<InsertVessel[]> {
       const destinationPort = vessel.destination ? vessel.destination.trim() : 'Unknown';
       const departurePort = vessel.last_port || 'Unknown';
       
-      // Create vessel object according to our schema
+      // Create vessel object according to our schema with a generated ID
+      const mmsiNumber = parseInt(vessel.mmsi.replace(/\D/g, '')) || 0;
+      const generatedId = mmsiNumber % 100000; // Generate a reasonably unique ID from MMSI
+      
       return {
+        id: generatedId, // Generate an ID to match the database schema
         imo: vessel.imo || `MST-${vessel.mmsi}`,
         mmsi: vessel.mmsi,
         name: vessel.name,
@@ -247,8 +251,10 @@ async function enrichVesselData(vessels: InsertVessel[]): Promise<InsertVessel[]
         // Find the vessel in our result array and update it
         const index = enrichedVessels.findIndex(v => v.imo === vessel.imo);
         if (index !== -1) {
+          // Make sure to keep the id from the original object
           enrichedVessels[index] = {
             ...enrichedVessels[index],
+            id: enrichedVessels[index].id, // Explicitly preserve ID
             built: vesselDetails.year_built || null,
             deadweight: vesselDetails.deadweight || null,
             name: vesselDetails.name || vessel.name,
@@ -310,7 +316,12 @@ async function getExpectedArrivals(portIds: string[]): Promise<InsertVessel[]> {
     
     // Map the arrival data to our vessel schema
     const expectedVessels: InsertVessel[] = response.data.map((arrival: any) => {
+      // Generate an ID from MMSI to match database schema
+      const mmsiNumber = parseInt(arrival.mmsi?.replace(/\D/g, '') || '0') || 0;
+      const generatedId = mmsiNumber % 100000; // Generate a reasonably unique ID from MMSI
+      
       return {
+        id: generatedId, // Generate an ID to match the database schema
         imo: arrival.imo || `MST-${arrival.mmsi}`,
         mmsi: arrival.mmsi,
         name: arrival.vessel_name || arrival.name,
