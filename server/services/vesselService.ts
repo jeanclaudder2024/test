@@ -3,21 +3,79 @@ import { InsertVessel, InsertProgressEvent, Vessel, ProgressEvent } from "@share
 import { dataService } from "./asiStreamService";
 import { generateLargeVesselDataset, isCoordinateAtSea } from "./vesselGenerator";
 import { OIL_PRODUCT_TYPES } from "@shared/constants";
+import { marineTrafficService } from "./marineTrafficService";
+import { REGIONS } from "@shared/constants";
 
 export const vesselService = {
   // Use the exported function from vesselGenerator to check if coordinates are at sea
   isCoordinateAtSea,
   
   getAllVessels: async () => {
-    return storage.getVessels();
+    try {
+      // First try to get vessels from the database
+      return await storage.getVessels();
+    } catch (dbError) {
+      console.warn("Database error getting vessels, using API fallback:", dbError);
+      
+      // If database access fails, try to get vessels from MyShipTracking API
+      if (marineTrafficService.isConfigured()) {
+        try {
+          return await marineTrafficService.fetchVessels();
+        } catch (apiError) {
+          console.error("Failed to fetch vessels from API:", apiError);
+          throw new Error("Failed to get vessels from database or API");
+        }
+      } else {
+        console.error("Database inaccessible and MyShipTracking API not configured");
+        throw new Error("Database inaccessible and MyShipTracking API not configured");
+      }
+    }
   },
 
   getVesselById: async (id: number) => {
-    return storage.getVesselById(id);
+    try {
+      // Try to get the vessel from database first
+      return await storage.getVesselById(id);
+    } catch (dbError) {
+      console.warn(`Database error getting vessel ${id}, using API fallback:`, dbError);
+      
+      // If database access fails, try to get all vessels from API and find the matching one
+      if (marineTrafficService.isConfigured()) {
+        try {
+          const allVessels = await marineTrafficService.fetchVessels();
+          return allVessels.find(v => v.id === id);
+        } catch (apiError) {
+          console.error("Failed to fetch vessel from API:", apiError);
+          throw new Error(`Failed to get vessel ${id} from database or API`);
+        }
+      } else {
+        console.error("Database inaccessible and MyShipTracking API not configured");
+        throw new Error("Database inaccessible and MyShipTracking API not configured");
+      }
+    }
   },
 
   getVesselsByRegion: async (region: string) => {
-    return storage.getVesselsByRegion(region);
+    try {
+      // Try to get vessels by region from database first
+      return await storage.getVesselsByRegion(region);
+    } catch (dbError) {
+      console.warn(`Database error getting vessels in region ${region}, using API fallback:`, dbError);
+      
+      // If database access fails, try to get all vessels from API and filter by region
+      if (marineTrafficService.isConfigured()) {
+        try {
+          const allVessels = await marineTrafficService.fetchVessels();
+          return allVessels.filter(v => v.currentRegion === region);
+        } catch (apiError) {
+          console.error("Failed to fetch vessels from API:", apiError);
+          throw new Error(`Failed to get vessels in region ${region} from database or API`);
+        }
+      } else {
+        console.error("Database inaccessible and MyShipTracking API not configured");
+        throw new Error("Database inaccessible and MyShipTracking API not configured");
+      }
+    }
   },
 
   createVessel: async (vessel: InsertVessel) => {
@@ -114,53 +172,105 @@ export const vesselService = {
   
   // Get vessel counts by region
   getVesselCountsByRegion: async () => {
-    const vessels = await storage.getVessels();
+    try {
+      // Function to identify oil vessels
+      const isOilVessel = (v: Vessel) => {
+        if (!v.vesselType) return false;
+        const type = v.vesselType.toLowerCase();
+        return (
+          type.includes('oil') ||
+          type.includes('tanker') ||
+          type.includes('crude') ||
+          type.includes('vlcc')
+        );
+      };
     
-    // Function to identify oil vessels
-    const isOilVessel = (v: Vessel) => {
-      if (!v.vesselType) return false;
-      const type = v.vesselType.toLowerCase();
-      return (
-        type.includes('oil') ||
-        type.includes('tanker') ||
-        type.includes('crude') ||
-        type.includes('vlcc')
-      );
-    };
-    
-    // Group vessels by region
-    const regionCounts: Record<string, number> = {};
-    const oilVesselRegionCounts: Record<string, number> = {};
-    let totalVessels = 0;
-    let totalOilVessels = 0;
-    
-    // Count vessels by region
-    for (const vessel of vessels) {
-      if (!vessel.currentRegion) continue;
-      
-      // Count total vessels by region
-      totalVessels++;
-      if (!regionCounts[vessel.currentRegion]) {
-        regionCounts[vessel.currentRegion] = 0;
-      }
-      regionCounts[vessel.currentRegion]++;
-      
-      // Count oil vessels by region
-      if (isOilVessel(vessel)) {
-        totalOilVessels++;
-        if (!oilVesselRegionCounts[vessel.currentRegion]) {
-          oilVesselRegionCounts[vessel.currentRegion] = 0;
+      // First try to get vessels from database
+      try {
+        const vessels = await storage.getVessels();
+        
+        // Group vessels by region
+        const regionCounts: Record<string, number> = {};
+        const oilVesselRegionCounts: Record<string, number> = {};
+        let totalVessels = 0;
+        let totalOilVessels = 0;
+        
+        // Count vessels by region
+        for (const vessel of vessels) {
+          if (!vessel.currentRegion) continue;
+          
+          // Count total vessels by region
+          totalVessels++;
+          if (!regionCounts[vessel.currentRegion]) {
+            regionCounts[vessel.currentRegion] = 0;
+          }
+          regionCounts[vessel.currentRegion]++;
+          
+          // Count oil vessels by region
+          if (isOilVessel(vessel)) {
+            totalOilVessels++;
+            if (!oilVesselRegionCounts[vessel.currentRegion]) {
+              oilVesselRegionCounts[vessel.currentRegion] = 0;
+            }
+            oilVesselRegionCounts[vessel.currentRegion]++;
+          }
         }
-        oilVesselRegionCounts[vessel.currentRegion]++;
+        
+        return {
+          totalVessels,
+          totalOilVessels,
+          regionCounts,
+          oilVesselRegionCounts
+        };
+      } catch (dbError) {
+        console.warn("Database error counting vessels by region, trying API fallback:", dbError);
+        
+        // If database access fails, try MyShipTracking API
+        if (marineTrafficService.isConfigured()) {
+          const vessels = await marineTrafficService.fetchVessels();
+          
+          // Group vessels by region
+          const regionCounts: Record<string, number> = {};
+          const oilVesselRegionCounts: Record<string, number> = {};
+          let totalVessels = 0;
+          let totalOilVessels = 0;
+          
+          // Count vessels by region
+          for (const vessel of vessels) {
+            if (!vessel.currentRegion) continue;
+            
+            // Count total vessels by region
+            totalVessels++;
+            if (!regionCounts[vessel.currentRegion]) {
+              regionCounts[vessel.currentRegion] = 0;
+            }
+            regionCounts[vessel.currentRegion]++;
+            
+            // Count oil vessels by region
+            if (isOilVessel(vessel)) {
+              totalOilVessels++;
+              if (!oilVesselRegionCounts[vessel.currentRegion]) {
+                oilVesselRegionCounts[vessel.currentRegion] = 0;
+              }
+              oilVesselRegionCounts[vessel.currentRegion]++;
+            }
+          }
+          
+          return {
+            totalVessels,
+            totalOilVessels,
+            regionCounts,
+            oilVesselRegionCounts
+          };
+        } else {
+          // If API is not configured, throw an error
+          throw new Error("Database inaccessible and MyShipTracking API not configured");
+        }
       }
+    } catch (error) {
+      console.error("Error getting vessel counts by region:", error);
+      throw error;
     }
-    
-    return {
-      totalVessels,
-      totalOilVessels,
-      regionCounts,
-      oilVesselRegionCounts
-    };
   },
 
   // Seed data for development
