@@ -47,8 +47,17 @@ export function useVesselWebSocket({ region }: UseVesselWebSocketProps = {}) {
       
       try {
         setIsLoading(true);
+        
+        // Get the current hostname
+        const hostname = window.location.hostname;
+        // Use the proper protocol based on the current connection
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsUrl = `${protocol}//${window.location.host}/ws`;
+        
+        // Create the WebSocket URL with the hostname and a fixed port (5000)
+        // The /ws path matches the server-side WebSocket path
+        const wsUrl = `${protocol}//${hostname}:5000/ws`;
+        
+        console.log('Connecting to WebSocket URL:', wsUrl);
         
         // Create new WebSocket connection
         const socket = new WebSocket(wsUrl);
