@@ -1,6 +1,8 @@
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
+// Import Bootstrap CSS
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 // Add Leaflet CSS for maps
 const leafletCss = document.createElement("link");

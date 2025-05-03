@@ -16,7 +16,7 @@ import Documents from "@/pages/Documents";
 import AIAssistantPage from "@/pages/AIAssistant";
 import Settings from "@/pages/Settings";
 import Subscribe from "@/pages/Subscribe";
-import LandingPage from "@/pages/LandingPage";
+import LandingPage from "@/pages/LandingPageBootstrap";
 import AuthPage from "@/pages/AuthPage";
 import TradingDashboard from "@/pages/TradingDashboard";
 import LiveTracking from "@/pages/LiveTracking";
