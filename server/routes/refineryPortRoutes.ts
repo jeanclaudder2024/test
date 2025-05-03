@@ -5,6 +5,19 @@ import { InsertRefineryPortConnection, insertRefineryPortConnectionSchema } from
 import { fromZodError } from "zod-validation-error";
 import { calculateDistance } from "../utils/geoUtils";
 
+// Convert numeric values to strings for database compatibility
+function convertToStringFields(obj: Record<string, any>): Record<string, any> {
+  const result: Record<string, any> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (typeof value === 'number') {
+      result[key] = value.toString();
+    } else {
+      result[key] = value;
+    }
+  }
+  return result;
+}
+
 export const refineryPortRouter = Router();
 
 // Get all refinery-port connections

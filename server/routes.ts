@@ -38,6 +38,7 @@ import { apiTesterRouter } from "./routes/apiTester";
 import { brokerRouter } from "./routes/brokerRoutes";
 import { tradingRouter } from "./routes/tradingRoutes";
 import { vesselDistributionRouter } from "./routes/vesselDistributionRoutes";
+import { refineryPortRouter } from "./routes/refineryPortRoutes";
 import { seedBrokers } from "./services/seedService";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -1745,6 +1746,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // API routes for broker-related operations
   app.use("/api/broker", brokerRouter);
+
+  // API routes for refinery-port connections
+  app.use("/api/refinery-port", refineryPortRouter);
 
   // API tester routes (performance testing, etc.)
   app.use("/api/tester", apiTesterRouter);
