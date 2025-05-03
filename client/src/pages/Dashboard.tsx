@@ -94,7 +94,7 @@ export default function Dashboard() {
   // Filter ports by region if a region is selected
   const filteredPorts = ports.filter(port => {
     // Apply region filter
-    return !selectedRegion || port.currentRegion === selectedRegion;
+    return !selectedRegion || port.region === selectedRegion;
   });
   
   // Fetch progress events for selected vessel
@@ -530,6 +530,7 @@ export default function Dashboard() {
           </div>
           
           {/* Map Container */}
+          {console.log('Dashboard rendering with ports:', filteredPorts)}
           <SimpleLeafletMap 
             vessels={selectedRefinery ? associatedVessels : filteredVessels}
             refineries={selectedRefinery ? [selectedRefinery] : filteredRefineries}
