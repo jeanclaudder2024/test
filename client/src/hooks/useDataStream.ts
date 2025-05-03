@@ -29,15 +29,11 @@ export function useDataStream() {
     lastUpdated: null
   });
   
-  // Update our filtered data whenever the stream data changes
+  // Update our data whenever the stream data changes
   useEffect(() => {
-    // Filter to only include cargo vessels
-    const cargoVessels = streamData.vessels.filter((vessel: Vessel) => 
-      vessel.vesselType?.toLowerCase().includes('cargo')
-    );
-    
+    // Include all vessels - don't filter by type to ensure vessel detail page works
     setData({
-      vessels: cargoVessels,
+      vessels: streamData.vessels,
       refineries: streamData.refineries,
       stats: streamData.stats,
       loading: streamData.loading,
@@ -45,9 +41,8 @@ export function useDataStream() {
       lastUpdated: streamData.lastUpdated
     });
     
-    if (cargoVessels.length > 0) {
-      console.log('Filtered data to', cargoVessels.length, 'cargo vessels out of', 
-                 streamData.vessels.length, 'total vessels');
+    if (streamData.vessels.length > 0) {
+      console.log('Using all', streamData.vessels.length, 'vessels from data stream');
     }
   }, [streamData]);
   
