@@ -900,8 +900,38 @@ export const portService = {
         existingPortNames.set(port.name.toLowerCase(), port);
       });
       
-      // Use provided data source or fallback to majorPortsData
-      const portsToProcess = portDataSource || majorPortsData;
+      // Use the world ports generator to create 7,183 ports
+      let portsToProcess = portDataSource;
+      
+      if (!portsToProcess) {
+        console.log('No port data provided, generating comprehensive port data set (7,183 ports)...');
+        try {
+          // Import the generator dynamically
+          const portGenerator = require('../../large-scale-port-importer');
+          
+          // Generate the comprehensive world ports dataset
+          const result = portGenerator.generateWorldPortsData();
+          
+          if (result.success && result.outputFile) {
+            console.log(`Successfully generated ${result.portsCount} ports to ${result.outputFile}`);
+            
+            // Read the generated file
+            const fs = require('fs');
+            const portsData = JSON.parse(fs.readFileSync(result.outputFile, 'utf8'));
+            
+            portsToProcess = portsData;
+            console.log(`Loaded ${portsToProcess.length} ports from generated dataset`);
+          } else {
+            console.error('Failed to generate ports data, falling back to default port list');
+            portsToProcess = majorPortsData;
+          }
+        } catch (generatorError) {
+          console.error('Error using port generator:', generatorError);
+          console.log('Falling back to default port list');
+          portsToProcess = majorPortsData;
+        }
+      }
+      
       console.log(`Preparing to process ${portsToProcess.length} ports`);
       
       let addedCount = 0;
