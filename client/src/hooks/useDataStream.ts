@@ -47,6 +47,9 @@ export function useDataStream() {
     if (streamData.vessels.length > 0) {
       console.log('Using all', streamData.vessels.length, 'vessels from data stream');
     }
+    
+    console.log('Ports available:', streamData.ports.length, 'ports loaded');
+    console.log('Refineries available:', streamData.refineries.length, 'refineries loaded');
   }, [streamData]);
   
   return data;
