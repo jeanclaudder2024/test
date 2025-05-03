@@ -28,7 +28,7 @@ const ENDPOINTS = {
   VESSEL_ROUTE: '/vessels/route',
   // Get port calls
   PORT_CALLS: '/ports/calls'
-};
+}
 
 // Types for MyShipTracking API responses
 interface MyShipTrackingVessel {
@@ -37,7 +37,7 @@ interface MyShipTrackingVessel {
   name: string;
   type: number;
   type_name: string;
-  ais_type_summary: string;
+  ais_type_summary?: string;
   flag: string;
   flag_name: string;
   latitude: number;
@@ -76,14 +76,21 @@ interface MyShipTrackingVesselDetails {
 }
 
 /**
- * Map Marine Traffic vessel type to our application vessel type
+ * Map MyShipTracking vessel type to our application vessel type
  */
-function mapVesselType(marineTrafficType: string): string {
-  const typeLower = marineTrafficType.toLowerCase();
+function mapVesselType(shipTrackingType: string): string {
+  const typeLower = shipTrackingType.toLowerCase();
   
-  if (typeLower.includes('crude oil tanker')) return 'crude oil tanker';
-  if (typeLower.includes('oil/chemical')) return 'oil/chemical tanker';
-  if (typeLower.includes('oil products')) return 'oil products tanker';
+  // MyShipTracking API uses numerical vessel types but also provides string descriptions
+  // Type 80: Tanker - Hazard A (Major)
+  // Type 81: Tanker - Hazard B
+  // Type 82: Tanker - Hazard C (Minor)
+  // Type 83: Tanker - Hazard D (Recognizable)
+  // Type 84: Other type of Tanker
+  
+  if (typeLower.includes('crude oil tanker') || typeLower.includes('hazard a')) return 'crude oil tanker';
+  if (typeLower.includes('oil/chemical') || typeLower.includes('hazard b')) return 'oil/chemical tanker';
+  if (typeLower.includes('oil products') || typeLower.includes('hazard c')) return 'oil products tanker';
   if (typeLower.includes('lng')) return 'lng tanker';
   if (typeLower.includes('lpg')) return 'lpg tanker';
   if (typeLower.includes('tanker')) return 'oil products tanker';
