@@ -51,7 +51,7 @@ export default function Dashboard() {
   const [showFiltersPanel, setShowFiltersPanel] = useState(false);
   
   // Use streaming data
-  const { vessels = [], refineries = [], stats, loading, error, lastUpdated } = useDataStream();
+  const { vessels = [], refineries = [], ports = [], stats, loading, error, lastUpdated } = useDataStream();
 
   // Create list of unique refinery statuses for filtering
   const refineryStatuses = Array.from(new Set(refineries.map(r => r.status || 'Unknown')));
@@ -89,6 +89,12 @@ export default function Dashboard() {
       refineryStatusFilters.includes(refinery.status || 'Unknown');
     
     return passesRegionFilter && passesStatusFilter;
+  });
+  
+  // Filter ports by region if a region is selected
+  const filteredPorts = ports.filter(port => {
+    // Apply region filter
+    return !selectedRegion || port.currentRegion === selectedRegion;
   });
   
   // Fetch progress events for selected vessel
@@ -527,6 +533,7 @@ export default function Dashboard() {
           <SimpleLeafletMap 
             vessels={selectedRefinery ? associatedVessels : filteredVessels}
             refineries={selectedRefinery ? [selectedRefinery] : filteredRefineries}
+            ports={filteredPorts}
             selectedRegion={selectedRegion}
             onVesselClick={handleVesselSelect}
             onRefineryClick={handleRefinerySelect}
@@ -535,6 +542,7 @@ export default function Dashboard() {
               ? [parseFloat(selectedRefinery.lat as string), parseFloat(selectedRefinery.lng as string)]
               : undefined}
             initialZoom={selectedRefinery ? 6 : undefined}
+            showConnections={true}
           />
         </div>
       </section>
