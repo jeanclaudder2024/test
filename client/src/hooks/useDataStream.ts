@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { type Vessel, type Refinery } from '@shared/schema';
+import { type Vessel, type Refinery, type Port } from '@shared/schema';
 import { useVesselStream } from './useVesselStream';
 
 interface StreamData {
   vessels: Vessel[];
   refineries: Refinery[];
+  ports: Vessel[];
   stats: any | null;
   loading: boolean;
   error: string | null;
@@ -23,6 +24,7 @@ export function useDataStream() {
   const [data, setData] = useState<StreamData>({
     vessels: [],
     refineries: [],
+    ports: [],
     stats: null,
     loading: true,
     error: null,
@@ -35,6 +37,7 @@ export function useDataStream() {
     setData({
       vessels: streamData.vessels,
       refineries: streamData.refineries,
+      ports: streamData.ports,
       stats: streamData.stats,
       loading: streamData.loading,
       error: streamData.error,
