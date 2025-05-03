@@ -100,15 +100,19 @@ export default function LiveVesselMap({ initialRegion, height = '600px' }: LiveV
   const [mapCenter, setMapCenter] = useState<[number, number]>([20, 0]);
   const [mapZoom, setMapZoom] = useState(3);
   
-  // Use our WebSocket hook for real-time vessel data
+  // Use our WebSocket hook for real-time vessel data with fallback to REST API polling
   const { 
     vessels, 
     isConnected, 
     lastUpdated, 
     error, 
     isLoading, 
-    refreshData 
-  } = useVesselWebSocket({ region: selectedRegion });
+    refreshData,
+    usingFallback
+  } = useVesselWebSocket({ 
+    region: selectedRegion,
+    pollingInterval: 30000 // 30 seconds polling interval for REST API fallback
+  });
 
   // Handle region selection change
   const handleRegionChange = (region: string) => {
@@ -126,7 +130,7 @@ export default function LiveVesselMap({ initialRegion, height = '600px' }: LiveV
           
           {isConnected ? (
             <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-              Connected
+              Connected {usingFallback ? "(REST API)" : "(WebSocket)"}
             </Badge>
           ) : (
             <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
@@ -155,7 +159,11 @@ export default function LiveVesselMap({ initialRegion, height = '600px' }: LiveV
             </SelectContent>
           </Select>
           
-          <Button variant="outline" onClick={refreshData} disabled={!isConnected || isLoading}>
+          <Button 
+            variant="outline" 
+            onClick={refreshData} 
+            disabled={(usingFallback ? false : !isConnected) || isLoading}
+          >
             Refresh
           </Button>
         </div>
@@ -372,6 +380,16 @@ export default function LiveVesselMap({ initialRegion, height = '600px' }: LiveV
                       ? `Last updated: ${new Date(lastUpdated).toLocaleString()}`
                       : 'Waiting for data...'}
                   </p>
+                  
+                  {/* Connection status indicator */}
+                  <div className="mt-2 flex items-center">
+                    <div className={`h-2 w-2 rounded-full mr-2 ${isConnected ? 'bg-green-500' : 'bg-yellow-500'}`} />
+                    <p className="text-xs text-muted-foreground">
+                      {isConnected 
+                        ? `Using ${usingFallback ? 'REST API' : 'WebSocket'} ${usingFallback ? '(fallback)' : '(real-time)'}`
+                        : 'Reconnecting...'}
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>

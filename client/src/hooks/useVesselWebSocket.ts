@@ -282,16 +282,12 @@ export function useVesselWebSocket({
       // If using WebSocket, send a request for vessels
       socketRef.current.send(JSON.stringify({ type: 'request_vessels' }));
     } else {
-      // If not connected, try to reconnect
+      // If not connected, set an error - the main WebSocket effect will handle reconnection
       console.log('Not connected to WebSocket, attempting to reconnect');
       setError('Not connected. Attempting to reconnect...');
-      if (socketRef.current) {
-        socketRef.current.close();
-      }
-      // Try WebSocket first, fallback to REST API if it fails
-      if (!usePolling) {
-        connectWebSocket();
-      }
+      
+      // Just trigger loading state and wait for reconnection attempts
+      setIsLoading(true);
     }
   };
   
