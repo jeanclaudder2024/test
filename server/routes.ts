@@ -262,6 +262,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     });
     
+    // Add a new endpoint to add all world ports to the database
+    apiRouter.post("/ports/add-all-world-ports", async (req, res) => {
+      try {
+        console.log("Starting to add all world ports to the database...");
+        
+        // Add all comprehensive world ports data
+        const addWorldPortsResult = await portService.addAllWorldPorts();
+        console.log("World ports added successfully:", addWorldPortsResult);
+        
+        res.json({
+          success: true,
+          message: "All world ports have been added to the database",
+          data: {
+            added: addWorldPortsResult.added,
+            total: addWorldPortsResult.total
+          }
+        });
+      } catch (error) {
+        console.error("Error adding world ports:", error);
+        res.status(500).json({ message: "Failed to add world ports to the database" });
+      }
+    });
+    
     // Route to update refinery coordinates with accurate data
     apiRouter.post("/refineries/update-coordinates", async (req, res) => {
       try {
