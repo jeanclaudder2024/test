@@ -939,8 +939,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Filter by region if specified in the query parameters
       const { region } = req.query;
       
+      // Try to fetch from MyShipTracking API first
+      if (marineTrafficService.isConfigured()) {
+        console.log("Fetching ports from MyShipTracking API...");
+        
+        try {
+          const apiPorts = await marineTrafficService.fetchPorts();
+          console.log(`Fetched ${apiPorts.length} ports from MyShipTracking API`);
+          
+          // Filter by region if requested
+          if (region && typeof region === 'string' && region !== 'all') {
+            const filteredPorts = apiPorts.filter(p => p.region === region);
+            console.log(`Filtered ports by region ${region}: ${apiPorts.length} → ${filteredPorts.length}`);
+            return res.json(filteredPorts);
+          }
+          
+          // If we have ports from the API, return them immediately
+          if (apiPorts.length > 0) {
+            return res.json(apiPorts);
+          }
+        } catch (apiError) {
+          console.error("Error fetching ports from MyShipTracking API:", apiError);
+          // Continue to fallback with database
+        }
+      }
+      
+      // Fallback to database if API fails or not configured
+      console.log("Falling back to database for port data");
       let ports;
-      if (region && typeof region === 'string') {
+      if (region && typeof region === 'string' && region !== 'all') {
         ports = await storage.getPortsByRegion(region);
       } else {
         ports = await storage.getPorts();
@@ -960,12 +987,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid port ID" });
       }
       
+      // Try to find port in MyShipTracking API data first
+      if (marineTrafficService.isConfigured()) {
+        try {
+          console.log(`Attempting to fetch port details for ID ${id} from MyShipTracking API...`);
+          const apiPorts = await marineTrafficService.fetchPorts();
+          
+          // Filter to find the port by ID
+          if (apiPorts.length > 0) {
+            // Note: API ports don't have IDs yet, so we'd need to assign them
+            // For now, just look for the port with the corresponding index
+            if (id <= apiPorts.length) {
+              const port = apiPorts[id - 1]; // Adjust for 0-based array
+              console.log(`Found port ${port.name} in MyShipTracking API data`);
+              return res.json({
+                ...port,
+                id, // Add the ID to match expected format
+                source: 'api'
+              });
+            }
+          }
+        } catch (apiError) {
+          console.error("Error fetching port from MyShipTracking API:", apiError);
+          // Continue to fallback with database
+        }
+      }
+      
+      // Fallback to database
+      console.log(`Falling back to database for port with ID ${id}`);
       const port = await storage.getPortById(id);
       if (!port) {
         return res.status(404).json({ message: "Port not found" });
       }
       
-      res.json(port);
+      res.json({
+        ...port,
+        source: 'database'
+      });
     } catch (error) {
       console.error("Error fetching port:", error);
       res.status(500).json({ message: "Failed to fetch port" });
@@ -1248,7 +1306,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Generate the document using AI
-      const generatedDocument = await aiService.generateShippingDocument(vessel, documentType);
+      const generatedDocument = await aiService.generateDocument(vessel.id, documentType);
       
       res.json(generatedDocument);
     } catch (error) {
@@ -1325,7 +1383,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Upgrade the broker to elite membership
-      const result = await brokerService.upgradeToBrokerElite(id, duration, level);
+      const result = await brokerService.upgradeToEliteMembership(id, duration, level);
       
       if (!result.success) {
         return res.status(400).json({ message: result.message });
@@ -1349,7 +1407,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid broker ID" });
       }
       
-      const isElite = await brokerService.checkEliteMembership(id);
+      const isElite = await brokerService.hasActiveEliteMembership(id);
       
       res.json({
         id,
