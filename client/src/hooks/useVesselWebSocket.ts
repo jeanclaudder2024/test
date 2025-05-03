@@ -59,16 +59,21 @@ export function useVesselWebSocket({ region }: UseVesselWebSocketProps = {}) {
           console.log('WebSocket connected');
           setIsConnected(true);
           
-          // If region is specified, subscribe to region-specific updates
-          if (region) {
-            socket.send(JSON.stringify({ 
-              type: 'subscribe_region',
-              region 
-            }));
-          }
-          
-          // Request initial data
-          socket.send(JSON.stringify({ type: 'request_vessels' }));
+          // Only send messages if socket is fully open
+          setTimeout(() => {
+            if (socket.readyState === WebSocket.OPEN) {
+              // If region is specified, subscribe to region-specific updates
+              if (region) {
+                socket.send(JSON.stringify({ 
+                  type: 'subscribe_region',
+                  region 
+                }));
+              }
+              
+              // Request initial data
+              socket.send(JSON.stringify({ type: 'request_vessels' }));
+            }
+          }, 500); // Add a small delay to ensure socket is ready
         };
         
         socket.onmessage = (event) => {
@@ -128,20 +133,26 @@ export function useVesselWebSocket({ region }: UseVesselWebSocketProps = {}) {
   
   // Request updated data for a specific region when the region changes
   useEffect(() => {
-    if (isConnected && socketRef.current && region) {
-      socketRef.current.send(JSON.stringify({ 
-        type: 'subscribe_region',
-        region 
-      }));
-      
-      // Also request immediate update with the new region filter
-      socketRef.current.send(JSON.stringify({ type: 'request_vessels' }));
+    if (isConnected && socketRef.current && region && socketRef.current.readyState === WebSocket.OPEN) {
+      // Add a slight delay to ensure the socket is ready
+      setTimeout(() => {
+        if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+          // Subscribe to region-specific updates
+          socketRef.current.send(JSON.stringify({ 
+            type: 'subscribe_region',
+            region 
+          }));
+          
+          // Also request immediate update with the new region filter
+          socketRef.current.send(JSON.stringify({ type: 'request_vessels' }));
+        }
+      }, 100);
     }
   }, [region, isConnected]);
   
   // Function to manually request vessel data
   const refreshData = () => {
-    if (isConnected && socketRef.current) {
+    if (isConnected && socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
       socketRef.current.send(JSON.stringify({ type: 'request_vessels' }));
       setIsLoading(true);
     }

@@ -33,7 +33,16 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
     setCollapsed(!collapsed);
   };
 
-  const getNavItems = () => [
+  // Define type for navigation items
+  type NavItem = {
+    title: string;
+    path: string;
+    icon: React.ReactNode;
+    badge?: string;
+    section?: string;
+  };
+
+  const getNavItems = (): NavItem[] => [
     {
       title: t("nav.dashboard"),
       path: "/dashboard",
@@ -73,7 +82,7 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
     }
   ];
 
-  const getUserItems = () => [
+  const getUserItems = (): NavItem[] => [
     {
       title: t("nav.profile"),
       path: "/profile",
