@@ -54,7 +54,9 @@ export default function SimpleLeafletMap({
   onRefineryClick,
   isLoading = false,
   initialCenter,
-  initialZoom
+  initialZoom,
+  ports = [],
+  showConnections = false
 }: SimpleLeafletMapProps) {
   // Generate a stable instance ID for this component
   const instanceId = useMemo(() => `map-${Math.random().toString(36).substring(2, 9)}`, []);
@@ -62,6 +64,7 @@ export default function SimpleLeafletMap({
   const mapRef = useRef<any>(null);
   const vesselMarkersRef = useRef<any[]>([]);
   const refineryMarkersRef = useRef<any[]>([]);
+  const portMarkersRef = useRef<any[]>([]);
   const routeLinesRef = useRef<any[]>([]);
   const tileLayerRef = useRef<any>(null);
   const [mapStyle, setMapStyle] = useState(mapStyles[0].id);
@@ -138,6 +141,14 @@ export default function SimpleLeafletMap({
       });
       refineryMarkersRef.current = [];
       
+      // Clear port markers
+      portMarkersRef.current.forEach(marker => {
+        if (marker && typeof marker.remove === 'function') {
+          marker.remove();
+        }
+      });
+      portMarkersRef.current = [];
+      
       // Clear route lines and associated markers
       routeLinesRef.current.forEach(item => {
         if (item.line && typeof item.line.remove === 'function') {
@@ -158,9 +169,11 @@ export default function SimpleLeafletMap({
     // Function to clear just vessel-refinery connection lines
     // This is used when showing associated vessels for a different refinery
     const clearConnectionLines = () => {
-      // Only clear lines with the vessel-refinery-connection class
+      // Clear lines with the vessel-refinery-connection class
       routeLinesRef.current = routeLinesRef.current.filter(item => {
-        if (item.line && item.line.options && item.line.options.className === 'vessel-refinery-connection') {
+        if (item.line && item.line.options && 
+           (item.line.options.className === 'vessel-refinery-connection' || 
+            item.line.options.className === 'refinery-port-connection')) {
           if (typeof item.line.remove === 'function') {
             item.line.remove();
           }
