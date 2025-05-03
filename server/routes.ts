@@ -737,17 +737,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`Fetched ${vessels.length} vessels globally`);
       }
       
-      // Limit to 100 vessels to avoid overwhelming the client
-      const limitedVessels = vessels.slice(0, 100);
+      // Get pagination parameters from query or use defaults
+      const page = parseInt(req.query.page as string) || 1;
+      const pageSize = parseInt(req.query.pageSize as string) || 500;
       
-      // Return with timestamp
+      // Apply pagination
+      const startIndex = (page - 1) * pageSize;
+      const endIndex = startIndex + pageSize;
+      const paginatedVessels = vessels.slice(startIndex, endIndex);
+      
+      // Return with timestamp and metadata for pagination
       res.json({
-        vessels: limitedVessels,
+        vessels: paginatedVessels,
         timestamp: new Date().toISOString(),
-        count: limitedVessels.length
+        count: paginatedVessels.length,
+        totalCount: vessels.length,
+        totalPages: Math.ceil(vessels.length / pageSize),
+        currentPage: page,
+        pageSize: pageSize
       });
       
-      console.log(`Sent ${limitedVessels.length} vessels to client via REST API polling`);
+      console.log(`Sent ${paginatedVessels.length} vessels to client via REST API polling (page ${page}/${Math.ceil(vessels.length / pageSize)})`);
     } catch (error) {
       console.error('Error in vessel polling API:', error);
       res.status(500).json({ 
