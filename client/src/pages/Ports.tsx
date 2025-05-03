@@ -209,9 +209,9 @@ export default function Ports() {
                     onChange={(e) => setSelectedRegion(e.target.value)}
                   >
                     <option value="all">All Regions</option>
-                    {REGIONS.map((region: string) => (
-                      <option key={region} value={region}>
-                        {region}
+                    {REGIONS.map((region) => (
+                      <option key={region.id} value={region.id}>
+                        {region.name}
                       </option>
                     ))}
                   </select>
@@ -228,7 +228,7 @@ export default function Ports() {
                   <p className="text-sm text-muted-foreground mb-6">
                     {selectedRegion === 'all' 
                       ? "There are no ports registered in the system." 
-                      : `No ports found in the ${selectedRegion} region.`}
+                      : `No ports found in the ${REGIONS.find(r => r.id === selectedRegion)?.name || selectedRegion} region.`}
                   </p>
                   {selectedRegion !== 'all' && (
                     <Button variant="outline" onClick={() => setSelectedRegion('all')}>
@@ -306,14 +306,14 @@ export default function Ports() {
                 <h3 className="font-semibold mb-4">Ports by Region</h3>
                 {ports ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    {REGIONS.map((region: string) => {
-                      const regionPorts = ports.filter((p: Port) => p.region === region);
+                    {REGIONS.map((region) => {
+                      const regionPorts = ports.filter((p: Port) => p.region === region.id);
                       return (
-                        <Card key={region} className="overflow-hidden">
-                          <div className={`h-1 ${getRegionColor(region)}`} />
+                        <Card key={region.id} className="overflow-hidden">
+                          <div className={`h-1 ${getRegionColor(region.name)}`} />
                           <CardContent className="pt-4">
                             <div className="flex justify-between items-center">
-                              <h4 className="font-medium">{region}</h4>
+                              <h4 className="font-medium">{region.name}</h4>
                               <Badge variant="outline">{regionPorts.length}</Badge>
                             </div>
                             <div className="mt-2 text-sm text-muted-foreground">
