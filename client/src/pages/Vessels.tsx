@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useDataStream } from '@/hooks/useDataStream';
+import { useVesselWebSocket } from '@/hooks/useVesselWebSocket';
 import { Vessel } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,10 +33,11 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from 'wouter';
 import { formatDate } from '@/lib/utils';
-import { Ship, Search, Plus, Filter, Droplet, Fuel, Layers, Tag, Anchor, AlertCircle } from 'lucide-react';
-import { OIL_PRODUCT_TYPES } from '@shared/constants';
+import { Ship, Search, Plus, Filter, Droplet, Fuel, Layers, Tag, Anchor, AlertCircle, Wifi, WifiOff } from 'lucide-react';
+import { OIL_PRODUCT_TYPES, REGIONS } from '@shared/constants';
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import axios from 'axios';
 
 // Define oil product categories for filtering
 const OIL_CATEGORIES = {
@@ -49,7 +51,25 @@ const OIL_CATEGORIES = {
 };
 
 export default function Vessels() {
-  const { vessels, loading } = useDataStream();
+  // Use the WebSocket hook with fallback to REST API
+  const { 
+    vessels: realTimeVessels, 
+    loading: wsLoading, 
+    connected: wsConnected,
+    connectionType
+  } = useVesselWebSocket("global");
+  
+  // For direct API access using the API endpoint
+  const [apiVessels, setApiVessels] = useState<Vessel[]>([]);
+  const [apiLoading, setApiLoading] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [selectedRegion, setSelectedRegion] = useState<string>("global");
+  
+  // Combined vessels from both sources
+  const [vessels, setVessels] = useState<Vessel[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  // UI state
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOilTypes, setSelectedOilTypes] = useState<string[]>([]);
   const [selectedTab, setSelectedTab] = useState<string>("all");
@@ -57,6 +77,71 @@ export default function Vessels() {
   const [currentPage, setCurrentPage] = useState(1);
   const [vesselsPerPage] = useState(50); // Show 50 vessels per page
   const { toast } = useToast();
+  
+  // Fetch vessels directly from the API endpoint 
+  const fetchVesselsFromAPI = async () => {
+    try {
+      setApiLoading(true);
+      setFetchError(null);
+      
+      const response = await axios.get('/api/vessels/marine-traffic');
+      console.log('Fetched vessels from API:', response.data.length);
+      
+      setApiVessels(response.data);
+      setFetchError(null);
+    } catch (error) {
+      console.error('Error fetching vessels from API:', error);
+      setFetchError('Failed to fetch vessels from API');
+      
+      // Try fallback endpoint if primary fails
+      try {
+        console.log('Trying fallback REST polling endpoint...');
+        const fallbackResponse = await axios.get('/api/vessels/polling', {
+          params: { region: selectedRegion }
+        });
+        
+        if (fallbackResponse.data && fallbackResponse.data.vessels) {
+          console.log('Fetched vessels from fallback endpoint:', fallbackResponse.data.vessels.length);
+          setApiVessels(fallbackResponse.data.vessels);
+          setFetchError(null);
+        }
+      } catch (fallbackError) {
+        console.error('Error with fallback endpoint:', fallbackError);
+        setFetchError('Failed to fetch vessels from all endpoints');
+      }
+    } finally {
+      setApiLoading(false);
+    }
+  };
+  
+  // Fetch vessels on component mount and when region changes
+  useEffect(() => {
+    fetchVesselsFromAPI();
+    // Fetch again every 5 minutes
+    const intervalId = setInterval(fetchVesselsFromAPI, 5 * 60 * 1000);
+    
+    // Clean up interval on unmount
+    return () => clearInterval(intervalId);
+  }, [selectedRegion]);
+  
+  // Combine vessels from real-time WebSocket and API
+  useEffect(() => {
+    // Determine which source to use
+    let combinedVessels: Vessel[] = [];
+    
+    if (wsConnected && realTimeVessels.length > 0) {
+      // WebSocket is connected and has data - prefer this
+      combinedVessels = realTimeVessels;
+      console.log('Using WebSocket vessels:', realTimeVessels.length);
+    } else if (apiVessels.length > 0) {
+      // Fall back to API data if WebSocket isn't connected
+      combinedVessels = apiVessels;
+      console.log('Using API vessels:', apiVessels.length);
+    }
+    
+    setVessels(combinedVessels);
+    setLoading(wsLoading && apiLoading);
+  }, [realTimeVessels, apiVessels, wsConnected, wsLoading, apiLoading]);
   
   // Helper function to determine oil category
   const getOilCategory = (cargoType: string | null | undefined): string => {
@@ -189,9 +274,48 @@ export default function Vessels() {
             <Ship className="h-8 w-8 mr-2 text-primary" />
             Vessels
           </h1>
-          <p className="text-muted-foreground">
-            {loading ? 'Loading vessels...' : `${vessels.length} vessels in the system`}
-          </p>
+          <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
+            <p className="text-muted-foreground">
+              {loading ? 'Loading vessels...' : `${vessels.length} vessels in the system`}
+            </p>
+            
+            {/* Connection status indicator */}
+            <div className="flex items-center">
+              <Badge 
+                variant="outline" 
+                className={`ml-2 flex items-center gap-1 ${
+                  wsConnected 
+                    ? 'bg-green-50 text-green-700 border-green-200' 
+                    : 'bg-amber-50 text-amber-700 border-amber-200'
+                }`}
+              >
+                {wsConnected ? (
+                  <>
+                    <Wifi className="h-3 w-3 text-green-600" />
+                    <span>WebSocket</span>
+                  </>
+                ) : (
+                  <>
+                    <WifiOff className="h-3 w-3 text-amber-600" />
+                    <span>REST API</span>
+                  </>
+                )}
+              </Badge>
+              
+              {fetchError && (
+                <Badge variant="outline" className="ml-2 bg-red-50 text-red-700 border-red-200 flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3 text-red-600" />
+                  <span>Error</span>
+                </Badge>
+              )}
+              
+              {connectionType && (
+                <Badge variant="outline" className="ml-2 bg-blue-50 text-blue-700 border-blue-200">
+                  {connectionType}
+                </Badge>
+              )}
+            </div>
+          </div>
         </div>
         
         <div className="flex flex-wrap gap-4 mt-4 md:mt-0">
@@ -206,10 +330,52 @@ export default function Vessels() {
             />
           </div>
           
+          {/* Region Filter */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="flex items-center gap-2">
                 <Filter className="h-4 w-4" />
+                <span>Region</span>
+                {selectedRegion !== 'global' && (
+                  <Badge variant="secondary" className="ml-1">
+                    {selectedRegion}
+                  </Badge>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56">
+              <DropdownMenuLabel>
+                <div className="flex items-center">
+                  <Tag className="h-4 w-4 mr-2" />
+                  Filter by Region
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuCheckboxItem
+                key="global"
+                checked={selectedRegion === 'global'}
+                onCheckedChange={() => setSelectedRegion('global')}
+              >
+                Global (All Regions)
+              </DropdownMenuCheckboxItem>
+              
+              {REGIONS.map((region) => (
+                <DropdownMenuCheckboxItem
+                  key={region}
+                  checked={selectedRegion === region}
+                  onCheckedChange={() => setSelectedRegion(region)}
+                >
+                  {region.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
+          {/* Oil Type Filter */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="flex items-center gap-2">
+                <Droplet className="h-4 w-4" />
                 <span>Oil Types</span>
                 {selectedOilTypes.length > 0 && (
                   <Badge variant="secondary" className="ml-1">
@@ -266,9 +432,9 @@ export default function Vessels() {
             {isUpdatingDestinations ? 'Updating...' : 'Ensure All Destinations'}
           </Button>
           
-          <Button>
+          <Button onClick={fetchVesselsFromAPI}>
             <Plus className="h-4 w-4 mr-2" />
-            Add Vessel
+            Refresh Vessels
           </Button>
         </div>
       </div>

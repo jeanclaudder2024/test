@@ -2,10 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 import { Vessel } from '@shared/schema';
 import axios from 'axios';
 
-interface UseVesselWebSocketProps {
-  region?: string;
+// Accept string for simple usage or object for advanced options
+type UseVesselWebSocketProps = string | {
+  region: string;
   pollingInterval?: number; // Polling interval in milliseconds (for REST fallback)
-}
+};
 
 interface WebSocketMessage {
   type: string;
@@ -19,10 +20,10 @@ interface WebSocketMessage {
  * Hook for connecting to the vessel tracking WebSocket to receive real-time vessel updates
  * Falls back to REST API polling if WebSocket connection fails
  */
-export function useVesselWebSocket({ 
-  region, 
-  pollingInterval = 30000 // Default polling interval: 30 seconds
-}: UseVesselWebSocketProps = {}) {
+export function useVesselWebSocket(props: UseVesselWebSocketProps = 'global') {
+  // Handle both string and object props
+  const region = typeof props === 'string' ? props : props.region;
+  const pollingInterval = typeof props === 'object' ? props.pollingInterval || 30000 : 30000;
   const [vessels, setVessels] = useState<Vessel[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
@@ -290,13 +291,19 @@ export function useVesselWebSocket({
     }
   };
   
+  // Determine connection type for UI display
+  const connectionType = usePolling 
+    ? "REST API" 
+    : (isConnected ? "WebSocket" : "Disconnected");
+
   return {
     vessels,
-    isConnected,
+    loading: isLoading,
+    connected: isConnected,
     lastUpdated,
     error,
-    isLoading,
     refreshData,
-    usingFallback: usePolling
+    usingFallback: usePolling,
+    connectionType
   };
 }
