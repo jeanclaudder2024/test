@@ -427,7 +427,7 @@ async function getExpectedArrivals(portIds: string[]): Promise<InsertVessel[]> {
 
 /**
  * Fetch ports from MyShipTracking API
- * Used to provide real port data for the application
+ * Used to provide real 2025 port data for the application
  */
 async function fetchPortsFromAPI(): Promise<InsertPort[]> {
   if (!API_KEY) {
@@ -438,74 +438,98 @@ async function fetchPortsFromAPI(): Promise<InsertPort[]> {
   try {
     console.log(`Attempting to fetch port data from MyShipTracking API...`);
     
-    // Headers for API requests - try with API key in header
+    // Headers for API requests - use Bearer token format
     const headers = {
-      'Authorization': `${API_KEY}`, // Try without Bearer prefix
+      'Authorization': `Bearer ${API_KEY}`,
       'Accept': 'application/json',
-      'Content-Type': 'application/json',
-      'X-API-KEY': API_KEY // Alternative API key header format
+      'Content-Type': 'application/json'
     };
     
-    // Log some of the request details for debugging
-    console.log(`API Request URL: ${API_BASE_URL}${ENDPOINTS.PORTS}`);
+    // First try to test the API connection
+    try {
+      console.log(`Testing API connection with ${API_BASE_URL}/health...`);
+      await axios.get(`${API_BASE_URL}/health`, { headers });
+    } catch (healthError) {
+      console.error('API health check failed, continuing with caution:', healthError);
+    }
     
-    // Try the request with a timeout
+    // Try the request with a timeout and proper error handling
+    console.log(`Requesting ports from: ${API_BASE_URL}${ENDPOINTS.PORTS}`);
     const response = await axios.get(`${API_BASE_URL}${ENDPOINTS.PORTS}`, { 
       headers,
       params: {
-        limit: 100, // Limit to 100 ports to avoid excessive API usage
-        api_key: API_KEY, // Also try API key as query parameter
-        apikey: API_KEY, // Alternative query parameter name
-        key: API_KEY // Another alternative
+        limit: 100,
       },
-      timeout: 10000 // 10 seconds timeout
+      timeout: 15000 // Increase timeout to 15 seconds
     });
     
-    // Log the response status for debugging
-    console.log(`MyShipTracking API ports response status: ${response.status}`);
+    // Log the response status and content type for debugging
+    console.log(`API response status: ${response.status}, content type: ${response.headers['content-type']}`);
     
-    if (!response.data) {
-      console.error('Empty response from MyShipTracking API');
-      return [];
-    }
-    
-    if (response.data.error) {
-      console.error('Error fetching port data from MyShipTracking:', response.data.error);
-      return [];
-    }
-    
-    // Check if the response is a 404 HTML page
+    // If we get HTML instead of JSON (which means a 404 or error page), return empty
     if (typeof response.data === 'string' && response.data.includes('<!DOCTYPE html>')) {
-      console.error('API returned HTML instead of JSON. Possible 404 or unauthorized access.');
+      console.error('API returned HTML instead of JSON. Endpoint may not be available.');
+      // The API is having issues, so we need to return an empty array to trigger fallback
       return [];
     }
     
-    // Map the MyShipTracking data to our port schema
-    const ports: InsertPort[] = response.data.map((port: MyShipTrackingPort) => {
+    if (!response.data || response.data.error) {
+      console.error('Invalid response from API:', response.data?.error || 'Empty response');
+      return [];
+    }
+    
+    // Ensure the response is an array
+    const portsData = Array.isArray(response.data) ? response.data : [response.data];
+    
+    if (portsData.length === 0) {
+      console.log('API returned empty ports array');
+      return [];
+    }
+    
+    // Map the data to our port schema
+    const ports: InsertPort[] = portsData.map((port: MyShipTrackingPort) => {
       // Determine region based on coordinates
-      const region = determineRegion(port.latitude, port.longitude);
+      const region = determineRegion(
+        typeof port.latitude === 'string' ? parseFloat(port.latitude) : port.latitude,
+        typeof port.longitude === 'string' ? parseFloat(port.longitude) : port.longitude
+      );
       
-      // Format port capacity and status
-      const capacity = port.capacity || Math.floor(Math.random() * 100000) + 50000; // Fallback capacity
-      const status = port.status || 'active'; // Default to active if not provided
-      
+      // Handle ports with missing values
       return {
-        name: port.name,
-        country: port.country_name || port.country,
+        name: port.name || 'Unknown Port',
+        country: port.country_name || port.country || 'Unknown',
         region: region,
-        lat: port.latitude.toString(),
-        lng: port.longitude.toString(),
-        capacity: capacity,
-        status: status,
-        description: `${port.name} is a ${port.port_type || 'commercial'} port located in ${port.country_name || port.country}.`
+        lat: typeof port.latitude === 'string' ? port.latitude : port.latitude?.toString() || '0',
+        lng: typeof port.longitude === 'string' ? port.longitude : port.longitude?.toString() || '0',
+        capacity: port.capacity || 1000000, // Default capacity for major ports
+        status: port.status || 'active',
+        description: port.description || `${port.name || 'This port'} is a major shipping facility located in ${port.country_name || port.country || 'its region'}.`
       };
     });
     
-    console.log(`Fetched ${ports.length} ports from MyShipTracking API`);
+    console.log(`API returned ${ports.length} ports`);
+    
+    if (ports.length === 0) {
+      console.error('Error mapping port data from API');
+      return [];
+    }
+    
     return ports;
     
-  } catch (error) {
-    console.error('Error fetching port data from MyShipTracking API:', error);
+  } catch (error: any) {
+    console.error('Error fetching port data from API:', error.message);
+    
+    // Check for specific API error types for better error reporting
+    if (error.response) {
+      // The request was made and the server responded with a status code outside of 2xx
+      console.error(`API returned status ${error.response.status}: ${error.response.statusText}`);
+      console.error('Error details:', error.response.data);
+    } else if (error.request) {
+      // The request was made but no response was received
+      console.error('No response received from API, possible network issue');
+    }
+    
+    // Return empty array to trigger fallback to database data
     return [];
   }
 }
