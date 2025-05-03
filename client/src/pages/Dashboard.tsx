@@ -6,7 +6,7 @@ import StatsCards from "@/components/dashboard/StatsCards";
 import RegionDistribution from "@/components/dashboard/RegionDistribution";
 import AIAssistant from "@/components/ai/AIAssistant";
 import { type Region, type RegionData } from "@/types";
-import { type Vessel, type Refinery } from "@shared/schema";
+import { type Vessel, type Refinery, type Port } from "@shared/schema";
 import { useVesselProgressEvents } from "@/hooks/useVessels";
 // استيراد خدمة توليد السفن لمحطات النفط
 import { getVesselsAtRefineryPorts } from "@/services/asiStreamService";

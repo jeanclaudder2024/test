@@ -1251,6 +1251,216 @@ export default function SimpleLeafletMap({
       refineryMarkersRef.current.push(marker);
     });
     
+    // Add port markers
+    if (ports && ports.length > 0) {
+      console.log(`Processing ${ports.length} ports for display on map`);
+      ports.forEach(port => {
+        if (!port.lat || !port.lng) return;
+        
+        const lat = typeof port.lat === 'number' 
+          ? port.lat 
+          : parseFloat(String(port.lat));
+          
+        const lng = typeof port.lng === 'number'
+          ? port.lng
+          : parseFloat(String(port.lng));
+          
+        if (isNaN(lat) || isNaN(lng)) return;
+        
+        // Create custom port icon
+        const customIcon = L.divIcon({
+          html: `
+            <div class="port-marker-container">
+              <div class="port-marker" style="
+                width: 28px;
+                height: 28px;
+                background: rgba(255,255,255,0.95);
+                border-radius: 4px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border: 2px solid #3772FF;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                text-align: center;
+                z-index: 880;
+                position: relative;
+              ">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3772FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 3v19"></path>
+                  <path d="M5 8h14"></path>
+                  <path d="M19 8a7 7 0 0 0-14 0"></path>
+                </svg>
+              </div>
+            </div>
+          `,
+          className: 'port-marker-wrapper',
+          iconSize: [34, 34],
+          iconAnchor: [17, 17]
+        });
+        
+        // Add marker with enhanced popup
+        const marker = L.marker([lat, lng], { icon: customIcon })
+          .bindPopup(`
+            <div class="port-popup">
+              <div class="port-popup-header" style="
+                background-color: #3772FF;
+                padding: 8px;
+                margin: -8px -8px 8px -8px;
+                border-top-left-radius: 8px;
+                border-top-right-radius: 8px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                color: white;
+              ">
+                <div style="
+                  width: 24px;
+                  height: 24px;
+                  border-radius: 4px;
+                  background: rgba(255,255,255,0.9);
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                ">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3772FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 3v19"></path>
+                    <path d="M5 8h14"></path>
+                    <path d="M19 8a7 7 0 0 0-14 0"></path>
+                  </svg>
+                </div>
+                <h3 style="
+                  font-weight: bold;
+                  margin: 0;
+                  font-size: 14px;
+                  white-space: nowrap;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  flex: 1;
+                ">${port.name}</h3>
+              </div>
+              
+              <div style="padding: 0 8px 8px; font-size: 12px; line-height: 1.4;">
+                <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                  <span style="font-weight: bold; min-width: 60px;">Country:</span>
+                  <span style="flex: 1;">${port.country}</span>
+                </div>
+                
+                <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                  <span style="font-weight: bold; min-width: 60px;">Region:</span>
+                  <span style="flex: 1;">${port.region}</span>
+                </div>
+                
+                <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                  <span style="font-weight: bold; min-width: 60px;">Type:</span>
+                  <span style="flex: 1;">${port.type ? (port.type.charAt(0).toUpperCase() + port.type.slice(1)) : 'Commercial'}</span>
+                </div>
+                
+                <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                  <span style="font-weight: bold; min-width: 60px;">Status:</span>
+                  <span style="display: inline-block; padding: 1px 6px; border-radius: 12px; font-size: 10px; color: white; background-color: ${port.status === 'active' ? '#38b000' : port.status === 'maintenance' ? '#f77f00' : '#6c757d'};">${port.status?.toUpperCase() || 'ACTIVE'}</span>
+                </div>
+                
+                ${port.description ? `
+                <div style="margin-bottom: 8px; font-size: 11px; line-height: 1.3; color: #666;">
+                  ${port.description}
+                </div>
+                ` : ''}
+              </div>
+            </div>
+          `);
+        
+        // Add marker to port markers list
+        marker.addTo(map);
+        portMarkersRef.current.push(marker);
+      });
+    }
+    
+    // Add connections between refineries and ports if showConnections is true
+    if (showConnections && ports && ports.length > 0) {
+      console.log('Displaying connections between refineries and ports');
+      
+      // For each refinery, find nearby ports (simplified approach - in a real app you would use actual connection data)
+      refineries.forEach(refinery => {
+        if (!refinery.lat || !refinery.lng) return;
+        
+        const refineryLat = typeof refinery.lat === 'number'
+          ? refinery.lat
+          : parseFloat(String(refinery.lat));
+          
+        const refineryLng = typeof refinery.lng === 'number'
+          ? refinery.lng
+          : parseFloat(String(refinery.lng));
+          
+        if (isNaN(refineryLat) || isNaN(refineryLng)) return;
+        
+        // Find ports in the same region
+        const nearbyPorts = ports.filter(port => {
+          // First filter by region to limit computations
+          if (port.region !== refinery.region) return false;
+          
+          // Then calculate distance
+          if (!port.lat || !port.lng) return false;
+          
+          const portLat = typeof port.lat === 'number'
+            ? port.lat
+            : parseFloat(String(port.lat));
+            
+          const portLng = typeof port.lng === 'number'
+            ? port.lng
+            : parseFloat(String(port.lng));
+            
+          if (isNaN(portLat) || isNaN(portLng)) return false;
+          
+          // Simplified distance calculation (in a real app, you would use more accurate methods)
+          const distance = Math.sqrt(
+            Math.pow(refineryLat - portLat, 2) + 
+            Math.pow(refineryLng - portLng, 2)
+          );
+          
+          // Consider ports within a reasonable distance threshold
+          // This is a simplified approach; in real world, we would use the RefineryPortConnection data
+          return distance < 5;
+        });
+        
+        // Draw connection lines to nearby ports
+        nearbyPorts.forEach(port => {
+          if (!port.lat || !port.lng) return;
+          
+          const portLat = typeof port.lat === 'number'
+            ? port.lat
+            : parseFloat(String(port.lat));
+            
+          const portLng = typeof port.lng === 'number'
+            ? port.lng
+            : parseFloat(String(port.lng));
+            
+          if (isNaN(portLat) || isNaN(portLng)) return;
+          
+          // Create a curved line for better visualization
+          const latlngs = [
+            [refineryLat, refineryLng],
+            [refineryLat + (portLat - refineryLat) * 0.5, refineryLng + (portLng - refineryLng) * 0.5 + 0.5],
+            [portLat, portLng]
+          ];
+          
+          // Create connection line
+          const connectionLine = L.polyline(latlngs, {
+            color: '#5C5CFF',
+            weight: 2,
+            opacity: 0.7,
+            dashArray: '3, 6',
+            smoothFactor: 1,
+            className: 'refinery-port-connection'
+          }).addTo(map);
+          
+          // Store the connection line in ref
+          routeLinesRef.current.push({
+            line: connectionLine
+          });
+        });
+      });
+    }
+    
     // Set view based on priority:
     // 1. initialCenter/initialZoom (if provided)
     // 2. Selected region
@@ -1293,7 +1503,9 @@ export default function SimpleLeafletMap({
     onRefineryClick,
     isLoading,
     initialCenter,
-    initialZoom
+    initialZoom,
+    ports,
+    showConnections
   ]);
   
   // Handlers for UI controls
@@ -1419,6 +1631,7 @@ export default function SimpleLeafletMap({
           <span>
             {displayVessels?.length || 0} vessels
             {refineries.length > 0 && `, ${refineries.length} refineries`}
+            {ports && ports.length > 0 && `, ${ports.length} ports`}
           </span>
         </div>
       </div>
