@@ -16,6 +16,7 @@ import Subscribe from "@/pages/Subscribe";
 import LandingPage from "@/pages/LandingPage";
 import AuthPage from "@/pages/AuthPage";
 import TradingDashboard from "@/pages/TradingDashboard";
+import LiveTracking from "@/pages/LiveTracking";
 import { useEffect } from "react";
 import { apiRequest } from "./lib/queryClient";
 import MainLayout from "@/components/layout/MainLayout";
@@ -59,6 +60,7 @@ function Router() {
         <ProtectedRoute path="/dashboard" component={Dashboard} />
         <ProtectedRoute path="/vessels" component={Vessels} />
         <ProtectedRoute path="/vessels/:id" component={VesselDetail} />
+        <ProtectedRoute path="/tracking" component={LiveTracking} />
         <ProtectedRoute path="/refineries" component={Refineries} />
         <ProtectedRoute path="/refineries/:id" component={RefineryDetail} />
         <ProtectedRoute path="/brokers" component={Brokers} />

@@ -11,7 +11,9 @@ import {
   ChevronRight,
   ChevronLeft,
   Settings,
-  BarChart
+  BarChart,
+  Map,
+  Radio
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -42,6 +44,12 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
       title: t("nav.vessels"),
       path: "/vessels",
       icon: <Ship className="h-5 w-5 mr-3" />,
+    },
+    {
+      title: t("nav.live_tracking"),
+      path: "/tracking",
+      icon: <Radio className="h-5 w-5 mr-3" />,
+      badge: "LIVE",
     },
     {
       title: t("nav.refineries"),
@@ -157,7 +165,16 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
                       isPathActive(item.path) ? "text-primary" : "text-gray-500 dark:text-gray-400",
                       collapsed ? "mr-0" : "mr-3"
                     )}>{item.icon}</span>
-                    {!collapsed && <span>{item.title}</span>}
+                    {!collapsed && (
+                      <div className="flex items-center">
+                        <span>{item.title}</span>
+                        {item.badge && (
+                          <span className="ml-2 px-1.5 py-0.5 text-[0.6rem] bg-red-500 text-white rounded-full font-bold animate-pulse">
+                            {item.badge}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </Link>
               </li>
@@ -191,7 +208,16 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
                   isPathActive(item.path) ? "text-primary" : "text-gray-500 dark:text-gray-400",
                   collapsed ? "mr-0" : "mr-3"
                 )}>{item.icon}</span>
-                {!collapsed && <span>{item.title}</span>}
+                {!collapsed && (
+                  <div className="flex items-center">
+                    <span>{item.title}</span>
+                    {item.badge && (
+                      <span className="ml-2 px-1.5 py-0.5 text-[0.6rem] bg-red-500 text-white rounded-full font-bold animate-pulse">
+                        {item.badge}
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
             </Link>
           ))}
