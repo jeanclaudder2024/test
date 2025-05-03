@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap, ZoomControl } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { Vessel } from '@shared/schema';
 import { useVesselWebSocket } from '@/hooks/useVesselWebSocket';
@@ -27,76 +27,28 @@ const DefaultIcon = L.icon({
   popupAnchor: [1, -34],
 });
 
-// Create enhanced custom vessel icon with better visual indicators
+// Create custom vessel icon
 const vesselIcon = (heading: number = 0, speed: number = 0, vesselType: string = 'oil products tanker') => {
   // Different colors based on vessel type
   let color = '#3388ff'; // default blue
   
-  // More specific vessel type differentiation for better visual identification
-  if (vesselType.toLowerCase().includes('crude')) {
+  if (vesselType.includes('crude')) {
     color = '#e53935'; // red for crude oil tankers
-  } else if (vesselType.toLowerCase().includes('lng')) {
+  } else if (vesselType.includes('lng')) {
     color = '#43a047'; // green for LNG
-  } else if (vesselType.toLowerCase().includes('lpg')) {
+  } else if (vesselType.includes('lpg')) {
     color = '#ffb300'; // amber for LPG
-  } else if (vesselType.toLowerCase().includes('chemical')) {
-    color = '#9c27b0'; // purple for chemical tankers
-  } else if (vesselType.toLowerCase().includes('product')) {
-    color = '#f06292'; // pink for product tankers
-  } else if (vesselType.toLowerCase().includes('tanker')) {
-    color = '#ff5722'; // deep orange for other tankers
   }
   
-  // Different sizes based on vessel type and speed to indicate both type and movement
-  // Larger vessels (like tankers) get larger icons
-  let baseSize = 10;
-  if (vesselType.toLowerCase().includes('tanker')) {
-    baseSize = 12;
-  } else if (vesselType.toLowerCase().includes('cargo')) {
-    baseSize = 10;
-  }
+  // Different sizes based on vessel speed to indicate movement
+  const size = 8 + Math.min(speed, 15); // Base size + speed factor
   
-  // Add speed factor to size
-  const size = baseSize + Math.min(speed / 2, 8); // Base size + speed factor
-  
-  // Determine if vessel is moving
-  const isMoving = speed > 0.5;
-  
-  // Create an SVG ship icon with directional indicator based on heading
-  // For moving vessels, add a directional indicator
-  let svgIcon;
-  
-  if (isMoving) {
-    // Icon with direction indicator for moving vessels
-    svgIcon = `
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="${size * 2}" height="${size * 2}">
-        <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
-          <feGaussianBlur stdDeviation="2" result="blur" />
-          <feFlood flood-color="${color}" flood-opacity="0.3" result="color" />
-          <feComposite in="color" in2="blur" operator="in" result="shadow" />
-          <feComposite in="SourceGraphic" in2="shadow" operator="over" />
-        </filter>
-        <g filter="url(#glow)">
-          <!-- Vessel body -->
-          <circle cx="16" cy="16" r="${size - 3}" fill="${color}" />
-          <!-- Direction pointer -->
-          <path transform="rotate(${heading}, 16, 16)" 
-                d="M16,${8 - (size * 0.3)} L19,${16 - (size * 0.3)} L16,${16 + (size * 0.3)} L13,${16 - (size * 0.3)} Z" 
-                fill="white" />
-          <!-- Vessel outline -->
-          <circle cx="16" cy="16" r="${size - 3}" fill="none" stroke="white" stroke-width="1.5" />
-        </g>
-      </svg>
-    `;
-  } else {
-    // Simpler icon for stationary vessels
-    svgIcon = `
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="${size * 2}" height="${size * 2}">
-        <circle cx="16" cy="16" r="${size - 2}" fill="${color}" opacity="0.8" />
-        <circle cx="16" cy="16" r="${size - 2}" fill="none" stroke="white" stroke-width="1" stroke-dasharray="3,2" />
-      </svg>
-    `;
-  }
+  // Create an SVG ship icon with rotation based on heading
+  const svgIcon = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="${size * 2}" height="${size * 2}">
+      <path fill="${color}" transform="rotate(${heading}, 12, 12)" d="M21 17H3V15H21V17M21 11H3V9H21V11M21 5H3V3H21V5Z" />
+    </svg>
+  `;
   
   // Convert SVG to data URL
   const svgBase64 = btoa(svgIcon);
@@ -229,26 +181,11 @@ export default function LiveVesselMap({ initialRegion, height = '600px' }: LiveV
             center={mapCenter}
             zoom={mapZoom}
             style={{ height: '100%', width: '100%' }}
-            zoomControl={false} // We'll add custom zoom controls
-            minZoom={2}
-            maxBoundsViscosity={1.0}
-            className="dark-themed-map"
           >
-            {/* Dark-themed map tiles for global maritime style */}
             <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="https://carto.com/attributions">CARTO</a>'
-              url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            
-            {/* Add sea routes overlay */}
-            <TileLayer
-              url="https://{s}.tile.openstreetmap.org/hot/{z}/{x}/{y}.png"
-              opacity={0.3}
-            />
-            
-            {/* Add zoom control in a better position */}
-            <ZoomControl position="bottomright" />
-            
             
             {vessels.map(vessel => {
               // Parse vessel metadata if available
@@ -286,62 +223,18 @@ export default function LiveVesselMap({ initialRegion, height = '600px' }: LiveV
                       }
                     }}
                   >
-                    <Popup minWidth={250} maxWidth={320}>
-                      <div className="text-sm vessel-popup">
-                        <p className="font-bold text-base border-b pb-1 mb-2">{vessel.name}</p>
-                        
-                        <div className="grid grid-cols-2 gap-y-1 mb-2">
-                          <div className="text-muted-foreground">Vessel Type:</div>
-                          <div>{vessel.vesselType}</div>
-                          
-                          <div className="text-muted-foreground">IMO:</div>
-                          <div>{vessel.imo}</div>
-                          
-                          <div className="text-muted-foreground">MMSI:</div>
-                          <div>{vessel.mmsi}</div>
-                          
-                          <div className="text-muted-foreground">Flag:</div>
-                          <div>{vessel.flag}</div>
-                        </div>
-                        
-                        <div className="border-t border-b py-2 my-2">
-                          <div className="grid grid-cols-2 gap-y-1">
-                            <div className="text-muted-foreground">Speed:</div>
-                            <div>{metadata.speed} knots</div>
-                            
-                            <div className="text-muted-foreground">Heading:</div>
-                            <div>{metadata.heading}°</div>
-                            
-                            <div className="text-muted-foreground">Course:</div>
-                            <div>{metadata.course || metadata.heading}°</div>
-                            
-                            <div className="text-muted-foreground">Status:</div>
-                            <div>{metadata.status || (metadata.speed > 0.5 ? 'Underway' : 'Stopped')}</div>
-                          </div>
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-y-1 mt-2">
-                          <div className="text-muted-foreground">Coordinates:</div>
-                          <div className="text-xs">
-                            {parseFloat(vessel.currentLat || '0').toFixed(4)}, {parseFloat(vessel.currentLng || '0').toFixed(4)}
-                          </div>
-                          
-                          <div className="text-muted-foreground">Destination:</div>
-                          <div className="text-xs">{vessel.destinationPort || "Unknown"}</div>
-                          
-                          <div className="text-muted-foreground col-span-2 mt-1">Current Route:</div>
-                          <div className="text-xs col-span-2">
-                            {vessel.departurePort || "Unknown"} → {vessel.destinationPort || "Unknown"}
-                          </div>
-                        </div>
-                        
+                    <Popup>
+                      <div className="text-sm">
+                        <p className="font-bold">{vessel.name}</p>
+                        <p>IMO: {vessel.imo}</p>
+                        <p>Type: {vessel.vesselType}</p>
+                        <p>Speed: {metadata.speed} knots</p>
                         <Button 
-                          variant="default" 
-                          size="sm"
-                          className="w-full mt-2"
+                          variant="link" 
+                          className="p-0 h-auto text-xs"
                           onClick={() => setSelectedVessel(vessel)}
                         >
-                          View Full Details
+                          View Details
                         </Button>
                       </div>
                     </Popup>
