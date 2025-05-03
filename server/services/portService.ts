@@ -267,6 +267,60 @@ export const portService = {
   },
   
   /**
+   * Update ports with latest 2025 data
+   * This will update existing ports with the latest information or create new ones
+   */
+  updatePortsWith2025Data: async (): Promise<{updated: number, added: number}> => {
+    try {
+      console.log("Updating ports with latest 2025 data...");
+      const existingPorts = await storage.getPorts();
+      let updatedCount = 0;
+      let addedCount = 0;
+      
+      // Create a map of existing ports by name for faster lookup
+      const portMap = new Map();
+      existingPorts.forEach(port => {
+        portMap.set(port.name.toLowerCase(), port);
+      });
+      
+      // Process all ports in the new 2025 data
+      for (const newPortData of majorPortsData) {
+        // Check if we have a port with similar name
+        const existingPort = portMap.get(newPortData.name.toLowerCase()) || 
+                            Array.from(portMap.values()).find((p: Port) => 
+                              p.name.toLowerCase().includes(newPortData.name.toLowerCase().split(' ')[0]) ||
+                              newPortData.name.toLowerCase().includes(p.name.toLowerCase().split(' ')[0]));
+        
+        if (existingPort) {
+          // Update the existing port with 2025 data
+          const updatedPort = {
+            ...newPortData,
+            lastUpdated: new Date()
+          };
+          
+          await storage.updatePort(existingPort.id, updatedPort);
+          updatedCount++;
+          console.log(`Updated port: ${existingPort.name} -> ${newPortData.name}`);
+        } else {
+          // This is a new port, add it
+          await storage.createPort({
+            ...newPortData,
+            lastUpdated: new Date()
+          });
+          addedCount++;
+          console.log(`Added new port: ${newPortData.name}`);
+        }
+      }
+      
+      console.log(`Port update complete. Updated: ${updatedCount}, Added: ${addedCount}`);
+      return { updated: updatedCount, added: addedCount };
+    } catch (error) {
+      console.error("Error updating ports with 2025 data:", error);
+      throw new Error("Failed to update ports with 2025 data");
+    }
+  },
+  
+  /**
    * Seed the database with port data
    */
   seedPortData: async (): Promise<{ports: number, seeded: boolean}> => {
@@ -301,11 +355,15 @@ export const portService = {
       }
       
       // If API failed or not configured, use majorPortsData
+      const now = new Date();
       for (const port of majorPortsData) {
-        await storage.createPort(port);
+        await storage.createPort({
+          ...port,
+          lastUpdated: now
+        });
       }
       
-      console.log(`Seeded database with ${majorPortsData.length} major ports.`);
+      console.log(`Seeded database with ${majorPortsData.length} major ports for 2025.`);
       return { ports: majorPortsData.length, seeded: true };
       
     } catch (error) {

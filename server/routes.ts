@@ -238,6 +238,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     });
     
+    // Add a new endpoint to update ports with 2025 data
+    apiRouter.post("/ports/update-to-2025", async (req, res) => {
+      try {
+        console.log("Starting port update to 2025 data...");
+        
+        // Update ports with the latest 2025 data
+        const portUpdateResult = await portService.updatePortsWith2025Data();
+        console.log("Port data updated to 2025 successfully:", portUpdateResult);
+        
+        res.json({
+          success: true,
+          message: "Port data has been updated to 2025",
+          data: {
+            updated: portUpdateResult.updated,
+            added: portUpdateResult.added,
+            total: portUpdateResult.updated + portUpdateResult.added
+          }
+        });
+      } catch (error) {
+        console.error("Error updating ports to 2025 data:", error);
+        res.status(500).json({ message: "Failed to update port data to 2025" });
+      }
+    });
+    
     // Route to update refinery coordinates with accurate data
     apiRouter.post("/refineries/update-coordinates", async (req, res) => {
       try {
