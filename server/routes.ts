@@ -13,6 +13,7 @@ import { seedAllData, regenerateGlobalVessels } from "./services/seedService";
 import { setupAuth } from "./auth";
 import { db } from "./db";
 import { REGIONS } from "@shared/constants";
+import { WebSocketServer, WebSocket } from "ws";
 import { 
   insertVesselSchema, 
   insertRefinerySchema, 
@@ -1244,6 +1245,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api", apiRouter);
 
   const httpServer = createServer(app);
+  
+  // Setup WebSocket server for real-time vessel tracking
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+
+  // Define interface for WebSocket with region subscription
+  interface VesselTrackingWebSocket extends WebSocket {
+    subscribedRegion?: string;
+  }
+
+  // Set up WebSocket server for live vessel updates
+  wss.on('connection', (ws: VesselTrackingWebSocket) => {
+    console.log('Client connected to vessel tracking WebSocket');
+
+    // Send initial data
+    sendVesselData(ws);
+
+    // Set up interval to send updates every 30 seconds
+    const updateInterval = setInterval(() => {
+      sendVesselData(ws);
+    }, 30000);
+
+    // Handle client messages
+    ws.on('message', (message: Buffer) => {
+      try {
+        const data = JSON.parse(message.toString());
+        console.log('Received message:', data);
+        
+        // Handle specific request types
+        if (data.type === 'request_vessels') {
+          sendVesselData(ws);
+        } else if (data.type === 'subscribe_region' && data.region) {
+          // Store the region subscription on the websocket client
+          ws.subscribedRegion = data.region;
+        }
+      } catch (error) {
+        console.error('Error processing WebSocket message:', error);
+      }
+    });
+
+    // Clean up on disconnect
+    ws.on('close', () => {
+      console.log('Client disconnected from vessel tracking WebSocket');
+      clearInterval(updateInterval);
+    });
+  });
+
+  // Function to fetch and send vessel data to websocket client
+  async function sendVesselData(ws: VesselTrackingWebSocket) {
+    try {
+      if (ws.readyState !== WebSocket.OPEN) return;
+      
+      let vessels: Vessel[] = [];
+      
+      try {
+        // First try to get vessels from database
+        vessels = await storage.getVessels();
+      } catch (dbError) {
+        console.log('Database error, fetching from API instead:', dbError);
+        
+        // If database is not available, fetch from API
+        if (marineTrafficService.isConfigured()) {
+          const apiVessels = await marineTrafficService.fetchVessels();
+          
+          // API vessels might not have IDs, so we need to add them
+          vessels = apiVessels.map((v, idx) => ({
+            ...v,
+            id: v.id || idx + 1 // Use index + 1 as fallback ID if needed
+          })) as Vessel[];
+        }
+      }
+      
+      // Filter by region if the client has subscribed to a specific region
+      if (ws.subscribedRegion) {
+        vessels = vessels.filter(v => v.currentRegion === ws.subscribedRegion);
+      }
+      
+      // Limit to 100 vessels to avoid overwhelming the client
+      const limitedVessels = vessels.slice(0, 100);
+      
+      // Send the vessel data
+      ws.send(JSON.stringify({
+        type: 'vessel_update',
+        vessels: limitedVessels,
+        timestamp: new Date().toISOString(),
+        count: limitedVessels.length
+      }));
+    } catch (error) {
+      console.error('Error sending vessel data via WebSocket:', error);
+    }
+  }
 
   return httpServer;
 }

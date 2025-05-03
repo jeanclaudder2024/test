@@ -173,11 +173,22 @@ async function fetchVesselsFromAPI(): Promise<InsertVessel[]> {
       const mmsiNumber = parseInt(vessel.mmsi.replace(/\D/g, '')) || 0;
       const generatedId = mmsiNumber % 100000; // Generate a reasonably unique ID from MMSI
       
+      // Store additional navigation details in metadata field
+      const navigationMetadata = {
+        heading: vessel.heading || 0,
+        course: vessel.course || 0,
+        speed: vessel.speed || 0,
+        status: vessel.status_name || 'Unknown',
+        lastPositionTime: vessel.last_position_time || new Date().toISOString(),
+      };
+      
+      // Serialize the metadata as a JSON string to store in our schema
+      const metadataString = JSON.stringify(navigationMetadata);
+      
       return {
-        id: generatedId, // Generate an ID to match the database schema
+        name: vessel.name,
         imo: vessel.imo || `MST-${vessel.mmsi}`,
         mmsi: vessel.mmsi,
-        name: vessel.name,
         vesselType: mapVesselType(vessel.type_name || vessel.ais_type_summary || 'Tanker'),
         flag: vessel.flag_name || vessel.flag || 'Unknown',
         built: null, // Detailed info not available in this endpoint
@@ -190,7 +201,8 @@ async function fetchVesselsFromAPI(): Promise<InsertVessel[]> {
         eta: vessel.eta ? new Date(vessel.eta) : null,
         cargoType: 'crude_oil', // Assuming oil tankers carry crude oil
         cargoCapacity: null, // Detailed info not available in this endpoint
-        currentRegion: region
+        currentRegion: region,
+        metadata: metadataString // Store navigation details in metadata
       };
     });
     
@@ -320,11 +332,22 @@ async function getExpectedArrivals(portIds: string[]): Promise<InsertVessel[]> {
       const mmsiNumber = parseInt(arrival.mmsi?.replace(/\D/g, '') || '0') || 0;
       const generatedId = mmsiNumber % 100000; // Generate a reasonably unique ID from MMSI
       
+      // Store additional navigation details in metadata field
+      const navigationMetadata = {
+        heading: arrival.heading || 0,
+        course: arrival.course || 0,
+        speed: arrival.speed || 0,
+        status: arrival.status_name || 'Unknown',
+        lastPositionTime: arrival.last_position_time || new Date().toISOString(),
+      };
+      
+      // Serialize the metadata as a JSON string to store in our schema
+      const metadataString = JSON.stringify(navigationMetadata);
+      
       return {
-        id: generatedId, // Generate an ID to match the database schema
+        name: arrival.vessel_name || arrival.name,
         imo: arrival.imo || `MST-${arrival.mmsi}`,
         mmsi: arrival.mmsi,
-        name: arrival.vessel_name || arrival.name,
         vesselType: mapVesselType(arrival.vessel_type_name || arrival.type_name || 'Tanker'),
         flag: arrival.flag_name || arrival.flag || 'Unknown',
         built: null,
@@ -340,7 +363,8 @@ async function getExpectedArrivals(portIds: string[]): Promise<InsertVessel[]> {
         currentRegion: determineRegion(
           parseFloat(arrival.latitude || '0'), 
           parseFloat(arrival.longitude || '0')
-        )
+        ),
+        metadata: metadataString
       };
     });
     

@@ -39,6 +39,7 @@ export const vessels = pgTable("vessels", {
   cargoType: text("cargo_type"),
   cargoCapacity: integer("cargo_capacity"),
   currentRegion: text("current_region"),
+  metadata: text("metadata"), // JSON string with additional vessel information (heading, speed, course, etc.)
 });
 
 export const insertVesselSchema = createInsertSchema(vessels).omit({
