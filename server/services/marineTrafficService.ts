@@ -3,73 +3,76 @@ import { InsertVessel, Vessel, InsertRefinery, Refinery } from "@shared/schema";
 import { REGIONS } from "@shared/constants";
 
 /**
- * Marine Traffic Service for fetching real vessel data
- * This service connects to the Marine Traffic API to get real-time vessel information
+ * MyShipTracking Service for fetching real vessel data
+ * This service connects to the MyShipTracking API to get real-time vessel information
  */
 
 // Environment variable check
 if (!process.env.MARINE_TRAFFIC_API_KEY) {
-  console.warn('Warning: MARINE_TRAFFIC_API_KEY environment variable is not set. Marine Traffic API integration will not work.');
+  console.warn('Warning: MARINE_TRAFFIC_API_KEY environment variable is not set. MyShipTracking API integration will not work.');
 }
 
-// Base URL for the Marine Traffic API
-const API_BASE_URL = 'https://services.marinetraffic.com/api';
+// Base URL for the MyShipTracking API
+const API_BASE_URL = 'https://api.myshiptracking.com/v1';
 const API_KEY = process.env.MARINE_TRAFFIC_API_KEY;
 
-// Marine Traffic API endpoints
+// MyShipTracking API endpoints
 const ENDPOINTS = {
-  // Marine Traffic PS01 - Vessel Positions
-  VESSEL_POSITIONS: '/exportvessels',
-  // Marine Traffic PS02 - Vessel Positions of a Fleet
-  FLEET_POSITIONS: '/exportvessel',
-  // Marine Traffic VD01 - Vessel Details
-  VESSEL_DETAILS: '/vesseldetails',
-  // Marine Traffic PS06 - Port Calls
-  PORT_CALLS: '/portcalls',
-  // Marine Traffic PS07 - Expected Arrivals
-  EXPECTED_ARRIVALS: '/expectedarrivals'
+  // Get vessel positions 
+  VESSEL_POSITIONS: '/vessels',
+  // Get vessel details by IMO or MMSI
+  VESSEL_DETAILS: '/vessels/details',
+  // Get vessels in area (defined by coordinates)
+  VESSELS_IN_AREA: '/vessels/area',
+  // Get vessel route and trajectory
+  VESSEL_ROUTE: '/vessels/route',
+  // Get port calls
+  PORT_CALLS: '/ports/calls'
 };
 
-// Types for Marine Traffic API responses
-interface MarineTrafficVesselPosition {
-  MMSI: string;
-  IMO: string;
-  SHIP_ID: string;
-  LAT: string;
-  LON: string;
-  SPEED: string;
-  HEADING: string;
-  COURSE: string;
-  STATUS: string;
-  TIMESTAMP: string;
-  DSRC: string;
-  SHIP_NAME: string;
-  SHIP_TYPE: string;
-  TYPE_COLOR: string;
-  TYPE_NAME: string;
-  DESTINATION: string;
-  ETA: string;
-  AIS_TYPE_SUMMARY: string;
-  CURRENT_PORT: string;
-  LAST_PORT: string;
-  LAST_PORT_TIME: string;
-  FLAG: string;
+// Types for MyShipTracking API responses
+interface MyShipTrackingVessel {
+  mmsi: string;
+  imo: string;
+  name: string;
+  type: number;
+  type_name: string;
+  ais_type_summary: string;
+  flag: string;
+  flag_name: string;
+  latitude: number;
+  longitude: number;
+  course: number;
+  speed: number;
+  heading: number;
+  status: number;
+  status_name: string;
+  last_position_time: string;
+  destination: string;
+  eta: string;
+  last_port: string;
+  last_port_time: string;
 }
 
-interface MarineTrafficVesselDetails {
-  IMO: string;
-  NAME: string;
-  MMSI: string;
-  TYPE_NAME: string;
-  TYPE_SUMMARY: string;
-  DWT: string;
-  YEAR_BUILT: string;
-  GT: string;
-  FLAG: string;
-  OWNER: string;
-  LENGTH: string;
-  BREADTH: string;
-  DRAUGHT: string;
+interface MyShipTrackingVesselDetails {
+  imo: string;
+  mmsi: string;
+  name: string;
+  type: number;
+  type_name: string;
+  call_sign: string;
+  flag: string;
+  flag_name: string;
+  gross_tonnage: number;
+  deadweight: number;
+  length: number;
+  beam: number;
+  draught: number;
+  year_built: number;
+  home_port: string;
+  owner: string;
+  manager: string;
+  photos: Array<{url: string; caption: string}>;
 }
 
 /**
@@ -119,75 +122,78 @@ function determineRegion(lat: number, lng: number): string {
 }
 
 /**
- * Fetch vessels from Marine Traffic API
+ * Fetch vessels from MyShipTracking API
  */
 async function fetchVesselsFromAPI(): Promise<InsertVessel[]> {
   if (!API_KEY) {
-    console.error('Marine Traffic API key is not set');
+    console.error('MyShipTracking API key is not set');
     return [];
   }
   
   try {
-    // PS01 API - Get vessel positions for oil tankers
+    // Get vessel positions for oil tankers
+    const headers = {
+      'Authorization': `Bearer ${API_KEY}`,
+      'Content-Type': 'application/json'
+    };
+    
+    // Query parameters for tankers only
     const params = {
-      timespan: 60, // Last 60 minutes
-      msgtype: 'simple',
-      protocol: 'jsono', // JSON output
-      key: API_KEY,
-      ship_type: '7', // 7 is for Tankers
+      type: '80,81,82,83,84', // Tanker vessel types (Crude oil, Oil/Chemical, LNG, etc.)
       limit: 100 // Limit to 100 vessels to avoid excessive API usage
     };
     
-    const response = await axios.get(`${API_BASE_URL}${ENDPOINTS.VESSEL_POSITIONS}`, { params });
+    const response = await axios.get(`${API_BASE_URL}${ENDPOINTS.VESSEL_POSITIONS}`, { 
+      headers,
+      params 
+    });
     
-    if (!response.data || response.data.errors) {
-      console.error('Error fetching vessel data from Marine Traffic:', response.data?.errors || 'Unknown error');
+    if (!response.data || response.data.error) {
+      console.error('Error fetching vessel data from MyShipTracking:', response.data?.error || 'Unknown error');
       return [];
     }
     
-    // Map the Marine Traffic data to our vessel schema
-    const vessels: InsertVessel[] = response.data.map((vessel: MarineTrafficVesselPosition) => {
-      // Extract values with proper type conversion
-      const lat = parseFloat(vessel.LAT);
-      const lng = parseFloat(vessel.LON);
-      const region = determineRegion(lat, lng);
+    // Map the MyShipTracking data to our vessel schema
+    const vessels: InsertVessel[] = response.data.map((vessel: MyShipTrackingVessel) => {
+      // Determine region based on coordinates
+      const region = determineRegion(vessel.latitude, vessel.longitude);
       
       // Format destination port
-      const destinationPort = vessel.DESTINATION ? vessel.DESTINATION.trim() : 'Unknown';
-      const departurePort = vessel.LAST_PORT || 'Unknown';
+      const destinationPort = vessel.destination ? vessel.destination.trim() : 'Unknown';
+      const departurePort = vessel.last_port || 'Unknown';
       
       // Create vessel object according to our schema
       return {
-        imo: vessel.IMO || `MT-${vessel.MMSI}`,
-        mmsi: vessel.MMSI,
-        name: vessel.SHIP_NAME,
-        vesselType: mapVesselType(vessel.TYPE_NAME || vessel.AIS_TYPE_SUMMARY || 'Tanker'),
-        flag: vessel.FLAG || 'Unknown',
+        imo: vessel.imo || `MST-${vessel.mmsi}`,
+        mmsi: vessel.mmsi,
+        name: vessel.name,
+        vesselType: mapVesselType(vessel.type_name || vessel.ais_type_summary || 'Tanker'),
+        flag: vessel.flag_name || vessel.flag || 'Unknown',
         built: null, // Detailed info not available in this endpoint
         deadweight: null, // Detailed info not available in this endpoint
-        currentLat: lat.toString(),
-        currentLng: lng.toString(),
+        currentLat: vessel.latitude.toString(),
+        currentLng: vessel.longitude.toString(),
         departurePort: departurePort,
-        departureDate: vessel.LAST_PORT_TIME ? new Date(vessel.LAST_PORT_TIME) : null,
+        departureDate: vessel.last_port_time ? new Date(vessel.last_port_time) : null,
         destinationPort: destinationPort,
-        eta: vessel.ETA ? new Date(vessel.ETA) : null,
+        eta: vessel.eta ? new Date(vessel.eta) : null,
         cargoType: 'crude_oil', // Assuming oil tankers carry crude oil
         cargoCapacity: null, // Detailed info not available in this endpoint
         currentRegion: region
       };
     });
     
-    console.log(`Fetched ${vessels.length} vessels from Marine Traffic API`);
+    console.log(`Fetched ${vessels.length} vessels from MyShipTracking API`);
     return vessels;
     
   } catch (error) {
-    console.error('Error fetching data from Marine Traffic API:', error);
+    console.error('Error fetching data from MyShipTracking API:', error);
     return [];
   }
 }
 
 /**
- * Enrich vessel data with details from the Marine Traffic API
+ * Enrich vessel data with details from the MyShipTracking API
  */
 async function enrichVesselData(vessels: InsertVessel[]): Promise<InsertVessel[]> {
   if (!API_KEY || vessels.length === 0) {
@@ -195,57 +201,70 @@ async function enrichVesselData(vessels: InsertVessel[]): Promise<InsertVessel[]
   }
   
   // We'll enrich up to 20 vessels at a time to avoid excessive API usage
+  const enrichedVessels: InsertVessel[] = [...vessels];
   const vesselBatch = vessels.slice(0, 20);
-  const imoList = vesselBatch.map(v => v.imo).filter(imo => imo && !imo.startsWith('MT-')).join(',');
   
-  if (!imoList) {
-    return vessels;
-  }
+  // Headers for API requests
+  const headers = {
+    'Authorization': `Bearer ${API_KEY}`,
+    'Content-Type': 'application/json'
+  };
   
   try {
-    // VD01 API - Get vessel details
-    const params = {
-      imois: imoList,
-      protocol: 'jsono',
-      key: API_KEY
-    };
-    
-    const response = await axios.get(`${API_BASE_URL}${ENDPOINTS.VESSEL_DETAILS}`, { params });
-    
-    if (!response.data || response.data.errors) {
-      console.error('Error fetching vessel details from Marine Traffic:', response.data?.errors || 'Unknown error');
-      return vessels;
-    }
-    
-    // Create a map of IMO to vessel details
-    const detailsMap = new Map<string, MarineTrafficVesselDetails>();
-    response.data.forEach((details: MarineTrafficVesselDetails) => {
-      detailsMap.set(details.IMO, details);
-    });
-    
-    // Enrich the vessels with details
-    return vessels.map(vessel => {
-      const details = detailsMap.get(vessel.imo);
-      
-      if (!details) {
-        return vessel;
+    // Process vessels in batches to avoid rate limits
+    for (const vessel of vesselBatch) {
+      // Skip vessels with generated IDs
+      if (vessel.imo.startsWith('MST-')) {
+        continue;
       }
       
-      return {
-        ...vessel,
-        built: details.YEAR_BUILT ? parseInt(details.YEAR_BUILT, 10) : null,
-        deadweight: details.DWT ? parseInt(details.DWT, 10) : null,
-        // Update other fields if available in the details
-        name: details.NAME || vessel.name,
-        mmsi: details.MMSI || vessel.mmsi,
-        vesselType: mapVesselType(details.TYPE_NAME || details.TYPE_SUMMARY || vessel.vesselType),
-        flag: details.FLAG || vessel.flag,
-        cargoCapacity: details.DWT ? Math.round(parseInt(details.DWT, 10) * 0.95) : null // Estimated cargo capacity as 95% of DWT
-      };
-    });
+      try {
+        // Get vessel details by IMO
+        const response = await axios.get(`${API_BASE_URL}${ENDPOINTS.VESSEL_DETAILS}`, { 
+          headers,
+          params: { imo: vessel.imo }
+        });
+        
+        if (!response.data || response.data.error) {
+          continue; // Skip to next vessel if error
+        }
+        
+        // API may return single object or array
+        const vesselDetails: MyShipTrackingVesselDetails = 
+          Array.isArray(response.data) ? response.data[0] : response.data;
+        
+        if (!vesselDetails) {
+          continue;
+        }
+        
+        // Find the vessel in our result array and update it
+        const index = enrichedVessels.findIndex(v => v.imo === vessel.imo);
+        if (index !== -1) {
+          enrichedVessels[index] = {
+            ...enrichedVessels[index],
+            built: vesselDetails.year_built || null,
+            deadweight: vesselDetails.deadweight || null,
+            name: vesselDetails.name || vessel.name,
+            mmsi: vesselDetails.mmsi || vessel.mmsi,
+            vesselType: mapVesselType(vesselDetails.type_name || vessel.vesselType),
+            flag: vesselDetails.flag_name || vesselDetails.flag || vessel.flag,
+            cargoCapacity: vesselDetails.deadweight ? Math.round(vesselDetails.deadweight * 0.95) : null // Estimated cargo capacity as 95% of DWT
+          };
+        }
+        
+        // Small delay to avoid hitting API rate limits
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+      } catch (detailError) {
+        console.warn(`Error fetching details for vessel ${vessel.imo}:`, detailError);
+        // Continue with next vessel
+      }
+    }
+    
+    return enrichedVessels;
     
   } catch (error) {
-    console.error('Error enriching vessel data from Marine Traffic API:', error);
+    console.error('Error enriching vessel data from MyShipTracking API:', error);
     return vessels;
   }
 }
