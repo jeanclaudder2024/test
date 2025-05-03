@@ -17,6 +17,7 @@ import LandingPage from "@/pages/LandingPage";
 import AuthPage from "@/pages/AuthPage";
 import TradingDashboard from "@/pages/TradingDashboard";
 import LiveTracking from "@/pages/LiveTracking";
+import ApiTest from "@/pages/ApiTest";
 import { useEffect } from "react";
 import { apiRequest } from "./lib/queryClient";
 import MainLayout from "@/components/layout/MainLayout";
@@ -69,6 +70,7 @@ function Router() {
         <ProtectedRoute path="/trading" component={TradingDashboard} />
         <ProtectedRoute path="/settings" component={Settings} />
         <ProtectedRoute path="/subscribe" component={Subscribe} />
+        <Route path="/api-test" component={ApiTest} />
         <Route component={NotFound} />
       </Switch>
     </MainLayout>
