@@ -1,5 +1,11 @@
-// Import any necessary libraries or SDK
-// Note: This is a simplified version without external API calls
+/**
+ * Service for interacting with Cohere AI API
+ */
+
+// Check if Cohere API key is set
+if (!process.env.COHERE_API_KEY) {
+  console.warn('Warning: COHERE_API_KEY is not set. Document generation features will not work.');
+}
 
 /**
  * Generate text using Cohere AI API
@@ -7,121 +13,179 @@
  * @returns Generated text
  */
 export async function generateWithCohere(prompt: string): Promise<string> {
-  if (!process.env.COHERE_API_KEY) {
-    console.warn("COHERE_API_KEY is not configured. Using fallback responses.");
-    return generateFallbackResponse(prompt);
-  }
-  
   try {
-    // In a real implementation, this would call the Cohere API
-    // For now, we'll use a fallback to avoid API costs
-    return generateFallbackResponse(prompt);
+    const url = 'https://api.cohere.ai/v1/generate';
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.COHERE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'command',
+        prompt,
+        max_tokens: 1000,
+        temperature: 0.7,
+        k: 0,
+        stop_sequences: [],
+        return_likelihoods: 'NONE',
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Cohere API error: ${response.status} - ${errorText}`);
+    }
+
+    const data = await response.json();
+    return data.generations[0].text;
   } catch (error) {
-    console.error("Error generating with Cohere:", error);
-    throw error;
+    console.error('Error generating text with Cohere:', error);
+    throw new Error('Failed to generate document content. Please try again later.');
   }
 }
 
 /**
  * Generate shipping document using Cohere AI
- * @param cargoData Cargo data for document generation
+ * @param vesselData Vessel and cargo data for document generation
  * @param documentType Type of document to generate
  * @returns Generated document content
  */
 export async function generateShippingDocument(
-  cargoData: any,
+  vesselData: any,
   documentType: string
 ): Promise<string> {
-  if (!process.env.COHERE_API_KEY) {
-    console.warn("COHERE_API_KEY is not configured. Using fallback document template.");
-    return generateFallbackDocument(documentType, cargoData);
-  }
+  const currentDate = new Date().toISOString().split('T')[0];
   
-  try {
-    // In a real implementation, this would call the Cohere API
-    // For now, we'll use a fallback to avoid API costs
-    return generateFallbackDocument(documentType, cargoData);
-  } catch (error) {
-    console.error("Error generating shipping document with Cohere:", error);
-    throw error;
-  }
-}
-
-/**
- * Fallback function for generating AI responses
- */
-function generateFallbackResponse(query: string): string {
-  const queryLower = query.toLowerCase();
-  
-  if (queryLower.includes("oil price") || queryLower.includes("oil market")) {
-    return "The oil market currently shows Brent crude trading at $82.45 and WTI at $78.60 per barrel. " +
-           "Recent OPEC+ decisions have been supporting prices amid geopolitical tensions in the Middle East.";
-  }
-  
-  if (queryLower.includes("shipping route") || queryLower.includes("transport")) {
-    return "Major oil shipping routes include the Strait of Hormuz, Suez Canal, Strait of Malacca, and Cape of Good Hope. " +
-           "Each route has different strategic and economic implications for oil transport.";
-  }
-  
-  if (queryLower.includes("broker") || queryLower.includes("trading")) {
-    return "Oil brokers facilitate transactions between buyers and sellers in the petroleum market. " +
-           "Our platform supports broker activities with premium features for elite members, including market analytics and dedicated support.";
-  }
-  
-  return "I'm an AI assistant specialized in oil trading, shipping, and market intelligence. " +
-         "I can help you with information about oil prices, shipping documentation, market trends, and broker services. " +
-         "How can I assist you today?";
-}
-
-/**
- * Fallback function for generating documents
- */
-function generateFallbackDocument(documentType: string, cargoData: any): string {
-  const date = new Date().toLocaleDateString();
-  const ref = `REF-${Math.floor(Math.random() * 1000000)}`;
+  // Build structured prompt based on document type
+  let prompt = '';
   
   switch (documentType.toLowerCase()) {
     case 'bill of lading':
-      return `BILL OF LADING
-Reference: ${ref}
-Date: ${date}
----------------------------------
-SHIPPER: ${cargoData?.shipper || '[Company Name]'}
-CONSIGNEE: ${cargoData?.consignee || '[Recipient Name]'}
-VESSEL: ${cargoData?.vessel || 'TBD'}
-PORT OF LOADING: ${cargoData?.portOfLoading || 'TBD'}
-PORT OF DISCHARGE: ${cargoData?.portOfDischarge || 'TBD'}
-CARGO: ${cargoData?.cargoType || 'Crude Oil'} - ${cargoData?.quantity || '1000'} ${cargoData?.unit || 'Metric Tons'}
----------------------------------
-This is to certify that the above-mentioned goods have been shipped in apparent good order and condition.
-`;
+      prompt = `Generate a detailed Bill of Lading for the following shipping information:
+Vessel: ${vesselData.name} (IMO: ${vesselData.imo})
+Flag: ${vesselData.flag}
+Cargo Type: ${vesselData.cargoType || 'Crude Oil'}
+Cargo Capacity: ${vesselData.cargoCapacity || 'N/A'} tons
+Departure: ${vesselData.departurePort || 'N/A'} on ${vesselData.departureDate ? new Date(vesselData.departureDate).toISOString().split('T')[0] : 'N/A'}
+Destination: ${vesselData.destinationPort || 'N/A'} (ETA: ${vesselData.eta ? new Date(vesselData.eta).toISOString().split('T')[0] : 'N/A'})
+Date Issued: ${currentDate}
+
+The Bill of Lading must include:
+1. Shipper details
+2. Consignee details
+3. Notify party
+4. Vessel and voyage details
+5. Port of loading and discharge
+6. Cargo description
+7. Container numbers (if applicable)
+8. Freight details
+9. Number of original bills of lading issued
+10. Terms and conditions
+11. Signature blocks
+
+Format as a properly structured formal document.`;
+      break;
       
-    case 'certificate of origin':
-      return `CERTIFICATE OF ORIGIN
-Reference: ${ref}
-Date: ${date}
----------------------------------
-EXPORTER: ${cargoData?.exporter || '[Company Name]'}
-IMPORTER: ${cargoData?.importer || '[Recipient Name]'}
-COUNTRY OF ORIGIN: ${cargoData?.origin || 'Saudi Arabia'}
-CARGO DESCRIPTION: ${cargoData?.cargoType || 'Crude Oil'} - ${cargoData?.quantity || '1000'} ${cargoData?.unit || 'Metric Tons'}
-HS CODE: ${cargoData?.hsCode || '2709.00'}
----------------------------------
-This is to certify that the goods described above originate from the stated country of origin.
-`;
+    case 'cargo manifest':
+      prompt = `Generate a detailed Cargo Manifest for the following shipping information:
+Vessel: ${vesselData.name} (IMO: ${vesselData.imo})
+Flag: ${vesselData.flag}
+Cargo Type: ${vesselData.cargoType || 'Crude Oil'}
+Cargo Capacity: ${vesselData.cargoCapacity || 'N/A'} tons
+Departure: ${vesselData.departurePort || 'N/A'} on ${vesselData.departureDate ? new Date(vesselData.departureDate).toISOString().split('T')[0] : 'N/A'}
+Destination: ${vesselData.destinationPort || 'N/A'} (ETA: ${vesselData.eta ? new Date(vesselData.eta).toISOString().split('T')[0] : 'N/A'})
+Date Issued: ${currentDate}
+
+The Cargo Manifest must include:
+1. Vessel details
+2. Voyage number
+3. Port of loading
+4. Port of discharge
+5. Detailed listing of all cargo with descriptions, weights, and measurements
+6. Hazardous cargo information (if applicable)
+7. Special handling requirements
+8. Total cargo weight and volume
+9. Signature and stamp
+10. Page numbers and total page count
+
+Format as a properly structured formal document.`;
+      break;
+      
+    case 'inspection report':
+      prompt = `Generate a detailed Vessel Inspection Report for the following vessel:
+Vessel: ${vesselData.name} (IMO: ${vesselData.imo})
+Flag: ${vesselData.flag}
+Built: ${vesselData.built || 'N/A'}
+Deadweight: ${vesselData.deadweight || 'N/A'} tons
+Current Location: Latitude ${vesselData.currentLat || 'N/A'}, Longitude ${vesselData.currentLng || 'N/A'}
+Date of Inspection: ${currentDate}
+
+The Inspection Report must include:
+1. Executive summary
+2. Vessel particulars
+3. Inspection scope and methodology
+4. Hull condition assessment
+5. Machinery and equipment condition
+6. Safety and navigation equipment
+7. Cargo systems inspection
+8. Compliance with international regulations
+9. Deficiencies identified
+10. Recommendations
+11. Overall vessel rating
+12. Inspector details and credentials
+13. Appendices for photos and detailed findings
+
+Format as a professionally structured inspection report.`;
+      break;
+      
+    case 'loading instructions':
+      prompt = `Generate detailed Loading Instructions for the following vessel and cargo:
+Vessel: ${vesselData.name} (IMO: ${vesselData.imo})
+Flag: ${vesselData.flag}
+Cargo Type: ${vesselData.cargoType || 'Crude Oil'}
+Cargo Capacity: ${vesselData.cargoCapacity || 'N/A'} tons
+Loading Port: ${vesselData.departurePort || 'N/A'}
+Loading Date: ${vesselData.departureDate ? new Date(vesselData.departureDate).toISOString().split('T')[0] : currentDate}
+
+The Loading Instructions must include:
+1. Pre-loading checks and preparations
+2. Loading sequence and rate
+3. Trim and stability considerations
+4. Tank distribution plan
+5. Temperature and pressure requirements
+6. Sampling and testing procedures
+7. Safety precautions and emergency procedures
+8. Communication protocols
+9. Documentation requirements
+10. Post-loading checks
+11. Master's acknowledgment
+12. Terminal representative's approval
+
+Format as a structured, step-by-step technical document.`;
+      break;
       
     default:
-      return `DOCUMENT: ${documentType.toUpperCase()}
-Reference: ${ref}
-Date: ${date}
----------------------------------
-This is a document template for ${documentType} related to cargo shipment.
-Please provide more specific details for a complete document.
-`;
+      prompt = `Generate a detailed shipping document for ${documentType} related to the following vessel:
+Vessel: ${vesselData.name} (IMO: ${vesselData.imo})
+Flag: ${vesselData.flag}
+Cargo Type: ${vesselData.cargoType || 'Crude Oil'}
+Cargo Capacity: ${vesselData.cargoCapacity || 'N/A'} tons
+Departure: ${vesselData.departurePort || 'N/A'} on ${vesselData.departureDate ? new Date(vesselData.departureDate).toISOString().split('T')[0] : 'N/A'}
+Destination: ${vesselData.destinationPort || 'N/A'} (ETA: ${vesselData.eta ? new Date(vesselData.eta).toISOString().split('T')[0] : 'N/A'})
+Date Issued: ${currentDate}
+
+Include all relevant fields for this type of document, ensuring it follows industry standards and regulatory requirements.
+Format as a properly structured formal document.`;
   }
+  
+  // Generate the document using Cohere
+  const generatedText = await generateWithCohere(prompt);
+  
+  return generatedText.trim();
 }
 
 export const cohereService = {
-  generateResponse: generateWithCohere,
+  generateWithCohere,
   generateShippingDocument
 };

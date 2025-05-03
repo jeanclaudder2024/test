@@ -4,6 +4,10 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
+import Vessels from "@/pages/Vessels";
+import VesselDetail from "@/pages/VesselDetail";
+import Refineries from "@/pages/Refineries";
+import RefineryDetail from "@/pages/RefineryDetail";
 import Brokers from "@/pages/Brokers";
 import Documents from "@/pages/Documents";
 import AIAssistantPage from "@/pages/AIAssistant";
@@ -12,6 +16,8 @@ import Subscribe from "@/pages/Subscribe";
 import LandingPage from "@/pages/LandingPage";
 import AuthPage from "@/pages/AuthPage";
 import TradingDashboard from "@/pages/TradingDashboard";
+import LiveTracking from "@/pages/LiveTracking";
+import ApiTest from "@/pages/ApiTest";
 import { useEffect } from "react";
 import { apiRequest } from "./lib/queryClient";
 import MainLayout from "@/components/layout/MainLayout";
@@ -53,12 +59,18 @@ function Router() {
     <MainLayout>
       <Switch>
         <ProtectedRoute path="/dashboard" component={Dashboard} />
+        <ProtectedRoute path="/vessels" component={Vessels} />
+        <ProtectedRoute path="/vessels/:id" component={VesselDetail} />
+        <ProtectedRoute path="/tracking" component={LiveTracking} />
+        <ProtectedRoute path="/refineries" component={Refineries} />
+        <ProtectedRoute path="/refineries/:id" component={RefineryDetail} />
         <ProtectedRoute path="/brokers" component={Brokers} />
         <ProtectedRoute path="/documents" component={Documents} />
         <ProtectedRoute path="/ai-assistant" component={AIAssistantPage} />
         <ProtectedRoute path="/trading" component={TradingDashboard} />
         <ProtectedRoute path="/settings" component={Settings} />
         <ProtectedRoute path="/subscribe" component={Subscribe} />
+        <Route path="/api-test" component={ApiTest} />
         <Route component={NotFound} />
       </Switch>
     </MainLayout>
