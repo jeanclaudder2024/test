@@ -1241,6 +1241,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // API tester routes (performance testing, etc.)
   app.use("/api/tester", apiTesterRouter);
 
+  // API endpoint for vessels when WebSockets are not available
+  apiRouter.get("/vessels/polling", async (req, res) => {
+    try {
+      console.log("REST API polling request for vessels received");
+      const region = req.query.region as string | undefined;
+      
+      // Get vessels from database
+      let vessels = await storage.getVessels();
+      console.log(`REST API: Retrieved ${vessels.length} vessels from database`);
+      
+      // Filter by region if requested
+      if (region && region !== 'global') {
+        const beforeFilter = vessels.length;
+        vessels = vessels.filter(v => v.currentRegion === region);
+        console.log(`REST API: Filtered vessels by region ${region}: ${beforeFilter} → ${vessels.length}`);
+      }
+      
+      // Limit to 100 vessels for performance
+      const limitedVessels = vessels.slice(0, 100);
+      
+      res.json({
+        vessels: limitedVessels,
+        timestamp: new Date().toISOString(),
+        count: limitedVessels.length
+      });
+      
+      console.log(`REST API: Sent ${limitedVessels.length} vessels to client`);
+    } catch (error) {
+      console.error("Error handling REST vessel polling:", error);
+      res.status(500).json({ 
+        error: "Failed to fetch vessel data",
+        message: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   // Mount API router for general endpoints
   app.use("/api", apiRouter);
 

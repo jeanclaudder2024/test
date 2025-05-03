@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { Vessel } from '@shared/schema';
+import axios from 'axios';
 
 interface UseVesselWebSocketProps {
   region?: string;
+  pollingInterval?: number; // Polling interval in milliseconds (for REST fallback)
 }
 
 interface WebSocketMessage {
@@ -15,16 +17,22 @@ interface WebSocketMessage {
 
 /**
  * Hook for connecting to the vessel tracking WebSocket to receive real-time vessel updates
+ * Falls back to REST API polling if WebSocket connection fails
  */
-export function useVesselWebSocket({ region }: UseVesselWebSocketProps = {}) {
+export function useVesselWebSocket({ 
+  region, 
+  pollingInterval = 30000 // Default polling interval: 30 seconds
+}: UseVesselWebSocketProps = {}) {
   const [vessels, setVessels] = useState<Vessel[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [usePolling, setUsePolling] = useState(false); // Track if we're using polling as fallback
   
   const socketRef = useRef<WebSocket | null>(null);
   const reconnectTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const pollingTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Set up WebSocket connection
   useEffect(() => {
@@ -145,19 +153,80 @@ export function useVesselWebSocket({ region }: UseVesselWebSocketProps = {}) {
         setError('Failed to connect to vessel tracking service');
         setIsLoading(false);
         
-        // Schedule reconnection
-        reconnectTimerRef.current = setTimeout(() => {
-          connectWebSocket();
-        }, 5000);
+        // Switch to REST API polling fallback after a few failed attempts
+        if (!usePolling) {
+          console.log('Switching to REST API polling as fallback');
+          setUsePolling(true);
+          startPolling();
+        } else {
+          // If already using polling, schedule a websocket reconnection attempt
+          reconnectTimerRef.current = setTimeout(() => {
+            connectWebSocket();
+          }, 30000); // Try websocket again after 30 seconds
+        }
       }
+    };
+    
+    // Function to poll the REST API for vessel data
+    const startPolling = () => {
+      // Clear any existing polling interval
+      if (pollingTimerRef.current) {
+        clearInterval(pollingTimerRef.current);
+      }
+      
+      // Function to fetch data via REST API
+      const pollVesselData = async () => {
+        try {
+          setIsLoading(true);
+          console.log('Polling REST API for vessel data...');
+          
+          // Build URL with optional region parameter
+          const url = `/api/vessels/polling${region && region !== 'global' ? `?region=${region}` : ''}`;
+          
+          const response = await axios.get(url);
+          const data = response.data;
+          
+          if (data.vessels) {
+            console.log(`Received ${data.vessels.length} vessels from REST API`);
+            setVessels(data.vessels);
+            setLastUpdated(data.timestamp || new Date().toISOString());
+          }
+          
+          setIsLoading(false);
+        } catch (error) {
+          console.error('Error polling REST API:', error);
+          setError('Failed to fetch vessel data');
+          setIsLoading(false);
+          
+          // Try to reconnect to WebSocket if REST API fails
+          if (usePolling) {
+            console.log('REST API failed, attempting WebSocket reconnection');
+            connectWebSocket();
+          }
+        }
+      };
+      
+      // Execute immediately
+      pollVesselData();
+      
+      // Then set up interval
+      pollingTimerRef.current = setInterval(pollVesselData, pollingInterval);
     };
     
     // Initial connection
     connectWebSocket();
     
-    // Clean up when component unmounts
-    return cleanup;
-  }, [region]);
+    // Clean up function when component unmounts
+    return () => {
+      cleanup();
+      
+      // Also clear polling interval if it exists
+      if (pollingTimerRef.current) {
+        clearInterval(pollingTimerRef.current);
+        pollingTimerRef.current = null;
+      }
+    };
+  }, [region, pollingInterval, usePolling]);
   
   // Request updated data for a specific region when the region changes
   useEffect(() => {
@@ -180,9 +249,49 @@ export function useVesselWebSocket({ region }: UseVesselWebSocketProps = {}) {
   
   // Function to manually request vessel data
   const refreshData = () => {
-    if (isConnected && socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+    setIsLoading(true);
+    
+    if (usePolling) {
+      // If using REST API polling, manually trigger a poll
+      const pollVesselData = async () => {
+        try {
+          console.log('Manual refresh: Polling REST API for vessel data...');
+          
+          // Build URL with optional region parameter
+          const url = `/api/vessels/polling${region && region !== 'global' ? `?region=${region}` : ''}`;
+          
+          const response = await axios.get(url);
+          const data = response.data;
+          
+          if (data.vessels) {
+            console.log(`Received ${data.vessels.length} vessels from REST API`);
+            setVessels(data.vessels);
+            setLastUpdated(data.timestamp || new Date().toISOString());
+          }
+          
+          setIsLoading(false);
+        } catch (error) {
+          console.error('Error polling REST API:', error);
+          setError('Failed to fetch vessel data');
+          setIsLoading(false);
+        }
+      };
+      
+      pollVesselData();
+    } else if (isConnected && socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+      // If using WebSocket, send a request for vessels
       socketRef.current.send(JSON.stringify({ type: 'request_vessels' }));
-      setIsLoading(true);
+    } else {
+      // If not connected, try to reconnect
+      console.log('Not connected to WebSocket, attempting to reconnect');
+      setError('Not connected. Attempting to reconnect...');
+      if (socketRef.current) {
+        socketRef.current.close();
+      }
+      // Try WebSocket first, fallback to REST API if it fails
+      if (!usePolling) {
+        connectWebSocket();
+      }
     }
   };
   
@@ -192,6 +301,7 @@ export function useVesselWebSocket({ region }: UseVesselWebSocketProps = {}) {
     lastUpdated,
     error,
     isLoading,
-    refreshData
+    refreshData,
+    usingFallback: usePolling
   };
 }
