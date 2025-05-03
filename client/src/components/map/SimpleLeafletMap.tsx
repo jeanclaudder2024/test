@@ -1377,7 +1377,7 @@ export default function SimpleLeafletMap({
     
     // Add connections between refineries and ports if showConnections is true
     if (showConnections && ports && ports.length > 0) {
-      console.log('Displaying connections between refineries and ports');
+      console.log(`Displaying connections between ${refineries.length} refineries and ${ports.length} ports`);
       
       // For each refinery, find nearby ports (simplified approach - in a real app you would use actual connection data)
       refineries.forEach(refinery => {
@@ -1396,10 +1396,15 @@ export default function SimpleLeafletMap({
         // Find ports in the same region
         const nearbyPorts = ports.filter(port => {
           // First filter by region to limit computations
-          if (port.region !== refinery.region) return false;
+          if (port.region !== refinery.region) {
+            return false;
+          }
           
           // Then calculate distance
-          if (!port.lat || !port.lng) return false;
+          if (!port.lat || !port.lng) {
+            console.log(`Port ${port.name} has invalid coordinates:`, port.lat, port.lng);
+            return false;
+          }
           
           const portLat = typeof port.lat === 'number'
             ? port.lat
@@ -1409,7 +1414,10 @@ export default function SimpleLeafletMap({
             ? port.lng
             : parseFloat(String(port.lng));
             
-          if (isNaN(portLat) || isNaN(portLng)) return false;
+          if (isNaN(portLat) || isNaN(portLng)) {
+            console.log(`Port ${port.name} has NaN coordinates after parsing:`, port.lat, port.lng);
+            return false;
+          }
           
           // Simplified distance calculation (in a real app, you would use more accurate methods)
           const distance = Math.sqrt(
@@ -1419,8 +1427,15 @@ export default function SimpleLeafletMap({
           
           // Consider ports within a reasonable distance threshold
           // This is a simplified approach; in real world, we would use the RefineryPortConnection data
-          return distance < 5;
+          // Increasing threshold to 15 to ensure we find connections (latitude/longitude distance)
+          const isNearby = distance < 15;
+          if (isNearby) {
+            console.log(`Found nearby port ${port.name} for refinery ${refinery.name}, distance: ${distance.toFixed(2)}`);
+          }
+          return isNearby;
         });
+        
+        console.log(`Found ${nearbyPorts.length} nearby ports for refinery ${refinery.name}`);
         
         // Draw connection lines to nearby ports
         nearbyPorts.forEach(port => {

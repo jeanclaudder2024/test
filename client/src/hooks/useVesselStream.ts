@@ -48,6 +48,18 @@ export function useVesselStream() {
         
         console.log(`Loaded ${refineriesData.length} refineries, ${portsData.length} connected ports, and ${vesselsAtRefineries.length} vessels from Marine Traffic`);
         
+        // Debug: Show example of the first port
+        if (portsData.length > 0) {
+          console.log('Example port:', portsData[0]);
+          console.log('Port lat/lng type:', typeof portsData[0].lat, typeof portsData[0].lng);
+        }
+        
+        // Debug: Show example of the first refinery
+        if (refineriesData.length > 0) {
+          console.log('Example refinery:', refineriesData[0]);
+          console.log('Refinery lat/lng type:', typeof refineriesData[0].lat, typeof refineriesData[0].lng);
+        }
+        
         // Update state with the prepared data
         setData({
           vessels: vesselsAtRefineries, // Don't add ports to vessels array anymore
