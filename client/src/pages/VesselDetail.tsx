@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useDataStream } from '@/hooks/useDataStream';
+import { useVesselWebSocket } from '@/hooks/useVesselWebSocket';
 import { Vessel, ProgressEvent } from '@/types';
 import { useVesselProgressEvents, useAddProgressEvent } from '@/hooks/useVessels';
 import { useToast } from '@/hooks/use-toast';
@@ -363,13 +363,24 @@ const LocationUpdateForm = ({
 export default function VesselDetail() {
   const [, params] = useRoute('/vessels/:id');
   const vesselId = params?.id ? parseInt(params.id) : null;
-  const { vessels, loading } = useDataStream();
+  const { vessels, loading } = useVesselWebSocket('global');
   const { data: progressEvents = [], isLoading: progressLoading } = useVesselProgressEvents(vesselId);
   const { toast } = useToast();
   const [isUpdatingLocation, setIsUpdatingLocation] = useState(false);
   
   // Find the vessel from our stream data
-  const vessel = vessels.find(v => v.id === vesselId);
+  console.log('VesselDetail: Looking for vessel with ID:', vesselId);
+  console.log('VesselDetail: Number of vessels in data:', vessels.length);
+  console.log('VesselDetail: First few vessel IDs:', vessels.slice(0, 5).map((v: any) => v.id));
+  
+  const vessel = vessels.find((v: any) => v.id === vesselId);
+  
+  // Log result of search
+  if (vessel) {
+    console.log('VesselDetail: Found vessel:', vessel.name, vessel.id);
+  } else {
+    console.log('VesselDetail: Vessel not found with ID:', vesselId);
+  }
   
   // Redirect to vessels page if vessel not found and not loading
   if (!loading && !vessel) {
@@ -586,7 +597,7 @@ export default function VesselDetail() {
                       <>
                         <div className="aspect-square bg-muted rounded-md overflow-hidden mb-4 relative">
                           <MapContainer
-                            center={[vessel.currentLat, vessel.currentLng]}
+                            center={[parseFloat(vessel.currentLat as string), parseFloat(vessel.currentLng as string)]}
                             zoom={6}
                             zoomControl={false}
                             className="h-full w-full"
@@ -606,7 +617,7 @@ export default function VesselDetail() {
                               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                             />
                             <Marker
-                              position={[vessel.currentLat, vessel.currentLng]}
+                              position={[parseFloat(vessel.currentLat as string), parseFloat(vessel.currentLng as string)]}
                               icon={L.divIcon({
                                 className: 'vessel-position-marker',
                                 html: `<div class="w-4 h-4 rounded-full bg-orange-500 border-2 border-white pulse-animation"></div>`,
