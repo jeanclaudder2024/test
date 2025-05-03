@@ -1,14 +1,15 @@
 import { eq, and } from "drizzle-orm";
 import { db } from "./db";
 import {
-  users, vessels, refineries, progressEvents, documents, brokers, stats as statsTable,
+  users, vessels, refineries, progressEvents, documents, brokers, stats as statsTable, ports,
   User, InsertUser, 
   Vessel, InsertVessel,
   Refinery, InsertRefinery,
   ProgressEvent, InsertProgressEvent,
   Document, InsertDocument,
   Broker, InsertBroker,
-  Stats, InsertStats
+  Stats, InsertStats,
+  Port, InsertPort
 } from "@shared/schema";
 
 // Storage interface with CRUD methods
@@ -35,6 +36,14 @@ export interface IStorage {
   createRefinery(refinery: InsertRefinery): Promise<Refinery>;
   updateRefinery(id: number, refinery: Partial<InsertRefinery>): Promise<Refinery | undefined>;
   deleteRefinery(id: number): Promise<boolean>;
+
+  // Port methods
+  getPorts(): Promise<Port[]>;
+  getPortById(id: number): Promise<Port | undefined>;
+  getPortsByRegion(region: string): Promise<Port[]>;
+  createPort(port: InsertPort): Promise<Port>;
+  updatePort(id: number, port: Partial<InsertPort>): Promise<Port | undefined>;
+  deletePort(id: number): Promise<boolean>;
 
   // Progress Event methods
   getProgressEventsByVesselId(vesselId: number): Promise<ProgressEvent[]>;

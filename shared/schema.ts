@@ -167,5 +167,28 @@ export type Document = typeof documents.$inferSelect;
 export type InsertBroker = z.infer<typeof insertBrokerSchema>;
 export type Broker = typeof brokers.$inferSelect;
 
+// Ports
+export const ports = pgTable("ports", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  country: text("country").notNull(),
+  region: text("region").notNull(),
+  lat: decimal("lat", { precision: 10, scale: 6 }).notNull(),
+  lng: decimal("lng", { precision: 10, scale: 6 }).notNull(),
+  type: text("type").default("commercial"), // commercial, oil, container, bulk, etc.
+  capacity: integer("capacity"), // handling capacity in TEU or tons per day
+  status: text("status").default("active"),
+  description: text("description"),
+  lastUpdated: timestamp("last_updated").defaultNow(),
+});
+
+export const insertPortSchema = createInsertSchema(ports).omit({
+  id: true,
+  lastUpdated: true,
+});
+
 export type InsertStats = z.infer<typeof insertStatsSchema>;
 export type Stats = typeof stats.$inferSelect;
+
+export type InsertPort = z.infer<typeof insertPortSchema>;
+export type Port = typeof ports.$inferSelect;
