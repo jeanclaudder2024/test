@@ -6,6 +6,8 @@ import axios from 'axios';
 type UseVesselWebSocketProps = string | {
   region: string;
   pollingInterval?: number; // Polling interval in milliseconds (for REST fallback)
+  page?: number;
+  pageSize?: number;
 };
 
 interface WebSocketMessage {
@@ -13,23 +15,37 @@ interface WebSocketMessage {
   vessels?: Vessel[];
   timestamp?: string;
   count?: number;
+  totalCount?: number;
+  totalPages?: number;
+  currentPage?: number;
+  pageSize?: number;
   error?: string;
 }
 
 /**
  * Hook for connecting to the vessel tracking WebSocket to receive real-time vessel updates
  * Falls back to REST API polling if WebSocket connection fails
+ * Supports pagination for larger datasets
  */
 export function useVesselWebSocket(props: UseVesselWebSocketProps = 'global') {
   // Handle both string and object props
   const region = typeof props === 'string' ? props : props.region;
   const pollingInterval = typeof props === 'object' ? props.pollingInterval || 30000 : 30000;
+  const initialPage = typeof props === 'object' && props.page ? props.page : 1;
+  const initialPageSize = typeof props === 'object' && props.pageSize ? props.pageSize : 500;
+  
   const [vessels, setVessels] = useState<Vessel[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [usePolling, setUsePolling] = useState(false); // Track if we're using polling as fallback
+  
+  // Pagination state
+  const [page, setPage] = useState(initialPage);
+  const [pageSize, setPageSize] = useState(initialPageSize);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   
   const socketRef = useRef<WebSocket | null>(null);
   const reconnectTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -99,7 +115,13 @@ export function useVesselWebSocket(props: UseVesselWebSocketProps = 'global') {
             console.log('Received WebSocket message:', message);
             
             if (message.type === 'vessel_update' && message.vessels) {
-              console.log(`Received ${message.vessels.length} vessels from server`);
+              console.log(`Received ${message.vessels.length} vessels from server (page ${message.currentPage || 1}/${message.totalPages || 1})`);
+              
+              // Update pagination information
+              if (message.totalCount) setTotalCount(message.totalCount);
+              if (message.totalPages) setTotalPages(message.totalPages);
+              if (message.currentPage) setPage(message.currentPage);
+              if (message.pageSize) setPageSize(message.pageSize);
               
               // Check if vessels have valid coordinates
               const vesselsWithCoordinates = message.vessels.filter(
@@ -180,14 +202,21 @@ export function useVesselWebSocket(props: UseVesselWebSocketProps = 'global') {
           setIsLoading(true);
           console.log('Polling REST API for vessel data...');
           
-          // Build URL with optional region parameter
-          const url = `/api/vessels/polling${region && region !== 'global' ? `?region=${region}` : ''}`;
+          // Build URL with optional region parameter and pagination
+          const url = `/api/vessels/polling?${region && region !== 'global' ? `region=${region}&` : ''}page=${page}&pageSize=${pageSize}`;
           
           const response = await axios.get(url);
           const data = response.data;
           
           if (data.vessels) {
-            console.log(`Received ${data.vessels.length} vessels from REST API`);
+            console.log(`Received ${data.vessels.length} vessels from REST API (page ${data.currentPage || 1}/${data.totalPages || 1})`);
+            
+            // Update pagination information from API response
+            if (data.totalCount) setTotalCount(data.totalCount);
+            if (data.totalPages) setTotalPages(data.totalPages);
+            if (data.currentPage) setPage(data.currentPage);
+            if (data.pageSize) setPageSize(data.pageSize);
+            
             setVessels(data.vessels);
             setLastUpdated(data.timestamp || new Date().toISOString());
           }
@@ -248,23 +277,42 @@ export function useVesselWebSocket(props: UseVesselWebSocketProps = 'global') {
   }, [region, isConnected]);
   
   // Function to manually request vessel data
-  const refreshData = () => {
+  const refreshData = (newPage?: number, newPageSize?: number) => {
     setIsLoading(true);
+    
+    // Update pagination parameters if provided
+    if (newPage !== undefined) {
+      setPage(newPage);
+    }
+    
+    if (newPageSize !== undefined) {
+      setPageSize(newPageSize);
+    }
+    
+    const currentPage = newPage !== undefined ? newPage : page;
+    const currentPageSize = newPageSize !== undefined ? newPageSize : pageSize;
     
     if (usePolling) {
       // If using REST API polling, manually trigger a poll
       const pollVesselData = async () => {
         try {
-          console.log('Manual refresh: Polling REST API for vessel data...');
+          console.log(`Manual refresh: Polling REST API for vessel data (page ${currentPage}, pageSize ${currentPageSize})...`);
           
-          // Build URL with optional region parameter
-          const url = `/api/vessels/polling${region && region !== 'global' ? `?region=${region}` : ''}`;
+          // Build URL with optional region parameter and pagination
+          const url = `/api/vessels/polling?${region && region !== 'global' ? `region=${region}&` : ''}page=${currentPage}&pageSize=${currentPageSize}`;
           
           const response = await axios.get(url);
           const data = response.data;
           
           if (data.vessels) {
-            console.log(`Received ${data.vessels.length} vessels from REST API`);
+            console.log(`Received ${data.vessels.length} vessels from REST API (page ${data.currentPage || 1}/${data.totalPages || 1})`);
+            
+            // Update pagination information from API response
+            if (data.totalCount) setTotalCount(data.totalCount);
+            if (data.totalPages) setTotalPages(data.totalPages);
+            if (data.currentPage) setPage(data.currentPage);
+            if (data.pageSize) setPageSize(data.pageSize);
+            
             setVessels(data.vessels);
             setLastUpdated(data.timestamp || new Date().toISOString());
           }
@@ -279,8 +327,12 @@ export function useVesselWebSocket(props: UseVesselWebSocketProps = 'global') {
       
       pollVesselData();
     } else if (isConnected && socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-      // If using WebSocket, send a request for vessels
-      socketRef.current.send(JSON.stringify({ type: 'request_vessels' }));
+      // If using WebSocket, send a request for vessels with pagination parameters
+      socketRef.current.send(JSON.stringify({ 
+        type: 'request_vessels',
+        page: currentPage,
+        pageSize: currentPageSize
+      }));
     } else {
       // If not connected, set an error - the main WebSocket effect will handle reconnection
       console.log('Not connected to WebSocket, attempting to reconnect');
@@ -296,14 +348,42 @@ export function useVesselWebSocket(props: UseVesselWebSocketProps = 'global') {
     ? "REST API" 
     : (isConnected ? "WebSocket" : "Disconnected");
 
+  // Function to change page
+  const goToPage = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      refreshData(newPage, pageSize);
+    }
+  };
+  
+  // Function to change page size
+  const changePageSize = (newPageSize: number) => {
+    if (newPageSize > 0 && newPageSize <= 500) {
+      // Reset to page 1 when changing page size
+      refreshData(1, newPageSize);
+    }
+  };
+  
   return {
+    // Data
     vessels,
     loading: isLoading,
     connected: isConnected,
     lastUpdated,
     error,
-    refreshData,
+    
+    // Connection info
     usingFallback: usePolling,
-    connectionType
+    connectionType,
+    
+    // Pagination info
+    page,
+    pageSize,
+    totalPages,
+    totalCount,
+    
+    // Functions
+    refreshData,
+    goToPage,
+    changePageSize
   };
 }

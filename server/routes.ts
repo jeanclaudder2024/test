@@ -1660,10 +1660,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Handle specific request types
         if (data.type === 'request_vessels') {
+          // Check if pagination parameters were provided
+          if (data.page) {
+            ws.page = parseInt(data.page) || 1;
+          }
+          if (data.pageSize) {
+            ws.pageSize = parseInt(data.pageSize) || 500;
+          }
           sendVesselData(ws);
         } else if (data.type === 'subscribe_region' && data.region) {
           // Store the region subscription on the websocket client
           ws.subscribedRegion = data.region;
+        } else if (data.type === 'set_pagination') {
+          // Update pagination settings
+          ws.page = parseInt(data.page) || 1;
+          ws.pageSize = parseInt(data.pageSize) || 500;
+          console.log(`Updated pagination settings: page=${ws.page}, pageSize=${ws.pageSize}`);
         }
       } catch (error) {
         console.error('Error processing WebSocket message:', error);
@@ -1677,10 +1689,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // Function to fetch and send vessel data to websocket client
+  // Extend the WebSocket interface to include pagination parameters
+  interface VesselTrackingWebSocket extends WebSocket {
+    subscribedRegion?: string;
+    page?: number;
+    pageSize?: number;
+  }
+  
+  // Function to fetch and send vessel data to websocket client with pagination support
   async function sendVesselData(ws: VesselTrackingWebSocket) {
     try {
       if (ws.readyState !== WebSocket.OPEN) return;
+      
+      // Default pagination values if not set
+      const page = ws.page || 1;
+      const pageSize = ws.pageSize || 500;
       
       let vessels: Vessel[] = [];
       
@@ -1710,22 +1733,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`Filtered vessels by region ${ws.subscribedRegion}: ${beforeFilter} → ${vessels.length}`);
       }
       
-      // Log vessel coordinates for debugging
-      console.log(`Vessel coordinate check: ${vessels.slice(0, 5).map(v => 
+      // Calculate pagination
+      const totalCount = vessels.length;
+      const totalPages = Math.ceil(totalCount / pageSize);
+      const startIndex = (page - 1) * pageSize;
+      const endIndex = Math.min(startIndex + pageSize, totalCount);
+      
+      // Get vessels for the current page
+      const paginatedVessels = vessels.slice(startIndex, endIndex);
+      
+      // Log vessel coordinates for debugging (first 5 vessels)
+      console.log(`Vessel coordinate check: ${paginatedVessels.slice(0, 5).map(v => 
         `${v.name}: lat=${v.currentLat}, lng=${v.currentLng}`).join(', ')}`);
       
-      // Limit to 100 vessels to avoid overwhelming the client
-      const limitedVessels = vessels.slice(0, 100);
-      
-      // Send the vessel data
+      // Send the vessel data with pagination metadata
       ws.send(JSON.stringify({
         type: 'vessel_update',
-        vessels: limitedVessels,
+        vessels: paginatedVessels,
         timestamp: new Date().toISOString(),
-        count: limitedVessels.length
+        count: paginatedVessels.length,
+        totalCount: totalCount,
+        totalPages: totalPages,
+        currentPage: page,
+        pageSize: pageSize
       }));
       
-      console.log(`Sent ${limitedVessels.length} vessels to client`);
+      console.log(`Sent ${paginatedVessels.length} vessels to client (page ${page}/${totalPages})`);
     } catch (error) {
       console.error('Error sending vessel data via WebSocket:', error);
     }
