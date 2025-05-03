@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
-import { type Vessel, type Refinery } from '@shared/schema';
+import { type Vessel, type Refinery, type Port, type RefineryPortConnection } from '@shared/schema';
 import { type Region } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from "@/components/ui/button";
@@ -39,6 +39,8 @@ interface SimpleLeafletMapProps {
   isLoading?: boolean;
   initialCenter?: [number, number]; // Optional [lat, lng] initial center
   initialZoom?: number;             // Optional initial zoom level
+  ports?: Port[];                  // Optional ports to display
+  showConnections?: boolean;       // Whether to show connections between refineries and ports
 }
 
 // Create a unique ID for this map instance
