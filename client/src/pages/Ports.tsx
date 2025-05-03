@@ -11,7 +11,8 @@ import {
   Anchor, 
   Ship, 
   GalleryVerticalEnd,
-  Building2
+  Building2,
+  Database
 } from 'lucide-react';
 import { REGIONS } from '../../../shared/constants';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -157,39 +158,21 @@ export default function Ports() {
             Manage and view all port facilities and their details
           </p>
         </div>
-        <Button onClick={() => navigate("/ports/new")}>
-          <Building2 className="mr-2 h-4 w-4" /> Add New Port
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => navigate("/ports/import")}>
+            <Database className="mr-2 h-4 w-4" /> Import All Ports
+          </Button>
+          <Button onClick={() => navigate("/ports/new")}>
+            <Building2 className="mr-2 h-4 w-4" /> Add New Port
+          </Button>
+        </div>
       </div>
 
-      <Tabs defaultValue="map" className="mb-6">
+      <Tabs defaultValue="list" className="mb-6">
         <TabsList>
-          <TabsTrigger value="map">Map View</TabsTrigger>
           <TabsTrigger value="list">List View</TabsTrigger>
           <TabsTrigger value="stats">Statistics</TabsTrigger>
         </TabsList>
-        
-        <TabsContent value="map" className="p-1">
-          <Card>
-            <CardHeader>
-              <CardTitle>Port Locations</CardTitle>
-              <CardDescription>
-                Interactive map showing port locations and status
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[60vh] bg-muted/30 rounded-md flex items-center justify-center border">
-                <div className="text-center">
-                  <MapPin className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                  <p className="text-lg font-medium">Map View Coming Soon</p>
-                  <p className="text-sm text-muted-foreground">
-                    We're enhancing our port mapping capabilities
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
         
         <TabsContent value="list">
           <Card>
