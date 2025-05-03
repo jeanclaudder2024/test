@@ -51,22 +51,6 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
       section: "DASHBOARD"
     },
     {
-      title: t("nav.vessels"),
-      path: "/vessels",
-      icon: <Ship className="h-5 w-5 mr-3" />,
-    },
-    {
-      title: t("nav.live_tracking"),
-      path: "/tracking",
-      icon: <Radio className="h-5 w-5 mr-3" />,
-      badge: "LIVE",
-    },
-    {
-      title: t("nav.refineries"),
-      path: "/refineries",
-      icon: <Building2 className="h-5 w-5 mr-3" />,
-    },
-    {
       title: t("nav.trading"),
       path: "/trading",
       icon: <BarChart className="h-5 w-5 mr-3" />,
@@ -80,12 +64,6 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
       title: t("nav.brokers"),
       path: "/brokers",
       icon: <Users className="h-5 w-5 mr-3" />,
-    },
-    {
-      title: t("nav.api_test"),
-      path: "/api-test",
-      icon: <Database className="h-5 w-5 mr-3" />,
-      badge: "DEV",
     }
   ];
 
