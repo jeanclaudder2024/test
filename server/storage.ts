@@ -68,6 +68,15 @@ export interface IStorage {
   // Stats methods
   getStats(): Promise<Stats | undefined>;
   updateStats(stats: Partial<InsertStats>): Promise<Stats | undefined>;
+  
+  // Refinery-Port Connection methods
+  getRefineryPortConnections(): Promise<RefineryPortConnection[]>;
+  getRefineryPortConnectionById(id: number): Promise<RefineryPortConnection | undefined>;
+  getRefineryPortConnectionsByRefineryId(refineryId: number): Promise<RefineryPortConnection[]>;
+  getRefineryPortConnectionsByPortId(portId: number): Promise<RefineryPortConnection[]>;
+  createRefineryPortConnection(connection: InsertRefineryPortConnection): Promise<RefineryPortConnection>;
+  updateRefineryPortConnection(id: number, connection: Partial<InsertRefineryPortConnection>): Promise<RefineryPortConnection | undefined>;
+  deleteRefineryPortConnection(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {

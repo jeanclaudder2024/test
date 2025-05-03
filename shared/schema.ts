@@ -197,3 +197,25 @@ export type Stats = typeof stats.$inferSelect;
 
 export type InsertPort = z.infer<typeof insertPortSchema>;
 export type Port = typeof ports.$inferSelect;
+
+// Refinery Port Connections
+export const refineryPortConnections = pgTable("refinery_port_connections", {
+  id: serial("id").primaryKey(),
+  refineryId: integer("refinery_id").notNull().references(() => refineries.id),
+  portId: integer("port_id").notNull().references(() => ports.id),
+  distance: decimal("distance", { precision: 10, scale: 2 }), // distance in kilometers
+  connectionType: text("connection_type").default("pipeline"), // pipeline, ship, truck, etc.
+  capacity: decimal("capacity", { precision: 15, scale: 2 }), // max transfer capacity in barrels per day
+  status: text("status").default("active"),
+  createdAt: timestamp("created_at").defaultNow(),
+  lastUpdated: timestamp("last_updated").defaultNow(),
+});
+
+export const insertRefineryPortConnectionSchema = createInsertSchema(refineryPortConnections).omit({
+  id: true,
+  createdAt: true,
+  lastUpdated: true,
+});
+
+export type InsertRefineryPortConnection = z.infer<typeof insertRefineryPortConnectionSchema>;
+export type RefineryPortConnection = typeof refineryPortConnections.$inferSelect;
