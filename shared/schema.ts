@@ -185,7 +185,12 @@ export const ports = pgTable("ports", {
 export const insertPortSchema = createInsertSchema(ports).omit({
   id: true,
   lastUpdated: true,
-});
+}).transform((port) => ({
+  ...port,
+  // Convert lat/lng to strings if they're passed as numbers
+  lat: port.lat !== undefined ? String(port.lat) : undefined,
+  lng: port.lng !== undefined ? String(port.lng) : undefined
+}));
 
 export type InsertStats = z.infer<typeof insertStatsSchema>;
 export type Stats = typeof stats.$inferSelect;

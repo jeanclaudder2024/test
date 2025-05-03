@@ -7,17 +7,18 @@ import { marineTrafficService } from "./marineTrafficService";
  * Generate a list of major shipping ports for initial database seeding with current 2025 data
  * These ports represent major oil shipping hubs around the world with updated capacities and details
  */
-const majorPortsData: InsertPort[] = [
+const majorPortsData = [
   // Middle East Region
   {
     name: "Ras Tanura Terminal",
     country: "Saudi Arabia",
     region: "Middle East",
-    lat: "26.644",
-    lng: "50.159",
+    lat: 26.644,
+    lng: 50.159,
     capacity: 7200000, // Upgraded capacity as of 2025
     status: "active",
-    description: "Ras Tanura is Saudi Aramco's primary oil export facility and one of the largest oil shipping ports in the world, expanded in 2024 with additional deep-water berths."
+    description: "Ras Tanura is Saudi Aramco's primary oil export facility and one of the largest oil shipping ports in the world, expanded in 2024 with additional deep-water berths.",
+    type: "oil"
   },
   {
     name: "Jebel Ali Port",
@@ -284,6 +285,7 @@ export const portService = {
       });
       
       // Process all ports in the new 2025 data
+      const now = new Date();
       for (const newPortData of majorPortsData) {
         // Check if we have a port with similar name
         const existingPort = portMap.get(newPortData.name.toLowerCase()) || 
@@ -293,9 +295,17 @@ export const portService = {
         
         if (existingPort) {
           // Update the existing port with 2025 data
-          const updatedPort = {
-            ...newPortData,
-            lastUpdated: new Date()
+          // Convert lat/lng to correct numeric format
+          const updatedPort: Partial<Port> = {
+            name: newPortData.name,
+            country: newPortData.country,
+            region: newPortData.region,
+            lat: typeof newPortData.lat === 'string' ? newPortData.lat : String(newPortData.lat),
+            lng: typeof newPortData.lng === 'string' ? newPortData.lng : String(newPortData.lng),
+            capacity: newPortData.capacity,
+            status: newPortData.status,
+            description: newPortData.description,
+            type: 'oil'
           };
           
           await storage.updatePort(existingPort.id, updatedPort);
@@ -303,10 +313,20 @@ export const portService = {
           console.log(`Updated port: ${existingPort.name} -> ${newPortData.name}`);
         } else {
           // This is a new port, add it
-          await storage.createPort({
-            ...newPortData,
-            lastUpdated: new Date()
-          });
+          // Convert lat/lng to correct numeric format
+          const newPort: InsertPort = {
+            name: newPortData.name,
+            country: newPortData.country,
+            region: newPortData.region,
+            lat: typeof newPortData.lat === 'string' ? parseFloat(newPortData.lat) : newPortData.lat,
+            lng: typeof newPortData.lng === 'string' ? parseFloat(newPortData.lng) : newPortData.lng,
+            capacity: newPortData.capacity,
+            status: newPortData.status,
+            description: newPortData.description,
+            type: 'oil'
+          };
+          
+          await storage.createPort(newPort);
           addedCount++;
           console.log(`Added new port: ${newPortData.name}`);
         }
@@ -355,12 +375,20 @@ export const portService = {
       }
       
       // If API failed or not configured, use majorPortsData
-      const now = new Date();
-      for (const port of majorPortsData) {
-        await storage.createPort({
-          ...port,
-          lastUpdated: now
-        });
+      for (const portData of majorPortsData) {
+        // Convert lat/lng to the correct format
+        const newPort: InsertPort = {
+          name: portData.name,
+          country: portData.country,
+          region: portData.region,
+          lat: typeof portData.lat === 'string' ? parseFloat(portData.lat) : portData.lat,
+          lng: typeof portData.lng === 'string' ? parseFloat(portData.lng) : portData.lng,
+          capacity: portData.capacity,
+          status: portData.status,
+          description: portData.description,
+          type: 'oil'
+        };
+        await storage.createPort(newPort);
       }
       
       console.log(`Seeded database with ${majorPortsData.length} major ports for 2025.`);
