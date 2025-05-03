@@ -14,7 +14,7 @@ document.head.appendChild(leafletCss);
 
 // Add page title
 const titleElement = document.createElement("title");
-titleElement.textContent = "ShipBoat Tracking | Oil Vessel Monitoring Platform";
+titleElement.textContent = "Vesselian | Smart Fleet Management Platform";
 document.head.appendChild(titleElement);
 
 // Add favicon

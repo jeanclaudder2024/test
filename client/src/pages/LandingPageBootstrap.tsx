@@ -7,23 +7,25 @@ import {
   ChevronRight, 
   Globe, 
   Layers, 
-  Map, 
+  Map as MapIcon, 
   MessageSquare,
   Users,
   Shield, 
   Zap,
-  Factory
+  Factory,
+  Navigation
 } from 'lucide-react';
+import '../assets/vesselian-style.css';
 
 export default function LandingPageBootstrap() {
   return (
     <div className="min-h-screen">
-      {/* Navigation - Bootstrap Navbar */}
-      <nav className="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+      {/* Navigation - Vesselian Style */}
+      <nav className="navbar navbar-expand-lg navbar-dark navbar-vesselian sticky-top">
         <div className="container">
           <a className="navbar-brand d-flex align-items-center" href="/">
-            <Ship className="me-2" size={24} />
-            <span className="fw-bold">Maritime Tracker</span>
+            <Anchor className="me-2" size={24} />
+            <span className="fw-bold">Vesselian</span>
           </a>
           <button 
             className="navbar-toggler" 
@@ -42,25 +44,22 @@ export default function LandingPageBootstrap() {
                 <a className="nav-link" href="#features">Features</a>
               </li>
               <li className="nav-item">
-                <a className="nav-link" href="#pricing">Pricing</a>
+                <a className="nav-link" href="#how-it-works">How It Works</a>
               </li>
               <li className="nav-item">
-                <a className="nav-link" href="#testimonials">Testimonials</a>
-              </li>
-              <li className="nav-item">
-                <a className="nav-link" href="#faq">FAQ</a>
+                <a className="nav-link" href="#vessels">Vessels</a>
               </li>
               <li className="nav-item ms-lg-3">
                 <Link href="/auth">
-                  <a className="btn btn-outline-light">Log In</a>
+                  <button className="btn btn-vesselian-outline">Log In</button>
                 </Link>
               </li>
               <li className="nav-item ms-lg-2 mt-2 mt-lg-0">
                 <Link href="/dashboard">
-                  <a className="btn btn-light text-primary">
+                  <button className="btn btn-vesselian">
                     Get Started
                     <ChevronRight className="ms-1" size={16} />
-                  </a>
+                  </button>
                 </Link>
               </li>
             </ul>
@@ -68,37 +67,65 @@ export default function LandingPageBootstrap() {
         </div>
       </nav>
 
-      {/* Hero Section with Bootstrap */}
-      <div className="bg-dark text-white py-5">
-        <div className="container">
+      {/* Hero Section with Vesselian Style */}
+      <div className="hero-container py-5">
+        <div className="container py-5">
           <div className="row align-items-center">
             <div className="col-lg-6 mb-5 mb-lg-0">
-              <h1 className="display-3 fw-bold mb-4">Track Your Fleet in Real-Time</h1>
+              <h1 className="display-heading display-4 mb-4">
+                Track Your Fleet in Real-Time.
+                <br />
+                Optimize Your Ship Operations.
+              </h1>
               <p className="lead mb-4">
-                Our maritime tracking platform gives you complete visibility into your vessel operations, with real-time location data, comprehensive analytics, and powerful management tools.
+                Manage up to 10 ships with live location tracking, fuel monitoring, and trip management.
               </p>
               <div className="d-flex gap-3">
                 <Link href="/dashboard">
-                  <a className="btn btn-primary btn-lg px-4">
-                    Start Free Trial
-                  </a>
-                </Link>
-                <Link href="/live-tracking">
-                  <a className="btn btn-outline-light btn-lg px-4">
-                    Live Demo
-                  </a>
+                  <button className="btn btn-vesselian btn-lg">
+                    Get Started Now
+                  </button>
                 </Link>
               </div>
             </div>
-            <div className="col-lg-6">
-              <div className="position-relative">
-                <img 
-                  src="https://images.unsplash.com/photo-1561361398-a957b93dbf35?q=80&w=1000&auto=format&fit=crop" 
-                  alt="Oil vessel at sea" 
-                  className="img-fluid rounded-3 shadow"
-                  style={{ height: '450px', objectFit: 'cover', width: '100%' }}
-                />
-                <div className="position-absolute top-0 start-0 w-100 h-100 bg-dark opacity-25 rounded-3"></div>
+            <div className="col-lg-5 offset-lg-1">
+              <div className="row">
+                <div className="col-6 mb-4">
+                  <div className="vesselian-card h-100 bg-white p-4">
+                    <div className="d-flex align-items-center mb-3">
+                      <div className="step-number">01</div>
+                      <h5 className="fw-bold mb-0">Sign Up</h5>
+                    </div>
+                    <p className="text-muted small mb-0">Create an account and register your ships in the app</p>
+                  </div>
+                </div>
+                <div className="col-6 mb-4">
+                  <div className="vesselian-card h-100 bg-white p-4">
+                    <div className="d-flex align-items-center mb-3">
+                      <div className="step-number">02</div>
+                      <h5 className="fw-bold mb-0">Track</h5>
+                    </div>
+                    <p className="text-muted small mb-0">Monitor location, status and performance of vessels</p>
+                  </div>
+                </div>
+                <div className="col-6">
+                  <div className="vesselian-card h-100 bg-white p-4">
+                    <div className="d-flex align-items-center mb-3">
+                      <div className="step-number">03</div>
+                      <h5 className="fw-bold mb-0">Optimize</h5>
+                    </div>
+                    <p className="text-muted small mb-0">Use insights to improve efficiency and reduce costs</p>
+                  </div>
+                </div>
+                <div className="col-6">
+                  <div className="vesselian-card h-100 bg-white p-4">
+                    <div className="d-flex align-items-center mb-3">
+                      <div className="step-number">04</div>
+                      <h5 className="fw-bold mb-0">Manage</h5>
+                    </div>
+                    <p className="text-muted small mb-0">Complete maritime operations in one platform</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -106,30 +133,30 @@ export default function LandingPageBootstrap() {
       </div>
 
       {/* Stats Section */}
-      <div className="bg-light py-5">
-        <div className="container">
-          <div className="row text-center">
-            <div className="col-md-3 mb-4 mb-md-0">
-              <div className="bg-white rounded-3 shadow-sm p-4">
-                <h2 className="display-5 fw-bold text-primary mb-0">2,500+</h2>
+      <div className="py-5">
+        <div className="container py-2">
+          <div className="row g-4">
+            <div className="col-md-3">
+              <div className="stat-card">
+                <h2>2,500+</h2>
                 <p className="text-muted mb-0">Vessels Tracked</p>
               </div>
             </div>
-            <div className="col-md-3 mb-4 mb-md-0">
-              <div className="bg-white rounded-3 shadow-sm p-4">
-                <h2 className="display-5 fw-bold text-primary mb-0">70+</h2>
+            <div className="col-md-3">
+              <div className="stat-card">
+                <h2>70+</h2>
                 <p className="text-muted mb-0">Refineries</p>
               </div>
             </div>
-            <div className="col-md-3 mb-4 mb-md-0">
-              <div className="bg-white rounded-3 shadow-sm p-4">
-                <h2 className="display-5 fw-bold text-primary mb-0">73</h2>
+            <div className="col-md-3">
+              <div className="stat-card">
+                <h2>73</h2>
                 <p className="text-muted mb-0">Ports Worldwide</p>
               </div>
             </div>
             <div className="col-md-3">
-              <div className="bg-white rounded-3 shadow-sm p-4">
-                <h2 className="display-5 fw-bold text-primary mb-0">24/7</h2>
+              <div className="stat-card">
+                <h2>24/7</h2>
                 <p className="text-muted mb-0">Live Updates</p>
               </div>
             </div>
@@ -137,11 +164,11 @@ export default function LandingPageBootstrap() {
         </div>
       </div>
 
-      {/* Features Section with Bootstrap */}
-      <section id="features" className="py-5">
+      {/* Features Section with Vesselian Style */}
+      <section id="features" className="py-5 bg-light">
         <div className="container py-5">
           <div className="text-center mb-5">
-            <h2 className="display-5 fw-bold mb-3">Powerful Maritime Tools</h2>
+            <h2 className="section-heading display-5 mb-3">Powerful Maritime Tools</h2>
             <p className="lead text-muted mx-auto" style={{ maxWidth: '700px' }}>
               Our comprehensive vessel tracking system provides unparalleled visibility into your maritime operations
             </p>
@@ -149,26 +176,28 @@ export default function LandingPageBootstrap() {
           
           <div className="row g-4">
             <div className="col-md-4">
-              <div className="card h-100 border-0 shadow-sm">
-                <div className="card-body text-center p-4">
-                  <div className="bg-primary bg-opacity-10 p-3 rounded-circle d-inline-flex mb-3">
-                    <Ship className="text-primary" size={32} />
+              <div className="vesselian-card bg-white">
+                <div className="card-body p-4">
+                  <div className="text-center mb-4">
+                    <div className="feature-icon mx-auto">
+                      <Ship size={32} />
+                    </div>
+                    <h3 className="fs-4 fw-bold mb-3">Vessel Tracking</h3>
+                    <p className="text-muted">
+                      Real-time position updates with detailed vessel information and voyage history
+                    </p>
                   </div>
-                  <h3 className="fs-4 fw-bold mb-3">Vessel Tracking</h3>
-                  <p className="text-muted">
-                    Real-time position updates with detailed vessel information and voyage history
-                  </p>
                   <hr className="my-4" />
-                  <ul className="list-unstyled text-start">
-                    <li className="mb-2 d-flex align-items-center">
+                  <ul className="list-unstyled">
+                    <li className="mb-3 d-flex align-items-center">
                       <ChevronRight className="text-primary me-2" size={18} />
                       <span>Live position tracking with AIS data</span>
                     </li>
-                    <li className="mb-2 d-flex align-items-center">
+                    <li className="mb-3 d-flex align-items-center">
                       <ChevronRight className="text-primary me-2" size={18} />
                       <span>Historical voyage replays</span>
                     </li>
-                    <li className="mb-2 d-flex align-items-center">
+                    <li className="mb-3 d-flex align-items-center">
                       <ChevronRight className="text-primary me-2" size={18} />
                       <span>ETA predictions and port alerts</span>
                     </li>
@@ -178,26 +207,28 @@ export default function LandingPageBootstrap() {
             </div>
             
             <div className="col-md-4">
-              <div className="card h-100 border-0 shadow-sm">
-                <div className="card-body text-center p-4">
-                  <div className="bg-primary bg-opacity-10 p-3 rounded-circle d-inline-flex mb-3">
-                    <Map className="text-primary" size={32} />
+              <div className="vesselian-card bg-white">
+                <div className="card-body p-4">
+                  <div className="text-center mb-4">
+                    <div className="feature-icon mx-auto">
+                      <MapIcon size={32} />
+                    </div>
+                    <h3 className="fs-4 fw-bold mb-3">Interactive Maps</h3>
+                    <p className="text-muted">
+                      Detailed maritime maps showing vessels, ports, and refineries with real-time connections
+                    </p>
                   </div>
-                  <h3 className="fs-4 fw-bold mb-3">Interactive Maps</h3>
-                  <p className="text-muted">
-                    Detailed maritime maps showing vessels, ports, and refineries with real-time connections
-                  </p>
                   <hr className="my-4" />
-                  <ul className="list-unstyled text-start">
-                    <li className="mb-2 d-flex align-items-center">
+                  <ul className="list-unstyled">
+                    <li className="mb-3 d-flex align-items-center">
                       <ChevronRight className="text-primary me-2" size={18} />
                       <span>Global coverage with detailed mapping</span>
                     </li>
-                    <li className="mb-2 d-flex align-items-center">
+                    <li className="mb-3 d-flex align-items-center">
                       <ChevronRight className="text-primary me-2" size={18} />
                       <span>Port and refinery connections</span>
                     </li>
-                    <li className="mb-2 d-flex align-items-center">
+                    <li className="mb-3 d-flex align-items-center">
                       <ChevronRight className="text-primary me-2" size={18} />
                       <span>Customizable filters and views</span>
                     </li>
@@ -207,26 +238,28 @@ export default function LandingPageBootstrap() {
             </div>
             
             <div className="col-md-4">
-              <div className="card h-100 border-0 shadow-sm">
-                <div className="card-body text-center p-4">
-                  <div className="bg-primary bg-opacity-10 p-3 rounded-circle d-inline-flex mb-3">
-                    <BarChart4 className="text-primary" size={32} />
+              <div className="vesselian-card bg-white">
+                <div className="card-body p-4">
+                  <div className="text-center mb-4">
+                    <div className="feature-icon mx-auto">
+                      <BarChart4 size={32} />
+                    </div>
+                    <h3 className="fs-4 fw-bold mb-3">Advanced Analytics</h3>
+                    <p className="text-muted">
+                      Comprehensive data analysis tools to optimize your maritime operations
+                    </p>
                   </div>
-                  <h3 className="fs-4 fw-bold mb-3">Advanced Analytics</h3>
-                  <p className="text-muted">
-                    Comprehensive data analysis tools to optimize your maritime operations
-                  </p>
                   <hr className="my-4" />
-                  <ul className="list-unstyled text-start">
-                    <li className="mb-2 d-flex align-items-center">
+                  <ul className="list-unstyled">
+                    <li className="mb-3 d-flex align-items-center">
                       <ChevronRight className="text-primary me-2" size={18} />
                       <span>Performance metrics and KPIs</span>
                     </li>
-                    <li className="mb-2 d-flex align-items-center">
+                    <li className="mb-3 d-flex align-items-center">
                       <ChevronRight className="text-primary me-2" size={18} />
                       <span>Fuel consumption analytics</span>
                     </li>
-                    <li className="mb-2 d-flex align-items-center">
+                    <li className="mb-3 d-flex align-items-center">
                       <ChevronRight className="text-primary me-2" size={18} />
                       <span>Custom reports and dashboards</span>
                     </li>
@@ -238,12 +271,128 @@ export default function LandingPageBootstrap() {
         </div>
       </section>
 
-      {/* Maritime Assets Section */}
-      <section className="py-5 bg-light">
+      {/* How It Works Section */}
+      <section id="how-it-works" className="py-5">
         <div className="container py-5">
           <div className="row align-items-center">
             <div className="col-lg-6 mb-5 mb-lg-0">
-              <h2 className="display-5 fw-bold mb-4">Complete Maritime Asset Visibility</h2>
+              <h2 className="section-heading display-5 mb-4">Empowering Ship Owners & Drivers</h2>
+              <p className="lead mb-4">
+                At Vesselian, we believe in making ship management simple, efficient, and data-driven. Our mission is to empower ship owners and drivers with real-time tracking, fuel monitoring, and comprehensive fleet management.
+              </p>
+              
+              <div className="vesselian-card bg-white p-4 mb-4">
+                <h3 className="fs-4 fw-bold mb-3">Simple Steps to Manage Your Fleet</h3>
+                <p className="text-muted mb-4">
+                  How the app works in a step-by-step process to make it easier for new users to understand.
+                </p>
+                <Link href="/dashboard">
+                  <button className="btn btn-vesselian">
+                    Learn More
+                  </button>
+                </Link>
+              </div>
+            </div>
+            
+            <div className="col-lg-6">
+              <img 
+                src="https://images.unsplash.com/photo-1580674285054-bed31e145f59?q=80&w=1000&auto=format&fit=crop" 
+                alt="Ship management" 
+                className="img-fluid vesselian-card"
+                style={{ objectFit: 'cover', height: '400px', width: '100%' }}
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Vessel List Section */}
+      <section id="vessels" className="py-5 bg-light">
+        <div className="container py-5">
+          <div className="text-center mb-5">
+            <h2 className="section-heading display-5 mb-3">Vessel Fleet Management</h2>
+            <p className="lead text-muted mx-auto" style={{ maxWidth: '700px' }}>
+              View and manage your entire fleet of vessels with detailed information and status updates
+            </p>
+          </div>
+          
+          <div className="row">
+            <div className="col-lg-8 mx-auto">
+              <div className="vessel-card">
+                <div className="vessel-detail">
+                  <div className="d-flex align-items-center">
+                    <Ship className="text-primary me-2" size={20} />
+                    <div className="vessel-name">SS Voyager</div>
+                    <div className="ms-auto">
+                      <span className="status-indicator status-active"></span>
+                      <small className="text-success">Active</small>
+                    </div>
+                  </div>
+                  <div className="vessel-info mt-2">Atlantic Ocean • Ro-Ro Ship • Vessel Id: 249645</div>
+                </div>
+              </div>
+              
+              <div className="vessel-card">
+                <div className="vessel-detail">
+                  <div className="d-flex align-items-center">
+                    <Ship className="text-primary me-2" size={20} />
+                    <div className="vessel-name">SS Pioneer</div>
+                    <div className="ms-auto">
+                      <span className="status-indicator status-docked"></span>
+                      <small className="text-warning">Docked</small>
+                    </div>
+                  </div>
+                  <div className="vessel-info mt-2">Port of Rotterdam • Container Ship • Vessel Id: 249122</div>
+                </div>
+              </div>
+              
+              <div className="vessel-card">
+                <div className="vessel-detail">
+                  <div className="d-flex align-items-center">
+                    <Ship className="text-primary me-2" size={20} />
+                    <div className="vessel-name">SS Explorer</div>
+                    <div className="ms-auto">
+                      <span className="status-indicator status-active"></span>
+                      <small className="text-success">Active</small>
+                    </div>
+                  </div>
+                  <div className="vessel-info mt-2">Pacific Ocean • Tanker Ship • Vessel Id: 249331</div>
+                </div>
+              </div>
+              
+              <div className="vessel-card">
+                <div className="vessel-detail">
+                  <div className="d-flex align-items-center">
+                    <Ship className="text-primary me-2" size={20} />
+                    <div className="vessel-name">Naval Ship Warship</div>
+                    <div className="ms-auto">
+                      <span className="status-indicator status-active"></span>
+                      <small className="text-success">Active</small>
+                    </div>
+                  </div>
+                  <div className="vessel-info mt-2">Mediterranean Sea • Vessel Id: 249345 • Captain: David Morich</div>
+                </div>
+              </div>
+              
+              <div className="text-center mt-4">
+                <Link href="/dashboard">
+                  <button className="btn btn-vesselian">
+                    View All Vessels
+                    <ChevronRight className="ms-1" size={16} />
+                  </button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Maritime Assets Section */}
+      <section className="py-5">
+        <div className="container py-5">
+          <div className="row align-items-center">
+            <div className="col-lg-6 mb-5 mb-lg-0">
+              <h2 className="section-heading display-5 mb-4">Complete Maritime Asset Visibility</h2>
               <p className="lead mb-4">
                 Track not just vessels, but all key maritime infrastructure in one powerful platform. Our system connects vessels, refineries, and ports to give you the complete picture.
               </p>
@@ -251,7 +400,7 @@ export default function LandingPageBootstrap() {
               <div className="row g-4 mt-2">
                 <div className="col-md-6">
                   <div className="d-flex">
-                    <div className="bg-primary text-white p-2 rounded me-3 d-flex align-items-center justify-content-center" style={{ width: '48px', height: '48px' }}>
+                    <div className="feature-icon me-3" style={{ width: '60px', height: '60px' }}>
                       <Ship size={24} />
                     </div>
                     <div>
@@ -263,7 +412,7 @@ export default function LandingPageBootstrap() {
                 
                 <div className="col-md-6">
                   <div className="d-flex">
-                    <div className="bg-primary text-white p-2 rounded me-3 d-flex align-items-center justify-content-center" style={{ width: '48px', height: '48px' }}>
+                    <div className="feature-icon me-3" style={{ width: '60px', height: '60px' }}>
                       <Factory size={24} />
                     </div>
                     <div>
@@ -275,7 +424,7 @@ export default function LandingPageBootstrap() {
                 
                 <div className="col-md-6">
                   <div className="d-flex">
-                    <div className="bg-primary text-white p-2 rounded me-3 d-flex align-items-center justify-content-center" style={{ width: '48px', height: '48px' }}>
+                    <div className="feature-icon me-3" style={{ width: '60px', height: '60px' }}>
                       <Anchor size={24} />
                     </div>
                     <div>
@@ -287,7 +436,7 @@ export default function LandingPageBootstrap() {
                 
                 <div className="col-md-6">
                   <div className="d-flex">
-                    <div className="bg-primary text-white p-2 rounded me-3 d-flex align-items-center justify-content-center" style={{ width: '48px', height: '48px' }}>
+                    <div className="feature-icon me-3" style={{ width: '60px', height: '60px' }}>
                       <Layers size={24} />
                     </div>
                     <div>
@@ -303,14 +452,15 @@ export default function LandingPageBootstrap() {
               <img 
                 src="https://images.unsplash.com/photo-1612284296123-eebf9e30e3ec?q=80&w=1000&auto=format&fit=crop" 
                 alt="Maritime infrastructure" 
-                className="img-fluid rounded-3 shadow"
+                className="img-fluid vesselian-card"
+                style={{ objectFit: 'cover', height: '450px', width: '100%' }}
               />
             </div>
           </div>
         </div>
       </section>
 
-      {/* CTA Section with Bootstrap */}
+      {/* CTA Section */}
       <section className="py-5 bg-primary text-white">
         <div className="container py-5 text-center">
           <h2 className="display-5 fw-bold mb-3">Ready to Transform Your Maritime Operations?</h2>
@@ -319,61 +469,61 @@ export default function LandingPageBootstrap() {
           </p>
           <div className="d-flex flex-column flex-md-row justify-content-center gap-3">
             <Link href="/auth">
-              <a className="btn btn-outline-light btn-lg px-5">Book a Demo</a>
+              <button className="btn btn-outline-light btn-lg px-5">Book a Demo</button>
             </Link>
             <Link href="/dashboard">
-              <a className="btn btn-light text-primary btn-lg px-5">
+              <button className="btn btn-light text-primary btn-lg px-5">
                 Get Started Now
                 <ChevronRight className="ms-1" size={16} />
-              </a>
+              </button>
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Footer with Bootstrap */}
-      <footer className="bg-dark text-white py-5">
+      {/* Footer */}
+      <footer className="footer-vesselian">
         <div className="container">
           <div className="row g-4">
             <div className="col-lg-3 col-md-6">
               <div className="mb-4">
                 <div className="d-flex align-items-center mb-3">
-                  <Ship className="me-2" size={24} />
-                  <span className="fs-4 fw-bold">Maritime Tracker</span>
+                  <Anchor className="me-2" size={24} />
+                  <span className="fs-4 fw-bold">Vesselian</span>
                 </div>
-                <p className="text-light opacity-75">
+                <p className="opacity-75">
                   The next generation of maritime intelligence for modern fleet operations
                 </p>
               </div>
             </div>
             
             <div className="col-lg-3 col-md-6">
-              <h5 className="fw-bold mb-3">Product</h5>
+              <h5 className="footer-heading">Product</h5>
               <ul className="list-unstyled">
-                <li className="mb-2"><a href="#" className="text-decoration-none text-light opacity-75">Features</a></li>
-                <li className="mb-2"><a href="#" className="text-decoration-none text-light opacity-75">Pricing</a></li>
-                <li className="mb-2"><a href="#" className="text-decoration-none text-light opacity-75">API</a></li>
-                <li className="mb-2"><a href="#" className="text-decoration-none text-light opacity-75">Integrations</a></li>
+                <li className="mb-2"><a href="#">Features</a></li>
+                <li className="mb-2"><a href="#">Pricing</a></li>
+                <li className="mb-2"><a href="#">API</a></li>
+                <li className="mb-2"><a href="#">Integrations</a></li>
               </ul>
             </div>
             
             <div className="col-lg-3 col-md-6">
-              <h5 className="fw-bold mb-3">Resources</h5>
+              <h5 className="footer-heading">Resources</h5>
               <ul className="list-unstyled">
-                <li className="mb-2"><a href="#" className="text-decoration-none text-light opacity-75">Documentation</a></li>
-                <li className="mb-2"><a href="#" className="text-decoration-none text-light opacity-75">Blog</a></li>
-                <li className="mb-2"><a href="#" className="text-decoration-none text-light opacity-75">Case Studies</a></li>
-                <li className="mb-2"><a href="#" className="text-decoration-none text-light opacity-75">Support</a></li>
+                <li className="mb-2"><a href="#">Documentation</a></li>
+                <li className="mb-2"><a href="#">Blog</a></li>
+                <li className="mb-2"><a href="#">Case Studies</a></li>
+                <li className="mb-2"><a href="#">Support</a></li>
               </ul>
             </div>
             
             <div className="col-lg-3 col-md-6">
-              <h5 className="fw-bold mb-3">Company</h5>
+              <h5 className="footer-heading">Company</h5>
               <ul className="list-unstyled">
-                <li className="mb-2"><a href="#" className="text-decoration-none text-light opacity-75">About</a></li>
-                <li className="mb-2"><a href="#" className="text-decoration-none text-light opacity-75">Careers</a></li>
-                <li className="mb-2"><a href="#" className="text-decoration-none text-light opacity-75">Privacy Policy</a></li>
-                <li className="mb-2"><a href="#" className="text-decoration-none text-light opacity-75">Terms of Service</a></li>
+                <li className="mb-2"><a href="#">About</a></li>
+                <li className="mb-2"><a href="#">Careers</a></li>
+                <li className="mb-2"><a href="#">Privacy Policy</a></li>
+                <li className="mb-2"><a href="#">Terms of Service</a></li>
               </ul>
             </div>
           </div>
@@ -381,22 +531,14 @@ export default function LandingPageBootstrap() {
           <hr className="my-4 opacity-25" />
           
           <div className="d-flex flex-column flex-md-row justify-content-between align-items-center">
-            <p className="mb-3 mb-md-0 text-light opacity-75">
-              © 2025 Maritime Tracker. All rights reserved.
+            <p className="mb-3 mb-md-0 opacity-75">
+              © 2025 Vesselian. All rights reserved.
             </p>
             <div className="d-flex gap-3">
-              <a href="#" className="text-decoration-none text-light opacity-75">
-                <i className="bi bi-facebook"></i>
-              </a>
-              <a href="#" className="text-decoration-none text-light opacity-75">
-                <i className="bi bi-twitter"></i>
-              </a>
-              <a href="#" className="text-decoration-none text-light opacity-75">
-                <i className="bi bi-linkedin"></i>
-              </a>
-              <a href="#" className="text-decoration-none text-light opacity-75">
-                <i className="bi bi-instagram"></i>
-              </a>
+              <a href="#"><i className="bi bi-facebook"></i></a>
+              <a href="#"><i className="bi bi-twitter"></i></a>
+              <a href="#"><i className="bi bi-linkedin"></i></a>
+              <a href="#"><i className="bi bi-instagram"></i></a>
             </div>
           </div>
         </div>
