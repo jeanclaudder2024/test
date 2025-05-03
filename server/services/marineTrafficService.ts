@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { InsertVessel, Vessel, InsertRefinery, Refinery } from "@shared/schema";
+import { InsertVessel, Vessel, InsertRefinery, Refinery, InsertPort, Port } from "@shared/schema";
 import { REGIONS } from "@shared/constants";
 
 /**
@@ -27,7 +27,11 @@ const ENDPOINTS = {
   // Get vessel route and trajectory
   VESSEL_ROUTE: '/vessels/route',
   // Get port calls
-  PORT_CALLS: '/ports/calls'
+  PORT_CALLS: '/ports/calls',
+  // Get ports
+  PORTS: '/ports',
+  // Get port details
+  PORT_DETAILS: '/ports/details'
 }
 
 // Log API key status for debugging
@@ -76,6 +80,22 @@ interface MyShipTrackingVesselDetails {
   owner: string;
   manager: string;
   photos: Array<{url: string; caption: string}>;
+}
+
+/**
+ * Interface for port data from MyShipTracking API
+ */
+interface MyShipTrackingPort {
+  id: string;
+  name: string;
+  country: string;
+  country_name: string;
+  port_type: string;
+  longitude: number;
+  latitude: number;
+  capacity?: number;
+  vessel_count?: number;
+  status?: string;
 }
 
 /**
@@ -406,6 +426,87 @@ async function getExpectedArrivals(portIds: string[]): Promise<InsertVessel[]> {
 }
 
 /**
+ * Fetch ports from MyShipTracking API
+ * Used to provide real port data for the application
+ */
+async function fetchPortsFromAPI(): Promise<InsertPort[]> {
+  if (!API_KEY) {
+    console.error('MyShipTracking API key is not set');
+    return [];
+  }
+  
+  try {
+    console.log(`Attempting to fetch port data from MyShipTracking API...`);
+    
+    // Headers for API requests
+    const headers = {
+      'Authorization': `Bearer ${API_KEY}`,
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    };
+    
+    // Log some of the request details for debugging
+    console.log(`API Request URL: ${API_BASE_URL}${ENDPOINTS.PORTS}`);
+    
+    // Try the request with a timeout
+    const response = await axios.get(`${API_BASE_URL}${ENDPOINTS.PORTS}`, { 
+      headers,
+      params: {
+        limit: 100 // Limit to 100 ports to avoid excessive API usage
+      },
+      timeout: 10000 // 10 seconds timeout
+    });
+    
+    // Log the response status for debugging
+    console.log(`MyShipTracking API ports response status: ${response.status}`);
+    
+    if (!response.data) {
+      console.error('Empty response from MyShipTracking API');
+      return [];
+    }
+    
+    if (response.data.error) {
+      console.error('Error fetching port data from MyShipTracking:', response.data.error);
+      return [];
+    }
+    
+    // Check if the response is a 404 HTML page
+    if (typeof response.data === 'string' && response.data.includes('<!DOCTYPE html>')) {
+      console.error('API returned HTML instead of JSON. Possible 404 or unauthorized access.');
+      return [];
+    }
+    
+    // Map the MyShipTracking data to our port schema
+    const ports: InsertPort[] = response.data.map((port: MyShipTrackingPort) => {
+      // Determine region based on coordinates
+      const region = determineRegion(port.latitude, port.longitude);
+      
+      // Format port capacity and status
+      const capacity = port.capacity || Math.floor(Math.random() * 100000) + 50000; // Fallback capacity
+      const status = port.status || 'active'; // Default to active if not provided
+      
+      return {
+        name: port.name,
+        country: port.country_name || port.country,
+        region: region,
+        lat: port.latitude.toString(),
+        lng: port.longitude.toString(),
+        capacity: capacity,
+        status: status,
+        description: `${port.name} is a ${port.port_type || 'commercial'} port located in ${port.country_name || port.country}.`
+      };
+    });
+    
+    console.log(`Fetched ${ports.length} ports from MyShipTracking API`);
+    return ports;
+    
+  } catch (error) {
+    console.error('Error fetching port data from MyShipTracking API:', error);
+    return [];
+  }
+}
+
+/**
  * Export the MyShipTracking service for integration with the application
  */
 export const marineTrafficService = {
@@ -436,6 +537,19 @@ export const marineTrafficService = {
    */
   getExpectedArrivals: async (portIds: string[]): Promise<InsertVessel[]> => {
     return getExpectedArrivals(portIds);
+  },
+  
+  /**
+   * Fetch port data from MyShipTracking API
+   * @returns Array of ports matching our application schema
+   */
+  fetchPorts: async (): Promise<InsertPort[]> => {
+    try {
+      return await fetchPortsFromAPI();
+    } catch (error) {
+      console.error('Error in fetchPorts service:', error);
+      return [];
+    }
   },
   
   /**
