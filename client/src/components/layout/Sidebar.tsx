@@ -13,7 +13,8 @@ import {
   Settings,
   BarChart,
   Map,
-  Radio
+  Radio,
+  Database
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -79,6 +80,12 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
       title: t("nav.brokers"),
       path: "/brokers",
       icon: <Users className="h-5 w-5 mr-3" />,
+    },
+    {
+      title: t("nav.api_test"),
+      path: "/api-test",
+      icon: <Database className="h-5 w-5 mr-3" />,
+      badge: "DEV",
     }
   ];
 
