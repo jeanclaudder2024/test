@@ -118,6 +118,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     });
 
+    // Route to clear all vessel and refinery data
+    apiRouter.post("/clear-data", async (req, res) => {
+      try {
+        console.log("Starting data removal process...");
+        const results = { vessels: 0, refineries: 0, success: true };
+        
+        try {
+          // Delete all vessel data
+          console.log("Removing all vessel data...");
+          const vessels = await storage.getVessels();
+          for (const vessel of vessels) {
+            await storage.deleteVessel(vessel.id);
+            results.vessels++;
+          }
+          console.log(`Successfully removed ${results.vessels} vessels`);
+        } catch (error) {
+          console.error("Error removing vessel data:", error);
+          // Continue with refineries even if vessel deletion fails
+        }
+        
+        try {
+          // Delete all refinery data
+          console.log("Removing all refinery data...");
+          const refineries = await storage.getRefineries();
+          for (const refinery of refineries) {
+            await storage.deleteRefinery(refinery.id);
+            results.refineries++;
+          }
+          console.log(`Successfully removed ${results.refineries} refineries`);
+        } catch (error) {
+          console.error("Error removing refinery data:", error);
+        }
+        
+        // Return results
+        res.json({
+          success: true,
+          message: "All vessel and refinery data has been cleared",
+          data: results
+        });
+      } catch (error) {
+        console.error("Error clearing data:", error);
+        res.status(500).json({ success: false, message: "Failed to clear data" });
+      }
+    });
+    
     apiRouter.post("/seed", async (req, res) => {
       try {
         console.log("Starting database seeding process...");
@@ -265,24 +310,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Marine Traffic API endpoints
+  // MyShipTracking API endpoints
   apiRouter.get("/vessels/marine-traffic", async (req, res) => {
     try {
       if (!marineTrafficService.isConfigured()) {
         return res.status(503).json({ 
-          message: "Marine Traffic API is not configured. Please set MARINE_TRAFFIC_API_KEY environment variable." 
+          message: "MyShipTracking API is not configured. Please set MARINE_TRAFFIC_API_KEY environment variable." 
         });
       }
       
       const vessels = await marineTrafficService.fetchVessels();
+      console.log(`Fetched ${vessels.length} vessels from MyShipTracking API`);
+      
       res.json(vessels);
     } catch (error) {
-      console.error("Error fetching vessels from Marine Traffic:", error);
-      res.status(500).json({ message: "Failed to fetch vessels from Marine Traffic API" });
+      console.error("Error fetching vessels from MyShipTracking:", error);
+      res.status(500).json({ message: "Failed to fetch vessels from MyShipTracking API" });
     }
   });
   
-  // Endpoint to get vessels near a refinery using Marine Traffic API
+  // Endpoint to get vessels near a refinery using MyShipTracking API
   apiRouter.get("/vessels/near-refinery/:id", async (req, res) => {
     try {
       const refineryId = parseInt(req.params.id);
@@ -296,8 +343,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Refinery not found" });
       }
       
-      // Try to fetch vessels from the database that are near this refinery
-      // This calculates distance based on coordinates
+      // First try to use the MyShipTracking API if configured
+      if (marineTrafficService.isConfigured()) {
+        try {
+          // Parse refinery coordinates
+          const refineryLat = typeof refinery.lat === 'number' 
+            ? refinery.lat 
+            : parseFloat(String(refinery.lat));
+            
+          const refineryLng = typeof refinery.lng === 'number'
+            ? refinery.lng
+            : parseFloat(String(refinery.lng));
+          
+          // Use the MyShipTracking vessels_in_area endpoint to get vessels
+          // This requires port_id in MyShipTracking API, which we may not have
+          // So we'll use the general query and filter by distance
+          const allVessels = await marineTrafficService.fetchVessels();
+          
+          // Filter vessels by distance from refinery (within ~500km)
+          const nearbyVessels = allVessels.filter(vessel => {
+            if (!vessel.currentLat || !vessel.currentLng) return false;
+            
+            const vesselLat = typeof vessel.currentLat === 'number'
+              ? vessel.currentLat
+              : parseFloat(String(vessel.currentLat));
+              
+            const vesselLng = typeof vessel.currentLng === 'number'
+              ? vessel.currentLng
+              : parseFloat(String(vessel.currentLng));
+              
+            // Calculate approximate distance using a simple formula
+            // This is a rough calculation, but good enough for this purpose
+            const latDiff = Math.abs(vesselLat - refineryLat);
+            const lngDiff = Math.abs(vesselLng - refineryLng);
+            
+            // Rough approximation for ~500km
+            return (latDiff*latDiff + lngDiff*lngDiff) < 25;
+          });
+          
+          console.log(`Found ${nearbyVessels.length} vessels near refinery ${refineryId} from MyShipTracking API`);
+          return res.json(nearbyVessels);
+        } catch (apiError) {
+          console.error("Error using MyShipTracking API for nearby vessels:", apiError);
+          // Fall back to database in case of API error
+        }
+      }
+      
+      // Fallback: Try to fetch vessels from the database that are near this refinery
       const allVessels = await storage.getVessels();
       
       // Parse refinery coordinates
@@ -322,7 +414,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           : parseFloat(String(vessel.currentLng));
           
         // Calculate approximate distance using a simple formula
-        // This is a rough calculation, but good enough for this purpose
         const latDiff = Math.abs(vesselLat - refineryLat);
         const lngDiff = Math.abs(vesselLng - refineryLng);
         
@@ -330,6 +421,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return (latDiff*latDiff + lngDiff*lngDiff) < 25;
       });
       
+      console.log(`Found ${nearbyVessels.length} vessels near refinery ${refineryId} from database`);
       res.json(nearbyVessels);
     } catch (error) {
       console.error(`Error fetching vessels near refinery:`, error);

@@ -1,6 +1,6 @@
 /**
- * MarineTraffic Service for fetching real vessel data
- * This service connects to Marine Traffic API to get real-time vessel information
+ * MyShipTracking Service for fetching real vessel data
+ * This service connects to MyShipTracking API via our backend to get real-time vessel information
  */
 
 import { Vessel } from '@shared/schema';
@@ -16,46 +16,51 @@ export const OIL_TANKER_TYPES = [
   'lpg tanker'
 ];
 
-// Sample data structure for a vessel from Marine Traffic API
-interface MarineTrafficVessel {
+// Sample data structure for a vessel from MyShipTracking API
+interface MyShipTrackingVessel {
   mmsi: string;
   imo: string;
   name: string;
-  type: string;
+  type_name: string;
   flag: string;
-  position: {
-    lat: number;
-    lng: number;
-  };
+  flag_name: string;
+  latitude: number;
+  longitude: number;
   course: number;
   speed: number;
+  heading: number;
+  status: number;
+  status_name: string;
   destination: string;
   eta: string;
-  lastReport: string;
+  last_port: string;
+  last_port_time: string;
 }
 
 /**
- * Fetch vessels from our backend API that connects to Marine Traffic
+ * Fetch vessels from our backend API that connects to MyShipTracking
  * @returns Promise<Vessel[]> Array of vessels
  */
 export async function fetchVessels(): Promise<Vessel[]> {
   try {
     const response = await axios.get('/api/vessels/marine-traffic');
+    console.log('Fetched vessels from MyShipTracking API:', response.data.length);
     return response.data;
   } catch (error) {
-    console.error('Error fetching vessels from Marine Traffic:', error);
+    console.error('Error fetching vessels from MyShipTracking:', error);
     return [];
   }
 }
 
 /**
- * Fetch vessels that are near a specific refinery
+ * Fetch vessels that are near a specific refinery using MyShipTracking's area search
  * @param refineryId ID of the refinery
  * @returns Promise<Vessel[]> Array of vessels near the refinery
  */
 export async function fetchVesselsNearRefinery(refineryId: number): Promise<Vessel[]> {
   try {
     const response = await axios.get(`/api/vessels/near-refinery/${refineryId}`);
+    console.log(`Fetched ${response.data.length} vessels near refinery ${refineryId} from MyShipTracking`);
     return response.data;
   } catch (error) {
     console.error(`Error fetching vessels near refinery ID ${refineryId}:`, error);

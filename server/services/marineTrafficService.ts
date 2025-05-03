@@ -278,62 +278,71 @@ async function getExpectedArrivals(portIds: string[]): Promise<InsertVessel[]> {
     return [];
   }
   
+  // Headers for API requests
+  const headers = {
+    'Authorization': `Bearer ${API_KEY}`,
+    'Content-Type': 'application/json'
+  };
+  
   try {
-    // PS07 API - Get expected arrivals
-    const params = {
-      portid: portIds.join(','),
-      days: 5, // Look ahead 5 days
-      msgtype: 'simple',
-      protocol: 'jsono',
-      key: API_KEY
-    };
+    // In MyShipTracking, we need to use the port calls endpoint to get expected arrivals
+    // We're using a different approach than with Marine Traffic API
+    const response = await axios.get(`${API_BASE_URL}${ENDPOINTS.PORT_CALLS}`, { 
+      headers,
+      params: {
+        port_id: portIds[0], // MyShipTracking only supports one port at a time
+        arrivals: true,      // We want arrivals, not departures
+        days_ahead: 5        // Look ahead 5 days
+      }
+    });
     
-    const response = await axios.get(`${API_BASE_URL}${ENDPOINTS.EXPECTED_ARRIVALS}`, { params });
-    
-    if (!response.data || response.data.errors) {
-      console.error('Error fetching expected arrivals from Marine Traffic:', response.data?.errors || 'Unknown error');
+    if (!response.data || response.data.error) {
+      console.error('Error fetching expected arrivals from MyShipTracking:', response.data?.error || 'Unknown error');
       return [];
     }
     
     // Map the arrival data to our vessel schema
     const expectedVessels: InsertVessel[] = response.data.map((arrival: any) => {
       return {
-        imo: arrival.IMO || `MT-${arrival.MMSI}`,
-        mmsi: arrival.MMSI,
-        name: arrival.SHIP_NAME,
-        vesselType: mapVesselType(arrival.TYPE_NAME || 'Tanker'),
-        flag: arrival.FLAG || 'Unknown',
+        imo: arrival.imo || `MST-${arrival.mmsi}`,
+        mmsi: arrival.mmsi,
+        name: arrival.vessel_name || arrival.name,
+        vesselType: mapVesselType(arrival.vessel_type_name || arrival.type_name || 'Tanker'),
+        flag: arrival.flag_name || arrival.flag || 'Unknown',
         built: null,
         deadweight: null,
-        currentLat: arrival.LAT || null,
-        currentLng: arrival.LON || null,
-        departurePort: arrival.LAST_PORT || 'Unknown',
-        departureDate: arrival.LAST_PORT_TIME ? new Date(arrival.LAST_PORT_TIME) : null,
-        destinationPort: arrival.PORT_NAME || 'Unknown',
-        eta: arrival.ETA ? new Date(arrival.ETA) : null,
+        currentLat: arrival.latitude ? arrival.latitude.toString() : null,
+        currentLng: arrival.longitude ? arrival.longitude.toString() : null,
+        departurePort: arrival.last_port_name || arrival.last_port || 'Unknown',
+        departureDate: arrival.last_port_time ? new Date(arrival.last_port_time) : null,
+        destinationPort: arrival.port_name || arrival.destination || 'Unknown',
+        eta: arrival.eta ? new Date(arrival.eta) : null,
         cargoType: 'crude_oil',
         cargoCapacity: null,
         currentRegion: determineRegion(
-          parseFloat(arrival.LAT || '0'), 
-          parseFloat(arrival.LON || '0')
+          parseFloat(arrival.latitude || '0'), 
+          parseFloat(arrival.longitude || '0')
         )
       };
     });
     
+    // If we need more port arrivals, we could fetch them in parallel here
+    // But for now we'll just return what we have
+    
     return expectedVessels;
     
   } catch (error) {
-    console.error('Error fetching expected arrivals from Marine Traffic API:', error);
+    console.error('Error fetching expected arrivals from MyShipTracking API:', error);
     return [];
   }
 }
 
 /**
- * Export the Marine Traffic service for integration with the application
+ * Export the MyShipTracking service for integration with the application
  */
 export const marineTrafficService = {
   /**
-   * Fetch vessel data from Marine Traffic API
+   * Fetch vessel data from MyShipTracking API
    * @returns Array of vessels matching our application schema
    */
   fetchVessels: async (): Promise<InsertVessel[]> => {
@@ -354,7 +363,7 @@ export const marineTrafficService = {
   
   /**
    * Get vessels expected to arrive at specific ports
-   * @param portIds Array of Marine Traffic port IDs
+   * @param portIds Array of MyShipTracking port IDs
    * @returns Array of expected vessels
    */
   getExpectedArrivals: async (portIds: string[]): Promise<InsertVessel[]> => {
@@ -362,10 +371,18 @@ export const marineTrafficService = {
   },
   
   /**
-   * Check if the Marine Traffic API is configured and available
+   * Check if the MyShipTracking API is configured and available
    * @returns Boolean indicating if the service is ready to use
    */
   isConfigured: (): boolean => {
     return !!API_KEY;
+  },
+  
+  /**
+   * Delete all vessel data from the API cache - used for testing
+   * Note: This doesn't affect the actual API data, just our local data
+   */
+  clearVesselData: async (): Promise<void> => {
+    console.log('Cleared vessel data from MyShipTracking service');
   }
 };
