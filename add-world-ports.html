@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add World Ports</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 16px;
+      margin: 4px 2px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    #resultContainer {
+      margin-top: 20px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background-color: #f9f9f9;
+      display: none;
+    }
+    .loader {
+      border: 5px solid #f3f3f3;
+      border-radius: 50%;
+      border-top: 5px solid #3498db;
+      width: 30px;
+      height: 30px;
+      animation: spin 2s linear infinite;
+      display: inline-block;
+      margin-left: 10px;
+      vertical-align: middle;
+      display: none;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <h1>Vesselian Port Database Management</h1>
+  
+  <div class="card">
+    <h2>Add World Ports to Database</h2>
+    <p>This tool will add our comprehensive world ports database to the system. This includes major commercial ports and oil terminals from all regions of the world.</p>
+    <button id="addWorldPortsBtn">Add All World Ports</button>
+    <span class="loader" id="loader"></span>
+  </div>
+  
+  <div id="resultContainer">
+    <h2>Operation Result</h2>
+    <pre id="resultContent"></pre>
+  </div>
+
+  <script>
+    const baseUrl = window.location.hostname.includes('replit.dev') 
+      ? window.location.origin 
+      : 'https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev';
+    
+    document.getElementById('addWorldPortsBtn').addEventListener('click', async () => {
+      const loader = document.getElementById('loader');
+      const resultContainer = document.getElementById('resultContainer');
+      const resultContent = document.getElementById('resultContent');
+      
+      // Show loader
+      loader.style.display = 'inline-block';
+      resultContainer.style.display = 'none';
+      
+      try {
+        const response = await fetch(`${baseUrl}/api/ports/add-all-world-ports`, {
+          method: 'POST'
+        });
+        
+        const data = await response.json();
+        
+        // Display result
+        resultContent.textContent = JSON.stringify(data, null, 2);
+        resultContainer.style.display = 'block';
+      } catch (error) {
+        resultContent.textContent = `Error: ${error.message}`;
+        resultContainer.style.display = 'block';
+      } finally {
+        // Hide loader
+        loader.style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>
