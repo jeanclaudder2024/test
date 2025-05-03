@@ -817,17 +817,17 @@ export default function VesselDetail() {
                       <div className="flex mb-2 items-center justify-between">
                         <div>
                           <span className="text-xs font-semibold inline-block text-primary">
-                            {vessel.departureDate && vessel.eta ? "48%" : "N/A"}
+                            {"64% Complete"}
                           </span>
                         </div>
                         <div className="text-right">
-                          <span className="text-xs font-semibold inline-block text-primary">
-                            {vessel.departureDate && vessel.eta ? formatDate(vessel.departureDate) + " → " + formatDate(vessel.eta) : "Unknown Duration"}
+                          <span className="text-xs font-semibold text-muted-foreground">
+                            9 days remaining
                           </span>
                         </div>
                       </div>
                       <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-primary/20">
-                        <div style={{ width: "48%" }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-primary"></div>
+                        <div style={{ width: "64%" }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-primary"></div>
                       </div>
                       <div className="flex justify-between text-xs text-muted-foreground">
                         <div>{vessel.departurePort}</div>
