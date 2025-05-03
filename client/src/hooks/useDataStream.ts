@@ -5,7 +5,7 @@ import { useVesselStream } from './useVesselStream';
 interface StreamData {
   vessels: Vessel[];
   refineries: Refinery[];
-  ports: Vessel[];
+  ports: Port[];
   stats: any | null;
   loading: boolean;
   error: string | null;

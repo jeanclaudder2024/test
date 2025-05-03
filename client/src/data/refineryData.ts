@@ -1,7 +1,7 @@
 // This file contains accurate refinery coordinates for oil refineries worldwide
 // These coordinates are based on real location data to correct the map display
 
-import { Refinery, Vessel } from '@shared/schema';
+import { Refinery, Vessel, Port } from '@shared/schema';
 
 export type RefineryData = {
   name: string;
@@ -728,7 +728,7 @@ export function convertToRefineries(refineryData: RefineryData[]): Refinery[] {
 /**
  * Generate ports connected to each refinery
  */
-export function generateConnectedPorts(refineries: Refinery[]): Vessel[] {
+export function generateConnectedPorts(refineries: Refinery[]): Port[] {
   return refineries.map((refinery, index) => {
     // Calculate a position near the refinery (5-20km away)
     const latOffset = (Math.random() * 0.15) * (Math.random() > 0.5 ? 1 : -1);
@@ -737,21 +737,15 @@ export function generateConnectedPorts(refineries: Refinery[]): Vessel[] {
     return {
       id: index + 1,
       name: `Port of ${refinery.name}`,
-      imo: `PORT${10000 + index}`,
-      mmsi: `${9000000 + index}`,
-      vesselType: 'port',
-      flag: refinery.country,
-      built: 1990 + Math.floor(Math.random() * 30),
-      deadweight: 0,
-      currentLat: (parseFloat(refinery.lat) + latOffset).toString(),
-      currentLng: (parseFloat(refinery.lng) + lngOffset).toString(),
-      destinationPort: refinery.name,
-      departurePort: 'Various',
-      cargoType: 'crude_oil',
-      cargoCapacity: 0,
-      eta: new Date(),
-      departureDate: new Date(),
-      currentRegion: refinery.region
+      country: refinery.country,
+      region: refinery.region,
+      lat: (parseFloat(refinery.lat) + latOffset).toString(),
+      lng: (parseFloat(refinery.lng) + lngOffset).toString(),
+      capacity: 100000 + Math.floor(Math.random() * 500000),
+      status: "operational",
+      description: `Major maritime port serving ${refinery.name}`,
+      type: "oil_terminal",
+      lastUpdated: new Date()
     };
   });
 }

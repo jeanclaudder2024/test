@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Vessel, Refinery } from '@shared/schema';
+import { Vessel, Refinery, Port } from '@shared/schema';
 import { apiRequest } from '@/lib/queryClient';
 import { ACCURATE_REFINERIES, convertToRefineries, generateConnectedPorts } from '@/data/refineryData';
 import { getVesselsForRefinery } from '@/services/marineTrafficService';
@@ -7,7 +7,7 @@ import { getVesselsForRefinery } from '@/services/marineTrafficService';
 interface VesselStreamData {
   vessels: Vessel[];
   refineries: Refinery[];
-  ports: Vessel[];
+  ports: Port[];
   stats: any | null;
   loading: boolean;
   error: string | null;
@@ -50,7 +50,7 @@ export function useVesselStream() {
         
         // Update state with the prepared data
         setData({
-          vessels: [...portsData, ...vesselsAtRefineries],
+          vessels: vesselsAtRefineries, // Don't add ports to vessels array anymore
           refineries: refineriesData,
           ports: portsData,
           stats: null, 
