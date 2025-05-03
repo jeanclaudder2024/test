@@ -14,7 +14,8 @@ import {
   BarChart,
   Map,
   Radio,
-  Database
+  Database,
+  Anchor
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -65,6 +66,11 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
       title: t("nav.refineries"),
       path: "/refineries",
       icon: <Building2 className="h-5 w-5 mr-3" />,
+    },
+    {
+      title: t("nav.ports"),
+      path: "/ports",
+      icon: <Anchor className="h-5 w-5 mr-3" />,
     },
     {
       title: t("nav.trading"),
