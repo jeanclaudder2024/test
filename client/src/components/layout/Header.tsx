@@ -47,7 +47,6 @@ export default function Header() {
     if (location === "/") return t("nav.dashboard");
     if (location.startsWith("/vessels")) return t("nav.vessels");
     if (location.startsWith("/refineries")) return t("nav.refineries");
-    if (location.startsWith("/map-explorer")) return "Map Explorer";
     if (location.startsWith("/documents")) return t("nav.documents");
     if (location.startsWith("/brokers")) return t("nav.brokers");
     if (location.startsWith("/profile")) return t("nav.profile");

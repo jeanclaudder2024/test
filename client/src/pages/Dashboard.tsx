@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import MapContainer from "@/components/map/MapContainer";
+import SimpleLeafletMap from "@/components/map/SimpleLeafletMap";
 import VesselInfo from "@/components/vessels/VesselInfo";
 import ProgressTimeline from "@/components/vessels/ProgressTimeline";
 import StatsCards from "@/components/dashboard/StatsCards";
@@ -524,14 +524,16 @@ export default function Dashboard() {
           </div>
           
           {/* Map Container */}
-          <MapContainer 
+          <SimpleLeafletMap 
+            vessels={selectedRefinery ? associatedVessels : filteredVessels}
+            refineries={selectedRefinery ? [selectedRefinery] : filteredRefineries}
+            selectedRegion={selectedRegion}
             onVesselClick={handleVesselSelect}
             onRefineryClick={handleRefinerySelect}
-            filterRegion={selectedRegion}
-            filterVesselTypes={vesselTypeFilters}
-            filterRefineryStatuses={refineryStatusFilters}
-            selectedRefineryId={selectedRefinery?.id}
-            selectedVesselId={selectedVessel?.id}
+            isLoading={loading}
+            initialCenter={selectedRefinery && selectedRefinery.lat && selectedRefinery.lng 
+              ? [parseFloat(selectedRefinery.lat as string), parseFloat(selectedRefinery.lng as string)]
+              : undefined}
             initialZoom={selectedRefinery ? 6 : undefined}
           />
         </div>

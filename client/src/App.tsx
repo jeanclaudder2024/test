@@ -8,7 +8,6 @@ import Vessels from "@/pages/Vessels";
 import VesselDetail from "@/pages/VesselDetail";
 import Refineries from "@/pages/Refineries";
 import RefineryDetail from "@/pages/RefineryDetail";
-import MapExplorer from "@/pages/MapExplorer";
 import Brokers from "@/pages/Brokers";
 import Documents from "@/pages/Documents";
 import AIAssistantPage from "@/pages/AIAssistant";
@@ -62,7 +61,6 @@ function Router() {
         <ProtectedRoute path="/vessels/:id" component={VesselDetail} />
         <ProtectedRoute path="/refineries" component={Refineries} />
         <ProtectedRoute path="/refineries/:id" component={RefineryDetail} />
-        <ProtectedRoute path="/map-explorer" component={MapExplorer} />
         <ProtectedRoute path="/brokers" component={Brokers} />
         <ProtectedRoute path="/documents" component={Documents} />
         <ProtectedRoute path="/ai-assistant" component={AIAssistantPage} />

@@ -1,211 +1,195 @@
-import axios from 'axios';
+/**
+ * MarineTraffic Service for fetching real vessel data
+ * This service connects to Marine Traffic API to get real-time vessel information
+ */
+
 import { Vessel } from '@shared/schema';
-import { REGIONS } from '@shared/constants';
+import { RefineryData } from '@/data/refineryData';
+import axios from 'axios';
 
-interface MarineTrafficVesselPosition {
-  MMSI: string;
-  IMO: string;
-  SHIP_ID: string;
-  LAT: string;
-  LON: string;
-  SPEED: string;
-  HEADING: string;
-  COURSE: string;
-  STATUS: string;
-  TIMESTAMP: string;
-  DSRC: string;
-  SHIP_NAME: string;
-  SHIP_TYPE: string;
-  TYPE_COLOR: string;
-  TYPE_NAME: string;
-  DESTINATION: string;
-  ETA: string;
-  AIS_TYPE_SUMMARY: string;
-  CURRENT_PORT: string;
-  LAST_PORT: string;
-  LAST_PORT_TIME: string;
-  FLAG: string;
-}
+// List of common vessels that carry oil products
+export const OIL_TANKER_TYPES = [
+  'crude oil tanker',
+  'oil/chemical tanker',
+  'oil products tanker',
+  'lng tanker',
+  'lpg tanker'
+];
 
-interface MarineTrafficVesselDetails {
-  IMO: string;
-  NAME: string;
-  MMSI: string;
-  TYPE_NAME: string;
-  TYPE_SUMMARY: string;
-  DWT: string;
-  YEAR_BUILT: string;
-  GT: string;
-  FLAG: string;
-  OWNER: string;
-  LENGTH: string;
-  BREADTH: string;
-  DRAUGHT: string;
-}
-
-/**
- * Map Marine Traffic vessel type to our application vessel type
- */
-function mapVesselType(marineTrafficType: string): string {
-  const typeMap: Record<string, string> = {
-    'Tanker': 'Oil Tanker',
-    'Crude Oil Tanker': 'Oil Tanker',
-    'Oil/Chemical Tanker': 'Oil Tanker',
-    'Chemical Tanker': 'Chemical Tanker',
-    'LPG Tanker': 'LPG Tanker',
-    'LNG Tanker': 'LNG Tanker',
-    'Container Ship': 'Container Ship',
-    'Bulk Carrier': 'Bulk Carrier',
-    'General Cargo': 'General Cargo',
-    'Passenger': 'Passenger',
-    'Fishing': 'Fishing Vessel'
+// Sample data structure for a vessel from Marine Traffic API
+interface MarineTrafficVessel {
+  mmsi: string;
+  imo: string;
+  name: string;
+  type: string;
+  flag: string;
+  position: {
+    lat: number;
+    lng: number;
   };
-  
-  return typeMap[marineTrafficType] || 'Other';
+  course: number;
+  speed: number;
+  destination: string;
+  eta: string;
+  lastReport: string;
 }
 
 /**
- * Determine region based on coordinates
+ * Fetch vessels from our backend API that connects to Marine Traffic
+ * @returns Promise<Vessel[]> Array of vessels
  */
-function determineRegion(lat: number, lng: number): string {
-  // Simple region determination based on coordinates
-  if (lat > 20 && lat < 72 && lng > -170 && lng < -30) {
-    return 'North America';
-  } else if (lat > -60 && lat < 15 && lng > -90 && lng < -30) {
-    return 'South America';
-  } else if (lat > 35 && lat < 70 && lng > -10 && lng < 40) {
-    return 'Europe';
-  } else if (lat > 5 && lat < 40 && lng > 30 && lng < 80) {
-    return 'Middle East';
-  } else if (lat > -40 && lat < 35 && lng > -20 && lng < 55 && !(lat > 5 && lng > 30)) {
-    return 'Africa';
-  } else if (lat > 0 && lat < 60 && lng > 60 && lng < 180) {
-    return 'Asia';
-  } else if (lat > -10 && lat < 20 && lng > 90 && lng < 140) {
-    return 'Southeast Asia';
-  } else if (lat > -50 && lat < -10 && lng > 110 && lng < 180) {
-    return 'Australia';
-  }
-  
-  // Default region
-  return 'Other';
-}
-
-/**
- * Directly fetch vessels from Marine Traffic API
- */
-export async function fetchVesselsFromAPI(): Promise<Vessel[]> {
+export async function fetchVessels(): Promise<Vessel[]> {
   try {
-    // Fetch vessels from the Marine Traffic API
     const response = await axios.get('/api/vessels/marine-traffic');
-    
-    if (!response.data || !Array.isArray(response.data)) {
-      console.error('Invalid response from Marine Traffic API:', response.data);
-      return [];
-    }
-    
-    // Map the API response to our vessel schema
-    const vessels: Vessel[] = response.data.map((vessel: MarineTrafficVesselPosition, index: number) => {
-      const lat = parseFloat(vessel.LAT);
-      const lng = parseFloat(vessel.LON);
-      const region = determineRegion(lat, lng);
-      
-      return {
-        id: index + 1, // Generate sequential IDs
-        name: vessel.SHIP_NAME,
-        imo: vessel.IMO || `IMO${Math.floor(Math.random() * 1000000)}`,
-        mmsi: vessel.MMSI,
-        vesselType: mapVesselType(vessel.TYPE_NAME),
-        flag: vessel.FLAG || 'Unknown',
-        built: null,
-        deadweight: null,
-        currentLat: vessel.LAT,
-        currentLng: vessel.LON,
-        destinationPort: vessel.DESTINATION || 'Unknown',
-        departurePort: vessel.LAST_PORT || 'Unknown',
-        cargoType: 'Crude Oil', // Default cargo type
-        cargoCapacity: null,
-        eta: vessel.ETA ? new Date(vessel.ETA) : null,
-        departureDate: vessel.LAST_PORT_TIME ? new Date(vessel.LAST_PORT_TIME) : null,
-        currentRegion: region,
-        
-        // Additional properties from Marine Traffic
-        heading: vessel.HEADING,
-        speed: vessel.SPEED,
-        status: vessel.STATUS
-      };
-    });
-    
-    return vessels;
+    return response.data;
   } catch (error) {
-    console.error('Error fetching vessels from Marine Traffic API:', error);
+    console.error('Error fetching vessels from Marine Traffic:', error);
     return [];
   }
 }
 
 /**
- * Directly fetch refineries (this would normally come from the API, but we'll use a hardcoded list for now)
+ * Fetch vessels that are near a specific refinery
+ * @param refineryId ID of the refinery
+ * @returns Promise<Vessel[]> Array of vessels near the refinery
  */
-export async function fetchRefineries(): Promise<any[]> {
+export async function fetchVesselsNearRefinery(refineryId: number): Promise<Vessel[]> {
   try {
-    // In a real implementation, this would be an API call
-    const response = await axios.get('/api/refineries');
+    const response = await axios.get(`/api/vessels/near-refinery/${refineryId}`);
     return response.data;
   } catch (error) {
-    console.error('Error fetching refineries:', error);
+    console.error(`Error fetching vessels near refinery ID ${refineryId}:`, error);
+    return [];
+  }
+}
+
+/**
+ * Generate realistic vessel data for ports near refineries when API data is not available
+ * This is used as a fallback when MarineTraffic API calls fail or are not configured
+ */
+export function generateVesselsForRefinery(refinery: RefineryData): Vessel[] {
+  // Create a unique hash from the refinery name to use as a stable ID base
+  const hashFromName = refinery.name.split('').reduce((a, b) => {
+    a = ((a << 5) - a) + b.charCodeAt(0);
+    return a & a;
+  }, 0);
+  
+  // Use absolute value and ensure it's a positive number
+  const baseId = Math.abs(hashFromName);
+  
+  // Determine how many vessels to generate - between 2 and 5 per refinery
+  // Using the hash ensures we get the same number for the same refinery name
+  const vesselCount = 2 + (baseId % 4); 
+  const vessels: Vessel[] = [];
+  
+  // Generate realistic vessel names for oil tankers
+  const vesselNames = [
+    'Pacific Crown', 'Oriental Jade', 'Gulf Explorer', 'Atlantic Pioneer', 'Nordic Prince',
+    'Desert Voyager', 'Ocean Guardian', 'Liberty Star', 'Coral Princess', 'Golden Horizon'
+  ];
+  
+  // Generate realistic vessel flags
+  const flags = [
+    'Liberia', 'Panama', 'Marshall Islands', 'Bahamas', 'Malta', 
+    'Singapore', 'Greece', 'Hong Kong', 'Cyprus', 'Japan'
+  ];
+  
+  // Generate vessels for this refinery
+  for (let i = 0; i < vesselCount; i++) {
+    // Create unique ID based on hash and vessel index
+    const uniqueId = baseId + i + 1;
     
-    // Return a simple list of major refineries
-    return [
-      {
-        id: 1,
-        name: 'Saudi Aramco Ras Tanura',
-        country: 'Saudi Arabia',
-        region: 'Middle East',
-        lat: '26.6444',
-        lng: '50.1520',
-        capacity: 550000,
-        status: 'Active'
-      },
-      {
-        id: 2,
-        name: 'Port Arthur Refinery',
-        country: 'United States',
-        region: 'North America',
-        lat: '29.8761',
-        lng: '-93.9577',
-        capacity: 600000,
-        status: 'Active'
-      },
-      {
-        id: 3,
-        name: 'Reliance Jamnagar Refinery',
-        country: 'India',
-        region: 'Asia',
-        lat: '22.2500',
-        lng: '69.0833',
-        capacity: 1240000,
-        status: 'Active'
-      },
-      {
-        id: 4,
-        name: 'SK Energy Ulsan',
-        country: 'South Korea',
-        region: 'Asia',
-        lat: '35.5472',
-        lng: '129.3194',
-        capacity: 840000,
-        status: 'Active'
-      },
-      {
-        id: 5,
-        name: 'ExxonMobil Singapore',
-        country: 'Singapore',
-        region: 'Southeast Asia',
-        lat: '1.2800',
-        lng: '103.7000',
-        capacity: 592000,
-        status: 'Active'
+    // Calculate position near the refinery (within 2-5km)
+    // Use deterministic offsets based on the uniqueId and index
+    const latOffset = (Math.sin(uniqueId * (i+1)) * 0.05);
+    const lngOffset = (Math.cos(uniqueId * (i+1)) * 0.05);
+    
+    // Choose vessel name and details based on uniqueId to ensure consistency
+    const vesselName = vesselNames[(uniqueId + i) % vesselNames.length];
+    const vesselType = OIL_TANKER_TYPES[(uniqueId + i) % OIL_TANKER_TYPES.length];
+    const flag = flags[(uniqueId + i) % flags.length];
+    
+    // Generate capacities and build years
+    const cargoCapacity = 50000 + ((uniqueId + i) % 250000);
+    const buildYear = 1990 + ((uniqueId + i) % 30);
+    const deadweight = cargoCapacity * 1.2;
+    
+    // Parse refinery coordinates
+    const refineryLat = typeof refinery.lat === 'number' 
+      ? refinery.lat 
+      : parseFloat(String(refinery.lat));
+    
+    const refineryLng = typeof refinery.lng === 'number'
+      ? refinery.lng
+      : parseFloat(String(refinery.lng));
+    
+    // Create vessel object that matches the schema definition
+    const vessel: Vessel = {
+      id: uniqueId,
+      name: vesselName,
+      imo: `IMO${9000000 + uniqueId}`,
+      mmsi: `${200000000 + uniqueId}`,
+      vesselType: vesselType,
+      flag: flag,
+      built: buildYear,
+      deadweight: Math.round(deadweight),
+      currentLat: (refineryLat + latOffset).toString(),
+      currentLng: (refineryLng + lngOffset).toString(),
+      destinationPort: `Port of ${refinery.name}`,
+      departurePort: 'Various Ports',
+      cargoType: 'crude_oil',
+      cargoCapacity: cargoCapacity,
+      eta: new Date(Date.now() + 86400000 * ((uniqueId + i) % 5)),
+      departureDate: new Date(Date.now() - 86400000 * ((uniqueId + i) % 10)),
+      currentRegion: refinery.region
+    };
+    
+    vessels.push(vessel);
+  }
+  
+  return vessels;
+}
+
+/**
+ * Main service function to get vessels for a refinery
+ * First tries to fetch real data, falls back to generated data if that fails
+ */
+export async function getVesselsForRefinery(refinery: RefineryData): Promise<Vessel[]> {
+  try {
+    // Create a unique hash from the refinery name to use as a stable ID
+    const hashFromName = refinery.name.split('').reduce((a, b) => {
+      a = ((a << 5) - a) + b.charCodeAt(0);
+      return a & a;
+    }, 0);
+    
+    // Use absolute value and ensure it's a positive number
+    const refineryId = Math.abs(hashFromName);
+    
+    // First try to get real data from the API
+    try {
+      const realVessels = await fetchVesselsNearRefinery(refineryId);
+      
+      // If we got real data, use it
+      if (realVessels && realVessels.length > 0) {
+        console.log(`Fetched ${realVessels.length} real vessels for refinery ${refinery.name}`);
+        return realVessels;
       }
-    ];
+    } catch (apiError) {
+      console.warn(`Could not fetch vessels from API for ${refinery.name}:`, apiError);
+      // Continue to fallback if API fails
+    }
+    
+    // If no real data, generate fallback data
+    const generatedVessels = generateVesselsForRefinery(refinery);
+    console.log(`Generated ${generatedVessels.length} fallback vessels for refinery ${refinery.name}`);
+    return generatedVessels;
+    
+  } catch (error) {
+    console.error(`Error getting vessels for refinery ${refinery.name}:`, error);
+    
+    // In case of any error, generate fallback data
+    const fallbackVessels = generateVesselsForRefinery(refinery);
+    console.log(`Generated ${fallbackVessels.length} fallback vessels after error for refinery ${refinery.name}`);
+    return fallbackVessels;
   }
 }
