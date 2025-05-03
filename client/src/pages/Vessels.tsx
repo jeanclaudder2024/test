@@ -59,13 +59,23 @@ export default function Vessels() {
   // Track which data source is being used
   const [dataSource, setDataSource] = useState<'websocket' | 'myshiptracking' | 'marine-traffic' | 'polling'>('websocket');
   
-  // Use the WebSocket hook with fallback to REST API
+  // Use the WebSocket hook with fallback to REST API and pagination support
   const { 
     vessels: realTimeVessels, 
     loading: wsLoading, 
     connected: wsConnected,
-    connectionType
-  } = useVesselWebSocket(selectedRegion);
+    connectionType,
+    page,
+    pageSize,
+    totalPages,
+    totalCount,
+    goToPage,
+    changePageSize
+  } = useVesselWebSocket({
+    region: selectedRegion,
+    page: 1,
+    pageSize: 500
+  });
   
   // Combined vessels from both sources
   const [vessels, setVessels] = useState<Vessel[]>([]);
@@ -240,33 +250,38 @@ export default function Vessels() {
     });
   }, [vesselsWithCategories, searchTerm, selectedOilTypes, selectedTab]);
   
-  // Get current page vessels
+  // Get current page vessels for the filtered table view
   const indexOfLastVessel = currentPage * vesselsPerPage;
   const indexOfFirstVessel = indexOfLastVessel - vesselsPerPage;
   const currentVessels = filteredVessels.slice(indexOfFirstVessel, indexOfLastVessel);
-  const totalPages = Math.ceil(filteredVessels.length / vesselsPerPage);
+  const filteredTotalPages = Math.ceil(filteredVessels.length / vesselsPerPage);
   
   // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, selectedOilTypes, selectedTab]);
   
-  // Pagination handlers
-  const goToPage = (page: number) => {
+  // Local pagination handlers for the filtered table results
+  const handleGoToPage = (page: number) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
   
-  const goToPreviousPage = () => {
+  const handleGoToPreviousPage = () => {
     if (currentPage > 1) {
-      goToPage(currentPage - 1);
+      handleGoToPage(currentPage - 1);
     }
   };
   
-  const goToNextPage = () => {
+  const handleGoToNextPage = () => {
     if (currentPage < totalPages) {
-      goToPage(currentPage + 1);
+      handleGoToPage(currentPage + 1);
     }
+  };
+  
+  // Handler for the WebSocket pagination
+  const handleWsPageChange = (newPage: number) => {
+    goToPage(newPage);
   };
   
   // Function to ensure all vessels have destinations
@@ -676,7 +691,7 @@ export default function Vessels() {
                   <PaginationContent>
                     <PaginationItem>
                       <PaginationPrevious 
-                        onClick={goToPreviousPage} 
+                        onClick={handleGoToPreviousPage} 
                         className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
                       />
                     </PaginationItem>
@@ -684,7 +699,7 @@ export default function Vessels() {
                     {/* Show first page */}
                     {currentPage > 3 && (
                       <PaginationItem>
-                        <PaginationLink onClick={() => goToPage(1)}>1</PaginationLink>
+                        <PaginationLink onClick={() => handleGoToPage(1)}>1</PaginationLink>
                       </PaginationItem>
                     )}
                     
@@ -698,7 +713,7 @@ export default function Vessels() {
                     {/* Show previous page if not first page */}
                     {currentPage > 1 && (
                       <PaginationItem>
-                        <PaginationLink onClick={() => goToPage(currentPage - 1)}>
+                        <PaginationLink onClick={() => handleGoToPage(currentPage - 1)}>
                           {currentPage - 1}
                         </PaginationLink>
                       </PaginationItem>
@@ -710,34 +725,34 @@ export default function Vessels() {
                     </PaginationItem>
                     
                     {/* Show next page if not last page */}
-                    {currentPage < totalPages && (
+                    {currentPage < filteredTotalPages && (
                       <PaginationItem>
-                        <PaginationLink onClick={() => goToPage(currentPage + 1)}>
+                        <PaginationLink onClick={() => handleGoToPage(currentPage + 1)}>
                           {currentPage + 1}
                         </PaginationLink>
                       </PaginationItem>
                     )}
                     
                     {/* Show ellipsis if needed */}
-                    {currentPage < totalPages - 3 && (
+                    {currentPage < filteredTotalPages - 3 && (
                       <PaginationItem>
                         <PaginationEllipsis />
                       </PaginationItem>
                     )}
                     
                     {/* Show last page */}
-                    {currentPage < totalPages - 2 && (
+                    {currentPage < filteredTotalPages - 2 && (
                       <PaginationItem>
-                        <PaginationLink onClick={() => goToPage(totalPages)}>
-                          {totalPages}
+                        <PaginationLink onClick={() => handleGoToPage(filteredTotalPages)}>
+                          {filteredTotalPages}
                         </PaginationLink>
                       </PaginationItem>
                     )}
                     
                     <PaginationItem>
                       <PaginationNext 
-                        onClick={goToNextPage} 
-                        className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                        onClick={handleGoToNextPage} 
+                        className={currentPage === filteredTotalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
                       />
                     </PaginationItem>
                   </PaginationContent>
