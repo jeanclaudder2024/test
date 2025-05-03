@@ -146,7 +146,8 @@ export function generateVesselsForRefinery(refinery: RefineryData): Vessel[] {
       cargoCapacity: cargoCapacity,
       eta: new Date(Date.now() + 86400000 * ((uniqueId + i) % 5)),
       departureDate: new Date(Date.now() - 86400000 * ((uniqueId + i) % 10)),
-      currentRegion: refinery.region
+      currentRegion: refinery.region,
+      metadata: null // Add missing required field
     };
     
     vessels.push(vessel);
