@@ -391,6 +391,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch vessels from MyShipTracking API" });
     }
   });
+
+  // New endpoint for MyShipTracking API
+  apiRouter.get("/vessels/myshiptracking", async (req, res) => {
+    try {
+      if (!marineTrafficService.isConfigured()) {
+        return res.status(503).json({ 
+          message: "MyShipTracking API is not configured. Please set MARINE_TRAFFIC_API_KEY environment variable." 
+        });
+      }
+      
+      // Fetch vessels from MyShipTracking using the same service
+      const vessels = await marineTrafficService.fetchVessels();
+      console.log(`Fetched ${vessels.length} vessels from MyShipTracking API for direct integration`);
+      
+      // Return the vessels in the same format
+      res.json(vessels);
+    } catch (error) {
+      console.error("Error fetching vessels from MyShipTracking direct API:", error);
+      res.status(500).json({ message: "Failed to fetch vessels from MyShipTracking API" });
+    }
+  });
   
   // Endpoint to get vessels near a refinery using MyShipTracking API
   apiRouter.get("/vessels/near-refinery/:id", async (req, res) => {
