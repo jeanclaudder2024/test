@@ -10,6 +10,7 @@ import { brokerService } from "./services/brokerService";
 import { stripeService } from "./services/stripeService";
 import { updateRefineryCoordinates, seedMissingRefineries } from "./services/refineryUpdate";
 import { seedAllData, regenerateGlobalVessels } from "./services/seedService";
+import { portService } from "./services/portService";
 import { setupAuth } from "./auth";
 import { db } from "./db";
 import { REGIONS } from "@shared/constants";
