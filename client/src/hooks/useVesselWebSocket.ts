@@ -79,8 +79,27 @@ export function useVesselWebSocket({ region }: UseVesselWebSocketProps = {}) {
         socket.onmessage = (event) => {
           try {
             const message = JSON.parse(event.data) as WebSocketMessage;
+            console.log('Received WebSocket message:', message);
             
             if (message.type === 'vessel_update' && message.vessels) {
+              console.log(`Received ${message.vessels.length} vessels from server`);
+              
+              // Check if vessels have valid coordinates
+              const vesselsWithCoordinates = message.vessels.filter(
+                v => v.currentLat && v.currentLng && 
+                parseFloat(v.currentLat) && parseFloat(v.currentLng)
+              );
+              
+              console.log(`${vesselsWithCoordinates.length} of ${message.vessels.length} vessels have valid coordinates`);
+              
+              if (vesselsWithCoordinates.length > 0) {
+                // Log some sample coordinates
+                console.log('Sample vessel coordinates:', 
+                  vesselsWithCoordinates.slice(0, 3).map(v => 
+                    `${v.name}: (${v.currentLat}, ${v.currentLng})`).join(', ')
+                );
+              }
+              
               setVessels(message.vessels);
               setLastUpdated(message.timestamp || new Date().toISOString());
               setIsLoading(false);

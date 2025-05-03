@@ -1301,6 +1301,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         // First try to get vessels from database
         vessels = await storage.getVessels();
+        console.log(`Retrieved ${vessels.length} vessels from database`);
       } catch (dbError) {
         console.log('Database error, fetching from API instead:', dbError);
         
@@ -1317,9 +1318,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Filter by region if the client has subscribed to a specific region
-      if (ws.subscribedRegion) {
+      if (ws.subscribedRegion && ws.subscribedRegion !== 'global') {
+        const beforeFilter = vessels.length;
         vessels = vessels.filter(v => v.currentRegion === ws.subscribedRegion);
+        console.log(`Filtered vessels by region ${ws.subscribedRegion}: ${beforeFilter} → ${vessels.length}`);
       }
+      
+      // Log vessel coordinates for debugging
+      console.log(`Vessel coordinate check: ${vessels.slice(0, 5).map(v => 
+        `${v.name}: lat=${v.currentLat}, lng=${v.currentLng}`).join(', ')}`);
       
       // Limit to 100 vessels to avoid overwhelming the client
       const limitedVessels = vessels.slice(0, 100);
@@ -1331,6 +1338,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         timestamp: new Date().toISOString(),
         count: limitedVessels.length
       }));
+      
+      console.log(`Sent ${limitedVessels.length} vessels to client`);
     } catch (error) {
       console.error('Error sending vessel data via WebSocket:', error);
     }
