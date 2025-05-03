@@ -729,23 +729,38 @@ export function convertToRefineries(refineryData: RefineryData[]): Refinery[] {
  * Generate ports connected to each refinery
  */
 export function generateConnectedPorts(refineries: Refinery[]): Port[] {
-  return refineries.map((refinery, index) => {
-    // Calculate a position near the refinery (5-20km away)
-    const latOffset = (Math.random() * 0.15) * (Math.random() > 0.5 ? 1 : -1);
-    const lngOffset = (Math.random() * 0.15) * (Math.random() > 0.5 ? 1 : -1);
+  let portsArray: Port[] = [];
+  let portIdCounter = 1;
+  
+  refineries.forEach((refinery) => {
+    // Generate 1-3 ports for each refinery
+    const numPorts = 1 + Math.floor(Math.random() * 3);
     
-    return {
-      id: index + 1,
-      name: `Port of ${refinery.name}`,
-      country: refinery.country,
-      region: refinery.region,
-      lat: (parseFloat(refinery.lat) + latOffset).toString(),
-      lng: (parseFloat(refinery.lng) + lngOffset).toString(),
-      capacity: 100000 + Math.floor(Math.random() * 500000),
-      status: "operational",
-      description: `Major maritime port serving ${refinery.name}`,
-      type: "oil_terminal",
-      lastUpdated: new Date()
-    };
+    for (let i = 0; i < numPorts; i++) {
+      // Calculate a position near the refinery (5-20km away)
+      const latOffset = (Math.random() * 0.15) * (Math.random() > 0.5 ? 1 : -1);
+      const lngOffset = (Math.random() * 0.15) * (Math.random() > 0.5 ? 1 : -1);
+      
+      const portName = i === 0 
+        ? `Port of ${refinery.name}` 
+        : `${refinery.name} Terminal ${i}`;
+      
+      portsArray.push({
+        id: portIdCounter++,
+        name: portName,
+        country: refinery.country,
+        region: refinery.region,
+        lat: (parseFloat(refinery.lat) + latOffset).toString(),
+        lng: (parseFloat(refinery.lng) + lngOffset).toString(),
+        capacity: 100000 + Math.floor(Math.random() * 500000),
+        status: "operational",
+        description: `Maritime port serving ${refinery.name}`,
+        type: "oil_terminal",
+        lastUpdated: new Date()
+      });
+    }
   });
+  
+  console.log(`Generated ${portsArray.length} ports for ${refineries.length} refineries`);
+  return portsArray;
 }

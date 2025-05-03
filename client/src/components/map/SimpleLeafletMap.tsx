@@ -1378,6 +1378,8 @@ export default function SimpleLeafletMap({
     // Add connections between refineries and ports if showConnections is true
     if (showConnections && ports && ports.length > 0) {
       console.log(`Displaying connections between ${refineries.length} refineries and ${ports.length} ports`);
+      console.log('First refinery:', refineries[0]);
+      console.log('First port:', ports[0]);
       
       // For each refinery, find nearby ports (simplified approach - in a real app you would use actual connection data)
       refineries.forEach(refinery => {
