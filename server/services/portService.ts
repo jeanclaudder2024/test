@@ -864,7 +864,11 @@ export const portService = {
         
         await storage.createPort(newPort);
         addedCount++;
-        console.log(`Added new port: ${portData.name}`);
+        
+        // Log less frequently to avoid console spam
+        if (addedCount % 10 === 0) {
+          console.log(`Added ${addedCount} new ports so far...`);
+        }
       }
       
       // Get final count of ports
@@ -875,6 +879,111 @@ export const portService = {
     } catch (error) {
       console.error("Error adding world ports:", error);
       throw new Error("Failed to add world ports to database");
+    }
+  },
+  
+  /**
+   * Add large-scale port data to the database (7000+ ports)
+   * This function can handle thousands of ports and adds them in batches
+   */
+  addLargeScalePortData: async (portDataSource?: any[]): Promise<{added: number, total: number, skipped: number}> => {
+    try {
+      console.log('Starting large-scale port data import...');
+      
+      // Check existing ports first to avoid duplicates
+      const existingPorts = await storage.getPorts();
+      console.log(`Database currently contains ${existingPorts.length} ports`);
+      
+      // Create maps for faster lookups
+      const existingPortNames = new Map();
+      existingPorts.forEach(port => {
+        existingPortNames.set(port.name.toLowerCase(), port);
+      });
+      
+      // Use provided data source or fallback to majorPortsData
+      const portsToProcess = portDataSource || majorPortsData;
+      console.log(`Preparing to process ${portsToProcess.length} ports`);
+      
+      let addedCount = 0;
+      let skippedCount = 0;
+      const batchSize = 100; // Process ports in batches to avoid memory issues
+      
+      // Process ports in batches
+      for (let i = 0; i < portsToProcess.length; i += batchSize) {
+        const batch = portsToProcess.slice(i, i + batchSize);
+        console.log(`Processing batch ${Math.floor(i/batchSize) + 1} of ${Math.ceil(portsToProcess.length/batchSize)} (${batch.length} ports)`);
+        
+        // Prepare all ports in the batch
+        const portsToAdd = [];
+        
+        for (const portDataRaw of batch) {
+          // Skip if this port already exists
+          const portNameLower = portDataRaw.name?.toLowerCase();
+          if (portNameLower && existingPortNames.has(portNameLower)) {
+            skippedCount++;
+            continue;
+          }
+          
+          // Apply formatting function to ensure data consistency
+          const portData = ensurePortDataHasRequiredFields(portDataRaw);
+          
+          // Create a new port with the standardized data
+          const newPort: InsertPort = {
+            name: portData.name,
+            country: portData.country,
+            region: portData.region,
+            lat: portData.lat,
+            lng: portData.lng,
+            capacity: portData.capacity,
+            status: portData.status,
+            description: portData.description,
+            type: portData.type
+          };
+          
+          portsToAdd.push(newPort);
+        }
+        
+        // Add the ports in a batch insert if supported, otherwise one by one
+        if (portsToAdd.length > 0) {
+          try {
+            // Try to use bulk insert if available
+            if (typeof storage.createPortsBulk === 'function') {
+              await storage.createPortsBulk(portsToAdd);
+              addedCount += portsToAdd.length;
+            } else {
+              // Fall back to individual inserts
+              for (const port of portsToAdd) {
+                await storage.createPort(port);
+                addedCount++;
+              }
+            }
+            console.log(`Added ${portsToAdd.length} ports in this batch, total added: ${addedCount}`);
+          } catch (batchError) {
+            console.error(`Error adding ports batch:`, batchError);
+            // Fall back to one-by-one insert if batch fails
+            console.log("Falling back to individual inserts for this batch");
+            for (const port of portsToAdd) {
+              try {
+                await storage.createPort(port);
+                addedCount++;
+              } catch (singleError) {
+                console.error(`Error adding port ${port.name}:`, singleError);
+                skippedCount++;
+              }
+            }
+          }
+        }
+      }
+      
+      // Get final count of ports
+      const updatedPorts = await storage.getPorts();
+      
+      console.log(`Large-scale port import complete.`);
+      console.log(`Added: ${addedCount}, Skipped: ${skippedCount}, Total ports now: ${updatedPorts.length}`);
+      return { added: addedCount, total: updatedPorts.length, skipped: skippedCount };
+    } catch (error) {
+      console.error("Error in large-scale port import:", error);
+      throw new Error("Failed to complete large-scale port import");
     }
   },
   

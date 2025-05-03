@@ -285,6 +285,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     });
     
+    // Add a new endpoint to import large-scale port data (7,000+ ports)
+    apiRouter.post("/ports/import-large-scale", async (req, res) => {
+      try {
+        console.log("Starting large-scale port data import process...");
+        
+        // Allow passing custom port data in the request body
+        const portData = req.body && req.body.portData ? req.body.portData : undefined;
+        
+        // Import the full 7,183 ports dataset
+        const importResult = await portService.addLargeScalePortData(portData);
+        console.log("Large-scale port data imported successfully:", importResult);
+        
+        res.json({
+          success: true,
+          message: "Large-scale port data has been imported successfully",
+          data: {
+            added: importResult.added,
+            skipped: importResult.skipped,
+            total: importResult.total
+          }
+        });
+      } catch (error) {
+        console.error("Error importing large-scale port data:", error);
+        res.status(500).json({ message: "Failed to import large-scale port data" });
+      }
+    });
+    
     // Route to update refinery coordinates with accurate data
     apiRouter.post("/refineries/update-coordinates", async (req, res) => {
       try {

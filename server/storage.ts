@@ -42,6 +42,7 @@ export interface IStorage {
   getPortById(id: number): Promise<Port | undefined>;
   getPortsByRegion(region: string): Promise<Port[]>;
   createPort(port: InsertPort): Promise<Port>;
+  createPortsBulk(ports: InsertPort[]): Promise<Port[]>; // Bulk insert method
   updatePort(id: number, port: Partial<InsertPort>): Promise<Port | undefined>;
   deletePort(id: number): Promise<boolean>;
 
@@ -180,6 +181,37 @@ export class DatabaseStorage implements IStorage {
   async createPort(insertPort: InsertPort): Promise<Port> {
     const [port] = await db.insert(ports).values(insertPort).returning();
     return port;
+  }
+  
+  async createPortsBulk(insertPorts: InsertPort[]): Promise<Port[]> {
+    // If no ports provided, return empty array
+    if (!insertPorts || insertPorts.length === 0) {
+      return [];
+    }
+    
+    try {
+      // Insert all ports in a single database operation
+      const createdPorts = await db.insert(ports).values(insertPorts).returning();
+      return createdPorts;
+    } catch (error) {
+      console.error("Error in bulk port insertion:", error);
+      
+      // Fall back to individual inserts if bulk insert fails
+      console.log("Falling back to individual port insertions");
+      const results: Port[] = [];
+      
+      for (const port of insertPorts) {
+        try {
+          const [createdPort] = await db.insert(ports).values(port).returning();
+          results.push(createdPort);
+        } catch (singleError) {
+          console.error(`Error inserting port ${port.name}:`, singleError);
+          // Continue with the next port
+        }
+      }
+      
+      return results;
+    }
   }
 
   async updatePort(id: number, portUpdate: Partial<InsertPort>): Promise<Port | undefined> {
