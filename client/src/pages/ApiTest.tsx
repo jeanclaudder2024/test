@@ -29,7 +29,7 @@ export default function ApiTest() {
   const [vessels, setVessels] = useState<Vessel[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [apiEndpoint, setApiEndpoint] = useState<string>('/api/vessels/marine-traffic');
+  const [apiEndpoint, setApiEndpoint] = useState<string>('/api/vessels/polling');
   const [rawData, setRawData] = useState<string>('');
   const [selectedVessel, setSelectedVessel] = useState<Vessel | null>(null);
   
@@ -106,33 +106,18 @@ export default function ApiTest() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Ship className="h-5 w-5 text-primary" />
-            Vessel API Endpoint
+            Vessel Database API
           </CardTitle>
           <CardDescription>
-            Select an API endpoint to test and view vessel data
+            Test the vessel polling API to view vessel data from our database
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="marinejson" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="marinejson" onClick={() => setApiEndpoint('/api/vessels/marine-traffic')}>
-                Marine Traffic API
-              </TabsTrigger>
-              <TabsTrigger value="polling" onClick={() => setApiEndpoint('/api/vessels/polling')}>
-                Polling API
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="marinejson" className="mt-4">
-              <p className="text-sm text-muted-foreground">
-                The Marine Traffic API endpoint returns vessel data from the Marine Traffic service.
-              </p>
-            </TabsContent>
-            <TabsContent value="polling" className="mt-4">
-              <p className="text-sm text-muted-foreground">
-                The Polling API endpoint is used as a fallback when WebSocket connections fail.
-              </p>
-            </TabsContent>
-          </Tabs>
+          <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-md border border-blue-200 dark:border-blue-800">
+            <p className="text-sm text-blue-800 dark:text-blue-300">
+              The Polling API endpoint provides vessel data directly from our database. It serves as a fallback mechanism when WebSocket connections fail to establish.
+            </p>
+          </div>
         </CardContent>
         <CardFooter className="flex justify-between">
           <div>
