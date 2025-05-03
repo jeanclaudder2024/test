@@ -13,8 +13,8 @@ const majorPortsData = [
     name: "Ras Tanura Terminal",
     country: "Saudi Arabia",
     region: "Middle East",
-    lat: 26.644,
-    lng: 50.159,
+    lat: "26.644",
+    lng: "50.159",
     capacity: 7200000, // Upgraded capacity as of 2025
     status: "active",
     description: "Ras Tanura is Saudi Aramco's primary oil export facility and one of the largest oil shipping ports in the world, expanded in 2024 with additional deep-water berths.",
@@ -28,7 +28,8 @@ const majorPortsData = [
     lng: "55.059",
     capacity: 5100000, // Expanded capacity 
     status: "active",
-    description: "Jebel Ali is the world's largest man-made harbor with advanced automation systems implemented in 2024, specializing in both container and oil shipping."
+    description: "Jebel Ali is the world's largest man-made harbor with advanced automation systems implemented in 2024, specializing in both container and oil shipping.",
+    type: "oil"
   },
   {
     name: "Fujairah Oil Terminal",
@@ -38,7 +39,8 @@ const majorPortsData = [
     lng: "56.342",
     capacity: 3400000,
     status: "active",
-    description: "The Fujairah Oil Terminal has expanded to become the largest oil storage facility in the Middle East following major expansion in 2024."
+    description: "The Fujairah Oil Terminal has expanded to become the largest oil storage facility in the Middle East following major expansion in 2024.",
+    type: "oil"
   },
   
   // Europe Region
@@ -50,7 +52,8 @@ const majorPortsData = [
     lng: "4.139",
     capacity: 9500000, // Increased capacity following 2024 expansion
     status: "active",
-    description: "Rotterdam has transformed into Europe's premier energy transition hub with new LNG and hydrogen facilities alongside traditional oil infrastructure."
+    description: "Rotterdam has transformed into Europe's premier energy transition hub with new LNG and hydrogen facilities alongside traditional oil infrastructure.",
+    type: "oil"
   },
   {
     name: "Port of Antwerp-Bruges",
@@ -318,8 +321,8 @@ export const portService = {
             name: newPortData.name,
             country: newPortData.country,
             region: newPortData.region,
-            lat: typeof newPortData.lat === 'string' ? parseFloat(newPortData.lat) : newPortData.lat,
-            lng: typeof newPortData.lng === 'string' ? parseFloat(newPortData.lng) : newPortData.lng,
+            lat: typeof newPortData.lat === 'string' ? newPortData.lat : String(newPortData.lat),
+            lng: typeof newPortData.lng === 'string' ? newPortData.lng : String(newPortData.lng),
             capacity: newPortData.capacity,
             status: newPortData.status,
             description: newPortData.description,
@@ -381,8 +384,8 @@ export const portService = {
           name: portData.name,
           country: portData.country,
           region: portData.region,
-          lat: typeof portData.lat === 'string' ? parseFloat(portData.lat) : portData.lat,
-          lng: typeof portData.lng === 'string' ? parseFloat(portData.lng) : portData.lng,
+          lat: typeof portData.lat === 'string' ? portData.lat : String(portData.lat),
+          lng: typeof portData.lng === 'string' ? portData.lng : String(portData.lng),
           capacity: portData.capacity,
           status: portData.status,
           description: portData.description,
