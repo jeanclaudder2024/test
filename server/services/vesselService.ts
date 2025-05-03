@@ -1,10 +1,9 @@
 import { storage } from "../storage";
-import { InsertVessel, InsertProgressEvent, Vessel, ProgressEvent } from "@shared/schema";
+import { InsertVessel, InsertProgressEvent, Vessel, ProgressEvent, InsertRefinery } from "@shared/schema";
 import { dataService } from "./asiStreamService";
 import { generateLargeVesselDataset, isCoordinateAtSea } from "./vesselGenerator";
-import { OIL_PRODUCT_TYPES } from "@shared/constants";
+import { OIL_PRODUCT_TYPES, REGIONS } from "@shared/constants";
 import { marineTrafficService } from "./marineTrafficService";
-import { REGIONS } from "@shared/constants";
 
 export const vesselService = {
   // Use the exported function from vesselGenerator to check if coordinates are at sea
@@ -118,18 +117,18 @@ export const vesselService = {
         if (marineTrafficService.isConfigured()) {
           allVessels = await marineTrafficService.fetchVessels();
           
-          // Get hardcoded refineries if database access fails
-          refineries = REGIONS.map(region => ({
-            id: parseInt(region.substring(0, 3)) || 1,
-            name: region.replace('_', ' ').toUpperCase(),
-            region: region,
+          // Create fallback refineries based on regions 
+          refineries = REGIONS.map((region, index) => ({
+            id: index + 1, // Use index + 1 as id to ensure uniqueness and valid values
+            name: region.name,
+            region: region.id.replace('-', '_'), // Convert dash to underscore for consistency
             status: 'active',
             capacity: 500000,
-            country: region.replace('_', ' ').toUpperCase(),
+            country: region.name,
             lat: 0,
             lng: 0,
             lastUpdated: new Date()
-          }));
+          } as InsertRefinery));
         } else {
           throw new Error("Database inaccessible and MarineTraffic API not configured");
         }
