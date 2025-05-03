@@ -286,18 +286,62 @@ export default function LiveVesselMap({ initialRegion, height = '600px' }: LiveV
                       }
                     }}
                   >
-                    <Popup>
-                      <div className="text-sm">
-                        <p className="font-bold">{vessel.name}</p>
-                        <p>IMO: {vessel.imo}</p>
-                        <p>Type: {vessel.vesselType}</p>
-                        <p>Speed: {metadata.speed} knots</p>
+                    <Popup minWidth={250} maxWidth={320}>
+                      <div className="text-sm vessel-popup">
+                        <p className="font-bold text-base border-b pb-1 mb-2">{vessel.name}</p>
+                        
+                        <div className="grid grid-cols-2 gap-y-1 mb-2">
+                          <div className="text-muted-foreground">Vessel Type:</div>
+                          <div>{vessel.vesselType}</div>
+                          
+                          <div className="text-muted-foreground">IMO:</div>
+                          <div>{vessel.imo}</div>
+                          
+                          <div className="text-muted-foreground">MMSI:</div>
+                          <div>{vessel.mmsi}</div>
+                          
+                          <div className="text-muted-foreground">Flag:</div>
+                          <div>{vessel.flag}</div>
+                        </div>
+                        
+                        <div className="border-t border-b py-2 my-2">
+                          <div className="grid grid-cols-2 gap-y-1">
+                            <div className="text-muted-foreground">Speed:</div>
+                            <div>{metadata.speed} knots</div>
+                            
+                            <div className="text-muted-foreground">Heading:</div>
+                            <div>{metadata.heading}°</div>
+                            
+                            <div className="text-muted-foreground">Course:</div>
+                            <div>{metadata.course || metadata.heading}°</div>
+                            
+                            <div className="text-muted-foreground">Status:</div>
+                            <div>{metadata.status || (metadata.speed > 0.5 ? 'Underway' : 'Stopped')}</div>
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-y-1 mt-2">
+                          <div className="text-muted-foreground">Coordinates:</div>
+                          <div className="text-xs">
+                            {parseFloat(vessel.currentLat || '0').toFixed(4)}, {parseFloat(vessel.currentLng || '0').toFixed(4)}
+                          </div>
+                          
+                          <div className="text-muted-foreground">Destination:</div>
+                          <div className="text-xs">{vessel.destinationPort || "Unknown"}</div>
+                          
+                          <div className="text-muted-foreground col-span-2 mt-1">Current Route:</div>
+                          <div className="text-xs col-span-2">
+                            {vessel.departurePort || "Unknown"} → {vessel.destinationPort || "Unknown"}
+                          </div>
+                        </div>
+                        
                         <Button 
-                          variant="link" 
-                          className="p-0 h-auto text-xs"
+                          variant="default" 
+                          size="sm"
+                          className="w-full mt-2"
                           onClick={() => setSelectedVessel(vessel)}
                         >
-                          View Details
+                          View Full Details
                         </Button>
                       </div>
                     </Popup>
