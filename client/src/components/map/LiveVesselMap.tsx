@@ -282,7 +282,7 @@ interface LiveVesselMapProps {
 export default function LiveVesselMap({ 
   initialRegion, 
   height = '600px',
-  showRoutes = true,
+  showRoutes = false, // Changed default to false
   showVesselHistory = false,
   showHeatmap = false,
   mapStyle: initialMapStyle = 'dark'
@@ -299,6 +299,7 @@ export default function LiveVesselMap({
   const [showConnections, setShowConnections] = useState<boolean>(true);
   const [displayMode, setDisplayMode] = useState<string>("all");
   const [hoveredVessel, setHoveredVessel] = useState<Vessel | null>(null);
+  const [vesselsWithRoutes, setVesselsWithRoutes] = useState<Record<number, boolean>>({});
   
   // Use our WebSocket hook for real-time vessel data with fallback to REST API polling
   const { 
@@ -686,9 +687,9 @@ export default function LiveVesselMap({
               return null;
             })}
             
-            {/* Display vessel routes if enabled */}
-            {showRoutes && (displayMode === 'all' || displayMode === 'vessels') && vessels.map(vessel => {
-              if (vessel.departurePort && vessel.destinationPort && vessel.currentLat && vessel.currentLng) {
+            {/* Display vessel routes only for vessels with enabled routes */}
+            {(displayMode === 'all' || displayMode === 'vessels') && vessels.map(vessel => {
+              if (vesselsWithRoutes[vessel.id] && vessel.departurePort && vessel.destinationPort && vessel.currentLat && vessel.currentLng) {
                 // Create route polyline if we have departure and destination ports
                 // This is a simplification - real routes would need port coordinates
                 const departureCoords = getRandomCoordinatesForPort(vessel.departurePort);
@@ -805,6 +806,25 @@ export default function LiveVesselMap({
                             </>
                           )}
                         </div>
+                        
+                        {/* Route Toggle Button */}
+                        <div className="flex items-center justify-between my-2 bg-blue-50 p-2 rounded-md">
+                          <label className="text-xs flex items-center text-blue-700 font-medium">
+                            <Navigation className="h-3 w-3 mr-1" />
+                            Show Vessel Route
+                          </label>
+                          <Switch 
+                            checked={!!vesselsWithRoutes[vessel.id]}
+                            onCheckedChange={(checked) => {
+                              setVesselsWithRoutes(prev => ({
+                                ...prev,
+                                [vessel.id]: checked
+                              }));
+                            }}
+                            size="sm"
+                          />
+                        </div>
+                        
                         <Button 
                           className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs py-1 mt-2"
                           onClick={(e) => {
