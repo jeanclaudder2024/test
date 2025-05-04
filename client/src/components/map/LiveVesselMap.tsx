@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { 
   MapContainer, 
   TileLayer, 
@@ -8,13 +8,9 @@ import {
   Polyline,
   Rectangle,
   CircleMarker,
-  Tooltip,
-  LayersControl,
-  useMapEvents,
-  Pane
+  Tooltip 
 } from 'react-leaflet';
 import L, { LatLngExpression, DomUtil, Control } from 'leaflet';
-import MarkerClusterGroup from 'react-leaflet-cluster';
 import { createPortal } from 'react-dom';
 import { Vessel, Refinery, Port, RefineryPortConnection } from '@shared/schema';
 
@@ -128,11 +124,11 @@ const vesselIcon = (heading: number = 0, speed: number = 0, vesselType: string =
 
 // Create custom refinery icon
 const refineryIcon = () => {
-  // Create an SVG factory icon - increased size for better visibility
-  const size = 36;
+  // Create an SVG factory icon
+  const size = 24;
   const svgIcon = `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="${size}" height="${size}">
-      <circle cx="12" cy="12" r="10" fill="#f44336" fill-opacity="0.9" stroke="#000" stroke-width="1.5"/>
+      <circle cx="12" cy="12" r="10" fill="#f44336" fill-opacity="0.8" stroke="#000" stroke-width="1"/>
       <path fill="#fff" d="M7 12h2v5H7v-5zm8 0h2v5h-2v-5zm-4-8h2v3h-2V4zm0 4h2v2h-2V8zm0 3h2v8h-2v-8z"/>
     </svg>
   `;
@@ -145,19 +141,17 @@ const refineryIcon = () => {
     iconUrl: dataUrl,
     iconSize: [size, size],
     iconAnchor: [size/2, size/2],
-    popupAnchor: [0, -size/2],
-    // Make sure icons remain visible at all zoom levels
-    className: 'always-visible-icon'
+    popupAnchor: [0, -size/2]
   });
 };
 
 // Create custom port icon
 const portIcon = () => {
-  // Create an SVG anchor icon - increased size for better visibility
-  const size = 34;
+  // Create an SVG anchor icon
+  const size = 22;
   const svgIcon = `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="${size}" height="${size}">
-      <circle cx="12" cy="12" r="10" fill="#2196f3" fill-opacity="0.9" stroke="#000" stroke-width="1.5"/>
+      <circle cx="12" cy="12" r="10" fill="#2196f3" fill-opacity="0.8" stroke="#000" stroke-width="1"/>
       <path fill="#fff" d="M16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8A4,4 0 0,1 16,12M13,4.26C13,4.1 12.9,4 12.74,4C12.59,4 12.5,4.1 12.5,4.26V6.34C12.16,6.42 11.84,6.54 11.53,6.69L9.93,5.83C9.78,5.76 9.66,5.81 9.58,5.94C9.5,6.08 9.53,6.24 9.67,6.34L11.29,7.23C10.87,7.58 10.5,8 10.23,8.5H8C7.86,8.5 7.75,8.61 7.75,8.76C7.75,8.91 7.86,9 8,9H10.07C10.03,9.17 10,9.33 10,9.5C10,9.67 10.03,9.83 10.07,10H8C7.86,10 7.75,10.1 7.75,10.24C7.75,10.38 7.86,10.5 8,10.5H10.23C10.5,10.99 10.87,11.42 11.29,11.77L9.67,12.66C9.53,12.76 9.5,12.92 9.58,13.06C9.66,13.19 9.78,13.24 9.93,13.17L11.53,12.31C11.84,12.46 12.16,12.58 12.5,12.66V14.74C12.5,14.9 12.59,15 12.74,15C12.89,15 13,14.9 13,14.74V12.67C13.33,12.58 13.64,12.46 13.94,12.31L15.57,13.17C15.7,13.25 15.82,13.2 15.9,13.07C15.97,12.94 15.96,12.77 15.82,12.67L14.21,11.77C14.63,11.42 15,10.99 15.26,10.5H17.5C17.64,10.5 17.75,10.4 17.75,10.26C17.75,10.11 17.64,10 17.5,10H15.42C15.46,9.83 15.5,9.67 15.5,9.5C15.5,9.33 15.46,9.17 15.42,9H17.5C17.64,9 17.75,8.9 17.75,8.74C17.75,8.59 17.64,8.5 17.5,8.5H15.26C15,8 14.63,7.58 14.21,7.23L15.82,6.34C15.96,6.24 15.97,6.07 15.9,5.94C15.82,5.81 15.7,5.76 15.57,5.83L13.94,6.69C13.64,6.54 13.33,6.42 13,6.34V4.26Z" />
     </svg>
   `;
@@ -170,9 +164,7 @@ const portIcon = () => {
     iconUrl: dataUrl,
     iconSize: [size, size],
     iconAnchor: [size/2, size/2],
-    popupAnchor: [0, -size/2],
-    // Make sure icons remain visible at all zoom levels
-    className: 'always-visible-icon'
+    popupAnchor: [0, -size/2]
   });
 };
 
@@ -244,36 +236,11 @@ function MapEvents() {
         map.invalidateSize();
       };
       
-      // Refresh map after initial load to ensure all elements are visible
-      setTimeout(() => {
-        map.invalidateSize();
-        // Force redraw of all layers to ensure visibility
-        map.eachLayer((layer: any) => {
-          if (typeof layer.redraw === 'function') {
-            layer.redraw();
-          }
-        });
-      }, 500);
-      
-      // Handle zoom events to ensure markers stay visible at all zoom levels
-      map.on('zoomend', () => {
-        document.querySelectorAll('.always-visible-icon').forEach((el) => {
-          const element = el as HTMLElement;
-          // Adjust icon size based on zoom level if needed
-          if (map.getZoom() > 10) {
-            element.style.transform = 'scale(1.2)';
-          } else {
-            element.style.transform = 'scale(1)';
-          }
-        });
-      });
-      
       window.addEventListener('resize', handleResize);
       
       // Clean up
       return () => {
         window.removeEventListener('resize', handleResize);
-        map.off('zoomend');
       };
     }
   }, [map]);
@@ -300,54 +267,6 @@ function MapUpdate({ vessels }: MapUpdateProps) {
     }
   }, [vessels, map]);
 
-  return null;
-}
-
-// Component to ensure all maritime entities are visible
-interface MaritimeEntitiesProps {
-  vessels: Vessel[];
-  ports: Port[];
-  refineries: Refinery[];
-}
-
-function ForceMapUpdate({ vessels, ports, refineries }: MaritimeEntitiesProps) {
-  const map = useMap();
-  const [updateCounter, setUpdateCounter] = useState(0);
-  
-  // Force periodic map updates to ensure entities render correctly
-  useEffect(() => {
-    if (map) {
-      // Initial validation
-      console.log(`ForceMapUpdate initialized: vessels=${vessels.length}, refineries=${refineries.length}, ports=${ports.length}`);
-      
-      // Schedule multiple updates at different intervals
-      const timers = [
-        setTimeout(() => {
-          map.invalidateSize();
-          setUpdateCounter(c => c + 1);
-        }, 500),
-        setTimeout(() => {
-          map.invalidateSize();
-          setUpdateCounter(c => c + 1);
-        }, 1500),
-        setTimeout(() => {
-          map.invalidateSize();
-          map.eachLayer((layer: any) => {
-            if (typeof layer.redraw === 'function') {
-              layer.redraw();
-            }
-          });
-          setUpdateCounter(c => c + 1);
-        }, 3000)
-      ];
-      
-      // Cleanup function
-      return () => {
-        timers.forEach(timer => clearTimeout(timer));
-      };
-    }
-  }, [vessels, ports, refineries, map]);
-  
   return null;
 }
 
@@ -507,12 +426,9 @@ export default function LiveVesselMap({
             zoom={mapZoom}
             style={{ height: '100%', width: '100%', background: '#1B262C' }}
             minZoom={2}
-            maxZoom={18} 
             maxBounds={[[-90, -180], [90, 180]]}
             maxBoundsViscosity={1.0}
             worldCopyJump={true}
-            preferCanvas={true} 
-            renderer={L.canvas({ padding: 0.5 })}
           >
             
             {/* Handle different map styles */}
@@ -564,34 +480,8 @@ export default function LiveVesselMap({
               </div>
             )}
             
-            {/* Add a MapEvents component to handle fitWorld and ensure map is fully initialized */}
+            {/* Add a MapEvents component to handle fitWorld */}
             <MapEvents />
-            
-            {/* Add dedicated force-update component to ensure markers render */}
-            <ForceMapUpdate vessels={vessels} ports={ports} refineries={refineries} />
-            
-            {/* Manually render some large marker icons to ensure visibility */}
-            {vessels.slice(0, 3).map((vessel, index) => {
-              if (vessel.currentLat && vessel.currentLng) {
-                const lat = parseFloat(vessel.currentLat);
-                const lng = parseFloat(vessel.currentLng);
-                if (!isNaN(lat) && !isNaN(lng)) {
-                  return (
-                    <Marker
-                      key={`manual-marker-${index}`}
-                      position={[lat, lng]}
-                      icon={L.divIcon({
-                        className: 'always-visible-icon',
-                        html: `<div style="background-color: red; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.5);"></div>`,
-                        iconSize: [30, 30],
-                        iconAnchor: [15, 15]
-                      })}
-                    />
-                  );
-                }
-              }
-              return null;
-            })}
             
             {/* Floating Map Control Panel with hover to expand */}
             <MapControl position="topright" className="floating-map-control">
@@ -827,8 +717,7 @@ export default function LiveVesselMap({
                           color: '#3388ff', 
                           weight: 2, 
                           opacity: 0.6,
-                          dashArray: '6, 8',
-                          renderer: L.canvas()
+                          dashArray: '6, 8'
                         }}
                       />
                       
@@ -842,8 +731,7 @@ export default function LiveVesselMap({
                           color: '#ff3366', 
                           weight: 2, 
                           opacity: 0.4,
-                          dashArray: '3, 6',
-                          renderer: L.canvas()
+                          dashArray: '3, 6'
                         }}
                       />
                     </div>
@@ -853,346 +741,300 @@ export default function LiveVesselMap({
               return null;
             })}
             
-            {/* Display vessels using clustering for better performance */}
-            {(displayMode === 'all' || displayMode === 'vessels') && (
-              <Pane name="vessels-layer" style={{ zIndex: 450 }}>
-                <MarkerClusterGroup
-                  chunkedLoading={true}
-                  showCoverageOnHover={false}
-                  maxClusterRadius={60}
-                  disableClusteringAtZoom={7}  
-                  spiderfyOnMaxZoom={false}
-                  zoomToBoundsOnClick={true}
-                  iconCreateFunction={(cluster: any) => {
-                    const count = cluster.getChildCount();
-                    let size = 40;
-                    let className = 'vessel-cluster-small';
-                    
-                    if (count > 100) {
-                      size = 60;
-                      className = 'vessel-cluster-large';
-                    } else if (count > 20) {
-                      size = 50;
-                      className = 'vessel-cluster-medium';
-                    }
-                    
-                    return L.divIcon({
-                      html: `<div><span>${count}</span></div>`,
-                      className: `vessel-cluster ${className}`,
-                      iconSize: L.point(size, size),
-                    });
-                  }}
-                >
-                  {vessels.filter(vessel => 
-                    vessel.currentLat && 
-                    vessel.currentLng && 
-                    !isNaN(parseFloat(vessel.currentLat)) && 
-                    !isNaN(parseFloat(vessel.currentLng))
-                  ).map(vessel => {
-                    // Parse vessel metadata if available
-                    let metadata = {
-                      heading: 0,
-                      course: 0,
-                      speed: 0,
-                      status: 'Unknown',
-                      lastPositionTime: new Date().toISOString()
-                    };
-                    
-                    try {
-                      if (vessel.metadata) {
-                        metadata = JSON.parse(vessel.metadata);
+            {/* Display vessels */}
+            {(displayMode === 'all' || displayMode === 'vessels') && vessels.map(vessel => {
+              // Parse vessel metadata if available
+              let metadata = {
+                heading: 0,
+                course: 0,
+                speed: 0,
+                status: 'Unknown',
+                lastPositionTime: new Date().toISOString()
+              };
+              
+              try {
+                if (vessel.metadata) {
+                  metadata = JSON.parse(vessel.metadata);
+                }
+              } catch (e) {
+                console.error('Failed to parse vessel metadata:', e);
+              }
+              
+              // Only render if we have valid coordinates
+              if (vessel.currentLat && vessel.currentLng) {
+                const lat = parseFloat(vessel.currentLat);
+                const lng = parseFloat(vessel.currentLng);
+                
+                if (isNaN(lat) || isNaN(lng)) return null;
+                
+                return (
+                  <Marker
+                    key={`vessel-${vessel.id}`}
+                    position={[lat, lng]}
+                    icon={vesselIcon(metadata.heading, metadata.speed, vessel.vesselType)}
+                    eventHandlers={{
+                      click: () => {
+                        setSelectedVessel(vessel);
+                        setSelectedRefinery(null);
+                        setSelectedPort(null);
                       }
-                    } catch (e) {
-                      console.error('Failed to parse vessel metadata:', e);
-                    }
-                    
-                    const lat = parseFloat(vessel.currentLat!);
-                    const lng = parseFloat(vessel.currentLng!);
-                    
-                    return (
-                      <Marker
-                        key={`vessel-${vessel.id}`}
-                        position={[lat, lng]}
-                        icon={vesselIcon(metadata.heading, metadata.speed, vessel.vesselType)}
-                        eventHandlers={{
-                          click: () => {
-                            setSelectedVessel(vessel);
-                            setSelectedRefinery(null);
-                            setSelectedPort(null);
-                          }
-                        }}
-                      >
-                        <Popup>
-                          <div className="text-sm">
-                            <div className="bg-blue-50 p-2 rounded-md mb-2 border-l-4 border-blue-500">
-                              <p className="font-bold text-base text-blue-700">{vessel.name}</p>
-                              <p className="text-xs text-blue-600">{vessel.vesselType.toUpperCase()}</p>
-                            </div>
-                            <div className="grid grid-cols-2 gap-1 text-xs mb-2">
-                              <div className="font-semibold">IMO:</div>
-                              <div>{vessel.imo}</div>
-                              
-                              <div className="font-semibold">MMSI:</div>
-                              <div>{vessel.mmsi}</div>
-                              
-                              <div className="font-semibold">Flag:</div>
-                              <div>{vessel.flag}</div>
-                              
-                              <div className="font-semibold">Speed:</div>
-                              <div>{metadata.speed} knots</div>
-                              
-                              {vessel.cargoType && (
-                                <>
-                                  <div className="font-semibold">Cargo:</div>
-                                  <div>{vessel.cargoType}</div>
-                                </>
-                              )}
-                            </div>
-                            
-                            {/* Route Toggle Button */}
-                            <div className="flex items-center justify-between my-2 bg-blue-50 p-2 rounded-md">
-                              <label className="text-xs flex items-center text-blue-700 font-medium">
-                                <Navigation className="h-3 w-3 mr-1" />
-                                Show Vessel Route
-                              </label>
-                              <Switch 
-                                checked={!!vesselsWithRoutes[vessel.id]}
-                                onCheckedChange={(checked) => {
-                                  setVesselsWithRoutes(prev => ({
-                                    ...prev,
-                                    [vessel.id]: checked
-                                  }));
-                                }}
-                              />
-                            </div>
-                            
-                            <Button 
-                              className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs py-1 mt-2"
-                              onClick={(e) => {
-                                e.stopPropagation(); // Prevent map click from interfering
-                                // Close the popup
-                                const closeButton = e.currentTarget.closest('.leaflet-popup')?.querySelector('.leaflet-popup-close-button');
-                                if (closeButton instanceof HTMLElement) {
-                                  closeButton.click();
-                                }
-                                // Navigate to vessel detail page
-                                window.location.href = `/vessels/${vessel.id}`;
-                              }}
-                            >
-                              <Ship className="h-3 w-3 mr-1" />
-                              Show Details
-                            </Button>
-                          </div>
-                        </Popup>
-                      </Marker>
-                    );
-                  })}
-                </MarkerClusterGroup>
-              </Pane>
-            )}
-            
-            {/* Display refineries - with optimized rendering */}
-            {showRefineries && (displayMode === 'all' || displayMode === 'infrastructure') && (
-              <Pane name="refineries-layer" style={{ zIndex: 420 }}>
-                {refineries.filter(refinery => {
-                  // Only process refineries with valid coordinates
-                  if (!refinery.lat || !refinery.lng) return false;
-                  
-                  const lat = typeof refinery.lat === 'string' ? parseFloat(refinery.lat) : refinery.lat;
-                  const lng = typeof refinery.lng === 'string' ? parseFloat(refinery.lng) : refinery.lng;
-                  
-                  return !isNaN(lat) && !isNaN(lng);
-                }).map(refinery => {
-                  const lat = typeof refinery.lat === 'string' ? parseFloat(refinery.lat) : refinery.lat;
-                  const lng = typeof refinery.lng === 'string' ? parseFloat(refinery.lng) : refinery.lng;
-                  
-                  return (
-                    <Marker
-                      key={`refinery-${refinery.id}`}
-                      position={[lat, lng]}
-                      icon={refineryIcon()}
-                      eventHandlers={{
-                        click: () => {
-                          setSelectedRefinery(refinery);
-                          setSelectedVessel(null);
-                          setSelectedPort(null);
-                        }
-                      }}
-                    >
-                      <Popup>
-                        <div className="text-sm">
-                          <div className="bg-red-50 p-2 rounded-md mb-2 border-l-4 border-red-500">
-                            <p className="font-bold text-base text-red-700">{refinery.name}</p>
-                            <p className="text-xs text-red-600">{refinery.region.toUpperCase()} REGION</p>
-                          </div>
-                          <div className="grid grid-cols-2 gap-1 text-xs mb-2">
-                            <div className="font-semibold">Country:</div>
-                            <div>{refinery.country}</div>
-                            {refinery.capacity && (
-                              <>
-                                <div className="font-semibold">Capacity:</div>
-                                <div>{refinery.capacity.toLocaleString()} bpd</div>
-                              </>
-                            )}
-                            {refinery.status && (
-                              <>
-                                <div className="font-semibold">Status:</div>
-                                <div className="capitalize">{refinery.status}</div>
-                              </>
-                            )}
-                          </div>
-                          <Button 
-                            className="w-full bg-red-600 hover:bg-red-700 text-white text-xs py-1 mt-2"
-                            onClick={(e) => {
-                              e.stopPropagation(); // Prevent map click from interfering
-                              // Close the popup
-                              const closeButton = e.currentTarget.closest('.leaflet-popup')?.querySelector('.leaflet-popup-close-button');
-                              if (closeButton instanceof HTMLElement) {
-                                closeButton.click();
-                              }
-                              // Navigate to refinery detail page
-                              window.location.href = `/refineries/${refinery.id}`;
-                            }}
-                          >
-                            <Factory className="h-3 w-3 mr-1" />
-                            Show Details
-                          </Button>
+                    }}
+                  >
+                    <Popup>
+                      <div className="text-sm">
+                        <div className="bg-blue-50 p-2 rounded-md mb-2 border-l-4 border-blue-500">
+                          <p className="font-bold text-base text-blue-700">{vessel.name}</p>
+                          <p className="text-xs text-blue-600">{vessel.vesselType.toUpperCase()}</p>
                         </div>
-                      </Popup>
-                    </Marker>
-                  );
-                })}
-              </Pane>
-            )}
-            
-            {/* Display ports - with optimized rendering */}
-            {showPorts && (displayMode === 'all' || displayMode === 'infrastructure') && (
-              <Pane name="ports-layer" style={{ zIndex: 400 }}>
-                {ports.filter(port => {
-                  // Only process ports with valid coordinates
-                  if (!port.lat || !port.lng) return false;
-                  
-                  const lat = typeof port.lat === 'string' ? parseFloat(port.lat) : port.lat;
-                  const lng = typeof port.lng === 'string' ? parseFloat(port.lng) : port.lng;
-                  
-                  return !isNaN(lat) && !isNaN(lng);
-                }).map(port => {
-                  const lat = typeof port.lat === 'string' ? parseFloat(port.lat) : port.lat;
-                  const lng = typeof port.lng === 'string' ? parseFloat(port.lng) : port.lng;
-                  
-                  return (
-                    <Marker
-                      key={`port-${port.id}`}
-                      position={[lat, lng]}
-                      icon={portIcon()}
-                      eventHandlers={{
-                        click: () => {
-                          setSelectedPort(port);
-                          setSelectedVessel(null);
-                          setSelectedRefinery(null);
-                        }
-                      }}
-                    >
-                      <Popup>
-                        <div className="text-sm">
-                          <div className="bg-blue-50 p-2 rounded-md mb-2 border-l-4 border-blue-500">
-                            <p className="font-bold text-base text-blue-700">{port.name}</p>
-                            <p className="text-xs text-blue-600">{port.region.toUpperCase()} REGION</p>
-                          </div>
-                          <div className="grid grid-cols-2 gap-1 text-xs mb-2">
-                            <div className="font-semibold">Country:</div>
-                            <div>{port.country}</div>
-                            {port.capacity && (
-                              <>
-                                <div className="font-semibold">Capacity:</div>
-                                <div>{port.capacity.toLocaleString()} tons/year</div>
-                              </>
-                            )}
-                            {port.type && (
-                              <>
-                                <div className="font-semibold">Type:</div>
-                                <div className="capitalize">{port.type.replace('_', ' ')}</div>
-                              </>
-                            )}
-                          </div>
-                          <Button 
-                            className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs py-1 mt-2"
-                            onClick={(e) => {
-                              e.stopPropagation(); // Prevent map click from interfering
-                              // Close the popup
-                              const closeButton = e.currentTarget.closest('.leaflet-popup')?.querySelector('.leaflet-popup-close-button');
-                              if (closeButton instanceof HTMLElement) {
-                                closeButton.click();
-                              }
-                              // Navigate to port detail page
-                              window.location.href = `/ports/${port.id}`;
-                            }}
-                          >
-                            <Anchor className="h-3 w-3 mr-1" />
-                            Show Details
-                          </Button>
+                        <div className="grid grid-cols-2 gap-1 text-xs mb-2">
+                          <div className="font-semibold">IMO:</div>
+                          <div>{vessel.imo}</div>
+                          
+                          <div className="font-semibold">MMSI:</div>
+                          <div>{vessel.mmsi}</div>
+                          
+                          <div className="font-semibold">Flag:</div>
+                          <div>{vessel.flag}</div>
+                          
+                          <div className="font-semibold">Speed:</div>
+                          <div>{metadata.speed} knots</div>
+                          
+                          {vessel.cargoType && (
+                            <>
+                              <div className="font-semibold">Cargo:</div>
+                              <div>{vessel.cargoType}</div>
+                            </>
+                          )}
                         </div>
-                      </Popup>
-                    </Marker>
-                  );
-                })}
-              </Pane>
-            )}
+                        
+                        {/* Route Toggle Button */}
+                        <div className="flex items-center justify-between my-2 bg-blue-50 p-2 rounded-md">
+                          <label className="text-xs flex items-center text-blue-700 font-medium">
+                            <Navigation className="h-3 w-3 mr-1" />
+                            Show Vessel Route
+                          </label>
+                          <Switch 
+                            checked={!!vesselsWithRoutes[vessel.id]}
+                            onCheckedChange={(checked) => {
+                              setVesselsWithRoutes(prev => ({
+                                ...prev,
+                                [vessel.id]: checked
+                              }));
+                            }}
+                            size="sm"
+                          />
+                        </div>
+                        
+                        <Button 
+                          className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs py-1 mt-2"
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent map click from interfering
+                            // Close the popup
+                            const closeButton = e.currentTarget.closest('.leaflet-popup')?.querySelector('.leaflet-popup-close-button');
+                            if (closeButton instanceof HTMLElement) {
+                              closeButton.click();
+                            }
+                            // Navigate to vessel detail page
+                            window.location.href = `/vessels/${vessel.id}`;
+                          }}
+                        >
+                          <Ship className="h-3 w-3 mr-1" />
+                          Show Details
+                        </Button>
+                      </div>
+                    </Popup>
+                  </Marker>
+                );
+              }
+              
+              return null;
+            })}
             
-            {/* Display connections between refineries and ports - with canvas rendering for better performance */}
-            {showConnections && (displayMode === 'all' || displayMode === 'infrastructure') && (
-              <Pane name="connections-pane" style={{ zIndex: 350 }}>
-                {connections.map(conn => {
-                  const refinery = refineries.find(r => r.id === conn.refineryId);
-                  const port = ports.find(p => p.id === conn.portId);
-                  
-                  if (!refinery || !port || !refinery.lat || !refinery.lng || !port.lat || !port.lng) {
-                    return null;
-                  }
-                  
-                  const refineryLat = typeof refinery.lat === 'string' ? parseFloat(refinery.lat) : refinery.lat;
-                  const refineryLng = typeof refinery.lng === 'string' ? parseFloat(refinery.lng) : refinery.lng;
-                  const portLat = typeof port.lat === 'string' ? parseFloat(port.lat) : port.lat;
-                  const portLng = typeof port.lng === 'string' ? parseFloat(port.lng) : port.lng;
-                  
-                  if (isNaN(refineryLat) || isNaN(refineryLng) || isNaN(portLat) || isNaN(portLng)) {
-                    return null;
-                  }
-                  
-                  // Generate a slightly curved line for better visualization
-                  // Calculate midpoint
-                  const midLat = (refineryLat + portLat) / 2;
-                  const midLng = (refineryLng + portLng) / 2;
-                  
-                  // Add a slight offset to create a curve
-                  const latOffset = (refineryLng - portLng) * 0.1;
-                  const lngOffset = (portLat - refineryLat) * 0.1;
-                  const curvedMidLat = midLat + latOffset;
-                  const curvedMidLng = midLng + lngOffset;
-                  
-                  // Create positions array with the midpoint
-                  const positions: L.LatLngExpression[] = [
-                    [refineryLat, refineryLng] as L.LatLngTuple,
-                    [curvedMidLat, curvedMidLng] as L.LatLngTuple,
-                    [portLat, portLng] as L.LatLngTuple
-                  ];
-                  
-                  return (
-                    <Polyline
-                      key={`connection-${conn.id}`}
-                      positions={positions}
-                      pathOptions={{
-                        color: '#9c27b0',
-                        weight: 2,
-                        opacity: 0.7,
-                        dashArray: '5,5',
-                        renderer: L.canvas() // Using canvas renderer for better performance
-                      }}
-                    />
-                  );
-                })}
-              </Pane>
-            )}
+            {/* Display refineries */}
+            {showRefineries && (displayMode === 'all' || displayMode === 'infrastructure') && refineries.map(refinery => {
+              // Only render if we have valid coordinates
+              if (refinery.lat && refinery.lng) {
+                const lat = typeof refinery.lat === 'string' ? parseFloat(refinery.lat) : refinery.lat;
+                const lng = typeof refinery.lng === 'string' ? parseFloat(refinery.lng) : refinery.lng;
+                
+                if (isNaN(lat) || isNaN(lng)) return null;
+                
+                return (
+                  <Marker
+                    key={`refinery-${refinery.id}`}
+                    position={[lat, lng]}
+                    icon={refineryIcon()}
+                    eventHandlers={{
+                      click: () => {
+                        setSelectedRefinery(refinery);
+                        setSelectedVessel(null);
+                        setSelectedPort(null);
+                      }
+                    }}
+                  >
+                    <Popup>
+                      <div className="text-sm">
+                        <div className="bg-red-50 p-2 rounded-md mb-2 border-l-4 border-red-500">
+                          <p className="font-bold text-base text-red-700">{refinery.name}</p>
+                          <p className="text-xs text-red-600">{refinery.region.toUpperCase()} REGION</p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-1 text-xs mb-2">
+                          <div className="font-semibold">Country:</div>
+                          <div>{refinery.country}</div>
+                          {refinery.capacity && (
+                            <>
+                              <div className="font-semibold">Capacity:</div>
+                              <div>{refinery.capacity.toLocaleString()} bpd</div>
+                            </>
+                          )}
+                          {refinery.status && (
+                            <>
+                              <div className="font-semibold">Status:</div>
+                              <div className="capitalize">{refinery.status}</div>
+                            </>
+                          )}
+                        </div>
+                        <Button 
+                          className="w-full bg-red-600 hover:bg-red-700 text-white text-xs py-1 mt-2"
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent map click from interfering
+                            // Close the popup
+                            const closeButton = e.currentTarget.closest('.leaflet-popup')?.querySelector('.leaflet-popup-close-button');
+                            if (closeButton instanceof HTMLElement) {
+                              closeButton.click();
+                            }
+                            // Navigate to refinery detail page
+                            window.location.href = `/refineries/${refinery.id}`;
+                          }}
+                        >
+                          <Factory className="h-3 w-3 mr-1" />
+                          Show Details
+                        </Button>
+                      </div>
+                    </Popup>
+                  </Marker>
+                );
+              }
+              
+              return null;
+            })}
+            
+            {/* Display ports */}
+            {showPorts && (displayMode === 'all' || displayMode === 'infrastructure') && ports.map(port => {
+              // Only render if we have valid coordinates
+              if (port.lat && port.lng) {
+                const lat = typeof port.lat === 'string' ? parseFloat(port.lat) : port.lat;
+                const lng = typeof port.lng === 'string' ? parseFloat(port.lng) : port.lng;
+                
+                if (isNaN(lat) || isNaN(lng)) return null;
+                
+                return (
+                  <Marker
+                    key={`port-${port.id}`}
+                    position={[lat, lng]}
+                    icon={portIcon()}
+                    eventHandlers={{
+                      click: () => {
+                        setSelectedPort(port);
+                        setSelectedVessel(null);
+                        setSelectedRefinery(null);
+                      }
+                    }}
+                  >
+                    <Popup>
+                      <div className="text-sm">
+                        <div className="bg-blue-50 p-2 rounded-md mb-2 border-l-4 border-blue-500">
+                          <p className="font-bold text-base text-blue-700">{port.name}</p>
+                          <p className="text-xs text-blue-600">{port.region.toUpperCase()} REGION</p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-1 text-xs mb-2">
+                          <div className="font-semibold">Country:</div>
+                          <div>{port.country}</div>
+                          {port.capacity && (
+                            <>
+                              <div className="font-semibold">Capacity:</div>
+                              <div>{port.capacity.toLocaleString()} tons/year</div>
+                            </>
+                          )}
+                          {port.type && (
+                            <>
+                              <div className="font-semibold">Type:</div>
+                              <div className="capitalize">{port.type.replace('_', ' ')}</div>
+                            </>
+                          )}
+                        </div>
+                        <Button 
+                          className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs py-1 mt-2"
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent map click from interfering
+                            // Close the popup
+                            const closeButton = e.currentTarget.closest('.leaflet-popup')?.querySelector('.leaflet-popup-close-button');
+                            if (closeButton instanceof HTMLElement) {
+                              closeButton.click();
+                            }
+                            // Navigate to port detail page
+                            window.location.href = `/ports/${port.id}`;
+                          }}
+                        >
+                          <Anchor className="h-3 w-3 mr-1" />
+                          Show Details
+                        </Button>
+                      </div>
+                    </Popup>
+                  </Marker>
+                );
+              }
+              
+              return null;
+            })}
+            
+            {/* Display connections between refineries and ports */}
+            {showConnections && (displayMode === 'all' || displayMode === 'infrastructure') && connections.map(conn => {
+              const refinery = refineries.find(r => r.id === conn.refineryId);
+              const port = ports.find(p => p.id === conn.portId);
+              
+              if (!refinery || !port || !refinery.lat || !refinery.lng || !port.lat || !port.lng) {
+                return null;
+              }
+              
+              const refineryLat = typeof refinery.lat === 'string' ? parseFloat(refinery.lat) : refinery.lat;
+              const refineryLng = typeof refinery.lng === 'string' ? parseFloat(refinery.lng) : refinery.lng;
+              const portLat = typeof port.lat === 'string' ? parseFloat(port.lat) : port.lat;
+              const portLng = typeof port.lng === 'string' ? parseFloat(port.lng) : port.lng;
+              
+              if (isNaN(refineryLat) || isNaN(refineryLng) || isNaN(portLat) || isNaN(portLng)) {
+                return null;
+              }
+              
+              // Generate a slightly curved line for better visualization
+              // Calculate midpoint
+              const midLat = (refineryLat + portLat) / 2;
+              const midLng = (refineryLng + portLng) / 2;
+              
+              // Add a slight offset to create a curve
+              const latOffset = (refineryLng - portLng) * 0.1;
+              const lngOffset = (portLat - refineryLat) * 0.1;
+              const curvedMidLat = midLat + latOffset;
+              const curvedMidLng = midLng + lngOffset;
+              
+              // Create positions array with the midpoint
+              const positions: L.LatLngExpression[] = [
+                [refineryLat, refineryLng] as L.LatLngTuple,
+                [curvedMidLat, curvedMidLng] as L.LatLngTuple,
+                [portLat, portLng] as L.LatLngTuple
+              ];
+              
+              return (
+                <Polyline
+                  key={`connection-${conn.id}`}
+                  positions={positions}
+                  color="#9c27b0"
+                  weight={2}
+                  opacity={0.7}
+                  dashArray="5,5"
+                />
+              );
+            })}
             
             <MapUpdate vessels={vessels} />
           </MapContainer>
@@ -1338,7 +1180,7 @@ export default function LiveVesselMap({
                           <>
                             <div className="font-medium text-slate-700">Coordinates:</div>
                             <div>
-                              {parseFloat(selectedVessel.currentLat || '0').toFixed(4)}, {parseFloat(selectedVessel.currentLng || '0').toFixed(4)}
+                              {parseFloat(selectedVessel.currentLat).toFixed(4)}, {parseFloat(selectedVessel.currentLng).toFixed(4)}
                             </div>
                           </>
                         )}
@@ -1491,8 +1333,18 @@ export default function LiveVesselMap({
                     <span className="text-muted-foreground">Location:</span>
                   </div>
                   <div>
-                    {parseFloat(String(selectedRefinery.lat)).toFixed(4)}, 
-                    {parseFloat(String(selectedRefinery.lng)).toFixed(4)}
+                    {(() => {
+                      const lat = selectedRefinery.lat;
+                      if (typeof lat === 'string') return parseFloat(lat).toFixed(4);
+                      if (typeof lat === 'number') return lat.toFixed(4);
+                      return '0.0000';
+                    })()}, 
+                    {(() => {
+                      const lng = selectedRefinery.lng;
+                      if (typeof lng === 'string') return parseFloat(lng).toFixed(4);
+                      if (typeof lng === 'number') return lng.toFixed(4);
+                      return '0.0000';
+                    })()}
                   </div>
                 </div>
                 
@@ -1583,8 +1435,18 @@ export default function LiveVesselMap({
                     <span className="text-muted-foreground">Location:</span>
                   </div>
                   <div>
-                    {parseFloat(String(selectedPort.lat)).toFixed(4)}, 
-                    {parseFloat(String(selectedPort.lng)).toFixed(4)}
+                    {(() => {
+                      const lat = selectedPort.lat;
+                      if (typeof lat === 'string') return parseFloat(lat).toFixed(4);
+                      if (typeof lat === 'number') return lat.toFixed(4);
+                      return '0.0000';
+                    })()}, 
+                    {(() => {
+                      const lng = selectedPort.lng;
+                      if (typeof lng === 'string') return parseFloat(lng).toFixed(4);
+                      if (typeof lng === 'number') return lng.toFixed(4);
+                      return '0.0000';
+                    })()}
                   </div>
                 </div>
                 
