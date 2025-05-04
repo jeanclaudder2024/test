@@ -1,5 +1,6 @@
-import { SignIn } from '@clerk/clerk-react';
-import { Ship, Navigation, AnchorIcon } from 'lucide-react';
+import { SignIn as ClerkSignIn } from '@clerk/clerk-react';
+import { Ship, Anchor } from 'lucide-react';
+import { Link } from 'wouter';
 
 export function Login() {
   return (
@@ -20,11 +21,11 @@ export function Login() {
           <div className="w-full max-w-md">
             <div className="mb-8 text-center">
               <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">Welcome Back</h2>
-              <p className="text-gray-600 dark:text-gray-300">Log in to access the maritime monitoring platform</p>
+              <p className="text-gray-600 dark:text-gray-300">Sign in to access your maritime dashboard</p>
             </div>
             
             <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-2 border border-gray-200 dark:border-gray-700">
-              <SignIn
+              <ClerkSignIn
                 routing="path"
                 path="/login"
                 signUpUrl="/signup"
@@ -35,30 +36,30 @@ export function Login() {
         </div>
         
         {/* Right Side: Maritime Illustration */}
-        <div className="hidden md:flex w-1/2 bg-blue-600 items-center justify-center relative overflow-hidden">
-          <div className="absolute inset-0 bg-[url('/maritime-background.svg')] opacity-10 bg-center bg-no-repeat bg-cover"></div>
+        <div className="hidden md:flex w-1/2 bg-blue-700 items-center justify-center relative overflow-hidden">
+          <div className="absolute inset-0 bg-[url('/maritime-pattern.svg')] opacity-10 bg-center bg-repeat"></div>
           <div className="relative z-10 text-center p-8 max-w-lg">
             <div className="flex justify-center mb-6">
-              <div className="h-20 w-20 rounded-full bg-blue-700 flex items-center justify-center">
-                <Navigation className="h-10 w-10 text-white" />
+              <div className="h-20 w-20 rounded-full bg-blue-800 flex items-center justify-center">
+                <Anchor className="h-10 w-10 text-white" />
               </div>
             </div>
-            <h2 className="text-3xl font-bold text-white mb-4">Global Maritime Intelligence</h2>
+            <h2 className="text-3xl font-bold text-white mb-4">Maritime Intelligence</h2>
             <p className="text-blue-100 text-lg mb-6">
-              Track vessels, monitor shipments, and gain valuable insights into maritime operations around the world.
+              Access your vessel tracking dashboard, refinery analytics, and port connections with secure login.
             </p>
-            <div className="flex justify-center space-x-8">
-              <div className="text-center">
-                <div className="text-4xl font-bold text-white mb-1">2,500+</div>
-                <div className="text-blue-200">Vessels Tracked</div>
+            <div className="flex flex-col space-y-6">
+              <div className="bg-blue-800/30 p-4 rounded-lg border border-blue-600/30">
+                <h3 className="text-white font-semibold mb-2">Global Maritime Network</h3>
+                <p className="text-blue-100">
+                  View live vessel positions, track shipments, and monitor maritime activities across all major shipping lanes.
+                </p>
               </div>
-              <div className="text-center">
-                <div className="text-4xl font-bold text-white mb-1">70+</div>
-                <div className="text-blue-200">Refineries</div>
-              </div>
-              <div className="text-center">
-                <div className="text-4xl font-bold text-white mb-1">80+</div>
-                <div className="text-blue-200">Global Ports</div>
+              <div className="bg-blue-800/30 p-4 rounded-lg border border-blue-600/30">
+                <p className="text-blue-100">
+                  "The most comprehensive maritime tracking platform we've used for monitoring our fleet operations."
+                </p>
+                <p className="text-white font-medium mt-2">— Global Shipping Enterprises</p>
               </div>
             </div>
           </div>

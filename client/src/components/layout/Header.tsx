@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import Sidebar from "./Sidebar";
+import { useClerk } from "@clerk/clerk-react";
 
 export default function Header() {
   const [location, navigate] = useLocation();
@@ -15,6 +16,7 @@ export default function Header() {
   const { logoutMutation } = useAuth();
   const { toast } = useToast();
   const { t } = useLanguage();
+  const { signOut } = useClerk();
 
   const toggleMobileSidebar = () => {
     setMobileSidebarOpen(!mobileSidebarOpen);
@@ -26,7 +28,16 @@ export default function Header() {
 
   const handleLogout = async () => {
     try {
-      await logoutMutation.mutateAsync();
+      // Try to logout using Clerk (will redirect to /login)
+      await signOut();
+      
+      // If we're still here, also try the legacy logout
+      try {
+        await logoutMutation.mutateAsync();
+      } catch (legacyError) {
+        console.log("Legacy logout failed, but Clerk logout succeeded");
+      }
+      
       navigate('/');
       toast({
         title: "Logged out successfully",

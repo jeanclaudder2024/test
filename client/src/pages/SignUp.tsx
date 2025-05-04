@@ -1,4 +1,4 @@
-import { SignUp } from '@clerk/clerk-react';
+import { SignUp as ClerkSignUp } from '@clerk/clerk-react';
 import { Ship, Navigation, AnchorIcon } from 'lucide-react';
 
 export function SignUp() {
@@ -24,7 +24,7 @@ export function SignUp() {
             </div>
             
             <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-2 border border-gray-200 dark:border-gray-700">
-              <SignUp
+              <ClerkSignUp
                 routing="path"
                 path="/signup"
                 signInUrl="/login"

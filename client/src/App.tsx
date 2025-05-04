@@ -21,12 +21,15 @@ import AuthPage from "@/pages/AuthPage";
 import TradingDashboard from "@/pages/TradingDashboard";
 import LiveTracking from "@/pages/LiveTracking";
 import ApiTest from "@/pages/ApiTest";
+import { Login } from "@/pages/Login";
+import { SignUp } from "@/pages/SignUp";
 import { useEffect } from "react";
 import { apiRequest } from "./lib/queryClient";
 import MainLayout from "@/components/layout/MainLayout";
 import { AuthProvider } from "@/hooks/use-auth";
 import { LanguageProvider } from "@/hooks/use-language";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { ClerkProvider } from "@/context/ClerkProvider";
 
 function Router() {
   const [location] = useLocation();
@@ -47,12 +50,14 @@ function Router() {
     seedData();
   }, []);
 
-  // For landing page and auth page, don't use MainLayout (no sidebar/header)
-  if (location === "/" || location === "/auth") {
+  // For landing page, auth pages, login and signup, don't use MainLayout (no sidebar/header)
+  if (location === "/" || location === "/auth" || location === "/login" || location === "/signup") {
     return (
       <Switch>
         <Route path="/" component={LandingPage} />
         <Route path="/auth" component={AuthPage} />
+        <Route path="/login" component={Login} />
+        <Route path="/signup" component={SignUp} />
       </Switch>
     );
   }
@@ -86,12 +91,14 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <LanguageProvider>
-          <Router />
-          <Toaster />
-        </LanguageProvider>
-      </AuthProvider>
+      <ClerkProvider>
+        <AuthProvider>
+          <LanguageProvider>
+            <Router />
+            <Toaster />
+          </LanguageProvider>
+        </AuthProvider>
+      </ClerkProvider>
     </QueryClientProvider>
   );
 }
