@@ -721,7 +721,8 @@ export default function LiveVesselMap({
                           color: '#3388ff', 
                           weight: 2, 
                           opacity: 0.6,
-                          dashArray: '6, 8'
+                          dashArray: '6, 8',
+                          renderer: L.canvas()
                         }}
                       />
                       
@@ -735,7 +736,8 @@ export default function LiveVesselMap({
                           color: '#ff3366', 
                           weight: 2, 
                           opacity: 0.4,
-                          dashArray: '3, 6'
+                          dashArray: '3, 6',
+                          renderer: L.canvas()
                         }}
                       />
                     </div>
@@ -754,7 +756,7 @@ export default function LiveVesselMap({
                   maxClusterRadius={80}
                   disableClusteringAtZoom={9}
                   spiderfyOnMaxZoom={true}
-                  iconCreateFunction={(cluster: L.MarkerCluster) => {
+                  iconCreateFunction={(cluster: any) => {
                     const count = cluster.getChildCount();
                     let size = 40;
                     let className = 'vessel-cluster-small';
