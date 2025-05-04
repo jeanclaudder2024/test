@@ -57,19 +57,19 @@ export function AIGenerationPanel({
   };
 
   return (
-    <Card className="mt-4">
-      <CardHeader>
-        <CardTitle className="flex items-center text-lg">
-          <Sparkles className="h-5 w-5 mr-2 text-yellow-500" />
-          AI Description Generation
+    <Card className="mt-4 border-2 border-amber-200 shadow-md">
+      <CardHeader className="bg-gradient-to-r from-amber-50 to-yellow-50 pb-3">
+        <CardTitle className="flex items-center text-lg text-amber-800">
+          <Sparkles className="h-5 w-5 mr-2 text-amber-500" />
+          AI-Powered Description Generator
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-amber-700">
           {currentDescription 
-            ? 'Update the existing description with AI-generated content' 
-            : 'Generate a detailed description using AI'}
+            ? 'Update the existing description with enhanced AI-generated content' 
+            : 'Generate a detailed professional description using AI'}
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-5">
         {error && (
           <Alert variant="destructive" className="mb-4">
             <AlertCircle className="h-4 w-4" />
@@ -79,29 +79,39 @@ export function AIGenerationPanel({
         )}
         
         {generatedDescription && (
-          <div className="mb-4 p-3 border rounded bg-blue-50 text-sm">
-            <p className="font-semibold mb-1">Generated description:</p>
-            <p>{generatedDescription}</p>
+          <div className="mb-4 p-4 border rounded-md bg-blue-50 text-sm border-blue-200 shadow-sm">
+            <p className="font-semibold mb-2 text-blue-800">Generated description:</p>
+            <p className="text-blue-700">{generatedDescription}</p>
           </div>
         )}
         
-        <p className="text-sm text-muted-foreground mb-2">
-          This will use OpenAI to generate a detailed description for 
-          {entityType === 'port' ? ' this port' : ' this refinery'} based on its metadata.
-        </p>
+        <div className="bg-amber-50 rounded-md p-3 border border-amber-100 mb-4">
+          <p className="text-sm text-amber-800 mb-2 font-medium">
+            How does this work?
+          </p>
+          <p className="text-xs text-amber-700">
+            This feature uses OpenAI GPT-4o to create a professional, accurate description for 
+            {entityType === 'port' ? ' this port' : ' this refinery'} based on its location, size, 
+            and other available metadata. The AI-generated description will help users better understand 
+            the {entityType}'s role in the global maritime ecosystem.
+          </p>
+        </div>
       </CardContent>
-      <CardFooter>
+      <CardFooter className="bg-amber-50 pt-3 pb-4 px-6">
         <Button 
           onClick={generateDescription} 
           disabled={isGenerating}
-          className="w-full"
+          className="w-full bg-amber-600 hover:bg-amber-700 text-white flex items-center justify-center gap-2 py-5"
         >
-          {isGenerating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {isGenerating ? 
+            <Loader2 className="h-4 w-4 animate-spin" /> : 
+            <Sparkles className="h-4 w-4" />
+          }
           {isGenerating 
-            ? 'Generating...' 
+            ? 'Generating Intelligence...' 
             : currentDescription 
-              ? 'Regenerate Description' 
-              : 'Generate Description'}
+              ? 'Regenerate Enhanced Description' 
+              : 'Generate Professional Description'}
         </Button>
       </CardFooter>
     </Card>

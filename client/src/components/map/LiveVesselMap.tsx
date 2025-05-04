@@ -4,12 +4,13 @@ import L from 'leaflet';
 import { Vessel, Refinery, Port } from '@shared/schema';
 import { useVesselWebSocket } from '@/hooks/useVesselWebSocket';
 import { useMaritimeData } from '@/hooks/useMaritimeData';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { 
   Loader2, Anchor, Info, Navigation, Flag, Calendar, Ship, 
-  Factory, Warehouse, Anchor as AnchorIcon, Sparkles
+  Factory, Warehouse, Anchor as AnchorIcon, Sparkles,
+  CheckCircle, FileText
 } from 'lucide-react';
 import { AIGenerationPanel } from '@/components/AIGenerationPanel';
 import { useToast } from '@/hooks/use-toast';
@@ -617,9 +618,12 @@ export default function LiveVesselMap({ initialRegion, height = '600px' }: LiveV
           {selectedVessel ? (
             <Card>
               <CardContent className="pt-6">
-                <div className="flex justify-between items-center mb-2">
-                  <h3 className="text-xl font-bold">{selectedVessel.name}</h3>
-                  <Badge className="bg-blue-100 text-blue-800 border-blue-200">Vessel</Badge>
+                <div className="bg-blue-50 p-3 rounded-md mb-4 border-l-4 border-blue-500 flex justify-between items-center">
+                  <div>
+                    <h3 className="text-xl font-bold text-blue-800">{selectedVessel.name}</h3>
+                    <p className="text-sm text-blue-600">{selectedVessel.vesselType.toUpperCase()}</p>
+                  </div>
+                  <Badge className="bg-blue-100 text-blue-800 border-blue-200 text-sm">Vessel</Badge>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-y-2 text-sm mb-4">
@@ -728,6 +732,58 @@ export default function LiveVesselMap({ initialRegion, height = '600px' }: LiveV
                     )}
                   </div>
                 </div>
+                
+                <Separator className="my-4" />
+                
+                {/* Document Generation Panel */}
+                <Card className="mt-4 border-2 border-blue-200 shadow-md">
+                  <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 pb-3">
+                    <CardTitle className="flex items-center text-lg text-blue-800">
+                      <FileText className="h-5 w-5 mr-2 text-blue-500" />
+                      AI Document Generator
+                    </CardTitle>
+                    <CardDescription className="text-blue-700">
+                      Generate shipping documentation for this vessel using AI
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-5">
+                    <div className="bg-blue-50 rounded-md p-3 border border-blue-100 mb-4">
+                      <p className="text-sm text-blue-800 mb-2 font-medium">
+                        Available Document Types
+                      </p>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div className="flex items-center">
+                          <CheckCircle className="h-3 w-3 mr-1 text-green-500" />
+                          <span className="text-blue-700">Bill of Lading</span>
+                        </div>
+                        <div className="flex items-center">
+                          <CheckCircle className="h-3 w-3 mr-1 text-green-500" />
+                          <span className="text-blue-700">Certificate of Origin</span>
+                        </div>
+                        <div className="flex items-center">
+                          <CheckCircle className="h-3 w-3 mr-1 text-green-500" />
+                          <span className="text-blue-700">Packing List</span>
+                        </div>
+                        <div className="flex items-center">
+                          <CheckCircle className="h-3 w-3 mr-1 text-green-500" />
+                          <span className="text-blue-700">Commercial Invoice</span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                  <CardFooter className="bg-blue-50 pt-3 pb-4 px-6">
+                    <Button 
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center gap-2 py-5"
+                      onClick={() => {
+                        // Link to document generation page would go here
+                        window.alert('Document generation feature will open in a dedicated panel');
+                      }}
+                    >
+                      <FileText className="h-4 w-4" />
+                      Generate Shipping Documentation
+                    </Button>
+                  </CardFooter>
+                </Card>
               </CardContent>
             </Card>
           ) : selectedRefinery ? (
