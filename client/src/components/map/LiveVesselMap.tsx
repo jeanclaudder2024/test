@@ -1171,12 +1171,18 @@ export default function LiveVesselMap({
                     <span className="text-muted-foreground">Location:</span>
                   </div>
                   <div>
-                    {typeof selectedRefinery.lat === 'string' 
-                      ? parseFloat(selectedRefinery.lat).toFixed(4) 
-                      : (typeof selectedRefinery.lat === 'number' ? selectedRefinery.lat.toFixed(4) : '0.0000')}, 
-                    {typeof selectedRefinery.lng === 'string'
-                      ? parseFloat(selectedRefinery.lng).toFixed(4)
-                      : (typeof selectedRefinery.lng === 'number' ? selectedRefinery.lng.toFixed(4) : '0.0000')}
+                    {(() => {
+                      const lat = selectedRefinery.lat;
+                      if (typeof lat === 'string') return parseFloat(lat).toFixed(4);
+                      if (typeof lat === 'number') return lat.toFixed(4);
+                      return '0.0000';
+                    })()}, 
+                    {(() => {
+                      const lng = selectedRefinery.lng;
+                      if (typeof lng === 'string') return parseFloat(lng).toFixed(4);
+                      if (typeof lng === 'number') return lng.toFixed(4);
+                      return '0.0000';
+                    })()}
                   </div>
                 </div>
                 
@@ -1267,12 +1273,18 @@ export default function LiveVesselMap({
                     <span className="text-muted-foreground">Location:</span>
                   </div>
                   <div>
-                    {typeof selectedPort.lat === 'string' 
-                      ? parseFloat(selectedPort.lat).toFixed(4) 
-                      : (typeof selectedPort.lat === 'number' ? selectedPort.lat.toFixed(4) : '0.0000')}, 
-                    {typeof selectedPort.lng === 'string'
-                      ? parseFloat(selectedPort.lng).toFixed(4)
-                      : (typeof selectedPort.lng === 'number' ? selectedPort.lng.toFixed(4) : '0.0000')}
+                    {(() => {
+                      const lat = selectedPort.lat;
+                      if (typeof lat === 'string') return parseFloat(lat).toFixed(4);
+                      if (typeof lat === 'number') return lat.toFixed(4);
+                      return '0.0000';
+                    })()}, 
+                    {(() => {
+                      const lng = selectedPort.lng;
+                      if (typeof lng === 'string') return parseFloat(lng).toFixed(4);
+                      if (typeof lng === 'number') return lng.toFixed(4);
+                      return '0.0000';
+                    })()}
                   </div>
                 </div>
                 
