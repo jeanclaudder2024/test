@@ -1992,9 +1992,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup WebSocket server for real-time vessel tracking
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
 
-  // Define interface for WebSocket with region subscription
+  // Define interface for WebSocket with region subscription and all vessels flag
   interface VesselTrackingWebSocket extends WebSocket {
     subscribedRegion?: string;
+    page?: number;
+    pageSize?: number;
+    sendAllVessels?: boolean;
   }
 
   // Set up WebSocket server for live vessel updates
@@ -2046,21 +2049,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // Extend the WebSocket interface to include pagination parameters
+  // Extend the WebSocket interface to include pagination parameters and all vessels flag
   interface VesselTrackingWebSocket extends WebSocket {
     subscribedRegion?: string;
     page?: number;
     pageSize?: number;
+    sendAllVessels?: boolean; // Flag to send all vessels at once
   }
   
-  // Function to fetch and send vessel data to websocket client with pagination support
+  // Function to fetch and send vessel data to websocket client with option to send all vessels
   async function sendVesselData(ws: VesselTrackingWebSocket) {
     try {
       if (ws.readyState !== WebSocket.OPEN) return;
       
-      // Default pagination values if not set
+      // Check if we should send all vessels at once (no pagination)
+      const sendAllVessels = ws.sendAllVessels || false;
       const page = ws.page || 1;
-      const pageSize = ws.pageSize || 500;
+      const pageSize = sendAllVessels ? 10000 : (ws.pageSize || 500); // Large pageSize effectively removes pagination
       
       let vessels: Vessel[] = [];
       
@@ -2090,32 +2095,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`Filtered vessels by region ${ws.subscribedRegion}: ${beforeFilter} → ${vessels.length}`);
       }
       
-      // Calculate pagination
+      // Calculate pagination (even if we send all, we still include pagination info)
       const totalCount = vessels.length;
       const totalPages = Math.ceil(totalCount / pageSize);
-      const startIndex = (page - 1) * pageSize;
-      const endIndex = Math.min(startIndex + pageSize, totalCount);
       
-      // Get vessels for the current page
-      const paginatedVessels = vessels.slice(startIndex, endIndex);
+      // Get all vessels or just the current page based on sendAllVessels flag
+      let vesselsToSend = vessels;
+      if (!sendAllVessels) {
+        const startIndex = (page - 1) * pageSize;
+        const endIndex = Math.min(startIndex + pageSize, totalCount);
+        vesselsToSend = vessels.slice(startIndex, endIndex);
+      }
       
       // Log vessel coordinates for debugging (first 5 vessels)
-      console.log(`Vessel coordinate check: ${paginatedVessels.slice(0, 5).map(v => 
+      console.log(`Vessel coordinate check: ${vesselsToSend.slice(0, 5).map(v => 
         `${v.name}: lat=${v.currentLat}, lng=${v.currentLng}`).join(', ')}`);
       
-      // Send the vessel data with pagination metadata
+      // Send the vessel data with metadata
       ws.send(JSON.stringify({
         type: 'vessel_update',
-        vessels: paginatedVessels,
+        vessels: vesselsToSend,
         timestamp: new Date().toISOString(),
-        count: paginatedVessels.length,
+        count: vesselsToSend.length,
         totalCount: totalCount,
         totalPages: totalPages,
-        currentPage: page,
-        pageSize: pageSize
+        currentPage: sendAllVessels ? 1 : page,
+        pageSize: pageSize,
+        allVesselsLoaded: sendAllVessels
       }));
       
-      console.log(`Sent ${paginatedVessels.length} vessels to client (page ${page}/${totalPages})`);
+      console.log(`Sent ${vesselsToSend.length} vessels to client (${sendAllVessels ? 'all vessels' : `page ${page}/${totalPages}`})`);
     } catch (error) {
       console.error('Error sending vessel data via WebSocket:', error);
     }
