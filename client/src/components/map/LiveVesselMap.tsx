@@ -736,6 +736,24 @@ export default function LiveVesselMap({ initialRegion, height = '600px' }: LiveV
                 {connections.filter(conn => conn.refineryId === selectedRefinery.id).length === 0 && (
                   <p className="text-sm text-muted-foreground">No connected ports found</p>
                 )}
+                
+                <Separator className="my-4" />
+                
+                {/* AI Description Generation Panel */}
+                <AIGenerationPanel
+                  entityType="refinery"
+                  entityId={selectedRefinery.id}
+                  entityName={selectedRefinery.name}
+                  currentDescription={selectedRefinery.description}
+                  onDescriptionGenerated={(description) => {
+                    // Update the selected refinery with the new description
+                    setSelectedRefinery({
+                      ...selectedRefinery,
+                      description: description
+                    });
+                    refreshInfrastructureData();
+                  }}
+                />
               </CardContent>
             </Card>
           ) : selectedPort ? (
@@ -819,6 +837,24 @@ export default function LiveVesselMap({ initialRegion, height = '600px' }: LiveV
                 {connections.filter(conn => conn.portId === selectedPort.id).length === 0 && (
                   <p className="text-sm text-muted-foreground">No connected refineries found</p>
                 )}
+                
+                <Separator className="my-4" />
+                
+                {/* AI Description Generation Panel */}
+                <AIGenerationPanel
+                  entityType="port"
+                  entityId={selectedPort.id}
+                  entityName={selectedPort.name}
+                  currentDescription={selectedPort.description}
+                  onDescriptionGenerated={(description) => {
+                    // Update the selected port with the new description
+                    setSelectedPort({
+                      ...selectedPort,
+                      description: description
+                    });
+                    refreshInfrastructureData();
+                  }}
+                />
               </CardContent>
             </Card>
           ) : (

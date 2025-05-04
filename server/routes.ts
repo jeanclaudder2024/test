@@ -1599,10 +1599,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Vessel not found" });
       }
       
-      // Generate the document using AI
-      const generatedDocument = await aiService.generateDocument(vessel.id, documentType);
+      // Generate the document using OpenAI
+      const generatedDocument = await openaiService.generateShippingDocument(vessel, documentType);
       
-      res.json(generatedDocument);
+      // Save the document to the database
+      const savedDocument = await storage.createDocument({
+        vesselId: vessel.id,
+        title: generatedDocument.title,
+        content: generatedDocument.content,
+        type: documentType,
+        status: 'generated'
+      });
+      
+      res.json({
+        success: true,
+        document: {
+          id: savedDocument.id,
+          ...generatedDocument
+        }
+      });
     } catch (error) {
       console.error("Error generating document:", error);
       res.status(500).json({ 

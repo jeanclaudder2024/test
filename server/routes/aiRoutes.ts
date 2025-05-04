@@ -162,9 +162,8 @@ aiRouter.post('/generate-document', async (req: Request, res: Response) => {
       title: document.title,
       content: document.content,
       type: documentType,  // in our schema, it's 'type' not 'documentType'
-      status: 'generated',
-      createdAt: new Date(),
-      lastUpdated: new Date()
+      status: 'generated'
+      // The createdAt and lastUpdated fields are handled by the database
     });
     
     // Return success response
