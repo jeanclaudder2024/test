@@ -1,9 +1,10 @@
 import OpenAI from "openai";
-import { Port, Refinery, Vessel } from "@shared/schema";
+import { Vessel, Port, Refinery } from "@shared/schema";
+import { storage } from "../storage";
 
-// Create OpenAI client instance
-// the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+// Initialize OpenAI client
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 
 /**
  * Service for generating maritime data using OpenAI APIs
@@ -14,37 +15,45 @@ export class OpenAIService {
    */
   async generatePortDescription(port: Port): Promise<string> {
     try {
+      console.log(`Generating AI description for port: ${port.name} (ID: ${port.id})`);
+      
       const prompt = `
-Generate a detailed and professional description for the following port:
-- Name: ${port.name}
-- Country: ${port.country}
-- Region: ${port.region}
-- Capacity: ${port.capacity || 'Unknown'} tons/year
-- Location: Lat ${port.lat}, Lng ${port.lng}
-
-The description should include:
-1. Brief historical context if applicable
-2. Primary cargo types handled
-3. Major shipping routes connected to this port
-4. Key infrastructure elements
-5. Economic importance to the region
-6. Maximum vessel size accommodations
-
-Format as a single paragraph, approximately 100-150 words. Use formal, maritime industry language.
-`;
-
+      You are a maritime industry expert. Generate a detailed, factual description for the following port.
+      
+      Port Details:
+      - Name: ${port.name}
+      - Country: ${port.country}
+      - Region: ${port.region}
+      - Type: ${port.type || 'Commercial'}
+      - Capacity: ${port.capacity?.toLocaleString() || 'Unknown'} tons
+      - Status: ${port.status || 'Active'}
+      
+      Please provide a comprehensive 2-3 paragraph description that includes:
+      1. The port's significance in the region
+      2. Its primary cargo types and trade routes
+      3. Notable infrastructure or facilities
+      4. Any relevant historical context
+      
+      Format as a cohesive narrative without bullet points or headers.
+      `;
+      
       const response = await openai.chat.completions.create({
         model: "gpt-4o",
         messages: [{ role: "user", content: prompt }],
-        max_tokens: 300,
         temperature: 0.7,
+        max_tokens: 500,
       });
-
-      return response.choices[0].message.content?.trim() || 
-        `${port.name} is a significant maritime facility located in ${port.country}, serving as a vital link in the region's shipping network.`;
+      
+      const description = response.choices[0].message.content?.trim() || 
+        "Unable to generate description at this time.";
+      
+      // Update the port description in database
+      await storage.updatePort(port.id, { description });
+      
+      return description;
     } catch (error) {
-      console.error('Error generating port description:', error);
-      return `${port.name} is a significant maritime facility located in ${port.country}, serving as a vital link in the region's shipping network.`;
+      console.error("Error generating port description:", error);
+      throw new Error("Failed to generate port description");
     }
   }
 
@@ -53,38 +62,56 @@ Format as a single paragraph, approximately 100-150 words. Use formal, maritime 
    */
   async generateRefineryDescription(refinery: Refinery): Promise<string> {
     try {
+      console.log(`Generating AI description for refinery: ${refinery.name} (ID: ${refinery.id})`);
+      
+      // Get connected ports for context
+      const connections = await storage.getRefineryPortConnectionsByRefineryId(refinery.id);
+      let connectedPorts: string[] = [];
+      
+      if (connections.length > 0) {
+        const portIds = connections.map(conn => conn.portId);
+        const portPromises = portIds.map(id => storage.getPortById(id));
+        const ports = await Promise.all(portPromises);
+        connectedPorts = ports.filter(Boolean).map(port => port?.name || '').filter(name => name !== '');
+      }
+      
       const prompt = `
-Generate a detailed and professional description for the following oil refinery:
-- Name: ${refinery.name}
-- Country: ${refinery.country}
-- Region: ${refinery.region}
-- Capacity: ${refinery.capacity || 'Unknown'} barrels per day
-- Status: ${refinery.status || 'Operational'}
-- Location: Lat ${refinery.lat}, Lng ${refinery.lng}
-
-The description should include:
-1. Brief information about when it was established (approximate if not known)
-2. Primary refined products
-3. Technical capabilities
-4. Economic importance to the region
-5. Distribution network
-6. Any notable characteristics
-
-Format as a single paragraph, approximately 100-150 words. Use formal, oil industry language.
-`;
-
+      You are a petroleum industry expert. Generate a detailed, factual description for the following oil refinery.
+      
+      Refinery Details:
+      - Name: ${refinery.name}
+      - Country: ${refinery.country}
+      - Region: ${refinery.region}
+      - Capacity: ${refinery.capacity?.toLocaleString() || 'Unknown'} barrels per day
+      - Status: ${refinery.status || 'Active'}
+      - Connected Ports: ${connectedPorts.length > 0 ? connectedPorts.join(', ') : 'None recorded'}
+      
+      Please provide a comprehensive 2-3 paragraph description that includes:
+      1. The refinery's significance in the regional energy landscape
+      2. Its primary products and output capacity
+      3. Notable technology or processes used
+      4. Its supply chain and distribution network (including connected ports if any)
+      
+      Format as a cohesive narrative without bullet points or headers.
+      `;
+      
       const response = await openai.chat.completions.create({
         model: "gpt-4o",
         messages: [{ role: "user", content: prompt }],
-        max_tokens: 300,
         temperature: 0.7,
+        max_tokens: 500,
       });
-
-      return response.choices[0].message.content?.trim() || 
-        `${refinery.name} is a major petroleum processing facility located in ${refinery.country}, playing a key role in the region's energy infrastructure.`;
+      
+      const description = response.choices[0].message.content?.trim() || 
+        "Unable to generate description at this time.";
+      
+      // Update the refinery description in database
+      await storage.updateRefinery(refinery.id, { description });
+      
+      return description;
     } catch (error) {
-      console.error('Error generating refinery description:', error);
-      return `${refinery.name} is a major petroleum processing facility located in ${refinery.country}, playing a key role in the region's energy infrastructure.`;
+      console.error("Error generating refinery description:", error);
+      throw new Error("Failed to generate refinery description");
     }
   }
 
@@ -93,45 +120,45 @@ Format as a single paragraph, approximately 100-150 words. Use formal, oil indus
    */
   async generateShippingDocument(vessel: Vessel, documentType: string): Promise<{title: string, content: string}> {
     try {
-      let documentPrompt = "";
+      console.log(`Generating ${documentType} for vessel: ${vessel.name} (IMO: ${vessel.imo})`);
       
-      switch(documentType.toLowerCase()) {
+      let prompt = "";
+      
+      // Select the appropriate prompt based on document type
+      switch (documentType.toLowerCase()) {
         case "bill of lading":
-          documentPrompt = this.getBillOfLadingPrompt(vessel);
+          prompt = this.getBillOfLadingPrompt(vessel);
           break;
         case "certificate of origin":
-          documentPrompt = this.getCertificateOfOriginPrompt(vessel);
+          prompt = this.getCertificateOfOriginPrompt(vessel);
           break;
         case "inspection report":
-          documentPrompt = this.getInspectionReportPrompt(vessel);
+          prompt = this.getInspectionReportPrompt(vessel);
           break;
         case "customs declaration":
-          documentPrompt = this.getCustomsDeclarationPrompt(vessel);
+          prompt = this.getCustomsDeclarationPrompt(vessel);
           break;
         default:
-          documentPrompt = this.getGenericDocumentPrompt(vessel, documentType);
+          prompt = this.getGenericDocumentPrompt(vessel, documentType);
       }
-
+      
       const response = await openai.chat.completions.create({
         model: "gpt-4o",
-        messages: [{ role: "user", content: documentPrompt }],
-        response_format: { type: "json_object" },
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.7,
         max_tokens: 800,
-        temperature: 0.5,
       });
-
-      const result = JSON.parse(response.choices[0].message.content || '{"title":"Document", "content":"Content unavailable"}');
+      
+      const content = response.choices[0].message.content?.trim() || 
+        "Unable to generate document at this time.";
       
       return {
-        title: result.title || `${documentType} - ${vessel.name}`,
-        content: result.content || `Document content unavailable for ${vessel.name}.`
+        title: `${documentType.toUpperCase()} - ${vessel.name} - ${new Date().toISOString().split('T')[0]}`,
+        content
       };
     } catch (error) {
-      console.error(`Error generating ${documentType}:`, error);
-      return {
-        title: `${documentType} - ${vessel.name}`,
-        content: `Document content unavailable for ${vessel.name}. Please try again later.`
-      };
+      console.error("Error generating shipping document:", error);
+      throw new Error("Failed to generate shipping document");
     }
   }
 
@@ -140,199 +167,177 @@ Format as a single paragraph, approximately 100-150 words. Use formal, oil indus
    */
   async generateRouteOptimization(vessel: Vessel): Promise<{suggestions: string[], fuelSavings: number, timeSavings: number}> {
     try {
+      console.log(`Generating route optimization for vessel: ${vessel.name} (IMO: ${vessel.imo})`);
+      
       const prompt = `
-Generate route optimization suggestions for the following vessel:
-- Vessel Name: ${vessel.name}
-- Type: ${vessel.vesselType}
-- Departure: ${vessel.departurePort || 'Unknown'}
-- Destination: ${vessel.destinationPort || 'Unknown'}
-- Current Position: Lat ${vessel.currentLat || 'Unknown'}, Lng ${vessel.currentLng || 'Unknown'}
-
-Provide your response as a JSON object with these fields:
-1. "suggestions": An array of 3-5 specific route optimization suggestions
-2. "fuelSavings": Estimated fuel savings percentage (a number between 5 and 20)
-3. "timeSavings": Estimated time savings in hours (a number between 5 and 48)
-
-Make the suggestions specific to maritime shipping, accounting for factors like currents, weather patterns, and shipping lanes.
-`;
-
+      You are a maritime routing expert. Generate route optimization suggestions for the following vessel:
+      
+      Vessel Details:
+      - Name: ${vessel.name}
+      - Type: ${vessel.vesselType}
+      - Current Position: Lat ${vessel.currentLat || 'Unknown'}, Lng ${vessel.currentLng || 'Unknown'}
+      - Current Region: ${vessel.currentRegion || 'Unknown'}
+      - Flag: ${vessel.flag || 'Unknown'}
+      - Deadweight: ${vessel.deadweight?.toLocaleString() || 'Unknown'} tons
+      
+      Please provide:
+      1. 3-5 specific route optimization suggestions that could improve efficiency
+      2. An estimated percentage of fuel savings
+      3. An estimated time savings in hours
+      
+      Format your response as a JSON object with these fields:
+      - suggestions: array of strings
+      - fuelSavings: number (percentage)
+      - timeSavings: number (hours)
+      `;
+      
       const response = await openai.chat.completions.create({
         model: "gpt-4o",
         messages: [{ role: "user", content: prompt }],
-        response_format: { type: "json_object" },
-        max_tokens: 500,
         temperature: 0.7,
+        max_tokens: 500,
+        response_format: { type: "json_object" }
       });
-
-      const result = JSON.parse(response.choices[0].message.content || '{"suggestions":[], "fuelSavings":0, "timeSavings":0}');
+      
+      const jsonResponse = JSON.parse(response.choices[0].message.content || "{}");
       
       return {
-        suggestions: result.suggestions || [],
-        fuelSavings: result.fuelSavings || 0,
-        timeSavings: result.timeSavings || 0
+        suggestions: Array.isArray(jsonResponse.suggestions) ? jsonResponse.suggestions : [],
+        fuelSavings: typeof jsonResponse.fuelSavings === 'number' ? jsonResponse.fuelSavings : 0,
+        timeSavings: typeof jsonResponse.timeSavings === 'number' ? jsonResponse.timeSavings : 0
       };
     } catch (error) {
-      console.error('Error generating route optimization:', error);
-      return {
-        suggestions: ["Unable to generate route optimization suggestions at this time."],
-        fuelSavings: 0,
-        timeSavings: 0
-      };
+      console.error("Error generating route optimization:", error);
+      throw new Error("Failed to generate route optimization");
     }
   }
 
-  // Helper methods for document prompt generation
   private getBillOfLadingPrompt(vessel: Vessel): string {
     return `
-Generate a realistic Bill of Lading document for the following vessel:
-- Vessel Name: ${vessel.name}
-- IMO: ${vessel.imo}
-- Vessel Type: ${vessel.vesselType}
-- Departure Port: ${vessel.departurePort || 'Unknown'}
-- Destination Port: ${vessel.destinationPort || 'Unknown'}
-- Cargo Type: ${vessel.cargoType || 'Crude Oil'}
-- Cargo Capacity: ${vessel.cargoCapacity || 'Unknown'} tons
-
-Include appropriate fields for a Bill of Lading including:
-- Shipper details
-- Consignee details
-- Notify party
-- Cargo description
-- Package count and type
-- Gross and net weight
-- Measurement
-- Freight terms
-- Date of issue
-- Signature fields
-
-Respond with a JSON object containing:
-1. "title": The title of the document
-2. "content": The formatted Bill of Lading text content
-
-Use realistic but fictional company names and contact details. Format the document appropriately with sections and formatting.
-`;
+    You are a shipping documentation expert. Create a Bill of Lading for the following vessel:
+    
+    Vessel Details:
+    - Name: ${vessel.name}
+    - IMO Number: ${vessel.imo}
+    - MMSI: ${vessel.mmsi}
+    - Type: ${vessel.vesselType}
+    - Flag: ${vessel.flag || 'Unknown'}
+    
+    Include these sections:
+    1. Shipper/Exporter
+    2. Consignee
+    3. Vessel and Voyage Information
+    4. Port of Loading
+    5. Port of Discharge
+    6. Description of Goods
+    7. Container Numbers
+    8. Weight and Measurements
+    9. Freight and Charges
+    10. Signatures
+    
+    Format as a formal document with appropriate headers and layouts.
+    `;
   }
 
   private getCertificateOfOriginPrompt(vessel: Vessel): string {
     return `
-Generate a realistic Certificate of Origin document for cargo carried by the following vessel:
-- Vessel Name: ${vessel.name}
-- IMO: ${vessel.imo}
-- Vessel Type: ${vessel.vesselType}
-- Departure Port: ${vessel.departurePort || 'Unknown'} (Country of Origin)
-- Destination Port: ${vessel.destinationPort || 'Unknown'} (Country of Destination)
-- Cargo Type: ${vessel.cargoType || 'Crude Oil'}
-
-Include appropriate fields for a Certificate of Origin including:
-- Exporter details
-- Consignee details
-- Country of origin
-- Country of destination
-- Transport details
-- Marks and numbers
-- Description of goods
-- HS tariff classification number
-- Origin criterion
-- Declaration by the exporter
-- Certification by the issuing authority
-- Date of issue
-
-Respond with a JSON object containing:
-1. "title": The title of the document
-2. "content": The formatted Certificate of Origin text content
-
-Use realistic but fictional company names and authorities. Format the document appropriately with sections and formatting.
-`;
+    You are a shipping documentation expert. Create a Certificate of Origin for cargo carried by the following vessel:
+    
+    Vessel Details:
+    - Name: ${vessel.name}
+    - IMO Number: ${vessel.imo}
+    - MMSI: ${vessel.mmsi}
+    - Type: ${vessel.vesselType}
+    - Flag: ${vessel.flag || 'Unknown'}
+    
+    Include these sections:
+    1. Exporter (Seller)
+    2. Consignee
+    3. Country of Origin
+    4. Transport Details
+    5. Description of Goods
+    6. HS Tariff Classification
+    7. Certifying Statements
+    8. Authorized Signature and Date
+    
+    Format as a formal certificate with appropriate headers, official language, and layout.
+    `;
   }
 
   private getInspectionReportPrompt(vessel: Vessel): string {
     return `
-Generate a realistic Vessel Inspection Report for the following vessel:
-- Vessel Name: ${vessel.name}
-- IMO: ${vessel.imo}
-- MMSI: ${vessel.mmsi}
-- Flag: ${vessel.flag}
-- Vessel Type: ${vessel.vesselType}
-- Built: ${vessel.built || 'Unknown'}
-
-Include appropriate fields for a Vessel Inspection Report including:
-- Inspection details (date, location, inspector)
-- Vessel particulars
-- Hull condition assessment
-- Machinery condition assessment
-- Safety equipment assessment
-- Navigation equipment assessment
-- Crew and documentation review
-- Compliance with international regulations
-- Deficiencies identified
-- Recommendations
-- Overall rating
-- Follow-up requirements
-- Signature and stamp sections
-
-Respond with a JSON object containing:
-1. "title": The title of the document
-2. "content": The formatted Inspection Report text content
-
-Make it detailed and technical in nature, including a mix of satisfactory items and several minor deficiencies that need addressing. Format the document appropriately with sections and formatting.
-`;
+    You are a maritime safety inspector. Create a detailed vessel inspection report for:
+    
+    Vessel Details:
+    - Name: ${vessel.name}
+    - IMO Number: ${vessel.imo}
+    - MMSI: ${vessel.mmsi}
+    - Type: ${vessel.vesselType}
+    - Flag: ${vessel.flag || 'Unknown'}
+    - Built: ${vessel.built || 'Unknown'}
+    - Deadweight: ${vessel.deadweight?.toLocaleString() || 'Unknown'} tons
+    
+    Include these sections:
+    1. Inspection Information (date, location, inspector)
+    2. Vessel Particulars
+    3. Safety Equipment Assessment
+    4. Structural Condition
+    5. Machinery and Propulsion
+    6. Navigation Equipment
+    7. Pollution Prevention
+    8. Crew Certification and Manning
+    9. Deficiencies (if any)
+    10. Conclusions and Recommendations
+    
+    Format as a detailed technical report with appropriate headers and sections.
+    `;
   }
 
   private getCustomsDeclarationPrompt(vessel: Vessel): string {
     return `
-Generate a realistic Customs Declaration document for cargo carried by the following vessel:
-- Vessel Name: ${vessel.name}
-- IMO: ${vessel.imo}
-- Voyage Number: (generate a realistic voyage number)
-- Vessel Type: ${vessel.vesselType}
-- Departure Port: ${vessel.departurePort || 'Unknown'}
-- Destination Port: ${vessel.destinationPort || 'Unknown'}
-- Cargo Type: ${vessel.cargoType || 'Crude Oil'}
-- Cargo Capacity: ${vessel.cargoCapacity || 'Unknown'} tons
-
-Include appropriate fields for a Customs Declaration including:
-- Declarant information
-- Importer/Exporter details
-- Transport information
-- Cargo manifest summary
-- Commodity codes
-- Country of origin
-- Value of goods
-- Duties and taxes
-- Customs broker information
-- Declaration statements
-- Date and signature fields
-
-Respond with a JSON object containing:
-1. "title": The title of the document
-2. "content": The formatted Customs Declaration text content
-
-Use realistic but fictional company names and details. Include appropriate commodity codes and duty calculations. Format the document appropriately with sections and formatting.
-`;
+    You are a customs documentation specialist. Create a customs declaration for cargo carried by:
+    
+    Vessel Details:
+    - Name: ${vessel.name}
+    - IMO Number: ${vessel.imo}
+    - MMSI: ${vessel.mmsi}
+    - Type: ${vessel.vesselType}
+    - Flag: ${vessel.flag || 'Unknown'}
+    
+    Include these sections:
+    1. Declarant Information
+    2. Vessel and Voyage Details
+    3. Port of Entry
+    4. Date of Arrival
+    5. Cargo Manifest Summary
+    6. Goods Classification (HS Codes)
+    7. Value of Goods
+    8. Country of Origin
+    9. Duties and Taxes
+    10. Declaration Statement
+    
+    Format as an official customs document with appropriate headers and layouts.
+    `;
   }
 
   private getGenericDocumentPrompt(vessel: Vessel, documentType: string): string {
     return `
-Generate a realistic ${documentType} document for the following vessel:
-- Vessel Name: ${vessel.name}
-- IMO: ${vessel.imo}
-- MMSI: ${vessel.mmsi}
-- Flag: ${vessel.flag}
-- Vessel Type: ${vessel.vesselType}
-- Departure Port: ${vessel.departurePort || 'Unknown'}
-- Destination Port: ${vessel.destinationPort || 'Unknown'}
-- Cargo Type: ${vessel.cargoType || 'Crude Oil'}
-
-Create a comprehensive and realistic ${documentType} that would typically be used in maritime shipping.
-Include all relevant sections, fields, and information that would normally appear in such a document.
-Use appropriate maritime terminology and formatting.
-
-Respond with a JSON object containing:
-1. "title": The title of the document
-2. "content": The formatted document text content
-
-Use realistic but fictional details where needed, and format the document appropriately with sections and formatting.
-`;
+    You are a maritime documentation specialist. Create a ${documentType} document for:
+    
+    Vessel Details:
+    - Name: ${vessel.name}
+    - IMO Number: ${vessel.imo}
+    - MMSI: ${vessel.mmsi}
+    - Type: ${vessel.vesselType}
+    - Flag: ${vessel.flag || 'Unknown'}
+    - Built: ${vessel.built || 'Unknown'}
+    - Deadweight: ${vessel.deadweight?.toLocaleString() || 'Unknown'} tons
+    
+    Create a professionally formatted ${documentType} with all necessary sections, details, and language
+    appropriate for this type of maritime document. Include relevant dates, locations, and regulatory references.
+    
+    Format as a formal document with appropriate structure and official language.
+    `;
   }
 }
 

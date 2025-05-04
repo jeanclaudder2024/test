@@ -1,9 +1,31 @@
 import { Router, Request, Response } from 'express';
+import { z } from 'zod';
+import { fromZodError } from 'zod-validation-error';
 import { openaiService } from '../services/openaiService';
 import { storage } from '../storage';
-import { Document, RefineryPortConnection, insertDocumentSchema } from '@shared/schema';
 
 export const aiRouter = Router();
+
+// Validation schema for port description generation request
+const portDescriptionRequestSchema = z.object({
+  portId: z.number().int().positive()
+});
+
+// Validation schema for refinery description generation request
+const refineryDescriptionRequestSchema = z.object({
+  refineryId: z.number().int().positive()
+});
+
+// Validation schema for vessel document generation request
+const documentGenerationRequestSchema = z.object({
+  vesselId: z.number().int().positive(),
+  documentType: z.string().min(3)
+});
+
+// Validation schema for route optimization request
+const routeOptimizationRequestSchema = z.object({
+  vesselId: z.number().int().positive()
+});
 
 /**
  * @route POST /api/ai/generate-port-description
@@ -12,35 +34,44 @@ export const aiRouter = Router();
  */
 aiRouter.post('/generate-port-description', async (req: Request, res: Response) => {
   try {
-    const { portId } = req.body;
+    // Validate request
+    const validationResult = portDescriptionRequestSchema.safeParse(req.body);
     
-    if (!portId) {
-      return res.status(400).json({ error: 'Port ID is required' });
+    if (!validationResult.success) {
+      const errorMessage = fromZodError(validationResult.error).message;
+      return res.status(400).json({ 
+        success: false, 
+        error: errorMessage 
+      });
     }
     
-    // Get port data
-    const port = await storage.getPortById(Number(portId));
+    const { portId } = validationResult.data;
+    
+    // Get port from database
+    const port = await storage.getPortById(portId);
     
     if (!port) {
-      return res.status(404).json({ error: 'Port not found' });
+      return res.status(404).json({ 
+        success: false, 
+        error: `Port with ID ${portId} not found` 
+      });
     }
     
-    // Generate description using OpenAI
+    // Generate description
     const description = await openaiService.generatePortDescription(port);
     
-    // Update port with new description
-    const updatedPort = await storage.updatePort(port.id, { 
-      description 
-    });
-    
-    res.json({ 
-      success: true, 
-      port: updatedPort,
-      description 
+    // Return success response
+    return res.json({
+      success: true,
+      portId,
+      description
     });
   } catch (error) {
     console.error('Error generating port description:', error);
-    res.status(500).json({ error: 'Failed to generate port description' });
+    return res.status(500).json({ 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error occurred' 
+    });
   }
 });
 
@@ -51,35 +82,44 @@ aiRouter.post('/generate-port-description', async (req: Request, res: Response) 
  */
 aiRouter.post('/generate-refinery-description', async (req: Request, res: Response) => {
   try {
-    const { refineryId } = req.body;
+    // Validate request
+    const validationResult = refineryDescriptionRequestSchema.safeParse(req.body);
     
-    if (!refineryId) {
-      return res.status(400).json({ error: 'Refinery ID is required' });
+    if (!validationResult.success) {
+      const errorMessage = fromZodError(validationResult.error).message;
+      return res.status(400).json({ 
+        success: false, 
+        error: errorMessage 
+      });
     }
     
-    // Get refinery data
-    const refinery = await storage.getRefineryById(Number(refineryId));
+    const { refineryId } = validationResult.data;
+    
+    // Get refinery from database
+    const refinery = await storage.getRefineryById(refineryId);
     
     if (!refinery) {
-      return res.status(404).json({ error: 'Refinery not found' });
+      return res.status(404).json({ 
+        success: false, 
+        error: `Refinery with ID ${refineryId} not found` 
+      });
     }
     
-    // Generate description using OpenAI
+    // Generate description
     const description = await openaiService.generateRefineryDescription(refinery);
     
-    // Update refinery with new description
-    const updatedRefinery = await storage.updateRefinery(refinery.id, { 
-      description 
-    });
-    
-    res.json({ 
-      success: true, 
-      refinery: updatedRefinery,
-      description 
+    // Return success response
+    return res.json({
+      success: true,
+      refineryId,
+      description
     });
   } catch (error) {
     console.error('Error generating refinery description:', error);
-    res.status(500).json({ error: 'Failed to generate refinery description' });
+    return res.status(500).json({ 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error occurred' 
+    });
   }
 });
 
@@ -90,53 +130,56 @@ aiRouter.post('/generate-refinery-description', async (req: Request, res: Respon
  */
 aiRouter.post('/generate-document', async (req: Request, res: Response) => {
   try {
-    const { vesselId, documentType } = req.body;
+    // Validate request
+    const validationResult = documentGenerationRequestSchema.safeParse(req.body);
     
-    if (!vesselId) {
-      return res.status(400).json({ error: 'Vessel ID is required' });
+    if (!validationResult.success) {
+      const errorMessage = fromZodError(validationResult.error).message;
+      return res.status(400).json({ 
+        success: false, 
+        error: errorMessage 
+      });
     }
     
-    if (!documentType) {
-      return res.status(400).json({ error: 'Document type is required' });
-    }
+    const { vesselId, documentType } = validationResult.data;
     
-    // Get vessel data
-    const vessel = await storage.getVesselById(Number(vesselId));
+    // Get vessel from database
+    const vessel = await storage.getVesselById(vesselId);
     
     if (!vessel) {
-      return res.status(404).json({ error: 'Vessel not found' });
+      return res.status(404).json({ 
+        success: false, 
+        error: `Vessel with ID ${vesselId} not found` 
+      });
     }
     
-    // Generate document using OpenAI
-    const { title, content } = await openaiService.generateShippingDocument(vessel, documentType);
+    // Generate document
+    const document = await openaiService.generateShippingDocument(vessel, documentType);
     
-    // Create document in database
-    const documentData = insertDocumentSchema.parse({
-      vesselId: vessel.id,
-      title,
-      content,
-      type: documentType,
-      status: 'active',
-      issuedDate: new Date(),
-      expiryDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days expiry
-      issuer: 'AI Generated',
-      fileUrl: null,
-      metadata: JSON.stringify({
-        generated: true,
-        generationDate: new Date().toISOString(),
-        model: 'gpt-4o'
-      })
+    // Store the document in the database
+    const newDocument = await storage.createDocument({
+      vesselId,
+      title: document.title,
+      content: document.content,
+      type: documentType,  // in our schema, it's 'type' not 'documentType'
+      status: 'generated',
+      createdAt: new Date(),
+      lastUpdated: new Date()
     });
     
-    const document = await storage.createDocument(documentData);
-    
-    res.json({ 
-      success: true, 
+    // Return success response
+    return res.json({
+      success: true,
+      vesselId,
+      documentId: newDocument.id,
       document
     });
   } catch (error) {
     console.error('Error generating document:', error);
-    res.status(500).json({ error: 'Failed to generate document' });
+    return res.status(500).json({ 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error occurred' 
+    });
   }
 });
 
@@ -147,31 +190,44 @@ aiRouter.post('/generate-document', async (req: Request, res: Response) => {
  */
 aiRouter.post('/route-optimization', async (req: Request, res: Response) => {
   try {
-    const { vesselId } = req.body;
+    // Validate request
+    const validationResult = routeOptimizationRequestSchema.safeParse(req.body);
     
-    if (!vesselId) {
-      return res.status(400).json({ error: 'Vessel ID is required' });
+    if (!validationResult.success) {
+      const errorMessage = fromZodError(validationResult.error).message;
+      return res.status(400).json({ 
+        success: false, 
+        error: errorMessage 
+      });
     }
     
-    // Get vessel data
-    const vessel = await storage.getVesselById(Number(vesselId));
+    const { vesselId } = validationResult.data;
+    
+    // Get vessel from database
+    const vessel = await storage.getVesselById(vesselId);
     
     if (!vessel) {
-      return res.status(404).json({ error: 'Vessel not found' });
+      return res.status(404).json({ 
+        success: false, 
+        error: `Vessel with ID ${vesselId} not found` 
+      });
     }
     
-    // Generate route optimization using OpenAI
+    // Generate route optimization
     const optimization = await openaiService.generateRouteOptimization(vessel);
     
-    res.json({ 
-      success: true, 
-      vesselId: vessel.id,
-      vesselName: vessel.name,
+    // Return success response
+    return res.json({
+      success: true,
+      vesselId,
       optimization
     });
   } catch (error) {
     console.error('Error generating route optimization:', error);
-    res.status(500).json({ error: 'Failed to generate route optimization' });
+    return res.status(500).json({ 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error occurred' 
+    });
   }
 });
 
@@ -182,46 +238,82 @@ aiRouter.post('/route-optimization', async (req: Request, res: Response) => {
  */
 aiRouter.post('/generate-all-port-descriptions', async (req: Request, res: Response) => {
   try {
-    const { region } = req.body;
+    // Get all ports from database
+    const ports = await storage.getPorts();
     
-    // Get all ports, optionally filtering by region
-    const ports = region 
-      ? await storage.getPortsByRegion(region)
-      : await storage.getPorts();
+    // Track progress
+    const results = {
+      total: ports.length,
+      success: 0,
+      failed: 0,
+      skipped: 0
+    };
     
-    // Filter ports that don't have descriptions
+    // Only process ports without descriptions
     const portsWithoutDescriptions = ports.filter(port => !port.description);
     
+    // If all ports have descriptions, return success
     if (portsWithoutDescriptions.length === 0) {
       return res.json({
         success: true,
         message: 'All ports already have descriptions',
-        portsUpdated: 0,
-        totalPorts: ports.length
+        results: {
+          ...results,
+          skipped: ports.length
+        }
       });
     }
     
-    // Limit to first 5 ports to avoid long-running requests
-    const portsToUpdate = portsWithoutDescriptions.slice(0, 5);
+    // Process ports in batches to avoid rate limiting
+    const batchSize = 5;
+    const batches = Math.ceil(portsWithoutDescriptions.length / batchSize);
     
-    // Generate and update descriptions
-    const updatePromises = portsToUpdate.map(async (port) => {
-      const description = await openaiService.generatePortDescription(port);
-      return storage.updatePort(port.id, { description });
-    });
+    // Track failed ports
+    const failedPorts: { id: number; name: string; error: string }[] = [];
     
-    const updatedPorts = await Promise.all(updatePromises);
+    // Process ports in batches
+    for (let i = 0; i < batches; i++) {
+      const batchStart = i * batchSize;
+      const batchEnd = Math.min(batchStart + batchSize, portsWithoutDescriptions.length);
+      const batch = portsWithoutDescriptions.slice(batchStart, batchEnd);
+      
+      console.log(`Processing port batch ${i + 1}/${batches} (${batch.length} ports)`);
+      
+      // Generate descriptions for batch
+      const batchPromises = batch.map(async (port) => {
+        try {
+          await openaiService.generatePortDescription(port);
+          results.success++;
+          return { success: true, port };
+        } catch (error) {
+          results.failed++;
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          failedPorts.push({ id: port.id, name: port.name, error: errorMessage });
+          return { success: false, port, error: errorMessage };
+        }
+      });
+      
+      await Promise.all(batchPromises);
+      
+      // Add a small delay between batches to avoid rate limiting
+      if (i < batches - 1) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+    }
     
-    res.json({
+    // Return success response
+    return res.json({
       success: true,
-      portsUpdated: updatedPorts.length,
-      totalPorts: ports.length,
-      remainingPorts: portsWithoutDescriptions.length - updatedPorts.length,
-      updatedPorts
+      message: `Generated descriptions for ${results.success} ports`,
+      results,
+      failedPorts: failedPorts.length > 0 ? failedPorts : undefined
     });
   } catch (error) {
     console.error('Error generating port descriptions:', error);
-    res.status(500).json({ error: 'Failed to generate port descriptions' });
+    return res.status(500).json({ 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error occurred' 
+    });
   }
 });
 
@@ -232,45 +324,81 @@ aiRouter.post('/generate-all-port-descriptions', async (req: Request, res: Respo
  */
 aiRouter.post('/generate-all-refinery-descriptions', async (req: Request, res: Response) => {
   try {
-    const { region } = req.body;
+    // Get all refineries from database
+    const refineries = await storage.getRefineries();
     
-    // Get all refineries, optionally filtering by region
-    const refineries = region 
-      ? await storage.getRefineryByRegion(region)
-      : await storage.getRefineries();
+    // Track progress
+    const results = {
+      total: refineries.length,
+      success: 0,
+      failed: 0,
+      skipped: 0
+    };
     
-    // Filter refineries that don't have descriptions
+    // Only process refineries without descriptions
     const refineriesWithoutDescriptions = refineries.filter(refinery => !refinery.description);
     
+    // If all refineries have descriptions, return success
     if (refineriesWithoutDescriptions.length === 0) {
       return res.json({
         success: true,
         message: 'All refineries already have descriptions',
-        refineriesUpdated: 0,
-        totalRefineries: refineries.length
+        results: {
+          ...results,
+          skipped: refineries.length
+        }
       });
     }
     
-    // Limit to first 5 refineries to avoid long-running requests
-    const refineriesToUpdate = refineriesWithoutDescriptions.slice(0, 5);
+    // Process refineries in batches to avoid rate limiting
+    const batchSize = 5;
+    const batches = Math.ceil(refineriesWithoutDescriptions.length / batchSize);
     
-    // Generate and update descriptions
-    const updatePromises = refineriesToUpdate.map(async (refinery) => {
-      const description = await openaiService.generateRefineryDescription(refinery);
-      return storage.updateRefinery(refinery.id, { description });
-    });
+    // Track failed refineries
+    const failedRefineries: { id: number; name: string; error: string }[] = [];
     
-    const updatedRefineries = await Promise.all(updatePromises);
+    // Process refineries in batches
+    for (let i = 0; i < batches; i++) {
+      const batchStart = i * batchSize;
+      const batchEnd = Math.min(batchStart + batchSize, refineriesWithoutDescriptions.length);
+      const batch = refineriesWithoutDescriptions.slice(batchStart, batchEnd);
+      
+      console.log(`Processing refinery batch ${i + 1}/${batches} (${batch.length} refineries)`);
+      
+      // Generate descriptions for batch
+      const batchPromises = batch.map(async (refinery) => {
+        try {
+          await openaiService.generateRefineryDescription(refinery);
+          results.success++;
+          return { success: true, refinery };
+        } catch (error) {
+          results.failed++;
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          failedRefineries.push({ id: refinery.id, name: refinery.name, error: errorMessage });
+          return { success: false, refinery, error: errorMessage };
+        }
+      });
+      
+      await Promise.all(batchPromises);
+      
+      // Add a small delay between batches to avoid rate limiting
+      if (i < batches - 1) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+    }
     
-    res.json({
+    // Return success response
+    return res.json({
       success: true,
-      refineriesUpdated: updatedRefineries.length,
-      totalRefineries: refineries.length,
-      remainingRefineries: refineriesWithoutDescriptions.length - updatedRefineries.length,
-      updatedRefineries
+      message: `Generated descriptions for ${results.success} refineries`,
+      results,
+      failedRefineries: failedRefineries.length > 0 ? failedRefineries : undefined
     });
   } catch (error) {
     console.error('Error generating refinery descriptions:', error);
-    res.status(500).json({ error: 'Failed to generate refinery descriptions' });
+    return res.status(500).json({ 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error occurred' 
+    });
   }
 });

@@ -39,7 +39,7 @@ export function AIGenerationPanel({
       
       const response = await apiRequest(endpoint, {
         method: 'POST',
-        data: { [paramName]: entityId }
+        body: JSON.stringify({ [paramName]: entityId })
       });
 
       if (response.success) {
