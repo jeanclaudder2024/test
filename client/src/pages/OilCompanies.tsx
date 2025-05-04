@@ -41,14 +41,14 @@ export default function OilCompanies() {
   const [view, setView] = useState("grid");
 
   // Fetch oil companies data
-  const { data: oilCompanies, isLoading, isError } = useQuery({
+  const { data: oilCompanies, isLoading, isError } = useQuery<OilCompany[]>({
     queryKey: ["/api/oil-companies"],
-    retry: 1,
+    retry: 3,
   });
 
   // Filter companies based on search term and region
   const filteredCompanies = React.useMemo(() => {
-    if (!oilCompanies) return [];
+    if (!oilCompanies || !Array.isArray(oilCompanies)) return [];
 
     return oilCompanies.filter((company: OilCompany) => {
       const matchesSearch = company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

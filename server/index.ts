@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { checkDatabaseConnection } from "./db";
 
 const app = express();
 app.use(express.json());
@@ -37,14 +38,40 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Check database connection first
+  const dbConnected = await checkDatabaseConnection();
+  if (!dbConnected) {
+    log('Warning: Could not establish database connection. Some features may not work properly.');
+  } else {
+    log('Database connection established successfully.');
+  }
+
   const server = await registerRoutes(app);
 
+  // Add endpoint to check database status
+  app.get('/api/status/database', async (req: Request, res: Response) => {
+    try {
+      const isConnected = await checkDatabaseConnection();
+      res.json({
+        status: isConnected ? 'connected' : 'disconnected',
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        status: 'error',
+        message: 'Failed to check database connection',
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
+  // Error handler
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
     res.status(status).json({ message });
-    throw err;
+    console.error('Server error:', err);
   });
 
   // importantly only setup vite in development and after
