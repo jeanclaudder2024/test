@@ -2021,7 +2021,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Handle specific request types
         if (data.type === 'request_vessels') {
           // Check if request is for all vessels
-          if (data.allVessels) {
+          if (data.allVessels === true) {
             ws.sendAllVessels = true;
             console.log('Client requested all vessels at once');
           } else {
@@ -2034,6 +2034,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               ws.pageSize = parseInt(data.pageSize) || 500;
             }
           }
+          console.log(`WebSocket request configuration: sendAllVessels=${ws.sendAllVessels}, page=${ws.page}, pageSize=${ws.pageSize}`);
           sendVesselData(ws);
         } else if (data.type === 'subscribe_region' && data.region) {
           // Store the region subscription on the websocket client
@@ -2070,9 +2071,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (ws.readyState !== WebSocket.OPEN) return;
       
       // Check if we should send all vessels at once (no pagination)
-      const sendAllVessels = ws.sendAllVessels || false;
+      const sendAllVessels = ws.sendAllVessels === true;
       const page = ws.page || 1;
       const pageSize = sendAllVessels ? 10000 : (ws.pageSize || 500); // Large pageSize effectively removes pagination
+      
+      console.log(`sendVesselData called with sendAllVessels=${sendAllVessels}`); // Debug log
       
       let vessels: Vessel[] = [];
       
