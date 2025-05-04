@@ -1,246 +1,265 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Spinner } from "@/components/ui/spinner";
-import { Badge } from "@/components/ui/badge";
-import { OilCompany } from "@shared/schema";
-import { useToast } from "@/hooks/use-toast";
+import { Building2, Search, Globe, Building, Globe2 } from "lucide-react";
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow
+} from "@/components/ui/table";
 import { PageHeader } from "@/components/ui/page-header";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { useLanguage } from "@/hooks/use-language";
+import { apiRequest } from "@/lib/queryClient";
 import { REGIONS } from "@shared/constants";
-import { BuildingIcon, MapIcon, ShipIcon, Filter, Globe2Icon } from "lucide-react";
 
-export function OilCompanies() {
-  const { toast } = useToast();
-  const [region, setRegion] = useState<string>('all');
-  const [searchTerm, setSearchTerm] = useState<string>('');
+type OilCompany = {
+  id: number;
+  name: string;
+  country: string;
+  region: string;
+  fleetSize: number | null;
+  foundedYear: number | null;
+  headquarters: string | null;
+  ceo: string | null;
+  revenue: string | null;
+  specialization: string | null;
+  website: string | null;
+  description: string | null;
+  majorRoutes: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
 
-  // Fetch all oil companies
-  const { data: oilCompanies, isLoading, error } = useQuery({
-    queryKey: ['/api/oil-companies'],
-    enabled: true,
+export default function OilCompanies() {
+  const { t } = useLanguage();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedRegion, setSelectedRegion] = useState("all");
+  const [view, setView] = useState("grid");
+
+  // Fetch oil companies data
+  const { data: oilCompanies, isLoading, isError } = useQuery({
+    queryKey: ["/api/oil-companies"],
+    retry: 1,
   });
 
-  // Filter oil companies based on selected region and search term
+  // Filter companies based on search term and region
   const filteredCompanies = React.useMemo(() => {
     if (!oilCompanies) return [];
-    
-    let filtered = [...oilCompanies];
-    
-    // Filter by region
-    if (region && region !== 'all') {
-      filtered = filtered.filter(company => company.region === region);
-    }
-    
-    // Filter by search term
-    if (searchTerm) {
-      const search = searchTerm.toLowerCase();
-      filtered = filtered.filter(
-        company => 
-          company.name.toLowerCase().includes(search) ||
-          company.country.toLowerCase().includes(search) ||
-          (company.specialization && company.specialization.toLowerCase().includes(search))
-      );
-    }
-    
-    return filtered;
-  }, [oilCompanies, region, searchTerm]);
 
-  // Handle region change
-  const handleRegionChange = (value: string) => {
-    setRegion(value);
+    return oilCompanies.filter((company: OilCompany) => {
+      const matchesSearch = company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        company.country.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (company.description && company.description.toLowerCase().includes(searchTerm.toLowerCase()));
+      
+      const matchesRegion = selectedRegion === "all" || company.region === selectedRegion;
+      
+      return matchesSearch && matchesRegion;
+    });
+  }, [oilCompanies, searchTerm, selectedRegion]);
+
+  // Handler for seed button
+  const handleSeedData = async () => {
+    try {
+      const response = await apiRequest("/api/oil-companies/seed", {
+        method: "POST",
+      });
+      console.log("Seed response:", response);
+      // Refresh the data after seeding
+      window.location.reload();
+    } catch (error) {
+      console.error("Error seeding oil company data:", error);
+    }
   };
 
-  // Handle search term change
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-  };
-
-  if (error) {
+  if (isLoading) {
     return (
-      <div className="container mx-auto p-4">
-        <PageHeader
-          title="Oil Companies"
-          description="View and manage oil shipping companies"
-          icon={<BuildingIcon className="w-10 h-10" />}
-        />
-        <div className="bg-destructive/20 border border-destructive text-destructive p-4 rounded-md mt-4">
-          <p>Error loading oil companies: {(error as Error).message}</p>
-          <Button 
-            variant="outline" 
-            className="mt-2"
-            onClick={() => window.location.reload()}
-          >
-            Retry
-          </Button>
-        </div>
+      <div className="flex items-center justify-center h-96">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center h-96 gap-4">
+        <h2 className="text-xl font-semibold">Error loading oil companies</h2>
+        <p className="text-muted-foreground">
+          There was an error loading the oil companies data. Please try again later.
+        </p>
+        <Button onClick={handleSeedData} variant="default">
+          Seed Oil Company Data
+        </Button>
+      </div>
+    );
+  }
+
+  if (!oilCompanies || oilCompanies.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-96 gap-4">
+        <h2 className="text-xl font-semibold">No oil companies found</h2>
+        <p className="text-muted-foreground">
+          No oil companies are currently in the database. Click the button below to seed some sample data.
+        </p>
+        <Button onClick={handleSeedData} variant="default">
+          Seed Oil Company Data
+        </Button>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto py-6 space-y-6">
       <PageHeader
         title="Oil Companies"
-        description="View and manage oil shipping companies across different regions"
-        icon={<BuildingIcon className="w-10 h-10" />}
+        description="View and manage global oil shipping companies"
+        actions={
+          <div className="flex space-x-2">
+            <Button onClick={handleSeedData} variant="outline" size="sm">
+              <Building className="mr-2 h-4 w-4" />
+              Seed Data
+            </Button>
+          </div>
+        }
       />
 
-      <div className="flex flex-col md:flex-row gap-4 mb-6 mt-4">
-        <div className="flex-1">
+      <div className="flex flex-col sm:flex-row gap-4 justify-between">
+        <div className="relative flex-1">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search by name, country, or specialization..."
+            type="search"
+            placeholder="Search by name, country or description..."
+            className="pl-8"
             value={searchTerm}
-            onChange={handleSearchChange}
-            className="w-full"
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <div className="w-full md:w-64">
-          <Select value={region} onValueChange={handleRegionChange}>
-            <SelectTrigger>
-              <SelectValue placeholder="Filter by region" />
+        <div className="flex gap-2">
+          <Select
+            value={selectedRegion}
+            onValueChange={setSelectedRegion}
+          >
+            <SelectTrigger className="w-44">
+              <SelectValue placeholder="All Regions" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">
-                <div className="flex items-center gap-2">
-                  <Globe2Icon className="h-4 w-4" />
-                  <span>All Regions</span>
-                </div>
-              </SelectItem>
-              {REGIONS.map((regionOption) => (
-                <SelectItem key={regionOption} value={regionOption}>
-                  {regionOption}
-                </SelectItem>
+              <SelectItem value="all">All Regions</SelectItem>
+              {REGIONS.map(region => (
+                <SelectItem key={region} value={region}>{region}</SelectItem>
               ))}
             </SelectContent>
           </Select>
+          <div className="flex border rounded-md overflow-hidden">
+            <Button
+              variant={view === "grid" ? "default" : "ghost"}
+              className="rounded-none px-3"
+              onClick={() => setView("grid")}
+            >
+              <Building2 className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={view === "table" ? "default" : "ghost"}
+              className="rounded-none px-3"
+              onClick={() => setView("table")}
+            >
+              <Building className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
 
-      {isLoading ? (
-        <div className="flex justify-center items-center h-64">
-          <Spinner size="lg" />
-          <p className="ml-2">Loading oil companies...</p>
-        </div>
-      ) : filteredCompanies.length === 0 ? (
-        <div className="bg-muted/50 border rounded-lg p-8 text-center">
-          <BuildingIcon className="mx-auto h-12 w-12 text-muted-foreground/80" />
-          <h3 className="mt-4 text-lg font-medium">No oil companies found</h3>
-          <p className="mt-2 text-muted-foreground">
-            {searchTerm || region !== 'all' 
-              ? "Try adjusting your filters or search term" 
-              : "There are no oil companies in the system yet"}
+      <div className="space-y-6">
+        {filteredCompanies.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-48 gap-2">
+            <p className="text-muted-foreground">No oil companies match your search criteria.</p>
+          </div>
+        ) : view === "grid" ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredCompanies.map((company: OilCompany) => (
+              <Card key={company.id} className="overflow-hidden">
+                <CardHeader className="pb-2">
+                  <div className="flex justify-between items-start">
+                    <CardTitle className="text-xl truncate">{company.name}</CardTitle>
+                    <Badge variant="outline">{company.region}</Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-1">
+                    <div className="text-sm text-muted-foreground">{company.country}</div>
+                    <div className="flex items-center gap-2">
+                      <Globe className="h-4 w-4 text-primary" />
+                      <span>{company.headquarters || company.country}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    {company.foundedYear && (
+                      <div>
+                        <span className="text-muted-foreground block">Founded</span>
+                        <span>{company.foundedYear}</span>
+                      </div>
+                    )}
+                    {company.fleetSize && (
+                      <div>
+                        <span className="text-muted-foreground block">Fleet Size</span>
+                        <span>{company.fleetSize} vessels</span>
+                      </div>
+                    )}
+                    {company.specialization && (
+                      <div className="col-span-2">
+                        <span className="text-muted-foreground block">Specialization</span>
+                        <span>{company.specialization}</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {company.description && (
+                    <div className="pt-2">
+                      <p className="text-sm text-muted-foreground line-clamp-3">{company.description}</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="border rounded-md">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Country</TableHead>
+                  <TableHead>Region</TableHead>
+                  <TableHead>Fleet Size</TableHead>
+                  <TableHead>Founded</TableHead>
+                  <TableHead>Specialization</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredCompanies.map((company: OilCompany) => (
+                  <TableRow key={company.id}>
+                    <TableCell className="font-medium">{company.name}</TableCell>
+                    <TableCell>{company.country}</TableCell>
+                    <TableCell>{company.region}</TableCell>
+                    <TableCell>{company.fleetSize || 'N/A'}</TableCell>
+                    <TableCell>{company.foundedYear || 'N/A'}</TableCell>
+                    <TableCell className="max-w-xs truncate">{company.specialization || 'N/A'}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+        
+        <div className="flex justify-between items-center">
+          <p className="text-sm text-muted-foreground">
+            Showing {filteredCompanies.length} of {oilCompanies.length} oil companies
           </p>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCompanies.map((company) => (
-            <OilCompanyCard key={company.id} company={company} />
-          ))}
-        </div>
-      )}
+      </div>
     </div>
   );
 }
-
-interface OilCompanyCardProps {
-  company: OilCompany;
-}
-
-function OilCompanyCard({ company }: OilCompanyCardProps) {
-  return (
-    <Card className="overflow-hidden h-full flex flex-col">
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-start">
-          <CardTitle className="text-lg">{company.name}</CardTitle>
-          <Badge variant="outline">{company.region}</Badge>
-        </div>
-        <CardDescription className="flex items-center gap-2">
-          <MapIcon className="h-4 w-4" />
-          {company.country}
-          {company.headquarters && ` • ${company.headquarters}`}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="flex-1">
-        <Tabs defaultValue="details" className="w-full">
-          <TabsList className="w-full">
-            <TabsTrigger value="details" className="flex-1">Details</TabsTrigger>
-            <TabsTrigger value="fleet" className="flex-1">Fleet</TabsTrigger>
-          </TabsList>
-          <TabsContent value="details" className="pt-4">
-            <dl className="grid grid-cols-1 gap-2 text-sm">
-              {company.foundedYear && (
-                <div className="flex flex-col">
-                  <dt className="text-muted-foreground">Founded</dt>
-                  <dd>{company.foundedYear}</dd>
-                </div>
-              )}
-              {company.ceo && (
-                <div className="flex flex-col">
-                  <dt className="text-muted-foreground">CEO</dt>
-                  <dd>{company.ceo}</dd>
-                </div>
-              )}
-              {company.revenue && (
-                <div className="flex flex-col">
-                  <dt className="text-muted-foreground">Revenue</dt>
-                  <dd>{company.revenue}</dd>
-                </div>
-              )}
-              {company.specialization && (
-                <div className="flex flex-col">
-                  <dt className="text-muted-foreground">Specialization</dt>
-                  <dd>{company.specialization}</dd>
-                </div>
-              )}
-              {company.website && (
-                <div className="flex flex-col">
-                  <dt className="text-muted-foreground">Website</dt>
-                  <dd>
-                    <a 
-                      href={company.website.startsWith('http') ? company.website : `https://${company.website}`} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-primary hover:underline"
-                    >
-                      {company.website}
-                    </a>
-                  </dd>
-                </div>
-              )}
-            </dl>
-            {company.description && (
-              <div className="mt-4 text-sm">
-                <p>{company.description}</p>
-              </div>
-            )}
-          </TabsContent>
-          <TabsContent value="fleet" className="pt-4">
-            <div className="flex items-center gap-2 mb-3">
-              <ShipIcon className="h-5 w-5 text-primary" />
-              <span className="font-medium">Fleet Size: {company.fleetSize || 'Unknown'}</span>
-            </div>
-            {company.majorRoutes ? (
-              <div className="text-sm">
-                <p className="text-muted-foreground mb-1">Major Routes:</p>
-                <p>{company.majorRoutes}</p>
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">No major routes information available</p>
-            )}
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-      <CardFooter className="border-t bg-muted/50 pt-4">
-        <div className="w-full flex justify-end">
-          <Button variant="outline" size="sm">View Details</Button>
-        </div>
-      </CardFooter>
-    </Card>
-  );
-}
-
-export default OilCompanies;
