@@ -388,16 +388,40 @@ export default function LiveVesselMap({ initialRegion, height = '600px' }: LiveV
                   >
                     <Popup>
                       <div className="text-sm">
-                        <p className="font-bold">{vessel.name}</p>
-                        <p>IMO: {vessel.imo}</p>
-                        <p>Type: {vessel.vesselType}</p>
-                        <p>Speed: {metadata.speed} knots</p>
+                        <div className="bg-blue-50 p-2 rounded-md mb-2 border-l-4 border-blue-500">
+                          <p className="font-bold text-base text-blue-700">{vessel.name}</p>
+                          <p className="text-xs text-blue-600">{vessel.vesselType.toUpperCase()}</p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-1 text-xs mb-2">
+                          <div className="font-semibold">IMO:</div>
+                          <div>{vessel.imo}</div>
+                          
+                          <div className="font-semibold">MMSI:</div>
+                          <div>{vessel.mmsi}</div>
+                          
+                          <div className="font-semibold">Flag:</div>
+                          <div>{vessel.flag}</div>
+                          
+                          <div className="font-semibold">Speed:</div>
+                          <div>{metadata.speed} knots</div>
+                          
+                          {vessel.cargoType && (
+                            <>
+                              <div className="font-semibold">Cargo:</div>
+                              <div>{vessel.cargoType}</div>
+                            </>
+                          )}
+                        </div>
                         <Button 
-                          variant="link" 
-                          className="p-0 h-auto text-xs"
-                          onClick={() => setSelectedVessel(vessel)}
+                          className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs py-1"
+                          onClick={() => {
+                            setSelectedVessel(vessel);
+                            setSelectedRefinery(null);
+                            setSelectedPort(null);
+                          }}
                         >
-                          View Details
+                          <Ship className="h-3 w-3 mr-1" />
+                          Show Details
                         </Button>
                       </div>
                     </Popup>
@@ -432,11 +456,37 @@ export default function LiveVesselMap({ initialRegion, height = '600px' }: LiveV
                   >
                     <Popup>
                       <div className="text-sm">
-                        <p className="font-bold">{refinery.name}</p>
-                        <p>Country: {refinery.country}</p>
-                        <p>Region: {refinery.region}</p>
-                        {refinery.capacity && <p>Capacity: {refinery.capacity.toLocaleString()} bpd</p>}
-                        {refinery.status && <p>Status: {refinery.status}</p>}
+                        <div className="bg-red-50 p-2 rounded-md mb-2 border-l-4 border-red-500">
+                          <p className="font-bold text-base text-red-700">{refinery.name}</p>
+                          <p className="text-xs text-red-600">{refinery.region.toUpperCase()} REGION</p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-1 text-xs mb-2">
+                          <div className="font-semibold">Country:</div>
+                          <div>{refinery.country}</div>
+                          {refinery.capacity && (
+                            <>
+                              <div className="font-semibold">Capacity:</div>
+                              <div>{refinery.capacity.toLocaleString()} bpd</div>
+                            </>
+                          )}
+                          {refinery.status && (
+                            <>
+                              <div className="font-semibold">Status:</div>
+                              <div className="capitalize">{refinery.status}</div>
+                            </>
+                          )}
+                        </div>
+                        <Button 
+                          className="w-full bg-red-600 hover:bg-red-700 text-white text-xs py-1"
+                          onClick={() => {
+                            setSelectedRefinery(refinery);
+                            setSelectedVessel(null);
+                            setSelectedPort(null);
+                          }}
+                        >
+                          <Factory className="h-3 w-3 mr-1" />
+                          Show Details
+                        </Button>
                       </div>
                     </Popup>
                   </Marker>
@@ -470,11 +520,37 @@ export default function LiveVesselMap({ initialRegion, height = '600px' }: LiveV
                   >
                     <Popup>
                       <div className="text-sm">
-                        <p className="font-bold">{port.name}</p>
-                        <p>Country: {port.country}</p>
-                        <p>Region: {port.region}</p>
-                        {port.capacity && <p>Capacity: {port.capacity.toLocaleString()} tons/year</p>}
-                        {port.description && <p>{port.description}</p>}
+                        <div className="bg-blue-50 p-2 rounded-md mb-2 border-l-4 border-blue-500">
+                          <p className="font-bold text-base text-blue-700">{port.name}</p>
+                          <p className="text-xs text-blue-600">{port.region.toUpperCase()} REGION</p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-1 text-xs mb-2">
+                          <div className="font-semibold">Country:</div>
+                          <div>{port.country}</div>
+                          {port.capacity && (
+                            <>
+                              <div className="font-semibold">Capacity:</div>
+                              <div>{port.capacity.toLocaleString()} tons/year</div>
+                            </>
+                          )}
+                          {port.type && (
+                            <>
+                              <div className="font-semibold">Type:</div>
+                              <div className="capitalize">{port.type.replace('_', ' ')}</div>
+                            </>
+                          )}
+                        </div>
+                        <Button 
+                          className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs py-1"
+                          onClick={() => {
+                            setSelectedPort(port);
+                            setSelectedVessel(null);
+                            setSelectedRefinery(null);
+                          }}
+                        >
+                          <Anchor className="h-3 w-3 mr-1" />
+                          Show Details
+                        </Button>
                       </div>
                     </Popup>
                   </Marker>
@@ -658,9 +734,12 @@ export default function LiveVesselMap({ initialRegion, height = '600px' }: LiveV
             /* Refinery Details */
             <Card>
               <CardContent className="pt-6">
-                <div className="flex justify-between items-center mb-2">
-                  <h3 className="text-xl font-bold">{selectedRefinery.name}</h3>
-                  <Badge className="bg-red-100 text-red-800 border-red-200">Refinery</Badge>
+                <div className="bg-red-50 p-3 rounded-md mb-4 border-l-4 border-red-500 flex justify-between items-center">
+                  <div>
+                    <h3 className="text-xl font-bold text-red-800">{selectedRefinery.name}</h3>
+                    <p className="text-sm text-red-600">{selectedRefinery.region.toUpperCase()} REGION</p>
+                  </div>
+                  <Badge className="bg-red-100 text-red-800 border-red-200 text-sm">Refinery</Badge>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-y-2 text-sm mb-4">
@@ -760,9 +839,12 @@ export default function LiveVesselMap({ initialRegion, height = '600px' }: LiveV
             /* Port Details */
             <Card>
               <CardContent className="pt-6">
-                <div className="flex justify-between items-center mb-2">
-                  <h3 className="text-xl font-bold">{selectedPort.name}</h3>
-                  <Badge className="bg-blue-100 text-blue-800 border-blue-200">Port</Badge>
+                <div className="bg-blue-50 p-3 rounded-md mb-4 border-l-4 border-blue-500 flex justify-between items-center">
+                  <div>
+                    <h3 className="text-xl font-bold text-blue-800">{selectedPort.name}</h3>
+                    <p className="text-sm text-blue-600">{selectedPort.region.toUpperCase()} REGION</p>
+                  </div>
+                  <Badge className="bg-blue-100 text-blue-800 border-blue-200 text-sm">Port</Badge>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-y-2 text-sm mb-4">
