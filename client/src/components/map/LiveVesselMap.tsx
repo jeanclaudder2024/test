@@ -303,6 +303,54 @@ function MapUpdate({ vessels }: MapUpdateProps) {
   return null;
 }
 
+// Component to ensure all maritime entities are visible
+interface MaritimeEntitiesProps {
+  vessels: Vessel[];
+  ports: Port[];
+  refineries: Refinery[];
+}
+
+function ForceMapUpdate({ vessels, ports, refineries }: MaritimeEntitiesProps) {
+  const map = useMap();
+  const [updateCounter, setUpdateCounter] = useState(0);
+  
+  // Force periodic map updates to ensure entities render correctly
+  useEffect(() => {
+    if (map) {
+      // Initial validation
+      console.log(`ForceMapUpdate initialized: vessels=${vessels.length}, refineries=${refineries.length}, ports=${ports.length}`);
+      
+      // Schedule multiple updates at different intervals
+      const timers = [
+        setTimeout(() => {
+          map.invalidateSize();
+          setUpdateCounter(c => c + 1);
+        }, 500),
+        setTimeout(() => {
+          map.invalidateSize();
+          setUpdateCounter(c => c + 1);
+        }, 1500),
+        setTimeout(() => {
+          map.invalidateSize();
+          map.eachLayer((layer: any) => {
+            if (typeof layer.redraw === 'function') {
+              layer.redraw();
+            }
+          });
+          setUpdateCounter(c => c + 1);
+        }, 3000)
+      ];
+      
+      // Cleanup function
+      return () => {
+        timers.forEach(timer => clearTimeout(timer));
+      };
+    }
+  }, [vessels, ports, refineries, map]);
+  
+  return null;
+}
+
 interface LiveVesselMapProps {
   initialRegion?: string;
   height?: string;
@@ -516,8 +564,34 @@ export default function LiveVesselMap({
               </div>
             )}
             
-            {/* Add a MapEvents component to handle fitWorld */}
+            {/* Add a MapEvents component to handle fitWorld and ensure map is fully initialized */}
             <MapEvents />
+            
+            {/* Add dedicated force-update component to ensure markers render */}
+            <ForceMapUpdate vessels={vessels} ports={ports} refineries={refineries} />
+            
+            {/* Manually render some large marker icons to ensure visibility */}
+            {vessels.slice(0, 3).map((vessel, index) => {
+              if (vessel.currentLat && vessel.currentLng) {
+                const lat = parseFloat(vessel.currentLat);
+                const lng = parseFloat(vessel.currentLng);
+                if (!isNaN(lat) && !isNaN(lng)) {
+                  return (
+                    <Marker
+                      key={`manual-marker-${index}`}
+                      position={[lat, lng]}
+                      icon={L.divIcon({
+                        className: 'always-visible-icon',
+                        html: `<div style="background-color: red; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.5);"></div>`,
+                        iconSize: [30, 30],
+                        iconAnchor: [15, 15]
+                      })}
+                    />
+                  );
+                }
+              }
+              return null;
+            })}
             
             {/* Floating Map Control Panel with hover to expand */}
             <MapControl position="topright" className="floating-map-control">
