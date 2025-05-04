@@ -4,7 +4,7 @@ import { insertOilCompanySchema } from "@shared/schema";
 import { ZodError } from "zod";
 import { eq } from "drizzle-orm";
 import { formatZodError } from "../utils/errorFormatters";
-import { oilCompanyService } from "../services/oilCompanyService";
+import * as oilCompanyService from "../services/oilCompanyService";
 
 const router = express.Router();
 
@@ -13,16 +13,15 @@ router.get("/", async (req: Request, res: Response) => {
   try {
     // Parse query parameters
     const region = req.query.region as string | undefined;
-    const country = req.query.country as string | undefined;
     
     // Return filtered oil companies if query params exist
     if (region) {
-      const oilCompanies = await storage.getOilCompaniesByRegion(region);
+      const oilCompanies = await oilCompanyService.getOilCompaniesByRegion(region);
       return res.json(oilCompanies);
     }
     
     // Return all oil companies if no filters
-    const oilCompanies = await storage.getOilCompanies();
+    const oilCompanies = await oilCompanyService.getAllOilCompanies();
     res.json(oilCompanies);
   } catch (error) {
     console.error("Error fetching oil companies:", error);
@@ -39,7 +38,7 @@ router.get("/:id", async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Invalid ID format" });
     }
     
-    const oilCompany = await storage.getOilCompanyById(id);
+    const oilCompany = await oilCompanyService.getOilCompanyById(id);
     
     if (!oilCompany) {
       return res.status(404).json({ message: "Oil company not found" });
@@ -157,7 +156,7 @@ router.post("/seed", async (req: Request, res: Response) => {
         seeded: result.seeded
       }
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error seeding oil companies:", error);
     res.status(500).json({ 
       success: false, 

@@ -48,7 +48,7 @@ import { refineryPortRouter } from "./routes/refineryPortRoutes";
 import { aiRouter } from "./routes/aiRoutes";
 import { oilCompanyRouter } from "./routes/oilCompanyRoutes";
 import { seedBrokers } from "./services/seedService";
-import { oilCompanyService } from "./services/oilCompanyService";
+import * as oilCompanyService from "./services/oilCompanyService";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication
