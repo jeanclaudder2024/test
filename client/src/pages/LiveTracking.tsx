@@ -340,264 +340,48 @@ export default function LiveTracking() {
         </Card>
       </div>
       
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-        <TabsList className="mb-4 w-full justify-start">
-          <TabsTrigger value="map" className="flex items-center gap-1">
-            <MapPin className="h-4 w-4" />
-            Interactive Map
-          </TabsTrigger>
-          <TabsTrigger value="list" className="flex items-center gap-1">
-            <List className="h-4 w-4" />
-            Vessel List
-          </TabsTrigger>
-          <TabsTrigger value="analytics" className="flex items-center gap-1">
-            <BarChart className="h-4 w-4" />
-            Analytics
-          </TabsTrigger>
-          <TabsTrigger value="alerts" className="flex items-center gap-1">
-            <AlertTriangle className="h-4 w-4" />
-            Alerts
-          </TabsTrigger>
-          <TabsTrigger value="settings" className="flex items-center gap-1">
-            <Settings className="h-4 w-4" />
-            Settings
-          </TabsTrigger>
-        </TabsList>
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold flex items-center gap-2 mb-2">
+          <MapPin className="h-5 w-5 text-primary" /> 
+          Interactive Vessel Map
+        </h2>
         
-        <TabsContent value="map">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="md:col-span-3">
-              <Card className="border-none shadow-lg">
-                <CardHeader className="pb-3 bg-card rounded-t-lg">
-                  <CardTitle className="flex items-center gap-2">
-                    <MapPin className="h-5 w-5 text-primary" />
-                    Advanced Maritime Intelligence Map
-                  </CardTitle>
-                  <CardDescription>
-                    Real-time vessel tracking with route prediction and integrated analytics
-                  </CardDescription>
-                  
-                  {totalCount > 0 && (
-                    <div className="mt-2">
-                      <div className="text-sm text-muted-foreground">
-                        Displaying all {totalCount.toLocaleString()} vessels with active routes and connections
-                      </div>
-                    </div>
-                  )}
-                </CardHeader>
-                <CardContent className="p-0">
-                  <LiveVesselMap 
-                    initialRegion={selectedRegion} 
-                    height="700px" 
-                    showRoutes={showRoutes}
-                    showVesselHistory={showVesselHistory}
-                    showHeatmap={showHeatmap}
-                    mapStyle={mapStyle}
-                  />
-                </CardContent>
-                <CardFooter className="bg-muted/40 p-2 text-xs text-muted-foreground">
-                  <div className="flex justify-between w-full">
-                    <span>Zoom: Use mouse wheel or pinch gesture | Pan: Click and drag</span>
-                    <span>Click on vessels for detailed information and tracking options</span>
-                  </div>
-                </CardFooter>
-              </Card>
-            </div>
+        <Card className="border-none shadow-lg">
+          <CardHeader className="pb-3 bg-card rounded-t-lg">
+            <CardTitle className="flex items-center gap-2">
+              <MapPin className="h-5 w-5 text-primary" />
+              Advanced Maritime Intelligence Map
+            </CardTitle>
+            <CardDescription>
+              Real-time vessel tracking with route prediction
+            </CardDescription>
             
-            <div className="h-[calc(700px+4rem)]">
-              <Card className="h-full border-none shadow-lg">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Info className="h-4 w-4 text-primary" />
-                    Vessel Details
-                  </CardTitle>
-                  <CardDescription className="text-xs">
-                    Select a vessel on the map to view details
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="p-3">
-                  <ScrollArea className="h-[calc(700px-8rem)] pr-3">
-                    <div className="text-sm space-y-4">
-                      <div className="bg-blue-50 p-3 rounded-md border border-blue-100">
-                        <h3 className="font-bold text-blue-800 mb-1">Selected Vessel</h3>
-                        <p className="text-blue-600 text-xs mb-3">Click on any vessel on the map to see its details</p>
-                        <div className="grid grid-cols-2 gap-y-2 gap-x-3 text-xs">
-                          <div className="font-semibold text-slate-700">Name:</div>
-                          <div className="text-slate-900">-</div>
-                          <div className="font-semibold text-slate-700">Type:</div>
-                          <div className="text-slate-900">-</div>
-                          <div className="font-semibold text-slate-700">IMO:</div>
-                          <div className="text-slate-900">-</div>
-                          <div className="font-semibold text-slate-700">MMSI:</div>
-                          <div className="text-slate-900">-</div>
-                        </div>
-                      </div>
-                      
-                      <div className="bg-slate-50 p-3 rounded-md border border-slate-100">
-                        <h3 className="font-bold text-slate-800 mb-1">Current Voyage</h3>
-                        <div className="grid grid-cols-2 gap-y-2 gap-x-3 text-xs">
-                          <div className="font-semibold text-slate-700">From:</div>
-                          <div className="text-slate-900">-</div>
-                          <div className="font-semibold text-slate-700">To:</div>
-                          <div className="text-slate-900">-</div>
-                          <div className="font-semibold text-slate-700">Departure:</div>
-                          <div className="text-slate-900">-</div>
-                          <div className="font-semibold text-slate-700">ETA:</div>
-                          <div className="text-slate-900">-</div>
-                          <div className="font-semibold text-slate-700">Cargo:</div>
-                          <div className="text-slate-900">-</div>
-                        </div>
-                      </div>
-                      
-                      <div className="bg-green-50 p-3 rounded-md border border-green-100">
-                        <h3 className="font-bold text-green-800 mb-1">Current Position</h3>
-                        <div className="grid grid-cols-2 gap-y-2 gap-x-3 text-xs">
-                          <div className="font-semibold text-slate-700">Latitude:</div>
-                          <div className="text-slate-900">-</div>
-                          <div className="font-semibold text-slate-700">Longitude:</div>
-                          <div className="text-slate-900">-</div>
-                          <div className="font-semibold text-slate-700">Speed:</div>
-                          <div className="text-slate-900">-</div>
-                          <div className="font-semibold text-slate-700">Course:</div>
-                          <div className="text-slate-900">-</div>
-                          <div className="font-semibold text-slate-700">Status:</div>
-                          <div className="text-slate-900">-</div>
-                          <div className="font-semibold text-slate-700">Last Updated:</div>
-                          <div className="text-slate-900">-</div>
-                        </div>
-                      </div>
-                      
-                      <div className="bg-amber-50 p-3 rounded-md border border-amber-100">
-                        <h3 className="font-bold text-amber-800 mb-1">Vessel Specifications</h3>
-                        <div className="grid grid-cols-2 gap-y-2 gap-x-3 text-xs">
-                          <div className="font-semibold text-slate-700">Flag:</div>
-                          <div className="text-slate-900">-</div>
-                          <div className="font-semibold text-slate-700">Built:</div>
-                          <div className="text-slate-900">-</div>
-                          <div className="font-semibold text-slate-700">Deadweight:</div>
-                          <div className="text-slate-900">-</div>
-                          <div className="font-semibold text-slate-700">Length:</div>
-                          <div className="text-slate-900">-</div>
-                          <div className="font-semibold text-slate-700">Beam:</div>
-                          <div className="text-slate-900">-</div>
-                          <div className="font-semibold text-slate-700">Draught:</div>
-                          <div className="text-slate-900">-</div>
-                        </div>
-                      </div>
-                    </div>
-                  </ScrollArea>
-                </CardContent>
-                <CardFooter className="bg-muted/40 p-2 flex justify-center">
-                  <Button size="sm" variant="outline" className="w-full" disabled>
-                    <Ship className="h-3 w-3 mr-1" />
-                    No Vessel Selected
-                  </Button>
-                </CardFooter>
-              </Card>
+            {totalCount > 0 && (
+              <div className="mt-2">
+                <div className="text-sm text-muted-foreground">
+                  Displaying all {totalCount.toLocaleString()} vessels with active routes and connections
+                </div>
+              </div>
+            )}
+          </CardHeader>
+          <CardContent className="p-0">
+            <LiveVesselMap 
+              initialRegion={selectedRegion} 
+              height="700px" 
+              showRoutes={showRoutes}
+              showVesselHistory={showVesselHistory}
+              showHeatmap={showHeatmap}
+              mapStyle={mapStyle}
+            />
+          </CardContent>
+          <CardFooter className="bg-muted/40 p-2 text-xs text-muted-foreground">
+            <div className="flex justify-between w-full">
+              <span>Zoom: Use mouse wheel or pinch gesture | Pan: Click and drag</span>
+              <span>Click on vessels for detailed information</span>
             </div>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="list">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle>Vessel Fleet Overview</CardTitle>
-              <CardDescription>
-                Comprehensive list of vessels with filtering and sorting capabilities
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="bg-muted rounded-lg p-8 text-center">
-                <Ship className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <p className="mb-4">Vessel list view is being enhanced with advanced filtering and data export capabilities.</p>
-                <Button 
-                  variant="default" 
-                  className="mt-2"
-                  onClick={() => setActiveTab('map')}
-                >
-                  <MapPin className="h-4 w-4 mr-2" />
-                  Return to Map View
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="analytics">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle>Maritime Traffic Analytics</CardTitle>
-              <CardDescription>
-                Advanced analytics and insights from vessel movement patterns
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="bg-muted rounded-lg p-8 text-center">
-                <BarChart className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <p className="mb-4">Analytics dashboard is under development with traffic pattern analysis and predictive insights.</p>
-                <Button 
-                  variant="default" 
-                  className="mt-2"
-                  onClick={() => setActiveTab('map')}
-                >
-                  <MapPin className="h-4 w-4 mr-2" />
-                  Return to Map View
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="alerts">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle>Maritime Alerts & Notifications</CardTitle>
-              <CardDescription>
-                Set up custom alerts for vessel movements and events
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="bg-muted rounded-lg p-8 text-center">
-                <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <p className="mb-4">Alert system is being configured to notify users of important maritime events and vessel status changes.</p>
-                <Button 
-                  variant="default" 
-                  className="mt-2"
-                  onClick={() => setActiveTab('map')}
-                >
-                  <MapPin className="h-4 w-4 mr-2" />
-                  Return to Map View
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="settings">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle>Platform Settings</CardTitle>
-              <CardDescription>
-                Configure your maritime intelligence experience
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="bg-muted rounded-lg p-8 text-center">
-                <Settings className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <p className="mb-4">Settings panel is being developed with user preferences, data refresh rates, and notification options.</p>
-                <Button 
-                  variant="default" 
-                  className="mt-2"
-                  onClick={() => setActiveTab('map')}
-                >
-                  <MapPin className="h-4 w-4 mr-2" />
-                  Return to Map View
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+          </CardFooter>
+        </Card>
+      </div>
     </div>
   );
 }
