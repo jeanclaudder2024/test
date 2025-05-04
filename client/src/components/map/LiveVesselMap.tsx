@@ -609,10 +609,10 @@ export default function LiveVesselMap({ initialRegion, height = '600px' }: LiveV
               const curvedMidLng = midLng + lngOffset;
               
               // Create positions array with the midpoint
-              const positions = [
-                [refineryLat, refineryLng],
-                [curvedMidLat, curvedMidLng],
-                [portLat, portLng]
+              const positions: L.LatLngExpression[] = [
+                [refineryLat, refineryLng] as L.LatLngTuple,
+                [curvedMidLat, curvedMidLng] as L.LatLngTuple,
+                [portLat, portLng] as L.LatLngTuple
               ];
               
               return (
@@ -852,10 +852,10 @@ export default function LiveVesselMap({ initialRegion, height = '600px' }: LiveV
                   <div>
                     {typeof selectedRefinery.lat === 'string' 
                       ? parseFloat(selectedRefinery.lat).toFixed(4) 
-                      : selectedRefinery.lat.toFixed(4)}, 
+                      : (selectedRefinery.lat ?? 0).toFixed(4)}, 
                     {typeof selectedRefinery.lng === 'string'
                       ? parseFloat(selectedRefinery.lng).toFixed(4)
-                      : selectedRefinery.lng.toFixed(4)}
+                      : (selectedRefinery.lng ?? 0).toFixed(4)}
                   </div>
                 </div>
                 
@@ -948,10 +948,10 @@ export default function LiveVesselMap({ initialRegion, height = '600px' }: LiveV
                   <div>
                     {typeof selectedPort.lat === 'string' 
                       ? parseFloat(selectedPort.lat).toFixed(4) 
-                      : selectedPort.lat.toFixed(4)}, 
+                      : (selectedPort.lat ?? 0).toFixed(4)}, 
                     {typeof selectedPort.lng === 'string'
                       ? parseFloat(selectedPort.lng).toFixed(4)
-                      : selectedPort.lng.toFixed(4)}
+                      : (selectedPort.lng ?? 0).toFixed(4)}
                   </div>
                 </div>
                 
