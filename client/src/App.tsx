@@ -50,12 +50,14 @@ function Router() {
     seedData();
   }, []);
 
-  // For landing page and auth page, don't use MainLayout (no sidebar/header)
-  if (location === "/" || location === "/auth") {
+  // For landing page, auth pages, login and signup pages, don't use MainLayout (no sidebar/header)
+  if (location === "/" || location === "/auth" || location === "/login" || location === "/signup") {
     return (
       <Switch>
         <Route path="/" component={LandingPage} />
         <Route path="/auth" component={AuthPage} />
+        <Route path="/login" component={LoginPage} />
+        <Route path="/signup" component={SignupPage} />
       </Switch>
     );
   }
@@ -89,12 +91,14 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <LanguageProvider>
-          <Router />
-          <Toaster />
-        </LanguageProvider>
-      </AuthProvider>
+      <ClerkProvider>
+        <AuthProvider>
+          <LanguageProvider>
+            <Router />
+            <Toaster />
+          </LanguageProvider>
+        </AuthProvider>
+      </ClerkProvider>
     </QueryClientProvider>
   );
 }

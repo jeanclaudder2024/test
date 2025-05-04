@@ -1,4 +1,4 @@
-import { ClerkProvider as BaseClerkProvider, dark } from '@clerk/clerk-react';
+import { ClerkProvider as BaseClerkProvider } from '@clerk/clerk-react';
 import { ReactNode } from 'react';
 
 // Get the publishable key from the environment
@@ -18,7 +18,6 @@ export function ClerkProvider({ children }: ClerkProviderProps) {
     <BaseClerkProvider 
       publishableKey={publishableKey}
       appearance={{
-        baseTheme: dark,
         elements: {
           formButtonPrimary: 'bg-blue-600 hover:bg-blue-700 text-white',
           card: 'bg-white shadow-none',

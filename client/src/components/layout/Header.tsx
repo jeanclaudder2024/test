@@ -7,6 +7,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { UserButton } from "@/components/auth/UserButton";
 import Sidebar from "./Sidebar";
 
 export default function Header() {
@@ -113,22 +114,8 @@ export default function Header() {
             <LanguageSwitcher variant="icon" />
           </div>
           
-          <div className="flex items-center">
-            <span className="mr-2 text-sm text-primary/80 font-medium hidden sm:inline">{t("action.logout")}</span>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-9 w-9 rounded-full bg-primary/10 hover:bg-primary/20 transition-colors"
-              onClick={handleLogout}
-              disabled={logoutMutation.isPending}
-            >
-              {logoutMutation.isPending ? (
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-              ) : (
-                <LogOut className="h-4 w-4 text-primary" />
-              )}
-            </Button>
-          </div>
+          {/* Clerk User Button */}
+          <UserButton />
         </div>
       </header>
     </>
