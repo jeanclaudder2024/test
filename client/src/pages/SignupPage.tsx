@@ -2,10 +2,10 @@ import { SignUp } from '@clerk/clerk-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'wouter';
+import { useLocation } from 'wouter';
 
 export default function SignupPage() {
-  const [, navigate] = useNavigate();
+  const [, setLocation] = useLocation();
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-blue-50 to-white p-4">
@@ -15,7 +15,7 @@ export default function SignupPage() {
             variant="ghost" 
             size="sm" 
             className="absolute left-2 top-2"
-            onClick={() => navigate('/')}
+            onClick={() => setLocation('/')}
           >
             <ArrowLeft className="h-4 w-4 mr-1" /> Back
           </Button>

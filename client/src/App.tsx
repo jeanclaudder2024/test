@@ -18,6 +18,8 @@ import Settings from "@/pages/Settings";
 import Subscribe from "@/pages/Subscribe";
 import LandingPage from "@/pages/LandingPage";
 import AuthPage from "@/pages/AuthPage";
+import LoginPage from "@/pages/LoginPage";
+import SignupPage from "@/pages/SignupPage";
 import TradingDashboard from "@/pages/TradingDashboard";
 import LiveTracking from "@/pages/LiveTracking";
 import ApiTest from "@/pages/ApiTest";
@@ -27,6 +29,7 @@ import MainLayout from "@/components/layout/MainLayout";
 import { AuthProvider } from "@/hooks/use-auth";
 import { LanguageProvider } from "@/hooks/use-language";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { ClerkProvider } from "@/context/ClerkProvider";
 
 function Router() {
   const [location] = useLocation();

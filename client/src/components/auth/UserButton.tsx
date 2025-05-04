@@ -6,11 +6,11 @@ import {
 } from '@clerk/clerk-react';
 import { Button } from '@/components/ui/button';
 import { LogIn } from 'lucide-react';
-import { useNavigate } from 'wouter';
+import { useLocation } from 'wouter';
 
 export function UserButton() {
   const { user, isLoaded } = useUser();
-  const [, navigate] = useNavigate();
+  const [, setLocation] = useLocation();
 
   return (
     <div className="flex items-center gap-2">
@@ -32,7 +32,7 @@ export function UserButton() {
       <SignedOut>
         <Button 
           size="sm" 
-          onClick={() => navigate('/login')}
+          onClick={() => setLocation('/login')}
           className="gap-2"
         >
           <LogIn className="h-4 w-4" />
