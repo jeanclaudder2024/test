@@ -248,8 +248,8 @@ function MapEvents() {
       setTimeout(() => {
         map.invalidateSize();
         // Force redraw of all layers to ensure visibility
-        map.eachLayer((layer) => {
-          if (layer.redraw) {
+        map.eachLayer((layer: any) => {
+          if (typeof layer.redraw === 'function') {
             layer.redraw();
           }
         });
@@ -459,9 +459,12 @@ export default function LiveVesselMap({
             zoom={mapZoom}
             style={{ height: '100%', width: '100%', background: '#1B262C' }}
             minZoom={2}
+            maxZoom={18} 
             maxBounds={[[-90, -180], [90, 180]]}
             maxBoundsViscosity={1.0}
             worldCopyJump={true}
+            preferCanvas={true} 
+            renderer={L.canvas({ padding: 0.5 })}
           >
             
             {/* Handle different map styles */}
