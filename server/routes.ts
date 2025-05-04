@@ -14,6 +14,12 @@ import { portService } from "./services/portService";
 import { setupAuth } from "./auth";
 import { db } from "./db";
 import { REGIONS } from "@shared/constants";
+import { 
+  getCachedVessels, 
+  setCachedVessels, 
+  getCachedVesselsByRegion, 
+  setCachedVesselsByRegion 
+} from "./utils/cacheManager";
 import { WebSocketServer, WebSocket } from "ws";
 import { 
   insertVesselSchema, 
@@ -2080,9 +2086,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let vessels: Vessel[] = [];
       
       try {
-        // First try to get vessels from database
-        vessels = await storage.getVessels();
-        console.log(`Retrieved ${vessels.length} vessels from database`);
+        // Check cached vessels first to improve performance
+        const cachedVessels = getCachedVessels();
+        
+        if (cachedVessels) {
+          // Use cached vessels if available
+          vessels = cachedVessels;
+          console.log(`Using cached vessels data (${vessels.length} vessels)`);
+        } else {
+          // Otherwise fetch from database and update cache
+          vessels = await storage.getVessels();
+          console.log(`Retrieved ${vessels.length} vessels from database`);
+          
+          // Cache the vessels for future requests
+          setCachedVessels(vessels);
+          console.log(`Cached ${vessels.length} vessels for future requests`);
+        }
       } catch (dbError) {
         console.log('Database error, fetching from API instead:', dbError);
         
@@ -2100,9 +2119,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Filter by region if the client has subscribed to a specific region
       if (ws.subscribedRegion && ws.subscribedRegion !== 'global') {
-        const beforeFilter = vessels.length;
-        vessels = vessels.filter(v => v.currentRegion === ws.subscribedRegion);
-        console.log(`Filtered vessels by region ${ws.subscribedRegion}: ${beforeFilter} → ${vessels.length}`);
+        // First check if we have cached vessels for this region
+        const regionCachedVessels = getCachedVesselsByRegion(ws.subscribedRegion);
+        
+        if (regionCachedVessels) {
+          // Use the cached region-specific vessels
+          vessels = regionCachedVessels;
+          console.log(`Using cached vessels for region ${ws.subscribedRegion} (${vessels.length} vessels)`);
+        } else {
+          // Filter and cache for future requests
+          const beforeFilter = vessels.length;
+          const filteredVessels = vessels.filter(v => v.currentRegion === ws.subscribedRegion);
+          
+          // Cache the filtered vessels
+          setCachedVesselsByRegion(ws.subscribedRegion, filteredVessels);
+          
+          vessels = filteredVessels;
+          console.log(`Filtered vessels by region ${ws.subscribedRegion}: ${beforeFilter} → ${vessels.length}`);
+        }
       }
       
       // Calculate pagination (even if we send all, we still include pagination info)

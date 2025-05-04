@@ -1,6 +1,48 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Vessel } from '@shared/schema';
 import axios from 'axios';
+
+// Client-side caching mechanism
+const vesselCache = {
+  global: null as Vessel[] | null,
+  regions: {} as Record<string, Vessel[] | null>,
+  lastUpdated: null as Date | null,
+  
+  // Cache expiry in milliseconds (5 minutes)
+  EXPIRY: 5 * 60 * 1000,
+  
+  setVessels(region: string, vessels: Vessel[]) {
+    if (region === 'global') {
+      this.global = vessels;
+    } else {
+      this.regions[region] = vessels;
+    }
+    this.lastUpdated = new Date();
+  },
+  
+  getVessels(region: string): Vessel[] | null {
+    // Return null if cache is expired
+    if (!this.lastUpdated || (new Date().getTime() - this.lastUpdated.getTime() > this.EXPIRY)) {
+      return null;
+    }
+    
+    if (region === 'global') {
+      return this.global;
+    }
+    
+    return this.regions[region] || null;
+  },
+  
+  isExpired(): boolean {
+    return !this.lastUpdated || (new Date().getTime() - this.lastUpdated.getTime() > this.EXPIRY);
+  },
+  
+  clear() {
+    this.global = null;
+    this.regions = {};
+    this.lastUpdated = null;
+  }
+};
 
 // Accept string for simple usage or object for advanced options
 type UseVesselWebSocketProps = string | {
@@ -143,6 +185,9 @@ export function useVesselWebSocket(props: UseVesselWebSocketProps = 'global') {
                     `${v.name}: (${v.currentLat}, ${v.currentLng})`).join(', ')
                 );
               }
+              
+              // Update cache with the new vessels
+              vesselCache.setVessels(region, message.vessels);
               
               setVessels(message.vessels);
               setLastUpdated(message.timestamp || new Date().toISOString());
