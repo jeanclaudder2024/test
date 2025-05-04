@@ -128,11 +128,11 @@ const vesselIcon = (heading: number = 0, speed: number = 0, vesselType: string =
 
 // Create custom refinery icon
 const refineryIcon = () => {
-  // Create an SVG factory icon
-  const size = 24;
+  // Create an SVG factory icon - increased size for better visibility
+  const size = 36;
   const svgIcon = `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="${size}" height="${size}">
-      <circle cx="12" cy="12" r="10" fill="#f44336" fill-opacity="0.8" stroke="#000" stroke-width="1"/>
+      <circle cx="12" cy="12" r="10" fill="#f44336" fill-opacity="0.9" stroke="#000" stroke-width="1.5"/>
       <path fill="#fff" d="M7 12h2v5H7v-5zm8 0h2v5h-2v-5zm-4-8h2v3h-2V4zm0 4h2v2h-2V8zm0 3h2v8h-2v-8z"/>
     </svg>
   `;
@@ -145,17 +145,19 @@ const refineryIcon = () => {
     iconUrl: dataUrl,
     iconSize: [size, size],
     iconAnchor: [size/2, size/2],
-    popupAnchor: [0, -size/2]
+    popupAnchor: [0, -size/2],
+    // Make sure icons remain visible at all zoom levels
+    className: 'always-visible-icon'
   });
 };
 
 // Create custom port icon
 const portIcon = () => {
-  // Create an SVG anchor icon
-  const size = 22;
+  // Create an SVG anchor icon - increased size for better visibility
+  const size = 34;
   const svgIcon = `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="${size}" height="${size}">
-      <circle cx="12" cy="12" r="10" fill="#2196f3" fill-opacity="0.8" stroke="#000" stroke-width="1"/>
+      <circle cx="12" cy="12" r="10" fill="#2196f3" fill-opacity="0.9" stroke="#000" stroke-width="1.5"/>
       <path fill="#fff" d="M16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8A4,4 0 0,1 16,12M13,4.26C13,4.1 12.9,4 12.74,4C12.59,4 12.5,4.1 12.5,4.26V6.34C12.16,6.42 11.84,6.54 11.53,6.69L9.93,5.83C9.78,5.76 9.66,5.81 9.58,5.94C9.5,6.08 9.53,6.24 9.67,6.34L11.29,7.23C10.87,7.58 10.5,8 10.23,8.5H8C7.86,8.5 7.75,8.61 7.75,8.76C7.75,8.91 7.86,9 8,9H10.07C10.03,9.17 10,9.33 10,9.5C10,9.67 10.03,9.83 10.07,10H8C7.86,10 7.75,10.1 7.75,10.24C7.75,10.38 7.86,10.5 8,10.5H10.23C10.5,10.99 10.87,11.42 11.29,11.77L9.67,12.66C9.53,12.76 9.5,12.92 9.58,13.06C9.66,13.19 9.78,13.24 9.93,13.17L11.53,12.31C11.84,12.46 12.16,12.58 12.5,12.66V14.74C12.5,14.9 12.59,15 12.74,15C12.89,15 13,14.9 13,14.74V12.67C13.33,12.58 13.64,12.46 13.94,12.31L15.57,13.17C15.7,13.25 15.82,13.2 15.9,13.07C15.97,12.94 15.96,12.77 15.82,12.67L14.21,11.77C14.63,11.42 15,10.99 15.26,10.5H17.5C17.64,10.5 17.75,10.4 17.75,10.26C17.75,10.11 17.64,10 17.5,10H15.42C15.46,9.83 15.5,9.67 15.5,9.5C15.5,9.33 15.46,9.17 15.42,9H17.5C17.64,9 17.75,8.9 17.75,8.74C17.75,8.59 17.64,8.5 17.5,8.5H15.26C15,8 14.63,7.58 14.21,7.23L15.82,6.34C15.96,6.24 15.97,6.07 15.9,5.94C15.82,5.81 15.7,5.76 15.57,5.83L13.94,6.69C13.64,6.54 13.33,6.42 13,6.34V4.26Z" />
     </svg>
   `;
@@ -168,7 +170,9 @@ const portIcon = () => {
     iconUrl: dataUrl,
     iconSize: [size, size],
     iconAnchor: [size/2, size/2],
-    popupAnchor: [0, -size/2]
+    popupAnchor: [0, -size/2],
+    // Make sure icons remain visible at all zoom levels
+    className: 'always-visible-icon'
   });
 };
 
@@ -240,11 +244,36 @@ function MapEvents() {
         map.invalidateSize();
       };
       
+      // Refresh map after initial load to ensure all elements are visible
+      setTimeout(() => {
+        map.invalidateSize();
+        // Force redraw of all layers to ensure visibility
+        map.eachLayer((layer) => {
+          if (layer.redraw) {
+            layer.redraw();
+          }
+        });
+      }, 500);
+      
+      // Handle zoom events to ensure markers stay visible at all zoom levels
+      map.on('zoomend', () => {
+        document.querySelectorAll('.always-visible-icon').forEach((el) => {
+          const element = el as HTMLElement;
+          // Adjust icon size based on zoom level if needed
+          if (map.getZoom() > 10) {
+            element.style.transform = 'scale(1.2)';
+          } else {
+            element.style.transform = 'scale(1)';
+          }
+        });
+      });
+      
       window.addEventListener('resize', handleResize);
       
       // Clean up
       return () => {
         window.removeEventListener('resize', handleResize);
+        map.off('zoomend');
       };
     }
   }, [map]);
@@ -753,9 +782,10 @@ export default function LiveVesselMap({
                 <MarkerClusterGroup
                   chunkedLoading={true}
                   showCoverageOnHover={false}
-                  maxClusterRadius={80}
-                  disableClusteringAtZoom={9}
-                  spiderfyOnMaxZoom={true}
+                  maxClusterRadius={60}
+                  disableClusteringAtZoom={7}  
+                  spiderfyOnMaxZoom={false}
+                  zoomToBoundsOnClick={true}
                   iconCreateFunction={(cluster: any) => {
                     const count = cluster.getChildCount();
                     let size = 40;
