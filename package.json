@@ -11,6 +11,10 @@
     "db:push": "drizzle-kit push"
   },
   "dependencies": {
+    "@clerk/clerk-js": "^5.63.5",
+    "@clerk/clerk-react": "^5.30.4",
+    "@clerk/nextjs": "^6.18.5",
+    "@clerk/types": "^4.56.3",
     "@hookform/resolvers": "^3.9.1",
     "@jridgewell/trace-mapping": "^0.3.25",
     "@maplibre/maplibre-gl-leaflet": "^0.1.0",

@@ -1,33 +1,29 @@
-import { useAuth } from "@/hooks/use-auth";
-import { Loader2 } from "lucide-react";
-import { Redirect, Route } from "wouter";
+import { useClerk, useUser } from '@clerk/clerk-react';
+import { Redirect, useLocation } from 'wouter';
+import { Loader2 } from 'lucide-react';
 
-export function ProtectedRoute({
-  path,
-  component: Component,
-}: {
-  path: string;
-  component: () => React.JSX.Element;
-}) {
-  const { user, isLoading } = useAuth();
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+}
 
-  if (isLoading) {
+export function ProtectedRoute({ children }: ProtectedRouteProps) {
+  const { isLoaded, isSignedIn } = useUser();
+  const { session } = useClerk();
+  const [, setLocation] = useLocation();
+
+  // Show loading spinner while Clerk is loading
+  if (!isLoaded) {
     return (
-      <Route path={path}>
-        <div className="flex items-center justify-center min-h-screen">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </Route>
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
     );
   }
 
-  if (!user) {
-    return (
-      <Route path={path}>
-        <Redirect to="/auth" />
-      </Route>
-    );
+  // If not signed in, redirect to login page
+  if (!isSignedIn) {
+    return <Redirect to="/login" />;
   }
 
-  return <Route path={path} component={Component} />;
+  return <>{children}</>;
 }
