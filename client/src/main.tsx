@@ -1,8 +1,6 @@
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
-// Import Bootstrap CSS
-import 'bootstrap/dist/css/bootstrap.min.css';
 
 // Add Leaflet CSS for maps
 const leafletCss = document.createElement("link");
@@ -14,7 +12,7 @@ document.head.appendChild(leafletCss);
 
 // Add page title
 const titleElement = document.createElement("title");
-titleElement.textContent = "Vesselian | Smart Fleet Management Platform";
+titleElement.textContent = "ShipBoat Tracking | Oil Vessel Monitoring Platform";
 document.head.appendChild(titleElement);
 
 // Add favicon
