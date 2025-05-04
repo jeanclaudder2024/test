@@ -209,13 +209,33 @@ refineryPortRouter.delete("/connections/:id", async (req: Request, res: Response
 // Connect all refineries to nearby ports
 refineryPortRouter.post("/connect-all", async (req: Request, res: Response) => {
   try {
+    // First clear all existing connections if requested
+    const clearExisting = req.query.clearExisting === 'true';
+    if (clearExisting) {
+      console.log("Clearing all existing refinery-port connections");
+      const allConnections = await storage.getRefineryPortConnections();
+      for (const conn of allConnections) {
+        await storage.deleteRefineryPortConnection(conn.id);
+      }
+      console.log(`Cleared ${allConnections.length} existing connections`);
+    }
+    
     // Get all refineries and ports
     const allRefineries = await storage.getRefineries();
     const allPorts = await storage.getPorts();
+    const allVessels = await storage.getVessels();
+    
+    console.log(`Retrieved ${allRefineries.length} refineries, ${allPorts.length} ports, and ${allVessels.length} vessels`);
     
     let connectionsMade = 0;
     const errors: string[] = [];
+    
+    // Get any existing connections that weren't cleared
     const existingConnections = await storage.getRefineryPortConnections();
+    
+    // Set a reasonable distance threshold (in kilometers)
+    // This determines which ports are considered "nearby" to a refinery
+    const DISTANCE_THRESHOLD = 15; // increased from 5 to 15 to find more ports
     
     // Iterate through each refinery
     for (const refinery of allRefineries) {
@@ -223,30 +243,109 @@ refineryPortRouter.post("/connect-all", async (req: Request, res: Response) => {
       const refineryLng = parseFloat(refinery.lng.toString());
       
       // Find ports in the same region
-      const sameContinentPorts = allPorts.filter(port => port.region === refinery.region);
+      const regionalPorts = allPorts.filter(port => port.region === refinery.region);
       
-      if (sameContinentPorts.length === 0) {
+      if (regionalPorts.length === 0) {
         errors.push(`No ports found in ${refinery.region} for refinery ${refinery.name}`);
         continue;
       }
       
-      // Find the closest port
-      let closestPort = sameContinentPorts[0];
-      let closestDistance = calculateDistance(
-        refineryLat, 
-        refineryLng,
-        parseFloat(closestPort.lat.toString()), 
-        parseFloat(closestPort.lng.toString())
-      );
+      // Find all ports within the distance threshold
+      const nearbyPorts = [];
+      let closestPort = null;
+      let closestDistance = Infinity;
       
-      for (let i = 1; i < sameContinentPorts.length; i++) {
-        const port = sameContinentPorts[i];
-        const distance = calculateDistance(
-          refineryLat, 
-          refineryLng,
-          parseFloat(port.lat.toString()), 
-          parseFloat(port.lng.toString())
+      for (const port of regionalPorts) {
+        try {
+          const portLat = parseFloat(port.lat.toString());
+          const portLng = parseFloat(port.lng.toString());
+          
+          const distance = calculateDistance(refineryLat, refineryLng, portLat, portLng);
+          
+          // Keep track of the closest port
+          if (distance < closestDistance) {
+            closestDistance = distance;
+            closestPort = port;
+          }
+          
+          // If port is within threshold, add it to nearby ports
+          if (distance <= DISTANCE_THRESHOLD) {
+            nearbyPorts.push({ port, distance });
+          }
+        } catch (error) {
+          console.error(`Error calculating distance for port ${port.name}:`, error);
+        }
+      }
+      
+      // If no nearby ports found within threshold, use the closest port
+      if (nearbyPorts.length === 0 && closestPort) {
+        nearbyPorts.push({ port: closestPort, distance: closestDistance });
+      }
+      
+      // Sort nearby ports by distance (closest first)
+      nearbyPorts.sort((a, b) => a.distance - b.distance);
+      
+      // Create connections for each nearby port
+      for (const { port, distance } of nearbyPorts) {
+        // Check if connection already exists
+        const existingConnection = existingConnections.find(
+          conn => conn.refineryId === refinery.id && conn.portId === port.id
         );
+        
+        if (existingConnection && !clearExisting) {
+          console.log(`Connection between refinery ${refinery.name} and port ${port.name} already exists`);
+          continue; // Skip if connection already exists and we're not clearing
+        }
+        
+        // Create new connection
+        try {
+          const capacity = refinery.capacity ? refinery.capacity * 0.8 : 100000;
+          
+          // Determine pipeline type based on distance
+          let connectionType = "pipeline";
+          if (distance > 10) {
+            connectionType = "shipping"; // For longer distances, assume shipping is used
+          }
+          
+          const newConnection: InsertRefineryPortConnection = {
+            refineryId: refinery.id,
+            portId: port.id,
+            distance: distance.toString(),
+            connectionType: connectionType,
+            capacity: capacity.toString(), // 80% of refinery capacity
+            status: "active",
+            lastUpdated: new Date().toISOString() // Add current timestamp
+          };
+          
+          await storage.createRefineryPortConnection(newConnection);
+          connectionsMade++;
+          console.log(`Created connection between refinery ${refinery.name} and port ${port.name} (${distance.toFixed(2)} km)`);
+        } catch (error) {
+          errors.push(`Error connecting refinery ${refinery.name} to port ${port.name}: ${error}`);
+        }
+      }
+    }
+    
+    // Now update vessel departure and destination ports based on their current position
+    console.log("Updating vessel port connections based on current positions...");
+    let vesselPortUpdates = 0;
+    
+    // Update vessel-to-port connections
+    for (const vessel of allVessels) {
+      if (!vessel.currentLat || !vessel.currentLng) continue;
+      
+      const vesselLat = parseFloat(vessel.currentLat);
+      const vesselLng = parseFloat(vessel.currentLng);
+      
+      // Find the nearest port to the vessel's current position
+      let closestPort = null;
+      let closestDistance = Infinity;
+      
+      for (const port of allPorts) {
+        const portLat = parseFloat(port.lat.toString());
+        const portLng = parseFloat(port.lng.toString());
+        
+        const distance = calculateDistance(vesselLat, vesselLng, portLat, portLng);
         
         if (distance < closestDistance) {
           closestDistance = distance;
@@ -254,32 +353,43 @@ refineryPortRouter.post("/connect-all", async (req: Request, res: Response) => {
         }
       }
       
-      // Check if connection already exists
-      const existingConnection = existingConnections.find(
-        conn => conn.refineryId === refinery.id && conn.portId === closestPort.id
-      );
-      
-      if (existingConnection) {
-        continue; // Skip if connection already exists
-      }
-      
-      // Create new connection
-      try {
-        const capacity = refinery.capacity ? refinery.capacity * 0.8 : 100000;
+      if (closestPort) {
+        // Update vessel with nearest port as destination if it's within a reasonable distance
+        const nearbyDistanceThreshold = 50; // 50 km is considered "nearby" for a vessel
         
-        const newConnection: InsertRefineryPortConnection = {
-          refineryId: refinery.id,
-          portId: closestPort.id,
-          distance: closestDistance.toString(),
-          connectionType: "pipeline",
-          capacity: capacity.toString(), // 80% of refinery capacity
-          status: "active"
-        };
-        
-        await storage.createRefineryPortConnection(newConnection);
-        connectionsMade++;
-      } catch (error) {
-        errors.push(`Error connecting refinery ${refinery.name} to port ${closestPort.name}: ${error}`);
+        try {
+          let needsUpdate = false;
+          const updates: Partial<InsertVessel> = {};
+          
+          // If vessel is near a port, use it as destination
+          if (closestDistance <= nearbyDistanceThreshold) {
+            if (vessel.destinationPort !== closestPort.name) {
+              updates.destinationPort = closestPort.name;
+              needsUpdate = true;
+            }
+          }
+          
+          // Find a sensible departure port (use port from same region if destination is set)
+          if (!vessel.departurePort) {
+            const departureRegion = vessel.region || (closestPort ? closestPort.region : null);
+            if (departureRegion) {
+              const possibleDeparturePorts = allPorts.filter(p => p.region === departureRegion && p.id !== closestPort?.id);
+              if (possibleDeparturePorts.length > 0) {
+                // Select a random port from the same region as departure
+                const randomPort = possibleDeparturePorts[Math.floor(Math.random() * possibleDeparturePorts.length)];
+                updates.departurePort = randomPort.name;
+                needsUpdate = true;
+              }
+            }
+          }
+          
+          if (needsUpdate) {
+            await storage.updateVessel(vessel.id, updates);
+            vesselPortUpdates++;
+          }
+        } catch (error) {
+          console.error(`Error updating vessel ${vessel.name} port connections:`, error);
+        }
       }
     }
     
@@ -287,11 +397,13 @@ refineryPortRouter.post("/connect-all", async (req: Request, res: Response) => {
       success: true,
       connectionsMade,
       totalRefineries: allRefineries.length,
+      vesselPortUpdates,
+      timestamp: new Date().toISOString(),
       errors: errors.length > 0 ? errors : undefined
     });
   } catch (error) {
     console.error("Error connecting refineries to ports:", error);
-    res.status(500).json({ error: "Failed to connect refineries to ports" });
+    res.status(500).json({ error: "Failed to connect refineries to ports", details: error.message });
   }
 });
 
