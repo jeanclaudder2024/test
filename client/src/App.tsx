@@ -18,8 +18,6 @@ import Settings from "@/pages/Settings";
 import Subscribe from "@/pages/Subscribe";
 import LandingPage from "@/pages/LandingPage";
 import AuthPage from "@/pages/AuthPage";
-import LoginPage from "@/pages/LoginPage";
-import SignupPage from "@/pages/SignupPage";
 import TradingDashboard from "@/pages/TradingDashboard";
 import LiveTracking from "@/pages/LiveTracking";
 import ApiTest from "@/pages/ApiTest";
@@ -29,7 +27,6 @@ import MainLayout from "@/components/layout/MainLayout";
 import { AuthProvider } from "@/hooks/use-auth";
 import { LanguageProvider } from "@/hooks/use-language";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-import { ClerkProvider } from "@/context/ClerkProvider";
 
 function Router() {
   const [location] = useLocation();
@@ -50,14 +47,12 @@ function Router() {
     seedData();
   }, []);
 
-  // For landing page, auth pages, login and signup pages, don't use MainLayout (no sidebar/header)
-  if (location === "/" || location === "/auth" || location === "/login" || location === "/signup") {
+  // For landing page and auth page, don't use MainLayout (no sidebar/header)
+  if (location === "/" || location === "/auth") {
     return (
       <Switch>
         <Route path="/" component={LandingPage} />
         <Route path="/auth" component={AuthPage} />
-        <Route path="/login" component={LoginPage} />
-        <Route path="/signup" component={SignupPage} />
       </Switch>
     );
   }
@@ -89,27 +84,14 @@ function Router() {
 }
 
 function App() {
-  const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-  
   return (
     <QueryClientProvider client={queryClient}>
-      {clerkPubKey ? (
-        <ClerkProvider>
-          <AuthProvider>
-            <LanguageProvider>
-              <Router />
-              <Toaster />
-            </LanguageProvider>
-          </AuthProvider>
-        </ClerkProvider>
-      ) : (
-        <AuthProvider>
-          <LanguageProvider>
-            <Router />
-            <Toaster />
-          </LanguageProvider>
-        </AuthProvider>
-      )}
+      <AuthProvider>
+        <LanguageProvider>
+          <Router />
+          <Toaster />
+        </LanguageProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
