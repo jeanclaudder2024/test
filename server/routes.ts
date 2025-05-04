@@ -2020,12 +2020,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Handle specific request types
         if (data.type === 'request_vessels') {
-          // Check if pagination parameters were provided
-          if (data.page) {
-            ws.page = parseInt(data.page) || 1;
-          }
-          if (data.pageSize) {
-            ws.pageSize = parseInt(data.pageSize) || 500;
+          // Check if request is for all vessels
+          if (data.allVessels) {
+            ws.sendAllVessels = true;
+            console.log('Client requested all vessels at once');
+          } else {
+            ws.sendAllVessels = false;
+            // Check if pagination parameters were provided
+            if (data.page) {
+              ws.page = parseInt(data.page) || 1;
+            }
+            if (data.pageSize) {
+              ws.pageSize = parseInt(data.pageSize) || 500;
+            }
           }
           sendVesselData(ws);
         } else if (data.type === 'subscribe_region' && data.region) {

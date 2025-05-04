@@ -8,6 +8,7 @@ type UseVesselWebSocketProps = string | {
   pollingInterval?: number; // Polling interval in milliseconds (for REST fallback)
   page?: number;
   pageSize?: number;
+  loadAllVessels?: boolean; // Flag to load all vessels at once (no pagination)
 };
 
 interface WebSocketMessage {
@@ -33,6 +34,7 @@ export function useVesselWebSocket(props: UseVesselWebSocketProps = 'global') {
   const pollingInterval = typeof props === 'object' ? props.pollingInterval || 30000 : 30000;
   const initialPage = typeof props === 'object' && props.page ? props.page : 1;
   const initialPageSize = typeof props === 'object' && props.pageSize ? props.pageSize : 500;
+  const loadAllVessels = typeof props === 'object' ? props.loadAllVessels || false : false;
   
   const [vessels, setVessels] = useState<Vessel[]>([]);
   const [isConnected, setIsConnected] = useState(false);
@@ -103,8 +105,11 @@ export function useVesselWebSocket(props: UseVesselWebSocketProps = 'global') {
                 }));
               }
               
-              // Request initial data
-              socket.send(JSON.stringify({ type: 'request_vessels' }));
+              // Request initial data with all vessels if specified
+              socket.send(JSON.stringify({ 
+                type: 'request_vessels',
+                allVessels: loadAllVessels 
+              }));
             }
           }, 500); // Add a small delay to ensure socket is ready
         };
@@ -255,7 +260,7 @@ export function useVesselWebSocket(props: UseVesselWebSocketProps = 'global') {
         pollingTimerRef.current = null;
       }
     };
-  }, [region, pollingInterval, usePolling]);
+  }, [region, pollingInterval, usePolling, loadAllVessels]);
   
   // Request updated data for a specific region when the region changes
   useEffect(() => {
@@ -269,12 +274,15 @@ export function useVesselWebSocket(props: UseVesselWebSocketProps = 'global') {
             region 
           }));
           
-          // Also request immediate update with the new region filter
-          socketRef.current.send(JSON.stringify({ type: 'request_vessels' }));
+          // Also request immediate update with the new region filter and all vessels if specified
+          socketRef.current.send(JSON.stringify({ 
+            type: 'request_vessels',
+            allVessels: loadAllVessels 
+          }));
         }
       }, 100);
     }
-  }, [region, isConnected]);
+  }, [region, isConnected, loadAllVessels]);
   
   // Function to manually request vessel data
   const refreshData = (newPage?: number, newPageSize?: number) => {
@@ -331,7 +339,8 @@ export function useVesselWebSocket(props: UseVesselWebSocketProps = 'global') {
       socketRef.current.send(JSON.stringify({ 
         type: 'request_vessels',
         page: currentPage,
-        pageSize: currentPageSize
+        pageSize: currentPageSize,
+        allVessels: loadAllVessels
       }));
     } else {
       // If not connected, set an error - the main WebSocket effect will handle reconnection
