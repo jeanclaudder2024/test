@@ -49,12 +49,12 @@ const vesselIcon = (heading: number = 0, speed: number = 0, vesselType: string =
   }
   
   // Different sizes based on vessel speed to indicate movement
-  const size = 8 + Math.min(speed, 15); // Base size + speed factor
+  const size = 10 + Math.min(speed, 15); // Base size + speed factor
   
-  // Create an SVG ship icon with rotation based on heading
+  // Create an SVG boat icon with rotation based on heading
   const svgIcon = `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="${size * 2}" height="${size * 2}">
-      <path fill="${color}" transform="rotate(${heading}, 12, 12)" d="M21 17H3V15H21V17M21 11H3V9H21V11M21 5H3V3H21V5Z" />
+      <path fill="${color}" transform="rotate(${heading}, 12, 12)" d="M20 21C18.61 21 17.22 20.53 16 19.67C13.56 21.38 10.44 21.38 8 19.67C6.78 20.53 5.39 21 4 21H2V19H4C5.37 19 6.74 18.35 8 17.26V13.5H4V11.5H8V8.74C6.74 7.65 5.37 7 4 7H2V5H4C5.39 5 6.78 5.47 8 6.33C10.44 4.62 13.56 4.62 16 6.33C17.22 5.47 18.61 5 20 5H22V7H20C18.63 7 17.26 7.65 16 8.74V11.5H20V13.5H16V17.26C17.26 18.35 18.63 19 20 19H22V21H20Z" />
     </svg>
   `;
   
