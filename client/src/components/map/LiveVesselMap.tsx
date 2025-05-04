@@ -1022,53 +1022,60 @@ export default function LiveVesselMap({
               return null;
             })}
             
-            {/* Display connections between refineries and ports */}
-            {showConnections && (displayMode === 'all' || displayMode === 'infrastructure') && connections.map(conn => {
-              const refinery = refineries.find(r => r.id === conn.refineryId);
-              const port = ports.find(p => p.id === conn.portId);
-              
-              if (!refinery || !port || !refinery.lat || !refinery.lng || !port.lat || !port.lng) {
-                return null;
-              }
-              
-              const refineryLat = typeof refinery.lat === 'string' ? parseFloat(refinery.lat) : refinery.lat;
-              const refineryLng = typeof refinery.lng === 'string' ? parseFloat(refinery.lng) : refinery.lng;
-              const portLat = typeof port.lat === 'string' ? parseFloat(port.lat) : port.lat;
-              const portLng = typeof port.lng === 'string' ? parseFloat(port.lng) : port.lng;
-              
-              if (isNaN(refineryLat) || isNaN(refineryLng) || isNaN(portLat) || isNaN(portLng)) {
-                return null;
-              }
-              
-              // Generate a slightly curved line for better visualization
-              // Calculate midpoint
-              const midLat = (refineryLat + portLat) / 2;
-              const midLng = (refineryLng + portLng) / 2;
-              
-              // Add a slight offset to create a curve
-              const latOffset = (refineryLng - portLng) * 0.1;
-              const lngOffset = (portLat - refineryLat) * 0.1;
-              const curvedMidLat = midLat + latOffset;
-              const curvedMidLng = midLng + lngOffset;
-              
-              // Create positions array with the midpoint
-              const positions: L.LatLngExpression[] = [
-                [refineryLat, refineryLng] as L.LatLngTuple,
-                [curvedMidLat, curvedMidLng] as L.LatLngTuple,
-                [portLat, portLng] as L.LatLngTuple
-              ];
-              
-              return (
-                <Polyline
-                  key={`connection-${conn.id}`}
-                  positions={positions}
-                  color="#9c27b0"
-                  weight={2}
-                  opacity={0.7}
-                  dashArray="5,5"
-                />
-              );
-            })}
+            {/* Display connections between refineries and ports - with canvas rendering for better performance */}
+            {showConnections && (displayMode === 'all' || displayMode === 'infrastructure') && (
+              <Pane name="connections-pane" style={{ zIndex: 350 }}>
+                {connections.map(conn => {
+                  const refinery = refineries.find(r => r.id === conn.refineryId);
+                  const port = ports.find(p => p.id === conn.portId);
+                  
+                  if (!refinery || !port || !refinery.lat || !refinery.lng || !port.lat || !port.lng) {
+                    return null;
+                  }
+                  
+                  const refineryLat = typeof refinery.lat === 'string' ? parseFloat(refinery.lat) : refinery.lat;
+                  const refineryLng = typeof refinery.lng === 'string' ? parseFloat(refinery.lng) : refinery.lng;
+                  const portLat = typeof port.lat === 'string' ? parseFloat(port.lat) : port.lat;
+                  const portLng = typeof port.lng === 'string' ? parseFloat(port.lng) : port.lng;
+                  
+                  if (isNaN(refineryLat) || isNaN(refineryLng) || isNaN(portLat) || isNaN(portLng)) {
+                    return null;
+                  }
+                  
+                  // Generate a slightly curved line for better visualization
+                  // Calculate midpoint
+                  const midLat = (refineryLat + portLat) / 2;
+                  const midLng = (refineryLng + portLng) / 2;
+                  
+                  // Add a slight offset to create a curve
+                  const latOffset = (refineryLng - portLng) * 0.1;
+                  const lngOffset = (portLat - refineryLat) * 0.1;
+                  const curvedMidLat = midLat + latOffset;
+                  const curvedMidLng = midLng + lngOffset;
+                  
+                  // Create positions array with the midpoint
+                  const positions: L.LatLngExpression[] = [
+                    [refineryLat, refineryLng] as L.LatLngTuple,
+                    [curvedMidLat, curvedMidLng] as L.LatLngTuple,
+                    [portLat, portLng] as L.LatLngTuple
+                  ];
+                  
+                  return (
+                    <Polyline
+                      key={`connection-${conn.id}`}
+                      positions={positions}
+                      pathOptions={{
+                        color: '#9c27b0',
+                        weight: 2,
+                        opacity: 0.7,
+                        dashArray: '5,5',
+                        renderer: L.canvas() // Using canvas renderer for better performance
+                      }}
+                    />
+                  );
+                })}
+              </Pane>
+            )}
             
             <MapUpdate vessels={vessels} />
           </MapContainer>
@@ -1214,7 +1221,7 @@ export default function LiveVesselMap({
                           <>
                             <div className="font-medium text-slate-700">Coordinates:</div>
                             <div>
-                              {parseFloat(selectedVessel.currentLat).toFixed(4)}, {parseFloat(selectedVessel.currentLng).toFixed(4)}
+                              {parseFloat(selectedVessel.currentLat || '0').toFixed(4)}, {parseFloat(selectedVessel.currentLng || '0').toFixed(4)}
                             </div>
                           </>
                         )}
@@ -1367,18 +1374,8 @@ export default function LiveVesselMap({
                     <span className="text-muted-foreground">Location:</span>
                   </div>
                   <div>
-                    {(() => {
-                      const lat = selectedRefinery.lat;
-                      if (typeof lat === 'string') return parseFloat(lat).toFixed(4);
-                      if (typeof lat === 'number') return lat.toFixed(4);
-                      return '0.0000';
-                    })()}, 
-                    {(() => {
-                      const lng = selectedRefinery.lng;
-                      if (typeof lng === 'string') return parseFloat(lng).toFixed(4);
-                      if (typeof lng === 'number') return lng.toFixed(4);
-                      return '0.0000';
-                    })()}
+                    {parseFloat(String(selectedRefinery.lat)).toFixed(4)}, 
+                    {parseFloat(String(selectedRefinery.lng)).toFixed(4)}
                   </div>
                 </div>
                 
