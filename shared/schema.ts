@@ -219,3 +219,32 @@ export const insertRefineryPortConnectionSchema = createInsertSchema(refineryPor
 
 export type InsertRefineryPortConnection = z.infer<typeof insertRefineryPortConnectionSchema>;
 export type RefineryPortConnection = typeof refineryPortConnections.$inferSelect;
+
+// Oil Companies schema
+export const oilCompanies = pgTable("oil_companies", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  country: text("country").notNull(),
+  region: text("region").notNull(),
+  fleetSize: integer("fleet_size"),
+  foundedYear: integer("founded_year"),
+  headquarters: text("headquarters"),
+  ceo: text("ceo"),
+  revenue: text("revenue"),
+  specialization: text("specialization"),
+  website: text("website"),
+  logo: text("logo"),
+  description: text("description"),
+  majorRoutes: text("major_routes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertOilCompanySchema = createInsertSchema(oilCompanies).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertOilCompany = z.infer<typeof insertOilCompanySchema>;
+export type OilCompany = typeof oilCompanies.$inferSelect;
