@@ -1246,24 +1246,41 @@ export default function LiveVesselMap({
                   </TabsContent>
                 </Tabs>
               </CardContent>
-              <CardFooter className="bg-gradient-to-t from-blue-50 to-white border-t border-blue-100 gap-2">
-                <Button 
-                  variant="default" 
-                  className="w-full"
-                  onClick={() => {
-                    window.location.href = `/vessels/${selectedVessel.id}`;
-                  }}
-                >
-                  <Info className="h-4 w-4 mr-2" />
-                  Full Details
-                </Button>
+              <CardFooter className="bg-gradient-to-t from-blue-50 to-white border-t border-blue-100 flex flex-col gap-2">
+                <div className="w-full flex gap-2">
+                  <Button 
+                    variant="default" 
+                    className="flex-1"
+                    onClick={() => {
+                      window.location.href = `/vessels/${selectedVessel.id}`;
+                    }}
+                  >
+                    <Info className="h-4 w-4 mr-2" />
+                    Full Details
+                  </Button>
+                  
+                  <Button 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={() => setSelectedVessel(null)}
+                  >
+                    Close
+                  </Button>
+                </div>
                 
                 <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => setSelectedVessel(null)}
+                  onClick={() => {
+                    // Toggle route visibility for this vessel
+                    setVesselsWithRoutes(prev => ({
+                      ...prev,
+                      [selectedVessel.id]: !prev[selectedVessel.id]
+                    }));
+                  }}
+                  className="w-full flex items-center justify-center gap-2"
+                  variant={vesselsWithRoutes[selectedVessel.id] ? "default" : "outline"}
                 >
-                  Close
+                  <Navigation className="h-4 w-4" /> 
+                  {vesselsWithRoutes[selectedVessel.id] ? "Hide Route on Map" : "Show Route on Map"}
                 </Button>
               </CardFooter>
             </Card>
