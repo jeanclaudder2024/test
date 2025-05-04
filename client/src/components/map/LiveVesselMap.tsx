@@ -563,7 +563,7 @@ export default function LiveVesselMap({
                   !isNaN(currentCoords[1])
                 ) {
                   return (
-                    <React.Fragment key={`route-${vessel.id}`}>
+                    <div key={`route-${vessel.id}`} style={{ display: 'contents' }}>
                       {/* Past route (from departure to current position) */}
                       <Polyline 
                         positions={[
@@ -591,7 +591,7 @@ export default function LiveVesselMap({
                           dashArray: '3, 6'
                         }}
                       />
-                    </React.Fragment>
+                    </div>
                   );
                 }
               }
