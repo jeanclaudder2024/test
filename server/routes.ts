@@ -48,6 +48,7 @@ import { refineryPortRouter } from "./routes/refineryPortRoutes";
 import { aiRouter } from "./routes/aiRoutes";
 import { oilCompanyRouter } from "./routes/oilCompanyRoutes";
 import { seedBrokers } from "./services/seedService";
+import { oilCompanyService } from "./services/oilCompanyService";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication
@@ -227,6 +228,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Continue with what we have
         }
         
+        // Seed oil company data
+        let oilCompanyResult = { companies: 0, seeded: false };
+        try {
+          console.log("Seeding oil company data...");
+          oilCompanyResult = await oilCompanyService.seedOilCompanyData();
+          console.log("Oil company data seeded successfully:", oilCompanyResult);
+        } catch (oilCompanyError) {
+          console.error("Error seeding oil company data:", oilCompanyError);
+          // Continue with what we have
+        }
+        
         // Return whatever data we managed to seed
         res.json({ 
           success: true, 
@@ -238,7 +250,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             refineries: refineryResult.refineries || 0,
             active: refineryResult.active || 0,
             brokers: brokerResult.count || 0,
-            ports: portResult.ports || 0
+            ports: portResult.ports || 0,
+            oilCompanies: oilCompanyResult.companies || 0
           }
         });
       } catch (error) {
