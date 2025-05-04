@@ -2081,15 +2081,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       try {
         // First try to get vessels from database
-        // Use a cached version if available and refresh every 5 minutes
-        const now = Date.now();
-        if (!global.cachedVessels || !global.lastVesselCacheTime || now - global.lastVesselCacheTime > 5 * 60 * 1000) {
-          global.cachedVessels = await storage.getVessels();
-          global.lastVesselCacheTime = now;
-          console.log(`Updated cached vessels with ${global.cachedVessels.length} records`);
-        }
-        
-        vessels = global.cachedVessels;
+        vessels = await storage.getVessels();
         console.log(`Retrieved ${vessels.length} vessels from database`);
       } catch (dbError) {
         console.log('Database error, fetching from API instead:', dbError);
@@ -2099,9 +2091,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const apiVessels = await marineTrafficService.fetchVessels();
           
           // API vessels might not have IDs, so we need to add them
-          vessels = apiVessels.map((v, idx) => ({
+          vessels = apiVessels.map((v: any, idx: number) => ({
             ...v,
-            id: v.id || idx + 1 // Use index + 1 as fallback ID if needed
+            id: (v.id !== undefined) ? v.id : idx + 1 // Use index + 1 as fallback ID if needed
           })) as Vessel[];
         }
       }
@@ -2118,12 +2110,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const totalPages = Math.ceil(totalCount / pageSize);
       
       // Get all vessels or just the current page based on sendAllVessels flag
-      let vesselsToSend = vessels;
-      if (!sendAllVessels) {
-        const startIndex = (page - 1) * pageSize;
-        const endIndex = Math.min(startIndex + pageSize, totalCount);
-        vesselsToSend = vessels.slice(startIndex, endIndex);
-      }
+      let vesselsToSend = sendAllVessels ? vessels : vessels.slice((page - 1) * pageSize, Math.min(page * pageSize, totalCount));
       
       // Log vessel coordinates for debugging (first 5 vessels)
       console.log(`Vessel coordinate check: ${vesselsToSend.slice(0, 5).map(v => 
