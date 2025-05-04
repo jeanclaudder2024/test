@@ -1,7 +1,57 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline } from 'react-leaflet';
-import L from 'leaflet';
-import { Vessel, Refinery, Port } from '@shared/schema';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { 
+  MapContainer, 
+  TileLayer, 
+  Marker, 
+  Popup, 
+  useMap, 
+  Polyline,
+  Rectangle,
+  CircleMarker,
+  Tooltip 
+} from 'react-leaflet';
+import L, { LatLngExpression } from 'leaflet';
+import { Vessel, Refinery, Port, RefineryPortConnection } from '@shared/schema';
+
+// Helper function to generate coordinates for ports
+// In a real application, this would be replaced with actual port coordinates from the database
+function getRandomCoordinatesForPort(portName: string): [number, number] {
+  // Create a deterministic "random" value based on the port name
+  let hash = 0;
+  for (let i = 0; i < portName.length; i++) {
+    hash = ((hash << 5) - hash) + portName.charCodeAt(i);
+    hash |= 0; // Convert to 32bit integer
+  }
+  
+  // Use the hash to create a somewhat deterministic latitude and longitude
+  // This is just for demonstration - real world would use actual coordinates
+  const regions: Record<string, [number, number, number, number]> = {
+    'Rotterdam': [51.9225, 4.47917, 0.5, 0.5],
+    'Singapore': [1.29027, 103.851, 0.5, 0.5], 
+    'Shanghai': [31.2304, 121.474, 0.5, 0.5],
+    'Antwerp': [51.2194, 4.40026, 0.5, 0.5],
+    'New York': [40.7128, -74.006, 1, 1],
+    'Houston': [29.7604, -95.3698, 1, 1],
+    'Dubai': [25.2048, 55.2708, 0.5, 0.5],
+    'Tokyo': [35.6762, 139.6503, 0.5, 0.5],
+    'Hamburg': [53.5511, 9.9937, 0.5, 0.5],
+    'Los Angeles': [33.7701, -118.1937, 1, 1]
+  };
+  
+  // Check if this is a known major port
+  for (const [key, value] of Object.entries(regions)) {
+    if (portName.toLowerCase().includes(key.toLowerCase())) {
+      return [value[0], value[1]];
+    }
+  }
+  
+  // For ports we don't recognize, create a somewhat random but reasonable coordinate
+  // This ensures we stay in ocean regions roughly
+  const lat = ((Math.abs(hash % 140) - 70) + 5) % 75; // -65 to +70 degrees latitude
+  const lng = ((hash % 360) - 180) % 360; // -180 to +180 degrees longitude
+  
+  return [lat, lng];
+}
 import { useVesselWebSocket } from '@/hooks/useVesselWebSocket';
 import { useMaritimeData } from '@/hooks/useMaritimeData';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -173,9 +223,20 @@ function MapUpdate({ vessels }: MapUpdateProps) {
 interface LiveVesselMapProps {
   initialRegion?: string;
   height?: string;
+  showRoutes?: boolean;
+  showVesselHistory?: boolean;
+  showHeatmap?: boolean;
+  mapStyle?: string;
 }
 
-export default function LiveVesselMap({ initialRegion, height = '600px' }: LiveVesselMapProps) {
+export default function LiveVesselMap({ 
+  initialRegion, 
+  height = '600px',
+  showRoutes = true,
+  showVesselHistory = false,
+  showHeatmap = false,
+  mapStyle = 'dark'
+}: LiveVesselMapProps) {
   const [selectedRegion, setSelectedRegion] = useState<string>(initialRegion || 'global');
   const [selectedVessel, setSelectedVessel] = useState<Vessel | null>(null);
   const [selectedRefinery, setSelectedRefinery] = useState<Refinery | null>(null);
@@ -186,6 +247,7 @@ export default function LiveVesselMap({ initialRegion, height = '600px' }: LiveV
   const [showPorts, setShowPorts] = useState<boolean>(true);
   const [showConnections, setShowConnections] = useState<boolean>(true);
   const [displayMode, setDisplayMode] = useState<string>("all");
+  const [hoveredVessel, setHoveredVessel] = useState<Vessel | null>(null);
   
   // Use our WebSocket hook for real-time vessel data with fallback to REST API polling
   const { 
@@ -380,8 +442,111 @@ export default function LiveVesselMap({ initialRegion, height = '600px' }: LiveV
               maxZoom={19}
             />
             
+            {/* Handle different map styles */}
+            {mapStyle === 'dark' && (
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                subdomains="abcd"
+                maxZoom={19}
+              />
+            )}
+            
+            {mapStyle === 'light' && (
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                maxZoom={19}
+              />
+            )}
+            
+            {mapStyle === 'satellite' && (
+              <TileLayer
+                attribution='Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+                url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                maxZoom={19}
+              />
+            )}
+            
+            {mapStyle === 'nautical' && (
+              <TileLayer
+                attribution='Tiles &copy; ESRI &mdash; National Geographic, Esri, DeLorme, NAVTEQ, UNEP-WCMC, USGS, NASA, ESA, METI, NRCAN, GEBCO, NOAA, iPC'
+                url="https://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}"
+                maxZoom={16}
+              />
+            )}
+            
+            {/* Add heatmap layer for traffic density if enabled */}
+            {showHeatmap && (
+              <div>
+                {/* Placeholder for heatmap - in a real implementation this would be a proper heatmap layer */}
+                <Rectangle 
+                  bounds={[[-60, -180], [70, 180]]} 
+                  pathOptions={{ 
+                    fillColor: '#ff9800', 
+                    fillOpacity: 0.05, 
+                    weight: 0 
+                  }} 
+                />
+              </div>
+            )}
+            
             {/* Add a MapEvents component to handle fitWorld */}
             <MapEvents />
+            
+            {/* Display vessel routes if enabled */}
+            {showRoutes && (displayMode === 'all' || displayMode === 'vessels') && vessels.map(vessel => {
+              if (vessel.departurePort && vessel.destinationPort && vessel.currentLat && vessel.currentLng) {
+                // Create route polyline if we have departure and destination ports
+                // This is a simplification - real routes would need port coordinates
+                const departureCoords = getRandomCoordinatesForPort(vessel.departurePort);
+                const destinationCoords = getRandomCoordinatesForPort(vessel.destinationPort);
+                const currentCoords = [parseFloat(vessel.currentLat), parseFloat(vessel.currentLng)];
+                
+                // Only draw routes if we have valid coordinates
+                if (
+                  !isNaN(departureCoords[0]) && 
+                  !isNaN(departureCoords[1]) && 
+                  !isNaN(destinationCoords[0]) && 
+                  !isNaN(destinationCoords[1]) && 
+                  !isNaN(currentCoords[0]) && 
+                  !isNaN(currentCoords[1])
+                ) {
+                  return (
+                    <React.Fragment key={`route-${vessel.id}`}>
+                      {/* Past route (from departure to current position) */}
+                      <Polyline 
+                        positions={[
+                          [departureCoords[0], departureCoords[1]] as LatLngExpression,
+                          [currentCoords[0], currentCoords[1]] as LatLngExpression
+                        ]}
+                        pathOptions={{ 
+                          color: '#3388ff', 
+                          weight: 2, 
+                          opacity: 0.6,
+                          dashArray: '6, 8'
+                        }}
+                      />
+                      
+                      {/* Future route (from current position to destination) */}
+                      <Polyline 
+                        positions={[
+                          [currentCoords[0], currentCoords[1]] as LatLngExpression,
+                          [destinationCoords[0], destinationCoords[1]] as LatLngExpression
+                        ]}
+                        pathOptions={{ 
+                          color: '#ff3366', 
+                          weight: 2, 
+                          opacity: 0.4,
+                          dashArray: '3, 6'
+                        }}
+                      />
+                    </React.Fragment>
+                  );
+                }
+              }
+              return null;
+            })}
             
             {/* Display vessels */}
             {(displayMode === 'all' || displayMode === 'vessels') && vessels.map(vessel => {
