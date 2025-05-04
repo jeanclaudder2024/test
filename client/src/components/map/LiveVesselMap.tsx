@@ -61,13 +61,14 @@ import { Badge } from '@/components/ui/badge';
 import { 
   Loader2, Anchor, Info, Navigation, Flag, Calendar, Ship, 
   Factory, Warehouse, Anchor as AnchorIcon, Sparkles,
-  CheckCircle, FileText, MapPin
+  CheckCircle, FileText, MapPin, Layers, RefreshCw
 } from 'lucide-react';
 import { AIGenerationPanel } from '@/components/AIGenerationPanel';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 // Import removed - using hardcoded regions instead
 
 // Ensure Leaflet CSS is imported
@@ -188,23 +189,24 @@ function MapControl({
 
   useEffect(() => {
     // Create control
-    const control = L.control({ position });
-    
-    // Monkeypatch _initLayout to use our custom container
-    control._initLayout = function() {
-      const containerDiv = L.DomUtil.create('div', `leaflet-custom-control ${className || ''}`);
-      containerDiv.style.padding = '0';
-      containerDiv.style.margin = '0';
-      containerDiv.style.background = 'none';
-      containerDiv.style.border = 'none';
-      containerDiv.style.boxShadow = 'none';
-      
-      L.DomEvent.disableClickPropagation(containerDiv);
-      L.DomEvent.disableScrollPropagation(containerDiv);
-      
-      this._container = containerDiv;
-      return containerDiv;
-    };
+    const controlOptions = { position };
+    const control = new (L.Control.extend({
+      options: controlOptions,
+      // Override the _initLayout method to use our custom container
+      onAdd: function(map) {
+        const containerDiv = L.DomUtil.create('div', `leaflet-custom-control ${className || ''}`);
+        containerDiv.style.padding = '0';
+        containerDiv.style.margin = '0';
+        containerDiv.style.background = 'none';
+        containerDiv.style.border = 'none';
+        containerDiv.style.boxShadow = 'none';
+        
+        L.DomEvent.disableClickPropagation(containerDiv);
+        L.DomEvent.disableScrollPropagation(containerDiv);
+        
+        return containerDiv;
+      }
+    }))();
     
     // Add control to map
     control.addTo(map);
@@ -283,8 +285,9 @@ export default function LiveVesselMap({
   showRoutes = true,
   showVesselHistory = false,
   showHeatmap = false,
-  mapStyle = 'dark'
+  mapStyle: initialMapStyle = 'dark'
 }: LiveVesselMapProps) {
+  const [mapStyle, setMapStyle] = useState<string>(initialMapStyle);
   const [selectedRegion, setSelectedRegion] = useState<string>(initialRegion || 'global');
   const [selectedVessel, setSelectedVessel] = useState<Vessel | null>(null);
   const [selectedRefinery, setSelectedRefinery] = useState<Refinery | null>(null);
@@ -478,6 +481,148 @@ export default function LiveVesselMap({
             
             {/* Add a MapEvents component to handle fitWorld */}
             <MapEvents />
+            
+            {/* Floating Map Control Panel */}
+            <MapControl position="topright" className="floating-map-control">
+              <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm p-3 rounded-lg shadow-lg border border-gray-200 dark:border-gray-800 w-64">
+                <div className="mb-4">
+                  <h3 className="text-sm font-semibold mb-2 flex items-center">
+                    <MapPin className="h-4 w-4 mr-1.5 text-blue-600" />
+                    Region Filter
+                  </h3>
+                  <Select value={selectedRegion} onValueChange={handleRegionChange}>
+                    <SelectTrigger className="w-full text-sm h-8">
+                      <SelectValue placeholder="Select Region" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="global">Global</SelectItem>
+                      <SelectItem value="middle_east">Middle East</SelectItem>
+                      <SelectItem value="north_america">North America</SelectItem>
+                      <SelectItem value="europe">Europe</SelectItem>
+                      <SelectItem value="africa">Africa</SelectItem>
+                      <SelectItem value="southeast_asia">Southeast Asia</SelectItem>
+                      <SelectItem value="east_asia">East Asia</SelectItem>
+                      <SelectItem value="oceania">Oceania</SelectItem>
+                      <SelectItem value="south_america">South America</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="mb-4">
+                  <h3 className="text-sm font-semibold mb-2 flex items-center">
+                    <Layers className="h-4 w-4 mr-1.5 text-blue-600" />
+                    Map Style
+                  </h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button 
+                      size="sm" 
+                      variant={mapStyle === 'dark' ? 'default' : 'outline'} 
+                      className="text-xs h-8" 
+                      onClick={() => setMapStyle('dark')}
+                    >
+                      Dark
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant={mapStyle === 'light' ? 'default' : 'outline'} 
+                      className="text-xs h-8" 
+                      onClick={() => setMapStyle('light')}
+                    >
+                      Light
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant={mapStyle === 'satellite' ? 'default' : 'outline'} 
+                      className="text-xs h-8" 
+                      onClick={() => setMapStyle('satellite')}
+                    >
+                      Satellite
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant={mapStyle === 'nautical' ? 'default' : 'outline'} 
+                      className="text-xs h-8" 
+                      onClick={() => setMapStyle('nautical')}
+                    >
+                      Nautical
+                    </Button>
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="text-sm font-semibold mb-2 flex items-center">
+                    <Layers className="h-4 w-4 mr-1.5 text-blue-600" />
+                    Map Layers
+                  </h3>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm flex items-center cursor-pointer">
+                        <Ship className="h-3.5 w-3.5 mr-1.5 text-blue-500" />
+                        Vessels
+                      </label>
+                      <Switch 
+                        checked={true}
+                        disabled={true}
+                      />
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm flex items-center cursor-pointer">
+                        <Factory className="h-3.5 w-3.5 mr-1.5 text-red-500" />
+                        Refineries
+                      </label>
+                      <Switch 
+                        checked={showRefineries}
+                        onCheckedChange={setShowRefineries}
+                      />
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm flex items-center cursor-pointer">
+                        <AnchorIcon className="h-3.5 w-3.5 mr-1.5 text-blue-600" />
+                        Ports
+                      </label>
+                      <Switch 
+                        checked={showPorts}
+                        onCheckedChange={setShowPorts}
+                      />
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm flex items-center cursor-pointer">
+                        <Warehouse className="h-3.5 w-3.5 mr-1.5 text-purple-500" />
+                        Connections
+                      </label>
+                      <Switch 
+                        checked={showConnections}
+                        onCheckedChange={setShowConnections}
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-4 flex justify-center">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="text-xs w-full h-8 flex items-center"
+                    onClick={refreshData}
+                  >
+                    <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+                    Refresh Data
+                  </Button>
+                </div>
+                
+                <div className="mt-3 flex items-center justify-center">
+                  <div className={`h-2 w-2 rounded-full mr-1.5 ${isConnected ? 'bg-green-500' : 'bg-yellow-500'}`} />
+                  <p className="text-xs text-muted-foreground">
+                    {isConnected 
+                      ? `${vessels.length} vessels${usingFallback ? ' (REST API)' : ' (WebSocket)'}`
+                      : 'Reconnecting...'}
+                  </p>
+                </div>
+              </div>
+            </MapControl>
             
             {/* Display vessel history if enabled */}
             {showVesselHistory && (displayMode === 'all' || displayMode === 'vessels') && vessels.map(vessel => {
