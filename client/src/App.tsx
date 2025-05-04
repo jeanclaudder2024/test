@@ -20,7 +20,6 @@ import LandingPage from "@/pages/LandingPage";
 import AuthPage from "@/pages/AuthPage";
 import TradingDashboard from "@/pages/TradingDashboard";
 import LiveTracking from "@/pages/LiveTracking";
-import OilCompanies from "@/pages/OilCompanies";
 import ApiTest from "@/pages/ApiTest";
 import { useEffect } from "react";
 import { apiRequest } from "./lib/queryClient";
@@ -72,7 +71,6 @@ function Router() {
         <ProtectedRoute path="/ports/import" component={PortImport} />
         <ProtectedRoute path="/ports/:id" component={PortDetail} />
         <ProtectedRoute path="/brokers" component={Brokers} />
-        <ProtectedRoute path="/oil-companies" component={OilCompanies} />
         <ProtectedRoute path="/documents" component={Documents} />
         <ProtectedRoute path="/ai-assistant" component={AIAssistantPage} />
         <ProtectedRoute path="/trading" component={TradingDashboard} />

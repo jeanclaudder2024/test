@@ -88,11 +88,6 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
       icon: <Users className="h-5 w-5 mr-3" />,
     },
     {
-      title: "Oil Companies",
-      path: "/oil-companies",
-      icon: <Building2 className="h-5 w-5 mr-3" />,
-    },
-    {
       title: t("nav.api_test"),
       path: "/api-test",
       icon: <Database className="h-5 w-5 mr-3" />,

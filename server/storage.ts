@@ -1,7 +1,7 @@
 import { eq, and } from "drizzle-orm";
 import { db } from "./db";
 import {
-  users, vessels, refineries, progressEvents, documents, brokers, stats as statsTable, ports, refineryPortConnections, oilCompanies,
+  users, vessels, refineries, progressEvents, documents, brokers, stats as statsTable, ports, refineryPortConnections,
   User, InsertUser, 
   Vessel, InsertVessel,
   Refinery, InsertRefinery,
@@ -10,8 +10,7 @@ import {
   Broker, InsertBroker,
   Stats, InsertStats,
   Port, InsertPort,
-  RefineryPortConnection, InsertRefineryPortConnection,
-  OilCompany, InsertOilCompany
+  RefineryPortConnection, InsertRefineryPortConnection
 } from "@shared/schema";
 
 // Storage interface with CRUD methods
@@ -66,14 +65,6 @@ export interface IStorage {
   createBroker(broker: InsertBroker): Promise<Broker>;
   updateBroker(id: number, broker: Partial<InsertBroker>): Promise<Broker | undefined>;
   deleteBroker(id: number): Promise<boolean>;
-
-  // Oil Company methods
-  getOilCompanies(): Promise<OilCompany[]>;
-  getOilCompanyById(id: number): Promise<OilCompany | undefined>;
-  getOilCompaniesByRegion(region: string): Promise<OilCompany[]>;
-  createOilCompany(company: InsertOilCompany): Promise<OilCompany>;
-  updateOilCompany(id: number, company: Partial<InsertOilCompany>): Promise<OilCompany | undefined>;
-  deleteOilCompany(id: number): Promise<boolean>;
 
   // Stats methods
   getStats(): Promise<Stats | undefined>;
@@ -418,39 +409,6 @@ export class DatabaseStorage implements IStorage {
 
   async deleteRefineryPortConnection(id: number): Promise<boolean> {
     await db.delete(refineryPortConnections).where(eq(refineryPortConnections.id, id));
-    return true;
-  }
-  
-  // Oil Companies implementation
-  async getOilCompanies(): Promise<OilCompany[]> {
-    return await db.select().from(oilCompanies);
-  }
-
-  async getOilCompanyById(id: number): Promise<OilCompany | undefined> {
-    const [company] = await db.select().from(oilCompanies).where(eq(oilCompanies.id, id));
-    return company || undefined;
-  }
-
-  async getOilCompaniesByRegion(region: string): Promise<OilCompany[]> {
-    return await db.select().from(oilCompanies).where(eq(oilCompanies.region, region));
-  }
-
-  async createOilCompany(company: InsertOilCompany): Promise<OilCompany> {
-    const [result] = await db.insert(oilCompanies).values(company).returning();
-    return result;
-  }
-
-  async updateOilCompany(id: number, companyUpdate: Partial<InsertOilCompany>): Promise<OilCompany | undefined> {
-    const [updatedCompany] = await db
-      .update(oilCompanies)
-      .set(companyUpdate)
-      .where(eq(oilCompanies.id, id))
-      .returning();
-    return updatedCompany || undefined;
-  }
-
-  async deleteOilCompany(id: number): Promise<boolean> {
-    await db.delete(oilCompanies).where(eq(oilCompanies.id, id));
     return true;
   }
 }
