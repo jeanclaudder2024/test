@@ -884,143 +884,153 @@ export default function LiveVesselMap({
               </Pane>
             )}
             
-            {/* Display refineries */}
-            {showRefineries && (displayMode === 'all' || displayMode === 'infrastructure') && refineries.map(refinery => {
-              // Only render if we have valid coordinates
-              if (refinery.lat && refinery.lng) {
-                const lat = typeof refinery.lat === 'string' ? parseFloat(refinery.lat) : refinery.lat;
-                const lng = typeof refinery.lng === 'string' ? parseFloat(refinery.lng) : refinery.lng;
-                
-                if (isNaN(lat) || isNaN(lng)) return null;
-                
-                return (
-                  <Marker
-                    key={`refinery-${refinery.id}`}
-                    position={[lat, lng]}
-                    icon={refineryIcon()}
-                    eventHandlers={{
-                      click: () => {
-                        setSelectedRefinery(refinery);
-                        setSelectedVessel(null);
-                        setSelectedPort(null);
-                      }
-                    }}
-                  >
-                    <Popup>
-                      <div className="text-sm">
-                        <div className="bg-red-50 p-2 rounded-md mb-2 border-l-4 border-red-500">
-                          <p className="font-bold text-base text-red-700">{refinery.name}</p>
-                          <p className="text-xs text-red-600">{refinery.region.toUpperCase()} REGION</p>
+            {/* Display refineries - with optimized rendering */}
+            {showRefineries && (displayMode === 'all' || displayMode === 'infrastructure') && (
+              <Pane name="refineries-layer" style={{ zIndex: 420 }}>
+                {refineries.filter(refinery => {
+                  // Only process refineries with valid coordinates
+                  if (!refinery.lat || !refinery.lng) return false;
+                  
+                  const lat = typeof refinery.lat === 'string' ? parseFloat(refinery.lat) : refinery.lat;
+                  const lng = typeof refinery.lng === 'string' ? parseFloat(refinery.lng) : refinery.lng;
+                  
+                  return !isNaN(lat) && !isNaN(lng);
+                }).map(refinery => {
+                  const lat = typeof refinery.lat === 'string' ? parseFloat(refinery.lat) : refinery.lat;
+                  const lng = typeof refinery.lng === 'string' ? parseFloat(refinery.lng) : refinery.lng;
+                  
+                  return (
+                    <Marker
+                      key={`refinery-${refinery.id}`}
+                      position={[lat, lng]}
+                      icon={refineryIcon()}
+                      eventHandlers={{
+                        click: () => {
+                          setSelectedRefinery(refinery);
+                          setSelectedVessel(null);
+                          setSelectedPort(null);
+                        }
+                      }}
+                    >
+                      <Popup>
+                        <div className="text-sm">
+                          <div className="bg-red-50 p-2 rounded-md mb-2 border-l-4 border-red-500">
+                            <p className="font-bold text-base text-red-700">{refinery.name}</p>
+                            <p className="text-xs text-red-600">{refinery.region.toUpperCase()} REGION</p>
+                          </div>
+                          <div className="grid grid-cols-2 gap-1 text-xs mb-2">
+                            <div className="font-semibold">Country:</div>
+                            <div>{refinery.country}</div>
+                            {refinery.capacity && (
+                              <>
+                                <div className="font-semibold">Capacity:</div>
+                                <div>{refinery.capacity.toLocaleString()} bpd</div>
+                              </>
+                            )}
+                            {refinery.status && (
+                              <>
+                                <div className="font-semibold">Status:</div>
+                                <div className="capitalize">{refinery.status}</div>
+                              </>
+                            )}
+                          </div>
+                          <Button 
+                            className="w-full bg-red-600 hover:bg-red-700 text-white text-xs py-1 mt-2"
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent map click from interfering
+                              // Close the popup
+                              const closeButton = e.currentTarget.closest('.leaflet-popup')?.querySelector('.leaflet-popup-close-button');
+                              if (closeButton instanceof HTMLElement) {
+                                closeButton.click();
+                              }
+                              // Navigate to refinery detail page
+                              window.location.href = `/refineries/${refinery.id}`;
+                            }}
+                          >
+                            <Factory className="h-3 w-3 mr-1" />
+                            Show Details
+                          </Button>
                         </div>
-                        <div className="grid grid-cols-2 gap-1 text-xs mb-2">
-                          <div className="font-semibold">Country:</div>
-                          <div>{refinery.country}</div>
-                          {refinery.capacity && (
-                            <>
-                              <div className="font-semibold">Capacity:</div>
-                              <div>{refinery.capacity.toLocaleString()} bpd</div>
-                            </>
-                          )}
-                          {refinery.status && (
-                            <>
-                              <div className="font-semibold">Status:</div>
-                              <div className="capitalize">{refinery.status}</div>
-                            </>
-                          )}
-                        </div>
-                        <Button 
-                          className="w-full bg-red-600 hover:bg-red-700 text-white text-xs py-1 mt-2"
-                          onClick={(e) => {
-                            e.stopPropagation(); // Prevent map click from interfering
-                            // Close the popup
-                            const closeButton = e.currentTarget.closest('.leaflet-popup')?.querySelector('.leaflet-popup-close-button');
-                            if (closeButton instanceof HTMLElement) {
-                              closeButton.click();
-                            }
-                            // Navigate to refinery detail page
-                            window.location.href = `/refineries/${refinery.id}`;
-                          }}
-                        >
-                          <Factory className="h-3 w-3 mr-1" />
-                          Show Details
-                        </Button>
-                      </div>
-                    </Popup>
-                  </Marker>
-                );
-              }
-              
-              return null;
-            })}
+                      </Popup>
+                    </Marker>
+                  );
+                })}
+              </Pane>
+            )}
             
-            {/* Display ports */}
-            {showPorts && (displayMode === 'all' || displayMode === 'infrastructure') && ports.map(port => {
-              // Only render if we have valid coordinates
-              if (port.lat && port.lng) {
-                const lat = typeof port.lat === 'string' ? parseFloat(port.lat) : port.lat;
-                const lng = typeof port.lng === 'string' ? parseFloat(port.lng) : port.lng;
-                
-                if (isNaN(lat) || isNaN(lng)) return null;
-                
-                return (
-                  <Marker
-                    key={`port-${port.id}`}
-                    position={[lat, lng]}
-                    icon={portIcon()}
-                    eventHandlers={{
-                      click: () => {
-                        setSelectedPort(port);
-                        setSelectedVessel(null);
-                        setSelectedRefinery(null);
-                      }
-                    }}
-                  >
-                    <Popup>
-                      <div className="text-sm">
-                        <div className="bg-blue-50 p-2 rounded-md mb-2 border-l-4 border-blue-500">
-                          <p className="font-bold text-base text-blue-700">{port.name}</p>
-                          <p className="text-xs text-blue-600">{port.region.toUpperCase()} REGION</p>
+            {/* Display ports - with optimized rendering */}
+            {showPorts && (displayMode === 'all' || displayMode === 'infrastructure') && (
+              <Pane name="ports-layer" style={{ zIndex: 400 }}>
+                {ports.filter(port => {
+                  // Only process ports with valid coordinates
+                  if (!port.lat || !port.lng) return false;
+                  
+                  const lat = typeof port.lat === 'string' ? parseFloat(port.lat) : port.lat;
+                  const lng = typeof port.lng === 'string' ? parseFloat(port.lng) : port.lng;
+                  
+                  return !isNaN(lat) && !isNaN(lng);
+                }).map(port => {
+                  const lat = typeof port.lat === 'string' ? parseFloat(port.lat) : port.lat;
+                  const lng = typeof port.lng === 'string' ? parseFloat(port.lng) : port.lng;
+                  
+                  return (
+                    <Marker
+                      key={`port-${port.id}`}
+                      position={[lat, lng]}
+                      icon={portIcon()}
+                      eventHandlers={{
+                        click: () => {
+                          setSelectedPort(port);
+                          setSelectedVessel(null);
+                          setSelectedRefinery(null);
+                        }
+                      }}
+                    >
+                      <Popup>
+                        <div className="text-sm">
+                          <div className="bg-blue-50 p-2 rounded-md mb-2 border-l-4 border-blue-500">
+                            <p className="font-bold text-base text-blue-700">{port.name}</p>
+                            <p className="text-xs text-blue-600">{port.region.toUpperCase()} REGION</p>
+                          </div>
+                          <div className="grid grid-cols-2 gap-1 text-xs mb-2">
+                            <div className="font-semibold">Country:</div>
+                            <div>{port.country}</div>
+                            {port.capacity && (
+                              <>
+                                <div className="font-semibold">Capacity:</div>
+                                <div>{port.capacity.toLocaleString()} tons/year</div>
+                              </>
+                            )}
+                            {port.type && (
+                              <>
+                                <div className="font-semibold">Type:</div>
+                                <div className="capitalize">{port.type.replace('_', ' ')}</div>
+                              </>
+                            )}
+                          </div>
+                          <Button 
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs py-1 mt-2"
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent map click from interfering
+                              // Close the popup
+                              const closeButton = e.currentTarget.closest('.leaflet-popup')?.querySelector('.leaflet-popup-close-button');
+                              if (closeButton instanceof HTMLElement) {
+                                closeButton.click();
+                              }
+                              // Navigate to port detail page
+                              window.location.href = `/ports/${port.id}`;
+                            }}
+                          >
+                            <Anchor className="h-3 w-3 mr-1" />
+                            Show Details
+                          </Button>
                         </div>
-                        <div className="grid grid-cols-2 gap-1 text-xs mb-2">
-                          <div className="font-semibold">Country:</div>
-                          <div>{port.country}</div>
-                          {port.capacity && (
-                            <>
-                              <div className="font-semibold">Capacity:</div>
-                              <div>{port.capacity.toLocaleString()} tons/year</div>
-                            </>
-                          )}
-                          {port.type && (
-                            <>
-                              <div className="font-semibold">Type:</div>
-                              <div className="capitalize">{port.type.replace('_', ' ')}</div>
-                            </>
-                          )}
-                        </div>
-                        <Button 
-                          className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs py-1 mt-2"
-                          onClick={(e) => {
-                            e.stopPropagation(); // Prevent map click from interfering
-                            // Close the popup
-                            const closeButton = e.currentTarget.closest('.leaflet-popup')?.querySelector('.leaflet-popup-close-button');
-                            if (closeButton instanceof HTMLElement) {
-                              closeButton.click();
-                            }
-                            // Navigate to port detail page
-                            window.location.href = `/ports/${port.id}`;
-                          }}
-                        >
-                          <Anchor className="h-3 w-3 mr-1" />
-                          Show Details
-                        </Button>
-                      </div>
-                    </Popup>
-                  </Marker>
-                );
-              }
-              
-              return null;
-            })}
+                      </Popup>
+                    </Marker>
+                  );
+                })}
+              </Pane>
+            )}
             
             {/* Display connections between refineries and ports - with canvas rendering for better performance */}
             {showConnections && (displayMode === 'all' || displayMode === 'infrastructure') && (
@@ -1466,18 +1476,8 @@ export default function LiveVesselMap({
                     <span className="text-muted-foreground">Location:</span>
                   </div>
                   <div>
-                    {(() => {
-                      const lat = selectedPort.lat;
-                      if (typeof lat === 'string') return parseFloat(lat).toFixed(4);
-                      if (typeof lat === 'number') return lat.toFixed(4);
-                      return '0.0000';
-                    })()}, 
-                    {(() => {
-                      const lng = selectedPort.lng;
-                      if (typeof lng === 'string') return parseFloat(lng).toFixed(4);
-                      if (typeof lng === 'number') return lng.toFixed(4);
-                      return '0.0000';
-                    })()}
+                    {parseFloat(String(selectedPort.lat)).toFixed(4)}, 
+                    {parseFloat(String(selectedPort.lng)).toFixed(4)}
                   </div>
                 </div>
                 
