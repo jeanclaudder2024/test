@@ -67,10 +67,25 @@ export function ClerkProvider({ children }: ClerkProviderProps) {
     <BaseClerkProvider
       publishableKey={publishableKey}
       appearance={{
+        layout: {
+          socialButtonsVariant: 'blockButton',
+          socialButtonsPlacement: 'bottom',
+        },
         elements: {
           formButtonPrimary: 'bg-primary text-primary-foreground hover:bg-primary/90',
           card: 'bg-card shadow-md rounded-lg border border-border',
-          footerActionLink: 'text-primary hover:text-primary hover:underline'
+          headerTitle: 'text-xl text-foreground',
+          headerSubtitle: 'text-sm text-muted-foreground',
+          socialButtons: 'grid grid-cols-1 gap-2',
+          dividerLine: 'bg-border',
+          dividerText: 'text-muted-foreground text-xs',
+          formField: 'space-y-1',
+          formFieldLabel: 'text-sm text-foreground',
+          formFieldInput:
+            'h-10 bg-input border border-input px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 rounded-md w-full',
+          footerActionText: 'text-xs text-muted-foreground',
+          footerActionLink: 'text-xs text-primary hover:text-primary hover:underline',
+          alertText: 'text-xs text-destructive',
         },
       }}
     >

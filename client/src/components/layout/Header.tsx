@@ -8,7 +8,14 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import Sidebar from "./Sidebar";
-import { useClerk } from "@clerk/clerk-react";
+import { 
+  useClerk, 
+  SignInButton, 
+  SignUpButton, 
+  UserButton, 
+  SignedIn, 
+  SignedOut 
+} from "@clerk/clerk-react";
 
 export default function Header() {
   const [location, navigate] = useLocation();
@@ -124,22 +131,39 @@ export default function Header() {
             <LanguageSwitcher variant="icon" />
           </div>
           
-          <div className="flex items-center">
-            <span className="mr-2 text-sm text-primary/80 font-medium hidden sm:inline">{t("action.logout")}</span>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-9 w-9 rounded-full bg-primary/10 hover:bg-primary/20 transition-colors"
-              onClick={handleLogout}
-              disabled={logoutMutation.isPending}
-            >
-              {logoutMutation.isPending ? (
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-              ) : (
-                <LogOut className="h-4 w-4 text-primary" />
-              )}
-            </Button>
-          </div>
+          {/* Authentication UI */}
+          <SignedIn>
+            <div className="flex items-center space-x-4">
+              <UserButton afterSignOutUrl="/" />
+              <div className="flex items-center">
+                <span className="mr-2 text-sm text-primary/80 font-medium hidden sm:inline">{t("action.logout")}</span>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-9 w-9 rounded-full bg-primary/10 hover:bg-primary/20 transition-colors"
+                  onClick={handleLogout}
+                  disabled={logoutMutation.isPending}
+                >
+                  {logoutMutation.isPending ? (
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                  ) : (
+                    <LogOut className="h-4 w-4 text-primary" />
+                  )}
+                </Button>
+              </div>
+            </div>
+          </SignedIn>
+          
+          <SignedOut>
+            <div className="flex items-center gap-4">
+              <SignInButton mode="modal">
+                <Button variant="outline" size="sm">Sign In</Button>
+              </SignInButton>
+              <SignUpButton mode="modal">
+                <Button variant="default" size="sm">Sign Up</Button>
+              </SignUpButton>
+            </div>
+          </SignedOut>
         </div>
       </header>
     </>
