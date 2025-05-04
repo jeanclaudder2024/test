@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import { storage } from "../storage";
 import { z } from "zod";
-import { InsertRefineryPortConnection, insertRefineryPortConnectionSchema } from "@shared/schema";
+import { InsertRefineryPortConnection, insertRefineryPortConnectionSchema, InsertVessel } from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
 import { calculateDistance } from "../utils/geoUtils";
 
@@ -242,11 +242,42 @@ refineryPortRouter.post("/connect-all", async (req: Request, res: Response) => {
       const refineryLat = parseFloat(refinery.lat.toString());
       const refineryLng = parseFloat(refinery.lng.toString());
       
-      // Find ports in the same region
-      const regionalPorts = allPorts.filter(port => port.region === refinery.region);
+      // Helper function to normalize region names for comparison
+      const normalizeRegion = (region: string): string => {
+        region = region.toLowerCase();
+        
+        // Map of equivalent regions
+        const regionMap: Record<string, string[]> = {
+          'europe': ['europe', 'western-europe', 'eastern-europe'],
+          'asia-pacific': ['asia-pacific', 'asia', 'east-asia', 'china'],
+          'middle east': ['middle east', 'middle-east'],
+          'latin america': ['latin america', 'south-america', 'central-america'],
+          'north america': ['north america', 'north-america'],
+          'africa': ['africa', 'north-africa', 'southern-africa'],
+          'oceania': ['oceania', 'southeast-asia-oceania']
+        };
+        
+        // Find the normalized region
+        for (const [normalizedRegion, variants] of Object.entries(regionMap)) {
+          if (variants.some(v => region.includes(v))) {
+            return normalizedRegion;
+          }
+        }
+        
+        return region;
+      };
+      
+      // Find ports in the same region using normalized region comparison
+      const refineryNormalizedRegion = normalizeRegion(refinery.region);
+      const regionalPorts = allPorts.filter(port => {
+        const portNormalizedRegion = normalizeRegion(port.region);
+        return portNormalizedRegion === refineryNormalizedRegion;
+      });
       
       if (regionalPorts.length === 0) {
-        errors.push(`No ports found in ${refinery.region} for refinery ${refinery.name}`);
+        // If no regional ports, get global ports
+        console.log(`No ports found in normalized region '${refineryNormalizedRegion}' for refinery ${refinery.name} (original region: ${refinery.region})`);
+        errors.push(`No ports found in normalized region '${refineryNormalizedRegion}' for refinery ${refinery.name}`);
         continue;
       }
       
@@ -307,14 +338,14 @@ refineryPortRouter.post("/connect-all", async (req: Request, res: Response) => {
             connectionType = "shipping"; // For longer distances, assume shipping is used
           }
           
+          // Create connection without lastUpdated field (handled by database default)
           const newConnection: InsertRefineryPortConnection = {
             refineryId: refinery.id,
             portId: port.id,
             distance: distance.toString(),
             connectionType: connectionType,
             capacity: capacity.toString(), // 80% of refinery capacity
-            status: "active",
-            lastUpdated: new Date().toISOString() // Add current timestamp
+            status: "active"
           };
           
           await storage.createRefineryPortConnection(newConnection);
@@ -371,7 +402,7 @@ refineryPortRouter.post("/connect-all", async (req: Request, res: Response) => {
           
           // Find a sensible departure port (use port from same region if destination is set)
           if (!vessel.departurePort) {
-            const departureRegion = vessel.region || (closestPort ? closestPort.region : null);
+            const departureRegion = vessel.currentRegion || (closestPort ? closestPort.region : null);
             if (departureRegion) {
               const possibleDeparturePorts = allPorts.filter(p => p.region === departureRegion && p.id !== closestPort?.id);
               if (possibleDeparturePorts.length > 0) {
