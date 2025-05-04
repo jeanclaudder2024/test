@@ -28,7 +28,8 @@ export default function LiveTracking() {
   } = useVesselWebSocket({ 
     region: selectedRegion,
     page: 1,
-    pageSize: 500
+    pageSize: 500,
+    loadAllVessels: true // Show all vessels at once instead of paginating
   });
   
   return (
@@ -42,7 +43,7 @@ export default function LiveTracking() {
           <p className="text-muted-foreground">
             {isConnected 
               ? totalCount 
-                ? `Tracking ${totalCount.toLocaleString()} vessels in real-time (page ${page} of ${totalPages})` 
+                ? `Tracking all ${totalCount.toLocaleString()} vessels in real-time` 
                 : `Tracking ${vessels.length} vessels in real-time`
               : 'Connecting to vessel tracking service...'}
           </p>
@@ -61,7 +62,7 @@ export default function LiveTracking() {
             
             {totalCount > 0 && (
               <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
-                Page Size: {pageSize}
+                All Vessels Shown
               </Badge>
             )}
           </div>
@@ -131,64 +132,11 @@ export default function LiveTracking() {
                 Interactive map showing real-time vessel positions by region
               </CardDescription>
               
-              {/* Only show pagination controls if we have more than one page */}
-              {totalPages > 1 && (
-                <div className="mt-2 flex flex-col space-y-2">
-                  <div className="flex justify-between items-center">
-                    <div className="text-sm text-muted-foreground">
-                      Page {page} of {totalPages} ({totalCount.toLocaleString()} vessels total)
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <label className="text-sm text-muted-foreground">Page Size:</label>
-                      <select 
-                        className="text-sm border rounded-md px-2 py-1"
-                        value={pageSize}
-                        onChange={(e) => changePageSize(Number(e.target.value))}
-                      >
-                        <option value="50">50</option>
-                        <option value="100">100</option>
-                        <option value="200">200</option>
-                        <option value="500">500</option>
-                      </select>
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-center">
-                    <div className="flex space-x-1">
-                      <Button 
-                        variant="outline"
-                        size="sm"
-                        onClick={() => goToPage(1)} 
-                        disabled={page === 1}
-                      >
-                        First
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => goToPage(page > 1 ? page - 1 : 1)} 
-                        disabled={page === 1}
-                      >
-                        Previous
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => goToPage(page < totalPages ? page + 1 : totalPages)} 
-                        disabled={page === totalPages}
-                      >
-                        Next
-                      </Button>
-                      <Button 
-                        variant="outline"
-                        size="sm"
-                        onClick={() => goToPage(totalPages)} 
-                        disabled={page === totalPages}
-                      >
-                        Last
-                      </Button>
-                    </div>
+              {/* Display total vessel count information instead of pagination */}
+              {totalCount > 0 && (
+                <div className="mt-2">
+                  <div className="text-sm text-muted-foreground">
+                    Displaying all {totalCount.toLocaleString()} vessels on the map
                   </div>
                 </div>
               )}
