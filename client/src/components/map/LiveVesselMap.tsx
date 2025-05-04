@@ -16,6 +16,7 @@ import L, { LatLngExpression, DomUtil, Control, LayerGroup } from 'leaflet';
 import { createPortal } from 'react-dom';
 import { OptimizedVesselLayer, OptimizedRefineryLayer, OptimizedPortLayer } from './OptimizedMarkerLayer';
 import { Vessel, Refinery, Port, RefineryPortConnection } from '@shared/schema';
+import { OIL_PRODUCT_TYPES } from '@shared/constants';
 
 // Helper function to generate coordinates for ports
 // In a real application, this would be replaced with actual port coordinates from the database
@@ -431,6 +432,7 @@ export default function LiveVesselMap({
   const [displayMode, setDisplayMode] = useState<string>("all");
   const [hoveredVessel, setHoveredVessel] = useState<Vessel | null>(null);
   const [vesselsWithRoutes, setVesselsWithRoutes] = useState<Record<number, boolean>>({});
+  const [selectedOilType, setSelectedOilType] = useState<string>("all");
   
   // Use our WebSocket hook for real-time vessel data with fallback to REST API polling
   const { 
@@ -529,6 +531,20 @@ export default function LiveVesselMap({
               <SelectItem value="all">All Maritime Assets</SelectItem>
               <SelectItem value="vessels">Vessels Only</SelectItem>
               <SelectItem value="infrastructure">Infrastructure Only</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <Select value={selectedOilType} onValueChange={setSelectedOilType}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select Oil Type" />
+            </SelectTrigger>
+            <SelectContent className="max-h-[300px] overflow-auto">
+              <SelectItem value="all">All Oil Types</SelectItem>
+              {OIL_PRODUCT_TYPES.map(oilType => (
+                <SelectItem key={oilType} value={oilType.toLowerCase()}>
+                  {oilType}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           
@@ -643,6 +659,26 @@ export default function LiveVesselMap({
                         <SelectItem value="east_asia">East Asia</SelectItem>
                         <SelectItem value="oceania">Oceania</SelectItem>
                         <SelectItem value="south_america">South America</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="mb-4">
+                    <h3 className="text-sm font-semibold mb-2 flex items-center">
+                      <Ship className="h-4 w-4 mr-1.5 text-blue-600" />
+                      Oil Type Filter
+                    </h3>
+                    <Select value={selectedOilType} onValueChange={setSelectedOilType}>
+                      <SelectTrigger className="w-full text-sm h-8">
+                        <SelectValue placeholder="Select Oil Type" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-[200px] overflow-auto">
+                        <SelectItem value="all">All Oil Types</SelectItem>
+                        {OIL_PRODUCT_TYPES.map(oilType => (
+                          <SelectItem key={oilType} value={oilType.toLowerCase()}>
+                            {oilType}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -765,7 +801,14 @@ export default function LiveVesselMap({
             </MapControl>
             
             {/* Display vessel history if enabled */}
-            {showVesselHistory && (displayMode === 'all' || displayMode === 'vessels') && vessels.map(vessel => {
+            {showVesselHistory && (displayMode === 'all' || displayMode === 'vessels') && 
+              (selectedOilType === 'all' 
+                ? vessels 
+                : vessels.filter(v => 
+                    (v.cargoType && v.cargoType.toLowerCase().includes(selectedOilType.toLowerCase())) ||
+                    (v.vesselType && v.vesselType.toLowerCase().includes(selectedOilType.toLowerCase()))
+                  )
+              ).map(vessel => {
               // For demonstration, we'll create synthetic vessel history paths
               // In a real application, this would come from the vessel's actual historical positions
               if (vessel.currentLat && vessel.currentLng) {
@@ -819,7 +862,14 @@ export default function LiveVesselMap({
             })}
             
             {/* Display vessel routes only for vessels with enabled routes */}
-            {(displayMode === 'all' || displayMode === 'vessels') && vessels.map(vessel => {
+            {(displayMode === 'all' || displayMode === 'vessels') && 
+              (selectedOilType === 'all' 
+                ? vessels 
+                : vessels.filter(v => 
+                    (v.cargoType && v.cargoType.toLowerCase().includes(selectedOilType.toLowerCase())) ||
+                    (v.vesselType && v.vesselType.toLowerCase().includes(selectedOilType.toLowerCase()))
+                  )
+              ).map(vessel => {
               if (vesselsWithRoutes[vessel.id] && vessel.departurePort && vessel.destinationPort && vessel.currentLat && vessel.currentLng) {
                 // Create route polyline if we have departure and destination ports
                 // This is a simplification - real routes would need port coordinates
@@ -877,7 +927,13 @@ export default function LiveVesselMap({
             {/* Vessels with optimized rendering and clustering */}
             {(displayMode === 'all' || displayMode === 'vessels') && (
               <OptimizedVesselLayer 
-                vessels={vessels}
+                vessels={selectedOilType === 'all' 
+                  ? vessels 
+                  : vessels.filter(v => 
+                      (v.cargoType && v.cargoType.toLowerCase().includes(selectedOilType.toLowerCase())) ||
+                      (v.vesselType && v.vesselType.toLowerCase().includes(selectedOilType.toLowerCase()))
+                    )
+                }
                 onVesselSelect={(vessel) => {
                   setSelectedVessel(vessel);
                   setSelectedRefinery(null);
