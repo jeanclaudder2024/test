@@ -10,7 +10,8 @@ import {
   CircleMarker,
   Tooltip 
 } from 'react-leaflet';
-import L, { LatLngExpression } from 'leaflet';
+import L, { LatLngExpression, DomUtil, Control } from 'leaflet';
+import { createPortal } from 'react-dom';
 import { Vessel, Refinery, Port, RefineryPortConnection } from '@shared/schema';
 
 // Helper function to generate coordinates for ports
@@ -169,6 +170,53 @@ const portIcon = () => {
 // MapUpdateComponent - handles updating the map when vessels change
 interface MapUpdateProps {
   vessels: Vessel[];
+}
+
+// Custom Map Control for the floating control panel
+function MapControl({ 
+  position, 
+  className,
+  children 
+}: { 
+  position: 'topleft' | 'topright' | 'bottomleft' | 'bottomright',
+  className?: string,
+  children: React.ReactNode
+}) {
+  const map = useMap();
+  const controlRef = useRef<HTMLDivElement | null>(null);
+  const [container, setContainer] = useState<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    // Create control
+    const control = L.control({ position });
+    
+    // Monkeypatch _initLayout to use our custom container
+    control._initLayout = function() {
+      const containerDiv = L.DomUtil.create('div', `leaflet-custom-control ${className || ''}`);
+      containerDiv.style.padding = '0';
+      containerDiv.style.margin = '0';
+      containerDiv.style.background = 'none';
+      containerDiv.style.border = 'none';
+      containerDiv.style.boxShadow = 'none';
+      
+      L.DomEvent.disableClickPropagation(containerDiv);
+      L.DomEvent.disableScrollPropagation(containerDiv);
+      
+      this._container = containerDiv;
+      return containerDiv;
+    };
+    
+    // Add control to map
+    control.addTo(map);
+    setContainer(control.getContainer() as HTMLDivElement);
+    
+    // Clean up on unmount
+    return () => {
+      if (map) control.remove();
+    };
+  }, [map, position, className]);
+  
+  return container ? createPortal(children, container) : null;
 }
 
 // Component to fix map display issues and handle events
@@ -359,66 +407,7 @@ export default function LiveVesselMap({
         </div>
       </div>
       
-      <div className="mb-4 p-2 bg-card rounded-md">
-        <div className="flex flex-wrap gap-3 justify-center">
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="showVessels"
-              className="rounded border-gray-300"
-              checked={true}
-              disabled={true} // Always show vessels
-              onChange={() => {}} // No-op
-            />
-            <label htmlFor="showVessels" className="text-sm flex items-center">
-              <Ship className="h-4 w-4 mr-1 text-blue-500" />
-              Vessels {vessels.length > 0 && `(${vessels.length})`}
-            </label>
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="showRefineries"
-              className="rounded border-gray-300"
-              checked={showRefineries}
-              onChange={() => setShowRefineries(!showRefineries)}
-            />
-            <label htmlFor="showRefineries" className="text-sm flex items-center">
-              <Factory className="h-4 w-4 mr-1 text-red-500" />
-              Refineries {refineries.length > 0 && `(${refineries.length})`}
-            </label>
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="showPorts"
-              className="rounded border-gray-300"
-              checked={showPorts}
-              onChange={() => setShowPorts(!showPorts)}
-            />
-            <label htmlFor="showPorts" className="text-sm flex items-center">
-              <AnchorIcon className="h-4 w-4 mr-1 text-blue-600" />
-              Ports {ports.length > 0 && `(${ports.length})`}
-            </label>
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="showConnections"
-              className="rounded border-gray-300"
-              checked={showConnections}
-              onChange={() => setShowConnections(!showConnections)}
-            />
-            <label htmlFor="showConnections" className="text-sm flex items-center">
-              <Warehouse className="h-4 w-4 mr-1 text-purple-500" />
-              Connections {connections.length > 0 && `(${connections.length})`}
-            </label>
-          </div>
-        </div>
-      </div>
+
       
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-md mb-4">
