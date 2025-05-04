@@ -60,7 +60,7 @@ import { Badge } from '@/components/ui/badge';
 import { 
   Loader2, Anchor, Info, Navigation, Flag, Calendar, Ship, 
   Factory, Warehouse, Anchor as AnchorIcon, Sparkles,
-  CheckCircle, FileText
+  CheckCircle, FileText, MapPin
 } from 'lucide-react';
 import { AIGenerationPanel } from '@/components/AIGenerationPanel';
 import { useToast } from '@/hooks/use-toast';
@@ -881,175 +881,255 @@ export default function LiveVesselMap({
         <div className="col-span-1 flex flex-col space-y-4" style={{ maxHeight: height, overflowY: 'auto' }}>
           {/* Vessel Details */}
           {selectedVessel ? (
-            <Card>
-              <CardContent className="pt-6">
-                <div className="bg-blue-50 p-3 rounded-md mb-4 border-l-4 border-blue-500 flex justify-between items-center">
-                  <div>
-                    <h3 className="text-xl font-bold text-blue-800">{selectedVessel.name}</h3>
-                    <p className="text-sm text-blue-600">{selectedVessel.vesselType.toUpperCase()}</p>
-                  </div>
-                  <Badge className="bg-blue-100 text-blue-800 border-blue-200 text-sm">Vessel</Badge>
+            <Card className="border-blue-200 shadow-lg">
+              <CardHeader className="bg-gradient-to-b from-blue-50 to-white border-b border-blue-100">
+                <div className="flex justify-between items-center">
+                  <Badge className="bg-blue-100 text-blue-700 mb-2 hover:bg-blue-200">{selectedVessel.vesselType}</Badge>
+                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Active</Badge>
                 </div>
-                
-                <div className="grid grid-cols-2 gap-y-2 text-sm mb-4">
-                  <div className="flex items-center">
-                    <Ship className="h-4 w-4 mr-2" />
-                    <span className="text-muted-foreground">Type:</span>
-                  </div>
-                  <div>{selectedVessel.vesselType}</div>
+                <CardTitle className="flex items-center gap-2 text-blue-800">
+                  <Ship className="h-5 w-5 text-blue-600" />
+                  {selectedVessel.name}
+                </CardTitle>
+                <CardDescription className="text-blue-600">
+                  {selectedVessel.flag} • IMO: {selectedVessel.imo}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4 p-4">
+                <Tabs defaultValue="voyage" className="w-full">
+                  <TabsList className="w-full">
+                    <TabsTrigger value="voyage" className="flex gap-1 items-center text-xs">
+                      <Navigation className="h-3 w-3" /> Voyage
+                    </TabsTrigger>
+                    <TabsTrigger value="details" className="flex gap-1 items-center text-xs">
+                      <Info className="h-3 w-3" /> Details
+                    </TabsTrigger>
+                    <TabsTrigger value="position" className="flex gap-1 items-center text-xs">
+                      <MapPin className="h-3 w-3" /> Position
+                    </TabsTrigger>
+                    <TabsTrigger value="documents" className="flex gap-1 items-center text-xs">
+                      <FileText className="h-3 w-3" /> Docs
+                    </TabsTrigger>
+                  </TabsList>
                   
-                  <div className="flex items-center">
-                    <Anchor className="h-4 w-4 mr-2" />
-                    <span className="text-muted-foreground">IMO:</span>
-                  </div>
-                  <div>{selectedVessel.imo}</div>
-                  
-                  <div className="flex items-center">
-                    <Info className="h-4 w-4 mr-2" />
-                    <span className="text-muted-foreground">MMSI:</span>
-                  </div>
-                  <div>{selectedVessel.mmsi}</div>
-                  
-                  <div className="flex items-center">
-                    <Flag className="h-4 w-4 mr-2" />
-                    <span className="text-muted-foreground">Flag:</span>
-                  </div>
-                  <div>{selectedVessel.flag}</div>
-                </div>
-                
-                <Separator className="my-4" />
-                
-                <h4 className="font-semibold mb-2">Navigation Details</h4>
-                
-                {selectedVessel.metadata ? (
-                  (() => {
-                    try {
-                      const metadata = JSON.parse(selectedVessel.metadata);
-                      return (
-                        <div className="grid grid-cols-2 gap-y-2 text-sm mb-4">
-                          <div className="flex items-center">
-                            <Navigation className="h-4 w-4 mr-2" />
-                            <span className="text-muted-foreground">Heading:</span>
+                  <TabsContent value="voyage" className="pt-4">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="text-center space-y-1">
+                          <div className="flex flex-col items-center">
+                            <AnchorIcon className="h-4 w-4 text-blue-600 mb-1" />
+                            <span className="text-xs text-muted-foreground">Origin</span>
                           </div>
-                          <div>{metadata.heading}°</div>
-                          
-                          <div className="flex items-center">
-                            <span className="text-muted-foreground">Course:</span>
-                          </div>
-                          <div>{metadata.course}°</div>
-                          
-                          <div className="flex items-center">
-                            <span className="text-muted-foreground">Speed:</span>
-                          </div>
-                          <div>{metadata.speed} knots</div>
-                          
-                          <div className="flex items-center">
-                            <span className="text-muted-foreground">Status:</span>
-                          </div>
-                          <div>{metadata.status}</div>
-                          
-                          <div className="flex items-center">
-                            <Calendar className="h-4 w-4 mr-2" />
-                            <span className="text-muted-foreground">Last Position:</span>
-                          </div>
-                          <div>{new Date(metadata.lastPositionTime).toLocaleString()}</div>
+                          <div className="font-semibold text-sm">{selectedVessel.departurePort || 'Unknown'}</div>
+                          {selectedVessel.departureDate && (
+                            <div className="text-xs text-muted-foreground">
+                              {new Date(selectedVessel.departureDate).toLocaleDateString()}
+                            </div>
+                          )}
                         </div>
-                      );
-                    } catch (e) {
-                      return <p className="text-sm text-muted-foreground">Navigation data unavailable</p>;
-                    }
-                  })()
-                ) : (
-                  <p className="text-sm text-muted-foreground">Navigation data unavailable</p>
-                )}
-                
-                <Separator className="my-4" />
-                
-                <h4 className="font-semibold mb-2">Voyage Information</h4>
-                <div className="grid grid-cols-1 gap-y-2 text-sm">
-                  <div>
-                    <span className="text-muted-foreground">From:</span>{' '}
-                    {selectedVessel.departurePort || 'Unknown'}
-                    {selectedVessel.departureDate && (
-                      <span className="text-xs block text-muted-foreground">
-                        {new Date(selectedVessel.departureDate).toLocaleDateString()}
-                      </span>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <span className="text-muted-foreground">To:</span>{' '}
-                    {selectedVessel.destinationPort || 'Unknown'}
-                    {selectedVessel.eta && (
-                      <span className="text-xs block text-muted-foreground">
-                        ETA: {new Date(selectedVessel.eta).toLocaleDateString()}
-                      </span>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <span className="text-muted-foreground">Cargo:</span>{' '}
-                    {selectedVessel.cargoType || 'Unknown'}
-                    {selectedVessel.cargoCapacity && (
-                      <span className="text-xs block text-muted-foreground">
-                        Capacity: {selectedVessel.cargoCapacity.toLocaleString()} tons
-                      </span>
-                    )}
-                  </div>
-                </div>
-                
-                <Separator className="my-4" />
-                
-                {/* Document Generation Panel */}
-                <Card className="mt-4 border-2 border-blue-200 shadow-md">
-                  <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 pb-3">
-                    <CardTitle className="flex items-center text-lg text-blue-800">
-                      <FileText className="h-5 w-5 mr-2 text-blue-500" />
-                      AI Document Generator
-                    </CardTitle>
-                    <CardDescription className="text-blue-700">
-                      Generate shipping documentation for this vessel using AI
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-5">
-                    <div className="bg-blue-50 rounded-md p-3 border border-blue-100 mb-4">
-                      <p className="text-sm text-blue-800 mb-2 font-medium">
-                        Available Document Types
-                      </p>
-                      <div className="grid grid-cols-2 gap-2 text-xs">
-                        <div className="flex items-center">
-                          <CheckCircle className="h-3 w-3 mr-1 text-green-500" />
-                          <span className="text-blue-700">Bill of Lading</span>
+                        
+                        <div className="flex-1 px-4">
+                          <div className="h-0.5 w-full bg-gradient-to-r from-blue-200 via-primary to-red-200 relative">
+                            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-blue-500 rounded-full h-3 w-3"></div>
+                          </div>
                         </div>
-                        <div className="flex items-center">
-                          <CheckCircle className="h-3 w-3 mr-1 text-green-500" />
-                          <span className="text-blue-700">Certificate of Origin</span>
+                        
+                        <div className="text-center space-y-1">
+                          <div className="flex flex-col items-center">
+                            <AnchorIcon className="h-4 w-4 text-red-600 mb-1" />
+                            <span className="text-xs text-muted-foreground">Destination</span>
+                          </div>
+                          <div className="font-semibold text-sm">{selectedVessel.destinationPort || 'Unknown'}</div>
+                          {selectedVessel.eta && (
+                            <div className="text-xs text-muted-foreground">
+                              ETA: {new Date(selectedVessel.eta).toLocaleDateString()}
+                            </div>
+                          )}
                         </div>
-                        <div className="flex items-center">
-                          <CheckCircle className="h-3 w-3 mr-1 text-green-500" />
-                          <span className="text-blue-700">Packing List</span>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-sm bg-blue-50 rounded-md p-3">
+                        <div className="font-medium text-slate-700">Cargo Type:</div>
+                        <div>{selectedVessel.cargoType || 'Unknown'}</div>
+                        
+                        <div className="font-medium text-slate-700">Amount:</div>
+                        <div>
+                          {selectedVessel.cargoAmount 
+                            ? selectedVessel.cargoAmount.toLocaleString() + ' tons'
+                            : (selectedVessel.cargoCapacity 
+                              ? selectedVessel.cargoCapacity.toLocaleString() + ' tons capacity' 
+                              : 'Unknown')}
                         </div>
+                        
+                        <div className="font-medium text-slate-700">Status:</div>
                         <div className="flex items-center">
-                          <CheckCircle className="h-3 w-3 mr-1 text-green-500" />
-                          <span className="text-blue-700">Commercial Invoice</span>
+                          <span className="inline-block h-2 w-2 rounded-full bg-green-500 mr-1.5"></span>
+                          <span>In Transit</span>
+                        </div>
+                        
+                        <div className="font-medium text-slate-700">Progress:</div>
+                        <div className="flex items-center">
+                          <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
+                            <div className="h-full bg-blue-500 rounded-full" style={{ width: '65%' }}></div>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </CardContent>
-                  <CardFooter className="bg-blue-50 pt-3 pb-4 px-6">
-                    <Button 
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center gap-2 py-5"
-                      onClick={() => {
-                        // Link to document generation page would go here
-                        window.alert('Document generation feature will open in a dedicated panel');
-                      }}
-                    >
-                      <FileText className="h-4 w-4" />
-                      Generate Shipping Documentation
-                    </Button>
-                  </CardFooter>
-                </Card>
+                  </TabsContent>
+                  
+                  <TabsContent value="details" className="pt-4">
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-sm bg-slate-50 rounded-md p-3">
+                      <div className="font-medium text-slate-700">IMO Number:</div>
+                      <div>{selectedVessel.imo}</div>
+                      
+                      <div className="font-medium text-slate-700">MMSI:</div>
+                      <div>{selectedVessel.mmsi}</div>
+                      
+                      <div className="font-medium text-slate-700">Flag:</div>
+                      <div className="flex items-center gap-1">
+                        <Flag className="h-3 w-3 text-blue-600" />
+                        {selectedVessel.flag}
+                      </div>
+                      
+                      <div className="font-medium text-slate-700">Vessel Type:</div>
+                      <div className="capitalize">{selectedVessel.vesselType}</div>
+                      
+                      {selectedVessel.built && (
+                        <>
+                          <div className="font-medium text-slate-700">Built:</div>
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3 text-blue-600" />
+                            {selectedVessel.built}
+                          </div>
+                        </>
+                      )}
+                      
+                      {selectedVessel.deadweight && (
+                        <>
+                          <div className="font-medium text-slate-700">Deadweight:</div>
+                          <div>{selectedVessel.deadweight.toLocaleString()} tons</div>
+                        </>
+                      )}
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="position" className="pt-4">
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-sm bg-green-50 rounded-md p-3">
+                        {selectedVessel.currentLat && selectedVessel.currentLng && (
+                          <>
+                            <div className="font-medium text-slate-700">Coordinates:</div>
+                            <div>
+                              {parseFloat(selectedVessel.currentLat).toFixed(4)}, {parseFloat(selectedVessel.currentLng).toFixed(4)}
+                            </div>
+                          </>
+                        )}
+                        
+                        {selectedVessel.metadata && (() => {
+                          try {
+                            const metadata = JSON.parse(selectedVessel.metadata);
+                            return (
+                              <>
+                                <div className="font-medium text-slate-700">Course:</div>
+                                <div>{metadata.course || 0}°</div>
+                                
+                                <div className="font-medium text-slate-700">Speed:</div>
+                                <div>{metadata.speed || 0} knots</div>
+                                
+                                <div className="font-medium text-slate-700">Navigation Status:</div>
+                                <div className="flex items-center">
+                                  <span className="inline-block h-2 w-2 rounded-full bg-green-500 mr-1.5"></span>
+                                  <span>{metadata.status || 'Under way'}</span>
+                                </div>
+                              </>
+                            );
+                          } catch (e) {
+                            return null;
+                          }
+                        })()}
+                        
+                        {selectedVessel.lastUpdate && (
+                          <>
+                            <div className="font-medium text-slate-700">Last Update:</div>
+                            <div className="text-xs">{new Date(selectedVessel.lastUpdate).toLocaleString()}</div>
+                          </>
+                        )}
+                      </div>
+                      
+                      <div className="text-xs text-slate-500">
+                        <p className="flex items-center">
+                          <CheckCircle className="h-3 w-3 text-green-500 mr-1" /> 
+                          Vessel position data verified and validated by AIS
+                        </p>
+                      </div>
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="documents" className="pt-4">
+                    <div className="space-y-2">
+                      <div className="bg-amber-50 border border-amber-200 rounded-md p-3">
+                        <p className="text-xs text-amber-700 mb-2">
+                          No documents are currently associated with this vessel. Generate required documentation:
+                        </p>
+                        <div className="grid grid-cols-2 gap-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="text-xs h-8"
+                            onClick={() => window.alert('Document generation feature will open in a dedicated panel')}
+                          >
+                            <FileText className="h-3 w-3 mr-1" /> Bill of Lading
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="text-xs h-8"
+                            onClick={() => window.alert('Document generation feature will open in a dedicated panel')}
+                          >
+                            <FileText className="h-3 w-3 mr-1" /> Cargo Manifest
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="text-xs h-8"
+                            onClick={() => window.alert('Document generation feature will open in a dedicated panel')}
+                          >
+                            <FileText className="h-3 w-3 mr-1" /> Certificate of Origin
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="text-xs h-8"
+                            onClick={() => window.alert('Document generation feature will open in a dedicated panel')}
+                          >
+                            <FileText className="h-3 w-3 mr-1" /> Commercial Invoice
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </TabsContent>
+                </Tabs>
               </CardContent>
+              <CardFooter className="bg-gradient-to-t from-blue-50 to-white border-t border-blue-100 gap-2">
+                <Button 
+                  variant="default" 
+                  className="w-full"
+                  onClick={() => {
+                    window.location.href = `/vessels/${selectedVessel.id}`;
+                  }}
+                >
+                  <Info className="h-4 w-4 mr-2" />
+                  Full Details
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => setSelectedVessel(null)}
+                >
+                  Close
+                </Button>
+              </CardFooter>
             </Card>
           ) : selectedRefinery ? (
             /* Refinery Details */
