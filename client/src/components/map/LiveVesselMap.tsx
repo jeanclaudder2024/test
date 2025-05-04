@@ -414,11 +414,17 @@ export default function LiveVesselMap({ initialRegion, height = '600px' }: LiveV
                           )}
                         </div>
                         <Button 
-                          className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs py-1"
-                          onClick={() => {
+                          className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs py-1 mt-2"
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent map click from interfering
                             setSelectedVessel(vessel);
                             setSelectedRefinery(null);
                             setSelectedPort(null);
+                            // Close the popup
+                            const closeButton = e.currentTarget.closest('.leaflet-popup')?.querySelector('.leaflet-popup-close-button');
+                            if (closeButton instanceof HTMLElement) {
+                              closeButton.click();
+                            }
                           }}
                         >
                           <Ship className="h-3 w-3 mr-1" />
@@ -478,11 +484,17 @@ export default function LiveVesselMap({ initialRegion, height = '600px' }: LiveV
                           )}
                         </div>
                         <Button 
-                          className="w-full bg-red-600 hover:bg-red-700 text-white text-xs py-1"
-                          onClick={() => {
+                          className="w-full bg-red-600 hover:bg-red-700 text-white text-xs py-1 mt-2"
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent map click from interfering
                             setSelectedRefinery(refinery);
                             setSelectedVessel(null);
                             setSelectedPort(null);
+                            // Close the popup
+                            const closeButton = e.currentTarget.closest('.leaflet-popup')?.querySelector('.leaflet-popup-close-button');
+                            if (closeButton instanceof HTMLElement) {
+                              closeButton.click();
+                            }
                           }}
                         >
                           <Factory className="h-3 w-3 mr-1" />
@@ -542,11 +554,17 @@ export default function LiveVesselMap({ initialRegion, height = '600px' }: LiveV
                           )}
                         </div>
                         <Button 
-                          className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs py-1"
-                          onClick={() => {
+                          className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs py-1 mt-2"
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent map click from interfering
                             setSelectedPort(port);
                             setSelectedVessel(null);
                             setSelectedRefinery(null);
+                            // Close the popup
+                            const closeButton = e.currentTarget.closest('.leaflet-popup')?.querySelector('.leaflet-popup-close-button');
+                            if (closeButton instanceof HTMLElement) {
+                              closeButton.click();
+                            }
                           }}
                         >
                           <Anchor className="h-3 w-3 mr-1" />
