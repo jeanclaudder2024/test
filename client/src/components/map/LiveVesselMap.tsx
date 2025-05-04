@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { 
   MapContainer, 
   TileLayer, 
@@ -8,9 +8,13 @@ import {
   Polyline,
   Rectangle,
   CircleMarker,
-  Tooltip 
+  Tooltip,
+  LayersControl,
+  useMapEvents,
+  Pane
 } from 'react-leaflet';
 import L, { LatLngExpression, DomUtil, Control } from 'leaflet';
+import MarkerClusterGroup from 'react-leaflet-cluster';
 import { createPortal } from 'react-dom';
 import { Vessel, Refinery, Port, RefineryPortConnection } from '@shared/schema';
 
@@ -741,114 +745,142 @@ export default function LiveVesselMap({
               return null;
             })}
             
-            {/* Display vessels */}
-            {(displayMode === 'all' || displayMode === 'vessels') && vessels.map(vessel => {
-              // Parse vessel metadata if available
-              let metadata = {
-                heading: 0,
-                course: 0,
-                speed: 0,
-                status: 'Unknown',
-                lastPositionTime: new Date().toISOString()
-              };
-              
-              try {
-                if (vessel.metadata) {
-                  metadata = JSON.parse(vessel.metadata);
-                }
-              } catch (e) {
-                console.error('Failed to parse vessel metadata:', e);
-              }
-              
-              // Only render if we have valid coordinates
-              if (vessel.currentLat && vessel.currentLng) {
-                const lat = parseFloat(vessel.currentLat);
-                const lng = parseFloat(vessel.currentLng);
-                
-                if (isNaN(lat) || isNaN(lng)) return null;
-                
-                return (
-                  <Marker
-                    key={`vessel-${vessel.id}`}
-                    position={[lat, lng]}
-                    icon={vesselIcon(metadata.heading, metadata.speed, vessel.vesselType)}
-                    eventHandlers={{
-                      click: () => {
-                        setSelectedVessel(vessel);
-                        setSelectedRefinery(null);
-                        setSelectedPort(null);
+            {/* Display vessels using clustering for better performance */}
+            {(displayMode === 'all' || displayMode === 'vessels') && (
+              <Pane name="vessels-layer" style={{ zIndex: 450 }}>
+                <MarkerClusterGroup
+                  chunkedLoading={true}
+                  showCoverageOnHover={false}
+                  maxClusterRadius={80}
+                  disableClusteringAtZoom={9}
+                  spiderfyOnMaxZoom={true}
+                  iconCreateFunction={(cluster: L.MarkerCluster) => {
+                    const count = cluster.getChildCount();
+                    let size = 40;
+                    let className = 'vessel-cluster-small';
+                    
+                    if (count > 100) {
+                      size = 60;
+                      className = 'vessel-cluster-large';
+                    } else if (count > 20) {
+                      size = 50;
+                      className = 'vessel-cluster-medium';
+                    }
+                    
+                    return L.divIcon({
+                      html: `<div><span>${count}</span></div>`,
+                      className: `vessel-cluster ${className}`,
+                      iconSize: L.point(size, size),
+                    });
+                  }}
+                >
+                  {vessels.filter(vessel => 
+                    vessel.currentLat && 
+                    vessel.currentLng && 
+                    !isNaN(parseFloat(vessel.currentLat)) && 
+                    !isNaN(parseFloat(vessel.currentLng))
+                  ).map(vessel => {
+                    // Parse vessel metadata if available
+                    let metadata = {
+                      heading: 0,
+                      course: 0,
+                      speed: 0,
+                      status: 'Unknown',
+                      lastPositionTime: new Date().toISOString()
+                    };
+                    
+                    try {
+                      if (vessel.metadata) {
+                        metadata = JSON.parse(vessel.metadata);
                       }
-                    }}
-                  >
-                    <Popup>
-                      <div className="text-sm">
-                        <div className="bg-blue-50 p-2 rounded-md mb-2 border-l-4 border-blue-500">
-                          <p className="font-bold text-base text-blue-700">{vessel.name}</p>
-                          <p className="text-xs text-blue-600">{vessel.vesselType.toUpperCase()}</p>
-                        </div>
-                        <div className="grid grid-cols-2 gap-1 text-xs mb-2">
-                          <div className="font-semibold">IMO:</div>
-                          <div>{vessel.imo}</div>
-                          
-                          <div className="font-semibold">MMSI:</div>
-                          <div>{vessel.mmsi}</div>
-                          
-                          <div className="font-semibold">Flag:</div>
-                          <div>{vessel.flag}</div>
-                          
-                          <div className="font-semibold">Speed:</div>
-                          <div>{metadata.speed} knots</div>
-                          
-                          {vessel.cargoType && (
-                            <>
-                              <div className="font-semibold">Cargo:</div>
-                              <div>{vessel.cargoType}</div>
-                            </>
-                          )}
-                        </div>
-                        
-                        {/* Route Toggle Button */}
-                        <div className="flex items-center justify-between my-2 bg-blue-50 p-2 rounded-md">
-                          <label className="text-xs flex items-center text-blue-700 font-medium">
-                            <Navigation className="h-3 w-3 mr-1" />
-                            Show Vessel Route
-                          </label>
-                          <Switch 
-                            checked={!!vesselsWithRoutes[vessel.id]}
-                            onCheckedChange={(checked) => {
-                              setVesselsWithRoutes(prev => ({
-                                ...prev,
-                                [vessel.id]: checked
-                              }));
-                            }}
-                            size="sm"
-                          />
-                        </div>
-                        
-                        <Button 
-                          className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs py-1 mt-2"
-                          onClick={(e) => {
-                            e.stopPropagation(); // Prevent map click from interfering
-                            // Close the popup
-                            const closeButton = e.currentTarget.closest('.leaflet-popup')?.querySelector('.leaflet-popup-close-button');
-                            if (closeButton instanceof HTMLElement) {
-                              closeButton.click();
-                            }
-                            // Navigate to vessel detail page
-                            window.location.href = `/vessels/${vessel.id}`;
-                          }}
-                        >
-                          <Ship className="h-3 w-3 mr-1" />
-                          Show Details
-                        </Button>
-                      </div>
-                    </Popup>
-                  </Marker>
-                );
-              }
-              
-              return null;
-            })}
+                    } catch (e) {
+                      console.error('Failed to parse vessel metadata:', e);
+                    }
+                    
+                    const lat = parseFloat(vessel.currentLat!);
+                    const lng = parseFloat(vessel.currentLng!);
+                    
+                    return (
+                      <Marker
+                        key={`vessel-${vessel.id}`}
+                        position={[lat, lng]}
+                        icon={vesselIcon(metadata.heading, metadata.speed, vessel.vesselType)}
+                        eventHandlers={{
+                          click: () => {
+                            setSelectedVessel(vessel);
+                            setSelectedRefinery(null);
+                            setSelectedPort(null);
+                          }
+                        }}
+                      >
+                        <Popup>
+                          <div className="text-sm">
+                            <div className="bg-blue-50 p-2 rounded-md mb-2 border-l-4 border-blue-500">
+                              <p className="font-bold text-base text-blue-700">{vessel.name}</p>
+                              <p className="text-xs text-blue-600">{vessel.vesselType.toUpperCase()}</p>
+                            </div>
+                            <div className="grid grid-cols-2 gap-1 text-xs mb-2">
+                              <div className="font-semibold">IMO:</div>
+                              <div>{vessel.imo}</div>
+                              
+                              <div className="font-semibold">MMSI:</div>
+                              <div>{vessel.mmsi}</div>
+                              
+                              <div className="font-semibold">Flag:</div>
+                              <div>{vessel.flag}</div>
+                              
+                              <div className="font-semibold">Speed:</div>
+                              <div>{metadata.speed} knots</div>
+                              
+                              {vessel.cargoType && (
+                                <>
+                                  <div className="font-semibold">Cargo:</div>
+                                  <div>{vessel.cargoType}</div>
+                                </>
+                              )}
+                            </div>
+                            
+                            {/* Route Toggle Button */}
+                            <div className="flex items-center justify-between my-2 bg-blue-50 p-2 rounded-md">
+                              <label className="text-xs flex items-center text-blue-700 font-medium">
+                                <Navigation className="h-3 w-3 mr-1" />
+                                Show Vessel Route
+                              </label>
+                              <Switch 
+                                checked={!!vesselsWithRoutes[vessel.id]}
+                                onCheckedChange={(checked) => {
+                                  setVesselsWithRoutes(prev => ({
+                                    ...prev,
+                                    [vessel.id]: checked
+                                  }));
+                                }}
+                              />
+                            </div>
+                            
+                            <Button 
+                              className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs py-1 mt-2"
+                              onClick={(e) => {
+                                e.stopPropagation(); // Prevent map click from interfering
+                                // Close the popup
+                                const closeButton = e.currentTarget.closest('.leaflet-popup')?.querySelector('.leaflet-popup-close-button');
+                                if (closeButton instanceof HTMLElement) {
+                                  closeButton.click();
+                                }
+                                // Navigate to vessel detail page
+                                window.location.href = `/vessels/${vessel.id}`;
+                              }}
+                            >
+                              <Ship className="h-3 w-3 mr-1" />
+                              Show Details
+                            </Button>
+                          </div>
+                        </Popup>
+                      </Marker>
+                    );
+                  })}
+                </MarkerClusterGroup>
+              </Pane>
+            )}
             
             {/* Display refineries */}
             {showRefineries && (displayMode === 'all' || displayMode === 'infrastructure') && refineries.map(refinery => {

@@ -2,6 +2,51 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Vessel cluster styling for better performance */
+.vessel-cluster {
+  background-color: rgba(33, 150, 243, 0.7);
+  border: 3px solid rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  color: white;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+}
+
+.vessel-cluster:hover {
+  background-color: rgba(33, 150, 243, 0.9);
+  transform: scale(1.05);
+}
+
+.vessel-cluster > div {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vessel-cluster span {
+  font-size: 14px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.vessel-cluster-small {
+  font-size: 12px;
+}
+
+.vessel-cluster-medium {
+  font-size: 14px;
+}
+
+.vessel-cluster-large {
+  font-size: 16px;
+}
+
 /* Enhanced popup styles for refineries */
 .refinery-popup {
   z-index: 1000 !important;
