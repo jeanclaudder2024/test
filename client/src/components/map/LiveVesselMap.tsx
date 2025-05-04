@@ -537,100 +537,86 @@ export default function LiveVesselMap({ initialRegion, height = '600px' }: LiveV
         </div>
         
         <div className="col-span-1 flex flex-col space-y-4" style={{ maxHeight: height, overflowY: 'auto' }}>
-          {/* Enhanced Vessel Details */}
+          {/* Vessel Details */}
           {selectedVessel ? (
-            <Card className="overflow-hidden border-2 border-blue-100 shadow-lg">
-              <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-4 text-white">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-xl font-bold">{selectedVessel.name}</h3>
-                  <Badge className="bg-white text-blue-800 hover:bg-blue-50">{selectedVessel.vesselType}</Badge>
-                </div>
-              </div>
-              
+            <Card>
               <CardContent className="pt-6">
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="col-span-2 bg-blue-50 rounded-lg p-3 flex items-center space-x-3">
-                    <Ship className="h-6 w-6 text-blue-500" />
-                    <div>
-                      <span className="text-sm font-medium text-blue-800">Vessel Registry</span>
-                      <div className="flex space-x-4 mt-1">
-                        <div className="flex items-center space-x-1">
-                          <span className="text-xs font-medium text-gray-500">IMO:</span>
-                          <span className="text-xs font-bold">{selectedVessel.imo}</span>
-                        </div>
-                        <div className="flex items-center space-x-1">
-                          <span className="text-xs font-medium text-gray-500">MMSI:</span>
-                          <span className="text-xs font-bold">{selectedVessel.mmsi}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-blue-50 rounded-lg p-3 flex flex-col">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <Flag className="h-4 w-4 text-blue-500" />
-                      <span className="text-sm font-medium text-blue-800">Flag</span>
-                    </div>
-                    <p className="text-sm font-semibold">{selectedVessel.flag}</p>
-                  </div>
-                  
-                  <div className="bg-blue-50 rounded-lg p-3 flex flex-col">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <Calendar className="h-4 w-4 text-blue-500" />
-                      <span className="text-sm font-medium text-blue-800">Built</span>
-                    </div>
-                    <p className="text-sm font-semibold">{selectedVessel.built || 'Unknown'}</p>
-                  </div>
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="text-xl font-bold">{selectedVessel.name}</h3>
+                  <Badge className="bg-blue-100 text-blue-800 border-blue-200">Vessel</Badge>
                 </div>
                 
-                <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-3 rounded-lg mb-4">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <Navigation className="h-4 w-4 text-blue-500" />
-                    <span className="text-sm font-medium text-blue-800">Navigation Details</span>
+                <div className="grid grid-cols-2 gap-y-2 text-sm mb-4">
+                  <div className="flex items-center">
+                    <Ship className="h-4 w-4 mr-2" />
+                    <span className="text-muted-foreground">Type:</span>
                   </div>
+                  <div>{selectedVessel.vesselType}</div>
+                  
+                  <div className="flex items-center">
+                    <Anchor className="h-4 w-4 mr-2" />
+                    <span className="text-muted-foreground">IMO:</span>
+                  </div>
+                  <div>{selectedVessel.imo}</div>
+                  
+                  <div className="flex items-center">
+                    <Info className="h-4 w-4 mr-2" />
+                    <span className="text-muted-foreground">MMSI:</span>
+                  </div>
+                  <div>{selectedVessel.mmsi}</div>
+                  
+                  <div className="flex items-center">
+                    <Flag className="h-4 w-4 mr-2" />
+                    <span className="text-muted-foreground">Flag:</span>
+                  </div>
+                  <div>{selectedVessel.flag}</div>
+                </div>
                 
-                  {selectedVessel.metadata ? (
-                    (() => {
-                      try {
-                        const metadata = JSON.parse(selectedVessel.metadata);
-                        return (
-                          <div className="grid grid-cols-2 gap-y-2 text-sm mb-4">
-                            <div className="flex items-center">
-                              <Navigation className="h-4 w-4 mr-2" />
-                              <span className="text-muted-foreground">Heading:</span>
-                            </div>
-                            <div>{metadata.heading}°</div>
-                            
-                            <div className="flex items-center">
-                              <span className="text-muted-foreground">Course:</span>
-                            </div>
-                            <div>{metadata.course}°</div>
-                            
-                            <div className="flex items-center">
-                              <span className="text-muted-foreground">Speed:</span>
-                            </div>
-                            <div>{metadata.speed} knots</div>
-                            
-                            <div className="flex items-center">
-                              <span className="text-muted-foreground">Status:</span>
-                            </div>
-                            <div>{metadata.status}</div>
-                            
-                            <div className="flex items-center">
-                              <Calendar className="h-4 w-4 mr-2" />
-                              <span className="text-muted-foreground">Last Position:</span>
-                            </div>
-                            <div>{new Date(metadata.lastPositionTime).toLocaleString()}</div>
+                <Separator className="my-4" />
+                
+                <h4 className="font-semibold mb-2">Navigation Details</h4>
+                
+                {selectedVessel.metadata ? (
+                  (() => {
+                    try {
+                      const metadata = JSON.parse(selectedVessel.metadata);
+                      return (
+                        <div className="grid grid-cols-2 gap-y-2 text-sm mb-4">
+                          <div className="flex items-center">
+                            <Navigation className="h-4 w-4 mr-2" />
+                            <span className="text-muted-foreground">Heading:</span>
                           </div>
-                        );
-                      } catch (e) {
-                        return <p className="text-sm text-muted-foreground">Navigation data unavailable</p>;
-                      }
-                    })()
-                  ) : (
-                    <p className="text-sm text-muted-foreground">Navigation data unavailable</p>
-                  )}
-                </div>
+                          <div>{metadata.heading}°</div>
+                          
+                          <div className="flex items-center">
+                            <span className="text-muted-foreground">Course:</span>
+                          </div>
+                          <div>{metadata.course}°</div>
+                          
+                          <div className="flex items-center">
+                            <span className="text-muted-foreground">Speed:</span>
+                          </div>
+                          <div>{metadata.speed} knots</div>
+                          
+                          <div className="flex items-center">
+                            <span className="text-muted-foreground">Status:</span>
+                          </div>
+                          <div>{metadata.status}</div>
+                          
+                          <div className="flex items-center">
+                            <Calendar className="h-4 w-4 mr-2" />
+                            <span className="text-muted-foreground">Last Position:</span>
+                          </div>
+                          <div>{new Date(metadata.lastPositionTime).toLocaleString()}</div>
+                        </div>
+                      );
+                    } catch (e) {
+                      return <p className="text-sm text-muted-foreground">Navigation data unavailable</p>;
+                    }
+                  })()
+                ) : (
+                  <p className="text-sm text-muted-foreground">Navigation data unavailable</p>
+                )}
                 
                 <Separator className="my-4" />
                 
@@ -669,108 +655,87 @@ export default function LiveVesselMap({ initialRegion, height = '600px' }: LiveV
               </CardContent>
             </Card>
           ) : selectedRefinery ? (
-            /* Enhanced Refinery Details */
-            <Card className="overflow-hidden border-2 border-red-100 shadow-lg">
-              <div className="bg-gradient-to-r from-red-500 to-red-600 p-4 text-white">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-xl font-bold">{selectedRefinery.name}</h3>
-                  <Badge className="bg-white text-red-800 hover:bg-red-50">Refinery</Badge>
-                </div>
-              </div>
-              
+            /* Refinery Details */
+            <Card>
               <CardContent className="pt-6">
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="col-span-2 bg-red-50 rounded-lg p-3 flex items-center space-x-3">
-                    <Factory className="h-6 w-6 text-red-500" />
-                    <div>
-                      <span className="text-sm font-medium text-red-800">Facility Information</span>
-                      <div className="flex space-x-4 mt-1">
-                        <div className="flex items-center space-x-1">
-                          <span className="text-xs font-medium text-gray-500">Country:</span>
-                          <span className="text-xs font-bold">{selectedRefinery.country}</span>
-                        </div>
-                        <div className="flex items-center space-x-1">
-                          <span className="text-xs font-medium text-gray-500">Region:</span>
-                          <span className="text-xs font-bold">{selectedRefinery.region}</span>
-                        </div>
-                      </div>
-                    </div>
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="text-xl font-bold">{selectedRefinery.name}</h3>
+                  <Badge className="bg-red-100 text-red-800 border-red-200">Refinery</Badge>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-y-2 text-sm mb-4">
+                  <div className="flex items-center">
+                    <Factory className="h-4 w-4 mr-2" />
+                    <span className="text-muted-foreground">Country:</span>
                   </div>
+                  <div>{selectedRefinery.country}</div>
+                  
+                  <div className="flex items-center">
+                    <span className="text-muted-foreground">Region:</span>
+                  </div>
+                  <div>{selectedRefinery.region}</div>
                   
                   {selectedRefinery.capacity && (
-                    <div className="bg-red-50 rounded-lg p-3 flex flex-col">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <span className="text-sm font-medium text-red-800">Capacity</span>
+                    <>
+                      <div className="flex items-center">
+                        <span className="text-muted-foreground">Capacity:</span>
                       </div>
-                      <p className="text-sm font-semibold">{selectedRefinery.capacity.toLocaleString()} bpd</p>
-                    </div>
+                      <div>{selectedRefinery.capacity.toLocaleString()} bpd</div>
+                    </>
                   )}
                   
                   {selectedRefinery.status && (
-                    <div className="bg-red-50 rounded-lg p-3 flex flex-col">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <span className="text-sm font-medium text-red-800">Status</span>
-                      </div>
+                    <>
                       <div className="flex items-center">
-                        <div className={`h-2 w-2 rounded-full mr-2 ${
-                          selectedRefinery.status === 'active' ? 'bg-green-500' : 
-                          selectedRefinery.status === 'maintenance' ? 'bg-yellow-500' : 'bg-gray-500'
-                        }`} />
-                        <p className="text-sm font-semibold capitalize">{selectedRefinery.status}</p>
+                        <span className="text-muted-foreground">Status:</span>
                       </div>
-                    </div>
+                      <div>{selectedRefinery.status}</div>
+                    </>
                   )}
                   
-                  <div className="col-span-2 bg-red-50 rounded-lg p-3 flex items-center">
-                    <div className="w-full">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <span className="text-sm font-medium text-red-800">Location</span>
-                      </div>
-                      <p className="text-sm font-semibold text-center">
-                        {typeof selectedRefinery.lat === 'string' 
-                          ? parseFloat(selectedRefinery.lat).toFixed(4) 
-                          : selectedRefinery.lat.toFixed(4)}, 
-                        {typeof selectedRefinery.lng === 'string'
-                          ? parseFloat(selectedRefinery.lng).toFixed(4)
-                          : selectedRefinery.lng.toFixed(4)}
-                      </p>
-                    </div>
+                  <div className="flex items-center">
+                    <span className="text-muted-foreground">Location:</span>
+                  </div>
+                  <div>
+                    {typeof selectedRefinery.lat === 'string' 
+                      ? parseFloat(selectedRefinery.lat).toFixed(4) 
+                      : selectedRefinery.lat.toFixed(4)}, 
+                    {typeof selectedRefinery.lng === 'string'
+                      ? parseFloat(selectedRefinery.lng).toFixed(4)
+                      : selectedRefinery.lng.toFixed(4)}
                   </div>
                 </div>
                 
-                <div className="bg-gradient-to-r from-red-50 to-red-100 p-3 rounded-lg mb-4">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <AnchorIcon className="h-4 w-4 text-red-500" />
-                    <span className="text-sm font-medium text-red-800">Connected Ports</span>
-                  </div>
+                <Separator className="my-4" />
                 
-                  {connections
-                    .filter(conn => conn.refineryId === selectedRefinery.id)
-                    .map(conn => {
-                      const port = ports.find(p => p.id === conn.portId);
-                      if (!port) return null;
-                      
-                      return (
-                        <div 
-                          key={`conn-${conn.id}`} 
-                          className="p-2 mb-2 rounded border border-purple-200 bg-purple-50"
-                          onClick={() => setSelectedPort(port)}
-                          style={{ cursor: 'pointer' }}
-                        >
-                          <div className="font-medium text-sm flex items-center">
-                            <AnchorIcon className="h-3 w-3 mr-1 text-blue-600" />
-                            {port.name}
-                          </div>
-                          <div className="text-xs text-muted-foreground">{port.country}</div>
+                <h4 className="font-semibold mb-2">Connected Ports</h4>
+                
+                {connections
+                  .filter(conn => conn.refineryId === selectedRefinery.id)
+                  .map(conn => {
+                    const port = ports.find(p => p.id === conn.portId);
+                    if (!port) return null;
+                    
+                    return (
+                      <div 
+                        key={`conn-${conn.id}`} 
+                        className="p-2 mb-2 rounded border border-purple-200 bg-purple-50"
+                        onClick={() => setSelectedPort(port)}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <div className="font-medium text-sm flex items-center">
+                          <AnchorIcon className="h-3 w-3 mr-1 text-blue-600" />
+                          {port.name}
                         </div>
-                      );
-                    })
-                  }
-                  
-                  {connections.filter(conn => conn.refineryId === selectedRefinery.id).length === 0 && (
-                    <p className="text-sm text-muted-foreground">No connected ports found</p>
-                  )}
-                </div>
+                        <div className="text-xs text-muted-foreground">{port.country}</div>
+                      </div>
+                    );
+                  })
+                }
+                
+                {connections.filter(conn => conn.refineryId === selectedRefinery.id).length === 0 && (
+                  <p className="text-sm text-muted-foreground">No connected ports found</p>
+                )}
                 
                 <Separator className="my-4" />
                 
@@ -792,103 +757,86 @@ export default function LiveVesselMap({ initialRegion, height = '600px' }: LiveV
               </CardContent>
             </Card>
           ) : selectedPort ? (
-            /* Enhanced Port Details */
-            <Card className="overflow-hidden border-2 border-blue-100 shadow-lg">
-              <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-4 text-white">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-xl font-bold">{selectedPort.name}</h3>
-                  <Badge className="bg-white text-blue-800 hover:bg-blue-50">Port</Badge>
-                </div>
-              </div>
-              
+            /* Port Details */
+            <Card>
               <CardContent className="pt-6">
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="col-span-2 bg-blue-50 rounded-lg p-3 flex items-center space-x-3">
-                    <AnchorIcon className="h-6 w-6 text-blue-500" />
-                    <div>
-                      <span className="text-sm font-medium text-blue-800">Port Information</span>
-                      <div className="flex space-x-4 mt-1">
-                        <div className="flex items-center space-x-1">
-                          <span className="text-xs font-medium text-gray-500">Country:</span>
-                          <span className="text-xs font-bold">{selectedPort.country}</span>
-                        </div>
-                        <div className="flex items-center space-x-1">
-                          <span className="text-xs font-medium text-gray-500">Region:</span>
-                          <span className="text-xs font-bold">{selectedPort.region}</span>
-                        </div>
-                      </div>
-                    </div>
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="text-xl font-bold">{selectedPort.name}</h3>
+                  <Badge className="bg-blue-100 text-blue-800 border-blue-200">Port</Badge>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-y-2 text-sm mb-4">
+                  <div className="flex items-center">
+                    <AnchorIcon className="h-4 w-4 mr-2" />
+                    <span className="text-muted-foreground">Country:</span>
                   </div>
+                  <div>{selectedPort.country}</div>
+                  
+                  <div className="flex items-center">
+                    <span className="text-muted-foreground">Region:</span>
+                  </div>
+                  <div>{selectedPort.region}</div>
                   
                   {selectedPort.capacity && (
-                    <div className="bg-blue-50 rounded-lg p-3 flex flex-col">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <Warehouse className="h-4 w-4 text-blue-500" />
-                        <span className="text-sm font-medium text-blue-800">Capacity</span>
+                    <>
+                      <div className="flex items-center">
+                        <span className="text-muted-foreground">Capacity:</span>
                       </div>
-                      <p className="text-sm font-semibold">{selectedPort.capacity.toLocaleString()} tons/year</p>
-                    </div>
+                      <div>{selectedPort.capacity.toLocaleString()} tons/year</div>
+                    </>
                   )}
                   
-                  <div className="bg-blue-50 rounded-lg p-3 flex flex-col">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <Navigation className="h-4 w-4 text-blue-500" />
-                      <span className="text-sm font-medium text-blue-800">Coordinates</span>
-                    </div>
-                    <p className="text-sm font-semibold">
-                      {typeof selectedPort.lat === 'string' 
-                        ? parseFloat(selectedPort.lat).toFixed(4) 
-                        : selectedPort.lat.toFixed(4)}, 
-                      {typeof selectedPort.lng === 'string'
-                        ? parseFloat(selectedPort.lng).toFixed(4)
-                        : selectedPort.lng.toFixed(4)}
-                    </p>
+                  <div className="flex items-center">
+                    <span className="text-muted-foreground">Location:</span>
+                  </div>
+                  <div>
+                    {typeof selectedPort.lat === 'string' 
+                      ? parseFloat(selectedPort.lat).toFixed(4) 
+                      : selectedPort.lat.toFixed(4)}, 
+                    {typeof selectedPort.lng === 'string'
+                      ? parseFloat(selectedPort.lng).toFixed(4)
+                      : selectedPort.lng.toFixed(4)}
                   </div>
                 </div>
                 
                 {selectedPort.description && (
-                  <div className="bg-blue-50 rounded-lg p-3 mb-4">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <Info className="h-4 w-4 text-blue-500" />
-                      <span className="text-sm font-medium text-blue-800">Description</span>
-                    </div>
+                  <>
+                    <Separator className="my-4" />
+                    <h4 className="font-semibold mb-2">Description</h4>
                     <p className="text-sm">{selectedPort.description}</p>
-                  </div>
+                  </>
                 )}
                 
-                <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-3 rounded-lg mb-4">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <Factory className="h-4 w-4 text-blue-500" />
-                    <span className="text-sm font-medium text-blue-800">Connected Refineries</span>
-                  </div>
+                <Separator className="my-4" />
                 
-                  {connections
-                    .filter(conn => conn.portId === selectedPort.id)
-                    .map(conn => {
-                      const refinery = refineries.find(r => r.id === conn.refineryId);
-                      if (!refinery) return null;
-                      
-                      return (
-                        <div 
-                          key={`conn-${conn.id}`} 
-                          className="p-2 mb-2 rounded border border-red-200 bg-red-50"
-                          onClick={() => setSelectedRefinery(refinery)}
-                          style={{ cursor: 'pointer' }}
-                        >
-                          <div className="font-medium text-sm flex items-center">
-                            <Factory className="h-3 w-3 mr-1 text-red-600" />
-                            {refinery.name}
-                          </div>
-                          <div className="text-xs text-muted-foreground">{refinery.country}</div>
+                <h4 className="font-semibold mb-2">Connected Refineries</h4>
+                
+                {connections
+                  .filter(conn => conn.portId === selectedPort.id)
+                  .map(conn => {
+                    const refinery = refineries.find(r => r.id === conn.refineryId);
+                    if (!refinery) return null;
+                    
+                    return (
+                      <div 
+                        key={`conn-${conn.id}`} 
+                        className="p-2 mb-2 rounded border border-red-200 bg-red-50"
+                        onClick={() => setSelectedRefinery(refinery)}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <div className="font-medium text-sm flex items-center">
+                          <Factory className="h-3 w-3 mr-1 text-red-600" />
+                          {refinery.name}
                         </div>
-                      );
-                    })
-                  }
-                  
-                  {connections.filter(conn => conn.portId === selectedPort.id).length === 0 && (
-                    <p className="text-sm text-muted-foreground">No connected refineries found</p>
-                  )}
-                </div>
+                        <div className="text-xs text-muted-foreground">{refinery.country}</div>
+                      </div>
+                    );
+                  })
+                }
+                
+                {connections.filter(conn => conn.portId === selectedPort.id).length === 0 && (
+                  <p className="text-sm text-muted-foreground">No connected refineries found</p>
+                )}
                 
                 <Separator className="my-4" />
                 
