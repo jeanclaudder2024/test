@@ -252,15 +252,16 @@ export default function LiveVesselMap({
   // Use our WebSocket hook for real-time vessel data with fallback to REST API polling
   const { 
     vessels, 
-    isConnected, 
+    connected: isConnected, 
     lastUpdated, 
     error: vesselError, 
-    isLoading: vesselsLoading, 
+    loading: vesselsLoading, 
     refreshData: refreshVesselData,
-    usingFallback
+    connectionType: usingFallback
   } = useVesselWebSocket({ 
     region: selectedRegion,
-    pollingInterval: 30000 // 30 seconds polling interval for REST API fallback
+    pollingInterval: 30000, // 30 seconds polling interval for REST API fallback
+    loadAllVessels: true // Load all vessels at once for routing visualization
   });
   
   // Use maritime data hook for refineries and ports with their connections
@@ -434,13 +435,8 @@ export default function LiveVesselMap({
             minZoom={2}
             maxBounds={[[-90, -180], [90, 180]]}
             maxBoundsViscosity={1.0}
+            worldCopyJump={true}
           >
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-              url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-              subdomains="abcd"
-              maxZoom={19}
-            />
             
             {/* Handle different map styles */}
             {mapStyle === 'dark' && (
@@ -493,6 +489,60 @@ export default function LiveVesselMap({
             
             {/* Add a MapEvents component to handle fitWorld */}
             <MapEvents />
+            
+            {/* Display vessel history if enabled */}
+            {showVesselHistory && (displayMode === 'all' || displayMode === 'vessels') && vessels.map(vessel => {
+              // For demonstration, we'll create synthetic vessel history paths
+              // In a real application, this would come from the vessel's actual historical positions
+              if (vessel.currentLat && vessel.currentLng) {
+                const currentLat = parseFloat(vessel.currentLat);
+                const currentLng = parseFloat(vessel.currentLng);
+                
+                if (isNaN(currentLat) || isNaN(currentLng)) return null;
+                
+                // Create a simple "wake" pattern behind the vessel using vessel ID to make it deterministic
+                const historyPoints: [number, number][] = [];
+                
+                // Use vessel ID to create a somewhat deterministic pattern
+                const vesselIdNum = parseInt(vessel.id.toString());
+                const direction = vesselIdNum % 8; // 0-7 for different directions
+                const directionMap = [
+                  [-0.01, 0], // North
+                  [-0.007, 0.007], // Northeast
+                  [0, 0.01], // East
+                  [0.007, 0.007], // Southeast
+                  [0.01, 0], // South
+                  [0.007, -0.007], // Southwest
+                  [0, -0.01], // West
+                  [-0.007, -0.007], // Northwest
+                ];
+                
+                // Use the direction to create history points
+                for (let i = 1; i <= 5; i++) {
+                  historyPoints.push([
+                    currentLat - (directionMap[direction][0] * i),
+                    currentLng - (directionMap[direction][1] * i)
+                  ]);
+                }
+                
+                // Add current position as first point
+                historyPoints.unshift([currentLat, currentLng]);
+                
+                return (
+                  <Polyline
+                    key={`history-${vessel.id}`}
+                    positions={historyPoints as LatLngExpression[]}
+                    pathOptions={{
+                      color: '#00ff00',
+                      weight: 2,
+                      opacity: 0.5,
+                      dashArray: '3, 6'
+                    }}
+                  />
+                );
+              }
+              return null;
+            })}
             
             {/* Display vessel routes if enabled */}
             {showRoutes && (displayMode === 'all' || displayMode === 'vessels') && vessels.map(vessel => {
