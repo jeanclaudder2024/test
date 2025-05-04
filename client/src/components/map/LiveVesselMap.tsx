@@ -9,8 +9,10 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { 
   Loader2, Anchor, Info, Navigation, Flag, Calendar, Ship, 
-  Factory, Warehouse, Anchor as AnchorIcon 
+  Factory, Warehouse, Anchor as AnchorIcon, Sparkles
 } from 'lucide-react';
+import { AIGenerationPanel } from '@/components/AIGenerationPanel';
+import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
