@@ -89,16 +89,27 @@ function Router() {
 }
 
 function App() {
+  const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+  
   return (
     <QueryClientProvider client={queryClient}>
-      <ClerkProvider>
+      {clerkPubKey ? (
+        <ClerkProvider>
+          <AuthProvider>
+            <LanguageProvider>
+              <Router />
+              <Toaster />
+            </LanguageProvider>
+          </AuthProvider>
+        </ClerkProvider>
+      ) : (
         <AuthProvider>
           <LanguageProvider>
             <Router />
             <Toaster />
           </LanguageProvider>
         </AuthProvider>
-      </ClerkProvider>
+      )}
     </QueryClientProvider>
   );
 }

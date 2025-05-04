@@ -1,33 +1,31 @@
-import { ClerkProvider as BaseClerkProvider } from '@clerk/clerk-react';
+import { ClerkProvider as ClerkProviderBase } from '@clerk/clerk-react';
 import { ReactNode } from 'react';
 
-// Get the publishable key from the environment
-const publishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-
-// Check if the key is available
-if (!publishableKey) {
-  console.error("Missing Clerk publishable key. Set VITE_CLERK_PUBLISHABLE_KEY in your environment.");
-}
-
+// Define the props interface
 interface ClerkProviderProps {
   children: ReactNode;
 }
 
 export function ClerkProvider({ children }: ClerkProviderProps) {
+  const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+  
+  if (!clerkPubKey) {
+    console.error('Missing VITE_CLERK_PUBLISHABLE_KEY environment variable');
+    // Return children without Clerk wrapping if no key is available
+    return <>{children}</>;
+  }
+
   return (
-    <BaseClerkProvider 
-      publishableKey={publishableKey}
+    <ClerkProviderBase
+      publishableKey={clerkPubKey}
       appearance={{
         elements: {
-          formButtonPrimary: 'bg-blue-600 hover:bg-blue-700 text-white',
-          card: 'bg-white shadow-none',
-          socialButtonsIconButton: 'border-gray-300',
-          formFieldInput: 'border-gray-300',
-          footer: 'hidden',
+          formButtonPrimary: 'bg-blue-600 hover:bg-blue-700',
+          card: 'bg-white',
         }
       }}
     >
       {children}
-    </BaseClerkProvider>
+    </ClerkProviderBase>
   );
 }
