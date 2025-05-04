@@ -2081,7 +2081,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       try {
         // First try to get vessels from database
-        vessels = await storage.getVessels();
+        // Use a cached version if available and refresh every 5 minutes
+        const now = Date.now();
+        if (!global.cachedVessels || !global.lastVesselCacheTime || now - global.lastVesselCacheTime > 5 * 60 * 1000) {
+          global.cachedVessels = await storage.getVessels();
+          global.lastVesselCacheTime = now;
+          console.log(`Updated cached vessels with ${global.cachedVessels.length} records`);
+        }
+        
+        vessels = global.cachedVessels;
         console.log(`Retrieved ${vessels.length} vessels from database`);
       } catch (dbError) {
         console.log('Database error, fetching from API instead:', dbError);
