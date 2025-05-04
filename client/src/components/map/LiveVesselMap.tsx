@@ -121,6 +121,33 @@ interface MapUpdateProps {
   vessels: Vessel[];
 }
 
+// Component to fix map display issues and handle events
+function MapEvents() {
+  const map = useMap();
+  
+  useEffect(() => {
+    // Fix gray areas by ensuring proper wrapping of the map
+    if (map) {
+      // Enable proper map wrapping around the globe
+      map.options.worldCopyJump = true;
+      
+      // Handle map resize events to ensure proper rendering
+      const handleResize = () => {
+        map.invalidateSize();
+      };
+      
+      window.addEventListener('resize', handleResize);
+      
+      // Clean up
+      return () => {
+        window.removeEventListener('resize', handleResize);
+      };
+    }
+  }, [map]);
+  
+  return null;
+}
+
 function MapUpdate({ vessels }: MapUpdateProps) {
   const map = useMap();
 
@@ -341,12 +368,20 @@ export default function LiveVesselMap({ initialRegion, height = '600px' }: LiveV
           <MapContainer
             center={mapCenter}
             zoom={mapZoom}
-            style={{ height: '100%', width: '100%' }}
+            style={{ height: '100%', width: '100%', background: '#1B262C' }}
+            minZoom={2}
+            maxBounds={[[-90, -180], [90, 180]]}
+            maxBoundsViscosity={1.0}
           >
             <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+              url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+              subdomains="abcd"
+              maxZoom={19}
             />
+            
+            {/* Add a MapEvents component to handle fitWorld */}
+            <MapEvents />
             
             {/* Display vessels */}
             {(displayMode === 'all' || displayMode === 'vessels') && vessels.map(vessel => {
