@@ -331,8 +331,6 @@ export function useVesselWebSocket(props: UseVesselWebSocketProps = 'global') {
   
   // Function to manually request vessel data
   const refreshData = (newPage?: number, newPageSize?: number) => {
-    setIsLoading(true);
-    
     // Update pagination parameters if provided
     if (newPage !== undefined) {
       setPage(newPage);
@@ -344,6 +342,29 @@ export function useVesselWebSocket(props: UseVesselWebSocketProps = 'global') {
     
     const currentPage = newPage !== undefined ? newPage : page;
     const currentPageSize = newPageSize !== undefined ? newPageSize : pageSize;
+    
+    // First check if we have cached data for this region
+    const cachedData = vesselCache.getVessels(region);
+    
+    if (cachedData && !vesselCache.isExpired()) {
+      console.log(`Using cached vessel data for region '${region}' (${cachedData.length} vessels)`);
+      
+      // Use the cached data without server request
+      setVessels(cachedData);
+      setLastUpdated(new Date().toISOString());
+      setIsLoading(false);
+      
+      // Calculate pagination info for UI
+      const totalCount = cachedData.length;
+      const totalPages = Math.ceil(totalCount / currentPageSize);
+      setTotalCount(totalCount);
+      setTotalPages(totalPages);
+      
+      return; // Don't continue with server request
+    }
+    
+    // If no cache or expired, fetch from server
+    setIsLoading(true);
     
     if (usePolling) {
       // If using REST API polling, manually trigger a poll
@@ -365,6 +386,9 @@ export function useVesselWebSocket(props: UseVesselWebSocketProps = 'global') {
             if (data.totalPages) setTotalPages(data.totalPages);
             if (data.currentPage) setPage(data.currentPage);
             if (data.pageSize) setPageSize(data.pageSize);
+            
+            // Update cache
+            vesselCache.setVessels(region, data.vessels);
             
             setVessels(data.vessels);
             setLastUpdated(data.timestamp || new Date().toISOString());
