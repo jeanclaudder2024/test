@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useDataStream } from '@/hooks/useDataStream';
-import { Refinery, Vessel } from '@/types';
+import { Refinery, Vessel } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
 import SimpleLeafletMap from '@/components/map/SimpleLeafletMap';
+import LiveVesselMap from '@/components/map/LiveVesselMap';
 import {
   Card,
   CardContent,
@@ -15,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Link, useRoute } from 'wouter';
 import { 
   ArrowLeft, Factory, Map, Edit, PieChart, Droplet, 
@@ -57,6 +59,7 @@ export default function RefineryDetail() {
   const { refineries, vessels, loading } = useDataStream();
   const { toast } = useToast();
   const [associatedVessels, setAssociatedVessels] = useState<Vessel[]>([]);
+  const [activeTab, setActiveTab] = useState('details');
   
   // Find the refinery from our stream data
   const refinery = refineries.find(r => r.id === refineryId);
@@ -161,7 +164,22 @@ export default function RefineryDetail() {
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Tabs defaultValue="details" value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+            <TabsList className="mb-2">
+              <TabsTrigger value="details">Details</TabsTrigger>
+              <TabsTrigger value="vessels">
+                Vessels
+                {associatedVessels.length > 0 && (
+                  <Badge variant="secondary" className="ml-2">
+                    {associatedVessels.length}
+                  </Badge>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="map">Live Tracking</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="details" className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card>
               <div className="relative">
                 {/* Background image based on refinery region */}
@@ -891,6 +909,122 @@ export default function RefineryDetail() {
               </CardFooter>
             </Card>
           </div>
+            </TabsContent>
+            
+            <TabsContent value="vessels" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Ship className="h-5 w-5 text-primary" />
+                    Associated Vessels
+                  </CardTitle>
+                  <CardDescription>
+                    Vessels that have loaded cargo at {refinery.name}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {associatedVessels.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {associatedVessels.map((vessel) => (
+                        <Card key={vessel.id} className="overflow-hidden">
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-base flex justify-between">
+                              <span>{vessel.name}</span>
+                              <StatusBadge status={vessel.status || 'Unknown'} />
+                            </CardTitle>
+                            <CardDescription>
+                              {vessel.vesselType || 'Unknown vessel type'} · IMO: {vessel.imo || 'N/A'}
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent className="pb-2">
+                            <div className="grid grid-cols-2 gap-2 text-sm mb-2">
+                              <div>
+                                <span className="text-muted-foreground">Capacity:</span>{' '}
+                                <span className="font-medium">{vessel.capacity ? vessel.capacity.toLocaleString() : 'N/A'}</span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Flag:</span>{' '}
+                                <span className="font-medium">{vessel.flag || 'N/A'}</span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Cargo:</span>{' '}
+                                <span className="font-medium">{vessel.cargoType || 'N/A'}</span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Built:</span>{' '}
+                                <span className="font-medium">{vessel.yearBuilt || 'N/A'}</span>
+                              </div>
+                            </div>
+                            
+                            {vessel.originPort && vessel.destinationPort && (
+                              <div className="text-xs text-muted-foreground border-t pt-2 mt-1">
+                                <div className="flex items-center justify-between">
+                                  <span className="flex items-center">
+                                    <MapPin className="h-3 w-3 mr-1" /> 
+                                    {vessel.originPort}
+                                  </span>
+                                  <span>→</span>
+                                  <span className="flex items-center">
+                                    {vessel.destinationPort} 
+                                    <MapPin className="h-3 w-3 ml-1" />
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+                          </CardContent>
+                          <CardFooter className="pt-2">
+                            <Button 
+                              variant="default" 
+                              size="sm" 
+                              className="w-full"
+                              onClick={() => window.location.href = `/vessels/${vessel.id}`}
+                            >
+                              View Details
+                            </Button>
+                          </CardFooter>
+                        </Card>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <Ship className="mx-auto h-12 w-12 text-muted-foreground opacity-50 mb-4" />
+                      <h3 className="text-lg font-medium mb-2">No vessels found</h3>
+                      <p className="text-muted-foreground mb-4">
+                        There are no vessels currently associated with this refinery.
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="map" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Globe className="h-5 w-5 text-primary" />
+                    Live Vessel Tracking - {refinery.name}
+                  </CardTitle>
+                  <CardDescription>
+                    Real-time location of vessels associated with this refinery
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-0 overflow-hidden">
+                  <div className="h-[600px] w-full">
+                    <LiveVesselMap 
+                      height="600px"
+                      initialRegion={refinery.region?.toLowerCase() || "global"}
+                      showRoutes={true}
+                      mapStyle="standard"
+                      initialLat={refinery.lat ? parseFloat(String(refinery.lat)) : undefined}
+                      initialLng={refinery.lng ? parseFloat(String(refinery.lng)) : undefined}
+                      initialZoom={6}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </>
       ) : null}
     </div>
