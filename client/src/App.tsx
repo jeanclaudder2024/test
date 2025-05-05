@@ -20,6 +20,7 @@ import LandingPage from "@/pages/LandingPage";
 import AuthPage from "@/pages/AuthPage";
 import TradingDashboard from "@/pages/TradingDashboard";
 import LiveTracking from "@/pages/LiveTracking";
+import Companies from "@/pages/Companies";
 import ApiTest from "@/pages/ApiTest";
 import { useEffect } from "react";
 import { apiRequest } from "./lib/queryClient";

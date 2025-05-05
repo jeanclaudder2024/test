@@ -421,6 +421,70 @@ export class DatabaseStorage implements IStorage {
     await db.delete(refineryPortConnections).where(eq(refineryPortConnections.id, id));
     return true;
   }
+  
+  // Company methods implementation
+  async getCompanies(): Promise<Company[]> {
+    return await db.select().from(companies);
+  }
+
+  async getCompanyById(id: number): Promise<Company | undefined> {
+    const [company] = await db.select().from(companies).where(eq(companies.id, id));
+    return company || undefined;
+  }
+
+  async getCompaniesByRegion(region: string): Promise<Company[]> {
+    return await db.select().from(companies).where(eq(companies.region, region));
+  }
+
+  async createCompany(insertCompany: InsertCompany): Promise<Company> {
+    const [company] = await db.insert(companies).values(insertCompany).returning();
+    return company;
+  }
+  
+  async createCompaniesBulk(insertCompanies: InsertCompany[]): Promise<Company[]> {
+    // If no companies provided, return empty array
+    if (!insertCompanies || insertCompanies.length === 0) {
+      return [];
+    }
+    
+    try {
+      // Insert all companies in a single database operation
+      const createdCompanies = await db.insert(companies).values(insertCompanies).returning();
+      return createdCompanies;
+    } catch (error) {
+      console.error("Error in bulk company insertion:", error);
+      
+      // Fall back to individual inserts if bulk insert fails
+      console.log("Falling back to individual company insertions");
+      const results: Company[] = [];
+      
+      for (const company of insertCompanies) {
+        try {
+          const [createdCompany] = await db.insert(companies).values(company).returning();
+          results.push(createdCompany);
+        } catch (singleError) {
+          console.error(`Error inserting company ${company.name}:`, singleError);
+          // Continue with the next company
+        }
+      }
+      
+      return results;
+    }
+  }
+
+  async updateCompany(id: number, companyUpdate: Partial<InsertCompany>): Promise<Company | undefined> {
+    const [updatedCompany] = await db
+      .update(companies)
+      .set(companyUpdate)
+      .where(eq(companies.id, id))
+      .returning();
+    return updatedCompany || undefined;
+  }
+
+  async deleteCompany(id: number): Promise<boolean> {
+    await db.delete(companies).where(eq(companies.id, id));
+    return true;
+  }
 }
 
 // Use database storage

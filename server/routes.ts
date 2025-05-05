@@ -1775,6 +1775,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // API routes for AI-powered content generation
   app.use("/api/ai", aiRouter);
+  
+  // API routes for oil shipping companies
+  app.use("/api/companies", companyRouter);
 
   // API tester routes (performance testing, etc.)
   app.use("/api/tester", apiTesterRouter);
