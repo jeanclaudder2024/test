@@ -1,13 +1,11 @@
 import { useState, useEffect } from "react";
 import SimpleLeafletMap from "@/components/map/SimpleLeafletMap";
 import VesselInfo from "@/components/vessels/VesselInfo";
-import ProgressTimeline from "@/components/vessels/ProgressTimeline";
 import StatsCards from "@/components/dashboard/StatsCards";
 import RegionDistribution from "@/components/dashboard/RegionDistribution";
 import AIAssistant from "@/components/ai/AIAssistant";
 import { type Region, type RegionData } from "@/types";
 import { type Vessel, type Refinery, type Port } from "@shared/schema";
-import { useVesselProgressEvents } from "@/hooks/useVessels";
 // استيراد خدمة توليد السفن لمحطات النفط
 import { getVesselsAtRefineryPorts } from "@/services/asiStreamService";
 import { Button } from "@/components/ui/button";
@@ -93,10 +91,7 @@ export default function Dashboard() {
     return !selectedRegion || port.region === selectedRegion;
   });
   
-  // Fetch progress events for selected vessel
-  const { data: progressEvents = [], isLoading: progressLoading } = useVesselProgressEvents(
-    selectedVessel?.id || null
-  );
+  // Progress events feature removed
   
   // Handle region selection
   const handleRegionSelect = (region: Region) => {
@@ -635,13 +630,22 @@ export default function Dashboard() {
               )}
             </div>
             
-            {/* Progress Card or Region Info */}
+            {/* Vessel or Refinery Info */}
             <div>
               {selectedVessel ? (
-                <ProgressTimeline 
-                  events={progressEvents} 
-                  isLoading={progressLoading} 
-                />
+                <Card className="overflow-hidden h-full">
+                  <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
+                    <h3 className="font-heading font-medium text-gray-800">Vessel Journey</h3>
+                  </div>
+                  <CardContent className="p-4">
+                    <div className="text-center py-4">
+                      <Button variant="link" className="text-primary text-sm p-0 h-auto" onClick={() => window.open(`/vessels/${selectedVessel.id}`)}>
+                        View Full Journey Details
+                        <ArrowRight className="h-4 w-4 ml-1" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
               ) : selectedRefinery && (
                 <Card>
                   <CardHeader>
