@@ -369,6 +369,54 @@ export default function VesselDetail() {
   const { data: progressEvents = [], isLoading: progressLoading } = useVesselProgressEvents(vesselId);
   const { toast } = useToast();
   const [isUpdatingLocation, setIsUpdatingLocation] = useState(false);
+  const [voyageProgress, setVoyageProgress] = useState<any>(null);
+  const [isLoadingVoyage, setIsLoadingVoyage] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState<any>(null);
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  
+  // Function to fetch voyage progress data
+  const fetchVoyageProgress = async () => {
+    if (!vesselId || !vessel?.destinationPort) return;
+    
+    setIsLoadingVoyage(true);
+    try {
+      const response = await axios.get(`/api/vessels/${vesselId}/voyage-progress`);
+      if (response.data) {
+        setVoyageProgress(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching voyage progress:', error);
+      toast({
+        title: "Failed to fetch voyage data",
+        description: "We couldn't retrieve the latest journey information.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingVoyage(false);
+    }
+  };
+  
+  // Function to fetch current location data
+  const fetchCurrentLocation = async () => {
+    if (!vesselId) return;
+    
+    setIsLoadingLocation(true);
+    try {
+      const response = await axios.get(`/api/vessels/${vesselId}/location`);
+      if (response.data) {
+        setCurrentLocation(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching current location:', error);
+      toast({
+        title: "Failed to fetch location data",
+        description: "We couldn't retrieve the latest vessel location.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingLocation(false);
+    }
+  };
   
   // Find the vessel from our stream data
   console.log('VesselDetail: Looking for vessel with ID:', vesselId);
@@ -376,6 +424,14 @@ export default function VesselDetail() {
   console.log('VesselDetail: First few vessel IDs:', vessels.slice(0, 5).map((v: any) => v.id));
   
   const vessel = vessels.find((v: any) => v.id === vesselId);
+  
+  // Load voyage data and location when vessel is available
+  useEffect(() => {
+    if (vessel && vessel.id) {
+      fetchVoyageProgress();
+      fetchCurrentLocation();
+    }
+  }, [vessel?.id]);
   
   // Log result of search
   if (vessel) {
@@ -853,6 +909,17 @@ export default function VesselDetail() {
             </TabsContent>
             
             <TabsContent value="journey">
+              {/* Add the VoyageDetails component at the top of the journey tab */}
+              <VoyageDetails 
+                vessel={vessel}
+                voyageProgress={voyageProgress}
+                isLoadingVoyage={isLoadingVoyage}
+                onRefreshVoyage={fetchVoyageProgress}
+                currentLocation={currentLocation}
+                isLoadingLocation={isLoadingLocation}
+                onRefreshLocation={fetchCurrentLocation}
+              />
+              
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Cargo Information Card */}
                 <Card>
