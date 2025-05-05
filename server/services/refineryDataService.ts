@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { db } from '../db';
-import { refineries, InsertRefinery } from '@shared/schema';
+import { refineries, InsertRefinery, Refinery } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import { storage } from '../storage';
 import { openaiService } from './openaiService';
@@ -368,18 +368,32 @@ export class RefineryDataService {
    */
   async generateRefineryDescription(refinery: InsertRefinery): Promise<string> {
     try {
-      const prompt = `Generate a detailed, factual description (about 2-3 sentences) for the following oil refinery:
-Name: ${refinery.name}
-Country: ${refinery.country}
-Region: ${refinery.region}
-Capacity: ${refinery.capacity} barrels per day
-Status: ${refinery.status}
-
-The description should include information about the refinery's capacity, location, products, and any other relevant factual information. Do not make up specific years of construction or other specific details that might not be accurate.`;
-
-      // Use the openaiService to generate the description
-      const description = await openaiService.generateText(prompt);
-      return description || `${refinery.name} is a petroleum refinery located in ${refinery.country} with a processing capacity of ${refinery.capacity} barrels per day.`;
+      if (!process.env.OPENAI_API_KEY) {
+        console.log("OpenAI API key not set, using default description");
+        return `${refinery.name} is a petroleum refinery located in ${refinery.country} with a processing capacity of ${refinery.capacity} barrels per day.`;
+      }
+      
+      // Create a refinery object with the same structure as the database refinery
+      const refineryObj: Refinery = {
+        id: 0, // Temporary ID
+        name: refinery.name,
+        country: refinery.country,
+        region: refinery.region,
+        lat: refinery.lat,
+        lng: refinery.lng,
+        capacity: Number(refinery.capacity),
+        status: refinery.status || "operational",
+        description: ""
+      };
+      
+      // Try to use the openaiService to generate the description
+      try {
+        const description = await openaiService.generateRefineryDescription(refineryObj);
+        return description;
+      } catch (error) {
+        console.log("Error using openaiService to generate description, using fallback");
+        return `${refinery.name} is a petroleum refinery located in ${refinery.country} with a processing capacity of ${refinery.capacity} barrels per day.`;
+      }
     } catch (error) {
       console.error("Error generating refinery description with OpenAI:", error);
       return `${refinery.name} is a petroleum refinery located in ${refinery.country} with a processing capacity of ${refinery.capacity} barrels per day.`;

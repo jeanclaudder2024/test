@@ -272,6 +272,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     });
     
+    // Add a new endpoint to update refineries with real data
+    apiRouter.post("/refineries/update-real-data", async (req, res) => {
+      try {
+        console.log("Starting refinery update with real-world data...");
+        
+        // Update refineries with real data from the refineryDataService
+        const refineries = await refineryDataService.seedRealRefineryData();
+        console.log(`Successfully updated refineries with ${refineries.length} real-world refineries`);
+        
+        res.json({
+          success: true,
+          message: "Refinery data has been updated with real-world information",
+          data: {
+            count: refineries.length,
+            regions: refineries.reduce((acc, r) => {
+              acc[r.region] = (acc[r.region] || 0) + 1;
+              return acc;
+            }, {})
+          }
+        });
+      } catch (error) {
+        console.error("Error updating refineries with real data:", error);
+        res.status(500).json({ message: "Failed to update refineries with real data" });
+      }
+    });
+    
     // Add a new endpoint to add all world ports to the database
     apiRouter.post("/ports/add-all-world-ports", async (req, res) => {
       try {
