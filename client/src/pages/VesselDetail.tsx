@@ -920,7 +920,7 @@ export default function VesselDetail() {
                 onRefreshLocation={fetchCurrentLocation}
               />
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Cargo Information Card */}
                 <Card>
                   <div className="relative">
@@ -1078,69 +1078,52 @@ export default function VesselDetail() {
                   </CardFooter>
                 </Card>
                 
-                {/* Journey Progress Timeline Card */}
-                <Card className="md:col-span-2">
+                {/* Add Progress Event Card */}
+                <Card>
                   <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <History className="h-5 w-5 mr-2 text-primary" />
-                      Voyage Progress
-                    </CardTitle>
+                    <CardTitle>Add Progress Event</CardTitle>
                     <CardDescription>
-                      Timeline of vessel's journey - جدول زمني لرحلة السفينة
+                      Record a new location or status update
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <ProgressTimeline events={progressEvents} />
+                    <form className="space-y-4">
+                      <div className="space-y-2">
+                        <label htmlFor="event" className="text-sm font-medium">
+                          Event Type
+                        </label>
+                        <Input id="event" placeholder="e.g. Departure, Arrival, Position Update" />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <label htmlFor="location" className="text-sm font-medium">
+                          Location
+                        </label>
+                        <Input id="location" placeholder="Port or location name" />
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label htmlFor="lat" className="text-sm font-medium">
+                            Latitude
+                          </label>
+                          <Input id="lat" placeholder="e.g. 51.5074" />
+                        </div>
+                        <div className="space-y-2">
+                          <label htmlFor="lng" className="text-sm font-medium">
+                            Longitude
+                          </label>
+                          <Input id="lng" placeholder="e.g. -0.1278" />
+                        </div>
+                      </div>
+                      
+                      <Button className="w-full">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Event
+                      </Button>
+                    </form>
                   </CardContent>
                 </Card>
-                
-                <div>
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Add Progress Event</CardTitle>
-                      <CardDescription>
-                        Record a new location or status update
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <form className="space-y-4">
-                        <div className="space-y-2">
-                          <label htmlFor="event" className="text-sm font-medium">
-                            Event Type
-                          </label>
-                          <Input id="event" placeholder="e.g. Departure, Arrival, Position Update" />
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <label htmlFor="location" className="text-sm font-medium">
-                            Location
-                          </label>
-                          <Input id="location" placeholder="Port or location name" />
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <label htmlFor="lat" className="text-sm font-medium">
-                              Latitude
-                            </label>
-                            <Input id="lat" placeholder="e.g. 51.5074" />
-                          </div>
-                          <div className="space-y-2">
-                            <label htmlFor="lng" className="text-sm font-medium">
-                              Longitude
-                            </label>
-                            <Input id="lng" placeholder="e.g. -0.1278" />
-                          </div>
-                        </div>
-                        
-                        <Button className="w-full">
-                          <Plus className="h-4 w-4 mr-2" />
-                          Add Event
-                        </Button>
-                      </form>
-                    </CardContent>
-                  </Card>
-                </div>
               </div>
             </TabsContent>
             
