@@ -381,8 +381,13 @@ export default function VesselDetail() {
     setIsLoadingVoyage(true);
     try {
       const response = await axios.get(`/api/vessels/${vesselId}/voyage-progress`);
-      if (response.data) {
-        setVoyageProgress(response.data);
+      console.log("Voyage progress API response:", response.data);
+      if (response.data && response.data.voyageProgress) {
+        // Set the actual voyage progress data from the response
+        setVoyageProgress(response.data.voyageProgress);
+        console.log("Setting voyage progress to:", response.data.voyageProgress);
+      } else {
+        console.warn("Voyage progress API returned unexpected format:", response.data);
       }
     } catch (error) {
       console.error('Error fetching voyage progress:', error);
