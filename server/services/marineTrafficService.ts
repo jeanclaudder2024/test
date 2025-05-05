@@ -1,769 +1,314 @@
 import axios from 'axios';
-import { InsertVessel, Vessel, InsertRefinery, Refinery, InsertPort, Port } from "@shared/schema";
-import { REGIONS } from "@shared/constants";
+import { Vessel, Port } from '@shared/schema';
 
 /**
- * MyShipTracking Service for fetching real vessel data
- * This service connects to the MyShipTracking API to get real-time vessel information
+ * Service to interact with Marine Traffic API for vessel data
  */
-
-// Environment variable check
-if (!process.env.MARINE_TRAFFIC_API_KEY) {
-  console.warn('Warning: MARINE_TRAFFIC_API_KEY environment variable is not set. MyShipTracking API integration will not work.');
-}
-
-// Base URL for the MyShipTracking API
-const API_BASE_URL = 'https://api.myshiptracking.com/v1';
-const API_KEY = process.env.MARINE_TRAFFIC_API_KEY;
-
-// MyShipTracking API endpoints
-const ENDPOINTS = {
-  // Get vessel positions 
-  VESSEL_POSITIONS: '/vessels',
-  // Get vessel details by IMO or MMSI
-  VESSEL_DETAILS: '/vessels/details',
-  // Get vessels in area (defined by coordinates)
-  VESSELS_IN_AREA: '/vessels/area',
-  // Get vessel route and trajectory
-  VESSEL_ROUTE: '/vessels/route',
-  // Get port calls
-  PORT_CALLS: '/ports/calls',
-  // Get ports
-  PORTS: '/ports',
-  // Get port details
-  PORT_DETAILS: '/ports/details'
-}
-
-// Log API key status for debugging
-console.log(`MyShipTracking API configuration status: ${API_KEY ? 'API Key present' : 'API Key missing'}`);
-
-// Types for MyShipTracking API responses
-interface MyShipTrackingVessel {
-  mmsi: string;
-  imo: string;
-  name: string;
-  type: number;
-  type_name: string;
-  ais_type_summary?: string;
-  flag: string;
-  flag_name: string;
-  latitude: number;
-  longitude: number;
-  course: number;
-  speed: number;
-  heading: number;
-  status: number;
-  status_name: string;
-  last_position_time: string;
-  destination: string;
-  eta: string;
-  last_port: string;
-  last_port_time: string;
-}
-
-interface MyShipTrackingVesselDetails {
-  imo: string;
-  mmsi: string;
-  name: string;
-  type: number;
-  type_name: string;
-  call_sign: string;
-  flag: string;
-  flag_name: string;
-  gross_tonnage: number;
-  deadweight: number;
-  length: number;
-  beam: number;
-  draught: number;
-  year_built: number;
-  home_port: string;
-  owner: string;
-  manager: string;
-  photos: Array<{url: string; caption: string}>;
-}
-
-/**
- * Interface for port data from MyShipTracking API
- */
-interface MyShipTrackingPort {
-  id: string;
-  name: string;
-  country: string;
-  country_name: string;
-  port_type: string;
-  longitude: number;
-  latitude: number;
-  capacity?: number;
-  vessel_count?: number;
-  status?: string;
-}
-
-/**
- * Map MyShipTracking vessel type to our application vessel type
- */
-function mapVesselType(shipTrackingType: string): string {
-  const typeLower = shipTrackingType.toLowerCase();
+export class MarineTrafficService {
+  private apiKey: string | undefined;
+  private baseUrl: string;
   
-  // MyShipTracking API uses numerical vessel types but also provides string descriptions
-  // Type 80: Tanker - Hazard A (Major)
-  // Type 81: Tanker - Hazard B
-  // Type 82: Tanker - Hazard C (Minor)
-  // Type 83: Tanker - Hazard D (Recognizable)
-  // Type 84: Other type of Tanker
-  
-  if (typeLower.includes('crude oil tanker') || typeLower.includes('hazard a')) return 'crude oil tanker';
-  if (typeLower.includes('oil/chemical') || typeLower.includes('hazard b')) return 'oil/chemical tanker';
-  if (typeLower.includes('oil products') || typeLower.includes('hazard c')) return 'oil products tanker';
-  if (typeLower.includes('lng')) return 'lng tanker';
-  if (typeLower.includes('lpg')) return 'lpg tanker';
-  if (typeLower.includes('tanker')) return 'oil products tanker';
-  
-  return 'other';
-}
-
-/**
- * Determine region based on coordinates
- */
-function determineRegion(lat: number, lng: number): string {
-  // First check specific regions by coordinates
-  
-  // Middle East
-  if (lat >= 15 && lat <= 40 && lng >= 30 && lng <= 65) {
-    return 'middle_east';
+  constructor() {
+    this.apiKey = process.env.MARINE_TRAFFIC_API_KEY;
+    this.baseUrl = 'https://api.myshiptracking.com/v1';
+    
+    console.log(`MyShipTracking API configuration status: ${this.apiKey ? 'API Key present' : 'API Key missing'}`);
   }
-  
-  // North America
-  if (lat >= 25 && lat <= 60 && lng >= -140 && lng <= -50) {
-    return 'north_america';
-  }
-  
-  // Europe
-  if (lat >= 35 && lat <= 70 && lng >= -10 && lng <= 40) {
-    return 'europe';
-  }
-  
-  // East Asia
-  if (lat >= 20 && lat <= 50 && lng >= 100 && lng <= 145) {
-    return 'east_asia';
-  }
-  
-  // Default to a reasonable region
-  return 'global';
-}
-
-/**
- * Fetch vessels from MyShipTracking API
- */
-async function fetchVesselsFromAPI(): Promise<InsertVessel[]> {
-  if (!API_KEY) {
-    console.error('MyShipTracking API key is not set');
-    return [];
-  }
-  
-  try {
-    console.log(`Attempting to fetch vessel data from MyShipTracking API...`);
-    
-    // Get vessel positions for oil tankers
-    const headers = {
-      'Authorization': `Bearer ${API_KEY}`,
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    };
-    
-    // Log some of the request details for debugging
-    console.log(`API Request URL: ${API_BASE_URL}${ENDPOINTS.VESSEL_POSITIONS}`);
-    console.log(`Authorization Header: Bearer ${API_KEY.substring(0, 4)}...${API_KEY.substring(API_KEY.length - 4)}`);
-    
-    // Query parameters for tankers only
-    const params = {
-      type: '80,81,82,83,84', // Tanker vessel types (Crude oil, Oil/Chemical, LNG, etc.)
-      limit: 100 // Limit to 100 vessels to avoid excessive API usage
-    };
-    
-    // Try the request with a timeout
-    const response = await axios.get(`${API_BASE_URL}${ENDPOINTS.VESSEL_POSITIONS}`, { 
-      headers,
-      params,
-      timeout: 10000 // 10 seconds timeout
-    });
-    
-    // Log the response status for debugging
-    console.log(`MyShipTracking API response status: ${response.status}`);
-    
-    if (!response.data) {
-      console.error('Empty response from MyShipTracking API');
-      return [];
-    }
-    
-    if (response.data.error) {
-      console.error('Error fetching vessel data from MyShipTracking:', response.data.error);
-      return [];
-    }
-    
-    // Check if the response is a 404 HTML page
-    if (typeof response.data === 'string' && response.data.includes('<!DOCTYPE html>')) {
-      console.error('API returned HTML instead of JSON. Possible 404 or unauthorized access.');
-      return [];
-    }
-    
-    // Map the MyShipTracking data to our vessel schema
-    const vessels: InsertVessel[] = response.data.map((vessel: MyShipTrackingVessel) => {
-      // Determine region based on coordinates
-      const region = determineRegion(vessel.latitude, vessel.longitude);
-      
-      // Format destination port
-      const destinationPort = vessel.destination ? vessel.destination.trim() : 'Unknown';
-      const departurePort = vessel.last_port || 'Unknown';
-      
-      // Create vessel object according to our schema with a generated ID
-      const mmsiNumber = parseInt(vessel.mmsi.replace(/\D/g, '')) || 0;
-      const generatedId = mmsiNumber % 100000; // Generate a reasonably unique ID from MMSI
-      
-      // Store additional navigation details in metadata field
-      const navigationMetadata = {
-        heading: vessel.heading || 0,
-        course: vessel.course || 0,
-        speed: vessel.speed || 0,
-        status: vessel.status_name || 'Unknown',
-        lastPositionTime: vessel.last_position_time || new Date().toISOString(),
-      };
-      
-      // Serialize the metadata as a JSON string to store in our schema
-      const metadataString = JSON.stringify(navigationMetadata);
-      
-      return {
-        name: vessel.name,
-        imo: vessel.imo || `MST-${vessel.mmsi}`,
-        mmsi: vessel.mmsi,
-        vesselType: mapVesselType(vessel.type_name || vessel.ais_type_summary || 'Tanker'),
-        flag: vessel.flag_name || vessel.flag || 'Unknown',
-        built: null, // Detailed info not available in this endpoint
-        deadweight: null, // Detailed info not available in this endpoint
-        currentLat: vessel.latitude.toString(),
-        currentLng: vessel.longitude.toString(),
-        departurePort: departurePort,
-        departureDate: vessel.last_port_time ? new Date(vessel.last_port_time) : null,
-        destinationPort: destinationPort,
-        eta: vessel.eta ? new Date(vessel.eta) : null,
-        cargoType: 'crude_oil', // Assuming oil tankers carry crude oil
-        cargoCapacity: null, // Detailed info not available in this endpoint
-        currentRegion: region,
-        metadata: metadataString // Store navigation details in metadata
-      };
-    });
-    
-    console.log(`Fetched ${vessels.length} vessels from MyShipTracking API`);
-    return vessels;
-    
-  } catch (error) {
-    console.error('Error fetching data from MyShipTracking API:', error);
-    return [];
-  }
-}
-
-/**
- * Enrich vessel data with details from the MyShipTracking API
- */
-async function enrichVesselData(vessels: InsertVessel[]): Promise<InsertVessel[]> {
-  if (!API_KEY || vessels.length === 0) {
-    return vessels;
-  }
-  
-  // We'll enrich up to 20 vessels at a time to avoid excessive API usage
-  const enrichedVessels: InsertVessel[] = [...vessels];
-  const vesselBatch = vessels.slice(0, 20);
-  
-  // Headers for API requests
-  const headers = {
-    'Authorization': `Bearer ${API_KEY}`,
-    'Content-Type': 'application/json'
-  };
-  
-  try {
-    // Process vessels in batches to avoid rate limits
-    for (const vessel of vesselBatch) {
-      // Skip vessels with generated IDs
-      if (vessel.imo.startsWith('MST-')) {
-        continue;
-      }
-      
-      try {
-        // Get vessel details by IMO
-        const response = await axios.get(`${API_BASE_URL}${ENDPOINTS.VESSEL_DETAILS}`, { 
-          headers,
-          params: { imo: vessel.imo }
-        });
-        
-        if (!response.data || response.data.error) {
-          continue; // Skip to next vessel if error
-        }
-        
-        // API may return single object or array
-        const vesselDetails: MyShipTrackingVesselDetails = 
-          Array.isArray(response.data) ? response.data[0] : response.data;
-        
-        if (!vesselDetails) {
-          continue;
-        }
-        
-        // Find the vessel in our result array and update it
-        const index = enrichedVessels.findIndex(v => v.imo === vessel.imo);
-        if (index !== -1) {
-          // Make sure to keep the id from the original object
-          enrichedVessels[index] = {
-            ...enrichedVessels[index],
-            id: enrichedVessels[index].id, // Explicitly preserve ID
-            built: vesselDetails.year_built || null,
-            deadweight: vesselDetails.deadweight || null,
-            name: vesselDetails.name || vessel.name,
-            mmsi: vesselDetails.mmsi || vessel.mmsi,
-            vesselType: mapVesselType(vesselDetails.type_name || vessel.vesselType),
-            flag: vesselDetails.flag_name || vesselDetails.flag || vessel.flag,
-            cargoCapacity: vesselDetails.deadweight ? Math.round(vesselDetails.deadweight * 0.95) : null // Estimated cargo capacity as 95% of DWT
-          };
-        }
-        
-        // Small delay to avoid hitting API rate limits
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-      } catch (detailError) {
-        console.warn(`Error fetching details for vessel ${vessel.imo}:`, detailError);
-        // Continue with next vessel
-      }
-    }
-    
-    return enrichedVessels;
-    
-  } catch (error) {
-    console.error('Error enriching vessel data from MyShipTracking API:', error);
-    return vessels;
-  }
-}
-
-/**
- * Get expected vessel arrivals at ports
- * This is useful for showing vessels that are expected to arrive at refineries
- */
-async function getExpectedArrivals(portIds: string[]): Promise<InsertVessel[]> {
-  if (!API_KEY || portIds.length === 0) {
-    return [];
-  }
-  
-  // Headers for API requests
-  const headers = {
-    'Authorization': `Bearer ${API_KEY}`,
-    'Content-Type': 'application/json'
-  };
-  
-  try {
-    // In MyShipTracking, we need to use the port calls endpoint to get expected arrivals
-    // We're using a different approach than with Marine Traffic API
-    const response = await axios.get(`${API_BASE_URL}${ENDPOINTS.PORT_CALLS}`, { 
-      headers,
-      params: {
-        port_id: portIds[0], // MyShipTracking only supports one port at a time
-        arrivals: true,      // We want arrivals, not departures
-        days_ahead: 5        // Look ahead 5 days
-      }
-    });
-    
-    if (!response.data || response.data.error) {
-      console.error('Error fetching expected arrivals from MyShipTracking:', response.data?.error || 'Unknown error');
-      return [];
-    }
-    
-    // Map the arrival data to our vessel schema
-    const expectedVessels: InsertVessel[] = response.data.map((arrival: any) => {
-      // Generate an ID from MMSI to match database schema
-      const mmsiNumber = parseInt(arrival.mmsi?.replace(/\D/g, '') || '0') || 0;
-      const generatedId = mmsiNumber % 100000; // Generate a reasonably unique ID from MMSI
-      
-      // Store additional navigation details in metadata field
-      const navigationMetadata = {
-        heading: arrival.heading || 0,
-        course: arrival.course || 0,
-        speed: arrival.speed || 0,
-        status: arrival.status_name || 'Unknown',
-        lastPositionTime: arrival.last_position_time || new Date().toISOString(),
-      };
-      
-      // Serialize the metadata as a JSON string to store in our schema
-      const metadataString = JSON.stringify(navigationMetadata);
-      
-      return {
-        name: arrival.vessel_name || arrival.name,
-        imo: arrival.imo || `MST-${arrival.mmsi}`,
-        mmsi: arrival.mmsi,
-        vesselType: mapVesselType(arrival.vessel_type_name || arrival.type_name || 'Tanker'),
-        flag: arrival.flag_name || arrival.flag || 'Unknown',
-        built: null,
-        deadweight: null,
-        currentLat: arrival.latitude ? arrival.latitude.toString() : null,
-        currentLng: arrival.longitude ? arrival.longitude.toString() : null,
-        departurePort: arrival.last_port_name || arrival.last_port || 'Unknown',
-        departureDate: arrival.last_port_time ? new Date(arrival.last_port_time) : null,
-        destinationPort: arrival.port_name || arrival.destination || 'Unknown',
-        eta: arrival.eta ? new Date(arrival.eta) : null,
-        cargoType: 'crude_oil',
-        cargoCapacity: null,
-        currentRegion: determineRegion(
-          parseFloat(arrival.latitude || '0'), 
-          parseFloat(arrival.longitude || '0')
-        ),
-        metadata: metadataString
-      };
-    });
-    
-    // If we need more port arrivals, we could fetch them in parallel here
-    // But for now we'll just return what we have
-    
-    return expectedVessels;
-    
-  } catch (error) {
-    console.error('Error fetching expected arrivals from MyShipTracking API:', error);
-    return [];
-  }
-}
-
-/**
- * Fetch ports from MyShipTracking API
- * Used to provide real 2025 port data for the application
- */
-async function fetchPortsFromAPI(): Promise<InsertPort[]> {
-  if (!API_KEY) {
-    console.error('MyShipTracking API key is not set');
-    return [];
-  }
-  
-  try {
-    console.log(`Attempting to fetch port data from MyShipTracking API...`);
-    
-    // Headers for API requests - use Bearer token format
-    const headers = {
-      'Authorization': `Bearer ${API_KEY}`,
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    };
-    
-    // First try to test the API connection
-    try {
-      console.log(`Testing API connection with ${API_BASE_URL}/health...`);
-      await axios.get(`${API_BASE_URL}/health`, { headers });
-    } catch (healthError) {
-      console.error('API health check failed, continuing with caution:', healthError);
-    }
-    
-    // Try the request with a timeout and proper error handling
-    console.log(`Requesting ports from: ${API_BASE_URL}${ENDPOINTS.PORTS}`);
-    const response = await axios.get(`${API_BASE_URL}${ENDPOINTS.PORTS}`, { 
-      headers,
-      params: {
-        limit: 100,
-      },
-      timeout: 15000 // Increase timeout to 15 seconds
-    });
-    
-    // Log the response status and content type for debugging
-    console.log(`API response status: ${response.status}, content type: ${response.headers['content-type']}`);
-    
-    // If we get HTML instead of JSON (which means a 404 or error page), return empty
-    if (typeof response.data === 'string' && response.data.includes('<!DOCTYPE html>')) {
-      console.error('API returned HTML instead of JSON. Endpoint may not be available.');
-      // The API is having issues, so we need to return an empty array to trigger fallback
-      return [];
-    }
-    
-    if (!response.data || response.data.error) {
-      console.error('Invalid response from API:', response.data?.error || 'Empty response');
-      return [];
-    }
-    
-    // Ensure the response is an array
-    const portsData = Array.isArray(response.data) ? response.data : [response.data];
-    
-    if (portsData.length === 0) {
-      console.log('API returned empty ports array');
-      return [];
-    }
-    
-    // Map the data to our port schema
-    const ports: InsertPort[] = portsData.map((port: MyShipTrackingPort) => {
-      // Determine region based on coordinates
-      const region = determineRegion(
-        typeof port.latitude === 'string' ? parseFloat(port.latitude) : port.latitude,
-        typeof port.longitude === 'string' ? parseFloat(port.longitude) : port.longitude
-      );
-      
-      // Handle ports with missing values
-      return {
-        name: port.name || 'Unknown Port',
-        country: port.country_name || port.country || 'Unknown',
-        region: region,
-        lat: typeof port.latitude === 'string' ? port.latitude : port.latitude?.toString() || '0',
-        lng: typeof port.longitude === 'string' ? port.longitude : port.longitude?.toString() || '0',
-        capacity: port.capacity || 1000000, // Default capacity for major ports
-        status: port.status || 'active',
-        description: port.description || `${port.name || 'This port'} is a major shipping facility located in ${port.country_name || port.country || 'its region'}.`
-      };
-    });
-    
-    console.log(`API returned ${ports.length} ports`);
-    
-    if (ports.length === 0) {
-      console.error('Error mapping port data from API');
-      return [];
-    }
-    
-    return ports;
-    
-  } catch (error: any) {
-    console.error('Error fetching port data from API:', error.message);
-    
-    // Check for specific API error types for better error reporting
-    if (error.response) {
-      // The request was made and the server responded with a status code outside of 2xx
-      console.error(`API returned status ${error.response.status}: ${error.response.statusText}`);
-      console.error('Error details:', error.response.data);
-    } else if (error.request) {
-      // The request was made but no response was received
-      console.error('No response received from API, possible network issue');
-    }
-    
-    // Return empty array to trigger fallback to database data
-    return [];
-  }
-}
-
-/**
- * Export the MyShipTracking service for integration with the application
- */
-export const marineTrafficService = {
-  /**
-   * Fetch vessel data from MyShipTracking API
-   * @returns Array of vessels matching our application schema
-   */
-  fetchVessels: async (): Promise<InsertVessel[]> => {
-    try {
-      const vessels = await fetchVesselsFromAPI();
-      
-      // Enrich data with vessel details if vessels were found
-      if (vessels.length > 0) {
-        return await enrichVesselData(vessels);
-      }
-      
-      return vessels;
-    } catch (error) {
-      console.error('Error in marineTrafficService.fetchVessels:', error);
-      return [];
-    }
-  },
   
   /**
-   * Fetch real-time location data for a specific vessel by IMO or MMSI
-   * @param identifier IMO or MMSI number of the vessel
-   * @returns Updated vessel location data or null if vessel not found
+   * Check if the API is properly configured with an API key
    */
-  fetchVesselLocation: async (identifier: string): Promise<{ 
-    currentLat: string; 
-    currentLng: string; 
-    speed?: number; 
-    heading?: number; 
-    status?: string;
-    lastUpdated: Date;
-  } | null> => {
-    if (!API_KEY) {
-      console.warn('MyShipTracking API key not configured, cannot fetch vessel location');
-      return null;
+  isConfigured(): boolean {
+    return !!this.apiKey;
+  }
+  
+  /**
+   * Fetch vessels from the API
+   * @param type Optional vessel type filter
+   * @param limit Optional limit on number of results
+   * @returns Array of vessels or empty array on error
+   */
+  async fetchVessels(type?: string, limit: number = 100): Promise<Vessel[]> {
+    if (!this.isConfigured()) {
+      console.warn('MyShipTracking API is not configured');
+      return [];
     }
     
     try {
-      // Headers for API requests
-      const headers = {
-        'Authorization': `Bearer ${API_KEY}`,
-        'Content-Type': 'application/json'
+      // Build query parameters
+      const params: Record<string, string> = {
+        limit: limit.toString()
       };
       
-      // Determine if the identifier is an IMO or MMSI number
-      const isIMO = identifier.toLowerCase().startsWith('imo');
-      const queryParam = isIMO ? 'imo' : 'mmsi';
-      const queryValue = isIMO ? identifier.substring(3) : identifier;
+      if (type) {
+        params.type = type;
+      }
       
-      // Fetch vessel details from the API
-      const response = await axios.get(`${API_BASE_URL}${ENDPOINTS.VESSEL_DETAILS}`, {
-        headers,
-        params: {
-          [queryParam]: queryValue
+      // Make API request
+      const response = await axios.get(`${this.baseUrl}/vessels`, {
+        params,
+        headers: {
+          'API-KEY': this.apiKey
         }
       });
       
-      if (!response.data || response.data.error) {
-        console.error('Error fetching vessel details from MyShipTracking:', 
-          response.data?.error || 'Unknown error');
-        return null;
+      if (response.status !== 200) {
+        console.error(`MyShipTracking API error: ${response.status} ${response.statusText}`);
+        return [];
       }
       
-      // Extract the location data from the response
-      const vesselData = response.data;
+      // Transform API response to our vessel model
+      // This would need to be customized based on the actual API response structure
+      const vessels = response.data.vessels?.map((vessel: any) => this.transformApiVessel(vessel)) || [];
       
-      if (!vesselData || !vesselData.latitude || !vesselData.longitude) {
-        console.warn(`Vessel ${identifier} found, but no location data available`);
-        return null;
-      }
-      
-      return {
-        currentLat: vesselData.latitude.toString(),
-        currentLng: vesselData.longitude.toString(),
-        speed: vesselData.speed || 0,
-        heading: vesselData.heading || 0,
-        status: vesselData.status_name || 'At sea',
-        lastUpdated: new Date()
-      };
+      return vessels as Vessel[];
     } catch (error) {
-      console.error(`Error fetching location for vessel ${identifier}:`, error);
-      return null;
-    }
-  },
-  
-  /**
-   * Get vessels expected to arrive at specific ports
-   * @param portIds Array of MyShipTracking port IDs
-   * @returns Array of expected vessels
-   */
-  getExpectedArrivals: async (portIds: string[]): Promise<InsertVessel[]> => {
-    return getExpectedArrivals(portIds);
-  },
-  
-  /**
-   * Fetch port data from MyShipTracking API
-   * @returns Array of ports matching our application schema
-   */
-  fetchPorts: async (): Promise<InsertPort[]> => {
-    try {
-      return await fetchPortsFromAPI();
-    } catch (error) {
-      console.error('Error in fetchPorts service:', error);
+      console.error('Error fetching vessels from MyShipTracking API:', error);
       return [];
     }
-  },
+  }
   
   /**
-   * Fetch voyage progress data for a specific vessel
-   * @param identifier IMO or MMSI number of the vessel
-   * @returns Voyage progress information or null if not available
+   * Fetch a single vessel by IMO or MMSI number
+   * @param identifier IMO or MMSI
+   * @returns Vessel or null if not found
    */
-  fetchVoyageProgress: async (identifier: string): Promise<{
+  async fetchVessel(identifier: string): Promise<Vessel | null> {
+    if (!this.isConfigured()) {
+      console.warn('MyShipTracking API is not configured');
+      return null;
+    }
+    
+    try {
+      // Determine if this is an IMO or MMSI number
+      const isIMO = identifier.toUpperCase().startsWith('IMO');
+      const queryParam = isIMO ? 'imo' : 'mmsi';
+      const queryValue = isIMO ? identifier.substring(3) : identifier;
+      
+      // Make API request
+      const response = await axios.get(`${this.baseUrl}/vessels`, {
+        params: {
+          [queryParam]: queryValue
+        },
+        headers: {
+          'API-KEY': this.apiKey
+        }
+      });
+      
+      if (response.status !== 200 || !response.data.vessels?.length) {
+        return null;
+      }
+      
+      // Transform API response to our vessel model
+      return this.transformApiVessel(response.data.vessels[0]) as Vessel;
+    } catch (error) {
+      console.error(`Error fetching vessel ${identifier} from MyShipTracking API:`, error);
+      return null;
+    }
+  }
+  
+  /**
+   * Fetch ports from the API
+   * @param country Optional country filter
+   * @param limit Optional limit on number of results
+   * @returns Array of ports or empty array on error
+   */
+  async fetchPorts(country?: string, limit: number = 100): Promise<Port[]> {
+    if (!this.isConfigured()) {
+      console.warn('MyShipTracking API is not configured');
+      return [];
+    }
+    
+    try {
+      // Build query parameters
+      const params: Record<string, string> = {
+        limit: limit.toString()
+      };
+      
+      if (country) {
+        params.country = country;
+      }
+      
+      // Make API request
+      const response = await axios.get(`${this.baseUrl}/ports`, {
+        params,
+        headers: {
+          'API-KEY': this.apiKey
+        }
+      });
+      
+      if (response.status !== 200) {
+        console.error(`MyShipTracking API error: ${response.status} ${response.statusText}`);
+        return [];
+      }
+      
+      // Transform API response to our port model
+      const ports = response.data.ports?.map((port: any) => this.transformApiPort(port)) || [];
+      
+      return ports as Port[];
+    } catch (error) {
+      console.error('Error fetching ports from MyShipTracking API:', error);
+      return [];
+    }
+  }
+  
+  /**
+   * Fetch vessel location from the API
+   * @param identifier IMO or MMSI
+   * @returns Location data or null if not found
+   */
+  async fetchVesselLocation(identifier: string): Promise<{currentLat: string, currentLng: string} | null> {
+    if (!this.isConfigured()) {
+      console.warn('MyShipTracking API is not configured');
+      return null;
+    }
+    
+    try {
+      // Determine if this is an IMO or MMSI number
+      const isIMO = identifier.toUpperCase().startsWith('IMO');
+      const queryParam = isIMO ? 'imo' : 'mmsi';
+      const queryValue = isIMO ? identifier.substring(3) : identifier;
+      
+      // Make API request
+      const response = await axios.get(`${this.baseUrl}/vessels/positions`, {
+        params: {
+          [queryParam]: queryValue
+        },
+        headers: {
+          'API-KEY': this.apiKey
+        }
+      });
+      
+      if (response.status !== 200 || !response.data.positions?.length) {
+        return null;
+      }
+      
+      const position = response.data.positions[0];
+      
+      // Return simple location data
+      return {
+        currentLat: position.lat.toString(),
+        currentLng: position.lon.toString()
+      };
+    } catch (error) {
+      console.error(`Error fetching vessel location for ${identifier} from MyShipTracking API:`, error);
+      return null;
+    }
+  }
+  
+  /**
+   * Fetch voyage progress details for a vessel
+   * @param identifier IMO or MMSI
+   * @returns Voyage progress data or null if not available
+   */
+  async fetchVoyageProgress(identifier: string): Promise<{
     percentComplete: number;
     distanceTraveled: number;
     distanceRemaining: number;
     estimatedArrival: Date | null;
     currentSpeed: number;
     averageSpeed: number;
-    lastUpdated: Date;
-  } | null> => {
-    if (!API_KEY) {
-      console.warn('MyShipTracking API key not configured, cannot fetch voyage progress');
+  } | null> {
+    if (!this.isConfigured()) {
+      console.warn('MyShipTracking API is not configured');
       return null;
     }
     
     try {
-      // Headers for API requests
-      const headers = {
-        'Authorization': `Bearer ${API_KEY}`,
-        'Content-Type': 'application/json'
-      };
+      // First get the vessel details
+      const vessel = await this.fetchVessel(identifier);
+      if (!vessel) return null;
       
-      // Determine if the identifier is an IMO or MMSI number
-      const isIMO = identifier.toLowerCase().startsWith('imo');
-      const queryParam = isIMO ? 'imo' : 'mmsi';
-      const queryValue = isIMO ? identifier.substring(3) : identifier;
+      // Then get the current position
+      const position = await this.fetchVesselLocation(identifier);
+      if (!position) return null;
       
-      // Fetch vessel route from the API
-      const response = await axios.get(`${API_BASE_URL}${ENDPOINTS.VESSEL_ROUTE}`, {
-        headers,
-        params: {
-          [queryParam]: queryValue
+      // Since the voyage progress endpoint might not exist directly,
+      // we need to calculate it from available data
+      
+      // Get additional voyage data if API provides it
+      try {
+        const voyageResponse = await axios.get(`${this.baseUrl}/vessels/voyages`, {
+          params: {
+            imo: identifier
+          },
+          headers: {
+            'API-KEY': this.apiKey
+          }
+        });
+        
+        if (voyageResponse.status === 200 && voyageResponse.data.voyages?.length) {
+          const voyage = voyageResponse.data.voyages[0];
+          
+          // Extract and return voyage progress data
+          // This would need to be customized based on the actual API response
+          return {
+            percentComplete: voyage.percentComplete || 0,
+            distanceTraveled: voyage.distanceTraveled || 0,
+            distanceRemaining: voyage.distanceRemaining || 0,
+            estimatedArrival: voyage.eta ? new Date(voyage.eta) : null,
+            currentSpeed: voyage.currentSpeed || 0,
+            averageSpeed: voyage.averageSpeed || 0
+          };
         }
-      });
-      
-      if (!response.data || response.data.error) {
-        console.error('Error fetching vessel route from MyShipTracking:', 
-          response.data?.error || 'Unknown error');
-        return null;
+      } catch (voyageError) {
+        console.error(`Error fetching voyage data for ${identifier}:`, voyageError);
+        // Continue with fallback calculation
       }
       
-      // Extract the voyage data from the response
-      const voyageData = response.data;
-      
-      if (!voyageData || !voyageData.route || voyageData.route.length === 0) {
-        console.warn(`Vessel ${identifier} found, but no route data available`);
-        return null;
-      }
-      
-      // Get vessel details to calculate remaining distance
-      const vesselDetails = await axios.get(`${API_BASE_URL}${ENDPOINTS.VESSEL_DETAILS}`, {
-        headers,
-        params: {
-          [queryParam]: queryValue
-        }
-      });
-      
-      if (!vesselDetails.data) {
-        console.warn(`Could not fetch vessel details for ${identifier}`);
-        return null;
-      }
-      
-      const vesselData = vesselDetails.data;
-      
-      // Calculate voyage progress
-      const route = voyageData.route;
-      const totalDistance = route.total_distance || 0;
-      const traveledDistance = route.traveled_distance || 0;
-      const remainingDistance = totalDistance - traveledDistance;
-      const percentComplete = totalDistance > 0 ? Math.round((traveledDistance / totalDistance) * 100) : 0;
-      
-      // Extract other voyage data
-      const currentSpeed = vesselData.speed || 0;
-      const averageSpeed = route.average_speed || currentSpeed;
-      
-      // Calculate estimated arrival if we have data
-      let estimatedArrival = null;
-      if (vesselData.eta) {
-        estimatedArrival = new Date(vesselData.eta);
-      } else if (remainingDistance > 0 && averageSpeed > 0) {
-        // Calculate rough ETA based on remaining distance and average speed
-        const hoursRemaining = remainingDistance / averageSpeed;
-        estimatedArrival = new Date();
-        estimatedArrival.setHours(estimatedArrival.getHours() + hoursRemaining);
-      }
-      
-      return {
-        percentComplete,
-        distanceTraveled: traveledDistance,
-        distanceRemaining: remainingDistance,
-        estimatedArrival,
-        currentSpeed,
-        averageSpeed,
-        lastUpdated: new Date()
-      };
+      // Fallback: If no direct voyage data available, we can't calculate it from just the position
+      // In a real implementation, you would need more data points or historical positions
+      return null;
     } catch (error) {
-      console.error(`Error fetching voyage progress for vessel ${identifier}:`, error);
+      console.error(`Error fetching voyage progress for ${identifier}:`, error);
       return null;
     }
-  },
-  
-  /**
-   * Check if the MyShipTracking API is configured and available
-   * @returns Boolean indicating if the service is ready to use
-   */
-  isConfigured: (): boolean => {
-    return !!API_KEY;
-  },
-  
-  /**
-   * Delete all vessel data from the API cache - used for testing
-   * Note: This doesn't affect the actual API data, just our local data
-   */
-  clearVesselData: async (): Promise<void> => {
-    console.log('Cleared vessel data from MyShipTracking service');
   }
-};
+  
+  /**
+   * Transform API vessel data to our vessel model
+   * @param apiVessel Vessel data from API
+   * @returns Transformed vessel object
+   */
+  private transformApiVessel(apiVessel: any): Partial<Vessel> {
+    return {
+      name: apiVessel.name || 'Unknown Vessel',
+      imo: apiVessel.imo || `MST-${Date.now()}`,
+      mmsi: apiVessel.mmsi || '',
+      vesselType: apiVessel.type || 'Unknown',
+      flag: apiVessel.flag || 'Unknown',
+      built: apiVessel.built || null,
+      deadweight: apiVessel.deadweight || null,
+      currentLat: apiVessel.lat?.toString() || null,
+      currentLng: apiVessel.lon?.toString() || null,
+      currentRegion: apiVessel.region || null,
+      departurePort: apiVessel.from || null,
+      destinationPort: apiVessel.to || null,
+      eta: apiVessel.eta ? new Date(apiVessel.eta) : null,
+      cargoType: apiVessel.cargo || 'Oil Products',
+      lastUpdated: new Date()
+    };
+  }
+  
+  /**
+   * Transform API port data to our port model
+   * @param apiPort Port data from API
+   * @returns Transformed port object
+   */
+  private transformApiPort(apiPort: any): Partial<Port> {
+    return {
+      name: apiPort.name || 'Unknown Port',
+      country: apiPort.country || 'Unknown',
+      region: apiPort.region || 'Unknown',
+      lat: apiPort.lat?.toString() || '0',
+      lng: apiPort.lon?.toString() || '0',
+      type: apiPort.type || 'commercial',
+      capacity: apiPort.capacity || null,
+      status: apiPort.status || 'active',
+      description: apiPort.description || null,
+      lastUpdated: new Date()
+    };
+  }
+}
+
+export const marineTrafficService = new MarineTrafficService();

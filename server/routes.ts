@@ -1190,10 +1190,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Optionally, update the database with the new location in the background
       try {
+        const now = new Date();
         await storage.updateVessel(id, {
           currentLat: locationData.currentLat,
-          currentLng: locationData.currentLng,
-          lastUpdated: new Date()
+          currentLng: locationData.currentLng
         });
         console.log(`Updated vessel ${vessel.name} (ID: ${id}) location in database`);
       } catch (updateError) {
@@ -1287,12 +1287,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         // Fallback to simple estimated data if generation fails
-        return res.status(503).json({ 
-          message: "MyShipTracking API is not configured and AI generation failed",
+        return res.json({ 
+          message: "MyShipTracking API is not configured and AI generation failed. Using basic estimation.",
           voyageProgress: {
-            percentComplete: 0,
+            percentComplete: calculateBasicProgress(vessel),
+            distanceTraveled: 0,
+            distanceRemaining: 0,
+            currentSpeed: 14,
+            averageSpeed: 14,
+            estimatedArrival: vessel.eta,
             estimated: true,
-            estimatedArrival: vessel.eta
+            fromAI: false,
+            fromAPI: false
           }
         });
       }
@@ -1305,12 +1311,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       if (!identifier) {
-        return res.status(400).json({ 
-          message: "Vessel has no valid IMO or MMSI identifier",
+        return res.json({ 
+          message: "Vessel has no valid IMO or MMSI identifier. Using basic estimation.",
           voyageProgress: {
-            percentComplete: 0,
+            percentComplete: calculateBasicProgress(vessel),
+            distanceTraveled: 0,
+            distanceRemaining: 0,
+            currentSpeed: 14,
+            averageSpeed: 14,
+            estimatedArrival: vessel.eta,
             estimated: true,
-            estimatedArrival: vessel.eta
+            fromAI: false,
+            fromAPI: false
           }
         });
       }
@@ -1343,8 +1355,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
             percentComplete: calculateBasicProgress(vessel),
             distanceTraveled: 0,
             distanceRemaining: 0,
+            currentSpeed: 14,
+            averageSpeed: 14,
             estimatedArrival: vessel.eta,
-            estimated: true
+            estimated: true,
+            fromAI: false,
+            fromAPI: false
           }
         });
       }
