@@ -1222,12 +1222,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Initialize the route data with vessel's current position
-      const routeData = {
+      const routeData: {
+        vessel: any,
+        currentPosition: { lat: number, lng: number } | null,
+        departurePosition: { 
+          lat: number, 
+          lng: number, 
+          portId?: number, 
+          portName?: string,
+          isEstimated?: boolean 
+        } | null,
+        destinationPosition: { 
+          lat: number, 
+          lng: number, 
+          portId?: number, 
+          portName?: string,
+          isEstimated?: boolean 
+        } | null,
+        stopovers: any[]
+      } = {
         vessel,
-        currentPosition: {
-          lat: vessel.currentLat,
-          lng: vessel.currentLng,
-        },
+        currentPosition: vessel.currentLat && vessel.currentLng ? {
+          lat: Number(vessel.currentLat),
+          lng: Number(vessel.currentLng),
+        } : null,
         departurePosition: null,
         destinationPosition: null,
         stopovers: []
@@ -1251,8 +1269,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (departurePorts.length > 0) {
           // Use the first matching port for departure coordinates
           routeData.departurePosition = {
-            lat: departurePorts[0].lat,
-            lng: departurePorts[0].lng,
+            lat: Number(departurePorts[0].lat),
+            lng: Number(departurePorts[0].lng),
             portId: departurePorts[0].id,
             portName: departurePorts[0].name,
           };
@@ -1274,8 +1292,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (destinationPorts.length > 0) {
           // Use the first matching port for destination coordinates
           routeData.destinationPosition = {
-            lat: destinationPorts[0].lat,
-            lng: destinationPorts[0].lng,
+            lat: Number(destinationPorts[0].lat),
+            lng: Number(destinationPorts[0].lng),
             portId: destinationPorts[0].id,
             portName: destinationPorts[0].name,
           };
@@ -1288,8 +1306,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (!routeData.departurePosition && vessel.departurePort) {
           // Estimate departure as 500 nautical miles behind current position
           routeData.departurePosition = {
-            lat: vessel.currentLat - 3, // Simple estimation, moving 3 degrees south
-            lng: vessel.currentLng - 5, // Simple estimation, moving 5 degrees west
+            lat: Number(vessel.currentLat) - 3, // Simple estimation, moving 3 degrees south
+            lng: Number(vessel.currentLng) - 5, // Simple estimation, moving 5 degrees west
             isEstimated: true,
             portName: vessel.departurePort
           };
@@ -1298,8 +1316,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (!routeData.destinationPosition && vessel.destinationPort) {
           // Estimate destination as 500 nautical miles ahead of current position
           routeData.destinationPosition = {
-            lat: vessel.currentLat + 3, // Simple estimation, moving 3 degrees north
-            lng: vessel.currentLng + 5, // Simple estimation, moving 5 degrees east
+            lat: Number(vessel.currentLat) + 3, // Simple estimation, moving 3 degrees north
+            lng: Number(vessel.currentLng) + 5, // Simple estimation, moving 5 degrees east
             isEstimated: true,
             portName: vessel.destinationPort
           };
