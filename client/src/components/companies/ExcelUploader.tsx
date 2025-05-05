@@ -1,263 +1,283 @@
-import React, { useState, useRef } from 'react';
-import * as XLSX from 'xlsx';
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Card } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
-import { Upload, CheckCircle, AlertCircle, FileSpreadsheet, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import { read, utils } from 'xlsx';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { useToast } from '@/hooks/use-toast';
+import { Upload, FileCheck, AlertTriangle, FileWarning, FileX, Ship, Building } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 
 interface ExcelUploaderProps {
   onImportSuccess: (count: number) => void;
 }
 
-const ExcelUploader: React.FC<ExcelUploaderProps> = ({ onImportSuccess }) => {
-  const { toast } = useToast();
+export default function ExcelUploader({ onImportSuccess }: ExcelUploaderProps) {
   const [file, setFile] = useState<File | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
-  const [uploadedCount, setUploadedCount] = useState(0);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [previewData, setPreviewData] = useState<any[]>([]);
+  const [importedCount, setImportedCount] = useState(0);
+  const [error, setError] = useState('');
+  const { toast } = useToast();
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
-      setUploadStatus('idle');
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    setError('');
+    const files = e.target.files;
+    
+    if (!files || files.length === 0) {
+      setFile(null);
+      setPreviewData([]);
+      return;
+    }
+    
+    const selectedFile = files[0];
+    
+    // Check file type
+    if (!selectedFile.name.endsWith('.xlsx') && !selectedFile.name.endsWith('.xls')) {
+      setError('Please upload an Excel file (.xlsx or .xls)');
+      setFile(null);
+      setPreviewData([]);
+      return;
+    }
+    
+    setFile(selectedFile);
+    
+    try {
+      // Read the Excel file
+      const arrayBuffer = await selectedFile.arrayBuffer();
+      const workbook = read(arrayBuffer, { type: 'array' });
+      
+      // Get the first sheet
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      
+      // Convert to JSON
+      const jsonData = utils.sheet_to_json(worksheet);
+      
+      // Show preview of first 5 records
+      setPreviewData(jsonData.slice(0, 5));
+    } catch (err) {
+      console.error('Error reading Excel file:', err);
+      setError('Error reading Excel file. Please make sure it is a valid Excel file.');
+      setFile(null);
+      setPreviewData([]);
+    }
+  };
+
+  const processCompanyData = (data: any[]) => {
+    return data.map(item => ({
+      name: item.Name || item.name || '',
+      country: item.Country || item.country || null,
+      region: item.Region || item.region || null,
+      headquarters: item.Headquarters || item.headquarters || null,
+      foundedYear: item.FoundedYear || item['Founded Year'] || item.founded_year || null,
+      ceo: item.CEO || item.ceo || null,
+      fleetSize: item.FleetSize || item['Fleet Size'] || item.fleet_size || null,
+      specialization: item.Specialization || item.specialization || null,
+      website: item.Website || item.website || null,
+      description: item.Description || item.description || null,
+      revenue: item.Revenue || item.revenue || null,
+      employees: item.Employees || item.employees || null,
+      publiclyTraded: Boolean(item.PubliclyTraded || item['Publicly Traded'] || item.publicly_traded || false),
+      stockSymbol: item.StockSymbol || item['Stock Symbol'] || item.stock_symbol || null,
+      status: 'active'
+    }));
+  };
+
+  const handleUpload = async () => {
+    if (!file) return;
+    
+    try {
+      setIsUploading(true);
+      setProgress(10);
+      
+      // Read the Excel file
+      const arrayBuffer = await file.arrayBuffer();
+      const workbook = read(arrayBuffer, { type: 'array' });
+      
+      // Get the first sheet
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      
+      // Convert to JSON
+      const jsonData = utils.sheet_to_json(worksheet);
+      setProgress(30);
+      
+      // Process the data
+      const companies = processCompanyData(jsonData);
+      setProgress(50);
+      
+      // Upload to API
+      const response = await apiRequest('/api/companies/import', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ companies })
+      });
+      
+      setProgress(100);
+      
+      const result = await response.json();
+      setImportedCount(result.count);
+      
+      toast({
+        title: 'Import successful',
+        description: `${result.count} companies imported successfully.`,
+        variant: 'default',
+      });
+      
+      // Call the callback
+      onImportSuccess(result.count);
+    } catch (err) {
+      console.error('Error uploading companies:', err);
+      setError('Error uploading companies. Please try again.');
+      toast({
+        title: 'Import failed',
+        description: 'There was an error importing the companies data.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUploading(false);
     }
   };
 
   const resetUploader = () => {
     setFile(null);
+    setPreviewData([]);
     setProgress(0);
-    setUploadStatus('idle');
-    setUploadedCount(0);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  const handleUpload = async () => {
-    if (!file) return;
-
-    setIsLoading(true);
-    setUploadStatus('uploading');
-    setProgress(10);
-
-    try {
-      // Read Excel file
-      const reader = new FileReader();
-      
-      reader.onload = async (e) => {
-        try {
-          const data = new Uint8Array(e.target?.result as ArrayBuffer);
-          const workbook = XLSX.read(data, { type: 'array' });
-          
-          setProgress(30);
-          
-          // Assume the first sheet is the one we want
-          const firstSheetName = workbook.SheetNames[0];
-          const worksheet = workbook.Sheets[firstSheetName];
-          
-          // Convert to JSON
-          const jsonData = XLSX.utils.sheet_to_json(worksheet);
-          
-          setProgress(50);
-          
-          if (jsonData.length === 0) {
-            throw new Error('The Excel file does not contain any data');
-          }
-          
-          console.log('Parsed Excel data:', jsonData);
-          
-          // Process the data and transform it if needed
-          const companies = jsonData.map((row: any) => ({
-            name: row.Name || row.name || '',
-            country: row.Country || row.country || '',
-            region: row.Region || row.region || '',
-            headquarters: row.Headquarters || row.headquarters || row.HQ || '',
-            foundedYear: row.FoundedYear || row.foundedYear || row.Founded || null,
-            ceo: row.CEO || row.ceo || '',
-            fleetSize: row.FleetSize || row.fleetSize || null,
-            specialization: row.Specialization || row.specialization || '',
-            website: row.Website || row.website || '',
-            logo: row.Logo || row.logo || '',
-            description: row.Description || row.description || '',
-            revenue: row.Revenue || row.revenue || null,
-            employees: row.Employees || row.employees || null,
-            publiclyTraded: Boolean(row.PubliclyTraded || row.publiclyTraded),
-            stockSymbol: row.StockSymbol || row.stockSymbol || '',
-            status: 'active'
-          }));
-          
-          setProgress(70);
-          
-          // Send data to the API
-          const result = await apiRequest('/api/companies/import-excel', {
-            method: 'POST',
-            data: { companies }
-          });
-          
-          setProgress(100);
-          setUploadedCount(result.count || companies.length);
-          setUploadStatus('success');
-          
-          // Notify parent component
-          onImportSuccess(result.count || companies.length);
-          
-          toast({
-            title: 'Import Successful',
-            description: `Successfully imported ${result.count || companies.length} companies from Excel`,
-            variant: 'default',
-          });
-        } catch (error) {
-          console.error('Error processing Excel file:', error);
-          setUploadStatus('error');
-          
-          toast({
-            title: 'Import Failed',
-            description: error instanceof Error ? error.message : 'Failed to process Excel file',
-            variant: 'destructive',
-          });
-        } finally {
-          setIsLoading(false);
-        }
-      };
-      
-      reader.onerror = () => {
-        setUploadStatus('error');
-        setIsLoading(false);
-        
-        toast({
-          title: 'Import Failed',
-          description: 'Failed to read Excel file',
-          variant: 'destructive',
-        });
-      };
-      
-      reader.readAsArrayBuffer(file);
-    } catch (error) {
-      console.error('Error uploading Excel file:', error);
-      setUploadStatus('error');
-      setIsLoading(false);
-      
-      toast({
-        title: 'Import Failed',
-        description: error instanceof Error ? error.message : 'Failed to upload Excel file',
-        variant: 'destructive',
-      });
-    }
+    setError('');
+    setImportedCount(0);
   };
 
   return (
-    <div>
-      <div className="mb-6">
-        <div className="flex gap-4 items-center">
-          <Button 
-            variant="outline" 
-            onClick={() => fileInputRef.current?.click()} 
-            disabled={isLoading}
-            className="w-[200px] h-16"
-          >
+    <Card className="w-full max-w-2xl mx-auto">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Building className="h-5 w-5 text-primary" />
+          Import Shipping Companies
+        </CardTitle>
+        <CardDescription>
+          Upload an Excel file (.xlsx) containing shipping company data
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md text-red-800 dark:text-red-300 flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5" />
+            <span>{error}</span>
+          </div>
+        )}
+        
+        {!file && (
+          <div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-8 text-center">
+            <Upload className="h-8 w-8 mx-auto mb-4 text-gray-400" />
+            <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
+              Click to upload or drag and drop
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Excel files only (.xlsx, .xls)
+            </p>
             <input
               type="file"
-              accept=".xlsx,.xls"
-              ref={fileInputRef}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               onChange={handleFileChange}
-              style={{ display: 'none' }}
+              accept=".xlsx,.xls"
+              disabled={isUploading}
             />
-            <div className="flex flex-col items-center justify-center">
-              <Upload className="h-5 w-5 mb-1" />
-              <span>Select Excel File</span>
+          </div>
+        )}
+        
+        {file && !isUploading && importedCount === 0 && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 p-2 bg-green-50 dark:bg-green-900/10 border border-green-100 dark:border-green-900/30 rounded-md">
+              <FileCheck className="h-5 w-5 text-green-500" />
+              <div className="flex-1">
+                <p className="text-sm font-medium">{file.name}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {(file.size / 1024).toFixed(1)} KB
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={resetUploader}
+                className="h-8 w-8 p-0"
+              >
+                <FileX className="h-5 w-5" />
+              </Button>
             </div>
-          </Button>
-          
-          <div className="flex-1">
-            {file ? (
-              <Card className="p-4 flex items-center gap-3">
-                <FileSpreadsheet className="h-6 w-6 text-primary" />
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium truncate">{file.name}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {(file.size / 1024).toFixed(1)} KB • {file.type || 'Excel file'}
-                  </div>
+            
+            {previewData.length > 0 && (
+              <div className="border border-gray-200 dark:border-gray-800 rounded-md overflow-hidden">
+                <div className="text-sm font-medium px-4 py-2 bg-gray-100 dark:bg-gray-800">
+                  Preview: {previewData.length} of {file ? "many" : "0"} rows
                 </div>
-                <Button 
-                  variant="default" 
-                  onClick={handleUpload} 
-                  disabled={isLoading || uploadStatus === 'success'}
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Uploading...
-                    </>
-                  ) : uploadStatus === 'success' ? (
-                    <>
-                      <CheckCircle className="h-4 w-4 mr-2" />
-                      Imported
-                    </>
-                  ) : (
-                    'Import'
-                  )}
-                </Button>
-              </Card>
-            ) : (
-              <div className="p-4 border border-dashed rounded-md text-center text-muted-foreground">
-                <p>No file selected</p>
-                <p className="text-xs mt-1">Supported formats: .xlsx, .xls</p>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50 dark:bg-gray-900">
+                      <tr>
+                        {Object.keys(previewData[0]).slice(0, 5).map((key) => (
+                          <th key={key} className="px-4 py-2 text-left">
+                            {key}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {previewData.map((row, rowIndex) => (
+                        <tr key={rowIndex} className="border-t border-gray-200 dark:border-gray-800">
+                          {Object.keys(row).slice(0, 5).map((key) => (
+                            <td key={key} className="px-4 py-2 truncate max-w-[150px]">
+                              {String(row[key] !== null && row[key] !== undefined ? row[key] : '-')}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
           </div>
-        </div>
-      </div>
-      
-      {uploadStatus !== 'idle' && (
-        <div className="mt-4">
-          <div className="flex justify-between mb-2">
-            <span className="text-sm font-medium">
-              {uploadStatus === 'uploading' ? 'Processing...' : 
-               uploadStatus === 'success' ? 'Import completed' : 
-               'Import failed'}
-            </span>
-            <span className="text-sm text-muted-foreground">{progress}%</span>
+        )}
+        
+        {isUploading && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <FileWarning className="h-5 w-5 text-amber-500 animate-pulse" />
+              <p className="text-sm">Processing {file?.name}...</p>
+            </div>
+            <Progress value={progress} className="h-2" />
+            <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+              {progress < 30 && "Reading file..."}
+              {progress >= 30 && progress < 50 && "Processing data..."}
+              {progress >= 50 && progress < 100 && "Importing to database..."}
+              {progress === 100 && "Complete!"}
+            </p>
           </div>
-          
-          <Progress value={progress} className="h-2" />
-          
-          <div className="mt-4">
-            {uploadStatus === 'uploading' ? (
-              <div className="flex items-center text-muted-foreground text-sm">
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                <span>Importing company data...</span>
-              </div>
-            ) : uploadStatus === 'success' ? (
-              <div className="flex items-center text-sm text-green-600">
-                <CheckCircle className="h-4 w-4 mr-2" />
-                <span>Successfully imported {uploadedCount} companies</span>
-              </div>
-            ) : uploadStatus === 'error' ? (
-              <div className="flex items-center text-sm text-destructive">
-                <AlertCircle className="h-4 w-4 mr-2" />
-                <span>Failed to import companies</span>
-              </div>
-            ) : null}
+        )}
+        
+        {importedCount > 0 && !isUploading && (
+          <div className="p-4 bg-green-50 dark:bg-green-900/10 border border-green-100 dark:border-green-900/30 rounded-md text-center">
+            <FileCheck className="h-8 w-8 mx-auto mb-2 text-green-500" />
+            <p className="font-medium">Import Complete!</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Successfully imported {importedCount} companies.
+            </p>
           </div>
-          
-          {(uploadStatus === 'success' || uploadStatus === 'error') && (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={resetUploader} 
-              className="mt-4"
-            >
-              Reset
-            </Button>
-          )}
-        </div>
-      )}
-    </div>
+        )}
+      </CardContent>
+      <CardFooter className="flex justify-between">
+        <Button variant="outline" onClick={resetUploader} disabled={isUploading || !file}>
+          {importedCount > 0 ? "Import Another File" : "Cancel"}
+        </Button>
+        {file && importedCount === 0 && (
+          <Button onClick={handleUpload} disabled={isUploading || !file}>
+            {isUploading ? "Importing..." : "Import Companies"}
+          </Button>
+        )}
+      </CardFooter>
+    </Card>
   );
-};
-
-export default ExcelUploader;
+}
