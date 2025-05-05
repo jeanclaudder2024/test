@@ -82,26 +82,54 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
 
   // History of route changes - would be from API
   const routeChanges = [
-    { date: new Date(2023, 2, 15), description: "Route adjusted due to weather conditions near the Strait of Gibraltar" },
-    { date: new Date(2023, 2, 12), description: "Initial route planned from Hammerfest to Tokyo" }
+    { date: new Date(2025, 4, 2), description: "Route optimized to avoid storm front in the Arabian Sea" },
+    { date: new Date(2025, 3, 28), description: "Speed increased to meet delivery schedule" },
+    { date: new Date(2025, 3, 15), description: "Route adjusted to accommodate new port regulations" },
+    { date: new Date(2025, 3, 5), description: "Initial route planned from departure port to destination" }
   ];
 
   // Stopovers - would be from API
   const stopovers = vessel.destinationPort ? [
     { 
       port: "Singapore", 
-      arrival: new Date(2023, 3, 20), 
-      departure: new Date(2023, 3, 21), 
-      purpose: "Refueling",
+      arrival: new Date(2025, 3, 25), 
+      departure: new Date(2025, 3, 26), 
+      purpose: "Refueling and Maintenance",
       // Add coordinates for the stopover for map display
       lat: 1.290270,
       lng: 103.851959
+    },
+    {
+      port: "Port Klang",
+      arrival: new Date(2025, 4, 2),
+      departure: new Date(2025, 4, 3),
+      purpose: "Cargo Inspection",
+      // Add coordinates for the stopover
+      lat: 3.005,
+      lng: 101.395
     }
   ] : [];
 
   // Alerts - would be from API
   const alerts = [
-    { type: "Delay", severity: "medium", message: "Weather conditions may delay arrival by 6-12 hours", date: new Date() }
+    { 
+      type: "Weather", 
+      severity: "medium", 
+      message: "Moderate storm activity detected ahead. Captain adjusting route to minimize impact.", 
+      date: new Date(2025, 4, 4, 9, 32) 
+    },
+    { 
+      type: "Port", 
+      severity: "low", 
+      message: "Port authorities at destination report higher than normal congestion. Possible docking delays.", 
+      date: new Date(2025, 4, 3, 14, 15) 
+    },
+    { 
+      type: "Technical", 
+      severity: "low", 
+      message: "Minor engine maintenance scheduled during next port call.", 
+      date: new Date(2025, 4, 2, 8, 45)
+    }
   ];
 
   // Calculate the estimated time of arrival display
