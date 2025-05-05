@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { Vessel, Port, Refinery } from "@shared/schema";
+import { Vessel, Port, Refinery, Company } from "@shared/schema";
 import { storage } from "../storage";
 
 // Initialize OpenAI client
@@ -338,6 +338,116 @@ export class OpenAIService {
     
     Format as a formal document with appropriate structure and official language.
     `;
+  }
+  
+  /**
+   * Generate a seller company name based on vessel information and cargo
+   */
+  async generateSellerCompanyName(vessel: Vessel): Promise<string> {
+    try {
+      console.log(`Generating seller company name for vessel: ${vessel.name} (IMO: ${vessel.imo})`);
+      
+      // First check if there are actual companies in the database that match the vessel's region or flag
+      let companies: Company[] = [];
+      
+      if (vessel.currentRegion) {
+        companies = await storage.getCompaniesByRegion(vessel.currentRegion);
+      }
+      
+      // If we have actual companies, randomly select one rather than generating
+      if (companies.length > 0) {
+        const randomIndex = Math.floor(Math.random() * companies.length);
+        return companies[randomIndex].name;
+      }
+      
+      // If no companies found, generate one using OpenAI
+      const prompt = `
+      You are a maritime industry expert. Generate a realistic oil shipping/trading company name that would be the seller for a vessel with these characteristics:
+      
+      Vessel Details:
+      - Name: ${vessel.name}
+      - Flag: ${vessel.flag || 'Unknown'}
+      - Region: ${vessel.currentRegion || vessel.flag || 'Global'}
+      - Cargo Type: ${vessel.cargoType || 'Oil products'}
+      
+      Please respond with just the company name, no additional text. The company name should be realistic, professional, and reflect the region and cargo type. It should sound like a real company in the oil shipping industry.
+      `;
+      
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.7,
+        max_tokens: 50,
+      });
+      
+      const companyName = response.choices[0].message.content?.trim() || 
+        "Global Oil Traders Ltd.";
+      
+      return companyName;
+    } catch (error) {
+      console.error("Error generating seller company name:", error);
+      return "Global Oil Traders Ltd."; // Default fallback name
+    }
+  }
+  
+  /**
+   * Update vessel with precise route tracking coordinates and seller/buyer info
+   */
+  async updateVesselRouteAndCompanyInfo(vessel: Vessel): Promise<Vessel> {
+    try {
+      console.log(`Updating route and company info for vessel: ${vessel.name} (IMO: ${vessel.imo})`);
+      
+      // Initialize update object
+      const vesselUpdate: Partial<Vessel> = {};
+      
+      // 1. Generate seller name if not present
+      if (!vessel.sellerName) {
+        vesselUpdate.sellerName = await this.generateSellerCompanyName(vessel);
+      }
+      
+      // 2. Set buyer to "NA" if not present
+      if (!vessel.buyerName) {
+        vesselUpdate.buyerName = "NA";
+      }
+      
+      // 3. Get port coordinates for departure and destination if available
+      if (vessel.departurePort && !vessel.departureLat && !vessel.departureLng) {
+        // Check if departure port exists in our database
+        const ports = await storage.getPorts();
+        const departurePort = ports.find(p => 
+          p.name.toLowerCase() === vessel.departurePort?.toLowerCase()
+        );
+        
+        if (departurePort) {
+          vesselUpdate.departureLat = departurePort.lat;
+          vesselUpdate.departureLng = departurePort.lng;
+        }
+      }
+      
+      if (vessel.destinationPort && !vessel.destinationLat && !vessel.destinationLng) {
+        // Check if destination port exists in our database
+        const ports = await storage.getPorts();
+        const destinationPort = ports.find(p => 
+          p.name.toLowerCase() === vessel.destinationPort?.toLowerCase()
+        );
+        
+        if (destinationPort) {
+          vesselUpdate.destinationLat = destinationPort.lat;
+          vesselUpdate.destinationLng = destinationPort.lng;
+        }
+      }
+      
+      // Only update if we have changes
+      if (Object.keys(vesselUpdate).length > 0) {
+        const updatedVessel = await storage.updateVessel(vessel.id, vesselUpdate);
+        return updatedVessel || vessel;
+      }
+      
+      return vessel;
+    } catch (error) {
+      console.error("Error updating vessel route and company info:", error);
+      return vessel; // Return original vessel if update fails
+    }
   }
 }
 

@@ -34,11 +34,17 @@ export const vessels = pgTable("vessels", {
   currentLng: decimal("current_lng", { precision: 10, scale: 6 }),
   departurePort: text("departure_port"),
   departureDate: timestamp("departure_date"),
+  departureLat: decimal("departure_lat", { precision: 10, scale: 6 }),
+  departureLng: decimal("departure_lng", { precision: 10, scale: 6 }),
   destinationPort: text("destination_port"), // Will store refinery references in format "REF:id:name"
+  destinationLat: decimal("destination_lat", { precision: 10, scale: 6 }),
+  destinationLng: decimal("destination_lng", { precision: 10, scale: 6 }),  
   eta: timestamp("eta"),
   cargoType: text("cargo_type"),
   cargoCapacity: integer("cargo_capacity"),
   currentRegion: text("current_region"),
+  buyerName: text("buyer_name").default("NA"),
+  sellerName: text("seller_name"),
   metadata: text("metadata"), // JSON string with additional vessel information (heading, speed, course, etc.)
 });
 
