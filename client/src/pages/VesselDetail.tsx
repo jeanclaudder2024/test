@@ -1,11 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useVesselWebSocket } from '@/hooks/useVesselWebSocket';
 import { Vessel, ProgressEvent } from '@/types';
 import { useVesselProgressEvents, useAddProgressEvent } from '@/hooks/useVessels';
 import { useToast } from '@/hooks/use-toast';
-import { getPortCoordinates, calculateDistance, calculateETA, formatDistance } from '@/utils/portUtils';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
-import L, { LatLngExpression } from 'leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
+import L from 'leaflet';
 import {
   Card,
   CardContent,
@@ -49,9 +48,6 @@ const OIL_CATEGORIES = {
 // Helper function to determine oil category
 const getOilCategory = (cargoType: string | null | undefined): string => {
   if (!cargoType) return "Other";
-  
-  // Update: getPortCoordinates has been moved to @/utils/portUtils.ts
-  
   const upperCargoType = cargoType.toUpperCase();
   
   for (const [category, keywords] of Object.entries(OIL_CATEGORIES)) {
@@ -117,155 +113,6 @@ const ProgressTimeline = ({ events }: { events: ProgressEvent[] }) => {
 };
 
 // Form component for updating vessel location
-// MapControls component for zoom in/out functionality
-const MapControls = () => {
-  const map = useMap();
-  
-  return (
-    <div className="absolute top-2 right-2 z-[1000] bg-white rounded-md shadow-sm">
-      <Button 
-        variant="ghost" 
-        size="icon" 
-        className="p-1 text-gray-600 hover:bg-gray-100 hover:text-primary h-8 w-8"
-        onClick={() => map.zoomIn()}
-      >
-        <ZoomIn className="h-4 w-4" />
-      </Button>
-      <Button 
-        variant="ghost" 
-        size="icon" 
-        className="p-1 text-gray-600 hover:bg-gray-100 hover:text-primary h-8 w-8 border-t border-gray-100"
-        onClick={() => map.zoomOut()}
-      >
-        <ZoomOut className="h-4 w-4" />
-      </Button>
-    </div>
-  );
-};
-
-// Helper function to generate a curved path between two points
-const generateCurvedPath = (
-  startPoint: [number, number], 
-  endPoint: [number, number], 
-  curvature = 0.2
-): [number, number][] => {
-  // Calculate midpoint
-  const midX = (startPoint[0] + endPoint[0]) / 2;
-  const midY = (startPoint[1] + endPoint[1]) / 2;
-  
-  // Calculate distance between points
-  const dx = endPoint[0] - startPoint[0];
-  const dy = endPoint[1] - startPoint[1];
-  const distance = Math.sqrt(dx * dx + dy * dy);
-  
-  // Calculate control point for curve (perpendicular to line)
-  const controlX = midX - dy * curvature;
-  const controlY = midY + dx * curvature;
-  
-  // Generate path with more points for smoothness
-  const path: [number, number][] = [];
-  const steps = 20; // Number of points on the curve
-  
-  for (let i = 0; i <= steps; i++) {
-    const t = i / steps;
-    // Quadratic Bezier curve formula
-    const x = (1 - t) * (1 - t) * startPoint[0] + 
-              2 * (1 - t) * t * controlX + 
-              t * t * endPoint[0];
-    const y = (1 - t) * (1 - t) * startPoint[1] + 
-              2 * (1 - t) * t * controlY + 
-              t * t * endPoint[1];
-    path.push([x, y]);
-  }
-  
-  return path;
-};
-
-// VesselRoutes component to display the vessel's route
-const VesselRoutes = ({ 
-  currentPos, 
-  departureCoords, 
-  destinationCoords 
-}: { 
-  currentPos: [number, number], 
-  departureCoords?: [number, number] | null, 
-  destinationCoords?: [number, number] | null 
-}) => {
-  const routeOptions = {
-    past: {
-      color: '#3b82f6', // blue
-      weight: 3,
-      opacity: 0.7,
-      className: 'past-route'
-    },
-    future: {
-      color: '#ef4444', // red
-      weight: 3,
-      opacity: 0.5,
-      dashArray: '5, 5',
-      className: 'future-route'
-    }
-  };
-  
-  return (
-    <>
-      {/* Past route: from departure to current position */}
-      {departureCoords && (
-        <Polyline
-          positions={generateCurvedPath(departureCoords, currentPos)}
-          pathOptions={routeOptions.past}
-        >
-          <Popup>
-            <div className="text-sm font-medium">Past route</div>
-            <div className="text-xs text-gray-500">From departure to current position</div>
-          </Popup>
-        </Polyline>
-      )}
-      
-      {/* Future route: from current position to destination */}
-      {destinationCoords && (
-        <Polyline
-          positions={generateCurvedPath(currentPos, destinationCoords)}
-          pathOptions={routeOptions.future}
-        >
-          <Popup>
-            <div className="text-sm font-medium">Projected route</div>
-            <div className="text-xs text-gray-500">From current position to destination</div>
-          </Popup>
-        </Polyline>
-      )}
-      
-      {/* Add origin marker if we have departure coordinates */}
-      {departureCoords && (
-        <Marker
-          position={departureCoords as LatLngExpression}
-          icon={L.divIcon({
-            className: 'departure-marker',
-            html: `<div class="w-3 h-3 rounded-full bg-blue-500 border-2 border-white"></div>`,
-            iconSize: [12, 12]
-          })}
-        >
-          <Popup>Departure port</Popup>
-        </Marker>
-      )}
-      
-      {/* Add destination marker if we have destination coordinates */}
-      {destinationCoords && (
-        <Marker
-          position={destinationCoords as LatLngExpression}
-          icon={L.divIcon({
-            className: 'destination-marker',
-            html: `<div class="w-3 h-3 rounded-full bg-red-500 border-2 border-white"></div>`,
-            iconSize: [12, 12]
-          })}
-        >
-          <Popup>Destination port</Popup>
-        </Marker>
-      )}
-    </>
-  );
-};
-
 const LocationUpdateForm = ({ 
   vesselId, 
   initialLat, 
@@ -513,10 +360,6 @@ const LocationUpdateForm = ({
   );
 };
 
-// Note: Using the getPortCoordinates utility function imported from @/utils/portUtils
-
-// Using the existing generateCurvedPath, MapControls, and VesselRoutes functions defined above
-
 export default function VesselDetail() {
   const [, params] = useRoute('/vessels/:id');
   const vesselId = params?.id ? parseInt(params.id) : null;
@@ -524,14 +367,6 @@ export default function VesselDetail() {
   const { data: progressEvents = [], isLoading: progressLoading } = useVesselProgressEvents(vesselId);
   const { toast } = useToast();
   const [isUpdatingLocation, setIsUpdatingLocation] = useState(false);
-  const [showRoute, setShowRoute] = useState(true);
-  const [departureCoords, setDepartureCoords] = useState<[number, number] | null>(null);
-  const [destinationCoords, setDestinationCoords] = useState<[number, number] | null>(null);
-  const [isLoadingPortData, setIsLoadingPortData] = useState(false);
-  const [journeyDistance, setJourneyDistance] = useState<number | null>(null);
-  const [distanceTraveled, setDistanceTraveled] = useState<number | null>(null);
-  const [remainingDistance, setRemainingDistance] = useState<number | null>(null);
-  const [estimatedEta, setEstimatedEta] = useState<number | null>(null);
   
   // Find the vessel from our stream data
   console.log('VesselDetail: Looking for vessel with ID:', vesselId);
@@ -546,110 +381,6 @@ export default function VesselDetail() {
   } else {
     console.log('VesselDetail: Vessel not found with ID:', vesselId);
   }
-  
-  // Fetch port coordinates for route visualization
-  useEffect(() => {
-    if (!vessel) return;
-    
-    const fetchPortCoordinates = async () => {
-      setIsLoadingPortData(true);
-      
-      try {
-        // Fetch departure port coordinates
-        if (vessel.departurePort) {
-          console.log('Fetching coordinates for departure port:', vessel.departurePort);
-          const depCoords = await getPortCoordinates(vessel.departurePort);
-          if (depCoords) {
-            console.log('Found departure port coordinates:', depCoords);
-            setDepartureCoords(depCoords);
-          } else if (vessel.departureLat && vessel.departureLng) {
-            // Use vessel's departure coordinates if port lookup fails
-            console.log('Using vessel departure coordinates');
-            setDepartureCoords([
-              parseFloat(vessel.departureLat as string), 
-              parseFloat(vessel.departureLng as string)
-            ]);
-          }
-        }
-        
-        // Fetch destination port coordinates
-        if (vessel.destinationPort) {
-          console.log('Fetching coordinates for destination port:', vessel.destinationPort);
-          const destCoords = await getPortCoordinates(vessel.destinationPort);
-          if (destCoords) {
-            console.log('Found destination port coordinates:', destCoords);
-            setDestinationCoords(destCoords);
-          } else if (vessel.destinationLat && vessel.destinationLng) {
-            // Use vessel's destination coordinates if port lookup fails
-            console.log('Using vessel destination coordinates');
-            setDestinationCoords([
-              parseFloat(vessel.destinationLat as string), 
-              parseFloat(vessel.destinationLng as string)
-            ]);
-          }
-        }
-        
-        // Calculate journey distance if we have current position and both points
-        if (vessel.currentLat && vessel.currentLng) {
-          const currentPos: [number, number] = [
-            parseFloat(vessel.currentLat as string),
-            parseFloat(vessel.currentLng as string)
-          ];
-          
-          // If departure coordinates are available, calculate distance traveled
-          if (departureCoords) {
-            const traveled = calculateDistance(
-              departureCoords[0], 
-              departureCoords[1], 
-              currentPos[0], 
-              currentPos[1]
-            );
-            setDistanceTraveled(traveled);
-            console.log(`Distance traveled: ${traveled.toFixed(1)} nautical miles`);
-          }
-          
-          // If destination coordinates are available, calculate remaining distance
-          if (destinationCoords) {
-            const remaining = calculateDistance(
-              currentPos[0], 
-              currentPos[1], 
-              destinationCoords[0], 
-              destinationCoords[1]
-            );
-            setRemainingDistance(remaining);
-            console.log(`Remaining distance: ${remaining.toFixed(1)} nautical miles`);
-            
-            // Calculate ETA based on vessel speed and remaining distance
-            // Default to 12 knots if no speed available in the vessel data
-            const speed = 12;
-            if (speed > 0) {
-              const eta = calculateETA(remaining, speed);
-              setEstimatedEta(eta);
-              console.log(`Estimated time to arrival: ${eta.toFixed(1)} hours`);
-            }
-          }
-          
-          // If both departure and destination coordinates are available, calculate total journey distance
-          if (departureCoords && destinationCoords) {
-            const totalDistance = calculateDistance(
-              departureCoords[0], 
-              departureCoords[1], 
-              destinationCoords[0], 
-              destinationCoords[1]
-            );
-            setJourneyDistance(totalDistance);
-            console.log(`Total journey distance: ${totalDistance.toFixed(1)} nautical miles`);
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching port coordinates:', error);
-      } finally {
-        setIsLoadingPortData(false);
-      }
-    };
-    
-    fetchPortCoordinates();
-  }, [vessel, departureCoords, destinationCoords]);
   
   // Redirect to vessels page if vessel not found and not loading
   if (!loading && !vessel) {
@@ -895,53 +626,14 @@ export default function VesselDetail() {
                             >
                               <Popup>Current position of {vessel.name}</Popup>
                             </Marker>
-                            
-                            {/* Display vessel routes if enabled */}
-                            {showRoute && !isLoadingPortData && (
-                              <VesselRoutes 
-                                currentPos={[
-                                  parseFloat(vessel.currentLat as string), 
-                                  parseFloat(vessel.currentLng as string)
-                                ]}
-                                departureCoords={departureCoords}
-                                destinationCoords={destinationCoords}
-                              />
-                            )}
-                            
-                            {/* Map controls */}
-                            <MapControls />
-                            
-                            {/* Route toggle control */}
-                            <div className="absolute top-2 left-2 z-[1000] bg-white rounded-md shadow-sm">
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className={`p-1 text-gray-600 hover:bg-gray-100 h-8 w-8 ${showRoute ? 'text-primary' : ''}`}
-                                onClick={() => setShowRoute(prev => !prev)}
-                                title={showRoute ? "Hide vessel route" : "Show vessel route"}
-                              >
-                                <Compass className="h-4 w-4" />
-                              </Button>
-                            </div>
                           </MapContainer>
-                          
-                          {/* Map controls panel */}
-                          <div className="absolute bottom-2 left-2 z-[1000] bg-white/80 backdrop-blur-sm rounded-md shadow-sm p-2">
-                            <div className="flex items-center space-x-2">
-                              <Button 
-                                variant={showRoute ? "default" : "outline"} 
-                                size="sm"
-                                className="h-7 px-2 text-xs"
-                                onClick={() => setShowRoute(prev => !prev)}
-                              >
-                                <Layers className="h-3 w-3 mr-1" />
-                                {showRoute ? 'Hide Route' : 'Show Route'}
-                              </Button>
-                              
-                              {isLoadingPortData && (
-                                <div className="animate-spin h-3 w-3 border-t-2 border-primary rounded-full"></div>
-                              )}
-                            </div>
+                          <div className="absolute top-2 right-2 z-[1000] bg-white rounded-md shadow-sm">
+                            <Button variant="ghost" size="icon" className="p-1 text-gray-600 hover:bg-gray-100 hover:text-primary h-8 w-8">
+                              <ZoomIn className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="p-1 text-gray-600 hover:bg-gray-100 hover:text-primary h-8 w-8 border-t border-gray-100">
+                              <ZoomOut className="h-4 w-4" />
+                            </Button>
                           </div>
                         </div>
                         <div className="space-y-2">
@@ -1120,110 +812,31 @@ export default function VesselDetail() {
                   </div>
                   
                   <div className="mt-6">
-                    <h3 className="font-medium mb-3 flex items-center justify-between">
-                      <span>Journey Progress</span>
-                      {(departureCoords || destinationCoords) && (
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="h-7 px-2 text-xs"
-                          onClick={() => setShowRoute(prev => !prev)}
-                        >
-                          {showRoute ? 
-                            <span className="flex items-center"><Check className="h-3 w-3 mr-1" />Route visible</span> : 
-                            <span className="flex items-center"><Map className="h-3 w-3 mr-1" />Show route</span>
-                          }
-                        </Button>
-                      )}
-                    </h3>
-                    
-                    {/* Route information */}
-                    {(departureCoords || destinationCoords) && (
-                      <div className="bg-muted/30 p-2 rounded-md mb-4 text-xs">
-                        <div className="flex items-center">
-                          <div className="flex-1">
-                            {departureCoords && (
-                              <div className="flex items-center mb-1">
-                                <div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
-                                <span>Departure: {vessel.departurePort || "Unknown port"}</span>
-                              </div>
-                            )}
-                            {destinationCoords && (
-                              <div className="flex items-center">
-                                <div className="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
-                                <span>Destination: {vessel.destinationPort?.replace(/REF:\d+:/, '') || "Unknown port"}</span>
-                              </div>
-                            )}
-                          </div>
-                          <div className="text-right text-muted-foreground">
-                            {isLoadingPortData ? 
-                              <div className="animate-spin h-3 w-3 border-t-2 border-primary rounded-full ml-2"></div> :
-                              <span>Route {showRoute ? 'visible' : 'hidden'}</span>
-                            }
-                          </div>
+                    <h3 className="font-medium mb-3">Journey Progress</h3>
+                    <div className="relative pt-1">
+                      <div className="flex mb-2 items-center justify-between">
+                        <div>
+                          <span className="text-xs font-semibold inline-block text-primary">
+                            {"64% Complete"}
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-xs font-semibold text-muted-foreground">
+                            9 days remaining
+                          </span>
                         </div>
                       </div>
-                    )}
-                    
-                    <div className="relative pt-1">
-                      {journeyDistance && distanceTraveled && remainingDistance && (
-                        <>
-                          <div className="flex mb-2 items-center justify-between">
-                            <div>
-                              <span className="text-xs font-semibold inline-block text-primary">
-                                {`${Math.round((distanceTraveled / journeyDistance) * 100)}% Complete`}
-                              </span>
-                            </div>
-                            <div className="text-right">
-                              <span className="text-xs font-semibold text-muted-foreground">
-                                {estimatedEta 
-                                  ? estimatedEta > 24 
-                                    ? `~${Math.round(estimatedEta / 24)} days remaining` 
-                                    : `~${Math.round(estimatedEta)} hours remaining`
-                                  : 'ETA calculating...'}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-primary/20">
-                            <div 
-                              style={{ width: `${Math.round((distanceTraveled / journeyDistance) * 100)}%` }} 
-                              className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-primary"
-                            ></div>
-                          </div>
-                          <div className="flex justify-between text-xs text-muted-foreground">
-                            <div>{vessel.departurePort}</div>
-                            <div>Current Position</div>
-                            <div>
-                              {vessel.destinationPort?.startsWith('REF:') 
-                                ? vessel.destinationPort.split(':')[2] + ' (Refinery)' 
-                                : vessel.destinationPort}
-                            </div>
-                          </div>
-                        </>
-                      )}
-                      
-                      {/* Distance statistics */}
-                      <div className="grid grid-cols-3 gap-4 mt-4 text-center">
-                        {journeyDistance && (
-                          <div className="bg-blue-50 p-3 rounded-md">
-                            <div className="text-blue-600 text-xs font-medium mb-1">Total Distance</div>
-                            <div className="text-gray-900 font-semibold">{formatDistance(journeyDistance)}</div>
-                          </div>
-                        )}
-                        
-                        {distanceTraveled && (
-                          <div className="bg-green-50 p-3 rounded-md">
-                            <div className="text-green-600 text-xs font-medium mb-1">Distance Traveled</div>
-                            <div className="text-gray-900 font-semibold">{formatDistance(distanceTraveled)}</div>
-                          </div>
-                        )}
-                        
-                        {remainingDistance && (
-                          <div className="bg-amber-50 p-3 rounded-md">
-                            <div className="text-amber-600 text-xs font-medium mb-1">Remaining</div>
-                            <div className="text-gray-900 font-semibold">{formatDistance(remainingDistance)}</div>
-                          </div>
-                        )}
+                      <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-primary/20">
+                        <div style={{ width: "64%" }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-primary"></div>
+                      </div>
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <div>{vessel.departurePort}</div>
+                        <div>Current Position</div>
+                        <div>
+                          {vessel.destinationPort?.startsWith('REF:') 
+                            ? vessel.destinationPort.split(':')[2] + ' (Refinery)' 
+                            : vessel.destinationPort}
+                        </div>
                       </div>
                     </div>
                   </div>
