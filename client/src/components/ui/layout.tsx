@@ -41,6 +41,7 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { ShipBoatAssistant } from "@/components/ShipBoatAssistant";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -296,6 +297,9 @@ export function Layout({ children }: LayoutProps) {
           </div>
         </main>
       </div>
+
+      {/* ShipBoat AI Assistant */}
+      <ShipBoatAssistant />
     </div>
   );
 }
