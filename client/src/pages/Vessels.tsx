@@ -38,7 +38,6 @@ import { OIL_PRODUCT_TYPES, REGIONS } from '@shared/constants';
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import axios from 'axios';
-import { CountryFlag } from '@/components/ui/country-flag';
 
 // Define oil product categories for filtering
 const OIL_CATEGORIES = {
@@ -755,9 +754,7 @@ export default function Vessels() {
                   </TableCell>
                   
                   <TableCell>{vessel.vesselType}</TableCell>
-                  <TableCell>
-                    <CountryFlag countryName={vessel.flag} size="sm" showName={false} />
-                  </TableCell>
+                  <TableCell>{vessel.flag}</TableCell>
                   <TableCell>
                     {vessel.departurePort}
                     {vessel.departureDate && (

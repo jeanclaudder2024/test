@@ -13,18 +13,15 @@ import {
   Building2, 
   Edit,
   Trash2,
-  Loader2,
-  Globe,
-  Info
+  Loader2
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import { DataTable } from '@/components/ui/data-table';
 import { ColumnDef } from '@tanstack/react-table';
-import { Port, Vessel } from '@shared/schema';
+import { Port, Vessel } from '../../../shared/schema';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
-import LiveVesselMap from '@/components/map/LiveVesselMap';
 
 // Define columns for nearby vessels table
 const vesselColumns: ColumnDef<Vessel>[] = [
@@ -219,24 +216,17 @@ export default function PortDetail() {
         
         <Card className="md:col-span-2">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Globe className="h-5 w-5 text-primary" />
-              Live Vessel Tracking
-            </CardTitle>
-            <CardDescription>
-              Real-time view of {port.name} and nearby vessels
-            </CardDescription>
+            <CardTitle>Map Location</CardTitle>
           </CardHeader>
-          <CardContent className="p-0 overflow-hidden">
-            <div className="h-[300px] w-full rounded-md overflow-hidden">
-              <LiveVesselMap
-                height="300px"
-                initialRegion={port.region?.toLowerCase() || "global"}
-                showRoutes={false}
-                mapStyle="standard"
-                initialCenter={[parseFloat(port.lat), parseFloat(port.lng)]}
-                initialZoom={8}
-              />
+          <CardContent>
+            <div className="h-[300px] bg-muted/30 rounded-md flex items-center justify-center border">
+              <div className="text-center">
+                <MapPin className="h-10 w-10 mx-auto mb-4 text-muted-foreground" />
+                <p className="text-lg font-medium">Map View Coming Soon</p>
+                <p className="text-sm text-muted-foreground">
+                  {port.lat}, {port.lng}
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>
