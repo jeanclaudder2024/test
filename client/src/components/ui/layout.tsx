@@ -65,6 +65,30 @@ export function Layout({ children }: LayoutProps) {
     { name: "Settings", href: "/settings", icon: Settings },
   ];
 
+  const handleProfile = () => {
+    window.location.href = "/settings/profile";
+  };
+
+  const handleSettings = () => {
+    window.location.href = "/settings";
+  };
+
+  const handleLogout = () => {
+    // In a real app, you'd call your logout API here
+    console.log("User logged out");
+    window.location.href = "/auth";
+  };
+
+  const handleRefreshData = () => {
+    // Refresh data logic
+    console.log("Refreshing data...");
+    window.location.reload();
+  };
+
+  const handleHelpSupport = () => {
+    window.open("https://support.myshiptracking.com", "_blank");
+  };
+
   return (
     <div className="min-h-screen bg-background flex">
       {/* Desktop Sidebar */}
@@ -120,7 +144,7 @@ export function Layout({ children }: LayoutProps) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={handleProfile}>
                   <User className="mr-2 h-4 w-4" />
                   Profile
                 </DropdownMenuItem>
@@ -132,15 +156,15 @@ export function Layout({ children }: LayoutProps) {
                   )}
                   Toggle Theme
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={handleRefreshData}>
                   <RefreshCw className="mr-2 h-4 w-4" />
                   Refresh Data
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={handleHelpSupport}>
                   <LifeBuoy className="mr-2 h-4 w-4" />
                   Help & Support
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
                   Logout
                 </DropdownMenuItem>
@@ -204,18 +228,48 @@ export function Layout({ children }: LayoutProps) {
                 <p className="text-sm font-medium">User</p>
                 <p className="text-xs text-sidebar-muted">user@example.com</p>
               </div>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="ml-auto"
-                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              >
-                {theme === "dark" ? (
-                  <Sun className="h-4 w-4" />
-                ) : (
-                  <Moon className="h-4 w-4" />
-                )}
-              </Button>
+              <div className="ml-auto flex items-center gap-2">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                >
+                  {theme === "dark" ? (
+                    <Sun className="h-4 w-4" />
+                  ) : (
+                    <Moon className="h-4 w-4" />
+                  )}
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={handleProfile}>
+                      <User className="mr-2 h-4 w-4" />
+                      Profile
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleSettings}>
+                      <Settings className="mr-2 h-4 w-4" />
+                      Settings
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleRefreshData}>
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                      Refresh Data
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleHelpSupport}>
+                      <LifeBuoy className="mr-2 h-4 w-4" />
+                      Help & Support
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleLogout}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Logout
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
           </div>
         </SheetContent>
@@ -271,15 +325,15 @@ export function Layout({ children }: LayoutProps) {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleProfile}>
                       <User className="mr-2 h-4 w-4" />
                       Profile
                     </DropdownMenuItem>
-                    <DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleSettings}>
                       <Settings className="mr-2 h-4 w-4" />
                       Settings
                     </DropdownMenuItem>
-                    <DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleLogout}>
                       <LogOut className="mr-2 h-4 w-4" />
                       Logout
                     </DropdownMenuItem>
