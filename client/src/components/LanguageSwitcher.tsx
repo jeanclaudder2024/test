@@ -1,111 +1,77 @@
-import React, { useState } from 'react';
-import { useLanguage } from '@/hooks/use-language';
-import { FlagIcon } from 'react-flag-kit';
+import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/hooks/use-language";
+import { useToast } from "@/hooks/use-toast";
+import { Languages } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
-import { Globe } from 'lucide-react';
+} from "@/components/ui/dropdown-menu";
 
 interface LanguageSwitcherProps {
-  position?: 'navbar' | 'sidebar' | 'footer';
+  variant?: "icon" | "button";
   showLabel?: boolean;
-  variant?: 'default' | 'icon';
 }
 
-const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
-  position = 'navbar',
-  showLabel = true,
-  variant = 'default'
-}) => {
-  const { language, setLanguage, t, languages, getLanguageFlag } = useLanguage();
-  const [isOpen, setIsOpen] = useState(false);
-  
-  const currentLangDetails = languages[language] || languages.en;
+export default function LanguageSwitcher({ variant = "button", showLabel = true }: LanguageSwitcherProps) {
+  const { language, setLanguage, t } = useLanguage();
+  const { toast } = useToast();
 
-  const handleChangeLanguage = (lng: string) => {
-    setLanguage(lng);
-    setIsOpen(false);
-  };
-
-  // Style variants based on position
-  const getButtonStyle = () => {
-    switch (position) {
-      case 'navbar':
-        return 'bg-transparent hover:bg-primary/10 text-foreground';
-      case 'sidebar':
-        return 'w-full justify-start bg-transparent hover:bg-primary/10 text-foreground';
-      case 'footer':
-        return 'bg-transparent hover:bg-primary/10 text-muted-foreground text-sm';
-      default:
-        return 'bg-transparent hover:bg-primary/10';
+  const handleLanguageChange = (newLanguage: "en" | "ar") => {
+    if (newLanguage !== language) {
+      setLanguage(newLanguage);
+      toast({
+        title: newLanguage === "en" ? "Language Changed" : "تم تغيير اللغة",
+        description: newLanguage === "en" ? "English language is now active" : "اللغة العربية مفعلة الآن",
+      });
     }
   };
 
-  return (
-    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-      <DropdownMenuTrigger asChild>
-        <Button 
-          variant="ghost" 
-          className={`flex items-center gap-2 ${getButtonStyle()}`}
-          aria-label={t('language.selectLanguage')}
-          size={variant === 'icon' ? 'icon' : 'default'}
-        >
-          {variant === 'default' ? (
-            <div className="flex items-center gap-2">
-              <FlagIcon 
-                code={getLanguageFlag(currentLangDetails.flag)}
-                size={18} 
-                className="rounded-sm shadow-sm"
-              />
-              {showLabel && (
-                <span className="hidden sm:inline-block">
-                  {t('language.language')}
-                </span>
-              )}
-              <Globe className="h-4 w-4" />
-            </div>
-          ) : (
-            <FlagIcon 
-              code={getLanguageFlag(currentLangDetails.flag)}
-              size={18} 
-              className="rounded-sm shadow-sm"
-            />
-          )}
-        </Button>
-      </DropdownMenuTrigger>
-
-      <DropdownMenuContent align="end" className="w-[200px] p-2">
-        <div className="mb-2 px-2 py-1.5 text-sm font-semibold">
-          {t('language.selectLanguage')}
-        </div>
-        {Object.entries(languages).map(([code, { nativeName, flag, dir }]) => (
-          <DropdownMenuItem
-            key={code}
-            onClick={() => handleChangeLanguage(code)}
-            className={`flex items-center gap-2 px-2 py-1.5 cursor-pointer ${
-              language === code ? 'bg-muted' : ''
-            }`}
+  if (variant === "icon") {
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 rounded-full bg-primary/10 hover:bg-primary/20"
+            aria-label={t("settings.language")}
           >
-            <FlagIcon 
-              code={getLanguageFlag(flag)} 
-              size={16} 
-              className="rounded-sm shadow-sm" 
-            />
-            <span className={dir === 'rtl' ? 'font-arabic' : ''}>
-              {nativeName}
-            </span>
-            {language === code && (
-              <span className="ml-auto text-primary">✓</span>
-            )}
+            <Languages className="h-4 w-4 text-primary" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={() => handleLanguageChange("en")}>
+            <span className={language === "en" ? "font-bold" : ""}>English</span>
           </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-};
+          <DropdownMenuItem onClick={() => handleLanguageChange("ar")}>
+            <span className={language === "ar" ? "font-bold" : ""}>العربية</span>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  }
 
-export default LanguageSwitcher;
+  return (
+    <div className="flex gap-2">
+      {showLabel && <span className="text-sm text-primary/80 font-medium">{t("settings.language")}:</span>}
+      <Button
+        variant={language === "en" ? "default" : "outline"}
+        size="sm"
+        onClick={() => handleLanguageChange("en")}
+        className="px-3"
+      >
+        English
+      </Button>
+      <Button
+        variant={language === "ar" ? "default" : "outline"}
+        size="sm"
+        onClick={() => handleLanguageChange("ar")}
+        className="px-3"
+      >
+        العربية
+      </Button>
+    </div>
+  );
+}
