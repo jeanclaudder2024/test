@@ -282,7 +282,7 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                       <div>
                         <div className="flex items-center">
                           <p className="text-sm font-medium">
-                            {`${parseFloat(currentLocation.currentLat).toFixed(4)}°, ${parseFloat(currentLocation.currentLng).toFixed(4)}°`}
+                            {`${parseFloat(String(currentLocation.currentLat)).toFixed(4)}°, ${parseFloat(String(currentLocation.currentLng)).toFixed(4)}°`}
                           </p>
                           {currentLocation.fromAPI && (
                             <Badge variant="outline" className="ml-2 text-xs bg-green-50 border-green-200 text-green-700">
@@ -310,7 +310,7 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                       <div>
                         <p className="text-sm font-medium">
                           {vessel.currentLat && vessel.currentLng
-                            ? `${parseFloat(vessel.currentLat).toFixed(4)}°, ${parseFloat(vessel.currentLng).toFixed(4)}°`
+                            ? `${parseFloat(String(vessel.currentLat)).toFixed(4)}°, ${parseFloat(String(vessel.currentLng)).toFixed(4)}°`
                             : "Position not available"}
                         </p>
                         <p className="text-xs text-gray-500">From vessel database record</p>

@@ -911,7 +911,7 @@ export default function VesselDetail() {
             <TabsContent value="journey">
               {/* Add the VoyageDetails component at the top of the journey tab */}
               <VoyageDetails 
-                vessel={vessel}
+                vessel={vessel as any}
                 voyageProgress={voyageProgress}
                 isLoadingVoyage={isLoadingVoyage}
                 onRefreshVoyage={fetchVoyageProgress}
