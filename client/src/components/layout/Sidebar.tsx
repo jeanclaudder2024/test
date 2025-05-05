@@ -16,11 +16,13 @@ import {
   Map,
   Radio,
   Database,
-  Anchor
+  Anchor,
+  Globe
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/hooks/use-language";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 interface SidebarProps {
   mobile?: boolean;
@@ -249,6 +251,29 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
               </div>
             </Link>
           ))}
+          
+          {/* Language Switcher Section */}
+          <div className="mt-6">
+            <div className="border-t border-primary/10 dark:border-primary/20 my-5 mx-6"></div>
+            <div className="px-6 mb-2">
+              {!collapsed && (
+                <h2 className="font-heading uppercase text-primary/60 dark:text-primary/70 font-bold pb-2 text-xs tracking-wider">
+                  {t("nav.language")}
+                </h2>
+              )}
+            </div>
+            
+            <div className={cn(
+              "mx-4 p-2",
+              collapsed ? "flex justify-center" : ""
+            )}>
+              <LanguageSwitcher 
+                position="sidebar" 
+                showLabel={!collapsed} 
+                variant={collapsed ? "icon" : "default"} 
+              />
+            </div>
+          </div>
         </div>
       </div>
     </aside>

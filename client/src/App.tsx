@@ -25,6 +25,7 @@ import { apiRequest, queryClient } from "./lib/queryClient";
 import { Layout } from "@/components/ui/layout";
 import { AuthProvider } from "@/hooks/use-auth";
 import { LanguageProvider } from "@/hooks/use-language";
+import TranslationProvider from "@/i18n/TranslationProvider";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { motion, AnimatePresence } from "framer-motion";
@@ -103,10 +104,12 @@ function App() {
     <ThemeProvider defaultTheme="system">
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <LanguageProvider>
-            <Router />
-            <Toaster />
-          </LanguageProvider>
+          <TranslationProvider>
+            <LanguageProvider>
+              <Router />
+              <Toaster />
+            </LanguageProvider>
+          </TranslationProvider>
         </AuthProvider>
       </QueryClientProvider>
     </ThemeProvider>

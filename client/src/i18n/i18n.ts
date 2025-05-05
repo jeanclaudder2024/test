@@ -14,8 +14,21 @@ import ru from './locales/ru/translation.json';
 import de from './locales/de/translation.json';
 import ja from './locales/ja/translation.json';
 
+// Define type for language details
+export interface LanguageDetails {
+  nativeName: string;
+  flag: string;
+  dir: 'ltr' | 'rtl';
+}
+
+// Define type for translation resources
+type TranslationResource = typeof en;
+interface ResourceType {
+  translation: TranslationResource;
+}
+
 // Define available languages with their details
-export const languages = {
+export const languages: Record<string, LanguageDetails> = {
   en: { nativeName: 'English', flag: 'US', dir: 'ltr' },
   ar: { nativeName: 'العربية', flag: 'SA', dir: 'rtl' },
   fr: { nativeName: 'Français', flag: 'FR', dir: 'ltr' },
@@ -27,7 +40,7 @@ export const languages = {
 };
 
 // Resources for the languages
-const resources = {
+const resources: Record<string, ResourceType> = {
   en: { translation: en },
   ar: { translation: ar },
   fr: { translation: fr },
@@ -37,6 +50,9 @@ const resources = {
   de: { translation: de },
   ja: { translation: ja },
 };
+
+// List of supported namespaces
+const namespaces = ['translation'];
 
 i18n
   // Load translation using http -> see /public/locales
@@ -53,7 +69,10 @@ i18n
   // For static loading resources (bundled with app)
   .use(
     resourcesToBackend((language: string, namespace: string) => {
-      return Promise.resolve(resources[language]?.[namespace] || {});
+      if (namespaces.includes(namespace)) {
+        return Promise.resolve(resources[language]?.translation || {});
+      }
+      return Promise.resolve({});
     })
   )
   
@@ -67,7 +86,7 @@ i18n
     
     // Namespaces
     defaultNS: 'translation',
-    ns: ['translation'],
+    ns: namespaces,
     
     // Lazy load translations
     partialBundledLanguages: true,
@@ -101,14 +120,28 @@ i18n
 // Function to change the language
 export const changeLanguage = (lng: string) => {
   i18n.changeLanguage(lng);
+  
   // Set HTML dir attribute for RTL languages
-  document.documentElement.dir = languages[lng]?.dir || 'ltr';
-  document.documentElement.lang = lng;
+  const langDetails = languages[lng];
+  if (langDetails) {
+    document.documentElement.dir = langDetails.dir;
+    document.documentElement.lang = lng;
+  } else {
+    document.documentElement.dir = 'ltr';
+    document.documentElement.lang = lng;
+  }
 };
 
 // Initialize language direction
 const currentLanguage = i18n.language;
-document.documentElement.dir = languages[currentLanguage]?.dir || 'ltr';
-document.documentElement.lang = currentLanguage;
+const languageCode = currentLanguage.split('-')[0];
+const currentLangDetails = languages[languageCode];
+if (currentLangDetails) {
+  document.documentElement.dir = currentLangDetails.dir;
+  document.documentElement.lang = currentLanguage;
+} else {
+  document.documentElement.dir = 'ltr';
+  document.documentElement.lang = currentLanguage;
+}
 
 export default i18n;

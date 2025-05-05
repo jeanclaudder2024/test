@@ -5,6 +5,7 @@ import "./styles/animations.css";
 import { ThemeProvider } from "./hooks/use-theme";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
+import TranslationProvider from "./i18n/TranslationProvider";
 
 // Add Leaflet CSS for maps
 const leafletCss = document.createElement("link");
@@ -14,10 +15,10 @@ leafletCss.integrity = "sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=";
 leafletCss.crossOrigin = "";
 document.head.appendChild(leafletCss);
 
-// Add Google Fonts
+// Add Google Fonts - Multiple for multilingual support
 const googleFonts = document.createElement("link");
 googleFonts.rel = "stylesheet";
-googleFonts.href = "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap";
+googleFonts.href = "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Arabic:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap";
 document.head.appendChild(googleFonts);
 
 // Add page title
@@ -37,10 +38,42 @@ metaDescription.name = "description";
 metaDescription.content = "Advanced maritime intelligence platform for tracking vessels, refineries, and ports with real-time geospatial insights.";
 document.head.appendChild(metaDescription);
 
+// Add font for Arabic text
+const styles = document.createElement("style");
+styles.textContent = `
+  /* Font configuration for different languages */
+  :root {
+    --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  }
+  
+  /* Arabic font */
+  .font-arabic {
+    font-family: 'Noto Sans Arabic', var(--font-sans);
+  }
+  
+  /* Chinese font */
+  html[lang="zh"] body {
+    font-family: 'Noto Sans SC', var(--font-sans);
+  }
+  
+  /* Japanese font */
+  html[lang="ja"] body {
+    font-family: 'Noto Sans JP', var(--font-sans);
+  }
+  
+  /* RTL specific styling */
+  html[dir="rtl"] body {
+    font-family: 'Noto Sans Arabic', var(--font-sans);
+  }
+`;
+document.head.appendChild(styles);
+
 createRoot(document.getElementById("root")!).render(
-  <ThemeProvider defaultTheme="system">
-    <QueryClientProvider client={queryClient}>
-      <App />
-    </QueryClientProvider>
-  </ThemeProvider>
+  <TranslationProvider>
+    <ThemeProvider defaultTheme="system">
+      <QueryClientProvider client={queryClient}>
+        <App />
+      </QueryClientProvider>
+    </ThemeProvider>
+  </TranslationProvider>
 );

@@ -110,7 +110,7 @@ export default function Header() {
           
           {/* Language Switcher */}
           <div className="hidden sm:block">
-            <LanguageSwitcher variant="icon" />
+            <LanguageSwitcher variant="icon" position="navbar" />
           </div>
           
           <div className="flex items-center">
