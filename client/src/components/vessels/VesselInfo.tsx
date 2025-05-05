@@ -197,16 +197,28 @@ export default function VesselInfo({ vessel }: VesselInfoProps) {
     <Card className="overflow-hidden">
       <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
         <h3 className="font-heading font-medium text-gray-800">Vessel Information</h3>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="text-xs" 
-          onClick={generateSellerName}
-          disabled={isLoading}
-        >
-          <RefreshCcw className={`h-3 w-3 mr-1 ${isLoading ? 'animate-spin' : ''}`} />
-          Update Trade Info
-        </Button>
+        <div className="flex space-x-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="text-xs" 
+            onClick={fetchCurrentLocation}
+            disabled={isLoadingLocation}
+          >
+            <Navigation className={`h-3 w-3 mr-1 ${isLoadingLocation ? 'animate-spin' : ''}`} />
+            Update Location
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="text-xs" 
+            onClick={generateSellerName}
+            disabled={isLoading}
+          >
+            <RefreshCcw className={`h-3 w-3 mr-1 ${isLoading ? 'animate-spin' : ''}`} />
+            Update Trade Info
+          </Button>
+        </div>
       </div>
       <CardContent className="p-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -298,6 +310,59 @@ export default function VesselInfo({ vessel }: VesselInfoProps) {
                     ? `${vessel.cargoCapacity.toLocaleString()} barrels` 
                     : "Capacity: N/A"}
                 </p>
+              </div>
+            </div>
+
+            {/* Current Location */}
+            <div className="flex items-center mb-3">
+              <div className="h-8 w-8 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
+                <Navigation className="h-4 w-4 text-primary" />
+              </div>
+              <div className="ml-3">
+                <p className="text-xs text-gray-500">CURRENT LOCATION</p>
+                {isLoadingLocation ? (
+                  <div className="flex items-center">
+                    <Navigation className="h-3 w-3 mr-1 animate-spin text-primary" />
+                    <span className="text-sm">Fetching location...</span>
+                  </div>
+                ) : currentLocation ? (
+                  <div>
+                    <div className="flex items-center">
+                      <p className="text-sm font-medium">
+                        {`${parseFloat(currentLocation.currentLat).toFixed(4)}°, ${parseFloat(currentLocation.currentLng).toFixed(4)}°`}
+                      </p>
+                      {currentLocation.fromAPI && (
+                        <Badge variant="outline" className="ml-2 text-xs bg-green-50 border-green-200 text-green-700">
+                          Live
+                        </Badge>
+                      )}
+                    </div>
+                    
+                    {currentLocation.status && (
+                      <p className="text-xs text-gray-500">Status: {currentLocation.status}</p>
+                    )}
+                    
+                    {currentLocation.speed !== undefined && (
+                      <p className="text-xs text-gray-500">
+                        Speed: {currentLocation.speed} knots 
+                        {currentLocation.heading !== undefined && ` • Heading: ${currentLocation.heading}°`}
+                      </p>
+                    )}
+                    
+                    <p className="text-xs text-gray-500">
+                      Updated: {formatDate(new Date(currentLocation.lastUpdated))}
+                    </p>
+                  </div>
+                ) : (
+                  <div>
+                    <p className="text-sm font-medium">
+                      {vessel.currentLat && vessel.currentLng
+                        ? `${parseFloat(vessel.currentLat).toFixed(4)}°, ${parseFloat(vessel.currentLng).toFixed(4)}°`
+                        : "Position not available"}
+                    </p>
+                    <p className="text-xs text-gray-500">From vessel database record</p>
+                  </div>
+                )}
               </div>
             </div>
             
