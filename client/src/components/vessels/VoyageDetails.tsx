@@ -131,11 +131,50 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
     try {
       const response = await axios.get(`/api/vessels/${vessel.id}/route`);
       console.log("Route data response:", response.data);
+      
       if (response.data && response.data.route) {
-        setRouteData(response.data.route);
+        // Process the route data to ensure all coordinates are numbers
+        const route = response.data.route;
+        
+        // Ensure current position coordinates are numbers
+        if (route.currentPosition) {
+          route.currentPosition = {
+            ...route.currentPosition,
+            lat: Number(route.currentPosition.lat),
+            lng: Number(route.currentPosition.lng)
+          };
+        }
+        
+        // Ensure departure position coordinates are numbers
+        if (route.departurePosition) {
+          route.departurePosition = {
+            ...route.departurePosition,
+            lat: Number(route.departurePosition.lat),
+            lng: Number(route.departurePosition.lng)
+          };
+        }
+        
+        // Ensure destination position coordinates are numbers
+        if (route.destinationPosition) {
+          route.destinationPosition = {
+            ...route.destinationPosition,
+            lat: Number(route.destinationPosition.lat),
+            lng: Number(route.destinationPosition.lng)
+          };
+        }
+        
+        // Validate vessel coordinates are numbers
+        if (route.vessel && route.vessel.currentLat && route.vessel.currentLng) {
+          route.vessel.currentLat = Number(route.vessel.currentLat);
+          route.vessel.currentLng = Number(route.vessel.currentLng);
+        }
+        
+        // Update the state with the processed route data
+        setRouteData(route);
       }
     } catch (error) {
       console.error('Error fetching route data:', error);
+      setRouteData(null); // Clear route data on error
     } finally {
       setIsLoadingRoute(false);
     }
