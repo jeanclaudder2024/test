@@ -666,6 +666,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch port data by region" });
     }
   });
+  
+  // Search ports by name endpoint
+  apiRouter.get("/ports/search", async (req, res) => {
+    try {
+      const { name } = req.query;
+      
+      if (!name || typeof name !== 'string') {
+        return res.status(400).json({ message: "Port name query parameter is required" });
+      }
+      
+      // Get all ports from the database
+      const allPorts = await portService.getAllPorts();
+      
+      // Filter ports by name (case-insensitive partial match)
+      const matchingPorts = allPorts.filter(port => 
+        port.name.toLowerCase().includes(name.toLowerCase())
+      );
+      
+      console.log(`Found ${matchingPorts.length} ports matching search query "${name}"`);
+      
+      res.json(matchingPorts);
+    } catch (error) {
+      console.error(`Error searching for ports with name "${req.query.name}":`, error);
+      res.status(500).json({ message: "Failed to search for ports" });
+    }
+  });
 
   // MyShipTracking API endpoints
   apiRouter.get("/vessels/marine-traffic", async (req, res) => {
