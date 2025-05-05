@@ -92,12 +92,17 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
 
   // Calculate the estimated time of arrival display
   const getETADisplay = () => {
-    if (voyageProgress?.estimatedArrival) {
-      return formatDate(new Date(voyageProgress.estimatedArrival));
-    } else if (vessel.eta) {
-      return formatDate(new Date(vessel.eta));
+    try {
+      if (voyageProgress?.estimatedArrival) {
+        return formatDate(new Date(voyageProgress.estimatedArrival));
+      } else if (vessel?.eta) {
+        return formatDate(new Date(vessel.eta));
+      }
+      return "Not available";
+    } catch (error) {
+      console.error("Error formatting ETA:", error);
+      return "Not available";
     }
-    return "Not available";
   };
 
   // For demo purposes, use a static image for route map
@@ -192,26 +197,42 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                       </div>
                       
                       <Progress 
-                        value={voyageProgress.percentComplete} 
+                        value={voyageProgress?.percentComplete ?? 0} 
                         className="h-2 mb-3" 
                       />
                       
                       <div className="grid grid-cols-2 gap-x-4 gap-y-2 mt-3">
                         <div>
                           <p className="text-xs text-gray-500">Distance traveled</p>
-                          <p className="text-sm font-medium">{voyageProgress.distanceTraveled.toLocaleString()} nautical miles</p>
+                          <p className="text-sm font-medium">
+                            {voyageProgress?.distanceTraveled ? 
+                              `${voyageProgress.distanceTraveled.toLocaleString()} nautical miles` : 
+                              'N/A'}
+                          </p>
                         </div>
                         <div>
                           <p className="text-xs text-gray-500">Remaining</p>
-                          <p className="text-sm font-medium">{voyageProgress.distanceRemaining.toLocaleString()} nautical miles</p>
+                          <p className="text-sm font-medium">
+                            {voyageProgress?.distanceRemaining ? 
+                              `${voyageProgress.distanceRemaining.toLocaleString()} nautical miles` : 
+                              'N/A'}
+                          </p>
                         </div>
                         <div>
                           <p className="text-xs text-gray-500">Current speed</p>
-                          <p className="text-sm font-medium">{voyageProgress.currentSpeed} knots</p>
+                          <p className="text-sm font-medium">
+                            {voyageProgress?.currentSpeed !== undefined ? 
+                              `${voyageProgress.currentSpeed} knots` : 
+                              'N/A'}
+                          </p>
                         </div>
                         <div>
                           <p className="text-xs text-gray-500">Average speed</p>
-                          <p className="text-sm font-medium">{voyageProgress.averageSpeed} knots</p>
+                          <p className="text-sm font-medium">
+                            {voyageProgress?.averageSpeed !== undefined ? 
+                              `${voyageProgress.averageSpeed} knots` : 
+                              'N/A'}
+                          </p>
                         </div>
                       </div>
                       
@@ -393,17 +414,17 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                   <div>
                     <p className="text-xs text-gray-500">Total Distance</p>
                     <p className="text-sm font-medium">
-                      {voyageProgress 
-                        ? (voyageProgress.distanceTraveled + voyageProgress.distanceRemaining).toLocaleString()
-                        : "N/A"} nautical miles
+                      {(voyageProgress?.distanceTraveled !== undefined && voyageProgress?.distanceRemaining !== undefined)
+                        ? `${(voyageProgress.distanceTraveled + voyageProgress.distanceRemaining).toLocaleString()} nautical miles`
+                        : "N/A"}
                     </p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">Estimated Duration</p>
                     <p className="text-sm font-medium">
-                      {vessel.eta && vessel.departureDate
-                        ? Math.ceil((new Date(vessel.eta).getTime() - new Date(vessel.departureDate).getTime()) / (1000 * 60 * 60 * 24))
-                        : "N/A"} days
+                      {vessel?.eta && vessel?.departureDate
+                        ? `${Math.ceil((new Date(vessel.eta).getTime() - new Date(vessel.departureDate).getTime()) / (1000 * 60 * 60 * 24))} days`
+                        : "N/A"}
                     </p>
                   </div>
                 </div>
