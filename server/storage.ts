@@ -1,7 +1,7 @@
 import { eq, and } from "drizzle-orm";
 import { db } from "./db";
 import {
-  users, vessels, refineries, progressEvents, documents, brokers, stats as statsTable, ports, refineryPortConnections,
+  users, vessels, refineries, progressEvents, documents, brokers, stats as statsTable, ports, refineryPortConnections, companies,
   User, InsertUser, 
   Vessel, InsertVessel,
   Refinery, InsertRefinery,
@@ -10,7 +10,8 @@ import {
   Broker, InsertBroker,
   Stats, InsertStats,
   Port, InsertPort,
-  RefineryPortConnection, InsertRefineryPortConnection
+  RefineryPortConnection, InsertRefineryPortConnection,
+  Company, InsertCompany
 } from "@shared/schema";
 
 // Storage interface with CRUD methods
@@ -78,6 +79,15 @@ export interface IStorage {
   createRefineryPortConnection(connection: InsertRefineryPortConnection): Promise<RefineryPortConnection>;
   updateRefineryPortConnection(id: number, connection: Partial<InsertRefineryPortConnection>): Promise<RefineryPortConnection | undefined>;
   deleteRefineryPortConnection(id: number): Promise<boolean>;
+  
+  // Company methods
+  getCompanies(): Promise<Company[]>;
+  getCompanyById(id: number): Promise<Company | undefined>;
+  getCompaniesByRegion(region: string): Promise<Company[]>;
+  createCompany(company: InsertCompany): Promise<Company>;
+  createCompaniesBulk(companies: InsertCompany[]): Promise<Company[]>;
+  updateCompany(id: number, company: Partial<InsertCompany>): Promise<Company | undefined>;
+  deleteCompany(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
