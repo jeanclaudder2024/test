@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useVesselWebSocket } from '@/hooks/useVesselWebSocket';
-import { Vessel, ProgressEvent } from '@/types';
+import { Vessel, ProgressEvent, Port } from '@/types';
 import { useVesselProgressEvents, useAddProgressEvent } from '@/hooks/useVessels';
 import { useToast } from '@/hooks/use-toast';
-import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
-import L from 'leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
+import L, { LatLngExpression } from 'leaflet';
 import {
   Card,
   CardContent,
@@ -360,6 +360,105 @@ const LocationUpdateForm = ({
   );
 };
 
+// Helper function to get port coordinates by name
+const getPortCoordinates = async (portName: string | null | undefined): Promise<[number, number] | null> => {
+  if (!portName) return null;
+  
+  try {
+    const response = await fetch(`/api/ports/search?name=${encodeURIComponent(portName)}`);
+    if (!response.ok) return null;
+    
+    const ports = await response.json();
+    if (ports && ports.length > 0) {
+      // Use the first matching port
+      return [parseFloat(ports[0].lat), parseFloat(ports[0].lng)];
+    }
+    
+    return null;
+  } catch (error) {
+    console.error("Error fetching port coordinates:", error);
+    return null;
+  }
+};
+
+// Function to generate curved route between points
+const generateCurvedPath = (start: [number, number], end: [number, number], curveIntensity = 0.2): LatLngExpression[] => {
+  // Calculate midpoint
+  const midLat = (start[0] + end[0]) / 2;
+  const midLng = (start[1] + end[1]) / 2;
+  
+  // Calculate distance and angle to determine curve control point
+  const distLat = end[0] - start[0];
+  const distLng = end[1] - start[1];
+  
+  // Perpendicular vector to create curve
+  const perpLat = -distLng;
+  const perpLng = distLat;
+  
+  // Normalize and scale perpendicular vector for control point
+  const length = Math.sqrt(perpLat * perpLat + perpLng * perpLng);
+  const normPerpLat = perpLat / length;
+  const normPerpLng = perpLng / length;
+  
+  // Distance-based curve intensity
+  const distance = Math.sqrt(distLat * distLat + distLng * distLng);
+  const actualCurveIntensity = curveIntensity * distance * 0.3;
+  
+  // Control point 
+  const controlPoint: [number, number] = [
+    midLat + (normPerpLat * actualCurveIntensity),
+    midLng + (normPerpLng * actualCurveIntensity)
+  ];
+  
+  // Create the curve using quadratic Bezier approximation
+  const path: LatLngExpression[] = [];
+  const steps = 20;
+  
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    // Quadratic Bezier curve formula: B(t) = (1-t)²P₀ + 2(1-t)tP₁ + t²P₂
+    const lat = (1-t)*(1-t)*start[0] + 2*(1-t)*t*controlPoint[0] + t*t*end[0];
+    const lng = (1-t)*(1-t)*start[1] + 2*(1-t)*t*controlPoint[1] + t*t*end[1];
+    path.push([lat, lng]);
+  }
+  
+  return path;
+};
+
+// Component for map controls
+const MapControls = () => {
+  const map = useMap();
+  
+  const handleZoomIn = () => {
+    map.zoomIn();
+  };
+  
+  const handleZoomOut = () => {
+    map.zoomOut();
+  };
+  
+  return (
+    <div className="absolute top-2 right-2 z-[1000] bg-white rounded-md shadow-sm">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="p-1 text-gray-600 hover:bg-gray-100 hover:text-primary h-8 w-8"
+        onClick={handleZoomIn}
+      >
+        <ZoomIn className="h-4 w-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="p-1 text-gray-600 hover:bg-gray-100 hover:text-primary h-8 w-8 border-t border-gray-100"
+        onClick={handleZoomOut}
+      >
+        <ZoomOut className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+};
+
 export default function VesselDetail() {
   const [, params] = useRoute('/vessels/:id');
   const vesselId = params?.id ? parseInt(params.id) : null;
@@ -367,6 +466,9 @@ export default function VesselDetail() {
   const { data: progressEvents = [], isLoading: progressLoading } = useVesselProgressEvents(vesselId);
   const { toast } = useToast();
   const [isUpdatingLocation, setIsUpdatingLocation] = useState(false);
+  const [showRoute, setShowRoute] = useState(true);
+  const [departureCoords, setDepartureCoords] = useState<[number, number] | null>(null);
+  const [destinationCoords, setDestinationCoords] = useState<[number, number] | null>(null);
   
   // Find the vessel from our stream data
   console.log('VesselDetail: Looking for vessel with ID:', vesselId);
