@@ -3,7 +3,7 @@ import { useVesselWebSocket } from '@/hooks/useVesselWebSocket';
 import { Vessel, ProgressEvent } from '@/types';
 import { useVesselProgressEvents, useAddProgressEvent } from '@/hooks/useVessels';
 import { useToast } from '@/hooks/use-toast';
-import { getPortCoordinates, calculateDistance, formatDistance } from '@/utils/portUtils';
+import { getPortCoordinates, calculateDistance, calculateETA, formatDistance } from '@/utils/portUtils';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L, { LatLngExpression } from 'leaflet';
 import {
@@ -620,7 +620,8 @@ export default function VesselDetail() {
             console.log(`Remaining distance: ${remaining.toFixed(1)} nautical miles`);
             
             // Calculate ETA based on vessel speed and remaining distance
-            const speed = vessel.speed ? parseFloat(vessel.speed as string) : 12; // Default to 12 knots if no speed available
+            // Default to 12 knots if no speed available in the vessel data
+            const speed = 12;
             if (speed > 0) {
               const eta = calculateETA(remaining, speed);
               setEstimatedEta(eta);
@@ -1165,29 +1166,65 @@ export default function VesselDetail() {
                     )}
                     
                     <div className="relative pt-1">
-                      <div className="flex mb-2 items-center justify-between">
-                        <div>
-                          <span className="text-xs font-semibold inline-block text-primary">
-                            {"64% Complete"}
-                          </span>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-xs font-semibold text-muted-foreground">
-                            9 days remaining
-                          </span>
-                        </div>
+                      {journeyDistance && distanceTraveled && remainingDistance && (
+                        <>
+                          <div className="flex mb-2 items-center justify-between">
+                            <div>
+                              <span className="text-xs font-semibold inline-block text-primary">
+                                {`${Math.round((distanceTraveled / journeyDistance) * 100)}% Complete`}
+                              </span>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-xs font-semibold text-muted-foreground">
+                                {estimatedEta 
+                                  ? estimatedEta > 24 
+                                    ? `~${Math.round(estimatedEta / 24)} days remaining` 
+                                    : `~${Math.round(estimatedEta)} hours remaining`
+                                  : 'ETA calculating...'}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-primary/20">
+                            <div 
+                              style={{ width: `${Math.round((distanceTraveled / journeyDistance) * 100)}%` }} 
+                              className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-primary"
+                            ></div>
+                          </div>
+                          <div className="flex justify-between text-xs text-muted-foreground">
+                            <div>{vessel.departurePort}</div>
+                            <div>Current Position</div>
+                            <div>
+                              {vessel.destinationPort?.startsWith('REF:') 
+                                ? vessel.destinationPort.split(':')[2] + ' (Refinery)' 
+                                : vessel.destinationPort}
+                            </div>
+                          </div>
+                        </>
+                      )}
+                      
+                      {/* Distance statistics */}
+                      <div className="grid grid-cols-3 gap-4 mt-4 text-center">
+                        {journeyDistance && (
+                          <div className="bg-blue-50 p-3 rounded-md">
+                            <div className="text-blue-600 text-xs font-medium mb-1">Total Distance</div>
+                            <div className="text-gray-900 font-semibold">{formatDistance(journeyDistance)}</div>
+                          </div>
+                        )}
+                        
+                        {distanceTraveled && (
+                          <div className="bg-green-50 p-3 rounded-md">
+                            <div className="text-green-600 text-xs font-medium mb-1">Distance Traveled</div>
+                            <div className="text-gray-900 font-semibold">{formatDistance(distanceTraveled)}</div>
+                          </div>
+                        )}
+                        
+                        {remainingDistance && (
+                          <div className="bg-amber-50 p-3 rounded-md">
+                            <div className="text-amber-600 text-xs font-medium mb-1">Remaining</div>
+                            <div className="text-gray-900 font-semibold">{formatDistance(remainingDistance)}</div>
+                          </div>
+                        )}
                       </div>
-                      <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-primary/20">
-                        <div style={{ width: "64%" }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-primary"></div>
-                      </div>
-                      <div className="flex justify-between text-xs text-muted-foreground">
-                        <div>{vessel.departurePort}</div>
-                        <div>Current Position</div>
-                        <div>
-                          {vessel.destinationPort?.startsWith('REF:') 
-                            ? vessel.destinationPort.split(':')[2] + ' (Refinery)' 
-                            : vessel.destinationPort}
-                        </div>
                       </div>
                     </div>
                   </div>
