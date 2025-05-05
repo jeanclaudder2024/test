@@ -20,11 +20,50 @@ import {
 } from "@/components/ui/card";
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'wouter';
-import { Factory, Search, Plus } from 'lucide-react';
+import { Factory, Search, Plus, RefreshCw } from 'lucide-react';
+import axios from 'axios';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Refineries() {
   const { refineries, loading } = useDataStream();
   const [searchTerm, setSearchTerm] = useState('');
+  const [isUpdating, setIsUpdating] = useState(false);
+  const { toast } = useToast();
+  
+  // Function to update refineries with real-world data
+  const updateRefineryWithRealData = async () => {
+    try {
+      setIsUpdating(true);
+      
+      // Call the API endpoint to update refineries with real data
+      const response = await axios.post('/api/refineries/update-real-data');
+      
+      if (response.data && response.data.success) {
+        // Show success toast
+        toast({
+          title: "Success!",
+          description: `Updated refineries with real-world data. Please refresh to see changes.`,
+          variant: "default",
+        });
+        
+        // Force a refresh of the page to show updated data
+        window.location.reload();
+      } else {
+        throw new Error(response.data?.message || "Failed to update refineries");
+      }
+    } catch (error) {
+      console.error("Error updating refineries with real data:", error);
+      
+      // Show error toast
+      toast({
+        title: "Update Failed",
+        description: error instanceof Error ? error.message : "An error occurred while updating refineries",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
   
   // Filter refineries based on search term
   const filteredRefineries = refineries.filter(refinery => 
@@ -79,10 +118,29 @@ export default function Refineries() {
             />
           </div>
           
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Refinery
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={updateRefineryWithRealData} 
+              disabled={isUpdating}
+            >
+              {isUpdating ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Updating...
+                </>
+              ) : (
+                <>
+                  <Factory className="h-4 w-4 mr-2" />
+                  Use Real Data
+                </>
+              )}
+            </Button>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Refinery
+            </Button>
+          </div>
         </div>
       </div>
 
