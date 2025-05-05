@@ -48,6 +48,58 @@ const OIL_CATEGORIES = {
 // Helper function to determine oil category
 const getOilCategory = (cargoType: string | null | undefined): string => {
   if (!cargoType) return "Other";
+  
+// Helper function to get port coordinates from name
+const getPortCoordinates = async (portName: string): Promise<[number, number] | null> => {
+  try {
+    console.log(`Searching for port coordinates: ${portName}`);
+    
+    // Check if it's a special format for refineries (REF:id:name)
+    if (portName.startsWith('REF:')) {
+      const parts = portName.split(':');
+      if (parts.length > 2) {
+        const refineryId = parts[1];
+        try {
+          // Fetch refinery data to get coordinates
+          const response = await fetch(`/api/refineries/${refineryId}`);
+          if (response.ok) {
+            const refinery = await response.json();
+            if (refinery && refinery.lat && refinery.lng) {
+              console.log(`Found refinery coordinates for ${refinery.name}: [${refinery.lat}, ${refinery.lng}]`);
+              return [parseFloat(refinery.lat), parseFloat(refinery.lng)];
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching refinery coordinates:', error);
+        }
+      }
+      return null;
+    }
+    
+    // Search for port by name
+    const response = await fetch(`/api/ports/search?name=${encodeURIComponent(portName)}`);
+    if (!response.ok) {
+      console.error(`Failed to search for port ${portName}: ${response.statusText}`);
+      return null;
+    }
+    
+    const ports = await response.json();
+    if (ports && ports.length > 0) {
+      // Use the first matching port
+      const port = ports[0];
+      if (port.lat && port.lng) {
+        console.log(`Found port coordinates for ${port.name}: [${port.lat}, ${port.lng}]`);
+        return [parseFloat(port.lat), parseFloat(port.lng)];
+      }
+    }
+    
+    console.log(`No coordinates found for port ${portName}`);
+    return null;
+  } catch (error) {
+    console.error('Error getting port coordinates:', error);
+    return null;
+  }
+};
   const upperCargoType = cargoType.toUpperCase();
   
   for (const [category, keywords] of Object.entries(OIL_CATEGORIES)) {
@@ -113,6 +165,155 @@ const ProgressTimeline = ({ events }: { events: ProgressEvent[] }) => {
 };
 
 // Form component for updating vessel location
+// MapControls component for zoom in/out functionality
+const MapControls = () => {
+  const map = useMap();
+  
+  return (
+    <div className="absolute top-2 right-2 z-[1000] bg-white rounded-md shadow-sm">
+      <Button 
+        variant="ghost" 
+        size="icon" 
+        className="p-1 text-gray-600 hover:bg-gray-100 hover:text-primary h-8 w-8"
+        onClick={() => map.zoomIn()}
+      >
+        <ZoomIn className="h-4 w-4" />
+      </Button>
+      <Button 
+        variant="ghost" 
+        size="icon" 
+        className="p-1 text-gray-600 hover:bg-gray-100 hover:text-primary h-8 w-8 border-t border-gray-100"
+        onClick={() => map.zoomOut()}
+      >
+        <ZoomOut className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+};
+
+// Helper function to generate a curved path between two points
+const generateCurvedPath = (
+  startPoint: [number, number], 
+  endPoint: [number, number], 
+  curvature = 0.2
+): [number, number][] => {
+  // Calculate midpoint
+  const midX = (startPoint[0] + endPoint[0]) / 2;
+  const midY = (startPoint[1] + endPoint[1]) / 2;
+  
+  // Calculate distance between points
+  const dx = endPoint[0] - startPoint[0];
+  const dy = endPoint[1] - startPoint[1];
+  const distance = Math.sqrt(dx * dx + dy * dy);
+  
+  // Calculate control point for curve (perpendicular to line)
+  const controlX = midX - dy * curvature;
+  const controlY = midY + dx * curvature;
+  
+  // Generate path with more points for smoothness
+  const path: [number, number][] = [];
+  const steps = 20; // Number of points on the curve
+  
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    // Quadratic Bezier curve formula
+    const x = (1 - t) * (1 - t) * startPoint[0] + 
+              2 * (1 - t) * t * controlX + 
+              t * t * endPoint[0];
+    const y = (1 - t) * (1 - t) * startPoint[1] + 
+              2 * (1 - t) * t * controlY + 
+              t * t * endPoint[1];
+    path.push([x, y]);
+  }
+  
+  return path;
+};
+
+// VesselRoutes component to display the vessel's route
+const VesselRoutes = ({ 
+  currentPos, 
+  departureCoords, 
+  destinationCoords 
+}: { 
+  currentPos: [number, number], 
+  departureCoords?: [number, number] | null, 
+  destinationCoords?: [number, number] | null 
+}) => {
+  const routeOptions = {
+    past: {
+      color: '#3b82f6', // blue
+      weight: 3,
+      opacity: 0.7,
+      className: 'past-route'
+    },
+    future: {
+      color: '#ef4444', // red
+      weight: 3,
+      opacity: 0.5,
+      dashArray: '5, 5',
+      className: 'future-route'
+    }
+  };
+  
+  return (
+    <>
+      {/* Past route: from departure to current position */}
+      {departureCoords && (
+        <Polyline
+          positions={generateCurvedPath(departureCoords, currentPos)}
+          pathOptions={routeOptions.past}
+        >
+          <Popup>
+            <div className="text-sm font-medium">Past route</div>
+            <div className="text-xs text-gray-500">From departure to current position</div>
+          </Popup>
+        </Polyline>
+      )}
+      
+      {/* Future route: from current position to destination */}
+      {destinationCoords && (
+        <Polyline
+          positions={generateCurvedPath(currentPos, destinationCoords)}
+          pathOptions={routeOptions.future}
+        >
+          <Popup>
+            <div className="text-sm font-medium">Projected route</div>
+            <div className="text-xs text-gray-500">From current position to destination</div>
+          </Popup>
+        </Polyline>
+      )}
+      
+      {/* Add origin marker if we have departure coordinates */}
+      {departureCoords && (
+        <Marker
+          position={departureCoords as LatLngExpression}
+          icon={L.divIcon({
+            className: 'departure-marker',
+            html: `<div class="w-3 h-3 rounded-full bg-blue-500 border-2 border-white"></div>`,
+            iconSize: [12, 12]
+          })}
+        >
+          <Popup>Departure port</Popup>
+        </Marker>
+      )}
+      
+      {/* Add destination marker if we have destination coordinates */}
+      {destinationCoords && (
+        <Marker
+          position={destinationCoords as LatLngExpression}
+          icon={L.divIcon({
+            className: 'destination-marker',
+            html: `<div class="w-3 h-3 rounded-full bg-red-500 border-2 border-white"></div>`,
+            iconSize: [12, 12]
+          })}
+        >
+          <Popup>Destination port</Popup>
+        </Marker>
+      )}
+    </>
+  );
+};
+
 const LocationUpdateForm = ({ 
   vesselId, 
   initialLat, 
@@ -381,165 +582,7 @@ const getPortCoordinates = async (portName: string | null | undefined): Promise<
   }
 };
 
-// Function to generate curved route between points
-const generateCurvedPath = (start: [number, number], end: [number, number], curveIntensity = 0.2): LatLngExpression[] => {
-  // Calculate midpoint
-  const midLat = (start[0] + end[0]) / 2;
-  const midLng = (start[1] + end[1]) / 2;
-  
-  // Calculate distance and angle to determine curve control point
-  const distLat = end[0] - start[0];
-  const distLng = end[1] - start[1];
-  
-  // Perpendicular vector to create curve
-  const perpLat = -distLng;
-  const perpLng = distLat;
-  
-  // Normalize and scale perpendicular vector for control point
-  const length = Math.sqrt(perpLat * perpLat + perpLng * perpLng);
-  const normPerpLat = perpLat / length;
-  const normPerpLng = perpLng / length;
-  
-  // Distance-based curve intensity
-  const distance = Math.sqrt(distLat * distLat + distLng * distLng);
-  const actualCurveIntensity = curveIntensity * distance * 0.3;
-  
-  // Control point 
-  const controlPoint: [number, number] = [
-    midLat + (normPerpLat * actualCurveIntensity),
-    midLng + (normPerpLng * actualCurveIntensity)
-  ];
-  
-  // Create the curve using quadratic Bezier approximation
-  const path: LatLngExpression[] = [];
-  const steps = 20;
-  
-  for (let i = 0; i <= steps; i++) {
-    const t = i / steps;
-    // Quadratic Bezier curve formula: B(t) = (1-t)²P₀ + 2(1-t)tP₁ + t²P₂
-    const lat = (1-t)*(1-t)*start[0] + 2*(1-t)*t*controlPoint[0] + t*t*end[0];
-    const lng = (1-t)*(1-t)*start[1] + 2*(1-t)*t*controlPoint[1] + t*t*end[1];
-    path.push([lat, lng]);
-  }
-  
-  return path;
-};
-
-// Component for map controls
-const MapControls = () => {
-  const map = useMap();
-  
-  const handleZoomIn = () => {
-    map.zoomIn();
-  };
-  
-  const handleZoomOut = () => {
-    map.zoomOut();
-  };
-  
-  return (
-    <div className="absolute top-2 right-2 z-[1000] bg-white rounded-md shadow-sm">
-      <Button
-        variant="ghost"
-        size="icon"
-        className="p-1 text-gray-600 hover:bg-gray-100 hover:text-primary h-8 w-8"
-        onClick={handleZoomIn}
-      >
-        <ZoomIn className="h-4 w-4" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="p-1 text-gray-600 hover:bg-gray-100 hover:text-primary h-8 w-8 border-t border-gray-100"
-        onClick={handleZoomOut}
-      >
-        <ZoomOut className="h-4 w-4" />
-      </Button>
-    </div>
-  );
-};
-
-// Component for vessel route paths
-const VesselRoutes = ({ 
-  currentPos, 
-  departureCoords, 
-  destinationCoords 
-}: { 
-  currentPos: [number, number], 
-  departureCoords: [number, number] | null, 
-  destinationCoords: [number, number] | null 
-}) => {
-  // Generate paths
-  return (
-    <>
-      {/* Past route - from departure port to current position */}
-      {departureCoords && (
-        <Polyline
-          positions={generateCurvedPath(departureCoords, currentPos, 0.3)}
-          pathOptions={{
-            color: '#3388ff',
-            weight: 3,
-            opacity: 0.7,
-            dashArray: '5, 10',
-            className: 'past-route'
-          }}
-        >
-          <Popup>
-            <div className="text-sm font-medium">Past route</div>
-            <div className="text-xs text-gray-500">From departure port to current position</div>
-          </Popup>
-        </Polyline>
-      )}
-      
-      {/* Future route - from current position to destination port */}
-      {destinationCoords && (
-        <Polyline
-          positions={generateCurvedPath(currentPos, destinationCoords, 0.3)}
-          pathOptions={{
-            color: '#ff3366',
-            weight: 3,
-            opacity: 0.5,
-            dashArray: '5, 5',
-            className: 'future-route'
-          }}
-        >
-          <Popup>
-            <div className="text-sm font-medium">Projected route</div>
-            <div className="text-xs text-gray-500">From current position to destination</div>
-          </Popup>
-        </Polyline>
-      )}
-      
-      {/* Add origin marker if we have departure coordinates */}
-      {departureCoords && (
-        <Marker
-          position={departureCoords as LatLngExpression}
-          icon={L.divIcon({
-            className: 'departure-marker',
-            html: `<div class="w-3 h-3 rounded-full bg-blue-500 border-2 border-white"></div>`,
-            iconSize: [12, 12]
-          })}
-        >
-          <Popup>Departure port</Popup>
-        </Marker>
-      )}
-      
-      {/* Add destination marker if we have destination coordinates */}
-      {destinationCoords && (
-        <Marker
-          position={destinationCoords as LatLngExpression}
-          icon={L.divIcon({
-            className: 'destination-marker',
-            html: `<div class="w-3 h-3 rounded-full bg-red-500 border-2 border-white"></div>`,
-            iconSize: [12, 12]
-          })}
-        >
-          <Popup>Destination port</Popup>
-        </Marker>
-      )}
-    </>
-  );
-};
+// Using the existing generateCurvedPath, MapControls, and VesselRoutes functions defined above
 
 export default function VesselDetail() {
   const [, params] = useRoute('/vessels/:id');
@@ -877,6 +920,19 @@ export default function VesselDetail() {
                             
                             {/* Map controls */}
                             <MapControls />
+                            
+                            {/* Route toggle control */}
+                            <div className="absolute top-2 left-2 z-[1000] bg-white rounded-md shadow-sm">
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className={`p-1 text-gray-600 hover:bg-gray-100 h-8 w-8 ${showRoute ? 'text-primary' : ''}`}
+                                onClick={() => setShowRoute(prev => !prev)}
+                                title={showRoute ? "Hide vessel route" : "Show vessel route"}
+                              >
+                                <Compass className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </MapContainer>
                           
                           {/* Map controls panel */}
@@ -1074,7 +1130,51 @@ export default function VesselDetail() {
                   </div>
                   
                   <div className="mt-6">
-                    <h3 className="font-medium mb-3">Journey Progress</h3>
+                    <h3 className="font-medium mb-3 flex items-center justify-between">
+                      <span>Journey Progress</span>
+                      {(departureCoords || destinationCoords) && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-7 px-2 text-xs"
+                          onClick={() => setShowRoute(prev => !prev)}
+                        >
+                          {showRoute ? 
+                            <span className="flex items-center"><Check className="h-3 w-3 mr-1" />Route visible</span> : 
+                            <span className="flex items-center"><Map className="h-3 w-3 mr-1" />Show route</span>
+                          }
+                        </Button>
+                      )}
+                    </h3>
+                    
+                    {/* Route information */}
+                    {(departureCoords || destinationCoords) && (
+                      <div className="bg-muted/30 p-2 rounded-md mb-4 text-xs">
+                        <div className="flex items-center">
+                          <div className="flex-1">
+                            {departureCoords && (
+                              <div className="flex items-center mb-1">
+                                <div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
+                                <span>Departure: {vessel.departurePort || "Unknown port"}</span>
+                              </div>
+                            )}
+                            {destinationCoords && (
+                              <div className="flex items-center">
+                                <div className="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
+                                <span>Destination: {vessel.destinationPort?.replace(/REF:\d+:/, '') || "Unknown port"}</span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="text-right text-muted-foreground">
+                            {isLoadingPortData ? 
+                              <div className="animate-spin h-3 w-3 border-t-2 border-primary rounded-full ml-2"></div> :
+                              <span>Route {showRoute ? 'visible' : 'hidden'}</span>
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
                     <div className="relative pt-1">
                       <div className="flex mb-2 items-center justify-between">
                         <div>
