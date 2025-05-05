@@ -870,25 +870,47 @@ export default function LiveVesselMap({
                     (v.vesselType && v.vesselType.toLowerCase().includes(selectedOilType.toLowerCase()))
                   )
               ).map(vessel => {
-              if (vesselsWithRoutes[vessel.id] && vessel.departurePort && vessel.destinationPort && vessel.currentLat && vessel.currentLng) {
-                // Create route polyline if we have departure and destination ports
-                // This is a simplification - real routes would need port coordinates
-                const departureCoords = getRandomCoordinatesForPort(vessel.departurePort);
-                const destinationCoords = getRandomCoordinatesForPort(vessel.destinationPort);
-                const currentCoords = [parseFloat(vessel.currentLat), parseFloat(vessel.currentLng)];
+                // Only show vessels with routes enabled and that have current coordinates
+                if (!vesselsWithRoutes[vessel.id] || !vessel.currentLat || !vessel.currentLng) {
+                  return null;
+                }
                 
-                // Only draw routes if we have valid coordinates
-                if (
-                  !isNaN(departureCoords[0]) && 
-                  !isNaN(departureCoords[1]) && 
-                  !isNaN(destinationCoords[0]) && 
-                  !isNaN(destinationCoords[1]) && 
-                  !isNaN(currentCoords[0]) && 
-                  !isNaN(currentCoords[1])
-                ) {
-                  return (
-                    <div key={`route-${vessel.id}`} style={{ display: 'contents' }}>
-                      {/* Past route (from departure to current position) */}
+                // Get current vessel position
+                const currentCoords = [
+                  parseFloat(vessel.currentLat as string), 
+                  parseFloat(vessel.currentLng as string)
+                ];
+                
+                // Check if we have precise route coordinates
+                const hasDepartureCoords = vessel.departureLat && vessel.departureLng;
+                const hasDestinationCoords = vessel.destinationLat && vessel.destinationLng;
+                
+                // Get departure coordinates (precise or fallback)
+                let departureCoords = null;
+                if (hasDepartureCoords) {
+                  departureCoords = [
+                    parseFloat(vessel.departureLat as string), 
+                    parseFloat(vessel.departureLng as string)
+                  ];
+                } else if (vessel.departurePort) {
+                  departureCoords = getRandomCoordinatesForPort(vessel.departurePort);
+                }
+                
+                // Get destination coordinates (precise or fallback)
+                let destinationCoords = null;
+                if (hasDestinationCoords) {
+                  destinationCoords = [
+                    parseFloat(vessel.destinationLat as string), 
+                    parseFloat(vessel.destinationLng as string)
+                  ];
+                } else if (vessel.destinationPort) {
+                  destinationCoords = getRandomCoordinatesForPort(vessel.destinationPort);
+                }
+                
+                return (
+                  <div key={`route-${vessel.id}`} style={{ display: 'contents' }}>
+                    {/* Past route (from departure to current position) */}
+                    {departureCoords && (
                       <Polyline 
                         positions={[
                           [departureCoords[0], departureCoords[1]] as LatLngExpression,
@@ -901,8 +923,10 @@ export default function LiveVesselMap({
                           dashArray: '6, 8'
                         }}
                       />
-                      
-                      {/* Future route (from current position to destination) */}
+                    )}
+                    
+                    {/* Future route (from current position to destination) */}
+                    {destinationCoords && (
                       <Polyline 
                         positions={[
                           [currentCoords[0], currentCoords[1]] as LatLngExpression,
@@ -915,12 +939,10 @@ export default function LiveVesselMap({
                           dashArray: '3, 6'
                         }}
                       />
-                    </div>
-                  );
-                }
-              }
-              return null;
-            })}
+                    )}
+                  </div>
+                );
+              })}
             
             {/* Custom Performance Optimized Rendering with Viewport-Based Loading */}
             
