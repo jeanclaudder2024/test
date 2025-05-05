@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { 
   Ship, 
   Building2, 
+  Building,
   FileText, 
   Users, 
   LayoutDashboard, 
@@ -86,6 +87,11 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
       title: t("nav.brokers"),
       path: "/brokers",
       icon: <Users className="h-5 w-5 mr-3" />,
+    },
+    {
+      title: "Shipping Companies",
+      path: "/companies",
+      icon: <Building className="h-5 w-5 mr-3" />,
     },
     {
       title: t("nav.api_test"),

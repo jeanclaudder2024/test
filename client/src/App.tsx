@@ -72,6 +72,7 @@ function Router() {
         <ProtectedRoute path="/ports/import" component={PortImport} />
         <ProtectedRoute path="/ports/:id" component={PortDetail} />
         <ProtectedRoute path="/brokers" component={Brokers} />
+        <ProtectedRoute path="/companies" component={Companies} />
         <ProtectedRoute path="/documents" component={Documents} />
         <ProtectedRoute path="/ai-assistant" component={AIAssistantPage} />
         <ProtectedRoute path="/trading" component={TradingDashboard} />
