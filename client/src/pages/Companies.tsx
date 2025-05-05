@@ -190,12 +190,12 @@ export default function Companies() {
           
           {REGIONS.map((region) => (
             <Badge
-              key={region}
-              variant={selectedRegion === region ? "default" : "outline"}
+              key={typeof region === 'string' ? region : ''}
+              variant={selectedRegion === region && typeof region === 'string' ? "default" : "outline"}
               className="cursor-pointer whitespace-nowrap"
-              onClick={() => setSelectedRegion(region)}
+              onClick={() => typeof region === 'string' ? setSelectedRegion(region) : null}
             >
-              {region}
+              {typeof region === 'string' ? region : ''}
             </Badge>
           ))}
         </div>
@@ -309,7 +309,7 @@ const CompanyCard = ({ company }: { company: Company }) => {
             variant="outline" 
             size="sm" 
             className="text-xs"
-            onClick={() => window.open(company.website, '_blank')}
+            onClick={() => company.website ? window.open(company.website, '_blank') : null}
           >
             <Globe className="h-3.5 w-3.5 mr-1" />
             Website
