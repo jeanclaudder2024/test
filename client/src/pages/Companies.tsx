@@ -14,6 +14,13 @@ import { Company } from '@shared/schema';
 
 export default function Companies() {
   const [searchTerm, setSearchTerm] = useState('');
+  // TypeScript interface for region objects
+  interface Region {
+    id: string;
+    name: string;
+    nameAr: string;
+  }
+  
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
   const [showImporter, setShowImporter] = useState(false);
   const { toast } = useToast();
@@ -44,7 +51,9 @@ export default function Companies() {
         (company.specialization && company.specialization.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (company.country && company.country.toLowerCase().includes(searchTerm.toLowerCase()));
       
-      const matchesRegion = !selectedRegion || company.region === selectedRegion;
+      // The company.region should match the region.id from selectedRegion
+      // Database region values should be stored as region.id values (e.g., "middle-east", "asia-pacific")
+      const matchesRegion = !selectedRegion || (company.region && company.region.toLowerCase() === selectedRegion.toLowerCase());
       
       return matchesSearch && matchesRegion;
     }) : [];
@@ -188,14 +197,14 @@ export default function Companies() {
             All Regions
           </Badge>
           
-          {REGIONS.map((region) => (
+          {REGIONS.map((region: Region) => (
             <Badge
-              key={typeof region === 'string' ? region : ''}
-              variant={selectedRegion === region && typeof region === 'string' ? "default" : "outline"}
+              key={region.id}
+              variant={selectedRegion === region.id ? "default" : "outline"}
               className="cursor-pointer whitespace-nowrap"
-              onClick={() => typeof region === 'string' ? setSelectedRegion(region) : null}
+              onClick={() => setSelectedRegion(region.id)}
             >
-              {typeof region === 'string' ? region : ''}
+              {region.name}
             </Badge>
           ))}
         </div>
@@ -248,6 +257,24 @@ export default function Companies() {
   );
 }
 
+// Helper function inside CompanyCard component to get user-friendly region display names
+const getRegionDisplayName = (regionId: string | null | undefined): string | null => {
+  if (!regionId) return null;
+  
+  // Find the region object with matching ID
+  const region = REGIONS.find((r: any) => r.id && r.id.toLowerCase() === regionId.toLowerCase());
+  
+  // Return the display name if found, otherwise return the original regionId with proper formatting
+  if (region) {
+    return region.name;
+  } else {
+    // Format the region ID for display (e.g., "middle-east" -> "Middle East")
+    return regionId.split('-')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  }
+};
+
 const CompanyCard = ({ company }: { company: Company }) => {
   return (
     <Card className="overflow-hidden h-full flex flex-col">
@@ -262,7 +289,7 @@ const CompanyCard = ({ company }: { company: Company }) => {
         </div>
         <CardDescription className="flex items-center gap-1">
           <Globe className="h-3.5 w-3.5" />
-          {company.region || "Unknown Region"}
+          {getRegionDisplayName(company.region) || "Unknown Region"}
         </CardDescription>
       </CardHeader>
       <CardContent className="py-2 flex-grow">
