@@ -51,7 +51,7 @@ export default function LiveTracking() {
   } = useVesselWebSocket({ 
     region: selectedRegion,
     page: 1,
-    pageSize: 2500, // Increased page size to handle all vessels
+    pageSize: 500,
     loadAllVessels: true // Show all vessels at once instead of paginating
   });
   
