@@ -4,6 +4,8 @@ import { Vessel, ProgressEvent } from '@/types';
 import { useVesselProgressEvents, useAddProgressEvent } from '@/hooks/useVessels';
 import { useToast } from '@/hooks/use-toast';
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
+import VoyageDetails from '@/components/vessels/VoyageDetails';
+import axios from 'axios';
 import L from 'leaflet';
 import {
   Card,
