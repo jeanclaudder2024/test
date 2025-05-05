@@ -392,6 +392,195 @@ export class OpenAIService {
   }
   
   /**
+   * Generate voyage progress data when API data is not available
+   */
+  async generateVoyageProgress(vessel: Vessel): Promise<{
+    percentComplete: number;
+    distanceTraveled: number;
+    distanceRemaining: number;
+    estimatedArrival: Date | null;
+    currentSpeed: number;
+    averageSpeed: number;
+    lastUpdated: Date;
+  } | null> {
+    try {
+      console.log(`Generating voyage progress with AI for vessel: ${vessel.name} (IMO: ${vessel.imo})`);
+      
+      // Check if we have all required data for calculation
+      if (!vessel.departurePort || !vessel.destinationPort) {
+        console.warn(`Cannot generate voyage progress: Missing departure or destination for vessel ${vessel.name}`);
+        return null;
+      }
+
+      // If we have coordinates, use them to calculate distance directly
+      const hasCoordinates = 
+        vessel.departureLat && vessel.departureLng && 
+        vessel.destinationLat && vessel.destinationLng && 
+        vessel.currentLat && vessel.currentLng;
+      
+      if (hasCoordinates) {
+        try {
+          const departLat = parseFloat(String(vessel.departureLat));
+          const departLng = parseFloat(String(vessel.departureLng));
+          const destLat = parseFloat(String(vessel.destinationLat));
+          const destLng = parseFloat(String(vessel.destinationLng));
+          const currentLat = parseFloat(String(vessel.currentLat));
+          const currentLng = parseFloat(String(vessel.currentLng));
+          
+          // Check if all coordinates are valid
+          if (!isNaN(departLat) && !isNaN(departLng) && 
+              !isNaN(destLat) && !isNaN(destLng) && 
+              !isNaN(currentLat) && !isNaN(currentLng)) {
+            
+            // Calculate distances using Haversine formula
+            const totalDistance = calculateDistance(
+              departLat, departLng, 
+              destLat, destLng
+            );
+            
+            const traveledDistance = calculateDistance(
+              departLat, departLng, 
+              currentLat, currentLng
+            );
+            
+            const remainingDistance = calculateDistance(
+              currentLat, currentLng, 
+              destLat, destLng
+            );
+            
+            // Calculate percent complete
+            const percentComplete = Math.min(
+              Math.round((traveledDistance / totalDistance) * 100), 
+              100
+            );
+            
+            // Generate reasonable speeds based on vessel type
+            let averageSpeed = 14; // Default average knots for tankers
+            if (vessel.vesselType?.includes('crude')) {
+              averageSpeed = 12; // Crude tankers are slower
+            } else if (vessel.vesselType?.includes('gas')) {
+              averageSpeed = 18; // Gas carriers tend to be faster
+            }
+            
+            // Add some variation to current speed
+            const currentSpeed = averageSpeed * (0.9 + Math.random() * 0.2);
+            
+            // Calculate ETA based on remaining distance and average speed
+            let estimatedArrival = null;
+            if (vessel.eta) {
+              estimatedArrival = new Date(vessel.eta);
+            } else if (remainingDistance > 0 && averageSpeed > 0) {
+              const hoursRemaining = remainingDistance / averageSpeed;
+              estimatedArrival = new Date();
+              estimatedArrival.setHours(estimatedArrival.getHours() + hoursRemaining);
+            }
+            
+            // Return calculated data
+            return {
+              percentComplete,
+              distanceTraveled: Math.round(traveledDistance),
+              distanceRemaining: Math.round(remainingDistance),
+              estimatedArrival,
+              currentSpeed: parseFloat(currentSpeed.toFixed(1)),
+              averageSpeed,
+              lastUpdated: new Date()
+            };
+          }
+        } catch (calcError) {
+          console.error("Error calculating distances from coordinates:", calcError);
+          // Continue to AI generation as fallback
+        }
+      }
+      
+      // If we don't have coordinates or calculation failed, use AI to generate the data
+      const prompt = `
+      You are a maritime voyage tracking expert. Generate realistic voyage progress data for the following vessel:
+      
+      Vessel Details:
+      - Name: ${vessel.name}
+      - Type: ${vessel.vesselType || 'Oil Tanker'}
+      - Departure Port: ${vessel.departurePort}
+      - Destination Port: ${vessel.destinationPort}
+      - Departure Date: ${vessel.departureDate ? new Date(vessel.departureDate).toISOString() : 'Unknown'}
+      - Estimated Arrival Date: ${vessel.eta ? new Date(vessel.eta).toISOString() : 'Unknown'}
+      - Current Position: ${vessel.currentLat}, ${vessel.currentLng}
+      
+      Please generate realistic voyage progress data including:
+      1. Percent complete (integer between 0-100)
+      2. Distance traveled in nautical miles (integer)
+      3. Distance remaining in nautical miles (integer)
+      4. Current speed in knots (float with 1 decimal)
+      5. Average speed in knots (float with 1 decimal)
+      
+      Notes:
+      - Make sure these values are realistic for an oil tanker
+      - Typical tanker speeds are 12-18 knots
+      - Make sure percentComplete, distanceTraveled, and distanceRemaining are consistent
+      - Percentages should be based on distance, not time
+      
+      Format your response as a JSON object with these fields:
+      - percentComplete: number (integer 0-100)
+      - distanceTraveled: number (integer nautical miles)
+      - distanceRemaining: number (integer nautical miles)
+      - currentSpeed: number (float with 1 decimal, knots)
+      - averageSpeed: number (float with 1 decimal, knots)
+      `;
+      
+      // Get AI to generate the data
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.5,
+        max_tokens: 250,
+        response_format: { type: "json_object" }
+      });
+      
+      // Parse the JSON response
+      const jsonResponse = JSON.parse(response.choices[0].message.content || "{}");
+      
+      // Ensure all fields are present and valid
+      const percentComplete = typeof jsonResponse.percentComplete === 'number' ? 
+        Math.min(Math.max(Math.round(jsonResponse.percentComplete), 0), 100) : 50;
+        
+      const distanceTraveled = typeof jsonResponse.distanceTraveled === 'number' ? 
+        Math.max(Math.round(jsonResponse.distanceTraveled), 0) : 1000;
+        
+      const distanceRemaining = typeof jsonResponse.distanceRemaining === 'number' ? 
+        Math.max(Math.round(jsonResponse.distanceRemaining), 0) : 1000;
+        
+      const currentSpeed = typeof jsonResponse.currentSpeed === 'number' ? 
+        Math.min(Math.max(jsonResponse.currentSpeed, 8), 20) : 14;
+        
+      const averageSpeed = typeof jsonResponse.averageSpeed === 'number' ? 
+        Math.min(Math.max(jsonResponse.averageSpeed, 8), 20) : 14;
+      
+      // Calculate estimated arrival time based on distances and speed
+      let estimatedArrival = null;
+      if (vessel.eta) {
+        estimatedArrival = new Date(vessel.eta);
+      } else if (distanceRemaining > 0 && averageSpeed > 0) {
+        const hoursRemaining = distanceRemaining / averageSpeed;
+        estimatedArrival = new Date();
+        estimatedArrival.setHours(estimatedArrival.getHours() + hoursRemaining);
+      }
+      
+      // Return the AI-generated voyage progress data
+      return {
+        percentComplete,
+        distanceTraveled,
+        distanceRemaining,
+        estimatedArrival,
+        currentSpeed,
+        averageSpeed,
+        lastUpdated: new Date()
+      };
+      
+    } catch (error) {
+      console.error("Error generating voyage progress with AI:", error);
+      return null;
+    }
+  }
+  /**
    * Update vessel with precise route tracking coordinates and seller/buyer info
    */
   async updateVesselRouteAndCompanyInfo(vessel: Vessel): Promise<Vessel> {

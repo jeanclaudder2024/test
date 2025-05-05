@@ -46,10 +46,12 @@ export const vessels = pgTable("vessels", {
   buyerName: text("buyer_name").default("NA"),
   sellerName: text("seller_name"),
   metadata: text("metadata"), // JSON string with additional vessel information (heading, speed, course, etc.)
+  lastUpdated: timestamp("last_updated").defaultNow(),
 });
 
 export const insertVesselSchema = createInsertSchema(vessels).omit({
   id: true,
+  lastUpdated: true,
 });
 
 // Refineries
