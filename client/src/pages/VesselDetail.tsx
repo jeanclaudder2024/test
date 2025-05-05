@@ -363,7 +363,11 @@ const LocationUpdateForm = ({
 export default function VesselDetail() {
   const [, params] = useRoute('/vessels/:id');
   const vesselId = params?.id ? parseInt(params.id) : null;
-  const { vessels, loading } = useVesselWebSocket('global');
+  const { vessels, loading } = useVesselWebSocket({
+    region: 'global',
+    pageSize: 2500,
+    loadAllVessels: true
+  });
   const { data: progressEvents = [], isLoading: progressLoading } = useVesselProgressEvents(vesselId);
   const { toast } = useToast();
   const [isUpdatingLocation, setIsUpdatingLocation] = useState(false);

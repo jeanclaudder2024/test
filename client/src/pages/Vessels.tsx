@@ -74,7 +74,8 @@ export default function Vessels() {
   } = useVesselWebSocket({
     region: selectedRegion,
     page: 1,
-    pageSize: 500
+    pageSize: 2500, // Increased to handle all vessels
+    loadAllVessels: true // Request all vessels at once
   });
   
   // Combined vessels from both sources

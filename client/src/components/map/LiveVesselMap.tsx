@@ -446,6 +446,7 @@ export default function LiveVesselMap({
   } = useVesselWebSocket({ 
     region: selectedRegion,
     pollingInterval: 30000, // 30 seconds polling interval for REST API fallback
+    pageSize: 2500, // Large page size to handle all vessels
     loadAllVessels: true // Load all vessels at once for routing visualization
   });
   
