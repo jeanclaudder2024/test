@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useVesselWebSocket } from '@/hooks/useVesselWebSocket';
-import { Vessel, ProgressEvent } from '@/types';
-import { useVesselProgressEvents, useAddProgressEvent } from '@/hooks/useVessels';
+import { Vessel } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import VoyageDetails from '@/components/vessels/VoyageDetails';
@@ -68,51 +67,7 @@ const InfoItem = ({ label, value }: { label: React.ReactNode; value: React.React
   </div>
 );
 
-const ProgressTimeline = ({ events }: { events: ProgressEvent[] }) => {
-  const sortedEvents = [...events].sort((a, b) => 
-    new Date(b.date).getTime() - new Date(a.date).getTime()
-  );
-
-  return (
-    <div className="space-y-4">
-      {sortedEvents.map((event, index) => (
-        <div key={event.id} className="relative pl-6">
-          {index !== sortedEvents.length - 1 && (
-            <div className="absolute left-[9px] top-6 bottom-0 w-[2px] bg-muted"></div>
-          )}
-          <div className="absolute left-0 top-1.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-            {event.event && event.event.toLowerCase().includes('departure') ? (
-              <Navigation className="h-3 w-3 text-white" />
-            ) : event.event && event.event.toLowerCase().includes('arrival') ? (
-              <Anchor className="h-3 w-3 text-white" />
-            ) : (
-              <div className="h-2 w-2 rounded-full bg-white" />
-            )}
-          </div>
-          
-          <div className="bg-muted/50 p-3 rounded-md">
-            <div className="font-medium">{event.event}</div>
-            <div className="text-sm text-muted-foreground">
-              {formatDate(event.date)}
-              {event.location && ` at ${event.location}`}
-              {(event.lat && event.lng) && 
-                <div className="text-xs">
-                  Coordinates: {event.lat}, {event.lng}
-                </div>
-              }
-            </div>
-          </div>
-        </div>
-      ))}
-      
-      {sortedEvents.length === 0 && (
-        <div className="text-center py-6 text-muted-foreground">
-          No progress events recorded yet
-        </div>
-      )}
-    </div>
-  );
-};
+// Removed ProgressTimeline component as requested
 
 // Form component for updating vessel location
 const LocationUpdateForm = ({ 
@@ -366,7 +321,6 @@ export default function VesselDetail() {
   const [, params] = useRoute('/vessels/:id');
   const vesselId = params?.id ? parseInt(params.id) : null;
   const { vessels, loading } = useVesselWebSocket('global');
-  const { data: progressEvents = [], isLoading: progressLoading } = useVesselProgressEvents(vesselId);
   const { toast } = useToast();
   const [isUpdatingLocation, setIsUpdatingLocation] = useState(false);
   const [voyageProgress, setVoyageProgress] = useState<any>(null);
