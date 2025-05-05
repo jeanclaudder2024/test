@@ -21,6 +21,7 @@ import { DataTable } from '@/components/ui/data-table';
 import { ColumnDef } from '@tanstack/react-table';
 import { Port, Vessel } from '../../../shared/schema';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import LiveVesselMap from '@/components/map/LiveVesselMap';
 import SimpleLeafletMap from '@/components/map/SimpleLeafletMap';
 import { AlertCircle } from "lucide-react";
 
@@ -220,19 +221,18 @@ export default function PortDetail() {
             <CardTitle>Map Location</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[300px] rounded-md border overflow-hidden">
+            <div className="rounded-md border overflow-hidden">
               {port.lat && port.lng ? (
-                <SimpleLeafletMap
-                  ports={[port]}
-                  vessels={nearbyVessels || []}
-                  selectedRegion={null}
-                  onPortClick={() => {}}
-                  onVesselClick={(vessel) => navigate(`/vessels/${vessel.id}`)}
-                  initialZoom={8}
-                  initialCenter={[parseFloat(String(port.lat)), parseFloat(String(port.lng))]}
+                <LiveVesselMap 
+                  initialRegion={port.region.toLowerCase()}
+                  height="300px"
+                  showRoutes={false}
+                  showVesselHistory={false}
+                  showHeatmap={false}
+                  mapStyle="light"
                 />
               ) : (
-                <div className="h-full flex items-center justify-center bg-muted/30">
+                <div className="h-[300px] flex items-center justify-center bg-muted/30">
                   <div className="text-center">
                     <MapPin className="h-10 w-10 mx-auto mb-4 text-muted-foreground" />
                     <p className="text-lg font-medium">Map Coordinates Missing</p>
