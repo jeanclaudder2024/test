@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useVesselWebSocket } from '@/hooks/useVesselWebSocket';
-import { Vessel, ProgressEvent, Port } from '@/types';
+import { Vessel, ProgressEvent } from '@/types';
 import { useVesselProgressEvents, useAddProgressEvent } from '@/hooks/useVessels';
 import { useToast } from '@/hooks/use-toast';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
@@ -459,6 +459,88 @@ const MapControls = () => {
   );
 };
 
+// Component for vessel route paths
+const VesselRoutes = ({ 
+  currentPos, 
+  departureCoords, 
+  destinationCoords 
+}: { 
+  currentPos: [number, number], 
+  departureCoords: [number, number] | null, 
+  destinationCoords: [number, number] | null 
+}) => {
+  // Generate paths
+  return (
+    <>
+      {/* Past route - from departure port to current position */}
+      {departureCoords && (
+        <Polyline
+          positions={generateCurvedPath(departureCoords, currentPos, 0.3)}
+          pathOptions={{
+            color: '#3388ff',
+            weight: 3,
+            opacity: 0.7,
+            dashArray: '5, 10',
+            className: 'past-route'
+          }}
+        >
+          <Popup>
+            <div className="text-sm font-medium">Past route</div>
+            <div className="text-xs text-gray-500">From departure port to current position</div>
+          </Popup>
+        </Polyline>
+      )}
+      
+      {/* Future route - from current position to destination port */}
+      {destinationCoords && (
+        <Polyline
+          positions={generateCurvedPath(currentPos, destinationCoords, 0.3)}
+          pathOptions={{
+            color: '#ff3366',
+            weight: 3,
+            opacity: 0.5,
+            dashArray: '5, 5',
+            className: 'future-route'
+          }}
+        >
+          <Popup>
+            <div className="text-sm font-medium">Projected route</div>
+            <div className="text-xs text-gray-500">From current position to destination</div>
+          </Popup>
+        </Polyline>
+      )}
+      
+      {/* Add origin marker if we have departure coordinates */}
+      {departureCoords && (
+        <Marker
+          position={departureCoords as LatLngExpression}
+          icon={L.divIcon({
+            className: 'departure-marker',
+            html: `<div class="w-3 h-3 rounded-full bg-blue-500 border-2 border-white"></div>`,
+            iconSize: [12, 12]
+          })}
+        >
+          <Popup>Departure port</Popup>
+        </Marker>
+      )}
+      
+      {/* Add destination marker if we have destination coordinates */}
+      {destinationCoords && (
+        <Marker
+          position={destinationCoords as LatLngExpression}
+          icon={L.divIcon({
+            className: 'destination-marker',
+            html: `<div class="w-3 h-3 rounded-full bg-red-500 border-2 border-white"></div>`,
+            iconSize: [12, 12]
+          })}
+        >
+          <Popup>Destination port</Popup>
+        </Marker>
+      )}
+    </>
+  );
+};
+
 export default function VesselDetail() {
   const [, params] = useRoute('/vessels/:id');
   const vesselId = params?.id ? parseInt(params.id) : null;
@@ -469,6 +551,7 @@ export default function VesselDetail() {
   const [showRoute, setShowRoute] = useState(true);
   const [departureCoords, setDepartureCoords] = useState<[number, number] | null>(null);
   const [destinationCoords, setDestinationCoords] = useState<[number, number] | null>(null);
+  const [isLoadingPortData, setIsLoadingPortData] = useState(false);
   
   // Find the vessel from our stream data
   console.log('VesselDetail: Looking for vessel with ID:', vesselId);
@@ -483,6 +566,57 @@ export default function VesselDetail() {
   } else {
     console.log('VesselDetail: Vessel not found with ID:', vesselId);
   }
+  
+  // Fetch port coordinates for route visualization
+  useEffect(() => {
+    if (!vessel) return;
+    
+    const fetchPortCoordinates = async () => {
+      setIsLoadingPortData(true);
+      
+      try {
+        // Fetch departure port coordinates
+        if (vessel.departurePort) {
+          console.log('Fetching coordinates for departure port:', vessel.departurePort);
+          const depCoords = await getPortCoordinates(vessel.departurePort);
+          if (depCoords) {
+            console.log('Found departure port coordinates:', depCoords);
+            setDepartureCoords(depCoords);
+          } else if (vessel.departureLat && vessel.departureLng) {
+            // Use vessel's departure coordinates if port lookup fails
+            console.log('Using vessel departure coordinates');
+            setDepartureCoords([
+              parseFloat(vessel.departureLat as string), 
+              parseFloat(vessel.departureLng as string)
+            ]);
+          }
+        }
+        
+        // Fetch destination port coordinates
+        if (vessel.destinationPort) {
+          console.log('Fetching coordinates for destination port:', vessel.destinationPort);
+          const destCoords = await getPortCoordinates(vessel.destinationPort);
+          if (destCoords) {
+            console.log('Found destination port coordinates:', destCoords);
+            setDestinationCoords(destCoords);
+          } else if (vessel.destinationLat && vessel.destinationLng) {
+            // Use vessel's destination coordinates if port lookup fails
+            console.log('Using vessel destination coordinates');
+            setDestinationCoords([
+              parseFloat(vessel.destinationLat as string), 
+              parseFloat(vessel.destinationLng as string)
+            ]);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching port coordinates:', error);
+      } finally {
+        setIsLoadingPortData(false);
+      }
+    };
+    
+    fetchPortCoordinates();
+  }, [vessel]);
   
   // Redirect to vessels page if vessel not found and not loading
   if (!loading && !vessel) {
@@ -728,14 +862,40 @@ export default function VesselDetail() {
                             >
                               <Popup>Current position of {vessel.name}</Popup>
                             </Marker>
+                            
+                            {/* Display vessel routes if enabled */}
+                            {showRoute && !isLoadingPortData && (
+                              <VesselRoutes 
+                                currentPos={[
+                                  parseFloat(vessel.currentLat as string), 
+                                  parseFloat(vessel.currentLng as string)
+                                ]}
+                                departureCoords={departureCoords}
+                                destinationCoords={destinationCoords}
+                              />
+                            )}
+                            
+                            {/* Map controls */}
+                            <MapControls />
                           </MapContainer>
-                          <div className="absolute top-2 right-2 z-[1000] bg-white rounded-md shadow-sm">
-                            <Button variant="ghost" size="icon" className="p-1 text-gray-600 hover:bg-gray-100 hover:text-primary h-8 w-8">
-                              <ZoomIn className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="p-1 text-gray-600 hover:bg-gray-100 hover:text-primary h-8 w-8 border-t border-gray-100">
-                              <ZoomOut className="h-4 w-4" />
-                            </Button>
+                          
+                          {/* Map controls panel */}
+                          <div className="absolute bottom-2 left-2 z-[1000] bg-white/80 backdrop-blur-sm rounded-md shadow-sm p-2">
+                            <div className="flex items-center space-x-2">
+                              <Button 
+                                variant={showRoute ? "default" : "outline"} 
+                                size="sm"
+                                className="h-7 px-2 text-xs"
+                                onClick={() => setShowRoute(prev => !prev)}
+                              >
+                                <Layers className="h-3 w-3 mr-1" />
+                                {showRoute ? 'Hide Route' : 'Show Route'}
+                              </Button>
+                              
+                              {isLoadingPortData && (
+                                <div className="animate-spin h-3 w-3 border-t-2 border-primary rounded-full"></div>
+                              )}
+                            </div>
                           </div>
                         </div>
                         <div className="space-y-2">
