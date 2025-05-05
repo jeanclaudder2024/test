@@ -205,7 +205,7 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                         <div>
                           <p className="text-xs text-gray-500">Distance traveled</p>
                           <p className="text-sm font-medium">
-                            {voyageProgress?.distanceTraveled ? 
+                            {(voyageProgress?.distanceTraveled !== undefined && voyageProgress.distanceTraveled !== null) ? 
                               `${voyageProgress.distanceTraveled.toLocaleString()} nautical miles` : 
                               'N/A'}
                           </p>
@@ -213,7 +213,7 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                         <div>
                           <p className="text-xs text-gray-500">Remaining</p>
                           <p className="text-sm font-medium">
-                            {voyageProgress?.distanceRemaining ? 
+                            {(voyageProgress?.distanceRemaining !== undefined && voyageProgress.distanceRemaining !== null) ? 
                               `${voyageProgress.distanceRemaining.toLocaleString()} nautical miles` : 
                               'N/A'}
                           </p>
@@ -221,7 +221,7 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                         <div>
                           <p className="text-xs text-gray-500">Current speed</p>
                           <p className="text-sm font-medium">
-                            {voyageProgress?.currentSpeed !== undefined ? 
+                            {(voyageProgress?.currentSpeed !== undefined && voyageProgress.currentSpeed !== null) ? 
                               `${voyageProgress.currentSpeed} knots` : 
                               'N/A'}
                           </p>
@@ -229,7 +229,7 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                         <div>
                           <p className="text-xs text-gray-500">Average speed</p>
                           <p className="text-sm font-medium">
-                            {voyageProgress?.averageSpeed !== undefined ? 
+                            {(voyageProgress?.averageSpeed !== undefined && voyageProgress.averageSpeed !== null) ? 
                               `${voyageProgress.averageSpeed} knots` : 
                               'N/A'}
                           </p>
