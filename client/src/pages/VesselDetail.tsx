@@ -382,12 +382,18 @@ export default function VesselDetail() {
     try {
       const response = await axios.get(`/api/vessels/${vesselId}/voyage-progress`);
       console.log("Voyage progress API response:", response.data);
+      
+      // The server always includes voyage data in a voyageProgress object
       if (response.data && response.data.voyageProgress) {
-        // Set the actual voyage progress data from the response
         setVoyageProgress(response.data.voyageProgress);
         console.log("Setting voyage progress to:", response.data.voyageProgress);
       } else {
         console.warn("Voyage progress API returned unexpected format:", response.data);
+        toast({
+          title: "Unexpected data format",
+          description: "The server returned voyage data in an unexpected format.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error('Error fetching voyage progress:', error);
