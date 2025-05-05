@@ -4,7 +4,17 @@ import { storage } from "../storage";
 import { calculateDistance } from "../utils/geoUtils";
 
 // Initialize OpenAI client
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+let openai: OpenAI | null = null;
+try {
+  if (process.env.OPENAI_API_KEY) {
+    openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    console.log("OpenAI client initialized successfully");
+  } else {
+    console.warn("OpenAI API key is not set. AI-powered features will be unavailable.");
+  }
+} catch (error) {
+  console.error("Error initializing OpenAI client:", error);
+}
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 
 /**
@@ -361,6 +371,12 @@ export class OpenAIService {
         return companies[randomIndex].name;
       }
       
+      // Check if OpenAI client is available
+      if (!openai) {
+        console.warn("OpenAI client is not available. Cannot generate seller company name.");
+        return "Global Oil Traders Ltd."; // Default fallback name
+      }
+      
       // If no companies found, generate one using OpenAI
       const prompt = `
       You are a maritime industry expert. Generate a realistic oil shipping/trading company name that would be the seller for a vessel with these characteristics:
@@ -525,6 +541,12 @@ export class OpenAIService {
       - currentSpeed: number (float with 1 decimal, knots)
       - averageSpeed: number (float with 1 decimal, knots)
       `;
+      
+      // Check if OpenAI client is available
+      if (!openai) {
+        console.warn("OpenAI client is not available. Cannot generate voyage progress.");
+        return null;
+      }
       
       // Get AI to generate the data
       const response = await openai.chat.completions.create({
