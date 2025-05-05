@@ -447,7 +447,7 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                 ) : routeData && vessel.currentLat && vessel.currentLng ? (
                   <div className="aspect-video w-full">
                     <MapContainer
-                      center={[vessel.currentLat, vessel.currentLng]}
+                      center={[Number(vessel.currentLat), Number(vessel.currentLng)]}
                       zoom={4}
                       style={{ height: "100%", width: "100%" }}
                       className="rounded-md"
@@ -462,7 +462,7 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                         <Polyline 
                           positions={[
                             [routeData.departurePosition.lat, routeData.departurePosition.lng], 
-                            [vessel.currentLat, vessel.currentLng],
+                            [Number(vessel.currentLat), Number(vessel.currentLng)],
                             [routeData.destinationPosition.lat, routeData.destinationPosition.lng]
                           ]}
                           color="#2563eb"
@@ -498,7 +498,7 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                       
                       {/* Current Position Marker */}
                       <Marker 
-                        position={[vessel.currentLat, vessel.currentLng]}
+                        position={[Number(vessel.currentLat), Number(vessel.currentLng)]}
                         icon={L.divIcon({
                           className: 'custom-div-icon',
                           html: `<div style="background-color: #047857; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; position: relative;">
@@ -512,8 +512,8 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                           <div className="text-sm">
                             <strong>Current Position</strong><br/>
                             <span className="text-xs">
-                              {vessel.currentLat.toFixed(4)}°, 
-                              {vessel.currentLng.toFixed(4)}°
+                              {typeof vessel.currentLat === 'number' ? vessel.currentLat.toFixed(4) : Number(vessel.currentLat).toFixed(4)}°, 
+                              {typeof vessel.currentLng === 'number' ? vessel.currentLng.toFixed(4) : Number(vessel.currentLng).toFixed(4)}°
                             </span>
                             {currentLocation?.speed && (
                               <div className="text-xs text-gray-500 mt-1">
