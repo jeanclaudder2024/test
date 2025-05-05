@@ -2222,6 +2222,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // API tester routes (performance testing, etc.)
   app.use("/api/tester", apiTesterRouter);
+  
+  // Register port routes for nearby vessels
+  registerPortRoutes(app);
 
   // API endpoint for vessels when WebSockets are not available
   apiRouter.get("/vessels/polling", async (req, res) => {
