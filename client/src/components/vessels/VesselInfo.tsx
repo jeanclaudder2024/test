@@ -1,8 +1,12 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Vessel } from "@/types";
-import { Package, MapPin, Box } from "lucide-react";
+import { Package, MapPin, Box, RefreshCcw } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { FlagIcon } from "react-flag-kit";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 interface VesselInfoProps {
   vessel: Vessel;
@@ -103,10 +107,56 @@ const getFlagCode = (countryName: string): string | null => {
 };
 
 export default function VesselInfo({ vessel }: VesselInfoProps) {
+  const [isLoading, setIsLoading] = useState(false);
+  const [sellerName, setSellerName] = useState<string | null>(vessel.sellerName);
+  const { toast } = useToast();
+  
+  // Function to generate seller name using OpenAI
+  const generateSellerName = async () => {
+    if (isLoading) return;
+    
+    setIsLoading(true);
+    try {
+      const response = await apiRequest('/api/ai/generate-seller-name', {
+        method: 'POST',
+        body: JSON.stringify({ vesselId: vessel.id })
+      });
+      
+      if (response.success && response.sellerName) {
+        setSellerName(response.sellerName);
+        toast({
+          title: "Seller Name Generated",
+          description: `Generated seller name: ${response.sellerName}`,
+        });
+      } else {
+        throw new Error(response.error || 'Failed to generate seller name');
+      }
+    } catch (error) {
+      console.error('Error generating seller name:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error instanceof Error ? error.message : 'Failed to generate seller name',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
   return (
     <Card className="overflow-hidden">
-      <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
+      <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
         <h3 className="font-heading font-medium text-gray-800">Vessel Information</h3>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="text-xs" 
+          onClick={generateSellerName}
+          disabled={isLoading}
+        >
+          <RefreshCcw className={`h-3 w-3 mr-1 ${isLoading ? 'animate-spin' : ''}`} />
+          Update Trade Info
+        </Button>
       </div>
       <CardContent className="p-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -186,7 +236,7 @@ export default function VesselInfo({ vessel }: VesselInfoProps) {
             </div>
             
             {/* Cargo */}
-            <div className="flex items-center">
+            <div className="flex items-center mb-3">
               <div className="h-8 w-8 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
                 <Box className="h-4 w-4 text-primary" />
               </div>
@@ -198,6 +248,31 @@ export default function VesselInfo({ vessel }: VesselInfoProps) {
                     ? `${vessel.cargoCapacity.toLocaleString()} barrels` 
                     : "Capacity: N/A"}
                 </p>
+              </div>
+            </div>
+            
+            {/* Trade Info (Buyer & Seller) */}
+            <div className="mt-4 pt-3 border-t border-gray-200">
+              <h4 className="text-sm font-medium text-gray-900 mb-3">TRADE INFORMATION</h4>
+              
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <p className="text-xs text-gray-500">SELLER</p>
+                  <p className="text-sm font-medium">
+                    {isLoading ? (
+                      <span className="inline-flex items-center">
+                        <RefreshCcw className="h-3 w-3 mr-1 animate-spin" />
+                        Generating...
+                      </span>
+                    ) : (
+                      sellerName || vessel.sellerName || "Unknown"
+                    )}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">BUYER</p>
+                  <p className="text-sm font-medium">{vessel.buyerName || "NA"}</p>
+                </div>
               </div>
             </div>
           </div>

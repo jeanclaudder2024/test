@@ -27,6 +27,16 @@ const routeOptimizationRequestSchema = z.object({
   vesselId: z.number().int().positive()
 });
 
+// Validation schema for seller name generation request
+const sellerNameGenerationRequestSchema = z.object({
+  vesselId: z.number().int().positive()
+});
+
+// Validation schema for updating vessel route and company info request
+const updateVesselInfoRequestSchema = z.object({
+  vesselId: z.number().int().positive()
+});
+
 /**
  * @route POST /api/ai/generate-port-description
  * @description Generate and update a port description using OpenAI
@@ -309,6 +319,112 @@ aiRouter.post('/generate-all-port-descriptions', async (req: Request, res: Respo
     });
   } catch (error) {
     console.error('Error generating port descriptions:', error);
+    return res.status(500).json({ 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error occurred' 
+    });
+  }
+});
+
+/**
+ * @route POST /api/ai/generate-seller-name
+ * @description Generate a seller company name for a vessel using OpenAI
+ * @access Public
+ */
+aiRouter.post('/generate-seller-name', async (req: Request, res: Response) => {
+  try {
+    // Validate request
+    const validationResult = sellerNameGenerationRequestSchema.safeParse(req.body);
+    
+    if (!validationResult.success) {
+      const errorMessage = fromZodError(validationResult.error).message;
+      return res.status(400).json({ 
+        success: false, 
+        error: errorMessage 
+      });
+    }
+    
+    const { vesselId } = validationResult.data;
+    
+    // Get vessel from database
+    const vessel = await storage.getVesselById(vesselId);
+    
+    if (!vessel) {
+      return res.status(404).json({ 
+        success: false, 
+        error: `Vessel with ID ${vesselId} not found` 
+      });
+    }
+    
+    // Generate seller name
+    const sellerName = await openaiService.generateSellerCompanyName(vessel);
+    
+    // Update vessel with seller name
+    await storage.updateVessel(vesselId, { sellerName });
+    
+    // Return success response
+    return res.json({
+      success: true,
+      vesselId,
+      sellerName
+    });
+  } catch (error) {
+    console.error('Error generating seller name:', error);
+    return res.status(500).json({ 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error occurred' 
+    });
+  }
+});
+
+/**
+ * @route POST /api/ai/update-vessel-info
+ * @description Update vessel with route tracking coordinates and company info
+ * @access Public
+ */
+aiRouter.post('/update-vessel-info', async (req: Request, res: Response) => {
+  try {
+    // Validate request
+    const validationResult = updateVesselInfoRequestSchema.safeParse(req.body);
+    
+    if (!validationResult.success) {
+      const errorMessage = fromZodError(validationResult.error).message;
+      return res.status(400).json({ 
+        success: false, 
+        error: errorMessage 
+      });
+    }
+    
+    const { vesselId } = validationResult.data;
+    
+    // Get vessel from database
+    const vessel = await storage.getVesselById(vesselId);
+    
+    if (!vessel) {
+      return res.status(404).json({ 
+        success: false, 
+        error: `Vessel with ID ${vesselId} not found` 
+      });
+    }
+    
+    // Update vessel route and company info
+    const updatedVessel = await openaiService.updateVesselRouteAndCompanyInfo(vessel);
+    
+    // Return success response
+    return res.json({
+      success: true,
+      vesselId,
+      updatedInfo: {
+        departureLat: updatedVessel.departureLat,
+        departureLng: updatedVessel.departureLng,
+        destinationLat: updatedVessel.destinationLat,
+        destinationLng: updatedVessel.destinationLng,
+        buyerName: updatedVessel.buyerName,
+        sellerName: updatedVessel.sellerName
+      }
+    });
+  } catch (error) {
+    console.error('Error updating vessel info:', error);
     return res.status(500).json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Unknown error occurred' 
