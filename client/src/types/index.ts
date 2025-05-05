@@ -24,6 +24,12 @@ export interface Vessel {
   cargoType?: string;
   cargoCapacity?: number;
   currentRegion?: string;
+  sellerName?: string;
+  buyerName?: string;
+  departureLat?: number;
+  departureLng?: number;
+  destinationLat?: number;
+  destinationLng?: number;
 }
 
 export interface Refinery {

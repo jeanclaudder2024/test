@@ -1207,6 +1207,117 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get route coordinates for a vessel, fetching port location data
+  apiRouter.get("/vessels/:id/route", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid vessel ID" });
+      }
+      
+      // Get the vessel to get departure/destination ports
+      const vessel = await storage.getVesselById(id);
+      if (!vessel) {
+        return res.status(404).json({ message: "Vessel not found" });
+      }
+      
+      // Initialize the route data with vessel's current position
+      const routeData = {
+        vessel,
+        currentPosition: {
+          lat: vessel.currentLat,
+          lng: vessel.currentLng,
+        },
+        departurePosition: null,
+        destinationPosition: null,
+        stopovers: []
+      };
+      
+      // Get all ports to search for departure and destination
+      const allPorts = await storage.getPorts();
+      
+      // Find departure port
+      if (vessel.departurePort) {
+        const departurePorts = allPorts.filter(port => {
+          // Simplify port name and vessel's departure port for matching
+          const simplifiedPortName = port.name.toLowerCase().replace(/port of |terminal|port/g, '').trim();
+          const simplifiedDeparturePort = vessel.departurePort.toLowerCase().replace(/port of |terminal|port/g, '').trim();
+          
+          // Check if port name is contained in departure port name or vice versa
+          return simplifiedPortName.includes(simplifiedDeparturePort) || 
+                 simplifiedDeparturePort.includes(simplifiedPortName);
+        });
+        
+        if (departurePorts.length > 0) {
+          // Use the first matching port for departure coordinates
+          routeData.departurePosition = {
+            lat: departurePorts[0].lat,
+            lng: departurePorts[0].lng,
+            portId: departurePorts[0].id,
+            portName: departurePorts[0].name,
+          };
+        }
+      }
+      
+      // Find destination port
+      if (vessel.destinationPort) {
+        const destinationPorts = allPorts.filter(port => {
+          // Simplify port name and vessel's destination port for matching
+          const simplifiedPortName = port.name.toLowerCase().replace(/port of |terminal|port/g, '').trim();
+          const simplifiedDestinationPort = vessel.destinationPort.toLowerCase().replace(/port of |terminal|port/g, '').trim();
+          
+          // Check if port name is contained in destination port name or vice versa
+          return simplifiedPortName.includes(simplifiedDestinationPort) || 
+                 simplifiedDestinationPort.includes(simplifiedPortName);
+        });
+        
+        if (destinationPorts.length > 0) {
+          // Use the first matching port for destination coordinates
+          routeData.destinationPosition = {
+            lat: destinationPorts[0].lat,
+            lng: destinationPorts[0].lng,
+            portId: destinationPorts[0].id,
+            portName: destinationPorts[0].name,
+          };
+        }
+      }
+      
+      // If we don't have coordinates for departure or destination,
+      // and the vessel has current coords, estimate departure/destination based on bearing
+      if ((!routeData.departurePosition || !routeData.destinationPosition) && vessel.currentLat && vessel.currentLng) {
+        if (!routeData.departurePosition && vessel.departurePort) {
+          // Estimate departure as 500 nautical miles behind current position
+          routeData.departurePosition = {
+            lat: vessel.currentLat - 3, // Simple estimation, moving 3 degrees south
+            lng: vessel.currentLng - 5, // Simple estimation, moving 5 degrees west
+            isEstimated: true,
+            portName: vessel.departurePort
+          };
+        }
+        
+        if (!routeData.destinationPosition && vessel.destinationPort) {
+          // Estimate destination as 500 nautical miles ahead of current position
+          routeData.destinationPosition = {
+            lat: vessel.currentLat + 3, // Simple estimation, moving 3 degrees north
+            lng: vessel.currentLng + 5, // Simple estimation, moving 5 degrees east
+            isEstimated: true,
+            portName: vessel.destinationPort
+          };
+        }
+      }
+      
+      // Return the route data
+      res.json({
+        message: "Route data retrieved successfully",
+        route: routeData
+      });
+      
+    } catch (error) {
+      console.error("Error fetching vessel route:", error);
+      res.status(500).json({ message: "Failed to fetch vessel route" });
+    }
+  });
+  
   // Get the voyage progress of a vessel from the API
   apiRouter.get("/vessels/:id/voyage-progress", async (req, res) => {
     try {

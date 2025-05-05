@@ -26,6 +26,11 @@ import { formatDate } from "@/lib/utils";
 import { Vessel } from "@/types";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
+// Import Leaflet map components
+import { MapContainer, TileLayer, Marker, Popup, Polyline, ZoomControl } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+
 interface VoyageDetailsProps {
   vessel: Vessel;
   voyageProgress: any | null;
@@ -384,16 +389,146 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                 Route Map
               </h3>
               
-              {/* Route map - in production this would be a real interactive map */}
+              {/* Interactive Route Map */}
               <div className="relative rounded-md overflow-hidden mb-4 bg-gray-100">
-                <img 
-                  src={routeMapUrl} 
-                  alt="Vessel route map" 
-                  className="w-full h-64 object-cover object-center"
-                />
+                {vessel.departurePort && vessel.destinationPort && 
+                 vessel.currentLat && vessel.currentLng && 
+                 vessel.departureLat && vessel.departureLng && 
+                 vessel.destinationLat && vessel.destinationLng ? (
+                  <div className="aspect-video w-full">
+                    <MapContainer
+                      center={[parseFloat(String(vessel.currentLat)), parseFloat(String(vessel.currentLng))]}
+                      zoom={4}
+                      style={{ height: "100%", width: "100%" }}
+                      className="rounded-md"
+                    >
+                      <TileLayer
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                      />
+                      
+                      {/* Show voyage route */}
+                      <Polyline 
+                        positions={[
+                          [parseFloat(String(vessel.departureLat)), parseFloat(String(vessel.departureLng))], 
+                          [parseFloat(String(vessel.currentLat)), parseFloat(String(vessel.currentLng))],
+                          [parseFloat(String(vessel.destinationLat)), parseFloat(String(vessel.destinationLng))]
+                        ]}
+                        color="#2563eb"
+                        weight={3}
+                        dashArray="6, 10"
+                      />
+                      
+                      {/* Departure Marker */}
+                      <Marker 
+                        position={[parseFloat(String(vessel.departureLat)), parseFloat(String(vessel.departureLng))]}
+                        icon={L.divIcon({
+                          className: 'custom-div-icon',
+                          html: `<div style="background-color: #2563eb; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></div>`,
+                          iconSize: [12, 12],
+                          iconAnchor: [6, 6]
+                        })}
+                      >
+                        <Popup>
+                          <div className="text-sm">
+                            <strong>Departure:</strong> {vessel.departurePort}<br/>
+                            <span className="text-xs text-gray-500">
+                              {vessel.departureDate ? formatDate(new Date(vessel.departureDate)) : "Unknown date"}
+                            </span>
+                          </div>
+                        </Popup>
+                      </Marker>
+                      
+                      {/* Current Position Marker */}
+                      <Marker 
+                        position={[parseFloat(String(vessel.currentLat)), parseFloat(String(vessel.currentLng))]}
+                        icon={L.divIcon({
+                          className: 'custom-div-icon',
+                          html: `<div style="background-color: #047857; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; position: relative;">
+                                  <div style="position: absolute; top: -4px; right: -4px; width: 8px; height: 8px; background-color: #f97316; border-radius: 50%; border: 1px solid white;"></div>
+                                 </div>`,
+                          iconSize: [14, 14],
+                          iconAnchor: [7, 7]
+                        })}
+                      >
+                        <Popup>
+                          <div className="text-sm">
+                            <strong>Current Position</strong><br/>
+                            <span className="text-xs">
+                              {parseFloat(String(vessel.currentLat)).toFixed(4)}°, 
+                              {parseFloat(String(vessel.currentLng)).toFixed(4)}°
+                            </span>
+                            {currentLocation?.speed && (
+                              <div className="text-xs text-gray-500 mt-1">
+                                Speed: {currentLocation.speed} knots
+                                {currentLocation.heading && ` • Heading: ${currentLocation.heading}°`}
+                              </div>
+                            )}
+                          </div>
+                        </Popup>
+                      </Marker>
+                      
+                      {/* Destination Marker */}
+                      <Marker 
+                        position={[parseFloat(String(vessel.destinationLat)), parseFloat(String(vessel.destinationLng))]}
+                        icon={L.divIcon({
+                          className: 'custom-div-icon',
+                          html: `<div style="background-color: #dc2626; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></div>`,
+                          iconSize: [12, 12],
+                          iconAnchor: [6, 6]
+                        })}
+                      >
+                        <Popup>
+                          <div className="text-sm">
+                            <strong>Destination:</strong> {vessel.destinationPort}<br/>
+                            <span className="text-xs text-gray-500">
+                              {vessel.eta ? `ETA: ${formatDate(new Date(vessel.eta))}` : "Unknown ETA"}
+                            </span>
+                          </div>
+                        </Popup>
+                      </Marker>
+                      
+                      {/* Add stopovers if available */}
+                      {stopovers.map((stop, index) => (
+                        stop.lat && stop.lng && (
+                          <Marker 
+                            key={index}
+                            position={[stop.lat, stop.lng]}
+                            icon={L.divIcon({
+                              className: 'custom-div-icon',
+                              html: `<div style="background-color: #8b5cf6; width: 10px; height: 10px; border-radius: 50%; border: 2px solid white;"></div>`,
+                              iconSize: [10, 10],
+                              iconAnchor: [5, 5]
+                            })}
+                          >
+                            <Popup>
+                              <div className="text-sm">
+                                <strong>Stopover:</strong> {stop.port}<br/>
+                                <span className="text-xs text-gray-500">
+                                  Arrival: {formatDate(stop.arrival)}<br/>
+                                  Departure: {formatDate(stop.departure)}<br/>
+                                  Purpose: {stop.purpose}
+                                </span>
+                              </div>
+                            </Popup>
+                          </Marker>
+                        )
+                      ))}
+                      
+                      <ZoomControl position="bottomright" />
+                    </MapContainer>
+                  </div>
+                ) : (
+                  <div className="h-64 flex items-center justify-center flex-col">
+                    <Route className="h-8 w-8 text-gray-400 mb-2" />
+                    <p className="text-gray-500 text-sm">Insufficient route data available</p>
+                    <p className="text-gray-400 text-xs mt-1">Missing departure or destination coordinates</p>
+                  </div>
+                )}
+                
                 <div className="absolute bottom-2 right-2">
                   <Badge className="bg-white text-primary border-primary">
-                    Interactive Map
+                    Live Route Data
                   </Badge>
                 </div>
               </div>
