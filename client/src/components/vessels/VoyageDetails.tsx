@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { 
   Anchor, 
   Ship, 
@@ -87,7 +88,15 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
 
   // Stopovers - would be from API
   const stopovers = vessel.destinationPort ? [
-    { port: "Singapore", arrival: new Date(2023, 3, 20), departure: new Date(2023, 3, 21), purpose: "Refueling" }
+    { 
+      port: "Singapore", 
+      arrival: new Date(2023, 3, 20), 
+      departure: new Date(2023, 3, 21), 
+      purpose: "Refueling",
+      // Add coordinates for the stopover for map display
+      lat: 1.290270,
+      lng: 103.851959
+    }
   ] : [];
 
   // Alerts - would be from API
@@ -110,9 +119,34 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
     }
   };
 
-  // For demo purposes, use a static image for route map
-  // In a real implementation, this would be a dynamic map showing the route
-  const routeMapUrl = "https://via.placeholder.com/500x250?text=Route+Map";
+  // State to store route data
+  const [routeData, setRouteData] = useState<any>(null);
+  const [isLoadingRoute, setIsLoadingRoute] = useState<boolean>(false);
+  
+  // Function to fetch route data
+  const fetchRouteData = async () => {
+    if (!vessel?.id) return;
+    
+    setIsLoadingRoute(true);
+    try {
+      const response = await axios.get(`/api/vessels/${vessel.id}/route`);
+      console.log("Route data response:", response.data);
+      if (response.data && response.data.route) {
+        setRouteData(response.data.route);
+      }
+    } catch (error) {
+      console.error('Error fetching route data:', error);
+    } finally {
+      setIsLoadingRoute(false);
+    }
+  };
+  
+  // Fetch route data when vessel changes
+  useEffect(() => {
+    if (vessel?.id) {
+      fetchRouteData();
+    }
+  }, [vessel?.id]);
 
   return (
     <Card className="mb-6">
@@ -391,13 +425,29 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
               
               {/* Interactive Route Map */}
               <div className="relative rounded-md overflow-hidden mb-4 bg-gray-100">
-                {vessel.departurePort && vessel.destinationPort && 
-                 vessel.currentLat && vessel.currentLng && 
-                 vessel.departureLat && vessel.departureLng && 
-                 vessel.destinationLat && vessel.destinationLng ? (
+                <div className="flex justify-between items-center py-2 px-4">
+                  <p className="text-xs text-gray-600">Interactive voyage tracking</p>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="text-xs" 
+                    onClick={fetchRouteData}
+                    disabled={isLoadingRoute}
+                  >
+                    <RefreshCw className={`h-3 w-3 mr-1 ${isLoadingRoute ? 'animate-spin' : ''}`} />
+                    {isLoadingRoute ? 'Loading...' : 'Refresh Route'}
+                  </Button>
+                </div>
+                
+                {isLoadingRoute ? (
+                  <div className="h-64 flex items-center justify-center flex-col">
+                    <Route className="h-8 w-8 text-gray-400 mb-2 animate-pulse" />
+                    <p className="text-gray-500 text-sm">Loading route data...</p>
+                  </div>
+                ) : routeData && vessel.currentLat && vessel.currentLng ? (
                   <div className="aspect-video w-full">
                     <MapContainer
-                      center={[parseFloat(String(vessel.currentLat)), parseFloat(String(vessel.currentLng))]}
+                      center={[vessel.currentLat, vessel.currentLng]}
                       zoom={4}
                       style={{ height: "100%", width: "100%" }}
                       className="rounded-md"
@@ -408,40 +458,47 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                       />
                       
                       {/* Show voyage route */}
-                      <Polyline 
-                        positions={[
-                          [parseFloat(String(vessel.departureLat)), parseFloat(String(vessel.departureLng))], 
-                          [parseFloat(String(vessel.currentLat)), parseFloat(String(vessel.currentLng))],
-                          [parseFloat(String(vessel.destinationLat)), parseFloat(String(vessel.destinationLng))]
-                        ]}
-                        color="#2563eb"
-                        weight={3}
-                        dashArray="6, 10"
-                      />
+                      {routeData.departurePosition && routeData.destinationPosition && (
+                        <Polyline 
+                          positions={[
+                            [routeData.departurePosition.lat, routeData.departurePosition.lng], 
+                            [vessel.currentLat, vessel.currentLng],
+                            [routeData.destinationPosition.lat, routeData.destinationPosition.lng]
+                          ]}
+                          color="#2563eb"
+                          weight={3}
+                          dashArray="6, 10"
+                        />
+                      )}
                       
                       {/* Departure Marker */}
-                      <Marker 
-                        position={[parseFloat(String(vessel.departureLat)), parseFloat(String(vessel.departureLng))]}
-                        icon={L.divIcon({
-                          className: 'custom-div-icon',
-                          html: `<div style="background-color: #2563eb; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></div>`,
-                          iconSize: [12, 12],
-                          iconAnchor: [6, 6]
-                        })}
-                      >
-                        <Popup>
-                          <div className="text-sm">
-                            <strong>Departure:</strong> {vessel.departurePort}<br/>
-                            <span className="text-xs text-gray-500">
-                              {vessel.departureDate ? formatDate(new Date(vessel.departureDate)) : "Unknown date"}
-                            </span>
-                          </div>
-                        </Popup>
-                      </Marker>
+                      {routeData.departurePosition && (
+                        <Marker 
+                          position={[routeData.departurePosition.lat, routeData.departurePosition.lng]}
+                          icon={L.divIcon({
+                            className: 'custom-div-icon',
+                            html: `<div style="background-color: #2563eb; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></div>`,
+                            iconSize: [12, 12],
+                            iconAnchor: [6, 6]
+                          })}
+                        >
+                          <Popup>
+                            <div className="text-sm">
+                              <strong>Departure:</strong> {routeData.departurePosition.portName || vessel.departurePort}<br/>
+                              <span className="text-xs text-gray-500">
+                                {vessel.departureDate ? formatDate(new Date(vessel.departureDate)) : "Unknown date"}
+                              </span>
+                              {routeData.departurePosition.isEstimated && (
+                                <div className="text-xs text-amber-600 mt-1">Estimated position</div>
+                              )}
+                            </div>
+                          </Popup>
+                        </Marker>
+                      )}
                       
                       {/* Current Position Marker */}
                       <Marker 
-                        position={[parseFloat(String(vessel.currentLat)), parseFloat(String(vessel.currentLng))]}
+                        position={[vessel.currentLat, vessel.currentLng]}
                         icon={L.divIcon({
                           className: 'custom-div-icon',
                           html: `<div style="background-color: #047857; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; position: relative;">
@@ -455,8 +512,8 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                           <div className="text-sm">
                             <strong>Current Position</strong><br/>
                             <span className="text-xs">
-                              {parseFloat(String(vessel.currentLat)).toFixed(4)}°, 
-                              {parseFloat(String(vessel.currentLng)).toFixed(4)}°
+                              {vessel.currentLat.toFixed(4)}°, 
+                              {vessel.currentLng.toFixed(4)}°
                             </span>
                             {currentLocation?.speed && (
                               <div className="text-xs text-gray-500 mt-1">
@@ -469,50 +526,57 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                       </Marker>
                       
                       {/* Destination Marker */}
-                      <Marker 
-                        position={[parseFloat(String(vessel.destinationLat)), parseFloat(String(vessel.destinationLng))]}
-                        icon={L.divIcon({
-                          className: 'custom-div-icon',
-                          html: `<div style="background-color: #dc2626; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></div>`,
-                          iconSize: [12, 12],
-                          iconAnchor: [6, 6]
-                        })}
-                      >
-                        <Popup>
-                          <div className="text-sm">
-                            <strong>Destination:</strong> {vessel.destinationPort}<br/>
-                            <span className="text-xs text-gray-500">
-                              {vessel.eta ? `ETA: ${formatDate(new Date(vessel.eta))}` : "Unknown ETA"}
-                            </span>
-                          </div>
-                        </Popup>
-                      </Marker>
+                      {routeData.destinationPosition && (
+                        <Marker 
+                          position={[routeData.destinationPosition.lat, routeData.destinationPosition.lng]}
+                          icon={L.divIcon({
+                            className: 'custom-div-icon',
+                            html: `<div style="background-color: #dc2626; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></div>`,
+                            iconSize: [12, 12],
+                            iconAnchor: [6, 6]
+                          })}
+                        >
+                          <Popup>
+                            <div className="text-sm">
+                              <strong>Destination:</strong> {routeData.destinationPosition.portName || vessel.destinationPort}<br/>
+                              <span className="text-xs text-gray-500">
+                                {vessel.eta ? `ETA: ${formatDate(new Date(vessel.eta))}` : "Unknown ETA"}
+                              </span>
+                              {routeData.destinationPosition.isEstimated && (
+                                <div className="text-xs text-amber-600 mt-1">Estimated position</div>
+                              )}
+                            </div>
+                          </Popup>
+                        </Marker>
+                      )}
                       
-                      {/* Add stopovers if available */}
-                      {stopovers.map((stop, index) => (
-                        stop.lat && stop.lng && (
-                          <Marker 
-                            key={index}
-                            position={[stop.lat, stop.lng]}
-                            icon={L.divIcon({
-                              className: 'custom-div-icon',
-                              html: `<div style="background-color: #8b5cf6; width: 10px; height: 10px; border-radius: 50%; border: 2px solid white;"></div>`,
-                              iconSize: [10, 10],
-                              iconAnchor: [5, 5]
-                            })}
-                          >
-                            <Popup>
-                              <div className="text-sm">
-                                <strong>Stopover:</strong> {stop.port}<br/>
-                                <span className="text-xs text-gray-500">
-                                  Arrival: {formatDate(stop.arrival)}<br/>
-                                  Departure: {formatDate(stop.departure)}<br/>
-                                  Purpose: {stop.purpose}
-                                </span>
-                              </div>
-                            </Popup>
-                          </Marker>
-                        )
+                      {/* Add stopovers if available with midpoint calculations */}
+                      {stopovers.length > 0 && routeData.departurePosition && routeData.destinationPosition && stopovers.map((stop, index) => (
+                        <Marker 
+                          key={index}
+                          position={[
+                            // Calculate a position along the route for the stopover
+                            (routeData.departurePosition.lat + routeData.destinationPosition.lat) / 2 + (index * 0.5 - 0.5),
+                            (routeData.departurePosition.lng + routeData.destinationPosition.lng) / 2
+                          ]}
+                          icon={L.divIcon({
+                            className: 'custom-div-icon',
+                            html: `<div style="background-color: #8b5cf6; width: 10px; height: 10px; border-radius: 50%; border: 2px solid white;"></div>`,
+                            iconSize: [10, 10],
+                            iconAnchor: [5, 5]
+                          })}
+                        >
+                          <Popup>
+                            <div className="text-sm">
+                              <strong>Stopover:</strong> {stop.port}<br/>
+                              <span className="text-xs text-gray-500">
+                                Arrival: {formatDate(stop.arrival)}<br/>
+                                Departure: {formatDate(stop.departure)}<br/>
+                                Purpose: {stop.purpose}
+                              </span>
+                            </div>
+                          </Popup>
+                        </Marker>
                       ))}
                       
                       <ZoomControl position="bottomright" />
@@ -521,16 +585,35 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                 ) : (
                   <div className="h-64 flex items-center justify-center flex-col">
                     <Route className="h-8 w-8 text-gray-400 mb-2" />
-                    <p className="text-gray-500 text-sm">Insufficient route data available</p>
-                    <p className="text-gray-400 text-xs mt-1">Missing departure or destination coordinates</p>
+                    <p className="text-gray-500 text-sm">Route data not available</p>
+                    <Button variant="outline" size="sm" className="mt-3" onClick={fetchRouteData}>
+                      Load Route Data
+                    </Button>
                   </div>
                 )}
                 
-                <div className="absolute bottom-2 right-2">
-                  <Badge className="bg-white text-primary border-primary">
-                    Live Route Data
-                  </Badge>
-                </div>
+                {routeData && (
+                  <div className="px-4 pb-2 pt-1 text-xs flex items-center space-x-3">
+                    <div className="flex items-center">
+                      <div className="h-3 w-3 rounded-full bg-blue-600 mr-1"></div>
+                      <span>Departure</span>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="h-3 w-3 rounded-full bg-green-700 mr-1"></div>
+                      <span>Current</span>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="h-3 w-3 rounded-full bg-red-600 mr-1"></div>
+                      <span>Destination</span>
+                    </div>
+                    {stopovers.length > 0 && (
+                      <div className="flex items-center">
+                        <div className="h-3 w-3 rounded-full bg-purple-500 mr-1"></div>
+                        <span>Stopover</span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
               
               {/* Stopovers */}
