@@ -1,214 +1,166 @@
+import { HTMLAttributes, ReactNode, forwardRef } from "react";
+import { VariantProps, cva } from "class-variance-authority";
 import { cn } from "@/lib/utils";
-import { cva, type VariantProps } from "class-variance-authority";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { motion } from "framer-motion";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./card";
+import { Skeleton } from "./skeleton";
 
 const dashboardCardVariants = cva(
-  "transition-all duration-300 overflow-hidden",
+  "transition-all duration-200 overflow-hidden",
   {
     variants: {
       variant: {
-        default: "bg-card",
-        primary: "bg-primary text-primary-foreground",
-        accent: "bg-accent",
-        muted: "bg-muted/80",
-        gradient: "bg-gradient-to-br from-primary/80 to-primary text-primary-foreground"
+        default: "bg-card text-card-foreground shadow-card hover:shadow-md",
+        transparent: "bg-transparent border border-border/50 hover:border-border/80",
+        highlight: "bg-primary/5 border border-primary/20 hover:bg-primary/10",
+        destructive: "bg-destructive/10 border-destructive/20 hover:bg-destructive/20 text-destructive-foreground",
+        success: "bg-success/10 border-success/20 hover:bg-success/20 text-success-foreground",
+        accent: "bg-accent/10 border-accent/20 hover:bg-accent/20 text-accent-foreground",
+        neutral: "bg-card text-card-foreground border border-border hover:bg-muted/50",
       },
       size: {
-        default: "",
-        sm: "p-2",
-        lg: "p-6"
+        sm: "p-3",
+        md: "p-5",
+        lg: "p-6",
       },
       hover: {
-        default: "hover:shadow-md",
-        none: "",
-        lift: "hover:-translate-y-1 hover:shadow-lg",
-        glow: "hover:shadow-[0_0_20px_rgba(var(--primary)/0.3)]"
+        true: "hover:translate-y-[-2px] hover:shadow-md",
+        false: "",
       },
-      borderStyle: {
-        default: "border",
-        none: "border-0",
-        accent: "border-l-4 border-l-primary"
+      hasAction: {
+        true: "cursor-pointer",
+        false: "",
       },
-      rounded: {
-        default: "rounded-lg",
-        none: "rounded-none",
-        full: "rounded-2xl",
-        sm: "rounded-md"
-      }
     },
     defaultVariants: {
       variant: "default",
-      size: "default",
-      hover: "default",
-      borderStyle: "default",
-      rounded: "default"
-    }
+      size: "md",
+      hover: true,
+      hasAction: false,
+    },
   }
 );
 
-export interface DashboardCardProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof dashboardCardVariants> {
-  title?: React.ReactNode;
-  description?: React.ReactNode;
-  icon?: React.ReactNode;
-  footer?: React.ReactNode;
+interface DashboardCardProps extends HTMLAttributes<HTMLDivElement>, VariantProps<typeof dashboardCardVariants> {
+  title?: ReactNode;
+  description?: ReactNode;
+  icon?: ReactNode;
+  footer?: ReactNode;
   isLoading?: boolean;
-  animation?: "fade" | "slide" | "scale" | "none";
-  animationDelay?: number;
+  action?: ReactNode;
+  className?: string;
+  noPadding?: boolean;
+  titleClassName?: string;
+  contentClassName?: string;
+  headerClassName?: string;
+  footerClassName?: string;
+  onClick?: () => void;
 }
 
-const loadingVariants = {
-  pulse: {
-    opacity: [0.7, 1, 0.7],
-    transition: {
-      repeat: Infinity,
-      duration: 2
-    }
-  }
-};
-
-const contentVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 }
-};
-
-export function DashboardCard({
-  className,
-  title,
-  description,
-  icon,
-  footer,
-  children,
-  variant,
-  size,
-  hover,
-  borderStyle,
-  rounded,
-  isLoading = false,
-  animation = "fade",
-  animationDelay = 0,
-  ...props
-}: DashboardCardProps) {
-  // Animation variants
-  const getAnimationVariants = () => {
-    switch (animation) {
-      case "fade":
-        return {
-          hidden: { opacity: 0 },
-          visible: { opacity: 1 }
-        };
-      case "slide":
-        return {
-          hidden: { opacity: 0, y: 20 },
-          visible: { opacity: 1, y: 0 }
-        };
-      case "scale":
-        return {
-          hidden: { opacity: 0, scale: 0.9 },
-          visible: { opacity: 1, scale: 1 }
-        };
-      default:
-        return {
-          hidden: { opacity: 1 },
-          visible: { opacity: 1 }
-        };
-    }
-  };
-
-  return (
-    <motion.div
-      initial="hidden"
-      animate="visible"
-      variants={getAnimationVariants()}
-      transition={{ 
-        duration: 0.4,
-        ease: "easeOut",
-        delay: animationDelay 
-      }}
-    >
+const DashboardCard = forwardRef<HTMLDivElement, DashboardCardProps>(
+  (
+    {
+      title,
+      description,
+      icon,
+      children,
+      footer,
+      className,
+      isLoading = false,
+      action,
+      noPadding = false,
+      variant,
+      size,
+      hover,
+      hasAction,
+      titleClassName,
+      contentClassName,
+      headerClassName,
+      footerClassName,
+      onClick,
+      ...props
+    },
+    ref
+  ) => {
+    return (
       <Card
-        className={cn(dashboardCardVariants({ variant, size, hover, borderStyle, rounded }), className)}
+        ref={ref}
+        className={cn(
+          dashboardCardVariants({
+            variant,
+            size,
+            hover,
+            hasAction: !!onClick || hasAction,
+            className,
+          })
+        )}
+        onClick={onClick}
         {...props}
       >
-        {(title || description) && (
-          <CardHeader className={cn(
-            "gap-1 pb-2",
-            variant === "primary" && "text-primary-foreground",
-            variant === "gradient" && "text-primary-foreground",
-            size === "sm" && "p-3"
-          )}>
-            {title && (
-              <div className="flex items-center justify-between">
-                <CardTitle className={cn(
-                  "text-lg font-semibold tracking-tight",
-                  variant === "primary" && "text-primary-foreground",
-                  variant === "gradient" && "text-primary-foreground"
-                )}>
-                  {title}
-                </CardTitle>
-                {icon && (
-                  <div className={cn(
-                    "flex h-8 w-8 items-center justify-center rounded-md bg-muted/30",
-                    variant === "primary" && "bg-primary-foreground/10 text-primary-foreground",
-                    variant === "gradient" && "bg-primary-foreground/10 text-primary-foreground"
-                  )}>
-                    {icon}
-                  </div>
+        {(title || description || icon) && (
+          <CardHeader className={cn(!noPadding && "p-6", headerClassName)}>
+            <div className="flex justify-between items-start">
+              <div className="space-y-1.5 flex-1">
+                {isLoading ? (
+                  <>
+                    <Skeleton className="h-6 w-1/2 mb-2" />
+                    {description && <Skeleton className="h-4 w-full" />}
+                  </>
+                ) : (
+                  <>
+                    {title && (
+                      <CardTitle className={cn("flex items-center gap-2", titleClassName)}>
+                        {icon && <span className="text-primary/80">{icon}</span>}
+                        {title}
+                      </CardTitle>
+                    )}
+                    {description && <CardDescription>{description}</CardDescription>}
+                  </>
                 )}
               </div>
-            )}
-            {description && (
-              <CardDescription className={cn(
-                "text-sm text-muted-foreground",
-                variant === "primary" && "text-primary-foreground/80",
-                variant === "gradient" && "text-primary-foreground/80"
-              )}>
-                {description}
-              </CardDescription>
-            )}
+              {action && <div className="flex-shrink-0">{action}</div>}
+            </div>
           </CardHeader>
         )}
-        <CardContent className={cn(
-          "pt-2",
-          size === "sm" && "p-3",
-          !title && !description && "pt-4"
-        )}>
-          {isLoading ? (
-            <motion.div
-              variants={loadingVariants}
-              animate="pulse"
-              className="w-full py-4 flex items-center justify-center"
-            >
-              <div className="h-8 w-8 rounded-full border-2 border-primary border-b-transparent animate-spin" />
-            </motion.div>
-          ) : (
-            <motion.div
-              variants={contentVariants}
-              initial="hidden"
-              animate="visible"
-              transition={{ 
-                duration: 0.3, 
-                delay: 0.1 + animationDelay,
-                ease: "easeOut"
-              }}
-            >
-              {children}
-            </motion.div>
-          )}
-        </CardContent>
+        
+        {children && (
+          <CardContent
+            className={cn(
+              "flex-1",
+              !noPadding && "px-6 pb-6",
+              (title || description) && !noPadding && "pt-0",
+              isLoading && "space-y-2",
+              contentClassName
+            )}
+          >
+            {isLoading ? (
+              <>
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-2/3" />
+                <Skeleton className="h-4 w-3/4" />
+              </>
+            ) : (
+              children
+            )}
+          </CardContent>
+        )}
+        
         {footer && (
-          <CardFooter className={cn(
-            "pt-2 flex items-center",
-            size === "sm" && "p-3 pt-2",
-            variant === "primary" && "text-primary-foreground/80",
-            variant === "gradient" && "text-primary-foreground/80"
-          )}>
-            {footer}
+          <CardFooter
+            className={cn(
+              "flex-wrap gap-2",
+              !noPadding && "px-6 pb-6",
+              (title || description || children) && !noPadding && "pt-0",
+              footerClassName
+            )}
+          >
+            {isLoading ? <Skeleton className="h-5 w-full" /> : footer}
           </CardFooter>
         )}
       </Card>
-    </motion.div>
-  );
-}
+    );
+  }
+);
+
+DashboardCard.displayName = "DashboardCard";
+
+export { DashboardCard, dashboardCardVariants, type DashboardCardProps };

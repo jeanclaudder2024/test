@@ -1,77 +1,45 @@
+import React, { HTMLAttributes, useEffect, useRef, useState } from "react";
+import { VariantProps, cva } from "class-variance-authority";
 import { cn } from "@/lib/utils";
-import { cva, type VariantProps } from "class-variance-authority";
-import { motion } from "framer-motion";
-import { ArrowDownIcon, ArrowUpIcon, MinusIcon } from "lucide-react";
+import { Skeleton } from "./skeleton";
+import {
+  ArrowDownIcon,
+  ArrowRightIcon,
+  ArrowUpIcon,
+  MinusIcon
+} from "lucide-react";
 
 const statisticVariants = cva(
-  "flex flex-col space-y-1.5",
+  "flex flex-col gap-1 p-4 rounded-lg",
   {
     variants: {
       variant: {
-        default: "",
-        card: "rounded-lg border p-4 bg-card shadow-sm",
-        outline: "rounded-lg border border-primary/20 p-4 bg-card/50 shadow-sm",
-        ghost: "rounded-lg bg-card/50 p-4",
-        inline: "flex-row items-center space-y-0 space-x-3"
+        default: "bg-card",
+        primary: "bg-primary/10",
+        secondary: "bg-secondary/10",
+        success: "bg-success/10 text-success-foreground",
+        accent: "bg-accent/10 text-accent-foreground",
+        destructive: "bg-destructive/10 text-destructive-foreground",
+        neutral: "bg-muted",
+        outline: "border border-border",
+        ghost: "bg-transparent",
       },
       size: {
-        default: "",
-        sm: "text-sm",
-        lg: "text-lg"
-      }
+        sm: "gap-0.5 p-3",
+        default: "gap-1 p-4",
+        lg: "gap-2 p-5",
+      },
+      align: {
+        left: "items-start text-left",
+        center: "items-center text-center",
+        right: "items-end text-right",
+      },
     },
     defaultVariants: {
       variant: "default",
-      size: "default"
-    }
-  }
-);
-
-const statisticLabelVariants = cva(
-  "text-sm font-medium text-muted-foreground",
-  {
-    variants: {
-      variant: {
-        default: "",
-        card: "",
-        outline: "",
-        ghost: "",
-        inline: "text-sm font-normal"
-      },
-      size: {
-        default: "",
-        sm: "text-xs",
-        lg: "text-base"
-      }
+      size: "default",
+      align: "left",
     },
-    defaultVariants: {
-      variant: "default",
-      size: "default"
-    }
-  }
-);
-
-const statisticValueVariants = cva(
-  "text-2xl font-bold tracking-tight",
-  {
-    variants: {
-      variant: {
-        default: "",
-        card: "",
-        outline: "",
-        ghost: "",
-        inline: "text-lg"
-      },
-      size: {
-        default: "",
-        sm: "text-lg",
-        lg: "text-3xl"
-      }
-    },
-    defaultVariants: {
-      variant: "default",
-      size: "default"
-    }
   }
 );
 
@@ -91,126 +59,138 @@ export interface StatisticProps
 }
 
 export function Statistic({
-  className,
-  variant,
-  size,
   label,
   value,
   prefix,
   suffix,
+  variant,
+  size,
+  align,
   trend,
   trendLabel,
   icon,
+  className,
   isLoading = false,
-  animate = true,
+  animate = false,
   animationDelay = 0,
   ...props
 }: StatisticProps) {
-  const getTrendIcon = () => {
-    if (trend === undefined) return null;
-    if (trend > 0) return <ArrowUpIcon className="h-3 w-3 text-green-500" />;
-    if (trend < 0) return <ArrowDownIcon className="h-3 w-3 text-red-500" />;
-    return <MinusIcon className="h-3 w-3 text-muted-foreground" />;
-  };
+  const [displayValue, setDisplayValue] = useState<React.ReactNode>(animate ? 0 : value);
+  const [isAnimated, setIsAnimated] = useState(false);
+  const prevValueRef = useRef<React.ReactNode>(0);
+  const isNumber = typeof value === 'number';
+  
+  useEffect(() => {
+    if (!animate || !isNumber || isAnimated) return;
 
-  const getTrendColor = () => {
-    if (trend === undefined) return "";
-    if (trend > 0) return "text-green-500";
-    if (trend < 0) return "text-red-500";
-    return "text-muted-foreground";
-  };
+    const numericValue = typeof value === 'number' ? value : 0;
+    const prevValue = typeof prevValueRef.current === 'number' ? prevValueRef.current : 0;
+    const diff = numericValue - prevValue;
+    const steps = 20; // Number of steps for animation
+    const stepValue = diff / steps;
+    let currentStep = 0;
 
-  const formatTrend = () => {
-    if (trend === undefined) return "";
-    const absoluteTrend = Math.abs(trend);
-    return `${trend > 0 ? '+' : ''}${absoluteTrend}%`;
-  };
-
-  const valueVariants = {
-    hidden: { opacity: 0, y: 10 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: {
-        duration: 0.5,
-        delay: animationDelay,
-        ease: [0.34, 1.56, 0.64, 1] // Spring-like ease
-      }
+    if (animationDelay > 0) {
+      const delayTimeout = setTimeout(() => {
+        const interval = setInterval(() => {
+          currentStep++;
+          const newValue = prevValue + stepValue * currentStep;
+          setDisplayValue(currentStep >= steps ? numericValue : Math.round(newValue * 100) / 100);
+          
+          if (currentStep >= steps) {
+            clearInterval(interval);
+            setIsAnimated(true);
+          }
+        }, 30);
+        
+        return () => clearInterval(interval);
+      }, animationDelay);
+      
+      return () => clearTimeout(delayTimeout);
+    } else {
+      const interval = setInterval(() => {
+        currentStep++;
+        const newValue = prevValue + stepValue * currentStep;
+        setDisplayValue(currentStep >= steps ? numericValue : Math.round(newValue * 100) / 100);
+        
+        if (currentStep >= steps) {
+          clearInterval(interval);
+          setIsAnimated(true);
+        }
+      }, 30);
+      
+      return () => clearInterval(interval);
     }
-  };
+  }, [value, animate, isAnimated, animationDelay]);
 
-  const iconVariants = {
-    hidden: { opacity: 0, scale: 0.8 },
-    visible: { 
-      opacity: 1, 
-      scale: 1,
-      transition: {
-        duration: 0.4,
-        delay: animationDelay + 0.1
-      }
+  useEffect(() => {
+    if (!animate) {
+      setDisplayValue(value);
     }
-  };
+    
+    if (typeof value !== typeof prevValueRef.current) {
+      setDisplayValue(value);
+      setIsAnimated(true);
+    }
+    
+    prevValueRef.current = value;
+  }, [value, animate]);
 
   return (
     <div
-      className={cn(statisticVariants({ variant, size }), className)}
+      className={cn(
+        statisticVariants({ variant, size, align }),
+        className
+      )}
       {...props}
     >
-      {icon && variant !== "inline" && (
-        <motion.div
-          initial={animate ? "hidden" : "visible"}
-          animate="visible"
-          variants={iconVariants}
-          className={cn(
-            "flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary",
-            variant === "outline" && "bg-primary/5"
-          )}
-        >
-          {icon}
-        </motion.div>
-      )}
-      {variant === "inline" && icon ? (
-        <motion.div
-          initial={animate ? "hidden" : "visible"}
-          animate="visible"
-          variants={iconVariants}
-          className="flex-shrink-0"
-        >
-          {icon}
-        </motion.div>
-      ) : null}
-      <div className={variant === "inline" ? "flex-1" : ""}>
-        <div className={cn(statisticLabelVariants({ variant, size }))}>
-          {label}
-        </div>
-        <motion.div
-          initial={animate ? "hidden" : "visible"}
-          animate="visible"
-          variants={valueVariants}
-          className="flex items-baseline gap-1"
-        >
-          {prefix && <span className="text-muted-foreground text-base">{prefix}</span>}
-          <div className={cn(statisticValueVariants({ variant, size }))}>
-            {isLoading ? (
-              <div className="h-7 w-20 rounded bg-muted animate-pulse"></div>
-            ) : (
-              value
-            )}
-          </div>
-          {suffix && <span className="text-muted-foreground text-base">{suffix}</span>}
-        </motion.div>
-        {trend !== undefined && (
-          <div className="flex items-center text-xs mt-1 gap-1">
-            {getTrendIcon()}
-            <span className={cn("font-medium", getTrendColor())}>
-              {formatTrend()}
-            </span>
-            {trendLabel && (
-              <span className="text-muted-foreground ml-1">{trendLabel}</span>
-            )}
-          </div>
+      <div className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
+        {icon && <span className="text-foreground/80">{icon}</span>}
+        {isLoading ? <Skeleton className="h-4 w-24" /> : label}
+      </div>
+
+      <div className="text-2xl font-semibold flex items-center gap-1 leading-none">
+        {isLoading ? (
+          <Skeleton className="h-7 w-32" />
+        ) : (
+          <>
+            {prefix && <span className="text-muted-foreground">{prefix}</span>}
+            <span>{displayValue}</span>
+            {suffix && <span className="text-muted-foreground text-sm">{suffix}</span>}
+          </>
         )}
       </div>
+
+      {(trend !== undefined || trendLabel) && !isLoading && (
+        <div className="flex items-center text-xs gap-1 mt-1">
+          {trend !== undefined && (
+            <span
+              className={cn(
+                "flex items-center font-medium",
+                trend > 0
+                  ? "text-success"
+                  : trend < 0
+                  ? "text-destructive"
+                  : "text-muted-foreground"
+              )}
+            >
+              {trend > 0 ? (
+                <ArrowUpIcon className="mr-1 h-3 w-3" />
+              ) : trend < 0 ? (
+                <ArrowDownIcon className="mr-1 h-3 w-3" />
+              ) : (
+                <MinusIcon className="mr-1 h-3 w-3" />
+              )}
+              {Math.abs(trend).toFixed(1)}%
+            </span>
+          )}
+          {trendLabel && (
+            <span className="text-muted-foreground">
+              {trendLabel}
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 }
