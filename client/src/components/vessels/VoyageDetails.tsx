@@ -205,7 +205,9 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                         <div>
                           <p className="text-xs text-gray-500">Distance traveled</p>
                           <p className="text-sm font-medium">
-                            {(voyageProgress?.distanceTraveled !== undefined && voyageProgress.distanceTraveled !== null) ? 
+                            {(voyageProgress?.distanceTraveled !== undefined && 
+                              voyageProgress.distanceTraveled !== null && 
+                              typeof voyageProgress.distanceTraveled === 'number') ? 
                               `${voyageProgress.distanceTraveled.toLocaleString()} nautical miles` : 
                               'N/A'}
                           </p>
@@ -213,7 +215,9 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                         <div>
                           <p className="text-xs text-gray-500">Remaining</p>
                           <p className="text-sm font-medium">
-                            {(voyageProgress?.distanceRemaining !== undefined && voyageProgress.distanceRemaining !== null) ? 
+                            {(voyageProgress?.distanceRemaining !== undefined && 
+                              voyageProgress.distanceRemaining !== null && 
+                              typeof voyageProgress.distanceRemaining === 'number') ? 
                               `${voyageProgress.distanceRemaining.toLocaleString()} nautical miles` : 
                               'N/A'}
                           </p>
@@ -221,7 +225,9 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                         <div>
                           <p className="text-xs text-gray-500">Current speed</p>
                           <p className="text-sm font-medium">
-                            {(voyageProgress?.currentSpeed !== undefined && voyageProgress.currentSpeed !== null) ? 
+                            {(voyageProgress?.currentSpeed !== undefined && 
+                              voyageProgress.currentSpeed !== null && 
+                              typeof voyageProgress.currentSpeed === 'number') ? 
                               `${voyageProgress.currentSpeed} knots` : 
                               'N/A'}
                           </p>
@@ -229,7 +235,9 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                         <div>
                           <p className="text-xs text-gray-500">Average speed</p>
                           <p className="text-sm font-medium">
-                            {(voyageProgress?.averageSpeed !== undefined && voyageProgress.averageSpeed !== null) ? 
+                            {(voyageProgress?.averageSpeed !== undefined && 
+                              voyageProgress.averageSpeed !== null && 
+                              typeof voyageProgress.averageSpeed === 'number') ? 
                               `${voyageProgress.averageSpeed} knots` : 
                               'N/A'}
                           </p>
@@ -303,7 +311,10 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                       <div>
                         <div className="flex items-center">
                           <p className="text-sm font-medium">
-                            {`${parseFloat(String(currentLocation.currentLat)).toFixed(4)}°, ${parseFloat(String(currentLocation.currentLng)).toFixed(4)}°`}
+                            {currentLocation.currentLat && currentLocation.currentLng ? 
+                              `${parseFloat(String(currentLocation.currentLat)).toFixed(4)}°, ${parseFloat(String(currentLocation.currentLng)).toFixed(4)}°` : 
+                              "Position not available"
+                            }
                           </p>
                           {currentLocation.fromAPI && (
                             <Badge variant="outline" className="ml-2 text-xs bg-green-50 border-green-200 text-green-700">
@@ -324,7 +335,7 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                         )}
                         
                         <p className="text-xs text-gray-500">
-                          Updated: {formatDate(new Date(currentLocation.lastUpdated))}
+                          Updated: {currentLocation.lastUpdated ? formatDate(new Date(currentLocation.lastUpdated)) : 'N/A'}
                         </p>
                       </div>
                     ) : (
@@ -414,7 +425,8 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                   <div>
                     <p className="text-xs text-gray-500">Total Distance</p>
                     <p className="text-sm font-medium">
-                      {(voyageProgress?.distanceTraveled !== undefined && voyageProgress?.distanceRemaining !== undefined)
+                      {(voyageProgress?.distanceTraveled !== undefined && voyageProgress?.distanceRemaining !== undefined &&
+                          typeof voyageProgress.distanceTraveled === 'number' && typeof voyageProgress.distanceRemaining === 'number')
                         ? `${(voyageProgress.distanceTraveled + voyageProgress.distanceRemaining).toLocaleString()} nautical miles`
                         : "N/A"}
                     </p>

@@ -414,8 +414,19 @@ export default function VesselDetail() {
     setIsLoadingLocation(true);
     try {
       const response = await axios.get(`/api/vessels/${vesselId}/location`);
-      if (response.data) {
-        setCurrentLocation(response.data);
+      console.log("Location API response:", response.data);
+      
+      // The server always includes location data in a currentLocation object
+      if (response.data && response.data.currentLocation) {
+        setCurrentLocation(response.data.currentLocation);
+        console.log("Setting current location to:", response.data.currentLocation);
+      } else {
+        console.warn("Location API returned unexpected format:", response.data);
+        toast({
+          title: "Unexpected data format",
+          description: "The server returned location data in an unexpected format.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error('Error fetching current location:', error);
