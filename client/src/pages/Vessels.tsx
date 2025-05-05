@@ -38,6 +38,8 @@ import { OIL_PRODUCT_TYPES, REGIONS } from '@shared/constants';
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import axios from 'axios';
+// Import flag icons
+import { FlagIcon } from "react-flag-kit";
 
 // Define oil product categories for filtering
 const OIL_CATEGORIES = {
@@ -48,6 +50,100 @@ const OIL_CATEGORIES = {
   "Gas": ["LPG", "LNG", "LIQUEFIED PETROLEUM GAS", "LIQUEFIED NATURAL GAS", "COMPRESSED NATURAL GAS", "CNG"],
   "Gasoline": ["GASOLINE", "PETROL", "MOGAS", "GASOLENE", "OCTANES"],
   "Other": ["NAPHTHA", "KEROSENE", "BITUMEN", "ASPHALT", "BASE OIL", "SULPHUR", "UREA", "DIAMMONIUM PHOSPHATE", "DAP"]
+};
+
+// Map country names to ISO country codes for flag icons
+const getFlagCode = (countryName: string): string | null => {
+  const countryCodeMap: Record<string, string> = {
+    // Common maritime countries
+    "United States": "US",
+    "USA": "US",
+    "United Kingdom": "GB",
+    "UK": "GB",
+    "China": "CN",
+    "Japan": "JP",
+    "South Korea": "KR",
+    "Korea": "KR",
+    "Russia": "RU",
+    "India": "IN",
+    "Australia": "AU",
+    "Canada": "CA",
+    "Brazil": "BR",
+    "Germany": "DE",
+    "France": "FR",
+    "Italy": "IT",
+    "Spain": "ES",
+    "Netherlands": "NL",
+    "Norway": "NO",
+    "Denmark": "DK",
+    "Sweden": "SE",
+    "Finland": "FI",
+    "Greece": "GR",
+    "Turkey": "TR",
+    "Portugal": "PT",
+    "Singapore": "SG",
+    "Malaysia": "MY",
+    "Indonesia": "ID",
+    "Philippines": "PH",
+    "Thailand": "TH",
+    "Vietnam": "VN",
+    "Taiwan": "TW",
+    "UAE": "AE",
+    "United Arab Emirates": "AE",
+    "Saudi Arabia": "SA",
+    "Qatar": "QA",
+    "Kuwait": "KW",
+    "Oman": "OM",
+    "Bahrain": "BH",
+    "Iran": "IR",
+    "Iraq": "IQ",
+    "Israel": "IL",
+    "Egypt": "EG",
+    "South Africa": "ZA",
+    "Nigeria": "NG",
+    "Morocco": "MA",
+    "Algeria": "DZ",
+    "Tunisia": "TN",
+    "Libya": "LY",
+    "Mexico": "MX",
+    "Argentina": "AR",
+    "Chile": "CL",
+    "Colombia": "CO",
+    "Peru": "PE",
+    "Venezuela": "VE",
+    "Panama": "PA",
+    "Liberia": "LR",
+    "Marshall Islands": "MH",
+    "Malta": "MT",
+    "Cyprus": "CY",
+    "Bahamas": "BS",
+    "Bermuda": "BM",
+    "Hong Kong": "HK",
+    "Gibraltar": "GI",
+    "Isle of Man": "IM",
+    "Cayman Islands": "KY",
+    "Antigua and Barbuda": "AG",
+    "St. Vincent": "VC",
+    "Saint Vincent": "VC",
+    "Vanuatu": "VU",
+    "Belize": "BZ",
+    "Jamaica": "JM",
+    "Barbados": "BB",
+    "Tanzania": "TZ",
+    "Togo": "TG",
+    "Sierra Leone": "SL",
+    "Comoros": "KM",
+    "Cambodia": "KH",
+    "Moldova": "MD",
+    "Mongolia": "MN",
+    "Palau": "PW",
+    "Samoa": "WS",
+    "Tuvalu": "TV",
+    "Cook Islands": "CK"
+  };
+  
+  // Return the country code if found in the map
+  return countryCodeMap[countryName] || null;
 };
 
 export default function Vessels() {
@@ -754,7 +850,18 @@ export default function Vessels() {
                   </TableCell>
                   
                   <TableCell>{vessel.vesselType}</TableCell>
-                  <TableCell>{vessel.flag}</TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    <div className="flex items-center gap-2">
+                      {vessel.flag && getFlagCode(vessel.flag) && (
+                        <FlagIcon 
+                          code={getFlagCode(vessel.flag)} 
+                          size={18} 
+                          className="shadow-sm rounded-sm" 
+                        />
+                      )}
+                      <span>{vessel.flag}</span>
+                    </div>
+                  </TableCell>
                   <TableCell>
                     {vessel.departurePort}
                     {vessel.departureDate && (
