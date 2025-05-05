@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Vessel } from "@/types";
-import { Package, MapPin, Box, RefreshCcw, Navigation, Compass, Clock, Gauge } from "lucide-react";
+import { Package, MapPin, Box, RefreshCcw, Navigation, Compass, Clock, Gauge, Anchor, Ship } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { FlagIcon } from "react-flag-kit";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import axios from "axios";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 
 interface VesselInfoProps {
   vessel: Vessel;
@@ -108,9 +109,23 @@ const getFlagCode = (countryName: string): string | null => {
   return countryCodeMap[countryName] || null;
 };
 
+// Voyage Progress interface
+interface VoyageProgress {
+  percentComplete: number;
+  distanceTraveled: number;
+  distanceRemaining: number;
+  estimatedArrival: Date | null;
+  currentSpeed: number;
+  averageSpeed: number;
+  lastUpdated: Date;
+  fromAPI?: boolean;
+  estimated?: boolean;
+}
+
 export default function VesselInfo({ vessel }: VesselInfoProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const [isLoadingVoyage, setIsLoadingVoyage] = useState(false);
   const [sellerName, setSellerName] = useState<string | null>(vessel.sellerName);
   const [currentLocation, setCurrentLocation] = useState<{
     currentLat: string;
@@ -122,6 +137,7 @@ export default function VesselInfo({ vessel }: VesselInfoProps) {
     fromAPI?: boolean;
     fromDatabase?: boolean;
   } | null>(null);
+  const [voyageProgress, setVoyageProgress] = useState<VoyageProgress | null>(null);
   const { toast } = useToast();
   
   // Function to generate seller name using OpenAI
@@ -185,11 +201,52 @@ export default function VesselInfo({ vessel }: VesselInfoProps) {
     }
   };
   
-  // Fetch current location on component mount
+  // Function to fetch voyage progress from API
+  const fetchVoyageProgress = async () => {
+    if (isLoadingVoyage || !vessel.destinationPort) return;
+    
+    setIsLoadingVoyage(true);
+    try {
+      const response = await axios.get(`/api/vessels/${vessel.id}/voyage-progress`);
+      
+      if (response.data && response.data.voyageProgress) {
+        // Parse any date strings
+        const progressData = {
+          ...response.data.voyageProgress,
+          lastUpdated: new Date(response.data.voyageProgress.lastUpdated),
+          estimatedArrival: response.data.voyageProgress.estimatedArrival 
+            ? new Date(response.data.voyageProgress.estimatedArrival) 
+            : null
+        };
+        
+        setVoyageProgress(progressData);
+        toast({
+          title: response.data.voyageProgress.fromAPI ? "Voyage Progress Updated" : "Voyage Progress Retrieved",
+          description: `Current progress: ${progressData.percentComplete}% complete`,
+        });
+      } else {
+        throw new Error(response.data?.message || 'Failed to fetch voyage progress');
+      }
+    } catch (error) {
+      console.error('Error fetching voyage progress:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error instanceof Error ? error.message : 'Failed to fetch voyage progress',
+      });
+    } finally {
+      setIsLoadingVoyage(false);
+    }
+  };
+  
+  // Fetch data on component mount
   useEffect(() => {
     // Only fetch if we have vessel ID
     if (vessel.id) {
       fetchCurrentLocation();
+      if (vessel.destinationPort) {
+        fetchVoyageProgress();
+      }
     }
   }, [vessel.id]);
   
@@ -208,6 +265,18 @@ export default function VesselInfo({ vessel }: VesselInfoProps) {
             <Navigation className={`h-3 w-3 mr-1 ${isLoadingLocation ? 'animate-spin' : ''}`} />
             Update Location
           </Button>
+          {vessel.destinationPort && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="text-xs" 
+              onClick={fetchVoyageProgress}
+              disabled={isLoadingVoyage}
+            >
+              <Ship className={`h-3 w-3 mr-1 ${isLoadingVoyage ? 'animate-spin' : ''}`} />
+              Update Journey
+            </Button>
+          )}
           <Button 
             variant="outline" 
             size="sm" 
@@ -365,6 +434,81 @@ export default function VesselInfo({ vessel }: VesselInfoProps) {
                 )}
               </div>
             </div>
+            
+            {/* Voyage Progress */}
+            {vessel.destinationPort && (
+              <div className="flex items-center mb-3">
+                <div className="h-8 w-8 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
+                  <Anchor className="h-4 w-4 text-primary" />
+                </div>
+                <div className="ml-3 w-full">
+                  <div className="flex justify-between items-center">
+                    <p className="text-xs text-gray-500">VOYAGE PROGRESS</p>
+                    {voyageProgress?.fromAPI && (
+                      <Badge variant="outline" className="ml-2 text-xs bg-green-50 border-green-200 text-green-700">
+                        Live
+                      </Badge>
+                    )}
+                    {voyageProgress?.estimated && (
+                      <Badge variant="outline" className="ml-2 text-xs bg-yellow-50 border-yellow-200 text-yellow-700">
+                        Estimated
+                      </Badge>
+                    )}
+                  </div>
+                  
+                  {isLoadingVoyage ? (
+                    <div className="flex items-center">
+                      <Ship className="h-3 w-3 mr-1 animate-spin text-primary" />
+                      <span className="text-sm">Fetching voyage progress...</span>
+                    </div>
+                  ) : voyageProgress ? (
+                    <div className="w-full">
+                      <div className="flex justify-between mb-1 text-xs text-gray-500">
+                        <span>{vessel.departurePort}</span>
+                        <span className="text-primary font-medium">{voyageProgress.percentComplete}%</span>
+                        <span>{vessel.destinationPort}</span>
+                      </div>
+                      <Progress value={voyageProgress.percentComplete} className="h-2 mb-1" />
+                      
+                      <div className="grid grid-cols-2 gap-2 mt-2 text-xs text-gray-600">
+                        <div>
+                          <p className="text-gray-500">Distance traveled:</p>
+                          <p className="font-medium">{voyageProgress.distanceTraveled.toLocaleString()} nautical miles</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500">Remaining:</p>
+                          <p className="font-medium">{voyageProgress.distanceRemaining.toLocaleString()} nautical miles</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500">Current speed:</p>
+                          <p className="font-medium">{voyageProgress.currentSpeed} knots</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500">Average speed:</p>
+                          <p className="font-medium">{voyageProgress.averageSpeed} knots</p>
+                        </div>
+                      </div>
+                      
+                      {voyageProgress.estimatedArrival && (
+                        <div className="mt-2 text-xs">
+                          <p className="text-gray-500">Estimated arrival:</p>
+                          <p className="font-medium">{formatDate(voyageProgress.estimatedArrival)}</p>
+                        </div>
+                      )}
+                      
+                      <p className="text-xs text-gray-500 mt-1">
+                        Updated: {formatDate(new Date(voyageProgress.lastUpdated))}
+                      </p>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="text-sm text-gray-500">Progress information not available</p>
+                      <p className="text-xs text-gray-500">Click "Update Journey" to fetch voyage progress</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
             
             {/* Trade Info (Buyer & Seller) */}
             <div className="mt-4 pt-3 border-t border-gray-200">

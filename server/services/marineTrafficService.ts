@@ -647,6 +647,111 @@ export const marineTrafficService = {
   },
   
   /**
+   * Fetch voyage progress data for a specific vessel
+   * @param identifier IMO or MMSI number of the vessel
+   * @returns Voyage progress information or null if not available
+   */
+  fetchVoyageProgress: async (identifier: string): Promise<{
+    percentComplete: number;
+    distanceTraveled: number;
+    distanceRemaining: number;
+    estimatedArrival: Date | null;
+    currentSpeed: number;
+    averageSpeed: number;
+    lastUpdated: Date;
+  } | null> => {
+    if (!API_KEY) {
+      console.warn('MyShipTracking API key not configured, cannot fetch voyage progress');
+      return null;
+    }
+    
+    try {
+      // Headers for API requests
+      const headers = {
+        'Authorization': `Bearer ${API_KEY}`,
+        'Content-Type': 'application/json'
+      };
+      
+      // Determine if the identifier is an IMO or MMSI number
+      const isIMO = identifier.toLowerCase().startsWith('imo');
+      const queryParam = isIMO ? 'imo' : 'mmsi';
+      const queryValue = isIMO ? identifier.substring(3) : identifier;
+      
+      // Fetch vessel route from the API
+      const response = await axios.get(`${API_BASE_URL}${ENDPOINTS.VESSEL_ROUTE}`, {
+        headers,
+        params: {
+          [queryParam]: queryValue
+        }
+      });
+      
+      if (!response.data || response.data.error) {
+        console.error('Error fetching vessel route from MyShipTracking:', 
+          response.data?.error || 'Unknown error');
+        return null;
+      }
+      
+      // Extract the voyage data from the response
+      const voyageData = response.data;
+      
+      if (!voyageData || !voyageData.route || voyageData.route.length === 0) {
+        console.warn(`Vessel ${identifier} found, but no route data available`);
+        return null;
+      }
+      
+      // Get vessel details to calculate remaining distance
+      const vesselDetails = await axios.get(`${API_BASE_URL}${ENDPOINTS.VESSEL_DETAILS}`, {
+        headers,
+        params: {
+          [queryParam]: queryValue
+        }
+      });
+      
+      if (!vesselDetails.data) {
+        console.warn(`Could not fetch vessel details for ${identifier}`);
+        return null;
+      }
+      
+      const vesselData = vesselDetails.data;
+      
+      // Calculate voyage progress
+      const route = voyageData.route;
+      const totalDistance = route.total_distance || 0;
+      const traveledDistance = route.traveled_distance || 0;
+      const remainingDistance = totalDistance - traveledDistance;
+      const percentComplete = totalDistance > 0 ? Math.round((traveledDistance / totalDistance) * 100) : 0;
+      
+      // Extract other voyage data
+      const currentSpeed = vesselData.speed || 0;
+      const averageSpeed = route.average_speed || currentSpeed;
+      
+      // Calculate estimated arrival if we have data
+      let estimatedArrival = null;
+      if (vesselData.eta) {
+        estimatedArrival = new Date(vesselData.eta);
+      } else if (remainingDistance > 0 && averageSpeed > 0) {
+        // Calculate rough ETA based on remaining distance and average speed
+        const hoursRemaining = remainingDistance / averageSpeed;
+        estimatedArrival = new Date();
+        estimatedArrival.setHours(estimatedArrival.getHours() + hoursRemaining);
+      }
+      
+      return {
+        percentComplete,
+        distanceTraveled: traveledDistance,
+        distanceRemaining: remainingDistance,
+        estimatedArrival,
+        currentSpeed,
+        averageSpeed,
+        lastUpdated: new Date()
+      };
+    } catch (error) {
+      console.error(`Error fetching voyage progress for vessel ${identifier}:`, error);
+      return null;
+    }
+  },
+  
+  /**
    * Check if the MyShipTracking API is configured and available
    * @returns Boolean indicating if the service is ready to use
    */

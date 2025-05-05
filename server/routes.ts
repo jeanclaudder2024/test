@@ -1206,6 +1206,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch vessel location" });
     }
   });
+  
+  // Get the voyage progress of a vessel from the API
+  apiRouter.get("/vessels/:id/voyage-progress", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid vessel ID" });
+      }
+      
+      // Get the vessel first to get the IMO or MMSI
+      const vessel = await storage.getVesselById(id);
+      if (!vessel) {
+        return res.status(404).json({ message: "Vessel not found" });
+      }
+      
+      // Check if the vessel has a destination
+      if (!vessel.destinationPort) {
+        return res.status(400).json({ 
+          message: "Vessel has no destination set",
+          voyageProgress: {
+            percentComplete: 0,
+            estimated: false
+          }
+        });
+      }
+      
+      // Check if the MyShipTracking API is configured
+      if (!marineTrafficService.isConfigured()) {
+        return res.status(503).json({ 
+          message: "MyShipTracking API is not configured. Please set MARINE_TRAFFIC_API_KEY environment variable.",
+          voyageProgress: {
+            percentComplete: 0,
+            estimated: true,
+            estimatedArrival: vessel.eta
+          }
+        });
+      }
+      
+      // Try to get the voyage progress from the API
+      let identifier = vessel.imo;
+      if (!identifier || identifier.startsWith('MST-')) {
+        // If no IMO or it's a generated one, try MMSI
+        identifier = vessel.mmsi;
+      }
+      
+      if (!identifier) {
+        return res.status(400).json({ 
+          message: "Vessel has no valid IMO or MMSI identifier",
+          voyageProgress: {
+            percentComplete: 0,
+            estimated: true,
+            estimatedArrival: vessel.eta
+          }
+        });
+      }
+      
+      const progressData = await marineTrafficService.fetchVoyageProgress(identifier);
+      
+      if (!progressData) {
+        // If API request fails, return estimated data
+        return res.json({
+          message: "Could not fetch voyage progress from API. Using estimated data.",
+          voyageProgress: {
+            percentComplete: 0,
+            distanceTraveled: 0,
+            distanceRemaining: 0,
+            estimatedArrival: vessel.eta,
+            estimated: true
+          }
+        });
+      }
+      
+      // Return the API progress data
+      res.json({
+        message: "Successfully fetched voyage progress from API",
+        voyageProgress: {
+          ...progressData,
+          fromAPI: true
+        }
+      });
+      
+    } catch (error) {
+      console.error("Error fetching vessel voyage progress:", error);
+      res.status(500).json({ message: "Failed to fetch vessel voyage progress" });
+    }
+  });
 
   // SSE endpoint for real-time data
   apiRouter.get("/stream/data", (req, res) => {
