@@ -2,10 +2,105 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Vessel } from "@/types";
 import { Package, MapPin, Box } from "lucide-react";
 import { formatDate } from "@/lib/utils";
+import { FlagIcon } from "react-flag-kit";
 
 interface VesselInfoProps {
   vessel: Vessel;
 }
+
+// Map country names to ISO country codes for flag icons
+const getFlagCode = (countryName: string): string | null => {
+  const countryCodeMap: Record<string, string> = {
+    // Common maritime countries
+    "United States": "US",
+    "USA": "US",
+    "United Kingdom": "GB",
+    "UK": "GB",
+    "China": "CN",
+    "Japan": "JP",
+    "South Korea": "KR",
+    "Korea": "KR",
+    "Russia": "RU",
+    "India": "IN",
+    "Australia": "AU",
+    "Canada": "CA",
+    "Brazil": "BR",
+    "Germany": "DE",
+    "France": "FR",
+    "Italy": "IT",
+    "Spain": "ES",
+    "Netherlands": "NL",
+    "Norway": "NO",
+    "Denmark": "DK",
+    "Sweden": "SE",
+    "Finland": "FI",
+    "Greece": "GR",
+    "Turkey": "TR",
+    "Portugal": "PT",
+    "Singapore": "SG",
+    "Malaysia": "MY",
+    "Indonesia": "ID",
+    "Philippines": "PH",
+    "Thailand": "TH",
+    "Vietnam": "VN",
+    "Taiwan": "TW",
+    "UAE": "AE",
+    "United Arab Emirates": "AE",
+    "Saudi Arabia": "SA",
+    "Qatar": "QA",
+    "Kuwait": "KW",
+    "Oman": "OM",
+    "Bahrain": "BH",
+    "Iran": "IR",
+    "Iraq": "IQ",
+    "Israel": "IL",
+    "Egypt": "EG",
+    "South Africa": "ZA",
+    "Nigeria": "NG",
+    "Morocco": "MA",
+    "Algeria": "DZ",
+    "Tunisia": "TN",
+    "Libya": "LY",
+    "Mexico": "MX",
+    "Argentina": "AR",
+    "Chile": "CL",
+    "Colombia": "CO",
+    "Peru": "PE",
+    "Venezuela": "VE",
+    "Panama": "PA",
+    "Liberia": "LR",
+    "Marshall Islands": "MH",
+    "Malta": "MT",
+    "Cyprus": "CY",
+    "Bahamas": "BS",
+    "Bermuda": "BM",
+    "Hong Kong": "HK",
+    "Gibraltar": "GI",
+    "Isle of Man": "IM",
+    "Cayman Islands": "KY",
+    "Antigua and Barbuda": "AG",
+    "St. Vincent": "VC",
+    "Saint Vincent": "VC",
+    "Vanuatu": "VU",
+    "Belize": "BZ",
+    "Jamaica": "JM",
+    "Barbados": "BB",
+    "Tanzania": "TZ",
+    "Togo": "TG",
+    "Sierra Leone": "SL",
+    "Comoros": "KM",
+    "Cambodia": "KH",
+    "Moldova": "MD",
+    "Mongolia": "MN",
+    "Palau": "PW",
+    "Samoa": "WS",
+    "Tuvalu": "TV",
+    "Cook Islands": "CK"
+  };
+  
+  // Return the country code if found in the map
+  return countryCodeMap[countryName] || null;
+};
 
 export default function VesselInfo({ vessel }: VesselInfoProps) {
   return (
@@ -36,7 +131,16 @@ export default function VesselInfo({ vessel }: VesselInfoProps) {
               </div>
               <div>
                 <p className="text-xs text-gray-500">FLAG</p>
-                <p className="text-sm font-medium">{vessel.flag}</p>
+                <div className="flex items-center gap-2">
+                  {vessel.flag && getFlagCode(vessel.flag) && (
+                    <FlagIcon 
+                      code={getFlagCode(vessel.flag) as string} 
+                      size={20} 
+                      className="shadow-sm rounded-sm" 
+                    />
+                  )}
+                  <p className="text-sm font-medium">{vessel.flag}</p>
+                </div>
               </div>
               <div>
                 <p className="text-xs text-gray-500">BUILT</p>

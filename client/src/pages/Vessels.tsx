@@ -854,7 +854,7 @@ export default function Vessels() {
                     <div className="flex items-center gap-2">
                       {vessel.flag && getFlagCode(vessel.flag) && (
                         <FlagIcon 
-                          code={getFlagCode(vessel.flag)} 
+                          code={getFlagCode(vessel.flag) as string} 
                           size={18} 
                           className="shadow-sm rounded-sm" 
                         />
