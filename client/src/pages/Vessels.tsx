@@ -435,68 +435,13 @@ export default function Vessels() {
               }
             </p>
             
-            {/* Connection and data source status indicators */}
+            {/* Only show error indicators if needed */}
             <div className="flex items-center flex-wrap gap-1">
-              {/* WebSocket/REST API connection status */}
-              <Badge 
-                variant="outline" 
-                className={`ml-2 flex items-center gap-1 ${
-                  wsConnected 
-                    ? 'bg-green-50 text-green-700 border-green-200' 
-                    : 'bg-amber-50 text-amber-700 border-amber-200'
-                }`}
-              >
-                {wsConnected ? (
-                  <>
-                    <Wifi className="h-3 w-3 text-green-600" />
-                    <span>WebSocket</span>
-                  </>
-                ) : (
-                  <>
-                    <WifiOff className="h-3 w-3 text-amber-600" />
-                    <span>REST API</span>
-                  </>
-                )}
-              </Badge>
-              
-              {/* Data source indicator */}
-              {dataSource && (
-                <Badge 
-                  variant="outline" 
-                  className={`ml-2 flex items-center gap-1 ${
-                    dataSource === 'myshiptracking' 
-                      ? 'bg-green-50 text-green-700 border-green-200'
-                      : dataSource === 'websocket'
-                        ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
-                        : dataSource === 'marine-traffic'
-                          ? 'bg-blue-50 text-blue-700 border-blue-200'
-                          : 'bg-amber-50 text-amber-700 border-amber-200'
-                  }`}
-                >
-                  <Ship className="h-3 w-3 mr-1" />
-                  {dataSource === 'myshiptracking' 
-                    ? 'MyShipTracking API' 
-                    : dataSource === 'websocket'
-                      ? 'WebSocket Data'
-                      : dataSource === 'marine-traffic'
-                        ? 'Marine Traffic API'
-                        : 'Polling Fallback'
-                  }
-                </Badge>
-              )}
-              
               {/* Error indicator */}
               {fetchError && (
                 <Badge variant="outline" className="ml-2 bg-red-50 text-red-700 border-red-200 flex items-center gap-1">
                   <AlertCircle className="h-3 w-3 text-red-600" />
                   <span>Error</span>
-                </Badge>
-              )}
-              
-              {/* Connection type from the hook */}
-              {connectionType && (
-                <Badge variant="outline" className="ml-2 bg-blue-50 text-blue-700 border-blue-200">
-                  {connectionType}
                 </Badge>
               )}
             </div>
@@ -624,17 +569,16 @@ export default function Vessels() {
         </div>
       </div>
       
-      {/* WebSocket Pagination Controls - only show when we have pagination metadata */}
-      {wsConnected && totalCount > 0 && totalPages > 1 && (
-        <div className="mb-6 p-4 border rounded-md bg-blue-50">
+      {/* Simple Pagination Controls */}
+      {totalCount > 0 && totalPages > 1 && (
+        <div className="mb-6 p-4 border rounded-md bg-gray-50">
           <div className="flex flex-col sm:flex-row justify-between items-center mb-2">
             <h3 className="text-base font-medium flex items-center mb-2 sm:mb-0">
-              <Wifi className="h-4 w-4 mr-2 text-blue-600" />
-              WebSocket Data Pagination
+              Vessel Navigation
             </h3>
             
             <div className="flex items-center">
-              <label className="text-sm mr-2">Page Size:</label>
+              <label className="text-sm mr-2">Items per page:</label>
               <select 
                 className="text-sm border rounded-md px-2 py-1"
                 value={pageSize}
@@ -649,7 +593,7 @@ export default function Vessels() {
           </div>
           
           <p className="text-sm text-muted-foreground mb-4">
-            Navigate through all {totalCount.toLocaleString()} vessels in real-time using the WebSocket connection.
+            Navigate through all {totalCount.toLocaleString()} vessels in the database.
             Currently viewing page {page} of {totalPages}.
           </p>
           
