@@ -100,15 +100,15 @@ export default function PortDetail() {
     enabled: !!portId,
   });
 
-  // Fetch nearby vessels using our new real-time API endpoint
+  // Fetch nearby vessels (in a real implementation, this would be a dedicated endpoint)
   const { 
     data: nearbyVessels, 
     isLoading: isLoadingVessels
   } = useQuery({
     queryKey: ['/api/ports/nearby-vessels', portId],
     queryFn: async () => {
-      // Use our new API endpoint to get vessels near this port
-      const response = await fetch(`/api/ports/${portId}/nearby-vessels?radius=150&limit=10`);
+      // For now, we'll simulate this by getting some general vessels
+      const response = await fetch('/api/vessels?limit=5');
       
       if (!response.ok) {
         throw new Error(`Error fetching nearby vessels: ${response.statusText}`);
@@ -117,7 +117,6 @@ export default function PortDetail() {
       return response.json();
     },
     enabled: !!portId && !!port,
-    refetchInterval: 30000, // Refetch every 30 seconds for real-time updates
   });
 
   // If we're loading, return a loading state

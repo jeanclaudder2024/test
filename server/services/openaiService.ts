@@ -20,31 +20,7 @@ try {
 /**
  * Service for generating maritime data using OpenAI APIs
  */
-class OpenAIService {
-  /**
-   * Generate completions using OpenAI API
-   */
-  async generateCompletion(prompt: string, format: 'text' | 'json' = 'text'): Promise<string | null> {
-    try {
-      if (!openai) {
-        console.warn("OpenAI client is not available. Cannot generate completion.");
-        return null;
-      }
-      
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.7,
-        max_tokens: 800,
-        response_format: format === 'json' ? { type: "json_object" } : undefined
-      });
-      
-      return response.choices[0].message.content?.trim() || null;
-    } catch (error) {
-      console.error("Error generating completion:", error);
-      return null;
-    }
-  }
+export class OpenAIService {
   /**
    * Generate a detailed description for a port based on its metadata
    */

@@ -48,7 +48,6 @@ import { vesselDistributionRouter } from "./routes/vesselDistributionRoutes";
 import { refineryPortRouter } from "./routes/refineryPortRoutes";
 import { aiRouter } from "./routes/aiRoutes";
 import { companyRouter } from "./routes/companyRoutes";
-import { registerPortRoutes } from "./routes/portRoutes";
 import { seedBrokers } from "./services/seedService";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -2222,9 +2221,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // API tester routes (performance testing, etc.)
   app.use("/api/tester", apiTesterRouter);
-  
-  // Register port routes for nearby vessels
-  registerPortRoutes(app);
 
   // API endpoint for vessels when WebSockets are not available
   apiRouter.get("/vessels/polling", async (req, res) => {
