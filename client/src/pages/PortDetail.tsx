@@ -228,7 +228,7 @@ export default function PortDetail() {
                   selectedRegion={null}
                   onPortClick={() => {}}
                   onVesselClick={(vessel) => navigate(`/vessels/${vessel.id}`)}
-                  zoom={8}
+                  initialZoom={8}
                   initialCenter={[parseFloat(String(port.lat)), parseFloat(String(port.lng))]}
                 />
               ) : (

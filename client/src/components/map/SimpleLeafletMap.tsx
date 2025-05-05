@@ -36,6 +36,7 @@ interface SimpleLeafletMapProps {
   selectedRegion: Region | null;
   onVesselClick: (vessel: Vessel) => void;
   onRefineryClick?: (refinery: Refinery) => void;
+  onPortClick?: (port: Port) => void;
   isLoading?: boolean;
   initialCenter?: [number, number]; // Optional [lat, lng] initial center
   initialZoom?: number;             // Optional initial zoom level
@@ -47,11 +48,12 @@ interface SimpleLeafletMapProps {
 const MAP_CONTAINER_ID = 'leaflet-map-container';
 
 export default function SimpleLeafletMap({
-  vessels,
-  refineries,
+  vessels = [],
+  refineries = [],
   selectedRegion,
   onVesselClick,
   onRefineryClick,
+  onPortClick,
   isLoading = false,
   initialCenter,
   initialZoom,
