@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import { Vessel, Port, Refinery, Company } from "@shared/schema";
 import { storage } from "../storage";
+import { calculateDistance } from "../utils/geoUtils";
 
 // Initialize OpenAI client
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });

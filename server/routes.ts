@@ -1221,6 +1221,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Vessel not found" });
       }
       
+      // Check if the vessel has all required voyage information
+      if (!vessel.sellerName || !vessel.buyerName) {
+        try {
+          // Use OpenAI to generate missing company information
+          const updatedVessel = await openaiService.updateVesselRouteAndCompanyInfo(vessel);
+          
+          // Save the generated data to the database
+          if (updatedVessel) {
+            await storage.updateVessel(vessel.id, {
+              sellerName: updatedVessel.sellerName,
+              buyerName: updatedVessel.buyerName,
+              departureLat: updatedVessel.departureLat,
+              departureLng: updatedVessel.departureLng,
+              destinationLat: updatedVessel.destinationLat,
+              destinationLng: updatedVessel.destinationLng
+            });
+            
+            // Update our local vessel object with new data
+            vessel.sellerName = updatedVessel.sellerName;
+            vessel.buyerName = updatedVessel.buyerName;
+            vessel.departureLat = updatedVessel.departureLat;
+            vessel.departureLng = updatedVessel.departureLng;
+            vessel.destinationLat = updatedVessel.destinationLat;
+            vessel.destinationLng = updatedVessel.destinationLng;
+            
+            console.log(`Generated missing data for vessel ${vessel.name} (ID: ${vessel.id}): 
+              Seller: ${vessel.sellerName}, Buyer: ${vessel.buyerName}`);
+          }
+        } catch (aiError) {
+          console.error("Error generating vessel data with OpenAI:", aiError);
+          // Continue with the existing data even if generation fails
+        }
+      }
+      
       // Check if the vessel has a destination
       if (!vessel.destinationPort) {
         return res.status(400).json({ 
@@ -1234,8 +1268,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Check if the MyShipTracking API is configured
       if (!marineTrafficService.isConfigured()) {
+        // If API not configured, generate voyage data with OpenAI
+        try {
+          const generatedProgress = await openaiService.generateVoyageProgress(vessel);
+          if (generatedProgress) {
+            return res.json({
+              message: "Generated voyage progress with AI as API is not configured",
+              voyageProgress: {
+                ...generatedProgress,
+                fromAPI: false,
+                fromAI: true,
+                estimated: true
+              }
+            });
+          }
+        } catch (aiError) {
+          console.error("Error generating voyage progress with OpenAI:", aiError);
+        }
+        
+        // Fallback to simple estimated data if generation fails
         return res.status(503).json({ 
-          message: "MyShipTracking API is not configured. Please set MARINE_TRAFFIC_API_KEY environment variable.",
+          message: "MyShipTracking API is not configured and AI generation failed",
           voyageProgress: {
             percentComplete: 0,
             estimated: true,
@@ -1265,11 +1318,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const progressData = await marineTrafficService.fetchVoyageProgress(identifier);
       
       if (!progressData) {
-        // If API request fails, return estimated data
+        // If API request fails, try to generate the data with OpenAI
+        try {
+          const generatedProgress = await openaiService.generateVoyageProgress(vessel);
+          if (generatedProgress) {
+            return res.json({
+              message: "Generated voyage progress with AI as API request failed",
+              voyageProgress: {
+                ...generatedProgress,
+                fromAPI: false,
+                fromAI: true,
+                estimated: true
+              }
+            });
+          }
+        } catch (aiError) {
+          console.error("Error generating voyage progress with OpenAI:", aiError);
+        }
+        
+        // Fallback to simple estimated data if generation fails
         return res.json({
-          message: "Could not fetch voyage progress from API. Using estimated data.",
+          message: "Could not fetch voyage progress from API or generate with AI. Using basic estimation.",
           voyageProgress: {
-            percentComplete: 0,
+            percentComplete: calculateBasicProgress(vessel),
             distanceTraveled: 0,
             distanceRemaining: 0,
             estimatedArrival: vessel.eta,
@@ -1292,6 +1363,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch vessel voyage progress" });
     }
   });
+  
+  // Helper function to calculate a very basic progress estimate
+  function calculateBasicProgress(vessel: Vessel): number {
+    if (!vessel.departureDate || !vessel.eta) return 0;
+    
+    const now = new Date();
+    const departure = new Date(vessel.departureDate);
+    const arrival = new Date(vessel.eta);
+    
+    // If either date is invalid or in the future, return 0
+    if (isNaN(departure.getTime()) || isNaN(arrival.getTime()) || departure > now) return 0;
+    if (arrival < now) return 100; // If already past ETA, return 100%
+    
+    // Calculate percentage based on time elapsed between departure and ETA
+    const totalJourneyTime = arrival.getTime() - departure.getTime();
+    const elapsedTime = now.getTime() - departure.getTime();
+    
+    if (totalJourneyTime <= 0) return 0;
+    
+    const percentComplete = Math.round((elapsedTime / totalJourneyTime) * 100);
+    return Math.min(Math.max(percentComplete, 0), 100); // Clamp between 0-100
+  }
 
   // SSE endpoint for real-time data
   apiRouter.get("/stream/data", (req, res) => {
