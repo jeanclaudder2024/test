@@ -601,7 +601,7 @@ export default function Vessels() {
             <PaginationContent>
               <PaginationItem>
                 <PaginationPrevious
-                  onClick={() => handleWsPageChange(page > 1 ? page - 1 : 1)}
+                  onClick={() => goToPage(page > 1 ? page - 1 : 1)}
                   className={page === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
                 />
               </PaginationItem>
@@ -609,7 +609,7 @@ export default function Vessels() {
               {/* First page */}
               {page > 2 && (
                 <PaginationItem>
-                  <PaginationLink onClick={() => handleWsPageChange(1)}>1</PaginationLink>
+                  <PaginationLink onClick={() => goToPage(1)}>1</PaginationLink>
                 </PaginationItem>
               )}
               
@@ -623,7 +623,7 @@ export default function Vessels() {
               {/* Previous page */}
               {page > 1 && (
                 <PaginationItem>
-                  <PaginationLink onClick={() => handleWsPageChange(page - 1)}>
+                  <PaginationLink onClick={() => goToPage(page - 1)}>
                     {page - 1}
                   </PaginationLink>
                 </PaginationItem>
@@ -637,7 +637,7 @@ export default function Vessels() {
               {/* Next page */}
               {page < totalPages && (
                 <PaginationItem>
-                  <PaginationLink onClick={() => handleWsPageChange(page + 1)}>
+                  <PaginationLink onClick={() => goToPage(page + 1)}>
                     {page + 1}
                   </PaginationLink>
                 </PaginationItem>
@@ -653,7 +653,7 @@ export default function Vessels() {
               {/* Last page */}
               {page < totalPages - 1 && (
                 <PaginationItem>
-                  <PaginationLink onClick={() => handleWsPageChange(totalPages)}>
+                  <PaginationLink onClick={() => goToPage(totalPages)}>
                     {totalPages}
                   </PaginationLink>
                 </PaginationItem>
@@ -661,7 +661,7 @@ export default function Vessels() {
               
               <PaginationItem>
                 <PaginationNext
-                  onClick={() => handleWsPageChange(page < totalPages ? page + 1 : totalPages)}
+                  onClick={() => goToPage(page < totalPages ? page + 1 : totalPages)}
                   className={page === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
                 />
               </PaginationItem>
