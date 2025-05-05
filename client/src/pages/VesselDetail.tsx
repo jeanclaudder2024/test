@@ -3,6 +3,7 @@ import { useVesselWebSocket } from '@/hooks/useVesselWebSocket';
 import { Vessel, ProgressEvent } from '@/types';
 import { useVesselProgressEvents, useAddProgressEvent } from '@/hooks/useVessels';
 import { useToast } from '@/hooks/use-toast';
+import { getPortCoordinates, calculateDistance, formatDistance } from '@/utils/portUtils';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L, { LatLngExpression } from 'leaflet';
 import {
@@ -49,57 +50,8 @@ const OIL_CATEGORIES = {
 const getOilCategory = (cargoType: string | null | undefined): string => {
   if (!cargoType) return "Other";
   
-// Helper function to get port coordinates from name
-const getPortCoordinates = async (portName: string): Promise<[number, number] | null> => {
-  try {
-    console.log(`Searching for port coordinates: ${portName}`);
-    
-    // Check if it's a special format for refineries (REF:id:name)
-    if (portName.startsWith('REF:')) {
-      const parts = portName.split(':');
-      if (parts.length > 2) {
-        const refineryId = parts[1];
-        try {
-          // Fetch refinery data to get coordinates
-          const response = await fetch(`/api/refineries/${refineryId}`);
-          if (response.ok) {
-            const refinery = await response.json();
-            if (refinery && refinery.lat && refinery.lng) {
-              console.log(`Found refinery coordinates for ${refinery.name}: [${refinery.lat}, ${refinery.lng}]`);
-              return [parseFloat(refinery.lat), parseFloat(refinery.lng)];
-            }
-          }
-        } catch (error) {
-          console.error('Error fetching refinery coordinates:', error);
-        }
-      }
-      return null;
-    }
-    
-    // Search for port by name
-    const response = await fetch(`/api/ports/search?name=${encodeURIComponent(portName)}`);
-    if (!response.ok) {
-      console.error(`Failed to search for port ${portName}: ${response.statusText}`);
-      return null;
-    }
-    
-    const ports = await response.json();
-    if (ports && ports.length > 0) {
-      // Use the first matching port
-      const port = ports[0];
-      if (port.lat && port.lng) {
-        console.log(`Found port coordinates for ${port.name}: [${port.lat}, ${port.lng}]`);
-        return [parseFloat(port.lat), parseFloat(port.lng)];
-      }
-    }
-    
-    console.log(`No coordinates found for port ${portName}`);
-    return null;
-  } catch (error) {
-    console.error('Error getting port coordinates:', error);
-    return null;
-  }
-};
+  // Update: getPortCoordinates has been moved to @/utils/portUtils.ts
+  
   const upperCargoType = cargoType.toUpperCase();
   
   for (const [category, keywords] of Object.entries(OIL_CATEGORIES)) {
@@ -561,26 +513,7 @@ const LocationUpdateForm = ({
   );
 };
 
-// Helper function to get port coordinates by name
-const getPortCoordinates = async (portName: string | null | undefined): Promise<[number, number] | null> => {
-  if (!portName) return null;
-  
-  try {
-    const response = await fetch(`/api/ports/search?name=${encodeURIComponent(portName)}`);
-    if (!response.ok) return null;
-    
-    const ports = await response.json();
-    if (ports && ports.length > 0) {
-      // Use the first matching port
-      return [parseFloat(ports[0].lat), parseFloat(ports[0].lng)];
-    }
-    
-    return null;
-  } catch (error) {
-    console.error("Error fetching port coordinates:", error);
-    return null;
-  }
-};
+// Note: Using the getPortCoordinates utility function imported from @/utils/portUtils
 
 // Using the existing generateCurvedPath, MapControls, and VesselRoutes functions defined above
 
@@ -595,6 +528,10 @@ export default function VesselDetail() {
   const [departureCoords, setDepartureCoords] = useState<[number, number] | null>(null);
   const [destinationCoords, setDestinationCoords] = useState<[number, number] | null>(null);
   const [isLoadingPortData, setIsLoadingPortData] = useState(false);
+  const [journeyDistance, setJourneyDistance] = useState<number | null>(null);
+  const [distanceTraveled, setDistanceTraveled] = useState<number | null>(null);
+  const [remainingDistance, setRemainingDistance] = useState<number | null>(null);
+  const [estimatedEta, setEstimatedEta] = useState<number | null>(null);
   
   // Find the vessel from our stream data
   console.log('VesselDetail: Looking for vessel with ID:', vesselId);
@@ -651,6 +588,58 @@ export default function VesselDetail() {
             ]);
           }
         }
+        
+        // Calculate journey distance if we have current position and both points
+        if (vessel.currentLat && vessel.currentLng) {
+          const currentPos: [number, number] = [
+            parseFloat(vessel.currentLat as string),
+            parseFloat(vessel.currentLng as string)
+          ];
+          
+          // If departure coordinates are available, calculate distance traveled
+          if (departureCoords) {
+            const traveled = calculateDistance(
+              departureCoords[0], 
+              departureCoords[1], 
+              currentPos[0], 
+              currentPos[1]
+            );
+            setDistanceTraveled(traveled);
+            console.log(`Distance traveled: ${traveled.toFixed(1)} nautical miles`);
+          }
+          
+          // If destination coordinates are available, calculate remaining distance
+          if (destinationCoords) {
+            const remaining = calculateDistance(
+              currentPos[0], 
+              currentPos[1], 
+              destinationCoords[0], 
+              destinationCoords[1]
+            );
+            setRemainingDistance(remaining);
+            console.log(`Remaining distance: ${remaining.toFixed(1)} nautical miles`);
+            
+            // Calculate ETA based on vessel speed and remaining distance
+            const speed = vessel.speed ? parseFloat(vessel.speed as string) : 12; // Default to 12 knots if no speed available
+            if (speed > 0) {
+              const eta = calculateETA(remaining, speed);
+              setEstimatedEta(eta);
+              console.log(`Estimated time to arrival: ${eta.toFixed(1)} hours`);
+            }
+          }
+          
+          // If both departure and destination coordinates are available, calculate total journey distance
+          if (departureCoords && destinationCoords) {
+            const totalDistance = calculateDistance(
+              departureCoords[0], 
+              departureCoords[1], 
+              destinationCoords[0], 
+              destinationCoords[1]
+            );
+            setJourneyDistance(totalDistance);
+            console.log(`Total journey distance: ${totalDistance.toFixed(1)} nautical miles`);
+          }
+        }
       } catch (error) {
         console.error('Error fetching port coordinates:', error);
       } finally {
@@ -659,7 +648,7 @@ export default function VesselDetail() {
     };
     
     fetchPortCoordinates();
-  }, [vessel]);
+  }, [vessel, departureCoords, destinationCoords]);
   
   // Redirect to vessels page if vessel not found and not loading
   if (!loading && !vessel) {
