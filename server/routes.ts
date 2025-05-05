@@ -48,6 +48,7 @@ import { vesselDistributionRouter } from "./routes/vesselDistributionRoutes";
 import { refineryPortRouter } from "./routes/refineryPortRoutes";
 import { aiRouter } from "./routes/aiRoutes";
 import { companyRouter } from "./routes/companyRoutes";
+import { registerPortRoutes } from "./routes/portRoutes";
 import { seedBrokers } from "./services/seedService";
 
 export async function registerRoutes(app: Express): Promise<Server> {
