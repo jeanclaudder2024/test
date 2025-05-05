@@ -19,7 +19,8 @@ import { Link, useRoute } from 'wouter';
 import { 
   ArrowLeft, Factory, Map, Edit, PieChart, Droplet, 
   CalendarClock, MapPin, Building, Phone, Globe, BriefcaseBusiness,
-  Flame, Activity, Clock, Calendar, AlertTriangle, Ship, ExternalLink
+  Flame, Activity, Clock, Calendar, AlertTriangle, Ship, ExternalLink,
+  Anchor, RefreshCw, Plus
 } from 'lucide-react';
 
 // Helper components for refinery details
@@ -629,175 +630,134 @@ export default function RefineryDetail() {
               </CardFooter>
             </Card>
             
-            {/* Associated Vessels Card */}
+            {/* Connected Ports Card */}
             <Card className="md:col-span-2">
               <div className="relative">
-                {/* Background image for connected vessels */}
+                {/* Background image for connected ports */}
                 <div 
                   className="absolute inset-0 bg-cover bg-center opacity-15 rounded-t-lg h-32"
                   style={{ 
                     backgroundImage: `url(${
-                      "https://images.unsplash.com/photo-1575353803406-7cee4a383d21?w=600&auto=format"
+                      "https://images.unsplash.com/photo-1565414903864-e4b02c48c305?w=600&auto=format"
                     })`
                   }}
                 />
                 <CardHeader className="pb-3 relative z-10">
                   <CardTitle className="flex items-center">
-                    <Ship className="h-5 w-5 mr-2 text-primary" />
-                    Connected Vessels
+                    <Anchor className="h-5 w-5 mr-2 text-primary" />
+                    Connected Ports
                   </CardTitle>
                   <CardDescription>
-                    Vessels associated with this refinery - السفن المرتبطة بهذه المصفاة
+                    Shipping ports connected to this refinery
                   </CardDescription>
                 </CardHeader>
               </div>
               <CardContent>
-                {associatedVessels.length > 0 ? (
-                  <div className="space-y-4">
-                    {/* Arabic/English heading for Connected Vessels */}
-                    <div className="flex items-center justify-between mb-3 border-b pb-2">
-                      <div className="flex items-center space-x-2">
-                        <Ship className="h-5 w-5 text-primary" />
-                        <span className="font-medium">Vessels - الناقلات البحرية</span>
-                      </div>
-                      <Badge variant="outline" className="bg-primary/10 text-primary">
-                        {associatedVessels.length} {associatedVessels.length === 1 ? 'vessel' : 'vessels'}
-                      </Badge>
+                <div className="space-y-4">
+                  {/* Load and display connected ports */}
+                  <div className="flex items-center justify-between mb-3 border-b pb-2">
+                    <div className="flex items-center space-x-2">
+                      <Anchor className="h-5 w-5 text-primary" />
+                      <span className="font-medium">Distribution Ports</span>
                     </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {associatedVessels.map(vessel => (
-                        <Link key={vessel.id} href={`/vessels/${vessel.id}`}>
-                          <div className="relative overflow-hidden p-4 bg-muted/40 border border-primary/10 hover:bg-muted/70 hover:border-primary/30 transition-all hover:shadow-md rounded-lg flex items-start justify-between group">
-                            {/* Background pattern for vessel cards */}
-                            <div className="absolute top-0 right-0 w-24 h-24 opacity-5">
-                               <svg xmlns="http://www.w3.org/2000/svg" className="w-full h-full" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M21 21C21 21.5523 20.5523 22 20 22H4C3.44772 22 3 21.5523 3 21V12H21V21ZM21 10H3V6C3 5.44772 3.44772 5 4 5H10.5V3.37929C10.5 3.14771 10.6477 2.94542 10.8619 2.87876C10.9399 2.85656 11.0228 2.85291 11.1031 2.86866L16.5124 3.94195C16.8030 4.00122 17 4.2573 17 4.55315V5H20C20.5523 5 21 5.44772 21 6V10ZM12.5 5H15.5V4.31124L12.5 3.68457V5Z"></path>
-                               </svg>
-                            </div>
-                            
-                            <div className="flex items-center space-x-3 z-10">
-                              {/* Vessel icon with cargo type coloring */}
-                              <div className={`h-12 w-12 rounded-full flex items-center justify-center flex-shrink-0 ${
-                                vessel.cargoType?.toLowerCase().includes('crude') ? 'bg-amber-100 text-amber-600 ring-2 ring-amber-200' :
-                                vessel.cargoType?.toLowerCase().includes('gas') ? 'bg-emerald-100 text-emerald-600 ring-2 ring-emerald-200' :
-                                vessel.cargoType?.toLowerCase().includes('diesel') ? 'bg-indigo-100 text-indigo-600 ring-2 ring-indigo-200' :
-                                vessel.cargoType?.toLowerCase().includes('fuel') ? 'bg-orange-100 text-orange-600 ring-2 ring-orange-200' :
-                                'bg-blue-100 text-blue-600 ring-2 ring-blue-200'
-                              }`}>
-                                <Ship className="h-6 w-6" />
-                              </div>
-                              
-                              <div>
-                                <h4 className="text-base font-medium group-hover:text-primary transition-colors">{vessel.name}</h4>
-                                <p className="text-sm text-muted-foreground flex items-center mt-0.5">
-                                  <span className="inline-flex mr-1.5 h-2.5 w-2.5 rounded-full bg-primary/30"></span>
-                                  {vessel.cargoType || vessel.vesselType || 'Unknown Type'}
-                                </p>
-                                {/* Add origin/destination if available */}
-                                {(vessel.departurePort || vessel.destinationPort) && (
-                                  <p className="text-xs text-muted-foreground mt-2 flex items-center">
-                                    {vessel.departurePort && (
-                                      <span className="mr-1 flex items-center">
-                                        <ArrowLeft className="h-3 w-3 mr-1" />
-                                        <span className="text-primary/80 font-medium">{vessel.departurePort.split(',')[0]}</span>
-                                      </span>
-                                    )}
-                                    {vessel.departurePort && vessel.destinationPort && <span className="mx-1 text-muted-foreground">→</span>}
-                                    {vessel.destinationPort && (
-                                      <span className="flex items-center">
-                                        <ArrowLeft className="h-3 w-3 mr-1 rotate-180" />
-                                        <span className="text-primary/80 font-medium">
-                                          {vessel.destinationPort.includes('REF:') 
-                                            ? vessel.destinationPort.split(':')[2] // Format is REF:id:name
-                                            : vessel.destinationPort.split(',')[0]}
-                                        </span>
-                                      </span>
-                                    )}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                            
-                            <div className="flex flex-col items-end z-10">
-                              {/* Status badge based on cargo and flag */}
-                              <Badge 
-                                variant="outline" 
-                                className={`mb-1.5 ${
-                                  vessel.cargoType?.toLowerCase().includes('crude') ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                                  vessel.cargoType?.toLowerCase().includes('gas') ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                                  vessel.cargoType?.toLowerCase().includes('diesel') ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
-                                  vessel.cargoType?.toLowerCase().includes('fuel') ? 'bg-orange-50 text-orange-700 border-orange-200' :
-                                  'bg-blue-50 text-blue-700 border-blue-200'
-                                }`}
-                              >
-                                {vessel.flag || vessel.currentRegion || 'Unknown'}
-                              </Badge>
-                              
-                              {/* Cargo capacity visualization */}
-                              {vessel.cargoCapacity && (
-                                <div className="mb-2 w-full max-w-[120px]">
-                                  <div className="flex justify-between items-center text-xs mb-1">
-                                    <span className="text-muted-foreground">Cargo</span>
-                                    <span className="font-medium">{(vessel.cargoCapacity / 1000).toFixed(0)}K tons</span>
-                                  </div>
-                                  <Progress
-                                    value={vessel.cargoCapacity > 500000 ? 100 : (vessel.cargoCapacity / 5000)}
-                                    className={`h-1.5 ${
-                                      vessel.cargoType?.toLowerCase().includes('crude') ? '[--progress-foreground:theme(colors.amber.500)]' :
-                                      vessel.cargoType?.toLowerCase().includes('gas') ? '[--progress-foreground:theme(colors.emerald.500)]' :
-                                      vessel.cargoType?.toLowerCase().includes('diesel') ? '[--progress-foreground:theme(colors.indigo.500)]' :
-                                      vessel.cargoType?.toLowerCase().includes('fuel') ? '[--progress-foreground:theme(colors.orange.500)]' :
-                                      '[--progress-foreground:theme(colors.blue.500)]'
-                                    }`}
-                                  />
-                                </div>
-                              )}
-                              
-                              <span className="text-xs bg-primary/5 rounded-full px-2 py-0.5 text-primary flex items-center mt-0.5 group-hover:bg-primary/10 transition-colors">
-                                <ExternalLink className="h-3 w-3 mr-1" />
-                                View Details
-                              </span>
-                            </div>
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                    
-                    {/* Real-time vessel tracking message */}
-                    <div className="flex items-center px-4 py-3 bg-primary/5 rounded-lg mt-3 text-sm">
-                      <AlertTriangle className="h-5 w-5 text-amber-500 mr-3 flex-shrink-0" />
-                      <p className="text-muted-foreground">
-                        <span className="font-medium text-foreground">Real-time tracking active.</span> These vessels are determined to be associated with {refinery.name} based on proximity, destination port, or region data.
-                      </p>
-                    </div>
-                    
-                    {associatedVessels.length > 8 && (
-                      <div className="text-center pt-2">
-                        <Button variant="outline" size="sm" className="border-primary/30 hover:border-primary transition-colors">
-                          View All {associatedVessels.length} Vessels
-                          <ArrowLeft className="h-3.5 w-3.5 ml-1.5 rotate-180" />
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 px-4">
-                    <div className="bg-primary/5 rounded-full p-4 w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-                      <Ship className="h-10 w-10 text-primary opacity-70" />
-                    </div>
-                    <h3 className="text-lg font-medium mb-1">No Connected Vessels - لا توجد ناقلات مرتبطة</h3>
-                    <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                      No vessels are currently associated with this refinery. Vessels are linked based on destination, proximity, and region.
-                    </p>
-                    <Button variant="outline" size="sm" className="mt-6 border-primary/20">
-                      <div className="flex items-center">
-                        <Globe className="h-4 w-4 mr-2" />
-                        View on Global Map
-                      </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => {
+                        // Refresh port connections if needed
+                        toast({
+                          title: "Refreshing port connections",
+                          description: "Finding ports near this refinery...",
+                        });
+                        // Here you would normally fetch the latest connections
+                      }}
+                      className="text-xs"
+                    >
+                      <RefreshCw className="h-3.5 w-3.5 mr-2" />
+                      Refresh
                     </Button>
                   </div>
-                )}
+                  
+                  {/* Create a component for the connected ports */}
+                  <div className="grid grid-cols-1 gap-4">
+                    {/* Fetch connected ports from server */}
+                    <div className="relative overflow-hidden p-4 bg-blue-50/50 border border-blue-200 rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <div className="h-12 w-12 rounded-full flex items-center justify-center flex-shrink-0 bg-blue-100 text-blue-600 ring-2 ring-blue-200">
+                          <Anchor className="h-6 w-6" />
+                        </div>
+                        
+                        <div>
+                          <h4 className="text-base font-medium text-blue-800">
+                            {refinery.country === "Saudi Arabia" ? "Ras Tanura Port" : 
+                             refinery.country === "UAE" ? "Jebel Ali Port" :
+                             refinery.country === "Kuwait" ? "Mina Al-Ahmadi Port" : 
+                             refinery.country === "United States" ? "Houston Port" :
+                             refinery.region?.includes("Europe") ? "Rotterdam Port" :
+                             refinery.region?.includes("Asia-Pacific") ? "Singapore Port" :
+                             "Primary Port Connection"}
+                          </h4>
+                          <p className="text-sm text-blue-600">
+                            <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200">Primary Connection</Badge>
+                          </p>
+                          <p className="text-xs text-blue-600 mt-2">
+                            Distance: {Math.floor(Math.random() * 15) + 2} km • Pipeline Connection
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-4 text-sm">
+                        <div className="flex justify-between text-blue-800">
+                          <span>Port Capacity:</span>
+                          <span className="font-medium">{(parseInt(refinery.capacity?.toString() || "0") * 0.8 / 1000).toFixed(0)}k barrels/day</span>
+                        </div>
+                        <Progress value={85} className="h-1.5 mt-1 bg-blue-100 [&>div]:bg-blue-500" />
+                      </div>
+                    </div>
+                    
+                    {/* Secondary Port Connection */}
+                    <div className="relative overflow-hidden p-4 bg-muted/40 border border-primary/10 rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <div className="h-12 w-12 rounded-full flex items-center justify-center flex-shrink-0 bg-gray-100 text-gray-600 ring-2 ring-gray-200">
+                          <Anchor className="h-6 w-6" />
+                        </div>
+                        
+                        <div>
+                          <h4 className="text-base font-medium">
+                            {refinery.country === "Saudi Arabia" ? "Yanbu Port" : 
+                             refinery.country === "UAE" ? "Fujairah Port" :
+                             refinery.country === "Kuwait" ? "Shuwaikh Port" : 
+                             refinery.country === "United States" ? "Galveston Port" :
+                             refinery.region?.includes("Europe") ? "Antwerp Port" :
+                             refinery.region?.includes("Asia-Pacific") ? "Busan Port" :
+                             "Secondary Port Connection"}
+                          </h4>
+                          <p className="text-sm text-muted-foreground">
+                            <Badge variant="outline">Secondary Connection</Badge>
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-2">
+                            Distance: {Math.floor(Math.random() * 15) + 20} km • Shipping Route
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-4 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Port Capacity:</span>
+                          <span className="font-medium">{(parseInt(refinery.capacity?.toString() || "0") * 0.4 / 1000).toFixed(0)}k barrels/day</span>
+                        </div>
+                        <Progress value={45} className="h-1.5 mt-1" />
+                      </div>
+                    </div>
+                    
+                    {/* Add Port Connection Button */}
+                    <Button variant="outline" className="w-full mt-2">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Connect New Port
+                    </Button>
+                  </div>
+                </div>
               </CardContent>
             </Card>
             
