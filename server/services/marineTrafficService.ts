@@ -559,6 +559,72 @@ export const marineTrafficService = {
   },
   
   /**
+   * Fetch real-time location data for a specific vessel by IMO or MMSI
+   * @param identifier IMO or MMSI number of the vessel
+   * @returns Updated vessel location data or null if vessel not found
+   */
+  fetchVesselLocation: async (identifier: string): Promise<{ 
+    currentLat: string; 
+    currentLng: string; 
+    speed?: number; 
+    heading?: number; 
+    status?: string;
+    lastUpdated: Date;
+  } | null> => {
+    if (!API_KEY) {
+      console.warn('MyShipTracking API key not configured, cannot fetch vessel location');
+      return null;
+    }
+    
+    try {
+      // Headers for API requests
+      const headers = {
+        'Authorization': `Bearer ${API_KEY}`,
+        'Content-Type': 'application/json'
+      };
+      
+      // Determine if the identifier is an IMO or MMSI number
+      const isIMO = identifier.toLowerCase().startsWith('imo');
+      const queryParam = isIMO ? 'imo' : 'mmsi';
+      const queryValue = isIMO ? identifier.substring(3) : identifier;
+      
+      // Fetch vessel details from the API
+      const response = await axios.get(`${API_BASE_URL}${ENDPOINTS.VESSEL_DETAILS}`, {
+        headers,
+        params: {
+          [queryParam]: queryValue
+        }
+      });
+      
+      if (!response.data || response.data.error) {
+        console.error('Error fetching vessel details from MyShipTracking:', 
+          response.data?.error || 'Unknown error');
+        return null;
+      }
+      
+      // Extract the location data from the response
+      const vesselData = response.data;
+      
+      if (!vesselData || !vesselData.latitude || !vesselData.longitude) {
+        console.warn(`Vessel ${identifier} found, but no location data available`);
+        return null;
+      }
+      
+      return {
+        currentLat: vesselData.latitude.toString(),
+        currentLng: vesselData.longitude.toString(),
+        speed: vesselData.speed || 0,
+        heading: vesselData.heading || 0,
+        status: vesselData.status_name || 'At sea',
+        lastUpdated: new Date()
+      };
+    } catch (error) {
+      console.error(`Error fetching location for vessel ${identifier}:`, error);
+      return null;
+    }
+  },
+  
+  /**
    * Get vessels expected to arrive at specific ports
    * @param portIds Array of MyShipTracking port IDs
    * @returns Array of expected vessels

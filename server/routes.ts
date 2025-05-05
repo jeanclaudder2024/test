@@ -1117,6 +1117,95 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch vessel" });
     }
   });
+  
+  // Get the current location of a vessel from the API
+  apiRouter.get("/vessels/:id/location", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid vessel ID" });
+      }
+      
+      // Get the vessel first to get the IMO or MMSI
+      const vessel = await storage.getVesselById(id);
+      if (!vessel) {
+        return res.status(404).json({ message: "Vessel not found" });
+      }
+      
+      // Check if the MyShipTracking API is configured
+      if (!marineTrafficService.isConfigured()) {
+        return res.status(503).json({ 
+          message: "MyShipTracking API is not configured. Please set MARINE_TRAFFIC_API_KEY environment variable.",
+          currentLocation: {
+            currentLat: vessel.currentLat,
+            currentLng: vessel.currentLng,
+            lastUpdated: new Date(),
+            fromDatabase: true
+          }
+        });
+      }
+      
+      // Try to get the current location from the API
+      let identifier = vessel.imo;
+      if (!identifier || identifier.startsWith('MST-')) {
+        // If no IMO or it's a generated one, try MMSI
+        identifier = vessel.mmsi;
+      }
+      
+      if (!identifier) {
+        return res.status(400).json({ 
+          message: "Vessel has no valid IMO or MMSI identifier",
+          currentLocation: {
+            currentLat: vessel.currentLat,
+            currentLng: vessel.currentLng,
+            lastUpdated: new Date(),
+            fromDatabase: true
+          }
+        });
+      }
+      
+      const locationData = await marineTrafficService.fetchVesselLocation(identifier);
+      
+      if (!locationData) {
+        // If API request fails, return the last known location from the database
+        return res.json({
+          message: "Could not fetch current location from API. Using last known location.",
+          currentLocation: {
+            currentLat: vessel.currentLat,
+            currentLng: vessel.currentLng,
+            lastUpdated: new Date(),
+            fromDatabase: true
+          }
+        });
+      }
+      
+      // Return the API location data
+      res.json({
+        message: "Successfully fetched current location from API",
+        currentLocation: {
+          ...locationData,
+          fromAPI: true
+        }
+      });
+      
+      // Optionally, update the database with the new location in the background
+      try {
+        await storage.updateVessel(id, {
+          currentLat: locationData.currentLat,
+          currentLng: locationData.currentLng,
+          lastUpdated: new Date()
+        });
+        console.log(`Updated vessel ${vessel.name} (ID: ${id}) location in database`);
+      } catch (updateError) {
+        console.error(`Error updating vessel location in database:`, updateError);
+        // Don't fail the request if the database update fails
+      }
+      
+    } catch (error) {
+      console.error("Error fetching vessel location:", error);
+      res.status(500).json({ message: "Failed to fetch vessel location" });
+    }
+  });
 
   // SSE endpoint for real-time data
   apiRouter.get("/stream/data", (req, res) => {

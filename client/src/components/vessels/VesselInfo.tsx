@@ -1,12 +1,14 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Vessel } from "@/types";
-import { Package, MapPin, Box, RefreshCcw } from "lucide-react";
+import { Package, MapPin, Box, RefreshCcw, Navigation, Compass, Clock, Gauge } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { FlagIcon } from "react-flag-kit";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import axios from "axios";
+import { Badge } from "@/components/ui/badge";
 
 interface VesselInfoProps {
   vessel: Vessel;
@@ -108,7 +110,18 @@ const getFlagCode = (countryName: string): string | null => {
 
 export default function VesselInfo({ vessel }: VesselInfoProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [sellerName, setSellerName] = useState<string | null>(vessel.sellerName);
+  const [currentLocation, setCurrentLocation] = useState<{
+    currentLat: string;
+    currentLng: string;
+    speed?: number;
+    heading?: number;
+    status?: string;
+    lastUpdated: Date;
+    fromAPI?: boolean;
+    fromDatabase?: boolean;
+  } | null>(null);
   const { toast } = useToast();
   
   // Function to generate seller name using OpenAI
@@ -142,6 +155,43 @@ export default function VesselInfo({ vessel }: VesselInfoProps) {
       setIsLoading(false);
     }
   };
+  
+  // Function to fetch current location from API
+  const fetchCurrentLocation = async () => {
+    if (isLoadingLocation) return;
+    
+    setIsLoadingLocation(true);
+    try {
+      const response = await axios.get(`/api/vessels/${vessel.id}/location`);
+      
+      if (response.data && response.data.currentLocation) {
+        setCurrentLocation(response.data.currentLocation);
+        toast({
+          title: response.data.fromAPI ? "Location Updated from API" : "Location Retrieved",
+          description: `Current position: ${response.data.currentLocation.currentLat}, ${response.data.currentLocation.currentLng}`,
+        });
+      } else {
+        throw new Error(response.data?.message || 'Failed to fetch current location');
+      }
+    } catch (error) {
+      console.error('Error fetching current location:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error instanceof Error ? error.message : 'Failed to fetch current location',
+      });
+    } finally {
+      setIsLoadingLocation(false);
+    }
+  };
+  
+  // Fetch current location on component mount
+  useEffect(() => {
+    // Only fetch if we have vessel ID
+    if (vessel.id) {
+      fetchCurrentLocation();
+    }
+  }, [vessel.id]);
   
   return (
     <Card className="overflow-hidden">
