@@ -49,7 +49,7 @@ interface LayoutProps {
 }
 
 export function Layout({ children }: LayoutProps) {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const { theme, setTheme } = useTheme();
   const [isMobileNavOpen, setIsMobileNavOpen] = React.useState(false);
 
@@ -162,9 +162,11 @@ export function Layout({ children }: LayoutProps) {
                   <RefreshCw className="mr-2 h-4 w-4" />
                   Refresh Data
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/account/subscription')}>
-                  <CreditCard className="mr-2 h-4 w-4" />
-                  Subscription
+                <DropdownMenuItem asChild>
+                  <Link href="/account/subscription">
+                    <CreditCard className="mr-2 h-4 w-4" />
+                    Subscription
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleHelpSupport}>
                   <LifeBuoy className="mr-2 h-4 w-4" />
@@ -265,9 +267,11 @@ export function Layout({ children }: LayoutProps) {
                       <RefreshCw className="mr-2 h-4 w-4" />
                       Refresh Data
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate('/account/subscription')}>
-                      <CreditCard className="mr-2 h-4 w-4" />
-                      Subscription
+                    <DropdownMenuItem asChild>
+                      <Link href="/account/subscription">
+                        <CreditCard className="mr-2 h-4 w-4" />
+                        Subscription
+                      </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={handleHelpSupport}>
                       <LifeBuoy className="mr-2 h-4 w-4" />
@@ -343,9 +347,11 @@ export function Layout({ children }: LayoutProps) {
                       <Settings className="mr-2 h-4 w-4" />
                       Settings
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate('/account/subscription')}>
-                      <CreditCard className="mr-2 h-4 w-4" />
-                      Subscription
+                    <DropdownMenuItem asChild>
+                      <Link href="/account/subscription">
+                        <CreditCard className="mr-2 h-4 w-4" />
+                        Subscription
+                      </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={handleLogout}>
                       <LogOut className="mr-2 h-4 w-4" />
