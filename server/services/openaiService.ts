@@ -18,6 +18,17 @@ try {
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 
 /**
+ * Helper function to safely access the OpenAI client
+ * Will throw an error if OpenAI client is not available
+ */
+function getOpenAIClient(): OpenAI {
+  if (!openai) {
+    throw new Error("OpenAI client not available. Check if OPENAI_API_KEY is set properly.");
+  }
+  return openai;
+}
+
+/**
  * Service for generating maritime data using OpenAI APIs
  */
 export class OpenAIService {
@@ -48,20 +59,35 @@ export class OpenAIService {
       Format as a cohesive narrative without bullet points or headers.
       `;
       
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.7,
-        max_tokens: 500,
-      });
-      
-      const description = response.choices[0].message.content?.trim() || 
-        "Unable to generate description at this time.";
-      
-      // Update the port description in database
-      await storage.updatePort(port.id, { description });
-      
-      return description;
+      try {
+        // Get OpenAI client with null check
+        const client = getOpenAIClient();
+        
+        const response = await client.chat.completions.create({
+          model: "gpt-4o",
+          messages: [{ role: "user", content: prompt }],
+          temperature: 0.7,
+          max_tokens: 500,
+        });
+        
+        const description = response.choices[0].message.content?.trim() || 
+          "Unable to generate description at this time.";
+        
+        // Update the port description in database
+        await storage.updatePort(port.id, { description });
+        
+        return description;
+      } catch (aiError) {
+        console.warn("OpenAI generation failed:", aiError);
+        
+        // Fallback to a basic description
+        const fallbackDescription = `${port.name} is a ${port.type || 'commercial'} port located in ${port.country}, ${port.region}. The port handles various types of cargo and serves as an important logistics hub in the region.`;
+        
+        // Update the port description in database with fallback
+        await storage.updatePort(port.id, { description: fallbackDescription });
+        
+        return fallbackDescription;
+      }
     } catch (error) {
       console.error("Error generating port description:", error);
       throw new Error("Failed to generate port description");
@@ -662,67 +688,58 @@ export class OpenAIService {
     port: Port,
     nearbyVessels: {vessels: Vessel, distance: number}[]
   ): Promise<{vessels: Vessel, distance: number, relevanceScore: number}[]> {
-    // Check if OpenAI is available
-    if (!openai) {
-      console.warn("OpenAI client not available for vessel analysis");
-      
-      // Fallback to distance-based scoring
-      return nearbyVessels.map(v => ({
-        ...v,
-        relevanceScore: Math.max(0, Math.min(1, 1 - (v.distance / 100)))
-      }));
-    }
-    
-    // Prepare a more compact vessel object for the prompt
-    const vesselData = nearbyVessels.map((v, index) => ({
-      id: index, // Use index as ID in the prompt to keep references simple
-      realId: v.vessels.id, // Keep the real ID for mapping back
-      name: v.vessels.name,
-      type: v.vessels.vesselType,
-      cargo: v.vessels.cargoType || 'Unknown',
-      flag: v.vessels.flag,
-      distance: v.distance,
-      deadweight: v.vessels.deadweight || 'Unknown'
-    }));
-    
-    // Create the prompt
-    const prompt = `
-    You are a maritime logistics expert. Analyze the compatibility between this port and nearby vessels.
-    
-    PORT INFORMATION:
-    Name: ${port.name}
-    Type: ${port.type || 'Commercial'}
-    Country: ${port.country}
-    Region: ${port.region}
-    
-    NEARBY VESSELS (${vesselData.length}):
-    ${JSON.stringify(vesselData, null, 2)}
-    
-    TASK:
-    For each vessel, assign a relevance score (0.0 to 1.0) based on how likely it would visit this type of port.
-    Consider these factors:
-    - Oil tankers are highly relevant to oil terminals
-    - LNG carriers are highly relevant to LNG terminals
-    - Container ships are relevant to container terminals
-    - Vessel cargo type should match port type
-    - Consider regional trading patterns
-    - Distance is a factor but not decisive (vessels travel long distances)
-    
-    Respond with a JSON array containing objects with: id (matching input), relevanceScore.
-    Example: [{"id": 0, "relevanceScore": 0.95}, {"id": 1, "relevanceScore": 0.72}]
-    `;
-    
-    // Call OpenAI
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.2, // Lower temperature for consistent results
-      max_tokens: 600,
-      response_format: { type: "json_object" }
-    });
-    
-    // Parse the response
     try {
+      // Prepare a more compact vessel object for the prompt
+      const vesselData = nearbyVessels.map((v, index) => ({
+        id: index, // Use index as ID in the prompt to keep references simple
+        realId: v.vessels.id, // Keep the real ID for mapping back
+        name: v.vessels.name,
+        type: v.vessels.vesselType,
+        cargo: v.vessels.cargoType || 'Unknown',
+        flag: v.vessels.flag,
+        distance: v.distance,
+        deadweight: v.vessels.deadweight || 'Unknown'
+      }));
+      
+      // Create the prompt
+      const prompt = `
+      You are a maritime logistics expert. Analyze the compatibility between this port and nearby vessels.
+      
+      PORT INFORMATION:
+      Name: ${port.name}
+      Type: ${port.type || 'Commercial'}
+      Country: ${port.country}
+      Region: ${port.region}
+      
+      NEARBY VESSELS (${vesselData.length}):
+      ${JSON.stringify(vesselData, null, 2)}
+      
+      TASK:
+      For each vessel, assign a relevance score (0.0 to 1.0) based on how likely it would visit this type of port.
+      Consider these factors:
+      - Oil tankers are highly relevant to oil terminals
+      - LNG carriers are highly relevant to LNG terminals
+      - Container ships are relevant to container terminals
+      - Vessel cargo type should match port type
+      - Consider regional trading patterns
+      - Distance is a factor but not decisive (vessels travel long distances)
+      
+      Respond with a JSON array containing objects with: id (matching input), relevanceScore.
+      Example: [{"id": 0, "relevanceScore": 0.95}, {"id": 1, "relevanceScore": 0.72}]
+      `;
+      
+      // Get OpenAI client with null check
+      const client = getOpenAIClient();
+      
+      const response = await client.chat.completions.create({
+        model: "gpt-4o",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.2, // Lower temperature for consistent results
+        max_tokens: 600,
+        response_format: { type: "json_object" }
+      });
+      
+      // Parse the response
       const content = response.choices[0].message.content?.trim() || "{}";
       const results = JSON.parse(content);
       
@@ -747,7 +764,7 @@ export class OpenAIService {
         };
       });
     } catch (error) {
-      console.error("Error parsing OpenAI response for vessel scoring:", error);
+      console.error("Error in vessel scoring:", error);
       
       // Fallback to distance-based scoring
       return nearbyVessels.map(v => ({
