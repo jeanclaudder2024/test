@@ -6,13 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Plus, Search, UserCog, Filter, MoreHorizontal, Edit, Trash, Mail, Eye, RotateCw, UserPlus, Lock, Ban, Download } from "lucide-react";
+import { Plus, Search, Filter, MoreHorizontal, Edit, Mail, Eye, RotateCw, UserPlus, Lock, Ban, Download } from "lucide-react";
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -284,7 +283,7 @@ export default function UsersManagement() {
                         {getSubscriptionBadge(user.subscriptionTier)}
                       </TableCell>
                       <TableCell>
-                        {user.lastLogin || "Never"}
+                        {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : "Never"}
                       </TableCell>
                       <TableCell>
                         {new Date(user.createdAt).toLocaleDateString()}
@@ -346,13 +345,13 @@ export default function UsersManagement() {
                 
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
                   <PaginationItem key={page}>
-                    <PaginationLink 
+                    <PaginationLink
                       href="#" 
                       onClick={(e) => {
                         e.preventDefault();
                         handlePageChange(page);
                       }}
-                      isActive={currentPage === page}
+                      aria-current={currentPage === page ? "page" : undefined}
                     >
                       {page}
                     </PaginationLink>
