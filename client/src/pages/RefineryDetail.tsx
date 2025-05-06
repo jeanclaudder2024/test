@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useDataStream } from '@/hooks/useDataStream';
 import { Refinery, Vessel } from '@/types';
 import { useToast } from '@/hooks/use-toast';
-import RefineryMap from '@/components/map/RefineryMap';
 import {
   Card,
   CardContent,
@@ -314,36 +313,18 @@ export default function RefineryDetail() {
               </CardContent>
             </Card>
             
-            {/* Second and third columns - Map and Capacity */}
+            {/* Second and third columns - Facility Details */}
             <Card className="md:col-span-2">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center">
-                  <MapPin className="h-5 w-5 mr-2 text-primary" />
-                  Location
+                  <Building className="h-5 w-5 mr-2 text-primary" />
+                  Facility Details
                 </CardTitle>
                 <CardDescription>
-                  Geographical location of the refinery
+                  Technical information and specifications
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="rounded-md overflow-hidden border border-border mb-4">
-                  {refinery ? (
-                    <RefineryMap 
-                      refinery={refinery}
-                      height="400px"
-                    />
-                  ) : (
-                    <div className="h-[400px] bg-muted flex items-center justify-center">
-                      <div className="text-center">
-                        <MapPin className="h-12 w-12 text-primary mx-auto mb-2" />
-                        <div>Map unavailable</div>
-                        <div className="text-sm text-muted-foreground mt-1">
-                          Refinery data missing
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="rounded-lg border border-border bg-muted/10 p-4">
