@@ -819,24 +819,24 @@ export default function RefineryOverview() {
                   </p>
                 </div>
                 
-                {refinery.refining_technology && (
+                {refinery.crudeTypes && (
                   <div>
-                    <h4 className="text-sm font-medium text-muted-foreground mb-1">Refining Technology</h4>
-                    <p className="text-sm">{refinery.refining_technology}</p>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-1">Crude Oil Types</h4>
+                    <p className="text-sm">{refinery.crudeTypes}</p>
                   </div>
                 )}
                 
-                {refinery.storage_capacity && (
+                {refinery.complexity && (
                   <div>
-                    <h4 className="text-sm font-medium text-muted-foreground mb-1">Storage Capacity</h4>
-                    <p className="text-sm">{refinery.storage_capacity}</p>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-1">Complexity Index</h4>
+                    <p className="text-sm">{refinery.complexity}</p>
                   </div>
                 )}
                 
-                {refinery.environmental_compliance && (
+                {refinery.securityLevel && (
                   <div>
-                    <h4 className="text-sm font-medium text-muted-foreground mb-1">Environmental Compliance</h4>
-                    <p className="text-sm">{refinery.environmental_compliance}</p>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-1">Security Level</h4>
+                    <p className="text-sm">{refinery.securityLevel}</p>
                   </div>
                 )}
                 
