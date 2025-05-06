@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 
 import PortMiniMap from '@/components/map/PortMiniMap';
+import PortVesselsTable from '@/components/PortVesselsTable';
 import { usePortSpecificVessels } from '@/hooks/usePortSpecificVessels';
 
 export default function PortDetail() {
@@ -332,6 +333,30 @@ export default function PortDetail() {
                 </p>
               </div>
             </div>
+          </CardContent>
+        </Card>
+        
+        {/* Vessels at Port Component */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center">
+              <Ship className="h-5 w-5 mr-2 text-primary" />
+              Vessels at this Port
+            </CardTitle>
+            <CardDescription>
+              Vessels currently at or near {port?.name}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {portId && (
+              <div className="h-[400px] overflow-y-auto pr-2">
+                <PortVesselsTable 
+                  portId={portId} 
+                  hideTitle={true} 
+                  showFilters={false}
+                />
+              </div>
+            )}
           </CardContent>
         </Card>
         
