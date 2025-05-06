@@ -183,9 +183,10 @@ export default function PortDetail() {
         <div>
           <h1 className="text-3xl font-bold flex items-center">
             <div className={`h-10 w-10 rounded-full flex items-center justify-center mr-3 ${
-              port?.type === 'oil' ? 'bg-amber-100 text-amber-600' : 
-              port?.type === 'container' ? 'bg-blue-100 text-blue-600' :
-              port?.type === 'bulk' ? 'bg-emerald-100 text-emerald-600' :
+              !port ? 'bg-gray-100 text-gray-600' :
+              port.type === 'oil' ? 'bg-amber-100 text-amber-600' : 
+              port.type === 'container' ? 'bg-blue-100 text-blue-600' :
+              port.type === 'bulk' ? 'bg-emerald-100 text-emerald-600' :
               'bg-gray-100 text-gray-600'
             }`}>
               <Anchor className="h-6 w-6" />
@@ -534,11 +535,11 @@ export default function PortDetail() {
                   </span>
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">
-                  {port?.type === 'oil' 
+                  {port && port.type === 'oil' 
                     ? 'Daily throughput capacity in barrels' 
                     : 'TEU handling capacity'}
                 </p>
-                {port?.type === 'oil' && port?.capacity && (
+                {port && port.type === 'oil' && port.capacity && (
                   <div className="mt-3 text-xs">
                     <div className="flex justify-between mb-1">
                       <span>Crude Oil</span>
