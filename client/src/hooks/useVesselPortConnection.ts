@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { apiRequest } from '@lib/queryClient';
+import { apiRequest } from '@/lib/queryClient';
 import { useQueryClient } from '@tanstack/react-query';
 
 interface ConnectVesselToPortParams {
@@ -40,10 +40,13 @@ export function useVesselPortConnection() {
     try {
       const { vesselId, portId, moveToPort = true } = params;
       
-      const response = await apiRequest('POST', '/api/port-vessels/connect', {
-        vesselId,
-        portId,
-        moveToPort
+      const response = await apiRequest('/api/port-vessels/connect', {
+        method: 'POST',
+        body: JSON.stringify({
+          vesselId,
+          portId,
+          moveToPort
+        })
       });
       
       const result = await response.json();
