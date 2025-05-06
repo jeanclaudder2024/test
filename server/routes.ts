@@ -1988,60 +1988,130 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Refinery not found" });
       }
       
-      // Get all vessels
+      const radius = req.query.radius ? parseInt(req.query.radius as string) : 20;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 12;
+      
+      // Use our service to get nearby vessels
+      const nearbyVessels = await refineryService.getVesselsNearRefinery(id, radius, limit);
+      return res.json({ refinery, vessels: nearbyVessels });
+    } catch (error) {
+      console.error("Error fetching vessels near refinery:", error);
+      res.status(500).json({ message: "Error fetching vessels near refinery" });
+    }
+  });
+  
+  // Get weather information for a refinery
+  apiRouter.get("/refineries/:id/weather", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid refinery ID" });
+      }
+      
+      // Get weather data for the refinery
+      const weatherData = await refineryService.getRefineryWeather(id);
+      if (!weatherData) {
+        return res.status(404).json({ message: "Refinery weather data not found" });
+      }
+      
+      return res.json(weatherData);
+    } catch (error) {
+      console.error("Error fetching refinery weather:", error);
+      res.status(500).json({ message: "Error fetching refinery weather" });
+    }
+  });
+  
+  // Generate AI insights for a refinery
+  apiRouter.get("/refineries/:id/insights", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid refinery ID" });
+      }
+      
+      // Get refinery insights
+      const insights = await refineryService.generateRefineryInsights(id);
+      if (!insights) {
+        return res.status(404).json({ message: "Failed to generate refinery insights" });
+      }
+      
+      return res.json(insights);
+    } catch (error) {
+      console.error("Error generating refinery insights:", error);
+      res.status(500).json({ 
+        message: "Error generating refinery insights",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Get all vessels
+  apiRouter.get("/vessels", async (req, res) => {
+    try {
       const vessels = await storage.getVessels();
       
-      // Find vessels within proximity
-      const SEARCH_RADIUS_KM = 500;  // Increased radius for better results
+      // Check if filtering by location is requested
+      const lat = req.query.lat ? parseFloat(req.query.lat as string) : null;
+      const lng = req.query.lng ? parseFloat(req.query.lng as string) : null;
+      const radius = req.query.radius ? parseFloat(req.query.radius as string) : 500; // Default radius 500km
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 20; // Default limit 20 vessels
       
-      const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-        const R = 6371; // Earth's radius in km
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLon = (lon2 - lon1) * Math.PI / 180;
-        const a = 
-          Math.sin(dLat/2) * Math.sin(dLat/2) +
-          Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-          Math.sin(dLon/2) * Math.sin(dLon/2); 
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
-        return R * c;
-      };
-      
-      // Parse refinery coordinates
-      const refineryLat = parseFloat(refinery.lat);
-      const refineryLng = parseFloat(refinery.lng);
-      
-      // Find vessels within radius
-      const allConnected = vessels.filter(vessel => {
-        // Parse vessel coordinates, skipping any with invalid coordinates
-        const vesselLat = parseFloat(vessel.currentLat || '0');
-        const vesselLng = parseFloat(vessel.currentLng || '0');
+      // If location filtering is requested
+      if (lat !== null && lng !== null && !isNaN(lat) && !isNaN(lng)) {
+        const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+          const R = 6371; // Earth's radius in km
+          const dLat = (lat2 - lat1) * Math.PI / 180;
+          const dLon = (lon2 - lon1) * Math.PI / 180;
+          const a = 
+            Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+            Math.sin(dLon/2) * Math.sin(dLon/2); 
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+          return R * c;
+        };
         
-        // Skip vessels with invalid coordinates
-        if (isNaN(vesselLat) || isNaN(vesselLng) || 
-            (vesselLat === 0 && vesselLng === 0)) {
-          return false;
-        }
+        // Find vessels within radius
+        const nearbyVessels = vessels.filter(vessel => {
+          // Parse vessel coordinates, skipping any with invalid coordinates
+          const vesselLat = typeof vessel.currentLat === 'string' 
+            ? parseFloat(vessel.currentLat) 
+            : vessel.currentLat;
+            
+          const vesselLng = typeof vessel.currentLng === 'string' 
+            ? parseFloat(vessel.currentLng) 
+            : vessel.currentLng;
+          
+          // Skip vessels with invalid coordinates
+          if (!vesselLat || !vesselLng || isNaN(vesselLat) || isNaN(vesselLng)) {
+            return false;
+          }
+          
+          // Calculate distance
+          const distance = calculateDistance(lat, lng, vesselLat, vesselLng);
+          
+          // Include vessels within the radius
+          return distance <= radius;
+        });
         
-        // Calculate distance
-        const distance = calculateDistance(
-          refineryLat, refineryLng, 
-          vesselLat, vesselLng
-        );
+        // Ensure unique vessels only
+        const uniqueIds = new Set();
+        const uniqueVessels = nearbyVessels.filter(vessel => {
+          if (uniqueIds.has(vessel.id)) return false;
+          uniqueIds.add(vessel.id);
+          return true;
+        });
         
-        // Include vessels within the radius
-        return distance <= SEARCH_RADIUS_KM;
-      });
+        // Return the nearby vessels (limit to specified amount)
+        return res.json(uniqueVessels.slice(0, limit));
+      }
       
-      // Ensure unique vessels only
-      const uniqueIds = new Set();
-      const uniqueVessels = allConnected.filter(vessel => {
-        if (uniqueIds.has(vessel.id)) return false;
-        uniqueIds.add(vessel.id);
-        return true;
-      });
+      // If no location filtering, return all vessels (with pagination)
+      const page = req.query.page ? parseInt(req.query.page as string) : 1;
+      const pageSize = req.query.pageSize ? parseInt(req.query.pageSize as string) : 100;
+      const start = (page - 1) * pageSize;
+      const end = start + pageSize;
       
-      // Return the associated vessels (limit to 20 vessels max)
-      res.json(uniqueVessels.slice(0, 20));
+      res.json(vessels.slice(start, end));
     } catch (error) {
       console.error("Error fetching vessels for refinery:", error);
       res.status(500).json({ message: "Failed to fetch vessels for refinery" });

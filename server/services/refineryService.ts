@@ -120,6 +120,112 @@ export const refineryService = {
       return null;
     }
   },
+  
+  // Generate AI insights for a refinery
+  generateRefineryInsights: async (refineryId: number) => {
+    try {
+      // Import OpenAI in an on-demand way to avoid unnecessary initialization
+      const OpenAI = (await import('openai')).default;
+      const openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY,
+      });
+      
+      // Fetch the refinery data
+      const refinery = await storage.getRefineryById(refineryId);
+      if (!refinery) return null;
+      
+      // Fetch nearby vessels for context
+      const nearbyVessels = await refineryService.getVesselsNearRefinery(refineryId, 20, 8);
+      
+      // Get weather info
+      const weatherData = await refineryService.getRefineryWeather(refineryId);
+      
+      // Format the context data
+      const context = {
+        refinery: {
+          ...refinery,
+          weather: weatherData
+        },
+        nearbyVessels: nearbyVessels.map(item => ({
+          vessel: {
+            name: item.vessel.name,
+            vesselType: item.vessel.vesselType,
+            flag: item.vessel.flag,
+            cargoType: item.vessel.cargoType,
+            cargoCapacity: item.vessel.cargoCapacity
+          },
+          distance: item.distance.toFixed(1)
+        }))
+      };
+      
+      // Prepare the prompt for OpenAI
+      const prompt = `
+      You are an expert oil industry analyst specializing in refinery operations.
+      
+      Analyze the following refinery data and provide professional insights about:
+      1. Current operational status and efficiency
+      2. Supply chain analysis based on nearby vessels
+      3. Market conditions impact
+      4. Recommendations for optimization
+      5. Key risks and opportunities
+      
+      Provide your analysis in a concise, professional format suitable for a dashboard.
+      
+      REFINERY INFORMATION:
+      ${JSON.stringify(context, null, 2)}
+      
+      Format the response as JSON with the following structure:
+      {
+        "summary": "Brief 1-2 sentence overview of the refinery status",
+        "operational_insights": "Analysis of current operations and efficiency",
+        "supply_chain_status": "Analysis of supply status based on nearby vessels",
+        "market_impact": "How current market conditions might be impacting this refinery",
+        "recommendations": "1-2 specific actionable recommendations",
+        "risks": ["List of 2-3 key risks"],
+        "opportunities": ["List of 2-3 key opportunities"]
+      }
+      `;
+      
+      // Call OpenAI for insights
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+        messages: [
+          { role: "system", content: "You are an expert oil industry analyst providing insights for a maritime intelligence platform." },
+          { role: "user", content: prompt }
+        ],
+        response_format: { type: "json_object" },
+        temperature: 0.7,
+        max_tokens: 1000
+      });
+      
+      // Parse the response
+      try {
+        const insights = JSON.parse(response.choices[0].message.content);
+        
+        // Store the insights for future reference with a timestamp
+        const insightsWithTimestamp = {
+          ...insights,
+          generated_at: new Date().toISOString()
+        };
+        
+        return insightsWithTimestamp;
+      } catch (e) {
+        console.error('Error parsing OpenAI response:', e);
+        return {
+          summary: "Unable to generate insights at this time",
+          error: "Data processing error",
+          generated_at: new Date().toISOString()
+        };
+      }
+    } catch (error) {
+      console.error('Error generating refinery insights:', error);
+      return {
+        summary: "Unable to generate insights at this time",
+        error: error instanceof Error ? error.message : "Unknown error",
+        generated_at: new Date().toISOString()
+      };
+    }
+  },
 
   // Seed data for development
   seedRefineryData: async () => {
