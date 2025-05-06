@@ -895,11 +895,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get all vessels
       const allVessels = await vesselService.getAllVessels();
       
-      // Filter vessels by owner or seller name
+      // Filter vessels by seller name or buyer name
       const companyVessels = allVessels.filter(vessel => {
-        // We check both owner name and seller name fields, if they exist
+        // Since ownerName field doesn't exist in the schema, we check only seller and buyer name fields
         return (
-          (vessel.ownerName && vessel.ownerName.toLowerCase() === companyName.toLowerCase()) || 
           (vessel.sellerName && vessel.sellerName.toLowerCase() === companyName.toLowerCase()) ||
           (vessel.buyerName && vessel.buyerName.toLowerCase() === companyName.toLowerCase())
         );
@@ -932,8 +931,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Filter by company name if provided
       if (companyName) {
         vessels = vessels.filter(vessel => {
+          // Since ownerName field doesn't exist in the schema, we check only seller and buyer name fields
           return (
-            (vessel.ownerName && vessel.ownerName.toLowerCase() === companyName.toLowerCase()) || 
             (vessel.sellerName && vessel.sellerName.toLowerCase() === companyName.toLowerCase()) ||
             (vessel.buyerName && vessel.buyerName.toLowerCase() === companyName.toLowerCase())
           );

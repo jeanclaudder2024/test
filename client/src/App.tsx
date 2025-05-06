@@ -88,6 +88,7 @@ function Router() {
             <Route path="/ports/:id" component={PortDetail} />
             <Route path="/brokers" component={Brokers} />
             <Route path="/companies" component={Companies} />
+            <Route path="/companies/:name/fleet" component={CompanyFleet} />
             <Route path="/documents" component={Documents} />
             <Route path="/ai-assistant" component={AIAssistantPage} />
             <Route path="/trading" component={TradingDashboard} />
