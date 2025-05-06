@@ -15,7 +15,7 @@ export class PortVesselService {
   async getPortWithNearbyVessels(portId: number, maxDistanceKm: number = 20) {
     try {
       // Get the port
-      const port = await storage.getPort(portId);
+      const port = await storage.getPortById(portId);
       if (!port) {
         throw new Error(`Port with ID ${portId} not found`);
       }

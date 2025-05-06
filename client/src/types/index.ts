@@ -1,10 +1,18 @@
-export interface RegionData {
-  id: string;
-  name: string;
-  nameAr: string;
-}
+// Type definitions for client components
 
-export type Region = string; // Region ID
+export interface Port {
+  id: number;
+  name: string;
+  country: string;
+  region: string;
+  lat: string | number;
+  lng: string | number;
+  capacity: number | null;
+  status: 'active' | 'maintenance' | 'planned' | 'operational';
+  description?: string | null;
+  type?: string | null;
+  lastUpdated?: Date | string | null;
+}
 
 export interface Vessel {
   id: number;
@@ -13,102 +21,60 @@ export interface Vessel {
   mmsi: string;
   vesselType: string;
   flag: string;
-  built?: number;
-  deadweight?: number;
-  currentLat?: number;
-  currentLng?: number;
-  departurePort?: string;
-  departureDate?: string;
-  destinationPort?: string;
-  eta?: string;
-  cargoType?: string;
-  cargoCapacity?: number;
-  currentRegion?: string;
-  sellerName?: string;
-  buyerName?: string;
-  departureLat?: number;
-  departureLng?: number;
-  destinationLat?: number;
-  destinationLng?: number;
+  built: number | null;
+  deadweight: number | null;
+  currentLat: string | number | null;
+  currentLng: string | number | null;
+  currentSpeed: number | null;
+  currentRegion: string | null;
+  departurePort: string | null;
+  departureTime: Date | string | null;
+  destinationPort: string | null;
+  eta: Date | string | null;
+  status: string | null;
+  course: number | null;
+  cargoType: string | null;
+  cargoAmount: number | null;
+  progress: number | null;
+  isOilVessel: boolean | null;
+  lastUpdated: Date | string | null;
 }
 
-export interface Refinery {
-  id: number;
+export interface PortWithVessels extends Port {
+  vesselCount: number;
+  nearbyVessels?: Array<{
+    vessels: Vessel;
+    distance: number;
+  }>;
+}
+
+export interface PaginationResult<T> {
+  data: T[];
+  pagination: {
+    page: number;
+    limit: number;
+    totalItems: number;
+    totalPages: number;
+  };
+}
+
+export interface Region {
+  id: string;
   name: string;
-  country: string;
-  region: string;
-  lat: number;
-  lng: number;
-  capacity?: number;
-  status: string;
+  description?: string;
+  coordinates?: {
+    lat: number;
+    lng: number;
+  };
 }
 
-export interface ProgressEvent {
-  id: number;
-  vesselId: number;
-  date: string;
-  event: string;
-  lat?: number;
-  lng?: number;
-  location?: string;
+export interface FilterOptions {
+  region?: string;
+  type?: string;
+  status?: string;
+  search?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
 }
 
-export interface Document {
-  id: number;
-  vesselId: number;
-  type: string;
-  title: string;
-  content: string;
-  status?: string; // active, expired, pending, revoked
-  issueDate?: string;
-  expiryDate?: string;
-  reference?: string; // Document reference number
-  issuer?: string; // Organization that issued document
-  recipientName?: string;
-  recipientOrg?: string;
-  lastModified?: string;
-  language?: string;
-  createdAt: string;
-}
-
-export interface Broker {
-  id: number;
-  name: string;
-  company: string;
-  email: string;
-  phone?: string;
-  country?: string;
-  active: boolean;
-  
-  // Elite Membership fields
-  eliteMember?: boolean;
-  eliteMemberSince?: string | Date;
-  eliteMemberExpires?: string | Date;
-  membershipId?: string;
-  shippingAddress?: string;
-  subscriptionPlan?: 'monthly' | 'annual';
-  lastLogin?: string | Date;
-}
-
-export interface Stats {
-  id: number;
-  activeVessels: number;
-  totalCargo: number;
-  activeRefineries: number;
-  activeBrokers: number;
-  lastUpdated: string;
-}
-
-export interface AIQueryResponse {
-  type: 'text' | 'vessel' | 'refinery' | 'document';
-  content: string;
-  vessel?: Vessel;
-  refinery?: Refinery;
-  document?: Document;
-}
-
-export interface MapPosition {
-  lat: number;
-  lng: number;
-  zoom: number;
-}
+export type SortDirection = 'asc' | 'desc';
