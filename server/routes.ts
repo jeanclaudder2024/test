@@ -884,68 +884,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get vessels by company name
-  apiRouter.get("/companies/:name/vessels", async (req, res) => {
-    try {
-      const companyName = decodeURIComponent(req.params.name);
-      if (!companyName) {
-        return res.status(400).json({ message: "Company name is required" });
-      }
-      
-      // Get all vessels
-      const allVessels = await vesselService.getAllVessels();
-      
-      // Case-insensitive filtering for company names
-      const companyVessels = allVessels.filter(vessel => {
-        // Make sure we handle empty or null values properly
-        const sellerNameMatch = vessel.sellerName && 
-          vessel.sellerName.toLowerCase().includes(companyName.toLowerCase());
-        
-        const buyerNameMatch = vessel.buyerName && 
-          vessel.buyerName.toLowerCase().includes(companyName.toLowerCase());
-        
-        return sellerNameMatch || buyerNameMatch;
-      });
-      
-      console.log(`Found ${companyVessels.length} vessels for company: ${companyName}`);
-      
-      // If we didn't find any vessels, create a few test vessels for the company
-      if (companyVessels.length === 0 && process.env.NODE_ENV === 'development') {
-        console.log(`Generating sample vessels for company: ${companyName}`);
-        
-        // Create 5 random vessels for testing associated with this company
-        const sampleVessels = [];
-        for (let i = 0; i < 5; i++) {
-          const vessel = await db.query.vessels.findFirst();
-          if (vessel) {
-            // Create a modified copy with this company as seller
-            const modifiedVessel = {
-              ...vessel,
-              id: vessel.id + 10000 + i, // Ensure unique ID
-              sellerName: companyName,
-              name: `${companyName} Vessel ${i+1}`
-            };
-            sampleVessels.push(modifiedVessel);
-          }
-        }
-        
-        return res.json(sampleVessels);
-      }
-      
-      res.json(companyVessels);
-    } catch (error) {
-      console.error(`Error fetching vessels for company:`, error);
-      res.status(500).json({ message: "Failed to fetch vessels for company" });
-    }
-  });
-
   // Vessel endpoints
   apiRouter.get("/vessels", async (req, res) => {
     try {
       const region = req.query.region as string | undefined;
       const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
       const vesselType = req.query.type as string | undefined;
-      const companyName = req.query.company as string | undefined;
       
       // Apply filters based on query parameters
       let vessels;
@@ -953,17 +897,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         vessels = await vesselService.getVesselsByRegion(region);
       } else {
         vessels = await vesselService.getAllVessels();
-      }
-      
-      // Filter by company name if provided
-      if (companyName) {
-        vessels = vessels.filter(vessel => {
-          // Since ownerName field doesn't exist in the schema, we check only seller and buyer name fields
-          return (
-            (vessel.sellerName && vessel.sellerName.toLowerCase() === companyName.toLowerCase()) ||
-            (vessel.buyerName && vessel.buyerName.toLowerCase() === companyName.toLowerCase())
-          );
-        });
       }
       
       // Apply vessel type filter if specified

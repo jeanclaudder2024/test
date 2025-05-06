@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link } from 'wouter';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -350,12 +349,9 @@ const CompanyCard = ({ company }: { company: Company }) => {
           variant="default" 
           size="sm" 
           className="text-xs"
-          asChild
         >
-          <Link to={`/companies/${encodeURIComponent(company.name)}/fleet`}>
-            <Ship className="h-3.5 w-3.5 mr-1" />
-            View Fleet
-          </Link>
+          <Ship className="h-3.5 w-3.5 mr-1" />
+          View Fleet
         </Button>
       </CardFooter>
     </Card>

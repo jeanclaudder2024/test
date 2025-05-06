@@ -22,7 +22,6 @@ import AuthPage from "@/pages/AuthPage";
 import TradingDashboard from "@/pages/TradingDashboard";
 import LiveTracking from "@/pages/LiveTracking";
 import Companies from "@/pages/Companies";
-import CompanyFleet from "@/pages/CompanyFleet";
 import ApiTest from "@/pages/ApiTest";
 import { useEffect } from "react";
 import { apiRequest, queryClient } from "./lib/queryClient";
@@ -88,7 +87,6 @@ function Router() {
             <Route path="/ports/:id" component={PortDetail} />
             <Route path="/brokers" component={Brokers} />
             <Route path="/companies" component={Companies} />
-            <Route path="/companies/:name/fleet" component={CompanyFleet} />
             <Route path="/documents" component={Documents} />
             <Route path="/ai-assistant" component={AIAssistantPage} />
             <Route path="/trading" component={TradingDashboard} />
