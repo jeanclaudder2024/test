@@ -132,20 +132,35 @@ export class OpenAIService {
       Format as a cohesive narrative without bullet points or headers.
       `;
       
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.7,
-        max_tokens: 500,
-      });
-      
-      const description = response.choices[0].message.content?.trim() || 
-        "Unable to generate description at this time.";
-      
-      // Update the refinery description in database
-      await storage.updateRefinery(refinery.id, { description });
-      
-      return description;
+      try {
+        // Get OpenAI client with null check
+        const client = getOpenAIClient();
+        
+        const response = await client.chat.completions.create({
+          model: "gpt-4o",
+          messages: [{ role: "user", content: prompt }],
+          temperature: 0.7,
+          max_tokens: 500,
+        });
+        
+        const description = response.choices[0].message.content?.trim() || 
+          "Unable to generate description at this time.";
+        
+        // Update the refinery description in database
+        await storage.updateRefinery(refinery.id, { description });
+        
+        return description;
+      } catch (aiError) {
+        console.warn("OpenAI generation failed:", aiError);
+        
+        // Fallback to a basic description
+        const fallbackDescription = `${refinery.name} is a petroleum refinery located in ${refinery.country}, ${refinery.region}. With a capacity of ${refinery.capacity?.toLocaleString() || 'Unknown'} barrels per day, it produces various refined petroleum products for domestic and international markets.`;
+        
+        // Update the refinery description in database with fallback
+        await storage.updateRefinery(refinery.id, { description: fallbackDescription });
+        
+        return fallbackDescription;
+      }
     } catch (error) {
       console.error("Error generating refinery description:", error);
       throw new Error("Failed to generate refinery description");
@@ -179,20 +194,44 @@ export class OpenAIService {
           prompt = this.getGenericDocumentPrompt(vessel, documentType);
       }
       
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.7,
-        max_tokens: 800,
-      });
-      
-      const content = response.choices[0].message.content?.trim() || 
-        "Unable to generate document at this time.";
-      
-      return {
-        title: `${documentType.toUpperCase()} - ${vessel.name} - ${new Date().toISOString().split('T')[0]}`,
-        content
-      };
+      try {
+        // Get OpenAI client with null check
+        const client = getOpenAIClient();
+        
+        const response = await client.chat.completions.create({
+          model: "gpt-4o",
+          messages: [{ role: "user", content: prompt }],
+          temperature: 0.7,
+          max_tokens: 800,
+        });
+        
+        const content = response.choices[0].message.content?.trim() || 
+          "Unable to generate document at this time.";
+        
+        return {
+          title: `${documentType.toUpperCase()} - ${vessel.name} - ${new Date().toISOString().split('T')[0]}`,
+          content
+        };
+      } catch (aiError) {
+        console.warn("OpenAI generation failed:", aiError);
+        
+        // Create a simple default document based on the type
+        const defaultContent = `
+DOCUMENT: ${documentType.toUpperCase()}
+VESSEL: ${vessel.name}
+IMO: ${vessel.imo || "N/A"}
+TYPE: ${vessel.vesselType || "N/A"}
+FLAG: ${vessel.flag || "N/A"}
+DATE: ${new Date().toISOString().split('T')[0]}
+
+This document was generated automatically without AI assistance.
+`;
+        
+        return {
+          title: `${documentType.toUpperCase()} - ${vessel.name} - ${new Date().toISOString().split('T')[0]}`,
+          content: defaultContent
+        };
+      }
     } catch (error) {
       console.error("Error generating shipping document:", error);
       throw new Error("Failed to generate shipping document");
@@ -228,21 +267,41 @@ export class OpenAIService {
       - timeSavings: number (hours)
       `;
       
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.7,
-        max_tokens: 500,
-        response_format: { type: "json_object" }
-      });
-      
-      const jsonResponse = JSON.parse(response.choices[0].message.content || "{}");
-      
-      return {
-        suggestions: Array.isArray(jsonResponse.suggestions) ? jsonResponse.suggestions : [],
-        fuelSavings: typeof jsonResponse.fuelSavings === 'number' ? jsonResponse.fuelSavings : 0,
-        timeSavings: typeof jsonResponse.timeSavings === 'number' ? jsonResponse.timeSavings : 0
-      };
+      try {
+        // Get OpenAI client with null check
+        const client = getOpenAIClient();
+        
+        const response = await client.chat.completions.create({
+          model: "gpt-4o",
+          messages: [{ role: "user", content: prompt }],
+          temperature: 0.7,
+          max_tokens: 500,
+          response_format: { type: "json_object" }
+        });
+        
+        const jsonResponse = JSON.parse(response.choices[0].message.content || "{}");
+        
+        return {
+          suggestions: Array.isArray(jsonResponse.suggestions) ? jsonResponse.suggestions : [],
+          fuelSavings: typeof jsonResponse.fuelSavings === 'number' ? jsonResponse.fuelSavings : 0,
+          timeSavings: typeof jsonResponse.timeSavings === 'number' ? jsonResponse.timeSavings : 0
+        };
+      } catch (aiError) {
+        console.warn("OpenAI route optimization generation failed:", aiError);
+        
+        // Return default suggestions based on vessel type
+        const defaultSuggestions = [
+          "Consider adjusting speed to optimal fuel efficiency range.",
+          "Monitor weather patterns to avoid adverse conditions.",
+          "Verify that the current route follows established shipping lanes."
+        ];
+        
+        return {
+          suggestions: defaultSuggestions,
+          fuelSavings: 3, // Default estimated savings
+          timeSavings: 5  // Default time savings in hours
+        };
+      }
     } catch (error) {
       console.error("Error generating route optimization:", error);
       throw new Error("Failed to generate route optimization");
@@ -397,36 +456,41 @@ export class OpenAIService {
         return companies[randomIndex].name;
       }
       
-      // Check if OpenAI client is available
-      if (!openai) {
-        console.warn("OpenAI client is not available. Cannot generate seller company name.");
-        return "Global Oil Traders Ltd."; // Default fallback name
+      try {
+        // Get OpenAI client with null check
+        const client = getOpenAIClient();
+        
+        // If no companies found, generate one using OpenAI
+        const prompt = `
+        You are a maritime industry expert. Generate a realistic oil shipping/trading company name that would be the seller for a vessel with these characteristics:
+        
+        Vessel Details:
+        - Name: ${vessel.name}
+        - Flag: ${vessel.flag || 'Unknown'}
+        - Region: ${vessel.currentRegion || vessel.flag || 'Global'}
+        - Cargo Type: ${vessel.cargoType || 'Oil products'}
+        
+        Please respond with just the company name, no additional text. The company name should be realistic, professional, and reflect the region and cargo type. It should sound like a real company in the oil shipping industry.
+        `;
+        
+        const response = await client.chat.completions.create({
+          model: "gpt-4o",
+          messages: [{ role: "user", content: prompt }],
+          temperature: 0.7,
+          max_tokens: 50,
+        });
+        
+        const companyName = response.choices[0].message.content?.trim() || 
+          "Global Oil Traders Ltd.";
+        
+        return companyName;
+      } catch (aiError) {
+        console.warn("OpenAI generation failed:", aiError);
+        
+        // Default company name based on vessel info
+        const region = vessel.currentRegion || vessel.flag || "Global";
+        return `${region} Oil Traders Ltd.`;
       }
-      
-      // If no companies found, generate one using OpenAI
-      const prompt = `
-      You are a maritime industry expert. Generate a realistic oil shipping/trading company name that would be the seller for a vessel with these characteristics:
-      
-      Vessel Details:
-      - Name: ${vessel.name}
-      - Flag: ${vessel.flag || 'Unknown'}
-      - Region: ${vessel.currentRegion || vessel.flag || 'Global'}
-      - Cargo Type: ${vessel.cargoType || 'Oil products'}
-      
-      Please respond with just the company name, no additional text. The company name should be realistic, professional, and reflect the region and cargo type. It should sound like a real company in the oil shipping industry.
-      `;
-      
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.7,
-        max_tokens: 50,
-      });
-      
-      const companyName = response.choices[0].message.content?.trim() || 
-        "Global Oil Traders Ltd.";
-      
-      return companyName;
     } catch (error) {
       console.error("Error generating seller company name:", error);
       return "Global Oil Traders Ltd."; // Default fallback name
@@ -568,60 +632,96 @@ export class OpenAIService {
       - averageSpeed: number (float with 1 decimal, knots)
       `;
       
-      // Check if OpenAI client is available
-      if (!openai) {
-        console.warn("OpenAI client is not available. Cannot generate voyage progress.");
-        return null;
+      try {
+        // Get OpenAI client with null check
+        const client = getOpenAIClient();
+        
+        // Get AI to generate the data
+        const response = await client.chat.completions.create({
+          model: "gpt-4o",
+          messages: [{ role: "user", content: prompt }],
+          temperature: 0.5,
+          max_tokens: 250,
+          response_format: { type: "json_object" }
+        });
+        
+        // Parse the JSON response
+        const jsonResponse = JSON.parse(response.choices[0].message.content || "{}");
+        
+        // Ensure all fields are present and valid
+        const percentComplete = typeof jsonResponse.percentComplete === 'number' ? 
+          Math.min(Math.max(Math.round(jsonResponse.percentComplete), 0), 100) : 50;
+          
+        const distanceTraveled = typeof jsonResponse.distanceTraveled === 'number' ? 
+          Math.max(Math.round(jsonResponse.distanceTraveled), 0) : 1000;
+          
+        const distanceRemaining = typeof jsonResponse.distanceRemaining === 'number' ? 
+          Math.max(Math.round(jsonResponse.distanceRemaining), 0) : 1000;
+          
+        const currentSpeed = typeof jsonResponse.currentSpeed === 'number' ? 
+          Math.min(Math.max(jsonResponse.currentSpeed, 8), 20) : 14;
+          
+        const averageSpeed = typeof jsonResponse.averageSpeed === 'number' ? 
+          Math.min(Math.max(jsonResponse.averageSpeed, 8), 20) : 14;
+        
+        // Calculate estimated arrival time based on distances and speed
+        let estimatedArrival = null;
+        if (vessel.eta) {
+          estimatedArrival = new Date(vessel.eta);
+        } else if (distanceRemaining > 0 && averageSpeed > 0) {
+          const hoursRemaining = distanceRemaining / averageSpeed;
+          estimatedArrival = new Date();
+          estimatedArrival.setHours(estimatedArrival.getHours() + hoursRemaining);
+        }
+        
+        // Return the AI-generated voyage progress data
+        return {
+          percentComplete,
+          distanceTraveled,
+          distanceRemaining,
+          estimatedArrival,
+          currentSpeed,
+          averageSpeed,
+          lastUpdated: new Date()
+        };
+      } catch (aiError) {
+        console.warn("OpenAI voyage progress generation failed:", aiError);
+        
+        // Use simple calculation based on departure and ETA
+        const now = new Date();
+        let percentComplete = 50; // Default to midway
+        let distanceTraveled = 1000;
+        let distanceRemaining = 1000;
+        let currentSpeed = 14;
+        let averageSpeed = 14;
+        
+        // If we have departure date and ETA, calculate based on time
+        if (vessel.departureDate && vessel.eta) {
+          const departureDate = new Date(vessel.departureDate);
+          const etaDate = new Date(vessel.eta);
+          
+          const totalJourneyTime = etaDate.getTime() - departureDate.getTime();
+          const timeElapsed = now.getTime() - departureDate.getTime();
+          
+          if (totalJourneyTime > 0) {
+            percentComplete = Math.min(Math.round((timeElapsed / totalJourneyTime) * 100), 100);
+            // Assume 2000 NM for a typical journey if unknown
+            const totalDistance = 2000;
+            distanceTraveled = Math.round((percentComplete / 100) * totalDistance);
+            distanceRemaining = totalDistance - distanceTraveled;
+          }
+        }
+        
+        return {
+          percentComplete,
+          distanceTraveled,
+          distanceRemaining,
+          estimatedArrival: vessel.eta ? new Date(vessel.eta) : null,
+          currentSpeed,
+          averageSpeed,
+          lastUpdated: new Date()
+        };
       }
-      
-      // Get AI to generate the data
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.5,
-        max_tokens: 250,
-        response_format: { type: "json_object" }
-      });
-      
-      // Parse the JSON response
-      const jsonResponse = JSON.parse(response.choices[0].message.content || "{}");
-      
-      // Ensure all fields are present and valid
-      const percentComplete = typeof jsonResponse.percentComplete === 'number' ? 
-        Math.min(Math.max(Math.round(jsonResponse.percentComplete), 0), 100) : 50;
-        
-      const distanceTraveled = typeof jsonResponse.distanceTraveled === 'number' ? 
-        Math.max(Math.round(jsonResponse.distanceTraveled), 0) : 1000;
-        
-      const distanceRemaining = typeof jsonResponse.distanceRemaining === 'number' ? 
-        Math.max(Math.round(jsonResponse.distanceRemaining), 0) : 1000;
-        
-      const currentSpeed = typeof jsonResponse.currentSpeed === 'number' ? 
-        Math.min(Math.max(jsonResponse.currentSpeed, 8), 20) : 14;
-        
-      const averageSpeed = typeof jsonResponse.averageSpeed === 'number' ? 
-        Math.min(Math.max(jsonResponse.averageSpeed, 8), 20) : 14;
-      
-      // Calculate estimated arrival time based on distances and speed
-      let estimatedArrival = null;
-      if (vessel.eta) {
-        estimatedArrival = new Date(vessel.eta);
-      } else if (distanceRemaining > 0 && averageSpeed > 0) {
-        const hoursRemaining = distanceRemaining / averageSpeed;
-        estimatedArrival = new Date();
-        estimatedArrival.setHours(estimatedArrival.getHours() + hoursRemaining);
-      }
-      
-      // Return the AI-generated voyage progress data
-      return {
-        percentComplete,
-        distanceTraveled,
-        distanceRemaining,
-        estimatedArrival,
-        currentSpeed,
-        averageSpeed,
-        lastUpdated: new Date()
-      };
       
     } catch (error) {
       console.error("Error generating voyage progress with AI:", error);
