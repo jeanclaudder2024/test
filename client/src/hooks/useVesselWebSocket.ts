@@ -155,11 +155,15 @@ export function useVesselWebSocket(props: UseVesselWebSocketProps = 'global') {
                 }));
               }
               
-              // Request initial data with all vessels if specified
+              // Request initial data with pagination parameters
               socket.send(JSON.stringify({ 
                 type: 'request_vessels',
+                page: Number(page),
+                pageSize: Number(pageSize),
                 allVessels: loadAllVessels 
               }));
+              
+              console.log(`Initial WebSocket request sent with page=${page}, pageSize=${pageSize}, allVessels=${loadAllVessels}`);
             }
           }, 500); // Add a small delay to ensure socket is ready
         };
@@ -327,15 +331,19 @@ export function useVesselWebSocket(props: UseVesselWebSocketProps = 'global') {
             region 
           }));
           
-          // Also request immediate update with the new region filter and all vessels if specified
+          // Also request immediate update with the new region filter and pagination parameters
           socketRef.current.send(JSON.stringify({ 
             type: 'request_vessels',
+            page: Number(page),
+            pageSize: Number(pageSize),
             allVessels: loadAllVessels 
           }));
+          
+          console.log(`Region change: WebSocket request sent with page=${page}, pageSize=${pageSize}, allVessels=${loadAllVessels}`);
         }
       }, 100);
     }
-  }, [region, isConnected, loadAllVessels]);
+  }, [region, isConnected, loadAllVessels, page, pageSize]);
   
   // Function to manually request vessel data
   const refreshData = (newPage?: number, newPageSize?: number) => {
@@ -417,10 +425,11 @@ export function useVesselWebSocket(props: UseVesselWebSocketProps = 'global') {
       pollVesselData();
     } else if (isConnected && socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
       // If using WebSocket, send a request for vessels with pagination parameters
+      console.log(`Sending WebSocket request with page=${currentPage}, pageSize=${currentPageSize}`);
       socketRef.current.send(JSON.stringify({ 
         type: 'request_vessels',
-        page: currentPage,
-        pageSize: currentPageSize,
+        page: Number(currentPage),
+        pageSize: Number(currentPageSize),
         allVessels: loadAllVessels
       }));
     } else {
