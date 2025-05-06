@@ -1,80 +1,64 @@
-import OpenAI from "openai";
-import { Refinery, InsertRefinery } from "@shared/schema";
-import { db } from "../db";
-import { refineries } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import OpenAI from 'openai';
+import { db } from '../db';
+import { refineries, type Refinery } from '@shared/schema';
+import { eq } from 'drizzle-orm';
 
-// the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-// Define product types for refineries
-const PRODUCT_TYPES = [
-  "Crude Oil",
-  "Gasoline",
-  "Diesel",
-  "Jet Fuel",
-  "LPG",
-  "Fuel Oil",
-  "Lubricants",
-  "Asphalt",
-  "Petrochemicals",
-  "Kerosene",
-  "Naphtha"
-];
-
-const REFINERY_TYPES = [
-  "Full Conversion",
-  "Cracking",
-  "Hydroskimming",
-  "Topping",
-  "Reforming",
-  "Coking",
-  "Integrated Petrochemical",
-  "Specialty Products",
-  "Export Terminal",
-  "Oil Sands Processing"
-];
-
-interface RefineryEnhancement {
-  operator?: string;
-  owner?: string;
-  type?: string;
-  products?: string[];
-  yearBuilt?: number;
-  complexity?: number;
-  email?: string;
-  phone?: string;
-  website?: string;
-  address?: string;
-  technicalSpecs?: any;
-  city?: string;
-  description?: string;
+// Extended refinery type with additional fields
+export interface EnhancedRefinery extends Refinery {
+  operator: string;
+  owner: string;
+  type: string;
+  products: string[];
+  yearBuilt: number;
+  complexity: number;
+  email: string;
+  phone: string;
+  website: string;
+  address: string;
+  city: string;
+  technicalSpecs: any;
+  description: string;
 }
 
-// Combine refinery types carefully
-interface EnhancedRefinery extends Omit<Refinery, keyof RefineryEnhancement>, RefineryEnhancement {}
-
+/**
+ * Service to enhance refinery data using OpenAI
+ */
 class RefineryAIEnhancer {
+  private openai: OpenAI;
+  
+  constructor() {
+    // Check if OpenAI API key is provided
+    if (!process.env.OPENAI_API_KEY) {
+      console.warn('OPENAI_API_KEY not provided. RefineryAIEnhancer will be unavailable.');
+    } else {
+      this.openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY
+      });
+      console.log('OpenAI client initialized successfully');
+    }
+  }
+  
   /**
-   * Enhance a refinery with AI-generated details
+   * Enhance a single refinery with AI-generated data
    */
   async enhanceRefinery(refinery: Refinery): Promise<EnhancedRefinery> {
-    console.log(`Enhancing refinery data for ${refinery.name} using OpenAI...`);
-    
     try {
+      if (!this.openai) {
+        throw new Error('OpenAI client not initialized');
+      }
+      
+      // Generate prompt for OpenAI
       const prompt = this.buildRefineryPrompt(refinery);
       
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o",
+      // Call OpenAI API
+      const response = await this.openai.chat.completions.create({
+        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
         messages: [
           {
             role: "system",
-            content: "You are a petroleum industry expert with detailed knowledge of global refineries. Provide factual, realistic information about refineries based on their name, location, and capacity."
+            content: "You are a refinery data specialist. Generate realistic, detailed technical information for refineries based on provided data. Respond in valid JSON only."
           },
-          {
-            role: "user",
-            content: prompt
-          }
+          { role: "user", content: prompt }
         ],
         response_format: { type: "json_object" }
       });
@@ -83,7 +67,7 @@ class RefineryAIEnhancer {
       // Handle null content case
       if (!content) {
         console.error(`Empty response from OpenAI for refinery ${refinery.name}`);
-        return refinery;
+        return refinery as EnhancedRefinery;
       }
       
       try {
@@ -93,15 +77,15 @@ class RefineryAIEnhancer {
         return {
           ...refinery,
           ...result
-        };
+        } as EnhancedRefinery;
       } catch (parseError) {
         console.error(`Failed to parse OpenAI response for refinery ${refinery.name}:`, parseError);
-        return refinery;
+        return refinery as EnhancedRefinery;
       }
     } catch (error) {
       console.error(`Error enhancing refinery ${refinery.name}:`, error);
       // Return the original refinery if enhancement fails
-      return refinery;
+      return refinery as EnhancedRefinery;
     }
   }
   
