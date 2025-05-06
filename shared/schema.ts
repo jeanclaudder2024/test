@@ -79,6 +79,7 @@ export const refineries = pgTable("refineries", {
   operator: text("operator"), // Company operating the refinery
   owner: text("owner"), // Owner company (may differ from operator)
   type: text("type"), // onshore/offshore, petrochemical, etc.
+  utilization: decimal("utilization", { precision: 5, scale: 2 }), // Current utilization percentage
   products: text("products"), // JSON string of product types (crude, diesel, jet fuel, etc.)
   yearBuilt: integer("year_built"), // Year refinery was built/commissioned
   lastMaintenance: timestamp("last_maintenance"), // Date of last maintenance

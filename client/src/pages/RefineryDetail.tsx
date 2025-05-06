@@ -1267,16 +1267,20 @@ export default function RefineryDetail() {
                             <Droplet className="h-4 w-4 mr-1 text-primary/60" /> Current Utilization
                           </span>
                           <span className="text-sm font-medium">
-                            {refinery?.status?.toLowerCase().includes('active') ? '92%' : 
-                             refinery?.status?.toLowerCase().includes('maintenance') ? '15%' :
+                            {refinery?.status?.toLowerCase().includes('active') ? 
+                              refinery?.utilization ? `${Math.round(parseFloat(String(refinery.utilization)))}%` : '85-95%' : 
+                             refinery?.status?.toLowerCase().includes('maintenance') ? 
+                              refinery?.utilization ? `${Math.round(parseFloat(String(refinery.utilization)))}%` : '10-20%' :
                              refinery?.status?.toLowerCase().includes('planned') ? '0%' :
                              refinery?.status?.toLowerCase().includes('shutdown') ? '0%' : 
                              'Unknown'}
                           </span>
                         </div>
                         <Progress
-                          value={refinery?.status?.toLowerCase().includes('active') ? 92 : 
-                                refinery?.status?.toLowerCase().includes('maintenance') ? 15 :
+                          value={refinery?.status?.toLowerCase().includes('active') ? 
+                                refinery?.utilization ? Math.round(parseFloat(String(refinery.utilization))) : 90 : 
+                                refinery?.status?.toLowerCase().includes('maintenance') ? 
+                                refinery?.utilization ? Math.round(parseFloat(String(refinery.utilization))) : 15 :
                                 0}
                           className={`h-2 ${
                             refinery?.status?.toLowerCase().includes('active') ? '[--progress-foreground:theme(colors.green.500)]' :
@@ -1362,8 +1366,12 @@ export default function RefineryDetail() {
                                 <TableCell className="text-right">
                                   {refinery?.status?.toLowerCase().includes('shutdown') ? '0%' :
                                    refinery?.status?.toLowerCase().includes('maintenance') ? 
-                                   Math.floor(Math.random() * 30) + '%' :
-                                   Math.floor(Math.random() * 20 + 80) + '%'}
+                                   refinery?.utilization ? 
+                                     `${Math.max(0, Math.min(100, Math.round(parseFloat(String(refinery.utilization)) * (0.7 + Math.random() * 0.5))))}%` :
+                                     `${Math.floor(Math.random() * 20 + 5)}%` :
+                                   refinery?.utilization ? 
+                                     `${Math.max(0, Math.min(100, Math.round(parseFloat(String(refinery.utilization)) * (0.9 + Math.random() * 0.2))))}%` :
+                                     `${Math.floor(Math.random() * 15 + 80)}%`}
                                 </TableCell>
                               </TableRow>
                             ))
@@ -1396,8 +1404,10 @@ export default function RefineryDetail() {
                     />
                     <InfoItem
                       label="Utilization"
-                      value={refinery?.status?.toLowerCase().includes('active') ? '92%' : 
-                             refinery?.status?.toLowerCase().includes('maintenance') ? '15%' :
+                      value={refinery?.status?.toLowerCase().includes('active') ? 
+                              refinery?.utilization ? `${Math.round(parseFloat(String(refinery.utilization)))}%` : '85-95%' : 
+                             refinery?.status?.toLowerCase().includes('maintenance') ? 
+                              refinery?.utilization ? `${Math.round(parseFloat(String(refinery.utilization)))}%` : '10-20%' :
                              refinery?.status?.toLowerCase().includes('planned') ? '0%' :
                              refinery?.status?.toLowerCase().includes('shutdown') ? '0%' : 
                              'Unknown'}
@@ -1464,7 +1474,7 @@ export default function RefineryDetail() {
                             Catalytic cracker unit overhaul in progress. Expected to be completed in two weeks.
                           </p>
                           <p className="text-xs text-orange-700 dark:text-orange-400 mt-1">
-                            Completion: {new Date(new Date().setDate(new Date().getDate() + 14)).toLocaleDateString()}
+                            Completion: {refinery?.nextMaintenance ? new Date(refinery.nextMaintenance).toLocaleDateString() : 'Unknown'}
                           </p>
                         </div>
                         <div className="bg-muted/30 p-3 rounded-lg border border-border">
@@ -1495,35 +1505,41 @@ export default function RefineryDetail() {
                 </CardHeader>
                 <CardContent className="pt-0">
                   <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="text-sm font-medium">Annual Safety Inspection</p>
-                        <p className="text-xs text-muted-foreground">Result: Passed</p>
+                    {refinery?.lastMaintenance ? (
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="text-sm font-medium">Last Maintenance Complete</p>
+                          <p className="text-xs text-muted-foreground">Result: Completed</p>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(refinery.lastMaintenance).toLocaleDateString()}
+                        </p>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(new Date().setMonth(new Date().getMonth() - 4)).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <Separator />
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="text-sm font-medium">Environmental Compliance</p>
-                        <p className="text-xs text-muted-foreground">Result: Compliant</p>
+                    ) : null}
+                    {refinery?.lastMaintenance ? <Separator /> : null}
+                    {refinery?.createdAt ? (
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="text-sm font-medium">Initial Registration</p>
+                          <p className="text-xs text-muted-foreground">Status: {refinery?.status || 'Unknown'}</p>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(refinery.createdAt).toLocaleDateString()}
+                        </p>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(new Date().setMonth(new Date().getMonth() - 2)).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <Separator />
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="text-sm font-medium">Process Safety Assessment</p>
-                        <p className="text-xs text-muted-foreground">Result: Passed with notes</p>
+                    ) : null}
+                    {refinery?.lastUpdated && refinery?.createdAt ? <Separator /> : null}
+                    {refinery?.lastUpdated ? (
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="text-sm font-medium">Last Database Update</p>
+                          <p className="text-xs text-muted-foreground">System refresh</p>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(refinery.lastUpdated).toLocaleDateString()}
+                        </p>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(new Date().setMonth(new Date().getMonth() - 6)).toLocaleDateString()}
-                      </p>
-                    </div>
+                    ) : null}
                   </div>
                 </CardContent>
               </Card>
