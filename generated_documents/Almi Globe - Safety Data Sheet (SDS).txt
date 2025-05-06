@@ -1,0 +1,62 @@
+=====================================
+DOCUMENT TYPE: SAFETY DATA SHEET (SDS)
+DOCUMENT DATE: 2025-05-06
+=====================================
+
+SAFETY DATA SHEET (SDS)
+Reference: SDS-315090
+Date: 2025-05-06
+Revision: 01
+
+SECTION 1: IDENTIFICATION OF THE SUBSTANCE/MIXTURE AND OF THE COMPANY/UNDERTAKING
+
+Product Identifier: Jet Fuel
+CAS Number: 64741-77-1
+Relevant identified uses: Fuel
+Supplier: Shell International Trading
+Address: 123 Commerce Street, London, UK
+Emergency telephone: +44 20 7946 0000
+
+SECTION 2: HAZARDS IDENTIFICATION
+
+Classification: Flammable Liquid Category 3
+Signal Word: DANGER
+Hazard Statements:
+H226 - Extremely flammable liquid and vapor
+H304 - May be fatal if swallowed and enters airways
+H315 - Causes skin irritation
+H336 - May cause drowsiness or dizziness
+H350 - May cause cancer
+H373 - May cause damage to organs through prolonged or repeated exposure
+H411 - Toxic to aquatic life with long-lasting effects
+
+Precautionary Statements:
+P210 - Keep away from heat, hot surfaces, sparks, open flames and other ignition sources. No smoking.
+P273 - Avoid release to the environment
+P280 - Wear protective gloves/protective clothing/eye protection/face protection
+P301+P310 - IF SWALLOWED: Immediately call a POISON CENTER or doctor/physician
+P403+P235 - Store in a well-ventilated place. Keep cool
+
+SECTION 3: COMPOSITION/INFORMATION ON INGREDIENTS
+
+Chemical Characterization: Petroleum product
+Hazardous Components:
+Petroleum distillates (CAS 64741-77-1): >99%
+
+SECTION 4: FIRST AID MEASURES
+
+Inhalation: Remove victim to fresh air and keep at rest in a position comfortable for breathing. If not breathing, give artificial respiration. Get medical attention.
+Skin Contact: Remove contaminated clothing. Wash affected area with soap and water. Get medical attention if irritation develops or persists.
+Eye Contact: Flush eyes with water for at least 15 minutes. Remove contact lenses if present and easy to do. Get medical attention.
+Ingestion: Do NOT induce vomiting. Get immediate medical attention. If vomiting occurs, keep head low to prevent aspiration.
+
+SECTION 5: FIREFIGHTING MEASURES
+
+Extinguishing Media: Dry chemical powder, foam, carbon dioxide
+Specific Hazards: Highly flammable. Vapors may form explosive mixtures with air. Vapors may travel to ignition sources and flash back.
+Advice for Firefighters: Wear self-contained breathing apparatus and full protective gear.
+
+This is an abbreviated version of the Safety Data Sheet. Refer to the full document for complete information.
+
+Shell International Trading
+Date: 2025-05-06

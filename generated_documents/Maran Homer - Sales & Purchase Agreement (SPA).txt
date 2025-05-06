@@ -1,0 +1,71 @@
+=====================================
+DOCUMENT TYPE: SALES & PURCHASE AGREEMENT (SPA)
+DOCUMENT DATE: 2025-05-06
+=====================================
+
+SALES & PURCHASE AGREEMENT (SPA)
+Reference: SPA-517241
+Date: 2025-05-06
+
+BETWEEN:
+SELLER: Shell International Trading
+Address: 123 Commerce Street, London, UK
+Contact: +44 20 7946 0000
+
+AND:
+BUYER: TOTAL Trading SA
+Address: 456 Petroleum Avenue, Houston, TX, USA
+Contact: +1 713 555 1234
+
+PRODUCT SPECIFICATIONS:
+Product: Jet Fuel
+Quantity: 81359 MT (+/- 5% at seller's option)
+Quality: As per specifications in Appendix A
+Price: 81 USD per MT (CIF basis)
+Delivery: Houston
+Delivery Period: 2025-04-13 to 2025-06-02
+
+PAYMENT TERMS:
+Payment Method: Irrevocable, Transferable Letter of Credit
+L/C Opening Bank: International Trade Bank, New York
+L/C Duration: 30 days from Bill of Lading date
+
+INSPECTION:
+Inspection Company: Bureau Veritas
+Inspection Location: Both loading and discharge ports
+Inspections Costs: Shared equally between Buyer and Seller
+
+SHIPPING TERMS:
+Vessel Name: Maran Homer
+IMO Number: 9830039
+Flag: Marshall Islands
+Master: Captain Martinez
+Shipping Mode: CIF Houston
+Laycan: 2025-04-13 to 2025-06-02
+
+DOCUMENTATION:
+The Seller shall provide the following documents:
+- Commercial Invoice (3 originals, 3 copies)
+- Full set of 3/3 original Clean on Board Ocean Bills of Lading
+- Certificate of Origin (1 original, 3 copies)
+- Certificate of Quality (1 original, 3 copies)
+- Certificate of Quantity (1 original, 3 copies)
+- Packing List (1 original, 3 copies)
+
+FORCE MAJEURE:
+Neither party shall be liable for failure to perform any obligation under this Agreement due to events beyond their reasonable control including but not limited to acts of God, fire, flood, war, governmental restrictions.
+
+ARBITRATION:
+Any dispute arising out of or in connection with this Agreement shall be referred to arbitration in London in accordance with the rules of the London Court of International Arbitration.
+
+GOVERNING LAW:
+This Agreement shall be governed by and construed in accordance with English Law.
+
+Legally binding contract between seller and buyer.
+
+FOR THE SELLER:                      FOR THE BUYER:
+
+________________________           ________________________
+Authorized Signatory                Authorized Signatory
+Shell International Trading    TOTAL Trading SA
+Date: 2025-05-06              Date: 2025-05-06

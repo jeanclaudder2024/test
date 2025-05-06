@@ -1,0 +1,33 @@
+=====================================
+DOCUMENT TYPE: BUNKER DELIVERY NOTE (BDN)
+DOCUMENT DATE: 2025-05-06
+=====================================
+
+GENERAL MARITIME DOCUMENT
+Reference: GMD-776092
+Date: 2025-05-06
+
+VESSEL INFORMATION:
+Name: Maran Artemis
+IMO Number: 9424792
+Flag: Liberia
+
+PORT DETAILS:
+Port: Houston
+Date: 2025-04-14
+
+CARGO INFORMATION:
+Type: Jet Fuel
+Quantity: 139542 MT
+
+PARTIES INVOLVED:
+Seller: Shell International Trading
+Buyer: TOTAL Trading SA
+Broker: Global Maritime Services
+
+REMARKS:
+Fuel receipt for MARPOL compliance.
+
+________________________
+Authorized Signatory
+Date: 2025-05-06

@@ -1,0 +1,33 @@
+=====================================
+DOCUMENT TYPE: PRE-DISCHARGE INSPECTION
+DOCUMENT DATE: 2025-05-06
+=====================================
+
+GENERAL MARITIME DOCUMENT
+Reference: GMD-277255
+Date: 2025-05-06
+
+VESSEL INFORMATION:
+Name: Gener8 Andriotis
+IMO Number: 9402407
+Flag: Liberia
+
+PORT DETAILS:
+Port: Houston
+Date: 2025-04-20
+
+CARGO INFORMATION:
+Type: LNG
+Quantity: 185414 MT
+
+PARTIES INVOLVED:
+Seller: Shell International Trading
+Buyer: TOTAL Trading SA
+Broker: Global Maritime Services
+
+REMARKS:
+Verifies cargo before unloading.
+
+________________________
+Authorized Signatory
+Date: 2025-05-06

@@ -1,0 +1,57 @@
+=====================================
+DOCUMENT TYPE: DELIVERY REPORT
+DOCUMENT DATE: 2025-05-06
+=====================================
+
+DELIVERY REPORT
+Reference: DR-787816
+Date: 2025-05-06
+
+RECEIVER INFORMATION:
+Receiver: TOTAL Trading SA
+Address: 456 Petroleum Avenue, Houston, TX, USA
+Contact Person: Ms. Sarah Chen
+Contact Number: +1 713 555 1234
+
+SHIPPER INFORMATION:
+Shipper: Shell International Trading
+Address: 123 Commerce Street, London, UK
+Contact Person: Ms. Emily Johnson
+Contact Number: +44 20 7946 0000
+
+SHIPMENT DETAILS:
+Product: Crude Oil
+Purchase Order Number: PO-318087
+Vessel Name: Seaways Redwood
+IMO Number: 9143546
+Port of Loading: Rotterdam
+Loading Date: 2025-04-16
+Port of Discharge: TOTAL Trading SA
+Discharge Date: 2025-05-25
+
+QUANTITY DETAILS:
+Bill of Lading Quantity: 178113 MT
+Delivered Quantity: 177459.729 MT
+Discrepancy: 488.345 MT (0.33%)
+Reason for Discrepancy: Normal transit loss
+
+QUALITY INSPECTION:
+Inspector: Bureau Veritas
+Quality Compliance: Full - All specifications met
+Sample References: S-78165
+
+DELIVERY CONFIRMATION:
+☑ All documentation received
+☑ Product quality verified
+☑ Product quantity verified
+☑ Delivery accepted
+
+REMARKS:
+Confirms receipt of shipment.
+
+Received By:
+
+________________________
+Authorized Signatory
+TOTAL Trading SA
+Date: 2025-05-06

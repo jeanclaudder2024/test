@@ -1,0 +1,33 @@
+=====================================
+DOCUMENT TYPE: DOCUMENTARY LETTER OF CREDIT (DLC)
+DOCUMENT DATE: 2025-05-06
+=====================================
+
+GENERAL MARITIME DOCUMENT
+Reference: GMD-468092
+Date: 2025-05-06
+
+VESSEL INFORMATION:
+Name: Aframax River
+IMO Number: 9996062
+Flag: Marshall Islands
+
+PORT DETAILS:
+Port: Houston
+Date: 2025-04-23
+
+CARGO INFORMATION:
+Type: LNG
+Quantity: 160461 MT
+
+PARTIES INVOLVED:
+Seller: Shell International Trading
+Buyer: TOTAL Trading SA
+Broker: Global Maritime Services
+
+REMARKS:
+Secure method of payment in international trade.
+
+________________________
+Authorized Signatory
+Date: 2025-05-06

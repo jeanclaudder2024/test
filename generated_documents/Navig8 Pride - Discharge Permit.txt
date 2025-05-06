@@ -1,0 +1,33 @@
+=====================================
+DOCUMENT TYPE: DISCHARGE PERMIT
+DOCUMENT DATE: 2025-05-06
+=====================================
+
+GENERAL MARITIME DOCUMENT
+Reference: GMD-326467
+Date: 2025-05-06
+
+VESSEL INFORMATION:
+Name: Navig8 Pride
+IMO Number: 9475911
+Flag: Panama
+
+PORT DETAILS:
+Port: Fujairah
+Date: 2025-04-10
+
+CARGO INFORMATION:
+Type: LNG
+Quantity: 131847 MT
+
+PARTIES INVOLVED:
+Seller: Shell International Trading
+Buyer: TOTAL Trading SA
+Broker: Global Maritime Services
+
+REMARKS:
+Permission to unload cargo.
+
+________________________
+Authorized Signatory
+Date: 2025-05-06

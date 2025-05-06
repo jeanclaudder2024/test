@@ -1,0 +1,33 @@
+=====================================
+DOCUMENT TYPE: PERFORMANCE BOND (PB)
+DOCUMENT DATE: 2025-05-06
+=====================================
+
+GENERAL MARITIME DOCUMENT
+Reference: GMD-112414
+Date: 2025-05-06
+
+VESSEL INFORMATION:
+Name: SCF Baltica
+IMO Number: 9703762
+Flag: Singapore
+
+PORT DETAILS:
+Port: Fujairah
+Date: 2025-04-12
+
+CARGO INFORMATION:
+Type: Diesel
+Quantity: 140479 MT
+
+PARTIES INVOLVED:
+Seller: Shell International Trading
+Buyer: TOTAL Trading SA
+Broker: Global Maritime Services
+
+REMARKS:
+2% performance guarantee in case of default.
+
+________________________
+Authorized Signatory
+Date: 2025-05-06

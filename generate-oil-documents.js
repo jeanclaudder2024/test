@@ -27,12 +27,53 @@ function generateDocuments() {
       try {
         console.log(`Processing row ${index + 1}:`, JSON.stringify(row));
         
-        const docType = row['Document Type'] || 'General Document';
-        const vesselName = row['Vessel Name'] || `Unnamed Vessel ${index + 1}`;
+        // Extract proper document type name from the Excel data
+        const docType = row['Document Name (EN)'] || 'General Document';
+        
+        // Generate vessel names based on real world oil tankers
+        const vesselNames = [
+          'Suez Rajan', 'Nordic Freedom', 'Advantage Spring', 'Maran Homer', 'SCF Baltica',
+          'Minerva Zoe', 'Aframax River', 'Eagle Vancouver', 'Stena Supreme', 'Delta Pioneer',
+          'Atlas Voyager', 'Pacific Victory', 'Olympic Faith', 'Nordic Apollo', 'Hafnia Rhine',
+          'Eagle Victoria', 'Navig8 Pride', 'Seaways Redwood', 'Maran Artemis', 'Gener8 Andriotis',
+          'Almi Globe', 'Sonangol Cabinda', 'Front Crown', 'Aegean Faith', 'TRF Kristiansand',
+          'Nissos Paros', 'Elandra Spruce', 'Marlin Aventurine'
+        ];
+        
+        // Select a vessel name based on the index, or use a default if index is out of range
+        const vesselName = index < vesselNames.length ? vesselNames[index] : `Unnamed Vessel ${index + 1}`;
+        
+        // Create a valid filename
         const documentName = `${vesselName} - ${docType}`.replace(/[\/\\:*?"<>|]/g, '_');
         
+        // Add maritime-specific data to the row for document generation
+        const enhancedRow = {
+          ...row,
+          'Document Type': docType, // Set the document type to the English name from the Excel
+          'Vessel Name': vesselName,
+          'Port Name': ['Rotterdam', 'Singapore', 'Houston', 'Fujairah', 'Shanghai'][Math.floor(Math.random() * 5)],
+          'Cargo Type': ['Crude Oil', 'Gasoline', 'Jet Fuel', 'Diesel', 'LNG'][Math.floor(Math.random() * 5)],
+          'Cargo Quantity': Math.floor(50000 + Math.random() * 150000),
+          'Unit': 'MT',
+          'Departure Date': new Date(Date.now() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000),
+          'Arrival Date': new Date(Date.now() + Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000),
+          'Document Date': new Date(),
+          'Broker': 'Global Maritime Services',
+          'Buyer': 'TOTAL Trading SA',
+          'Seller': 'Shell International Trading',
+          'Captain': `Captain ${['Smith', 'Anderson', 'Johnson', 'Miller', 'Martinez'][Math.floor(Math.random() * 5)]}`,
+          'Flag': ['Panama', 'Liberia', 'Marshall Islands', 'Greece', 'Singapore'][Math.floor(Math.random() * 5)],
+          'IMO Number': `9${Math.floor(100000 + Math.random() * 900000)}`,
+          'Price': Math.floor(70 + Math.random() * 40),
+          'Currency': 'USD',
+          'Refinery': ['Saudi Aramco Ras Tanura', 'ExxonMobil Baytown', 'Shell Pernis', 'Sinopec Zhenhai', 'Reliance Jamnagar'][Math.floor(Math.random() * 5)],
+          'Inspector Name': `${['John', 'Maria', 'Ahmed', 'Wei', 'Carlos'][Math.floor(Math.random() * 5)]} ${['Wilson', 'Chen', 'Al-Farsi', 'Garcia', 'Singh'][Math.floor(Math.random() * 5)]}`,
+          'Inspection Company': ['SGS Group', 'Bureau Veritas', 'Intertek', 'AmSpec', 'Saybolt'][Math.floor(Math.random() * 5)],
+          'Remarks': row['Notes'] || ''
+        };
+        
         // Generate document content based on document type
-        const content = generateDocumentContent(row);
+        const content = generateDocumentContent(enhancedRow);
         
         // Save document to file
         const filePath = path.join(docsDir, `${documentName}.txt`);
@@ -101,7 +142,614 @@ DOCUMENT DATE: ${documentDate}
 =====================================\n\n`;
 
   // Generate content based on document type
-  switch (docType.toLowerCase()) {
+  const docTypeLower = docType.toLowerCase();
+  
+  // Handle specific document types based on their english names from the Excel file
+  switch (docTypeLower) {
+    case 'letter of intent (loi)':
+      content += `LETTER OF INTENT (LOI)
+Reference: LOI-${Math.floor(100000 + Math.random() * 900000)}
+Date: ${documentDate}
+
+FROM:
+${buyer || 'GLOBAL OIL IMPORTS INC.'}
+Address: 456 Petroleum Avenue, Houston, TX, USA
+Contact: +1 713 555 1234
+
+TO:
+${seller || 'MASTER ENERGY TRADING LTD.'}
+Address: 123 Commerce Street, London, UK
+Contact: +44 20 7946 0000
+
+SUBJECT: INTENTION TO PURCHASE PETROLEUM PRODUCTS
+
+Dear Sir/Madam,
+
+I, the undersigned, acting as authorized representative of ${buyer || 'GLOBAL OIL IMPORTS INC.'}, hereby confirm our interest in purchasing the following petroleum products under the terms and conditions outlined below:
+
+PRODUCT SPECIFICATIONS:
+Product: ${cargoType}
+Quantity: ${cargoQuantity} ${cargoUnit} (+/- 5% at seller's option)
+Quality: As per international standards for ${cargoType}
+Price: ${price} ${currency} per ${cargoUnit} (CIF basis)
+Delivery: ${portName}
+Delivery Period: ${departureDate} to ${arrivalDate}
+
+PAYMENT TERMS:
+Payment Method: Letter of Credit
+L/C Opening Bank: International Trade Bank
+L/C Duration: 30 days from Bill of Lading date
+
+This Letter of Intent is valid for fifteen (15) days from the date hereof and shall automatically expire thereafter unless extended by mutual agreement in writing.
+
+This document represents our genuine interest to enter into a formal agreement for the above transaction and shall be followed by a detailed Sales & Purchase Agreement upon your acceptance.
+
+${remarks}
+
+Sincerely,
+
+________________________
+Authorized Signatory
+${buyer || 'GLOBAL OIL IMPORTS INC.'}
+Date: ${documentDate}`;
+      break;
+      
+    case 'soft corporate offer (sco)':
+      content += `SOFT CORPORATE OFFER (SCO)
+Reference: SCO-${Math.floor(100000 + Math.random() * 900000)}
+Date: ${documentDate}
+
+FROM:
+${seller || 'MASTER ENERGY TRADING LTD.'}
+Address: 123 Commerce Street, London, UK
+Contact: +44 20 7946 0000
+
+TO:
+${buyer || 'GLOBAL OIL IMPORTS INC.'}
+Address: 456 Petroleum Avenue, Houston, TX, USA
+Contact: +1 713 555 1234
+
+SUBJECT: OFFER FOR SUPPLY OF PETROLEUM PRODUCTS
+
+Dear Sir/Madam,
+
+We are pleased to submit our Soft Corporate Offer for the supply of petroleum products with the following specifications and terms:
+
+PRODUCT DETAILS:
+Product: ${cargoType}
+Quantity: ${cargoQuantity} ${cargoUnit} (+/- 5% at seller's option)
+Quality: As per international standards for ${cargoType}
+Origin: ${refinery || 'Various Origins'}
+Price: ${price} ${currency} per ${cargoUnit} (CIF basis)
+Delivery Port: ${portName}
+Delivery Timeline: ${departureDate} to ${arrivalDate}
+
+PAYMENT TERMS:
+Payment Method: 100% irrevocable, transferable Letter of Credit
+L/C Duration: 30 days from Bill of Lading date
+Issuing Bank: Top 25 world bank
+
+DOCUMENTATION:
+- Commercial Invoice
+- Bill of Lading
+- Certificate of Origin
+- Certificate of Quality
+- Certificate of Quantity
+- Packing List
+
+This offer is valid for five (5) business days from the date of issue and subject to prior sale and availability at time of confirmation.
+
+${remarks}
+
+Sincerely,
+
+________________________
+Authorized Signatory
+${seller || 'MASTER ENERGY TRADING LTD.'}
+Date: ${documentDate}`;
+      break;
+      
+    case 'irrevocable corporate purchase order (icpo)':
+      content += `IRREVOCABLE CORPORATE PURCHASE ORDER (ICPO)
+Reference: ICPO-${Math.floor(100000 + Math.random() * 900000)}
+Date: ${documentDate}
+
+FROM:
+${buyer || 'GLOBAL OIL IMPORTS INC.'}
+Address: 456 Petroleum Avenue, Houston, TX, USA
+Contact: +1 713 555 1234
+
+TO:
+${seller || 'MASTER ENERGY TRADING LTD.'}
+Address: 123 Commerce Street, London, UK
+Contact: +44 20 7946 0000
+
+SUBJECT: IRREVOCABLE PURCHASE ORDER FOR PETROLEUM PRODUCTS
+
+Dear Sir/Madam,
+
+We, the undersigned, as authorized representatives of ${buyer || 'GLOBAL OIL IMPORTS INC.'}, hereby confirm our irrevocable intention to purchase the following petroleum products under the terms and conditions outlined below:
+
+PRODUCT SPECIFICATIONS:
+Product: ${cargoType}
+Quantity: ${cargoQuantity} ${cargoUnit} (+/- 5% at seller's option)
+Quality: As per international standards for ${cargoType}
+Price: ${price} ${currency} per ${cargoUnit} (CIF basis)
+Delivery: ${portName}
+Delivery Period: ${departureDate} to ${arrivalDate}
+
+PAYMENT TERMS:
+Payment Method: Irrevocable, Transferable Letter of Credit
+L/C Opening Bank: International Trade Bank, New York
+L/C Duration: 30 days from Bill of Lading date
+
+INSPECTION:
+Inspection Company: ${inspectionCompany}
+Inspection Location: Both loading and discharge ports
+
+DOCUMENTATION REQUIRED:
+- Commercial Invoice (3 originals, 3 copies)
+- Full set of 3/3 original Clean on Board Ocean Bills of Lading
+- Certificate of Origin (1 original, 3 copies)
+- Certificate of Quality (1 original, 3 copies)
+- Certificate of Quantity (1 original, 3 copies)
+- Packing List (1 original, 3 copies)
+
+This Purchase Order is irrevocable and binding upon both parties when countersigned by the Seller. Please indicate your acceptance by signing and returning a copy of this document within five (5) business days.
+
+${remarks}
+
+FOR THE BUYER:                       FOR THE SELLER:
+
+________________________           ________________________
+Authorized Signatory                Authorized Signatory
+${buyer || 'GLOBAL OIL IMPORTS INC.'}    ${seller || 'MASTER ENERGY TRADING LTD.'}
+Date: ${documentDate}              Date: ____________________`;
+      break;
+      
+    case 'sales & purchase agreement (spa)':
+      content += `SALES & PURCHASE AGREEMENT (SPA)
+Reference: SPA-${Math.floor(100000 + Math.random() * 900000)}
+Date: ${documentDate}
+
+BETWEEN:
+SELLER: ${seller || 'MASTER ENERGY TRADING LTD.'}
+Address: 123 Commerce Street, London, UK
+Contact: +44 20 7946 0000
+
+AND:
+BUYER: ${buyer || 'GLOBAL OIL IMPORTS INC.'}
+Address: 456 Petroleum Avenue, Houston, TX, USA
+Contact: +1 713 555 1234
+
+PRODUCT SPECIFICATIONS:
+Product: ${cargoType}
+Quantity: ${cargoQuantity} ${cargoUnit} (+/- 5% at seller's option)
+Quality: As per specifications in Appendix A
+Price: ${price} ${currency} per ${cargoUnit} (CIF basis)
+Delivery: ${portName}
+Delivery Period: ${departureDate} to ${arrivalDate}
+
+PAYMENT TERMS:
+Payment Method: Irrevocable, Transferable Letter of Credit
+L/C Opening Bank: International Trade Bank, New York
+L/C Duration: 30 days from Bill of Lading date
+
+INSPECTION:
+Inspection Company: ${inspectionCompany}
+Inspection Location: Both loading and discharge ports
+Inspections Costs: Shared equally between Buyer and Seller
+
+SHIPPING TERMS:
+Vessel Name: ${vesselName}
+IMO Number: ${imo}
+Flag: ${flag}
+Master: ${captain}
+Shipping Mode: CIF ${portName}
+Laycan: ${departureDate} to ${arrivalDate}
+
+DOCUMENTATION:
+The Seller shall provide the following documents:
+- Commercial Invoice (3 originals, 3 copies)
+- Full set of 3/3 original Clean on Board Ocean Bills of Lading
+- Certificate of Origin (1 original, 3 copies)
+- Certificate of Quality (1 original, 3 copies)
+- Certificate of Quantity (1 original, 3 copies)
+- Packing List (1 original, 3 copies)
+
+FORCE MAJEURE:
+Neither party shall be liable for failure to perform any obligation under this Agreement due to events beyond their reasonable control including but not limited to acts of God, fire, flood, war, governmental restrictions.
+
+ARBITRATION:
+Any dispute arising out of or in connection with this Agreement shall be referred to arbitration in London in accordance with the rules of the London Court of International Arbitration.
+
+GOVERNING LAW:
+This Agreement shall be governed by and construed in accordance with English Law.
+
+${remarks}
+
+FOR THE SELLER:                      FOR THE BUYER:
+
+________________________           ________________________
+Authorized Signatory                Authorized Signatory
+${seller || 'MASTER ENERGY TRADING LTD.'}    ${buyer || 'GLOBAL OIL IMPORTS INC.'}
+Date: ${documentDate}              Date: ${documentDate}`;
+      break;
+
+    case 'proforma invoice':
+      content += `PROFORMA INVOICE
+Reference: PI-${Math.floor(100000 + Math.random() * 900000)}
+Date: ${documentDate}
+
+SELLER:
+${seller || 'MASTER ENERGY TRADING LTD.'}
+Address: 123 Commerce Street, London, UK
+Contact: +44 20 7946 0000
+Tax ID: GB123456789
+
+BUYER:
+${buyer || 'GLOBAL OIL IMPORTS INC.'}
+Address: 456 Petroleum Avenue, Houston, TX, USA
+Contact: +1 713 555 1234
+Tax ID: US987654321
+
+PRODUCT DETAILS:
+Description: ${cargoType}
+HS Code: ${cargoType.toLowerCase().includes('crude') ? '2709.00' : cargoType.toLowerCase().includes('gasoline') ? '2710.12' : '2710.19'}
+Origin: ${refinery || 'Various Origins'}
+Quantity: ${cargoQuantity} ${cargoUnit}
+Unit Price: ${price} ${currency} per ${cargoUnit}
+Total Value: ${(parseFloat(cargoQuantity) * parseFloat(price)).toLocaleString()} ${currency}
+
+SHIPPING DETAILS:
+Delivery Terms: CIF ${portName}
+Port of Loading: ${portName}
+Expected Shipping Date: ${departureDate}
+Vessel: ${vesselName}
+IMO Number: ${imo}
+
+PAYMENT TERMS:
+Payment Method: Irrevocable Letter of Credit
+L/C Validity: 45 days
+Banking Details: 
+Bank: International Banking Corporation
+Swift Code: INTBCXXX
+Account Number: 12345678
+
+REMARKS:
+This is a proforma invoice only and not a demand for payment.
+Final quantities will be determined by outturn measurements at discharge port.
+${remarks}
+
+FOR THE SELLER:
+
+________________________
+Authorized Signatory
+${seller || 'MASTER ENERGY TRADING LTD.'}
+Date: ${documentDate}`;
+      break;
+
+    case 'commercial invoice':
+      content += `COMMERCIAL INVOICE
+Reference: INV-${Math.floor(100000 + Math.random() * 900000)}
+Date: ${documentDate}
+
+SELLER:
+${seller || 'MASTER ENERGY TRADING LTD.'}
+Address: 123 Commerce Street, London, UK
+Contact: +44 20 7946 0000
+Tax ID: GB123456789
+
+BUYER:
+${buyer || 'GLOBAL OIL IMPORTS INC.'}
+Address: 456 Petroleum Avenue, Houston, TX, USA
+Contact: +1 713 555 1234
+Tax ID: US987654321
+
+PRODUCT DETAILS:
+Description: ${cargoType}
+HS Code: ${cargoType.toLowerCase().includes('crude') ? '2709.00' : cargoType.toLowerCase().includes('gasoline') ? '2710.12' : '2710.19'}
+Origin: ${refinery || 'Various Origins'}
+Quantity: ${cargoQuantity} ${cargoUnit}
+Unit Price: ${price} ${currency} per ${cargoUnit}
+Total Value: ${(parseFloat(cargoQuantity) * parseFloat(price)).toLocaleString()} ${currency}
+
+SHIPPING DETAILS:
+Delivery Terms: CIF ${portName}
+Port of Loading: ${portName}
+Shipping Date: ${departureDate}
+Vessel: ${vesselName}
+IMO Number: ${imo}
+B/L Number: BL-${Math.floor(100000 + Math.random() * 900000)}
+
+PAYMENT TERMS:
+Payment Method: As per Sales & Purchase Agreement
+L/C Reference: LC-${Math.floor(100000 + Math.random() * 900000)}
+Banking Details:
+Bank: International Banking Corporation
+Swift Code: INTBCXXX
+Account Number: 12345678
+
+REMARKS:
+We hereby certify that this invoice shows the actual price of the goods described, and that all particulars are true and correct.
+${remarks}
+
+FOR THE SELLER:
+
+________________________
+Authorized Signatory
+${seller || 'MASTER ENERGY TRADING LTD.'}
+Date: ${documentDate}`;
+      break;
+      
+    case 'packing list':
+      content += `PACKING LIST
+Reference: PL-${Math.floor(100000 + Math.random() * 900000)}
+Date: ${documentDate}
+
+SELLER:
+${seller || 'MASTER ENERGY TRADING LTD.'}
+Address: 123 Commerce Street, London, UK
+Contact: +44 20 7946 0000
+
+BUYER:
+${buyer || 'GLOBAL OIL IMPORTS INC.'}
+Address: 456 Petroleum Avenue, Houston, TX, USA
+Contact: +1 713 555 1234
+
+SHIPPING DETAILS:
+Vessel: ${vesselName}
+IMO Number: ${imo}
+Flag: ${flag}
+Port of Loading: ${portName}
+Date of Loading: ${departureDate}
+Port of Discharge: ${row['Destination Port'] || 'TBN (To Be Nominated)'}
+Estimated Arrival: ${arrivalDate}
+B/L Number: BL-${Math.floor(100000 + Math.random() * 900000)}
+
+CARGO DETAILS:
+Product Description: ${cargoType}
+Total Quantity: ${cargoQuantity} ${cargoUnit}
+Number of Parcels: 1
+
+TANK DISTRIBUTION:
+${(() => {
+  const tankCount = Math.floor(4 + Math.random() * 6);
+  let distribution = '';
+  let remaining = parseFloat(cargoQuantity);
+  
+  for (let i = 1; i <= tankCount; i++) {
+    const tankPercentage = (i === tankCount) ? 1 : (1 / tankCount + (Math.random() * 0.1 - 0.05));
+    const tankQuantity = (i === tankCount) ? remaining : parseFloat(cargoQuantity) * tankPercentage;
+    remaining -= tankQuantity;
+    
+    distribution += `Tank ${i}: ${tankQuantity.toFixed(3)} ${cargoUnit}\n`;
+  }
+  
+  return distribution;
+})()}
+
+REMARKS:
+The product is loaded in bulk as per the quality specifications outlined in the Certificate of Quality.
+${remarks}
+
+FOR THE SELLER:
+
+________________________
+Authorized Signatory
+${seller || 'MASTER ENERGY TRADING LTD.'}
+Date: ${documentDate}`;
+      break;
+      
+    case 'safety data sheet (sds)':
+      content += `SAFETY DATA SHEET (SDS)
+Reference: SDS-${Math.floor(100000 + Math.random() * 900000)}
+Date: ${documentDate}
+Revision: 01
+
+SECTION 1: IDENTIFICATION OF THE SUBSTANCE/MIXTURE AND OF THE COMPANY/UNDERTAKING
+
+Product Identifier: ${cargoType}
+CAS Number: ${cargoType.toLowerCase().includes('crude') ? '8002-05-9' : cargoType.toLowerCase().includes('gasoline') ? '86290-81-5' : cargoType.toLowerCase().includes('diesel') ? '68334-30-5' : '64741-77-1'}
+Relevant identified uses: Fuel
+Supplier: ${seller || 'MASTER ENERGY TRADING LTD.'}
+Address: 123 Commerce Street, London, UK
+Emergency telephone: +44 20 7946 0000
+
+SECTION 2: HAZARDS IDENTIFICATION
+
+Classification: Flammable Liquid Category ${cargoType.toLowerCase().includes('crude') ? '2' : cargoType.toLowerCase().includes('gasoline') ? '1' : '3'}
+Signal Word: DANGER
+Hazard Statements:
+H${cargoType.toLowerCase().includes('gasoline') ? '224' : cargoType.toLowerCase().includes('crude') ? '225' : '226'} - ${cargoType.toLowerCase().includes('gasoline') ? 'Extremely' : cargoType.toLowerCase().includes('crude') ? 'Highly' : 'Extremely'} flammable liquid and vapor
+H304 - May be fatal if swallowed and enters airways
+H315 - Causes skin irritation
+H336 - May cause drowsiness or dizziness
+H350 - May cause cancer
+H373 - May cause damage to organs through prolonged or repeated exposure
+H411 - Toxic to aquatic life with long-lasting effects
+
+Precautionary Statements:
+P210 - Keep away from heat, hot surfaces, sparks, open flames and other ignition sources. No smoking.
+P273 - Avoid release to the environment
+P280 - Wear protective gloves/protective clothing/eye protection/face protection
+P301+P310 - IF SWALLOWED: Immediately call a POISON CENTER or doctor/physician
+P403+P235 - Store in a well-ventilated place. Keep cool
+
+SECTION 3: COMPOSITION/INFORMATION ON INGREDIENTS
+
+Chemical Characterization: ${cargoType.toLowerCase().includes('crude') ? 'Complex combination of hydrocarbons' : 'Petroleum product'}
+Hazardous Components:
+${cargoType.toLowerCase().includes('crude') ? 'Crude oil (CAS 8002-05-9): 100%' : cargoType.toLowerCase().includes('gasoline') ? 'Gasoline (CAS 86290-81-5): >99%\nBenzene (CAS 71-43-2): <1%' : cargoType.toLowerCase().includes('diesel') ? 'Diesel fuel (CAS 68334-30-5): >99%' : 'Petroleum distillates (CAS 64741-77-1): >99%'}
+
+SECTION 4: FIRST AID MEASURES
+
+Inhalation: Remove victim to fresh air and keep at rest in a position comfortable for breathing. If not breathing, give artificial respiration. Get medical attention.
+Skin Contact: Remove contaminated clothing. Wash affected area with soap and water. Get medical attention if irritation develops or persists.
+Eye Contact: Flush eyes with water for at least 15 minutes. Remove contact lenses if present and easy to do. Get medical attention.
+Ingestion: Do NOT induce vomiting. Get immediate medical attention. If vomiting occurs, keep head low to prevent aspiration.
+
+SECTION 5: FIREFIGHTING MEASURES
+
+Extinguishing Media: Dry chemical powder, foam, carbon dioxide
+Specific Hazards: Highly flammable. Vapors may form explosive mixtures with air. Vapors may travel to ignition sources and flash back.
+Advice for Firefighters: Wear self-contained breathing apparatus and full protective gear.
+
+This is an abbreviated version of the Safety Data Sheet. Refer to the full document for complete information.
+
+${seller || 'MASTER ENERGY TRADING LTD.'}
+Date: ${documentDate}`;
+      break;
+
+    case 'certificate of quantity':
+      content += `CERTIFICATE OF QUANTITY
+Reference: CON-${Math.floor(100000 + Math.random() * 900000)}
+Date: ${documentDate}
+
+VESSEL INFORMATION:
+Vessel Name: ${vesselName}
+IMO Number: ${imo}
+Flag: ${flag}
+
+CARGO DETAILS:
+Product: ${cargoType}
+Loading Port: ${portName}
+Loading Date: ${departureDate}
+Shore Tank(s): Tank ${Math.floor(100 + Math.random() * 900)}
+
+QUANTITY DETERMINATION:
+Method of Measurement: Shore Tank Measurement / Vessel Tank Measurement / Flow Meter
+Temperature: ${Math.floor(15 + Math.random() * 10)}°C
+Density at 15°C: ${cargoType.toLowerCase().includes('crude') ? (820 + Math.random() * 50).toFixed(2) : cargoType.toLowerCase().includes('gasoline') ? (730 + Math.random() * 40).toFixed(2) : (830 + Math.random() * 40).toFixed(2)} kg/m³
+
+QUANTITY DETAILS:
+Gross Observed Volume: ${parseFloat(cargoQuantity) * 1.002} ${cargoUnit}
+Temperature Correction Factor: ${(0.985 + Math.random() * 0.01).toFixed(5)}
+Gross Standard Volume (at 15°C): ${parseFloat(cargoQuantity)} ${cargoUnit}
+Water & Sediment: ${(Math.random() * 0.15).toFixed(2)}%
+Net Standard Volume: ${(parseFloat(cargoQuantity) * (1 - Math.random() * 0.002)).toFixed(3)} ${cargoUnit}
+Weight in Air: ${(parseFloat(cargoQuantity) * (cargoType.toLowerCase().includes('crude') ? 0.85 : cargoType.toLowerCase().includes('gasoline') ? 0.75 : 0.85)).toFixed(3)} Metric Tons
+
+MEASUREMENT WITNESSED BY:
+Seller's Representative: ${seller || 'MASTER ENERGY TRADING LTD.'}
+Buyer's Representative: ${buyer || 'GLOBAL OIL IMPORTS INC.'}
+Independent Inspector: ${inspectionCompany}
+
+REMARKS:
+The above quantities were determined in accordance with API/ASTM standards.
+${remarks}
+
+CERTIFICATION:
+This is to certify that the above quantities were determined by or under the supervision of the undersigned, and are true and correct to the best of our knowledge and belief.
+
+________________________
+${inspectorName}
+${inspectionCompany}
+Date: ${documentDate}`;
+      break;
+      
+    case 'shipping declaration':
+      content += `SHIPPING DECLARATION
+Reference: SD-${Math.floor(100000 + Math.random() * 900000)}
+Date: ${documentDate}
+
+VESSEL INFORMATION:
+Vessel Name: ${vesselName}
+IMO Number: ${imo}
+Flag: ${flag}
+Call Sign: ${(['ALPHA', 'BRAVO', 'CHARLIE', 'DELTA', 'ECHO'])[Math.floor(Math.random() * 5)]}${Math.floor(1000 + Math.random() * 9000)}
+Gross Tonnage: ${Math.floor(30000 + Math.random() * 70000)} MT
+Net Tonnage: ${Math.floor(20000 + Math.random() * 50000)} MT
+Year Built: ${2000 + Math.floor(Math.random() * 22)}
+
+VOYAGE DETAILS:
+Voyage Number: ${Math.floor(100 + Math.random() * 900)}
+Port of Loading: ${portName}
+Loading Date: ${departureDate}
+Port of Discharge: ${row['Destination Port'] || 'TBN (To Be Nominated)'}
+Expected Arrival: ${arrivalDate}
+
+CARGO INFORMATION:
+Type of Cargo: ${cargoType}
+Quantity: ${cargoQuantity} ${cargoUnit}
+UN Number: ${cargoType.toLowerCase().includes('crude') ? 'UN1267' : cargoType.toLowerCase().includes('gasoline') ? 'UN1203' : cargoType.toLowerCase().includes('diesel') ? 'UN1202' : 'UN1223'}
+IMO Class: ${cargoType.toLowerCase().includes('crude') ? '3' : cargoType.toLowerCase().includes('gasoline') ? '3' : cargoType.toLowerCase().includes('diesel') ? '3' : '3'}
+Packing Group: ${cargoType.toLowerCase().includes('gasoline') ? 'II' : 'III'}
+Marine Pollutant: Yes
+Flashpoint: ${cargoType.toLowerCase().includes('crude') ? '<23°C' : cargoType.toLowerCase().includes('gasoline') ? '<-40°C' : cargoType.toLowerCase().includes('diesel') ? '>55°C' : '>60°C'}
+
+CARRIER/AGENT INFORMATION:
+Carrier: ${seller || 'MASTER ENERGY TRADING LTD.'}
+Carrier's Agent at Loading Port: Global Shipping Agency
+Agent's Contact: +1 555 123 4567
+
+DECLARATION:
+I hereby declare that the contents of this consignment are fully and accurately described above by the proper shipping name, and are classified, packaged, marked and labeled/placarded, and are in all respects in proper condition for transport according to applicable international and national governmental regulations.
+
+${remarks}
+
+________________________
+Authorized Signatory
+${seller || 'MASTER ENERGY TRADING LTD.'}
+Date: ${documentDate}`;
+      break;
+      
+    case 'delivery report':
+      content += `DELIVERY REPORT
+Reference: DR-${Math.floor(100000 + Math.random() * 900000)}
+Date: ${documentDate}
+
+RECEIVER INFORMATION:
+Receiver: ${buyer || 'GLOBAL OIL IMPORTS INC.'}
+Address: 456 Petroleum Avenue, Houston, TX, USA
+Contact Person: ${Math.random() > 0.5 ? 'Mr. John Smith' : 'Ms. Sarah Chen'}
+Contact Number: +1 713 555 1234
+
+SHIPPER INFORMATION:
+Shipper: ${seller || 'MASTER ENERGY TRADING LTD.'}
+Address: 123 Commerce Street, London, UK
+Contact Person: ${Math.random() > 0.5 ? 'Mr. Andrew Wilson' : 'Ms. Emily Johnson'}
+Contact Number: +44 20 7946 0000
+
+SHIPMENT DETAILS:
+Product: ${cargoType}
+Purchase Order Number: PO-${Math.floor(100000 + Math.random() * 900000)}
+Vessel Name: ${vesselName}
+IMO Number: ${imo}
+Port of Loading: ${portName}
+Loading Date: ${departureDate}
+Port of Discharge: ${row['Destination Port'] || buyer || 'Houston'}
+Discharge Date: ${arrivalDate}
+
+QUANTITY DETAILS:
+Bill of Lading Quantity: ${parseFloat(cargoQuantity)} ${cargoUnit}
+Delivered Quantity: ${(parseFloat(cargoQuantity) * (1 - Math.random() * 0.005)).toFixed(3)} ${cargoUnit}
+Discrepancy: ${(parseFloat(cargoQuantity) * Math.random() * 0.005).toFixed(3)} ${cargoUnit} (${(Math.random() * 0.5).toFixed(2)}%)
+Reason for Discrepancy: ${Math.random() > 0.5 ? 'Normal transit loss' : 'Temperature variation'}
+
+QUALITY INSPECTION:
+Inspector: ${inspectionCompany}
+Quality Compliance: ${Math.random() > 0.8 ? 'Partial - See remarks' : 'Full - All specifications met'}
+Sample References: S-${Math.floor(10000 + Math.random() * 90000)}
+
+DELIVERY CONFIRMATION:
+☑ All documentation received
+☑ Product quality verified
+☑ Product quantity verified
+☑ Delivery accepted
+
+REMARKS:
+${remarks || 'Delivery completed successfully. All contractual obligations have been met.'}
+
+Received By:
+
+________________________
+Authorized Signatory
+${buyer || 'GLOBAL OIL IMPORTS INC.'}
+Date: ${documentDate}`;
+      break;
+    
+    case 'bill of lading (b/l)':
     case 'bill of lading':
       content += `BILL OF LADING
 Reference: BOL-${Math.floor(100000 + Math.random() * 900000)}

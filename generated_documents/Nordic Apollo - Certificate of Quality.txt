@@ -1,0 +1,48 @@
+=====================================
+DOCUMENT TYPE: CERTIFICATE OF QUALITY
+DOCUMENT DATE: 2025-05-06
+=====================================
+
+CERTIFICATE OF QUALITY
+Reference: COQ-568377
+Date: 2025-05-06
+
+VESSEL INFORMATION:
+Vessel Name: Nordic Apollo
+IMO Number: 9203087
+Flag: Panama
+
+CARGO DETAILS:
+Product: Diesel
+Total Quantity: 63938 MT
+Loading Port: Shanghai
+Loading Date: 2025-04-08
+Origin: Shell Pernis
+
+QUALITY ANALYSIS:
+Sample Type: Composite
+Sample Date: 2025-05-06
+Analysis Performed By: SGS Group
+
+TEST RESULTS:
+Parameter                 | Result        | Specification    | Method
+--------------------------|---------------|------------------|------------------
+Cetane Number             | 55          | Min 49           | ASTM D613
+Density @ 15°C, kg/m³     | 836        | 820-845          | ASTM D1298
+Sulfur Content, ppm       | 6          | Max 15           | ASTM D5453
+Flash Point, °C           | 69          | Min 55           | ASTM D93
+Viscosity @ 40°C, mm²/s   | 2.32         | 2.0-4.5          | ASTM D445
+Cloud Point, °C           | -15          | Max 0            | ASTM D2500
+CFPP, °C                  | -21         | Max -10          | ASTM D6371
+Water Content, mg/kg      | 187        | Max 200          | ASTM D6304
+
+CERTIFICATION:
+This is to certify that the above samples were drawn and analyzed in accordance with standard industry procedures and the results conform to the agreed specifications.
+
+Quality analysis of product.
+
+________________________
+John Chen
+Quality Assurance Manager
+SGS Group
+Date: 2025-05-06

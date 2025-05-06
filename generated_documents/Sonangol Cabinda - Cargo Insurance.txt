@@ -1,0 +1,33 @@
+=====================================
+DOCUMENT TYPE: CARGO INSURANCE
+DOCUMENT DATE: 2025-05-06
+=====================================
+
+GENERAL MARITIME DOCUMENT
+Reference: GMD-234761
+Date: 2025-05-06
+
+VESSEL INFORMATION:
+Name: Sonangol Cabinda
+IMO Number: 9342905
+Flag: Panama
+
+PORT DETAILS:
+Port: Houston
+Date: 2025-04-13
+
+CARGO INFORMATION:
+Type: Diesel
+Quantity: 128626 MT
+
+PARTIES INVOLVED:
+Seller: Shell International Trading
+Buyer: TOTAL Trading SA
+Broker: Global Maritime Services
+
+REMARKS:
+Coverage against cargo loss/damage.
+
+________________________
+Authorized Signatory
+Date: 2025-05-06

@@ -1,0 +1,55 @@
+=====================================
+DOCUMENT TYPE: PACKING LIST
+DOCUMENT DATE: 2025-05-06
+=====================================
+
+PACKING LIST
+Reference: PL-666440
+Date: 2025-05-06
+
+SELLER:
+Shell International Trading
+Address: 123 Commerce Street, London, UK
+Contact: +44 20 7946 0000
+
+BUYER:
+TOTAL Trading SA
+Address: 456 Petroleum Avenue, Houston, TX, USA
+Contact: +1 713 555 1234
+
+SHIPPING DETAILS:
+Vessel: Olympic Faith
+IMO Number: 9758212
+Flag: Singapore
+Port of Loading: Fujairah
+Date of Loading: 2025-05-05
+Port of Discharge: TBN (To Be Nominated)
+Estimated Arrival: 2025-05-31
+B/L Number: BL-813173
+
+CARGO DETAILS:
+Product Description: Crude Oil
+Total Quantity: 58607 MT
+Number of Parcels: 1
+
+TANK DISTRIBUTION:
+Tank 1: 8557.624 MT
+Tank 2: 5187.008 MT
+Tank 3: 5275.512 MT
+Tank 4: 8940.170 MT
+Tank 5: 5045.459 MT
+Tank 6: 7057.997 MT
+Tank 7: 7101.939 MT
+Tank 8: 11441.291 MT
+
+
+REMARKS:
+The product is loaded in bulk as per the quality specifications outlined in the Certificate of Quality.
+Detailed content of shipment.
+
+FOR THE SELLER:
+
+________________________
+Authorized Signatory
+Shell International Trading
+Date: 2025-05-06
