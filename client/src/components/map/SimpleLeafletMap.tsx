@@ -1291,6 +1291,84 @@ export default function SimpleLeafletMap({
       refineryMarkersRef.current.push(marker);
     });
     
+    // Add custom markers if provided
+    if (markers && markers.length > 0) {
+      console.log(`Processing ${markers.length} custom markers for display on map`);
+      
+      markers.forEach(marker => {
+        const [lat, lng] = marker.position;
+        
+        if (isNaN(lat) || isNaN(lng)) return;
+        
+        // Create custom marker icon based on marker type
+        const getMarkerEmoji = () => {
+          switch (marker.type) {
+            case 'warning': return '⚠️';
+            case 'alert': return '🚨';
+            case 'info': return 'ℹ️';
+            case 'ship': return '🚢';
+            case 'refinery': return '🏭';
+            case 'port': return '🚢';
+            case 'location': return '📍';
+            default: return '📌';
+          }
+        };
+        
+        // Get marker color
+        const getMarkerColor = () => {
+          switch (marker.type) {
+            case 'warning': return '#FFB020';
+            case 'alert': return '#FF4842';
+            case 'info': return '#2196F3';
+            case 'ship': return '#00AB55';
+            case 'refinery': return '#BA68C8';
+            case 'port': return '#0288D1';
+            case 'location': return '#F44336';
+            default: return '#637381';
+          }
+        };
+        
+        // Create custom icon
+        const customIcon = L.divIcon({
+          html: `
+            <div class="custom-marker-container">
+              <div class="custom-marker" style="
+                width: 30px;
+                height: 30px;
+                background: rgba(255,255,255,0.95);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border: 2px solid ${getMarkerColor()};
+                box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                font-size: 16px;
+              ">
+                ${getMarkerEmoji()}
+              </div>
+            </div>
+          `,
+          className: 'custom-marker-wrapper',
+          iconSize: [30, 30],
+          iconAnchor: [15, 15]
+        });
+        
+        // Add marker with popup
+        const customMarker = L.marker([lat, lng], { icon: customIcon })
+          .bindPopup(`
+            <div class="custom-marker-popup">
+              <div style="font-weight: bold; margin-bottom: 5px; border-bottom: 2px solid ${getMarkerColor()}; padding-bottom: 5px;">
+                ${marker.tooltip}
+              </div>
+            </div>
+          `)
+          .addTo(map);
+          
+        // Store marker reference for later cleanup
+        refineryMarkersRef.current.push(customMarker);
+      });
+    }
+    
     // Add port markers
     if (ports && ports.length > 0) {
       console.log(`Processing ${ports.length} ports for display on map`);
@@ -1624,7 +1702,7 @@ export default function SimpleLeafletMap({
   }
   
   return (
-    <div className="relative h-[500px] rounded-lg overflow-hidden border border-border bg-card">
+    <div className={`relative h-[500px] rounded-lg overflow-hidden border border-border bg-card ${className}`}>
       {/* Stable Map Container - key prevents remounting */}
       <div className="absolute inset-0 w-full h-full z-0">
         <MapContainer id={MAP_CONTAINER_ID} className="w-full h-full" />

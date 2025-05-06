@@ -1,599 +1,871 @@
-import { useState, useEffect } from 'react';
-import { useParams, Link } from 'wouter';
+import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Refinery, Vessel } from '@shared/schema';
-import { formatDistance } from 'date-fns';
-import { MapPinIcon, AlertTriangle, ThermometerIcon, DropletIcon, Cloud, Wind, SunIcon, RefreshCw } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { useParams, useLocation, Link } from 'wouter';
+import { type Vessel, type Refinery } from '@shared/schema';
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle 
+} from '@/components/ui/card';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { 
+  Tabs, 
+  TabsContent, 
+  TabsList, 
+  TabsTrigger 
+} from '@/components/ui/tabs';
+import { 
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from '@/components/ui/progress';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useToast } from '@/hooks/use-toast';
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import SimpleLeafletMap from '@/components/map/SimpleLeafletMap';
+import {
+  AlertCircle,
+  BarChart,
+  Calendar,
+  ChevronLeft,
+  Clock,
+  CloudSun,
+  Compass,
+  Droplets,
+  Factory,
+  FileText,
+  Flag,
+  Globe,
+  History,
+  Info,
+  Map,
+  Menu,
+  MessageSquare,
+  Milestone,
+  MoreHorizontal,
+  Navigation,
+  Ship,
+  Thermometer,
+  Timer,
+  Truck,
+  Wind,
+} from 'lucide-react';
 
-// Weather card component
-const WeatherCard = ({ weather, isLoading }: { weather: any, isLoading: boolean }) => {
-  if (isLoading) {
-    return (
-      <Card className="h-full">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg font-medium flex items-center gap-2">
-            <ThermometerIcon className="h-5 w-5" />
-            Weather Conditions
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pb-2">
-          <div className="flex flex-col gap-3">
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-3/4" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-1/2" />
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (!weather) {
-    return (
-      <Card className="h-full">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg font-medium flex items-center gap-2">
-            <ThermometerIcon className="h-5 w-5" />
-            Weather Conditions
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pb-2">
-          <div className="flex flex-col items-center justify-center p-4 text-muted-foreground">
-            <Cloud className="h-10 w-10 mb-2 opacity-50" />
-            <p>Weather data unavailable</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <Card className="h-full">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-medium flex items-center gap-2">
-          <ThermometerIcon className="h-5 w-5" />
-          Weather Conditions
-        </CardTitle>
-        <CardDescription>
-          Last updated: {formatDistance(new Date(weather.lastUpdated), new Date(), { addSuffix: true })}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="pb-2">
-        <div className="grid grid-cols-2 gap-3">
-          <div className="flex items-center gap-2">
-            <ThermometerIcon className="h-4 w-4 text-orange-500" />
-            <span className="text-sm">{weather.temperature}°C</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <DropletIcon className="h-4 w-4 text-blue-500" />
-            <span className="text-sm">{weather.humidity}% Humidity</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Wind className="h-4 w-4 text-slate-500" />
-            <span className="text-sm">{weather.windSpeed} km/h {weather.windDirection}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Cloud className="h-4 w-4 text-gray-500" />
-            <span className="text-sm">{weather.conditions}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <SunIcon className="h-4 w-4 text-yellow-500" />
-            <span className="text-sm">UV: {weather.uvIndex}/10</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 text-blue-500" />
-            <span className="text-sm">Seas: {weather.seaState}</span>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
-
-// Insights card component
-const InsightsCard = ({ insights, isLoading, onRefresh }: { 
-  insights: any, 
-  isLoading: boolean,
-  onRefresh: () => void 
-}) => {
-  if (isLoading) {
-    return (
-      <Card className="h-full">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg font-medium">AI Analysis</CardTitle>
-        </CardHeader>
-        <CardContent className="pb-2">
-          <div className="flex flex-col gap-3">
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-3/4" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-5/6" />
-            <Skeleton className="h-4 w-3/4" />
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (!insights) {
-    return (
-      <Card className="h-full">
-        <CardHeader className="pb-2">
-          <div className="flex justify-between items-center">
-            <CardTitle className="text-lg font-medium">AI Analysis</CardTitle>
-            <Button variant="outline" size="sm" onClick={onRefresh}>
-              <RefreshCw className="h-4 w-4 mr-1" />
-              Generate
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="pb-2">
-          <div className="flex flex-col items-center justify-center p-4 text-muted-foreground">
-            <p>No insights available. Click Generate to analyze refinery data.</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <Card className="h-full">
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-lg font-medium">AI Analysis</CardTitle>
-          <Button variant="outline" size="sm" onClick={onRefresh}>
-            <RefreshCw className="h-4 w-4 mr-1" />
-            Refresh
-          </Button>
-        </div>
-        <CardDescription>
-          {insights.generated_at && (
-            <>Generated {formatDistance(new Date(insights.generated_at), new Date(), { addSuffix: true })}</>
-          )}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="pb-2 space-y-3">
-        <div>
-          <p className="font-medium text-sm">Summary</p>
-          <p className="text-sm text-muted-foreground">{insights.summary}</p>
-        </div>
-        <Separator />
-        <div>
-          <p className="font-medium text-sm">Operations</p>
-          <p className="text-sm text-muted-foreground">{insights.operational_insights}</p>
-        </div>
-        <div>
-          <p className="font-medium text-sm">Supply Chain</p>
-          <p className="text-sm text-muted-foreground">{insights.supply_chain_status}</p>
-        </div>
-        <div>
-          <p className="font-medium text-sm">Market Impact</p>
-          <p className="text-sm text-muted-foreground">{insights.market_impact}</p>
-        </div>
-        <Separator />
-        <div>
-          <p className="font-medium text-sm">Recommendations</p>
-          <p className="text-sm text-muted-foreground">{insights.recommendations}</p>
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
-
-// Vessel item component
+// Vessel card component to display nearby vessels
 const VesselItem = ({ vessel, distance }: { vessel: Vessel, distance: number }) => {
   return (
-    <div className="rounded-md border p-4 mb-3">
-      <div className="flex justify-between items-start mb-2">
-        <div>
-          <h4 className="font-medium text-base">{vessel.name}</h4>
-          <p className="text-sm text-muted-foreground">
-            {vessel.flag} · {vessel.vesselType}
-          </p>
-        </div>
-        <Badge variant="outline">{distance.toFixed(1)} km</Badge>
+    <div className="flex items-start gap-3 p-3 rounded-lg border border-border hover:bg-accent/50 transition-colors">
+      <div className="flex-shrink-0 bg-background rounded-md p-2 border border-border">
+        <Ship className="h-6 w-6 text-primary" />
       </div>
-      <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-2">
-        <div className="text-xs">
-          <span className="text-muted-foreground">Cargo: </span>
-          <span>{vessel.cargoType || 'Unknown'}</span>
+      <div className="flex-1 min-w-0">
+        <h4 className="font-medium text-sm text-foreground truncate">{vessel.name}</h4>
+        <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+          <Flag className="h-3 w-3" />
+          <span>{vessel.flag || 'Unknown'}</span>
+          
+          <span className="mx-1">•</span>
+          
+          <Droplets className="h-3 w-3" />
+          <span>{vessel.cargoType || 'Unknown cargo'}</span>
         </div>
-        <div className="text-xs">
-          <span className="text-muted-foreground">Capacity: </span>
-          <span>{vessel.cargoCapacity?.toLocaleString() || 'Unknown'}</span>
-        </div>
-        <div className="text-xs">
-          <span className="text-muted-foreground">IMO: </span>
-          <span>{vessel.imo || 'Unknown'}</span>
-        </div>
-        <div className="text-xs">
-          <span className="text-muted-foreground">Built: </span>
-          <span>{vessel.built || 'Unknown'}</span>
+        <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+          <Navigation className="h-3 w-3" />
+          <span>{distance.toFixed(1)} km away</span>
+          
+          <span className="mx-1">•</span>
+          
+          <Clock className="h-3 w-3" />
+          <span>
+            {vessel.estimatedArrival 
+              ? new Date(vessel.estimatedArrival).toLocaleDateString() 
+              : 'Unknown ETA'}
+          </span>
         </div>
       </div>
+      <Link to={`/vessels/${vessel.id}`}>
+        <Button size="sm" variant="ghost" className="h-7 w-7 p-0">
+          <MoreHorizontal className="h-4 w-4" />
+          <span className="sr-only">View vessel details</span>
+        </Button>
+      </Link>
     </div>
   );
 };
 
-// Status renderer
-const StatusBadge = ({ status }: { status: string }) => {
-  const statusMap: { [key: string]: { label: string, variant: "default" | "secondary" | "destructive" | "outline" } } = {
-    operational: { label: "Operational", variant: "default" },
-    maintenance: { label: "Maintenance", variant: "secondary" },
-    shutdown: { label: "Shutdown", variant: "destructive" },
-    construction: { label: "Under Construction", variant: "outline" },
-    planned: { label: "Planned", variant: "outline" }
-  };
-
-  const { label, variant } = statusMap[status?.toLowerCase()] || { label: status, variant: "outline" };
-
-  return <Badge variant={variant}>{label}</Badge>;
-};
-
-// Main Refinery Overview component
 export default function RefineryOverview() {
-  const { id } = useParams<{ id: string }>();
-  const { toast } = useToast();
+  const [, params] = useParams();
+  const [, navigate] = useLocation();
+  const refineryId = params.id;
   const [activeTab, setActiveTab] = useState('overview');
-  const refineryId = parseInt(id);
-
-  // Fetch refinery details
-  const { data: refinery, isLoading: isRefineryLoading, error: refineryError } = useQuery<Refinery>({
-    queryKey: [`/api/refineries/${refineryId}`],
-    enabled: !isNaN(refineryId)
+  
+  // Fetch refinery details with nearby vessels, weather, and AI insights
+  const { data: refineryData, isLoading: isRefineryLoading } = useQuery<{ refinery: Refinery, vessels: Array<{ vessel: Vessel, distance: number }> }>({
+    queryKey: ['/api/refineries', refineryId, 'details'],
+    enabled: !!refineryId,
   });
-
-  // Fetch nearby vessels
-  const { data: vesselsData, isLoading: isVesselsLoading } = useQuery<{ refinery: Refinery, vessels: Array<{ vessel: Vessel, distance: number }> }>({
-    queryKey: [`/api/refineries/${refineryId}/vessels`],
-    enabled: !isNaN(refineryId)
+  
+  const { data: weatherData, isLoading: isWeatherLoading } = useQuery<{ 
+    temperature: number, 
+    conditions: string, 
+    windSpeed: number, 
+    windDirection: string, 
+    humidity: number,
+    forecast: Array<{ day: string, condition: string, temperature: number }>
+  }>({
+    queryKey: ['/api/refineries', refineryId, 'weather'],
+    enabled: !!refineryId,
   });
-
-  // Fetch weather data
-  const { data: weatherData, isLoading: isWeatherLoading } = useQuery<any>({
-    queryKey: [`/api/refineries/${refineryId}/weather`],
-    enabled: !isNaN(refineryId)
+  
+  const { data: insightsData, isLoading: isInsightsLoading } = useQuery<{ 
+    summary: string, 
+    activityLevel: 'low' | 'moderate' | 'high',
+    recentTrends: string,
+    riskAssessment: string,
+    recommendations: string[],
+    keyMetrics: { label: string, value: string, change: number }[]
+  }>({
+    queryKey: ['/api/refineries', refineryId, 'insights'],
+    enabled: !!refineryId,
   });
-
-  // Fetch AI insights
-  const { 
-    data: insightsData, 
-    isLoading: isInsightsLoading, 
-    refetch: refetchInsights 
-  } = useQuery<any>({
-    queryKey: [`/api/refineries/${refineryId}/insights`],
-    enabled: !isNaN(refineryId)
-  });
-
-  useEffect(() => {
-    if (refineryError) {
-      toast({
-        title: "Error",
-        description: "Failed to load refinery data. Please try again.",
-        variant: "destructive"
-      });
-    }
-  }, [refineryError, toast]);
-
-  if (isNaN(refineryId)) {
+  
+  // Handle back navigation
+  const handleBack = () => {
+    navigate('/refineries');
+  };
+  
+  // If loading or no data yet, show skeleton UI
+  if (isRefineryLoading || !refineryData) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="text-center py-12">
-          <h2 className="text-2xl font-bold mb-4">Invalid Refinery ID</h2>
-          <p className="mb-6 text-muted-foreground">The requested refinery ID is not valid.</p>
-          <Button asChild>
-            <Link href="/refineries">Back to Refineries</Link>
+      <div className="container py-6 max-w-7xl mx-auto">
+        <div className="flex items-center gap-2 mb-6">
+          <Button variant="ghost" size="icon" onClick={handleBack}>
+            <ChevronLeft className="h-5 w-5" />
           </Button>
+          <Skeleton className="h-8 w-52" />
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <Skeleton className="h-[500px] w-full rounded-lg" />
+          </div>
+          <div>
+            <Skeleton className="h-[500px] w-full rounded-lg" />
+          </div>
         </div>
       </div>
     );
   }
-
-  const handleRefreshInsights = () => {
-    refetchInsights();
-    toast({
-      title: "Generating insights",
-      description: "AI is analyzing refinery and vessel data...",
-    });
+  
+  const { refinery, vessels } = refineryData;
+  
+  // Generate map markers for the refinery and nearby vessels
+  const mapMarkers = [
+    {
+      id: refinery.id,
+      position: [
+        typeof refinery.lat === 'number' ? refinery.lat : parseFloat(String(refinery.lat)),
+        typeof refinery.lng === 'number' ? refinery.lng : parseFloat(String(refinery.lng))
+      ] as [number, number],
+      tooltip: `${refinery.name}`,
+      type: 'refinery'
+    },
+    ...vessels.slice(0, 5).map(({ vessel }) => ({
+      id: vessel.id,
+      position: [
+        typeof vessel.currentLat === 'number' ? vessel.currentLat : parseFloat(String(vessel.currentLat)),
+        typeof vessel.currentLng === 'number' ? vessel.currentLng : parseFloat(String(vessel.currentLng))
+      ] as [number, number],
+      tooltip: vessel.name,
+      type: 'ship'
+    }))
+  ];
+  
+  // Format the founded date if available
+  const foundedDate = refinery.founded_year 
+    ? new Date(refinery.founded_year, 0).getFullYear() 
+    : 'Unknown';
+  
+  // Calculate refinery age
+  const refineryAge = refinery.founded_year 
+    ? new Date().getFullYear() - new Date(refinery.founded_year, 0).getFullYear() 
+    : null;
+    
+  // Format capacity with proper units
+  const formattedCapacity = refinery.capacity 
+    ? `${refinery.capacity.toLocaleString()} bpd` 
+    : 'Unknown';
+  
+  // Format ownership type
+  const ownershipType = () => {
+    if (!refinery.ownership_type) return 'Unknown';
+    return refinery.ownership_type.charAt(0).toUpperCase() + refinery.ownership_type.slice(1);
   };
-
+  
+  // Format recent expansions from array or string
+  const recentExpansions = () => {
+    if (!refinery.recent_expansions) return [];
+    
+    if (typeof refinery.recent_expansions === 'string') {
+      try {
+        return JSON.parse(refinery.recent_expansions);
+      } catch (e) {
+        return [refinery.recent_expansions];
+      }
+    }
+    
+    return Array.isArray(refinery.recent_expansions) 
+      ? refinery.recent_expansions 
+      : [String(refinery.recent_expansions)];
+  };
+  
+  // Format operational status
+  const operationalStatus = () => {
+    if (!refinery.operational_status) return 'Unknown';
+    
+    const status = refinery.operational_status.toLowerCase();
+    if (status === 'active') return 'Active';
+    if (status === 'maintenance') return 'Under Maintenance';
+    if (status === 'offline') return 'Offline';
+    if (status === 'construction') return 'Under Construction';
+    
+    return refinery.operational_status.charAt(0).toUpperCase() + refinery.operational_status.slice(1);
+  };
+  
+  // Get status color
+  const getStatusColor = () => {
+    if (!refinery.operational_status) return 'default';
+    
+    const status = refinery.operational_status.toLowerCase();
+    if (status === 'active') return 'success';
+    if (status === 'maintenance') return 'warning';
+    if (status === 'offline') return 'destructive';
+    if (status === 'construction') return 'secondary';
+    
+    return 'default';
+  };
+  
   return (
-    <div className="container mx-auto p-6">
-      {/* Header section */}
-      <div className="flex flex-col-reverse sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <Link href="/refineries">
-              <Button variant="ghost" size="sm" className="gap-1">
-                Refineries
-              </Button>
-            </Link>
-            <span className="text-muted-foreground">/</span>
-            <h1 className="text-2xl font-bold">
-              {isRefineryLoading ? <Skeleton className="h-9 w-48" /> : refinery?.name}
-            </h1>
-            {refinery?.status && <StatusBadge status={refinery.status} />}
-          </div>
-          <div className="flex items-center text-muted-foreground">
-            {isRefineryLoading ? (
-              <Skeleton className="h-5 w-36" />
-            ) : (
-              <>
-                <MapPinIcon className="h-4 w-4 mr-1" />
-                <span>{refinery?.country}, {refinery?.region}</span>
-              </>
-            )}
-          </div>
+    <div className="container py-6 max-w-7xl mx-auto">
+      {/* Header with back button and refinery name */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" onClick={handleBack} className="h-9 w-9">
+            <ChevronLeft className="h-5 w-5" />
+            <span className="sr-only">Back to refineries</span>
+          </Button>
+          <h1 className="text-2xl font-bold">{refinery.name}</h1>
+          <Badge variant={getStatusColor()}>
+            {operationalStatus()}
+          </Badge>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" asChild>
-            <Link href={`/refinery-logs/${refineryId}`}>Logs</Link>
+        
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="hidden md:flex items-center gap-1"
+            asChild
+          >
+            <Link to={`/documents/generate?refinery=${refinery.id}`}>
+              <FileText className="h-4 w-4" />
+              <span>Generate Report</span>
+            </Link>
           </Button>
-          <Button variant="outline" asChild>
-            <Link href={`/refinery-security/${refineryId}`}>Security</Link>
-          </Button>
-          <Button asChild>
-            <Link href={`/refinery-edit/${refineryId}`}>Edit</Link>
-          </Button>
+          
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="icon" className="md:hidden">
+                <Menu className="h-4 w-4" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent>
+              <SheetHeader>
+                <SheetTitle>Refinery Options</SheetTitle>
+                <SheetDescription>
+                  Access tools and actions for {refinery.name}
+                </SheetDescription>
+              </SheetHeader>
+              <div className="py-6 space-y-4">
+                <Link to={`/documents/generate?refinery=${refinery.id}`}>
+                  <Button variant="outline" className="w-full justify-start">
+                    <FileText className="h-4 w-4 mr-2" />
+                    Generate Report
+                  </Button>
+                </Link>
+                <Link to={`/refineries/${refinery.id}/history`}>
+                  <Button variant="outline" className="w-full justify-start">
+                    <History className="h-4 w-4 mr-2" />
+                    View History
+                  </Button>
+                </Link>
+                <Link to={`/refineries/${refinery.id}/edit`}>
+                  <Button variant="outline" className="w-full justify-start">
+                    <Milestone className="h-4 w-4 mr-2" />
+                    Edit Refinery
+                  </Button>
+                </Link>
+              </div>
+            </SheetContent>
+          </Sheet>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon" className="hidden md:flex">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Refinery Actions</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link to={`/refineries/${refinery.id}/history`} className="cursor-pointer">
+                  <History className="h-4 w-4 mr-2" />
+                  View History
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to={`/refineries/${refinery.id}/edit`} className="cursor-pointer">
+                  <Milestone className="h-4 w-4 mr-2" />
+                  Edit Refinery
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
-
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="vessels">Nearby Vessels</TabsTrigger>
-          <TabsTrigger value="logistics">Logistics</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
-        </TabsList>
-        
-        {/* Overview tab content */}
-        <TabsContent value="overview" className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {/* Main info */}
-            <Card className="lg:col-span-2">
-              <CardHeader>
-                <CardTitle>Refinery Information</CardTitle>
-                <CardDescription>
-                  Key details about the refinery operation
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {isRefineryLoading ? (
-                  <>
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-3/4" />
-                    <Skeleton className="h-4 w-5/6" />
-                  </>
-                ) : (
-                  <>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <h3 className="text-sm font-medium text-muted-foreground">Owner</h3>
-                        <p>{refinery?.owner || 'Not specified'}</p>
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-medium text-muted-foreground">Capacity</h3>
-                        <p>{refinery?.capacity?.toLocaleString() || 'Unknown'} barrels/day</p>
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-medium text-muted-foreground">Founded</h3>
-                        <p>{refinery?.foundedYear || 'Unknown'}</p>
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-medium text-muted-foreground">Last Upgraded</h3>
-                        <p>{refinery?.lastModernization ? new Date(refinery.lastModernization).getFullYear() : 'Unknown'}</p>
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-medium text-muted-foreground">Complexity</h3>
-                        <p>{refinery?.complexity ? `${refinery.complexity} NCI` : 'Not rated'}</p>
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-medium text-muted-foreground">Products</h3>
-                        <p>{refinery?.primaryProducts || 'Not specified'}</p>
-                      </div>
-                    </div>
-                    
-                    <Separator />
-                    
-                    <div>
-                      <h3 className="text-sm font-medium text-muted-foreground mb-2">Description</h3>
-                      <p className="text-sm">{refinery?.description || 'No description available'}</p>
-                    </div>
-                    
-                    {refinery?.crudeTypes && (
-                      <>
-                        <Separator />
-                        <div>
-                          <h3 className="text-sm font-medium text-muted-foreground mb-2">Crude Types Processed</h3>
-                          <p className="text-sm">{refinery.crudeTypes}</p>
-                        </div>
-                      </>
-                    )}
-                    
-                    {refinery?.certifications && (
-                      <>
-                        <Separator />
-                        <div>
-                          <h3 className="text-sm font-medium text-muted-foreground mb-2">Certifications</h3>
-                          <div className="flex flex-wrap gap-2">
-                            {refinery.certifications.split(',').map((cert, i) => (
-                              <Badge key={i} variant="outline">{cert.trim()}</Badge>
-                            ))}
-                          </div>
-                        </div>
-                      </>
-                    )}
-                  </>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Map card */}
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle>Location</CardTitle>
-              </CardHeader>
-              <CardContent className="p-0 aspect-square">
-                {isRefineryLoading ? (
-                  <div className="h-full w-full bg-muted animate-pulse flex items-center justify-center">
-                    <MapPinIcon className="h-8 w-8 text-muted-foreground opacity-50" />
-                  </div>
-                ) : (
-                  <SimpleLeafletMap
-                    markers={[
-                      {
-                        id: refineryId,
-                        position: [Number(refinery?.lat), Number(refinery?.lng)],
-                        tooltip: refinery?.name || 'Refinery',
-                        type: 'refinery'
-                      }
-                    ]}
-                    center={[Number(refinery?.lat), Number(refinery?.lng)]}
-                    zoom={9}
-                    dragging={false}
-                    className="h-full w-full rounded-b-lg"
-                  />
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Second row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Weather card */}
-            <WeatherCard 
-              weather={weatherData} 
-              isLoading={isWeatherLoading} 
-            />
-
-            {/* AI Insights card */}
-            <InsightsCard 
-              insights={insightsData} 
-              isLoading={isInsightsLoading}
-              onRefresh={handleRefreshInsights} 
-            />
-          </div>
-
-          {/* Vessels preview */}
+      
+      {/* Main content grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Map and Tabs section - takes 2/3 of the screen on desktop */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Map card */}
           <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <CardTitle>Nearby Vessels</CardTitle>
-                <Button variant="ghost" size="sm" onClick={() => setActiveTab('vessels')}>
-                  View All
-                </Button>
-              </div>
+            <CardHeader className="pb-0">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Map className="h-5 w-5 text-primary" />
+                Location & Nearby Vessels
+              </CardTitle>
               <CardDescription>
-                Vessels within 20km of the refinery
+                Interactive map showing {refinery.name} and nearby vessels
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              {isVesselsLoading ? (
-                <div className="space-y-3">
-                  <Skeleton className="h-20 w-full" />
-                  <Skeleton className="h-20 w-full" />
-                  <Skeleton className="h-20 w-full" />
-                </div>
-              ) : !vesselsData?.vessels.length ? (
-                <div className="text-center py-6 text-muted-foreground">
-                  <p>No vessels currently near this refinery</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {vesselsData.vessels.slice(0, 3).map(({ vessel, distance }) => (
-                    <VesselItem key={vessel.id} vessel={vessel} distance={distance} />
-                  ))}
-                </div>
-              )}
+            <CardContent className="pt-6">
+              <SimpleLeafletMap 
+                markers={mapMarkers}
+                center={[
+                  typeof refinery.lat === 'number' ? refinery.lat : parseFloat(String(refinery.lat)),
+                  typeof refinery.lng === 'number' ? refinery.lng : parseFloat(String(refinery.lng))
+                ]}
+                zoom={10}
+                dragging={true}
+                className="h-[400px]"
+              />
             </CardContent>
           </Card>
-        </TabsContent>
-
-        {/* Vessels tab content */}
-        <TabsContent value="vessels">
-          <Card>
-            <CardHeader>
-              <CardTitle>Nearby Vessels</CardTitle>
-              <CardDescription>
-                All vessels near the refinery
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {isVesselsLoading ? (
-                <div className="space-y-3">
-                  {[...Array(5)].map((_, i) => (
-                    <Skeleton key={i} className="h-20 w-full" />
-                  ))}
-                </div>
-              ) : !vesselsData?.vessels.length ? (
-                <div className="text-center py-6 text-muted-foreground">
-                  <p>No vessels currently near this refinery</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 gap-4">
-                  <div className="p-3 bg-muted rounded-md mb-4">
-                    <div className="flex justify-between items-center">
-                      <h3 className="font-medium">Found {vesselsData.vessels.length} vessels</h3>
-                      <p className="text-sm text-muted-foreground">Within 20km radius</p>
+          
+          {/* Tabs for different content sections */}
+          <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid grid-cols-4">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="insights">AI Insights</TabsTrigger>
+              <TabsTrigger value="history">History</TabsTrigger>
+              <TabsTrigger value="documents">Documents</TabsTrigger>
+            </TabsList>
+            
+            {/* Overview Tab */}
+            <TabsContent value="overview" className="space-y-6 pt-4">
+              {/* Quick Facts Card */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Info className="h-5 w-5 text-primary" />
+                    Quick Facts
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Globe className="h-3.5 w-3.5" />
+                        Country
+                      </p>
+                      <p className="font-medium">{refinery.country || 'Unknown'}</p>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Factory className="h-3.5 w-3.5" />
+                        Owner
+                      </p>
+                      <p className="font-medium">{refinery.owner || 'Unknown'}</p>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Droplets className="h-3.5 w-3.5" />
+                        Capacity
+                      </p>
+                      <p className="font-medium">{formattedCapacity}</p>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Calendar className="h-3.5 w-3.5" />
+                        Founded
+                      </p>
+                      <p className="font-medium">
+                        {foundedDate}
+                        {refineryAge && ` (${refineryAge} years)`}
+                      </p>
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {vesselsData.vessels.map(({ vessel, distance }) => (
-                      <VesselItem key={vessel.id} vessel={vessel} distance={distance} />
-                    ))}
+                  <Separator className="my-4" />
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <BarChart className="h-3.5 w-3.5" />
+                        Type
+                      </p>
+                      <p className="font-medium">{ownershipType()}</p>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Truck className="h-3.5 w-3.5" />
+                        Products
+                      </p>
+                      <p className="font-medium">{refinery.primary_products?.split(',').length || 0} types</p>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Compass className="h-3.5 w-3.5" />
+                        Region
+                      </p>
+                      <p className="font-medium">{refinery.region || 'Unknown'}</p>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Timer className="h-3.5 w-3.5" />
+                        Last Updated
+                      </p>
+                      <p className="font-medium">
+                        {refinery.last_updated 
+                          ? new Date(refinery.last_updated).toLocaleDateString() 
+                          : 'Unknown'}
+                      </p>
+                    </div>
                   </div>
+                </CardContent>
+              </Card>
+              
+              {/* Weather Card */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <CloudSun className="h-5 w-5 text-primary" />
+                    Current Weather
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {isWeatherLoading ? (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <Skeleton className="h-20 w-full" />
+                      <Skeleton className="h-20 w-full" />
+                      <Skeleton className="h-20 w-full" />
+                    </div>
+                  ) : weatherData ? (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <Card className="bg-background border-muted">
+                        <CardContent className="p-4 flex items-center justify-between">
+                          <div>
+                            <p className="text-xs text-muted-foreground">Temperature</p>
+                            <p className="text-xl font-bold mt-1">{weatherData.temperature}°C</p>
+                          </div>
+                          <Thermometer className="h-8 w-8 text-primary" />
+                        </CardContent>
+                      </Card>
+                      
+                      <Card className="bg-background border-muted">
+                        <CardContent className="p-4 flex items-center justify-between">
+                          <div>
+                            <p className="text-xs text-muted-foreground">Wind</p>
+                            <p className="text-xl font-bold mt-1">{weatherData.windSpeed} km/h</p>
+                            <p className="text-xs text-muted-foreground">{weatherData.windDirection}</p>
+                          </div>
+                          <Wind className="h-8 w-8 text-primary" />
+                        </CardContent>
+                      </Card>
+                      
+                      <Card className="bg-background border-muted">
+                        <CardContent className="p-4 flex items-center justify-between">
+                          <div>
+                            <p className="text-xs text-muted-foreground">Conditions</p>
+                            <p className="text-xl font-bold mt-1">{weatherData.conditions}</p>
+                            <p className="text-xs text-muted-foreground">{weatherData.humidity}% humidity</p>
+                          </div>
+                          <CloudSun className="h-8 w-8 text-primary" />
+                        </CardContent>
+                      </Card>
+                    </div>
+                  ) : (
+                    <div className="text-muted-foreground text-sm">
+                      Weather data not available
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+              
+              {/* Primary Products Card */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Droplets className="h-5 w-5 text-primary" />
+                    Primary Products
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {refinery.primary_products ? (
+                    <div className="flex flex-wrap gap-2">
+                      {refinery.primary_products.split(',').map((product, index) => (
+                        <Badge key={index} variant="outline" className="px-3 py-1 bg-background">
+                          {product.trim()}
+                        </Badge>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-muted-foreground text-sm">
+                      No product information available
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+              
+              {/* Recent Expansions Card */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Milestone className="h-5 w-5 text-primary" />
+                    Recent Expansions
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {recentExpansions().length > 0 ? (
+                    <div className="space-y-4">
+                      {recentExpansions().map((expansion, index) => (
+                        <div key={index} className="flex gap-3">
+                          <div className="flex-shrink-0 h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                            <Calendar className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-medium">{expansion}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-muted-foreground text-sm">
+                      No recent expansions recorded
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            {/* AI Insights Tab */}
+            <TabsContent value="insights" className="space-y-6 pt-4">
+              {isInsightsLoading ? (
+                <div className="space-y-6">
+                  <Skeleton className="h-24 w-full" />
+                  <Skeleton className="h-32 w-full" />
+                  <Skeleton className="h-48 w-full" />
                 </div>
+              ) : insightsData ? (
+                <>
+                  {/* Activity Summary Card */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <BarChart className="h-5 w-5 text-primary" />
+                        Activity Summary
+                      </CardTitle>
+                      <Badge 
+                        variant={
+                          insightsData.activityLevel === 'high' ? 'default' : 
+                          insightsData.activityLevel === 'moderate' ? 'secondary' : 
+                          'outline'
+                        }
+                      >
+                        {insightsData.activityLevel.toUpperCase()} ACTIVITY
+                      </Badge>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-foreground leading-relaxed">
+                        {insightsData.summary}
+                      </p>
+                    </CardContent>
+                  </Card>
+                  
+                  {/* Key Metrics Card */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <BarChart className="h-5 w-5 text-primary" />
+                        Key Metrics
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {insightsData.keyMetrics.map((metric, index) => (
+                          <div key={index} className="p-4 border rounded-lg">
+                            <p className="text-xs text-muted-foreground">{metric.label}</p>
+                            <p className="text-lg font-bold mt-1">{metric.value}</p>
+                            <div className={`text-xs flex items-center mt-1 ${
+                              metric.change > 0 ? 'text-green-500' : 
+                              metric.change < 0 ? 'text-red-500' : 
+                              'text-muted-foreground'
+                            }`}>
+                              {metric.change > 0 ? '↑' : metric.change < 0 ? '↓' : '–'}
+                              <span className="ml-1">
+                                {Math.abs(metric.change)}% from last period
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  {/* Recent Trends Card */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <BarChart className="h-5 w-5 text-primary" />
+                        Recent Trends
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-foreground leading-relaxed">
+                        {insightsData.recentTrends}
+                      </p>
+                    </CardContent>
+                  </Card>
+                  
+                  {/* Risk Assessment Card */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <AlertCircle className="h-5 w-5 text-primary" />
+                        Risk Assessment
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-foreground leading-relaxed">
+                        {insightsData.riskAssessment}
+                      </p>
+                    </CardContent>
+                  </Card>
+                  
+                  {/* Recommendations Card */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <MessageSquare className="h-5 w-5 text-primary" />
+                        AI Recommendations
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ul className="space-y-2">
+                        {insightsData.recommendations.map((recommendation, index) => (
+                          <li key={index} className="flex items-start gap-2 text-sm">
+                            <span className="text-primary">•</span>
+                            <span>{recommendation}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                  </Card>
+                </>
+              ) : (
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-center space-y-2">
+                      <BarChart className="h-12 w-12 text-muted-foreground mx-auto" />
+                      <h3 className="font-medium text-lg">No AI insights available</h3>
+                      <p className="text-sm text-muted-foreground">
+                        AI-generated insights about this refinery are not available at this time.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
               )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Logistics tab content */}
-        <TabsContent value="logistics">
-          <Card className="w-full">
-            <CardHeader>
-              <CardTitle>Logistics</CardTitle>
+            </TabsContent>
+            
+            {/* History Tab */}
+            <TabsContent value="history" className="space-y-6 pt-4">
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="text-center space-y-2">
+                    <History className="h-12 w-12 text-muted-foreground mx-auto" />
+                    <h3 className="font-medium text-lg">Historical Data</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Historical operations data will be available in a future update.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            {/* Documents Tab */}
+            <TabsContent value="documents" className="space-y-6 pt-4">
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="text-center space-y-2">
+                    <FileText className="h-12 w-12 text-muted-foreground mx-auto" />
+                    <h3 className="font-medium text-lg">Documents</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Related documents for this refinery will be listed here.
+                    </p>
+                    <Button 
+                      variant="outline" 
+                      className="mt-4"
+                      asChild
+                    >
+                      <Link to={`/documents/generate?refinery=${refinery.id}`}>
+                        <FileText className="h-4 w-4 mr-2" />
+                        Generate New Report
+                      </Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
+        
+        {/* Sidebar - takes 1/3 of the screen on desktop */}
+        <div className="space-y-6">
+          {/* Nearby Vessels Card */}
+          <Card>
+            <CardHeader className="pb-0">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Ship className="h-5 w-5 text-primary" />
+                Nearby Vessels
+              </CardTitle>
               <CardDescription>
-                Supply chain and transportation details
+                Showing vessels within 20km of this refinery
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <p className="text-center py-6 text-muted-foreground">
-                Logistics information coming soon
-              </p>
+            <CardContent className="pt-6">
+              <div className="space-y-3">
+                {vessels.length > 0 ? (
+                  vessels.map(({ vessel, distance }) => (
+                    <VesselItem key={vessel.id} vessel={vessel} distance={distance} />
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground text-sm">
+                    No vessels currently near this refinery
+                  </div>
+                )}
+              </div>
             </CardContent>
+            <CardFooter>
+              <Button 
+                variant="outline" 
+                className="w-full"
+                asChild
+              >
+                <Link to={`/live-vessels?refinery=${refinery.id}`}>
+                  <Map className="h-4 w-4 mr-2" />
+                  View All Nearby Vessels
+                </Link>
+              </Button>
+            </CardFooter>
           </Card>
-        </TabsContent>
-
-        {/* Analytics tab content */}
-        <TabsContent value="analytics">
-          <Card className="w-full">
-            <CardHeader>
-              <CardTitle>Analytics</CardTitle>
+          
+          {/* Refinery Details Card */}
+          <Card>
+            <CardHeader className="pb-0">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Factory className="h-5 w-5 text-primary" />
+                Refinery Details
+              </CardTitle>
               <CardDescription>
-                Operational metrics and performance data
+                Additional information and specifications
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <p className="text-center py-6 text-muted-foreground">
-                Analytics dashboard coming soon
-              </p>
+            <CardContent className="pt-6">
+              <div className="space-y-4">
+                {refinery.description && (
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-1">Description</h4>
+                    <p className="text-sm">{refinery.description}</p>
+                  </div>
+                )}
+                
+                <div>
+                  <h4 className="text-sm font-medium text-muted-foreground mb-1">Coordinates</h4>
+                  <p className="text-sm">
+                    Lat: {typeof refinery.lat === 'number' ? refinery.lat.toFixed(6) : refinery.lat}, 
+                    Lng: {typeof refinery.lng === 'number' ? refinery.lng.toFixed(6) : refinery.lng}
+                  </p>
+                </div>
+                
+                {refinery.refining_technology && (
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-1">Refining Technology</h4>
+                    <p className="text-sm">{refinery.refining_technology}</p>
+                  </div>
+                )}
+                
+                {refinery.storage_capacity && (
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-1">Storage Capacity</h4>
+                    <p className="text-sm">{refinery.storage_capacity}</p>
+                  </div>
+                )}
+                
+                {refinery.environmental_compliance && (
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-1">Environmental Compliance</h4>
+                    <p className="text-sm">{refinery.environmental_compliance}</p>
+                  </div>
+                )}
+                
+                {refinery.certifications && (
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-1">Certifications</h4>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {refinery.certifications.split(',').map((cert, index) => (
+                        <Badge key={index} variant="outline">
+                          {cert.trim()}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
-        </TabsContent>
-      </Tabs>
+        </div>
+      </div>
     </div>
   );
 }
