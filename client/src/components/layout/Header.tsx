@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { Menu, LogOut, Download, Home } from "lucide-react";
+import { Menu, LogOut, Download, Home, Globe } from "lucide-react";
 import { useLanguage } from "@/hooks/use-language";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -52,6 +52,7 @@ export default function Header() {
     if (location.startsWith("/profile")) return t("nav.profile");
     if (location.startsWith("/ai-assistant")) return t("nav.ai_assistant");
     if (location.startsWith("/trading")) return t("nav.trading");
+    if (location.startsWith("/translation")) return "Translation";
     if (location.startsWith("/settings")) return t("nav.settings");
     return t("nav.dashboard");
   };
@@ -101,6 +102,20 @@ export default function Header() {
           >
             <Download className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
             {t("action.export")}
+          </Button>
+          
+          {/* Translation Button */}
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="hidden sm:flex border border-primary/20 hover:bg-primary/10 text-primary relative"
+            onClick={() => navigate('/translation')}
+          >
+            <Globe className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
+            Translate
+            <span className="absolute -top-2 -right-2 px-1.5 py-0.5 text-[0.6rem] bg-red-500 text-white rounded-full font-bold animate-pulse">
+              NEW
+            </span>
           </Button>
           
           {/* Theme Toggle */}
