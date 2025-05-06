@@ -76,6 +76,24 @@ export const refineries = pgTable("refineries", {
   capacity: integer("capacity"), // in barrels per day
   status: text("status").default("active"),
   description: text("description"),
+  // Preserving existing columns
+  operator: text("operator"),
+  owner: text("owner"),
+  type: text("type"),
+  products: text("products"),
+  year_built: integer("year_built"),
+  last_maintenance: timestamp("last_maintenance"),
+  next_maintenance: timestamp("next_maintenance"),
+  complexity: decimal("complexity", { precision: 5, scale: 2 }),
+  email: text("email"),
+  phone: text("phone"),
+  website: text("website"),
+  address: text("address"),
+  technical_specs: text("technical_specs"),
+  photo: text("photo"),
+  city: text("city"),
+  last_updated: timestamp("last_updated"),
+  utilization: decimal("utilization", { precision: 5, scale: 2 }),
 });
 
 export const insertRefinerySchema = createInsertSchema(refineries).omit({
@@ -376,3 +394,189 @@ export const insertInvoiceSchema = createInsertSchema(invoices).omit({
 
 export type InsertInvoice = z.infer<typeof insertInvoiceSchema>;
 export type Invoice = typeof invoices.$inferSelect;
+
+// User roles and permissions
+export const roles = pgTable("roles", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertRoleSchema = createInsertSchema(roles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertRole = z.infer<typeof insertRoleSchema>;
+export type Role = typeof roles.$inferSelect;
+
+// User-role relationships
+export const userRoles = pgTable("user_roles", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  roleId: integer("role_id").notNull().references(() => roles.id),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (t) => ({
+  pk: primaryKey({ columns: [t.userId, t.roleId] })
+}));
+
+export const insertUserRoleSchema = createInsertSchema(userRoles).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertUserRole = z.infer<typeof insertUserRoleSchema>;
+export type UserRole = typeof userRoles.$inferSelect;
+
+// Permissions
+export const permissions = pgTable("permissions", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  description: text("description"),
+  resource: text("resource").notNull(), // The resource this permission affects (e.g., 'users', 'vessels')
+  action: text("action").notNull(), // The action allowed (e.g., 'read', 'write', 'delete')
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertPermissionSchema = createInsertSchema(permissions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertPermission = z.infer<typeof insertPermissionSchema>;
+export type Permission = typeof permissions.$inferSelect;
+
+// Role-permission relationships
+export const rolePermissions = pgTable("role_permissions", {
+  id: serial("id").primaryKey(),
+  roleId: integer("role_id").notNull().references(() => roles.id),
+  permissionId: integer("permission_id").notNull().references(() => permissions.id),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (t) => ({
+  pk: primaryKey({ columns: [t.roleId, t.permissionId] })
+}));
+
+export const insertRolePermissionSchema = createInsertSchema(rolePermissions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertRolePermission = z.infer<typeof insertRolePermissionSchema>;
+export type RolePermission = typeof rolePermissions.$inferSelect;
+
+// Feature Flags - for controlling feature access
+export const featureFlags = pgTable("feature_flags", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  description: text("description"),
+  isEnabled: boolean("is_enabled").default(true),
+  requiredSubscriptionTier: text("required_subscription_tier"), // Minimum subscription tier needed
+  startDate: timestamp("start_date"), // When this feature becomes available
+  endDate: timestamp("end_date"), // When this feature expires (if temporary)
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertFeatureFlagSchema = createInsertSchema(featureFlags).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertFeatureFlag = z.infer<typeof insertFeatureFlagSchema>;
+export type FeatureFlag = typeof featureFlags.$inferSelect;
+
+// User Login History
+export const loginHistory = pgTable("login_history", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  loginTime: timestamp("login_time").defaultNow(),
+  logoutTime: timestamp("logout_time"),
+  isSuccessful: boolean("is_successful").default(true),
+  failureReason: text("failure_reason"),
+  location: text("location"), // Geo location based on IP
+});
+
+export const insertLoginHistorySchema = createInsertSchema(loginHistory).omit({
+  id: true,
+  loginTime: true,
+});
+
+export type InsertLoginHistory = z.infer<typeof insertLoginHistorySchema>;
+export type LoginHistory = typeof loginHistory.$inferSelect;
+
+// User Activity Log (for tracking user actions in the system)
+export const userActivityLog = pgTable("user_activity_log", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  action: text("action").notNull(), // e.g., 'login', 'view_vessel', 'edit_profile'
+  resourceType: text("resource_type"), // e.g., 'vessel', 'user', 'document'
+  resourceId: text("resource_id"), // ID of the resource affected
+  details: jsonb("details"), // Additional details about the action
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  timestamp: timestamp("timestamp").defaultNow(),
+});
+
+export const insertUserActivityLogSchema = createInsertSchema(userActivityLog).omit({
+  id: true,
+  timestamp: true,
+});
+
+export type InsertUserActivityLog = z.infer<typeof insertUserActivityLogSchema>;
+export type UserActivityLog = typeof userActivityLog.$inferSelect;
+
+// Scheduled Events (for scheduling when features/plans go live)
+export const scheduledEvents = pgTable("scheduled_events", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  eventType: text("event_type").notNull(), // e.g., 'feature_release', 'plan_update', 'maintenance'
+  resourceType: text("resource_type"), // e.g., 'feature_flag', 'subscription_plan'
+  resourceId: integer("resource_id"), // ID of the resource to be updated
+  scheduledTime: timestamp("scheduled_time").notNull(),
+  status: text("status").default("pending"), // 'pending', 'completed', 'failed', 'cancelled'
+  action: text("action").notNull(), // e.g., 'enable', 'disable', 'update'
+  actionPayload: jsonb("action_payload"), // Additional data for the action
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  completedAt: timestamp("completed_at"),
+});
+
+export const insertScheduledEventSchema = createInsertSchema(scheduledEvents).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  completedAt: true,
+});
+
+export type InsertScheduledEvent = z.infer<typeof insertScheduledEventSchema>;
+export type ScheduledEvent = typeof scheduledEvents.$inferSelect;
+
+// Usage Analytics
+export const featureUsage = pgTable("feature_usage", {
+  id: serial("id").primaryKey(),
+  featureId: integer("feature_id").references(() => featureFlags.id),
+  featureName: text("feature_name").notNull(),
+  userId: integer("user_id").references(() => users.id),
+  subscriptionTier: text("subscription_tier"),
+  usageCount: integer("usage_count").default(1),
+  firstUsedAt: timestamp("first_used_at").defaultNow(),
+  lastUsedAt: timestamp("last_used_at").defaultNow(),
+});
+
+export const insertFeatureUsageSchema = createInsertSchema(featureUsage).omit({
+  id: true,
+  firstUsedAt: true,
+  lastUsedAt: true,
+});
+
+export type InsertFeatureUsage = z.infer<typeof insertFeatureUsageSchema>;
+export type FeatureUsage = typeof featureUsage.$inferSelect;
