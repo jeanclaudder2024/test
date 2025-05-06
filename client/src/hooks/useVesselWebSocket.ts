@@ -339,6 +339,8 @@ export function useVesselWebSocket(props: UseVesselWebSocketProps = 'global') {
   
   // Function to manually request vessel data
   const refreshData = (newPage?: number, newPageSize?: number) => {
+    console.log(`refreshData called with newPage=${newPage}, newPageSize=${newPageSize}`);
+    
     // Update pagination parameters if provided
     if (newPage !== undefined) {
       setPage(newPage);
@@ -350,6 +352,8 @@ export function useVesselWebSocket(props: UseVesselWebSocketProps = 'global') {
     
     const currentPage = newPage !== undefined ? newPage : page;
     const currentPageSize = newPageSize !== undefined ? newPageSize : pageSize;
+    
+    console.log(`Using page=${currentPage}, pageSize=${currentPageSize} for refresh`);
     
     // First check if we have cached data for this region
     const cachedData = vesselCache.getVessels(region);
