@@ -74,8 +74,19 @@ export const refineries = pgTable("refineries", {
   lat: decimal("lat", { precision: 10, scale: 6 }).notNull(),
   lng: decimal("lng", { precision: 10, scale: 6 }).notNull(),
   capacity: integer("capacity"), // in barrels per day
-  status: text("status").default("active"),
+  status: text("status").default("operational"),
   description: text("description"),
+  owner: text("owner"), // Company/entity that owns the refinery
+  foundedYear: integer("founded_year"), // Year the refinery was built
+  lastModernization: timestamp("last_modernization"), // Date of last significant upgrade
+  complexity: decimal("complexity", { precision: 5, scale: 2 }), // Nelson complexity index
+  primaryProducts: text("primary_products"), // Comma-separated list of main products
+  crudeTypes: text("crude_types"), // Types of crude oil processed
+  certifications: text("certifications"), // Safety/environmental certifications
+  securityLevel: text("security_level").default("normal"), // normal, elevated, high
+  contactInfo: text("contact_info"), // JSON string with contact details
+  weatherInfo: text("weather_info"), // JSON string with current weather data
+  lastUpdated: timestamp("last_updated").defaultNow(),
 });
 
 export const insertRefinerySchema = createInsertSchema(refineries).omit({
