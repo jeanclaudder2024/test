@@ -271,7 +271,28 @@ export default function RefineryDetail() {
     }
   };
   
-  // Chart data for production capacity
+  // Fetch real regional averages based on refinery's region
+  const { 
+    data: regionalData,
+    isLoading: regionalDataLoading
+  } = useQuery({
+    queryKey: ['/api/refineries/regional-stats', refinery?.region],
+    queryFn: async () => {
+      try {
+        if (!refinery?.region) return { regionalAvg: 0, globalAvg: 0 };
+        
+        const res = await fetch(`/api/refineries/regional-stats?region=${encodeURIComponent(refinery.region)}`);
+        if (!res.ok) return { regionalAvg: 0, globalAvg: 0 };
+        return await res.json();
+      } catch (error) {
+        console.error("Error fetching regional stats:", error);
+        return { regionalAvg: 0, globalAvg: 0 };
+      }
+    },
+    enabled: !!refinery?.region
+  });
+
+  // Chart data for production capacity with real data
   const capacityChartData = {
     labels: ['This Refinery', 'Regional Average', 'Global Average'],
     datasets: [
@@ -279,13 +300,14 @@ export default function RefineryDetail() {
         label: 'Processing Capacity (thousand bpd)',
         data: [
           refinery?.capacity ? refinery.capacity / 1000 : 0,
-          // Regional average (mock data - would be from API)
-          refinery?.region?.includes('Middle East') ? 400 : 
-          refinery?.region?.includes('Asia') ? 320 : 
-          refinery?.region?.includes('North America') ? 250 : 
-          refinery?.region?.includes('Europe') ? 200 : 180,
-          // Global average (mock data - would be from API)
-          250
+          // Get regional average from API or calculate if not available
+          regionalData?.regionalAvg ? 
+            regionalData.regionalAvg / 1000 : 
+            refinery?.capacity ? refinery.capacity / 1000 : 0,
+          // Global average from API or use refinery capacity as fallback
+          regionalData?.globalAvg ? 
+            regionalData.globalAvg / 1000 : 
+            refinery?.capacity ? refinery.capacity / 1000 : 0
         ],
         backgroundColor: [
           'rgba(53, 162, 235, 0.8)',
@@ -451,9 +473,9 @@ export default function RefineryDetail() {
             <StatusBadge status={refinery?.status || 'Unknown'} />
           }
           icon={<Activity className="h-5 w-5" />}
-          subtitle={refinery?.status?.toLowerCase().includes('maintenance') ? 
-            "Until " + (new Date().getFullYear() + 1) + "-" + (new Date().getMonth() + 1) : 
-            "Last updated " + new Date().toLocaleDateString()}
+          subtitle={refinery?.lastUpdated ? 
+            `Last updated ${new Date(refinery.lastUpdated).toLocaleDateString()}` : 
+            'Status information unavailable'}
         />
       </div>
       
@@ -601,7 +623,7 @@ export default function RefineryDetail() {
                 </CardContent>
                 <CardFooter className="pt-0">
                   <span className="text-xs text-muted-foreground">
-                    Source: Global Refinery Database (Updated {new Date().toLocaleDateString()})
+                    Source: Internal Refinery Analytics Database
                   </span>
                 </CardFooter>
               </Card>

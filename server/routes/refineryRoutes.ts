@@ -365,6 +365,52 @@ refineryRouter.get("/stats/regional", async (req: Request, res: Response) => {
   }
 });
 
+// Get regional and global avg for a specific refinery's region
+refineryRouter.get("/regional-stats", async (req: Request, res: Response) => {
+  try {
+    const { region } = req.query as { region?: string };
+    
+    // Calculate global average capacity
+    const [globalResult] = await db
+      .select({
+        globalAvg: sql`avg(capacity)`
+      })
+      .from(refineries)
+      .where(sql`capacity IS NOT NULL`);
+    
+    let regionalAvg = 0;
+    
+    // If region is specified, calculate regional average
+    if (region) {
+      const [regionalResult] = await db
+        .select({
+          regionalAvg: sql`avg(capacity)`
+        })
+        .from(refineries)
+        .where(
+          and(
+            eq(refineries.region, region),
+            sql`capacity IS NOT NULL`
+          )
+        );
+      
+      regionalAvg = regionalResult?.regionalAvg || 0;
+    }
+    
+    // Return both metrics
+    res.json({
+      globalAvg: globalResult?.globalAvg || 0,
+      regionalAvg: regionalAvg
+    });
+  } catch (error) {
+    console.error('Error calculating refinery averages:', error);
+    res.status(500).json({ 
+      error: 'Failed to calculate refinery averages',
+      details: error instanceof Error ? error.message : String(error)
+    });
+  }
+});
+
 // Helper function to calculate distance between two coordinates in kilometers
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371; // Radius of the earth in km
