@@ -15,7 +15,9 @@ router.get('/with-vessels/summary', async (req, res) => {
       page: pageStr,
       limit: limitStr,
       sortBy = 'name',
-      sortOrder = 'asc'
+      sortOrder = 'asc',
+      portType,
+      useAI = 'true'
     } = req.query;
 
     // Parse pagination parameters
@@ -30,13 +32,15 @@ router.get('/with-vessels/summary', async (req, res) => {
       return res.status(400).json({ error: 'Invalid limit parameter (must be between 1 and 100)' });
     }
 
-    // Get ports with vessel counts
+    // Get ports with vessel counts, with optional AI-powered vessel selection
     const result = await portVesselService.getPortsWithVesselsSummary({
       region: region as string,
       page,
       limit,
       sortBy: sortBy as string,
-      sortOrder: (sortOrder as string) === 'desc' ? 'desc' : 'asc'
+      sortOrder: (sortOrder as string) === 'desc' ? 'desc' : 'asc',
+      portType: portType as string,
+      useAI: useAI === 'true'
     });
 
     res.json(result);

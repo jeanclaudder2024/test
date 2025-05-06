@@ -603,6 +603,161 @@ export class OpenAIService {
     }
   }
   /**
+   * Analyze vessels near a port and prioritize the most relevant ones
+   * This uses OpenAI to evaluate vessel-port compatibility based on cargo type, port type, 
+   * vessel type, and other characteristics
+   * 
+   * @param port The port to analyze vessels for
+   * @param nearbyVessels Array of vessels with their distances from the port
+   * @param maxResults Maximum number of vessels to return (default: 9)
+   * @returns Filtered and prioritized array of vessels with distances
+   */
+  async analyzePortVesselRelationships(
+    port: Port,
+    nearbyVessels: {vessels: Vessel, distance: number}[],
+    maxResults: number = 9
+  ): Promise<{vessels: Vessel, distance: number, relevanceScore: number}[]> {
+    try {
+      console.log(`Analyzing vessels near port ${port.name} (ID: ${port.id}) with OpenAI`);
+      
+      // If we have 0 or 1 vessels, return them as is
+      if (nearbyVessels.length <= 1) {
+        return nearbyVessels.map(v => ({...v, relevanceScore: 1}));
+      }
+      
+      // If we have fewer vessels than maxResults, use all of them
+      if (nearbyVessels.length <= maxResults) {
+        // Still score them for consistent results
+        const scoredVessels = await this.scoreVesselPortRelevance(port, nearbyVessels);
+        return scoredVessels.sort((a, b) => b.relevanceScore - a.relevanceScore);
+      }
+      
+      // If we have many vessels, use OpenAI to select the most relevant ones
+      const scoredVessels = await this.scoreVesselPortRelevance(port, nearbyVessels);
+      
+      // Sort by relevance score (highest first) and take the top maxResults
+      return scoredVessels
+        .sort((a, b) => b.relevanceScore - a.relevanceScore)
+        .slice(0, maxResults);
+    } catch (error) {
+      console.error(`Error analyzing vessels for port ${port.name}:`, error);
+      
+      // Fallback to simple distance-based selection if AI analysis fails
+      console.log("Falling back to distance-based vessel selection");
+      return nearbyVessels
+        .slice(0, maxResults)
+        .map(v => ({...v, relevanceScore: 1 - (v.distance / 100)}));
+    }
+  }
+  
+  /**
+   * Score vessels based on their relevance to a specific port
+   * Uses OpenAI to evaluate characteristics like vessel type matching port type
+   * 
+   * @param port The port to analyze vessels for
+   * @param nearbyVessels Array of vessels with their distances from the port
+   * @returns Vessels with relevance scores (0-1 scale)
+   */
+  private async scoreVesselPortRelevance(
+    port: Port,
+    nearbyVessels: {vessels: Vessel, distance: number}[]
+  ): Promise<{vessels: Vessel, distance: number, relevanceScore: number}[]> {
+    // Check if OpenAI is available
+    if (!openai) {
+      console.warn("OpenAI client not available for vessel analysis");
+      
+      // Fallback to distance-based scoring
+      return nearbyVessels.map(v => ({
+        ...v,
+        relevanceScore: Math.max(0, Math.min(1, 1 - (v.distance / 100)))
+      }));
+    }
+    
+    // Prepare a more compact vessel object for the prompt
+    const vesselData = nearbyVessels.map((v, index) => ({
+      id: index, // Use index as ID in the prompt to keep references simple
+      realId: v.vessels.id, // Keep the real ID for mapping back
+      name: v.vessels.name,
+      type: v.vessels.vesselType,
+      cargo: v.vessels.cargoType || 'Unknown',
+      flag: v.vessels.flag,
+      distance: v.distance,
+      deadweight: v.vessels.deadweight || 'Unknown'
+    }));
+    
+    // Create the prompt
+    const prompt = `
+    You are a maritime logistics expert. Analyze the compatibility between this port and nearby vessels.
+    
+    PORT INFORMATION:
+    Name: ${port.name}
+    Type: ${port.type || 'Commercial'}
+    Country: ${port.country}
+    Region: ${port.region}
+    
+    NEARBY VESSELS (${vesselData.length}):
+    ${JSON.stringify(vesselData, null, 2)}
+    
+    TASK:
+    For each vessel, assign a relevance score (0.0 to 1.0) based on how likely it would visit this type of port.
+    Consider these factors:
+    - Oil tankers are highly relevant to oil terminals
+    - LNG carriers are highly relevant to LNG terminals
+    - Container ships are relevant to container terminals
+    - Vessel cargo type should match port type
+    - Consider regional trading patterns
+    - Distance is a factor but not decisive (vessels travel long distances)
+    
+    Respond with a JSON array containing objects with: id (matching input), relevanceScore.
+    Example: [{"id": 0, "relevanceScore": 0.95}, {"id": 1, "relevanceScore": 0.72}]
+    `;
+    
+    // Call OpenAI
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.2, // Lower temperature for consistent results
+      max_tokens: 600,
+      response_format: { type: "json_object" }
+    });
+    
+    // Parse the response
+    try {
+      const content = response.choices[0].message.content?.trim() || "{}";
+      const results = JSON.parse(content);
+      
+      // Ensure results is in the expected format
+      if (!results.vessels && !Array.isArray(results)) {
+        console.warn("Unexpected format in OpenAI response for vessel scoring");
+        throw new Error("Invalid response format");
+      }
+      
+      // Handle both possible response formats
+      const scoredIndices = Array.isArray(results) ? results : (results.vessels || []);
+      
+      // Map the scores back to the original vessels
+      return nearbyVessels.map((v, index) => {
+        // Find the matching score from OpenAI
+        const match = scoredIndices.find((s: any) => s.id === index);
+        const relevanceScore = match ? parseFloat(match.relevanceScore) : 0.5; // Default to 0.5 if no match
+        
+        return {
+          ...v,
+          relevanceScore: Math.max(0, Math.min(1, relevanceScore)) // Ensure score is between 0-1
+        };
+      });
+    } catch (error) {
+      console.error("Error parsing OpenAI response for vessel scoring:", error);
+      
+      // Fallback to distance-based scoring
+      return nearbyVessels.map(v => ({
+        ...v,
+        relevanceScore: Math.max(0, Math.min(1, 1 - (v.distance / 100)))
+      }));
+    }
+  }
+
+  /**
    * Update vessel with precise route tracking coordinates and seller/buyer info
    */
   async updateVesselRouteAndCompanyInfo(vessel: Vessel): Promise<Vessel> {
