@@ -129,4 +129,61 @@ router.get('/:id/vessels', async (req, res) => {
   }
 });
 
+/**
+ * Connect a vessel to a port manually
+ */
+router.post('/connect', async (req, res) => {
+  try {
+    const { vesselId, portId } = req.body;
+    
+    if (!vesselId || !portId) {
+      return res.status(400).json({ 
+        error: 'Missing required parameters',
+        message: 'Both vesselId and portId are required'
+      });
+    }
+    
+    // Convert to numbers if they are strings
+    const vesselIdNum = typeof vesselId === 'string' ? parseInt(vesselId) : vesselId;
+    const portIdNum = typeof portId === 'string' ? parseInt(portId) : portId;
+    
+    if (isNaN(vesselIdNum) || isNaN(portIdNum)) {
+      return res.status(400).json({ error: 'Invalid vessel ID or port ID' });
+    }
+    
+    // Get vessel and port
+    const vessel = await storage.getVesselById(vesselIdNum);
+    if (!vessel) {
+      return res.status(404).json({ error: 'Vessel not found' });
+    }
+    
+    const port = await storage.getPortById(portIdNum);
+    if (!port) {
+      return res.status(404).json({ error: 'Port not found' });
+    }
+    
+    // Update vessel to set the port as destination
+    const updatedVessel = await storage.updateVessel(vesselIdNum, {
+      destinationPort: port.name,
+      destinationLat: port.lat,
+      destinationLng: port.lng
+    });
+    
+    res.json({
+      success: true,
+      message: `Vessel ${vessel.name} successfully connected to port ${port.name}`,
+      data: {
+        vessel: updatedVessel,
+        port
+      }
+    });
+  } catch (error) {
+    console.error('Error connecting vessel to port:', error);
+    res.status(500).json({
+      error: 'Failed to connect vessel to port',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 export default router;
