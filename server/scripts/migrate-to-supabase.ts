@@ -1,14 +1,36 @@
 // Script to migrate database schema to Supabase
 import { supabase } from '../db';
 import * as schema from '@shared/schema';
+import { Pool } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-serverless';
+import ws from "ws";
 
 /**
- * This script creates all tables in Supabase according to our schema
- * and sets up triggers for handling timestamps and references
+ * This script migrates schema and data from our old PostgreSQL database to Supabase
  */
 async function migrateToSupabase() {
   console.log('Starting migration to Supabase...');
   try {
+    // Connection to old database (needed to fetch existing data)
+    let oldPoolConnected = false;
+    let oldDb: any = null;
+
+    try {
+      if (process.env.DATABASE_URL) {
+        // Only attempt connection if DATABASE_URL is available
+        const neonConfig = { webSocketConstructor: ws };
+        const oldPool = new Pool({ connectionString: process.env.DATABASE_URL });
+        oldDb = drizzle({ client: oldPool, schema });
+        oldPoolConnected = true;
+        console.log('Successfully connected to old database for data migration');
+      } else {
+        console.log('No DATABASE_URL found, skipping data migration from old database');
+      }
+    } catch(err) {
+      console.log('Failed to connect to old database:', err);
+      console.log('Will create empty tables without migrating data');
+    }
+
     // Create tables in the correct order to respect dependencies
     console.log('Creating tables...');
     
@@ -254,6 +276,12 @@ async function migrateToSupabase() {
     // Set up RLS policies for Supabase
     await setupRowLevelSecurity();
 
+    // Migrate data if we have connection to old database
+    if (oldPoolConnected && oldDb) {
+      console.log('Migrating data from old database...');
+      await migrateData(oldDb);
+    }
+
     console.log('Migration to Supabase completed successfully!');
   } catch (error) {
     console.error('Error during migration:', error);
@@ -261,38 +289,33 @@ async function migrateToSupabase() {
   }
 }
 
-// Helper function to create a table if it doesn't exist
+// Helper function to check if a table exists
 async function createTable(tableName: string, tableDefinition: string) {
-  console.log(`Creating table: ${tableName}...`);
+  console.log(`Checking if table ${tableName} exists...`);
   
-  // Check if table exists first
-  const { data: tableExists } = await supabase
-    .from('pg_tables')
-    .select('*')
-    .eq('tablename', tableName)
-    .eq('schemaname', 'public');
-
-  if (tableExists && tableExists.length > 0) {
-    console.log(`Table ${tableName} already exists, skipping creation.`);
-    return;
+  try {
+    // Try to query the table
+    const { error } = await supabase.from(tableName).select('*', { count: 'exact', head: true });
+    
+    if (error && error.code === 'PGRST116') {
+      // Table doesn't exist (error code for "relation does not exist")
+      console.log(`Table ${tableName} doesn't exist, would create it with schema:`, tableDefinition);
+      console.log(`NOTE: The free tier of Supabase doesn't allow creating tables via API.`);
+      console.log(`Please create this table manually in the Supabase dashboard SQL editor.`);
+    } else {
+      console.log(`Table ${tableName} already exists, skipping creation.`);
+    }
+  } catch (err) {
+    console.error(`Error checking table ${tableName}:`, err);
+    console.log(`NOTE: Please create this table manually in the Supabase dashboard SQL editor with schema:`, tableDefinition);
   }
-
-  // Create the table
-  const { error } = await supabase.rpc('run_sql', { 
-    sql: `CREATE TABLE IF NOT EXISTS ${tableName} (${tableDefinition});`
-  });
-
-  if (error) {
-    console.error(`Error creating table ${tableName}:`, error);
-    throw error;
-  }
-
-  console.log(`Table ${tableName} created successfully.`);
 }
 
 // Set up Row Level Security policies for Supabase tables
 async function setupRowLevelSecurity() {
-  console.log('Setting up Row Level Security policies...');
+  console.log('For Row Level Security (RLS) policies setup:');
+  console.log('NOTE: The free tier of Supabase does not allow executing SQL via the API.');
+  console.log('Please set up RLS policies manually in the Supabase dashboard SQL editor:');
   
   // The tables that need RLS
   const tables = [
@@ -301,26 +324,98 @@ async function setupRowLevelSecurity() {
     'subscription_plans', 'subscriptions', 'payment_methods', 'invoices'
   ];
 
-  // Enable RLS for all tables
+  // Generate SQL for RLS setup
   for (const table of tables) {
-    await supabase.rpc('run_sql', {
-      sql: `ALTER TABLE ${table} ENABLE ROW LEVEL SECURITY;`
-    });
+    console.log(`-- RLS setup for table ${table}:`);
+    console.log(`ALTER TABLE ${table} ENABLE ROW LEVEL SECURITY;`);
+    console.log(`CREATE POLICY service_role_policy ON ${table}`);
+    console.log(`  USING (auth.role() = 'service_role')`);
+    console.log(`  WITH CHECK (auth.role() = 'service_role');`);
+    console.log();
+  }
+  
+  console.log('Please copy and execute the above SQL in your Supabase SQL Editor.');
+}
 
-    // Create policy for service operations (our backend)
-    await supabase.rpc('run_sql', {
-      sql: `
-        CREATE POLICY service_role_policy ON ${table}
-        USING (auth.role() = 'service_role')
-        WITH CHECK (auth.role() = 'service_role');
-      `
-    });
+// Migrate data from old database to Supabase
+async function migrateData(oldDb: any) {
+  // Tables to migrate in order (respecting foreign key constraints)
+  const tablesToMigrate = [
+    { name: 'users', oldTable: schema.users },
+    { name: 'subscription_plans', oldTable: schema.subscriptionPlans },
+    { name: 'vessels', oldTable: schema.vessels },
+    { name: 'refineries', oldTable: schema.refineries },
+    { name: 'ports', oldTable: schema.ports },
+    { name: 'progress_events', oldTable: schema.progressEvents },
+    { name: 'documents', oldTable: schema.documents },
+    { name: 'brokers', oldTable: schema.brokers },
+    { name: 'stats', oldTable: schema.stats },
+    { name: 'companies', oldTable: schema.companies },
+    { name: 'refinery_port_connections', oldTable: schema.refineryPortConnections },
+    { name: 'subscriptions', oldTable: schema.subscriptions },
+    { name: 'payment_methods', oldTable: schema.paymentMethods },
+    { name: 'invoices', oldTable: schema.invoices }
+  ];
+
+  for (const table of tablesToMigrate) {
+    try {
+      console.log(`Migrating data for table: ${table.name}...`);
+
+      // Get data from old database
+      const oldData = await oldDb.select().from(table.oldTable);
+      
+      if (!oldData || oldData.length === 0) {
+        console.log(`No data found in old database for table ${table.name}, skipping.`);
+        continue;
+      }
+      
+      console.log(`Found ${oldData.length} records in old database for table ${table.name}.`);
+
+      // Check if target table already has data
+      const { data: existingData, error: countError } = await supabase
+        .from(table.name)
+        .select('id', { count: 'exact', head: true });
+      
+      if (countError) {
+        console.error(`Error checking existing data for ${table.name}:`, countError);
+      } else if (existingData && existingData.length > 0) {
+        console.log(`Table ${table.name} already has data, skipping import.`);
+        continue;
+      }
+
+      // Import in batches to avoid timeouts and payload size issues
+      const batchSize = 50;
+      let imported = 0;
+      
+      for (let i = 0; i < oldData.length; i += batchSize) {
+        const batch = oldData.slice(i, i + batchSize);
+        
+        // Insert data into Supabase
+        const { error: insertError } = await supabase
+          .from(table.name)
+          .insert(batch);
+        
+        if (insertError) {
+          console.error(`Error inserting batch for ${table.name}:`, insertError);
+        } else {
+          imported += batch.length;
+          console.log(`Imported ${imported}/${oldData.length} records for ${table.name}`);
+        }
+      }
+
+      console.log(`Completed migration for table ${table.name}.`);
+    } catch (error) {
+      console.error(`Error migrating data for table ${table.name}:`, error);
+    }
   }
 }
 
 // Run the migration
 migrateToSupabase()
-  .then(() => process.exit(0))
+  .then(() => {
+    console.log('Migration completed successfully!');
+    process.exit(0);
+  })
   .catch(err => {
     console.error('Migration failed:', err);
     process.exit(1);

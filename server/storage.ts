@@ -1,5 +1,5 @@
 import { eq, and } from "drizzle-orm";
-import { db } from "./db";
+import { db, supabase } from "./db";
 import {
   users, vessels, refineries, progressEvents, documents, brokers, stats as statsTable, ports, refineryPortConnections, companies,
   subscriptionPlans, subscriptions, paymentMethods, invoices,
@@ -503,21 +503,56 @@ export class DatabaseStorage implements IStorage {
 
   // Port methods implementation
   async getPorts(): Promise<Port[]> {
-    return await db.select().from(ports);
+    const { data, error } = await supabase
+      .from('ports')
+      .select('*');
+    
+    if (error) {
+      console.error("Error fetching ports:", error);
+      return [];
+    }
+    
+    return data as Port[];
   }
 
   async getPortById(id: number): Promise<Port | undefined> {
-    const [port] = await db.select().from(ports).where(eq(ports.id, id));
-    return port || undefined;
+    const { data, error } = await supabase
+      .from('ports')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error || !data) return undefined;
+    return data as Port;
   }
 
   async getPortsByRegion(region: string): Promise<Port[]> {
-    return await db.select().from(ports).where(eq(ports.region, region));
+    const { data, error } = await supabase
+      .from('ports')
+      .select('*')
+      .eq('region', region);
+    
+    if (error) {
+      console.error(`Error fetching ports for region ${region}:`, error);
+      return [];
+    }
+    
+    return data as Port[];
   }
 
   async createPort(insertPort: InsertPort): Promise<Port> {
-    const [port] = await db.insert(ports).values(insertPort).returning();
-    return port;
+    const { data, error } = await supabase
+      .from('ports')
+      .insert(insertPort)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error("Error creating port:", error);
+      throw error;
+    }
+    
+    return data as Port;
   }
   
   async createPortsBulk(insertPorts: InsertPort[]): Promise<Port[]> {
@@ -528,8 +563,16 @@ export class DatabaseStorage implements IStorage {
     
     try {
       // Insert all ports in a single database operation
-      const createdPorts = await db.insert(ports).values(insertPorts).returning();
-      return createdPorts;
+      const { data, error } = await supabase
+        .from('ports')
+        .insert(insertPorts)
+        .select();
+      
+      if (error) {
+        throw error;
+      }
+      
+      return data as Port[];
     } catch (error) {
       console.error("Error in bulk port insertion:", error);
       
@@ -539,8 +582,14 @@ export class DatabaseStorage implements IStorage {
       
       for (const port of insertPorts) {
         try {
-          const [createdPort] = await db.insert(ports).values(port).returning();
-          results.push(createdPort);
+          const { data, error } = await supabase
+            .from('ports')
+            .insert(port)
+            .select()
+            .single();
+          
+          if (error) throw error;
+          if (data) results.push(data as Port);
         } catch (singleError) {
           console.error(`Error inserting port ${port.name}:`, singleError);
           // Continue with the next port
@@ -552,16 +601,32 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updatePort(id: number, portUpdate: Partial<InsertPort>): Promise<Port | undefined> {
-    const [updatedPort] = await db
-      .update(ports)
-      .set(portUpdate)
-      .where(eq(ports.id, id))
-      .returning();
-    return updatedPort || undefined;
+    const { data, error } = await supabase
+      .from('ports')
+      .update(portUpdate)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error(`Error updating port ${id}:`, error);
+      return undefined;
+    }
+    
+    return data as Port;
   }
 
   async deletePort(id: number): Promise<boolean> {
-    const result = await db.delete(ports).where(eq(ports.id, id));
+    const { error } = await supabase
+      .from('ports')
+      .delete()
+      .eq('id', id);
+    
+    if (error) {
+      console.error(`Error deleting port ${id}:`, error);
+      return false;
+    }
+    
     return true;
   }
 
