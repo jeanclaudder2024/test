@@ -131,18 +131,36 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   async getUser(id: number): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user || undefined;
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error || !user) return undefined;
+    return user as User;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
-    return user || undefined;
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('username', username)
+      .single();
+    
+    if (error || !user) return undefined;
+    return user as User;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const [user] = await db.insert(users).values(insertUser).returning();
-    return user;
+    const { data, error } = await supabase
+      .from('users')
+      .insert(insertUser)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data as User;
   }
   
   async getUserByStripeCustomerId(customerId: string): Promise<User | undefined> {
@@ -369,35 +387,86 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getVessels(): Promise<Vessel[]> {
-    return await db.select().from(vessels);
+    const { data, error } = await supabase
+      .from('vessels')
+      .select('*');
+    
+    if (error) {
+      console.error("Error fetching vessels:", error);
+      return [];
+    }
+    
+    return data as Vessel[];
   }
 
   async getVesselById(id: number): Promise<Vessel | undefined> {
-    const [vessel] = await db.select().from(vessels).where(eq(vessels.id, id));
-    return vessel || undefined;
+    const { data, error } = await supabase
+      .from('vessels')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error || !data) return undefined;
+    return data as Vessel;
   }
 
   async getVesselsByRegion(region: string): Promise<Vessel[]> {
-    return await db.select().from(vessels).where(eq(vessels.currentRegion, region));
+    const { data, error } = await supabase
+      .from('vessels')
+      .select('*')
+      .eq('current_region', region);
+    
+    if (error) {
+      console.error(`Error fetching vessels for region ${region}:`, error);
+      return [];
+    }
+    
+    return data as Vessel[];
   }
 
   async createVessel(insertVessel: InsertVessel): Promise<Vessel> {
-    const [vessel] = await db.insert(vessels).values(insertVessel).returning();
-    return vessel;
+    const { data, error } = await supabase
+      .from('vessels')
+      .insert(insertVessel)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error("Error creating vessel:", error);
+      throw error;
+    }
+    
+    return data as Vessel;
   }
 
   async updateVessel(id: number, vesselUpdate: Partial<InsertVessel>): Promise<Vessel | undefined> {
-    const [updatedVessel] = await db
-      .update(vessels)
-      .set(vesselUpdate)
-      .where(eq(vessels.id, id))
-      .returning();
-    return updatedVessel || undefined;
+    const { data, error } = await supabase
+      .from('vessels')
+      .update(vesselUpdate)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error(`Error updating vessel ${id}:`, error);
+      return undefined;
+    }
+    
+    return data as Vessel;
   }
 
   async deleteVessel(id: number): Promise<boolean> {
-    const result = await db.delete(vessels).where(eq(vessels.id, id));
-    return true; // PostgreSQL doesn't return count of affected rows in the way we need
+    const { error } = await supabase
+      .from('vessels')
+      .delete()
+      .eq('id', id);
+    
+    if (error) {
+      console.error(`Error deleting vessel ${id}:`, error);
+      return false;
+    }
+    
+    return true;
   }
 
   async getRefineries(): Promise<Refinery[]> {
