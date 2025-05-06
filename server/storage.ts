@@ -2,6 +2,7 @@ import { eq, and } from "drizzle-orm";
 import { db } from "./db";
 import {
   users, vessels, refineries, progressEvents, documents, brokers, stats as statsTable, ports, refineryPortConnections, companies,
+  subscriptionPlans, subscriptions, paymentMethods, invoices,
   User, InsertUser, 
   Vessel, InsertVessel,
   Refinery, InsertRefinery,
@@ -11,7 +12,11 @@ import {
   Stats, InsertStats,
   Port, InsertPort,
   RefineryPortConnection, InsertRefineryPortConnection,
-  Company, InsertCompany
+  Company, InsertCompany,
+  SubscriptionPlan, InsertSubscriptionPlan,
+  Subscription, InsertSubscription,
+  PaymentMethod, InsertPaymentMethod,
+  Invoice, InsertInvoice
 } from "@shared/schema";
 
 // Storage interface with CRUD methods
@@ -22,6 +27,40 @@ export interface IStorage {
   getUserByStripeCustomerId(customerId: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, user: Partial<User>): Promise<User | undefined>;
+  
+  // Subscription Plan methods
+  getSubscriptionPlans(): Promise<SubscriptionPlan[]>;
+  getSubscriptionPlanById(id: number): Promise<SubscriptionPlan | undefined>;
+  getSubscriptionPlanBySlug(slug: string): Promise<SubscriptionPlan | undefined>;
+  createSubscriptionPlan(plan: InsertSubscriptionPlan): Promise<SubscriptionPlan>;
+  updateSubscriptionPlan(id: number, plan: Partial<InsertSubscriptionPlan>): Promise<SubscriptionPlan | undefined>;
+  deleteSubscriptionPlan(id: number): Promise<boolean>;
+  
+  // Subscription methods
+  getSubscriptions(): Promise<Subscription[]>;
+  getSubscriptionById(id: number): Promise<Subscription | undefined>;
+  getSubscriptionsByUserId(userId: number): Promise<Subscription[]>;
+  getActiveSubscriptionByUserId(userId: number): Promise<Subscription | undefined>;
+  getSubscriptionByStripeId(stripeSubscriptionId: string): Promise<Subscription | undefined>;
+  createSubscription(subscription: InsertSubscription): Promise<Subscription>;
+  updateSubscription(id: number, subscription: Partial<InsertSubscription>): Promise<Subscription | undefined>;
+  deleteSubscription(id: number): Promise<boolean>;
+  
+  // Payment Method methods
+  getPaymentMethods(userId: number): Promise<PaymentMethod[]>;
+  getPaymentMethodById(id: number): Promise<PaymentMethod | undefined>;
+  getDefaultPaymentMethod(userId: number): Promise<PaymentMethod | undefined>;
+  createPaymentMethod(paymentMethod: InsertPaymentMethod): Promise<PaymentMethod>;
+  updatePaymentMethod(id: number, paymentMethod: Partial<InsertPaymentMethod>): Promise<PaymentMethod | undefined>;
+  deletePaymentMethod(id: number): Promise<boolean>;
+  
+  // Invoice methods
+  getInvoices(userId: number): Promise<Invoice[]>;
+  getInvoiceById(id: number): Promise<Invoice | undefined>;
+  getInvoiceByStripeId(stripeInvoiceId: string): Promise<Invoice | undefined>;
+  createInvoice(invoice: InsertInvoice): Promise<Invoice>;
+  updateInvoice(id: number, invoice: Partial<InsertInvoice>): Promise<Invoice | undefined>;
+  deleteInvoice(id: number): Promise<boolean>;
 
   // Vessel methods
   getVessels(): Promise<Vessel[]>;
@@ -118,6 +157,215 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, id))
       .returning();
     return updatedUser || undefined;
+  }
+  
+  // Subscription Plan Methods
+  async getSubscriptionPlans(): Promise<SubscriptionPlan[]> {
+    return await db.select().from(subscriptionPlans).orderBy(subscriptionPlans.sortOrder);
+  }
+  
+  async getSubscriptionPlanById(id: number): Promise<SubscriptionPlan | undefined> {
+    const [plan] = await db.select().from(subscriptionPlans).where(eq(subscriptionPlans.id, id));
+    return plan || undefined;
+  }
+  
+  async getSubscriptionPlanBySlug(slug: string): Promise<SubscriptionPlan | undefined> {
+    const [plan] = await db.select().from(subscriptionPlans).where(eq(subscriptionPlans.slug, slug));
+    return plan || undefined;
+  }
+  
+  async createSubscriptionPlan(plan: InsertSubscriptionPlan): Promise<SubscriptionPlan> {
+    const [newPlan] = await db.insert(subscriptionPlans).values(plan).returning();
+    return newPlan;
+  }
+  
+  async updateSubscriptionPlan(id: number, planUpdate: Partial<InsertSubscriptionPlan>): Promise<SubscriptionPlan | undefined> {
+    const [updatedPlan] = await db
+      .update(subscriptionPlans)
+      .set({
+        ...planUpdate,
+        updatedAt: new Date()
+      })
+      .where(eq(subscriptionPlans.id, id))
+      .returning();
+    return updatedPlan || undefined;
+  }
+  
+  async deleteSubscriptionPlan(id: number): Promise<boolean> {
+    await db.delete(subscriptionPlans).where(eq(subscriptionPlans.id, id));
+    return true;
+  }
+  
+  // Subscription Methods
+  async getSubscriptions(): Promise<Subscription[]> {
+    return await db.select().from(subscriptions);
+  }
+  
+  async getSubscriptionById(id: number): Promise<Subscription | undefined> {
+    const [subscription] = await db.select().from(subscriptions).where(eq(subscriptions.id, id));
+    return subscription || undefined;
+  }
+  
+  async getSubscriptionsByUserId(userId: number): Promise<Subscription[]> {
+    return await db.select().from(subscriptions).where(eq(subscriptions.userId, userId));
+  }
+  
+  async getActiveSubscriptionByUserId(userId: number): Promise<Subscription | undefined> {
+    const [subscription] = await db
+      .select()
+      .from(subscriptions)
+      .where(and(
+        eq(subscriptions.userId, userId),
+        eq(subscriptions.status, 'active')
+      ));
+    return subscription || undefined;
+  }
+  
+  async getSubscriptionByStripeId(stripeSubscriptionId: string): Promise<Subscription | undefined> {
+    const [subscription] = await db
+      .select()
+      .from(subscriptions)
+      .where(eq(subscriptions.stripeSubscriptionId, stripeSubscriptionId));
+    return subscription || undefined;
+  }
+  
+  async createSubscription(subscription: InsertSubscription): Promise<Subscription> {
+    const [newSubscription] = await db.insert(subscriptions).values(subscription).returning();
+    return newSubscription;
+  }
+  
+  async updateSubscription(id: number, subscriptionUpdate: Partial<InsertSubscription>): Promise<Subscription | undefined> {
+    const [updatedSubscription] = await db
+      .update(subscriptions)
+      .set({
+        ...subscriptionUpdate,
+        updatedAt: new Date()
+      })
+      .where(eq(subscriptions.id, id))
+      .returning();
+    return updatedSubscription || undefined;
+  }
+  
+  async deleteSubscription(id: number): Promise<boolean> {
+    await db.delete(subscriptions).where(eq(subscriptions.id, id));
+    return true;
+  }
+  
+  // Payment Method Methods
+  async getPaymentMethods(userId: number): Promise<PaymentMethod[]> {
+    return await db
+      .select()
+      .from(paymentMethods)
+      .where(eq(paymentMethods.userId, userId));
+  }
+  
+  async getPaymentMethodById(id: number): Promise<PaymentMethod | undefined> {
+    const [paymentMethod] = await db
+      .select()
+      .from(paymentMethods)
+      .where(eq(paymentMethods.id, id));
+    return paymentMethod || undefined;
+  }
+  
+  async getDefaultPaymentMethod(userId: number): Promise<PaymentMethod | undefined> {
+    const [paymentMethod] = await db
+      .select()
+      .from(paymentMethods)
+      .where(and(
+        eq(paymentMethods.userId, userId),
+        eq(paymentMethods.isDefault, true)
+      ));
+    return paymentMethod || undefined;
+  }
+  
+  async createPaymentMethod(paymentMethod: InsertPaymentMethod): Promise<PaymentMethod> {
+    // If this is set as default, unset other default payment methods for this user
+    if (paymentMethod.isDefault) {
+      await db
+        .update(paymentMethods)
+        .set({ isDefault: false })
+        .where(eq(paymentMethods.userId, paymentMethod.userId));
+    }
+    
+    const [newPaymentMethod] = await db.insert(paymentMethods).values(paymentMethod).returning();
+    return newPaymentMethod;
+  }
+  
+  async updatePaymentMethod(id: number, paymentMethodUpdate: Partial<InsertPaymentMethod>): Promise<PaymentMethod | undefined> {
+    // If this is being set as default, unset other default payment methods for this user
+    if (paymentMethodUpdate.isDefault) {
+      // First get the payment method to find the user ID
+      const [existingPaymentMethod] = await db
+        .select()
+        .from(paymentMethods)
+        .where(eq(paymentMethods.id, id));
+      
+      if (existingPaymentMethod) {
+        await db
+          .update(paymentMethods)
+          .set({ isDefault: false })
+          .where(and(
+            eq(paymentMethods.userId, existingPaymentMethod.userId),
+            eq(paymentMethods.isDefault, true)
+          ));
+      }
+    }
+    
+    const [updatedPaymentMethod] = await db
+      .update(paymentMethods)
+      .set({
+        ...paymentMethodUpdate,
+        updatedAt: new Date()
+      })
+      .where(eq(paymentMethods.id, id))
+      .returning();
+    return updatedPaymentMethod || undefined;
+  }
+  
+  async deletePaymentMethod(id: number): Promise<boolean> {
+    await db.delete(paymentMethods).where(eq(paymentMethods.id, id));
+    return true;
+  }
+  
+  // Invoice Methods
+  async getInvoices(userId: number): Promise<Invoice[]> {
+    return await db
+      .select()
+      .from(invoices)
+      .where(eq(invoices.userId, userId))
+      .orderBy(invoices.invoiceDate, 'desc');
+  }
+  
+  async getInvoiceById(id: number): Promise<Invoice | undefined> {
+    const [invoice] = await db.select().from(invoices).where(eq(invoices.id, id));
+    return invoice || undefined;
+  }
+  
+  async getInvoiceByStripeId(stripeInvoiceId: string): Promise<Invoice | undefined> {
+    const [invoice] = await db.select().from(invoices).where(eq(invoices.stripeInvoiceId, stripeInvoiceId));
+    return invoice || undefined;
+  }
+  
+  async createInvoice(invoice: InsertInvoice): Promise<Invoice> {
+    const [newInvoice] = await db.insert(invoices).values(invoice).returning();
+    return newInvoice;
+  }
+  
+  async updateInvoice(id: number, invoiceUpdate: Partial<InsertInvoice>): Promise<Invoice | undefined> {
+    const [updatedInvoice] = await db
+      .update(invoices)
+      .set({
+        ...invoiceUpdate,
+        updatedAt: new Date()
+      })
+      .where(eq(invoices.id, id))
+      .returning();
+    return updatedInvoice || undefined;
+  }
+  
+  async deleteInvoice(id: number): Promise<boolean> {
+    await db.delete(invoices).where(eq(invoices.id, id));
+    return true;
   }
 
   async getVessels(): Promise<Vessel[]> {
