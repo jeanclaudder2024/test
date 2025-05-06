@@ -236,6 +236,9 @@ export default function Ports() {
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
+          <Button variant="outline" onClick={() => navigate("/ports/proximity")} className="bg-blue-50 border-blue-200 hover:bg-blue-100">
+            <Map className="mr-2 h-4 w-4 text-blue-600" /> Vessel-Port Proximity
+          </Button>
           <Button variant="outline" onClick={() => navigate("/ports/import")}>
             <Database className="mr-2 h-4 w-4" /> Import All Ports
           </Button>

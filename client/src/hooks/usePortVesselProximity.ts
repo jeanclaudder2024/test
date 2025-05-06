@@ -1,7 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { Vessel, Port } from '@shared/schema';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
-// Type for port-vessel connection data received from WebSocket
+// Define types for port-vessel connections
 export interface PortVesselConnection {
   vesselId: number;
   portId: number;
@@ -22,7 +21,14 @@ export interface PortVesselConnection {
   };
 }
 
-// Props for the hook
+// Messages from the WebSocket server
+type WebSocketMessage = {
+  type: 'port-connections' | 'error' | 'vessels' | 'info';
+  data: any;
+  timestamp?: string;
+};
+
+// Hook props
 interface UsePortVesselProximityProps {
   proximityRadius?: number; // In kilometers
   autoConnect?: boolean;
@@ -37,187 +43,231 @@ interface UsePortVesselProximityProps {
 export function usePortVesselProximity({
   proximityRadius = 10,
   autoConnect = true,
-  pollingInterval = 10000
+  pollingInterval = 15000, // 15 seconds default
 }: UsePortVesselProximityProps = {}) {
+  // State variables
   const [connections, setConnections] = useState<PortVesselConnection[]>([]);
-  const [vessels, setVessels] = useState<Vessel[]>([]);
-  const [isConnected, setIsConnected] = useState(false);
+  const [vessels, setVessels] = useState<any[]>([]);
+  const [isConnected, setIsConnected] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   
-  // Refs to store WebSocket and timer
+  // References
   const socketRef = useRef<WebSocket | null>(null);
-  const reconnectTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const pollingTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
-  // Function to connect to WebSocket
-  const connectWebSocket = useCallback(() => {
-    // Close existing socket if any
+  /**
+   * Connect to the WebSocket server
+   */
+  const connect = useCallback(() => {
+    // Clear any existing reconnect timeout
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
+    
+    // If we already have a connection, close it
     if (socketRef.current) {
       socketRef.current.close();
       socketRef.current = null;
     }
     
     try {
-      // Determine WebSocket URL
+      // Create WebSocket connection
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${protocol}//${window.location.host}/ws`;
+      const host = window.location.host;
+      const wsUrl = `${protocol}//${host}/ws`;
       
-      console.log('Connecting to WebSocket server at:', wsUrl);
-      
-      // Create new WebSocket connection
       const socket = new WebSocket(wsUrl);
       socketRef.current = socket;
       
-      // Connection opened handler
-      socket.addEventListener('open', () => {
-        console.log('WebSocket connection established');
+      // Event listeners
+      socket.onopen = () => {
         setIsConnected(true);
         setError(null);
         
-        // Send configuration to server
+        // Send configuration to the server
         socket.send(JSON.stringify({
-          type: 'track_port_proximity',
-          enabled: true,
-          radius: proximityRadius
+          type: 'config',
+          trackPortProximity: true,
+          proximityRadius,
         }));
         
-        // Also request all vessels
-        socket.send(JSON.stringify({
-          type: 'request_vessels',
-          allVessels: true
-        }));
-      });
+        // Clear polling interval if it's active
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
+        }
+      };
       
-      // Message handler
-      socket.addEventListener('message', (event) => {
+      socket.onmessage = (event) => {
         try {
-          const data = JSON.parse(event.data);
+          const message = JSON.parse(event.data) as WebSocketMessage;
           
-          // Handle vessel data updates with port connections
-          if (data.type === 'vessel_update') {
-            // Update vessels
-            if (data.vessels && Array.isArray(data.vessels)) {
-              setVessels(data.vessels);
-            }
-            
-            // Update connections if present
-            if (data.portConnections && Array.isArray(data.portConnections)) {
-              setConnections(data.portConnections);
-              console.log(`Received ${data.portConnections.length} vessel-port connections`);
-            }
-            
-            // Update lastUpdated timestamp
-            if (data.timestamp) {
-              setLastUpdated(new Date(data.timestamp));
-            }
-            
+          if (message.type === 'port-connections') {
+            setConnections(message.data);
             setIsLoading(false);
+            setLastUpdated(new Date());
+          } else if (message.type === 'vessels') {
+            setVessels(message.data);
+          } else if (message.type === 'error') {
+            setError(message.data.message);
           }
         } catch (error) {
           console.error('Error parsing WebSocket message:', error);
+          setError('Failed to parse server message');
         }
-      });
+      };
       
-      // Error handler
-      socket.addEventListener('error', (event) => {
-        console.error('WebSocket error:', event);
+      socket.onclose = () => {
+        setIsConnected(false);
+        
+        // Attempt to reconnect after a delay
+        reconnectTimeoutRef.current = setTimeout(() => {
+          if (autoConnect) {
+            connect();
+          }
+        }, 5000); // 5 second reconnect delay
+        
+        // If polling is enabled and socket disconnected, fall back to polling
+        if (pollingInterval > 0 && !pollingIntervalRef.current) {
+          startPolling();
+        }
+      };
+      
+      socket.onerror = (error) => {
+        console.error('WebSocket error:', error);
         setError('WebSocket connection error');
         setIsConnected(false);
-        
-        // Schedule reconnection
-        if (!reconnectTimerRef.current) {
-          reconnectTimerRef.current = setTimeout(() => {
-            reconnectTimerRef.current = null;
-            connectWebSocket();
-          }, 5000);
-        }
-      });
-      
-      // Close handler
-      socket.addEventListener('close', () => {
-        console.log('WebSocket connection closed');
-        setIsConnected(false);
-        
-        // Schedule reconnection
-        if (!reconnectTimerRef.current) {
-          reconnectTimerRef.current = setTimeout(() => {
-            reconnectTimerRef.current = null;
-            connectWebSocket();
-          }, 5000);
-        }
-      });
+      };
     } catch (error) {
-      console.error('Error creating WebSocket:', error);
-      setError('Failed to create WebSocket connection');
+      console.error('Failed to connect to WebSocket:', error);
+      setError('Failed to connect to real-time updates');
       setIsConnected(false);
       
-      // Schedule reconnection
-      if (!reconnectTimerRef.current) {
-        reconnectTimerRef.current = setTimeout(() => {
-          reconnectTimerRef.current = null;
-          connectWebSocket();
-        }, 5000);
+      // If polling is enabled and socket failed, fall back to polling
+      if (pollingInterval > 0 && !pollingIntervalRef.current) {
+        startPolling();
       }
     }
-  }, [proximityRadius]);
+  }, [autoConnect, proximityRadius, pollingInterval]);
   
-  // Function to manually refresh data
-  const refreshData = useCallback(() => {
-    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-      socketRef.current.send(JSON.stringify({
-        type: 'request_vessels',
-        allVessels: true
-      }));
-    } else {
-      // Fallback to reconnect
-      connectWebSocket();
-    }
-  }, [connectWebSocket]);
-  
-  // Function to cleanup resources
-  const cleanup = useCallback(() => {
-    // Close WebSocket
+  /**
+   * Disconnect from the WebSocket server
+   */
+  const disconnect = useCallback(() => {
     if (socketRef.current) {
       socketRef.current.close();
       socketRef.current = null;
     }
     
-    // Clear timers
-    if (reconnectTimerRef.current) {
-      clearTimeout(reconnectTimerRef.current);
-      reconnectTimerRef.current = null;
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
     }
     
-    if (pollingTimerRef.current) {
-      clearInterval(pollingTimerRef.current);
-      pollingTimerRef.current = null;
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
     }
     
     setIsConnected(false);
   }, []);
   
-  // Effect to connect on mount and clean up on unmount
-  useEffect(() => {
-    if (autoConnect) {
-      connectWebSocket();
+  /**
+   * Start polling for data as a fallback
+   */
+  const startPolling = useCallback(() => {
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
     }
     
-    return cleanup;
-  }, [autoConnect, connectWebSocket, cleanup]);
+    // Skip polling if interval is set to 0
+    if (pollingInterval === 0) return;
+    
+    // Function to fetch data via API
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Fetch port-vessel connections data
+        const url = new URL('/api/port-vessel-proximity', window.location.origin);
+        url.searchParams.append('radius', proximityRadius.toString());
+        
+        const response = await fetch(url.toString());
+        if (!response.ok) {
+          throw new Error(`Error fetching data: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        setConnections(data.connections || []);
+        setVessels(data.vessels || []);
+        setLastUpdated(new Date());
+        setError(null);
+      } catch (error) {
+        console.error('Error polling for data:', error);
+        setError(error instanceof Error ? error.message : 'Failed to fetch data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    // Fetch immediately
+    fetchData();
+    
+    // Set up the interval
+    pollingIntervalRef.current = setInterval(fetchData, pollingInterval);
+  }, [proximityRadius, pollingInterval]);
   
-  // Effect to handle proximity radius changes
+  /**
+   * Update radius configuration
+   */
   useEffect(() => {
-    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+    if (socketRef.current && isConnected) {
+      // Send updated config to the server
       socketRef.current.send(JSON.stringify({
-        type: 'track_port_proximity',
-        enabled: true,
-        radius: proximityRadius
+        type: 'config',
+        trackPortProximity: true,
+        proximityRadius,
       }));
     }
-  }, [proximityRadius]);
+  }, [proximityRadius, isConnected]);
   
+  /**
+   * Initial connection setup
+   */
+  useEffect(() => {
+    if (autoConnect) {
+      connect();
+    }
+    
+    return () => {
+      disconnect();
+    };
+  }, [autoConnect, connect, disconnect]);
+  
+  /**
+   * Manually refresh data
+   */
+  const refreshData = useCallback(() => {
+    if (isConnected && socketRef.current) {
+      // Request fresh data
+      socketRef.current.send(JSON.stringify({
+        type: 'request-data',
+        trackPortProximity: true,
+        proximityRadius,
+      }));
+      
+      setIsLoading(true);
+    } else {
+      // Fall back to polling if not connected
+      startPolling();
+    }
+  }, [isConnected, proximityRadius, startPolling]);
+  
+  // Return the hook state and functions
   return {
     connections,
     vessels,
@@ -225,8 +275,8 @@ export function usePortVesselProximity({
     error,
     isLoading,
     lastUpdated,
+    connect,
+    disconnect,
     refreshData,
-    connect: connectWebSocket,
-    disconnect: cleanup
   };
 }
