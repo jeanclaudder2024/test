@@ -25,12 +25,6 @@ import LiveTracking from "@/pages/LiveTracking";
 import Companies from "@/pages/Companies";
 import ApiTest from "@/pages/ApiTest";
 import TranslationPage from "@/pages/TranslationPage";
-
-// Admin pages
-import AdminDashboard from "@/pages/admin/AdminDashboard";
-import UsersManagement from "@/pages/admin/UsersManagement";
-import SubscriptionsManagement from "@/pages/admin/SubscriptionsManagement";
-import AnalyticsPage from "@/pages/admin/AnalyticsPage";
 import { useEffect } from "react";
 import { apiRequest, queryClient } from "./lib/queryClient";
 import { Layout } from "@/components/ui/layout";
@@ -106,13 +100,6 @@ function Router() {
             <Route path="/account/subscription" component={AccountSubscription} />
             <Route path="/subscription/success" component={SubscriptionSuccess} />
             <Route path="/api-test" component={ApiTest} />
-            
-            {/* Admin Routes */}
-            <Route path="/admin" component={AdminDashboard} />
-            <Route path="/admin/users" component={UsersManagement} />
-            <Route path="/admin/subscriptions" component={SubscriptionsManagement} />
-            <Route path="/admin/analytics" component={AnalyticsPage} />
-            
             <Route component={NotFound} />
           </Switch>
         </motion.div>

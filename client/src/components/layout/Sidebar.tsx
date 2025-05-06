@@ -17,19 +17,11 @@ import {
   Radio,
   Database,
   Anchor,
-  Globe,
-  Shield,
-  LineChart,
-  UserCog,
-  CreditCard,
-  CalendarDays,
-  Flag,
-  BadgeDollarSign
+  Globe
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/hooks/use-language";
-import { useAuth } from "@/hooks/use-auth";
 
 interface SidebarProps {
   mobile?: boolean;
@@ -40,7 +32,6 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
   const [location] = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const { t } = useLanguage();
-  const { user } = useAuth();
 
   const toggleSidebar = () => {
     setCollapsed(!collapsed);
@@ -111,45 +102,6 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
     }
   ];
 
-  const getAdminItems = (): NavItem[] => [
-    {
-      title: "Admin Dashboard",
-      path: "/admin",
-      icon: <Shield className="h-5 w-5 mr-3" />,
-      section: "ADMIN"
-    },
-    {
-      title: "Users",
-      path: "/admin/users",
-      icon: <UserCog className="h-5 w-5 mr-3" />,
-    },
-    {
-      title: "Subscriptions",
-      path: "/admin/subscriptions",
-      icon: <BadgeDollarSign className="h-5 w-5 mr-3" />,
-    },
-    {
-      title: "Analytics",
-      path: "/admin/analytics",
-      icon: <LineChart className="h-5 w-5 mr-3" />,
-    },
-    {
-      title: "Payments",
-      path: "/admin/payments",
-      icon: <CreditCard className="h-5 w-5 mr-3" />,
-    },
-    {
-      title: "Feature Flags",
-      path: "/admin/features",
-      icon: <Flag className="h-5 w-5 mr-3" />,
-    },
-    {
-      title: "Schedule",
-      path: "/admin/schedule",
-      icon: <CalendarDays className="h-5 w-5 mr-3" />,
-    }
-  ];
-
   const getUserItems = (): NavItem[] => [
     {
       title: t("nav.profile"),
@@ -176,8 +128,6 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
   
   const navItems = getNavItems();
   const userItems = getUserItems();
-  // Only show admin items if user is an admin - for now show to all
-  const adminItems = getAdminItems();
 
   const isPathActive = (path: string) => {
     if (path === "/" && location === "/") return true;
@@ -267,49 +217,6 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
           </ul>
         </nav>
         
-        {/* Admin Section */}
-        <div className="mt-8">
-          <div className="border-t border-primary/10 dark:border-primary/20 my-5 mx-6"></div>
-          <div className="px-6 mb-2">
-            {!collapsed && <h2 className="font-heading uppercase text-primary/60 dark:text-primary/70 font-bold pb-2 text-xs tracking-wider">Admin</h2>}
-          </div>
-          
-          {adminItems.map((item, index) => (
-            <Link
-              key={index}
-              href={item.path}
-              onClick={mobile ? onClose : undefined}
-            >
-              <div
-                className={cn(
-                  "flex items-center py-3 px-4 rounded-lg my-1 mx-2 transition-all duration-200", 
-                  isPathActive(item.path) 
-                    ? "bg-primary/10 text-primary font-medium dark:bg-primary/20" 
-                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-100/80 dark:hover:bg-gray-800/60",
-                  collapsed && "justify-center px-2"
-                )}
-              >
-                <span className={cn(
-                  "flex items-center justify-center",
-                  isPathActive(item.path) ? "text-primary" : "text-gray-500 dark:text-gray-400",
-                  collapsed ? "mr-0" : "mr-3"
-                )}>{item.icon}</span>
-                {!collapsed && (
-                  <div className="flex items-center">
-                    <span>{item.title}</span>
-                    {item.badge && (
-                      <span className="ml-2 px-1.5 py-0.5 text-[0.6rem] bg-red-500 text-white rounded-full font-bold animate-pulse">
-                        {item.badge}
-                      </span>
-                    )}
-                  </div>
-                )}
-              </div>
-            </Link>
-          ))}
-        </div>
-
-        {/* User Section */}
         <div className="mt-8">
           <div className="border-t border-primary/10 dark:border-primary/20 my-5 mx-6"></div>
           <div className="px-6 mb-2">
