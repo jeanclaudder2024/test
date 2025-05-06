@@ -1243,7 +1243,7 @@ export default function RefineryDetail() {
                               {!refinery?.status?.toLowerCase().includes('maintenance') ? (
                                 <>
                                   <Clock className="h-3 w-3 mr-1" /> 
-                                  Last updated: {new Date().toLocaleString()}
+                                  Last updated: {refinery?.lastUpdated ? new Date(refinery.lastUpdated).toLocaleString() : 'Unknown'}
                                 </>
                               ) : (
                                 <>
@@ -1441,7 +1441,7 @@ export default function RefineryDetail() {
                             All units operating at optimal levels with no significant issues reported.
                           </p>
                           <p className="text-xs text-muted-foreground mt-1">
-                            Last updated: {new Date().toLocaleDateString()}
+                            Last updated: {refinery?.lastUpdated ? new Date(refinery.lastUpdated).toLocaleDateString() : 'Unknown'}
                           </p>
                         </div>
                         <div className="bg-muted/30 p-3 rounded-lg border border-border">
@@ -1450,7 +1450,7 @@ export default function RefineryDetail() {
                             Routine inspection scheduled for next quarter with no expected production impact.
                           </p>
                           <p className="text-xs text-muted-foreground mt-1">
-                            Date: {new Date(new Date().setMonth(new Date().getMonth() + 3)).toLocaleDateString()}
+                            Date: {refinery?.nextMaintenance ? new Date(refinery.nextMaintenance).toLocaleDateString() : 'Not scheduled'}
                           </p>
                         </div>
                       </>
