@@ -94,11 +94,11 @@ export default function AccountSubscription() {
   } = useQuery({
     queryKey: ['/api/subscriptions/current'],
     queryFn: async () => {
-      const response = await apiRequest('GET', '/api/subscriptions/current');
-      if (!response.ok) {
+      try {
+        return await apiRequest('/api/subscriptions/current');
+      } catch (error) {
         throw new Error('Failed to fetch subscription');
       }
-      return response.json();
     },
     enabled: isAuthenticated,
   });
@@ -110,11 +110,11 @@ export default function AccountSubscription() {
   } = useQuery({
     queryKey: ['/api/subscriptions/payment-methods'],
     queryFn: async () => {
-      const response = await apiRequest<PaymentMethod[]>('GET', '/api/subscriptions/payment-methods');
-      if (!response.ok) {
+      try {
+        return await apiRequest('/api/subscriptions/payment-methods');
+      } catch (error) {
         throw new Error('Failed to fetch payment methods');
       }
-      return response.json();
     },
     enabled: isAuthenticated && subscriptionData?.active,
   });
@@ -126,11 +126,11 @@ export default function AccountSubscription() {
   } = useQuery({
     queryKey: ['/api/subscriptions/invoices'],
     queryFn: async () => {
-      const response = await apiRequest<Invoice[]>('GET', '/api/subscriptions/invoices');
-      if (!response.ok) {
+      try {
+        return await apiRequest('/api/subscriptions/invoices');
+      } catch (error) {
         throw new Error('Failed to fetch invoices');
       }
-      return response.json();
     },
     enabled: isAuthenticated && subscriptionData?.active,
   });

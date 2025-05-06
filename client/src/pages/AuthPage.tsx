@@ -40,9 +40,13 @@ export default function AuthPage() {
     }
   }, [user, navigate]);
   
+  // Extract redirect from URL if present
+  const searchParams = new URLSearchParams(window.location.search);
+  const redirectTo = searchParams.get('redirect') || '/dashboard';
+  
   // Handle successful login or registration
   const handleSuccess = () => {
-    navigate("/dashboard");
+    navigate(redirectTo);
   };
 
   // Login form
@@ -57,7 +61,8 @@ export default function AuthPage() {
   const onLoginSubmit = async (data: LoginFormValues) => {
     try {
       await loginMutation.mutateAsync(data);
-      // Navigation is handled in the auth context on success
+      // After successful login, redirect to the specified page
+      handleSuccess();
     } catch (error) {
       console.error("Login error:", error);
       // Toast handled in auth context
@@ -77,7 +82,8 @@ export default function AuthPage() {
   const onRegisterSubmit = async (data: RegisterFormValues) => {
     try {
       await registerMutation.mutateAsync(data);
-      // Navigation is handled in the auth context on success
+      // After successful registration, redirect to the specified page
+      handleSuccess();
     } catch (error) {
       console.error("Registration error:", error);
       // Toast handled in auth context
