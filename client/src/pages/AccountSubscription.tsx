@@ -73,7 +73,7 @@ type Invoice = {
 };
 
 export default function AccountSubscription() {
-  const { user, isAuthenticated, loading: authLoading } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const [, navigate] = useLocation();
   const queryClient = useQueryClient();
@@ -82,7 +82,7 @@ export default function AccountSubscription() {
   // Redirect if not authenticated
   React.useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      navigate('/login?redirect=/account/subscription');
+      navigate('/auth?redirect=/account/subscription');
     }
   }, [isAuthenticated, authLoading, navigate]);
 

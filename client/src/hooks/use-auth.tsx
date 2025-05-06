@@ -19,6 +19,7 @@ type AuthContextType = {
   user: User | null;
   isLoading: boolean;
   error: Error | null;
+  isAuthenticated: boolean;
   loginMutation: UseMutationResult<User, Error, LoginData>;
   logoutMutation: UseMutationResult<void, Error, void>;
   registerMutation: UseMutationResult<User, Error, RegisterData>;
@@ -142,6 +143,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user: user ?? null, // Ensure we never pass undefined as the user value
         isLoading,
         error,
+        isAuthenticated: !!user, // User is authenticated if user object exists
         loginMutation,
         logoutMutation,
         registerMutation,
