@@ -1487,14 +1487,54 @@ export default function SimpleLeafletMap({
     if (initialCenter && initialZoom) {
       try {
         // Make sure we have valid coordinates
-        const validLat = typeof initialCenter[0] === 'number' ? initialCenter[0] : parseFloat(initialCenter[0] as any);
-        const validLng = typeof initialCenter[1] === 'number' ? initialCenter[1] : parseFloat(initialCenter[1] as any);
+        const validLat = typeof initialCenter[0] === 'number' 
+          ? initialCenter[0] 
+          : parseFloat(String(initialCenter[0] || '0'));
+        
+        const validLng = typeof initialCenter[1] === 'number' 
+          ? initialCenter[1] 
+          : parseFloat(String(initialCenter[1] || '0'));
+        
+        // Add better logging to diagnose the issue
+        console.log('Initial center coordinates:', initialCenter);
+        console.log('Parsed coordinates:', [validLat, validLng]);
+        console.log('Coordinate types:', {
+          lat0Type: typeof initialCenter[0],
+          lng1Type: typeof initialCenter[1],
+          validLatType: typeof validLat,
+          validLngType: typeof validLng
+        });
         
         if (!isNaN(validLat) && !isNaN(validLng)) {
           console.log('Setting map view to:', [validLat, validLng], initialZoom);
-          map.setView([validLat, validLng], initialZoom);
+          // Make sure to use proper bounds
+          if (validLat >= -90 && validLat <= 90 && validLng >= -180 && validLng <= 180) {
+            map.setView([validLat, validLng], initialZoom);
+          } else {
+            console.warn('Coordinates out of bounds, clamping:', [validLat, validLng]);
+            const clampedLat = Math.max(-90, Math.min(90, validLat));
+            const clampedLng = Math.max(-180, Math.min(180, validLng));
+            map.setView([clampedLat, clampedLng], initialZoom);
+          }
         } else {
           console.error('Invalid coordinates:', initialCenter);
+          
+          // If we have refineries, center on the first one instead of world view
+          if (refineries.length > 0 && refineries[0].lat && refineries[0].lng) {
+            const refLat = typeof refineries[0].lat === 'number' 
+              ? refineries[0].lat 
+              : parseFloat(String(refineries[0].lat || '0'));
+              
+            const refLng = typeof refineries[0].lng === 'number' 
+              ? refineries[0].lng 
+              : parseFloat(String(refineries[0].lng || '0'));
+              
+            if (!isNaN(refLat) && !isNaN(refLng)) {
+              map.setView([refLat, refLng], initialZoom || 7);
+              return;
+            }
+          }
+          
           map.setView([0, 0], 2); // Default to world view if invalid
         }
       } catch (err) {
