@@ -12,6 +12,7 @@ import { stripeService } from "./services/stripeService";
 import { updateRefineryCoordinates, seedMissingRefineries } from "./services/refineryUpdate";
 import { seedAllData, regenerateGlobalVessels } from "./services/seedService";
 import { portService } from "./services/portService";
+import { vesselPositionService } from "./services/vesselPositionService";
 import { setupAuth } from "./auth";
 import { db } from "./db";
 import { REGIONS } from "@shared/constants";
@@ -2459,19 +2460,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     page?: number;
     pageSize?: number;
     sendAllVessels?: boolean;
+    trackPortProximity?: boolean;
+    proximityRadius?: number;
   }
 
   // Set up WebSocket server for live vessel updates
   wss.on('connection', (ws: VesselTrackingWebSocket) => {
     console.log('Client connected to vessel tracking WebSocket');
 
+    // Initialize with default values
+    ws.trackPortProximity = false;
+    ws.proximityRadius = 10; // Default 10km radius
+
     // Send initial data
     sendVesselData(ws);
 
-    // Set up interval to send updates every 30 seconds
+    // Set up interval to send updates every 10 seconds
     const updateInterval = setInterval(() => {
       sendVesselData(ws);
-    }, 30000);
+    }, 10000);
 
     // Handle client messages
     ws.on('message', (message: Buffer) => {
@@ -2509,6 +2516,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ws.page = parseInt(data.page) || 1;
           ws.pageSize = parseInt(data.pageSize) || 500;
           console.log(`Updated pagination settings: page=${ws.page}, pageSize=${ws.pageSize}`);
+        } else if (data.type === 'track_port_proximity') {
+          // Enable port proximity tracking
+          ws.trackPortProximity = data.enabled === true;
+          
+          // Set proximity radius if provided
+          if (data.radius !== undefined) {
+            const radius = parseInt(String(data.radius));
+            ws.proximityRadius = !isNaN(radius) ? radius : 10;
+          }
+          
+          console.log(`Port proximity tracking ${ws.trackPortProximity ? 'enabled' : 'disabled'} with radius ${ws.proximityRadius}km`);
+          sendVesselData(ws);
         }
       } catch (error) {
         console.error('Error processing WebSocket message:', error);
@@ -2521,14 +2540,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       clearInterval(updateInterval);
     });
   });
-
-  // Extend the WebSocket interface to include pagination parameters and all vessels flag
-  interface VesselTrackingWebSocket extends WebSocket {
-    subscribedRegion?: string;
-    page?: number;
-    pageSize?: number;
-    sendAllVessels?: boolean; // Flag to send all vessels at once
-  }
   
   // Function to fetch and send vessel data to websocket client with option to send all vessels
   async function sendVesselData(ws: VesselTrackingWebSocket) {
@@ -2539,40 +2550,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const sendAllVessels = ws.sendAllVessels === true;
       const page = ws.page || 1;
       const pageSize = sendAllVessels ? 10000 : (ws.pageSize || 500); // Large pageSize effectively removes pagination
+      const trackPortProximity = ws.trackPortProximity === true;
+      const proximityRadius = ws.proximityRadius || 10; // Default to 10km
       
-      console.log(`sendVesselData called with sendAllVessels=${sendAllVessels}`); // Debug log
+      console.log(`sendVesselData called with sendAllVessels=${sendAllVessels}, trackPortProximity=${trackPortProximity}`);
       
       let vessels: Vessel[] = [];
       
+      // First try to use the vessel position service for the most up-to-date positions
       try {
-        // Check cached vessels first to improve performance
-        const cachedVessels = getCachedVessels();
-        
-        if (cachedVessels) {
-          // Use cached vessels if available
-          vessels = cachedVessels;
-          console.log(`Using cached vessels data (${vessels.length} vessels)`);
+        const positionData = vesselPositionService.getAllVesselPositions();
+        if (positionData.vessels.length > 0) {
+          vessels = positionData.vessels;
+          console.log(`Using vessel position service data (${vessels.length} vessels)`);
         } else {
-          // Otherwise fetch from database and update cache
-          vessels = await storage.getVessels();
-          console.log(`Retrieved ${vessels.length} vessels from database`);
-          
-          // Cache the vessels for future requests
-          setCachedVessels(vessels);
-          console.log(`Cached ${vessels.length} vessels for future requests`);
+          throw new Error("No vessels in position service, falling back to cache/database");
         }
-      } catch (dbError) {
-        console.log('Database error, fetching from API instead:', dbError);
+      } catch (positionError) {
+        console.log('Position service error, trying cache/database:', positionError);
         
-        // If database is not available, fetch from API
-        if (marineTrafficService.isConfigured()) {
-          const apiVessels = await marineTrafficService.fetchVessels();
+        try {
+          // Check cached vessels next
+          const cachedVessels = getCachedVessels();
           
-          // API vessels might not have IDs, so we need to add them
-          vessels = apiVessels.map((v: any, idx: number) => ({
-            ...v,
-            id: (v.id !== undefined) ? v.id : idx + 1 // Use index + 1 as fallback ID if needed
-          })) as Vessel[];
+          if (cachedVessels && cachedVessels.length > 0) {
+            // Use cached vessels if available
+            vessels = cachedVessels;
+            console.log(`Using cached vessels data (${vessels.length} vessels)`);
+          } else {
+            // Otherwise fetch from database and update cache
+            vessels = await storage.getVessels();
+            console.log(`Retrieved ${vessels.length} vessels from database`);
+            
+            // Cache the vessels for future requests
+            setCachedVessels(vessels);
+            console.log(`Cached ${vessels.length} vessels for future requests`);
+          }
+        } catch (dbError) {
+          console.log('Database error, fetching from API instead:', dbError);
+          
+          // If database is not available, fetch from API
+          if (marineTrafficService.isConfigured()) {
+            const apiVessels = await marineTrafficService.fetchVessels();
+            
+            // API vessels might not have IDs, so we need to add them
+            vessels = apiVessels.map((v: any, idx: number) => ({
+              ...v,
+              id: (v.id !== undefined) ? v.id : idx + 1 // Use index + 1 as fallback ID if needed
+            })) as Vessel[];
+          }
         }
       }
       
@@ -2605,12 +2631,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get all vessels or just the current page based on sendAllVessels flag
       let vesselsToSend = sendAllVessels ? vessels : vessels.slice((page - 1) * pageSize, Math.min(page * pageSize, totalCount));
       
+      // Get port-vessel connections if requested
+      let portConnections = [];
+      if (trackPortProximity) {
+        try {
+          // Get all vessel-port connections within the specified radius
+          const connectionsData = vesselPositionService.getVesselsNearPorts(proximityRadius);
+          
+          // Format the connections for the client
+          portConnections = connectionsData.connections.map(conn => ({
+            vesselId: conn.vessel.id,
+            portId: conn.port.id,
+            vesselName: conn.vessel.name,
+            portName: conn.port.name,
+            distance: conn.distance,
+            vesselType: conn.vessel.vesselType,
+            portType: conn.port.type,
+            coordinates: {
+              vessel: {
+                lat: conn.vessel.currentLat,
+                lng: conn.vessel.currentLng
+              },
+              port: {
+                lat: conn.port.lat,
+                lng: conn.port.lng
+              }
+            }
+          }));
+          
+          console.log(`Found ${portConnections.length} vessel-port connections within ${proximityRadius}km`);
+        } catch (connectionError) {
+          console.error('Error getting vessel-port connections:', connectionError);
+        }
+      }
+      
       // Log vessel coordinates for debugging (first 5 vessels)
       console.log(`Vessel coordinate check: ${vesselsToSend.slice(0, 5).map(v => 
         `${v.name}: lat=${v.currentLat}, lng=${v.currentLng}`).join(', ')}`);
       
       // Send the vessel data with metadata
-      ws.send(JSON.stringify({
+      const response = {
         type: 'vessel_update',
         vessels: vesselsToSend,
         timestamp: new Date().toISOString(),
@@ -2620,9 +2680,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         currentPage: sendAllVessels ? 1 : page,
         pageSize: pageSize,
         allVesselsLoaded: sendAllVessels
-      }));
+      };
       
-      console.log(`Sent ${vesselsToSend.length} vessels to client (${sendAllVessels ? 'all vessels' : `page ${page}/${totalPages}`})`);
+      // Add port connections data if tracking is enabled
+      if (trackPortProximity) {
+        Object.assign(response, {
+          portConnections,
+          portConnectionsCount: portConnections.length,
+          proximityRadius
+        });
+      }
+      
+      ws.send(JSON.stringify(response));
+      
+      const summaryMessage = `Sent ${vesselsToSend.length} vessels to client (${sendAllVessels ? 'all vessels' : `page ${page}/${totalPages}`})`;
+      const connectionSummary = trackPortProximity ? ` with ${portConnections.length} port connections` : '';
+      console.log(summaryMessage + connectionSummary);
     } catch (error) {
       console.error('Error sending vessel data via WebSocket:', error);
     }
