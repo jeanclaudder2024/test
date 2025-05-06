@@ -474,14 +474,14 @@ export default function Documents() {
                 Vessel
               </label>
               <Select 
-                value={selectedVesselId?.toString() || 'select'} 
-                onValueChange={(value) => value !== 'select' ? setSelectedVesselId(parseInt(value)) : null}
+                value={selectedVesselId?.toString() || ''} 
+                onValueChange={(value) => value ? setSelectedVesselId(parseInt(value)) : setSelectedVesselId(null)}
               >
                 <SelectTrigger id="vessel">
                   <SelectValue placeholder="Select a vessel" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="select" disabled>Select a vessel</SelectItem>
+                  <SelectItem value="placeholder" disabled>Select a vessel</SelectItem>
                   {vessels.map((vessel) => (
                     <SelectItem key={vessel.id} value={vessel.id.toString()}>
                       {vessel.name}
