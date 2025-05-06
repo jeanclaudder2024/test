@@ -506,16 +506,16 @@ export default function PortDetail() {
                 <div className="mt-3 text-xs">
                   <div className="flex justify-between mb-1">
                     <span>Oil Tankers</span>
-                    <span>{nearbyVessels.filter(v => v.vessels.vesselType?.toLowerCase().includes('oil')).length}</span>
+                    <span>{nearbyVessels.filter((v: any) => v.vessels.vesselType?.toLowerCase().includes('oil')).length}</span>
                   </div>
                   <div className="flex justify-between mb-1">
                     <span>Cargo Ships</span>
-                    <span>{nearbyVessels.filter(v => v.vessels.vesselType?.toLowerCase().includes('cargo')).length}</span>
+                    <span>{nearbyVessels.filter((v: any) => v.vessels.vesselType?.toLowerCase().includes('cargo')).length}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Other Vessels</span>
                     <span>{nearbyVessels.length - 
-                      nearbyVessels.filter(v => 
+                      nearbyVessels.filter((v: any) => 
                         v.vessels.vesselType?.toLowerCase().includes('oil') || 
                         v.vessels.vesselType?.toLowerCase().includes('cargo')
                       ).length}</span>
