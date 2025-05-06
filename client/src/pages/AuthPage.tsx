@@ -10,8 +10,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Anchor, Lock, Mail, User, Globe, Loader2 } from "lucide-react";
+import { Anchor, Lock, Mail, User, Globe, Loader2, Phone } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { Separator } from "@/components/ui/separator";
 
 // Form validation schemas
 const loginSchema = z.object({
@@ -23,6 +24,7 @@ const registerSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
+  phone: z.string().optional(),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;

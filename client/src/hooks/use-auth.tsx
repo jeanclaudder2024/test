@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext } from "react";
+import { createContext, ReactNode, useContext, useEffect } from "react";
 import {
   useQuery,
   useMutation,
@@ -6,11 +6,17 @@ import {
 } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { signInWithGoogle, handleRedirectResult, auth } from "@/lib/firebase";
+import { User as FirebaseUser } from "firebase/auth";
 
 type User = {
   id: number;
   username: string;
   email?: string | null;
+  phone?: string | null;
+  provider?: string | null;
+  photoURL?: string | null;
+  displayName?: string | null;
   isSubscribed?: boolean;
   subscriptionTier?: string | null;
 };
@@ -23,6 +29,7 @@ type AuthContextType = {
   loginMutation: UseMutationResult<User, Error, LoginData>;
   logoutMutation: UseMutationResult<void, Error, void>;
   registerMutation: UseMutationResult<User, Error, RegisterData>;
+  googleSignIn: () => Promise<void>;
 };
 
 type LoginData = {
@@ -32,6 +39,7 @@ type LoginData = {
 
 type RegisterData = LoginData & {
   email?: string;
+  phone?: string;
 };
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -137,6 +145,79 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   });
 
+  // Google Sign In mutation
+  const googleAuthMutation = useMutation({
+    mutationFn: async (firebaseUser: FirebaseUser) => {
+      // Send Firebase auth data to the server to create/login the user
+      const authData = {
+        idToken: await firebaseUser.getIdToken(),
+        email: firebaseUser.email,
+        displayName: firebaseUser.displayName,
+        photoURL: firebaseUser.photoURL,
+        uid: firebaseUser.uid
+      };
+
+      const res = await apiRequest("/api/auth/google", {
+        method: "POST",
+        body: JSON.stringify(authData),
+      });
+      return res;
+    },
+    onSuccess: (user: User) => {
+      queryClient.setQueryData(['/api/user'], user);
+      toast({
+        title: "Google login successful",
+        description: `Welcome, ${user.displayName || user.username}!`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Google login failed",
+        description: error.message || "Could not authenticate with Google",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Handle Google sign-in
+  const googleSignIn = async () => {
+    try {
+      const userCredential = await signInWithGoogle();
+      if (userCredential?.user) {
+        await googleAuthMutation.mutateAsync(userCredential.user);
+      }
+    } catch (error: any) {
+      toast({
+        title: "Google login failed",
+        description: error.message || "Could not authenticate with Google",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handle Google redirect result on component mount
+  useEffect(() => {
+    const checkRedirectResult = async () => {
+      try {
+        const result = await handleRedirectResult();
+        if (result?.user) {
+          await googleAuthMutation.mutateAsync(result.user);
+        }
+      } catch (error: any) {
+        // Only show error if not canceled by user
+        if (error.code !== 'auth/cancelled-popup-request') {
+          toast({
+            title: "Google login failed",
+            description: error.message || "Could not authenticate with Google",
+            variant: "destructive",
+          });
+        }
+      }
+    };
+
+    checkRedirectResult();
+  }, []);
+
   return (
     <AuthContext.Provider
       value={{
@@ -147,6 +228,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loginMutation,
         logoutMutation,
         registerMutation,
+        googleSignIn,
       }}
     >
       {children}
