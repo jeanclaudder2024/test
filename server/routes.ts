@@ -51,6 +51,7 @@ import { aiRouter } from "./routes/aiRoutes";
 import { companyRouter } from "./routes/companyRoutes";
 import portVesselRouter from "./routes/portVesselRoutes";
 import { subscriptionRouter } from "./routes/subscriptionRoutes";
+import translationRouter from "./routes/translationRoutes";
 import { seedBrokers } from "./services/seedService";
 
 export async function registerRoutes(app: Express): Promise<Server> {
