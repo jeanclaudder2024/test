@@ -1,7 +1,35 @@
 import { TranslationWidget } from '@/components/TranslationWidget';
 import { GlobeIcon } from 'lucide-react';
+import { useLocation } from 'wouter';
+import { useEffect, useState } from 'react';
+
+// Preset language pairs
+const presets: {
+  [key: string]: { source: string; target: string; autoDetect: boolean }
+} = {
+  'english-to-arabic': { source: 'en', target: 'ar', autoDetect: false },
+  'arabic-to-english': { source: 'ar', target: 'en', autoDetect: false },
+  'english-to-spanish': { source: 'en', target: 'es', autoDetect: false },
+  'english-to-french': { source: 'en', target: 'fr', autoDetect: false },
+  'english-to-chinese': { source: 'en', target: 'zh', autoDetect: false },
+  'english-to-russian': { source: 'en', target: 'ru', autoDetect: false },
+};
 
 export default function TranslationPage() {
+  const [location] = useLocation();
+  const [preset, setPreset] = useState<{ source: string, target: string, autoDetect: boolean } | null>(null);
+
+  useEffect(() => {
+    // Parse URL query parameters
+    const searchParams = new URLSearchParams(location.split('?')[1]);
+    const presetParam = searchParams.get('preset');
+    
+    if (presetParam && presets[presetParam]) {
+      setPreset(presets[presetParam]);
+    } else {
+      setPreset(null);
+    }
+  }, [location]);
   return (
     <div>
       <div className="container mx-auto py-8 px-4">
@@ -17,7 +45,11 @@ export default function TranslationPage() {
           </p>
         </div>
         
-        <TranslationWidget />
+        <TranslationWidget 
+          initialSourceLanguage={preset?.source}
+          initialTargetLanguage={preset?.target}
+          initialAutoDetect={preset?.autoDetect ?? true}
+        />
         
         <div className="mt-12 grid md:grid-cols-2 gap-8">
           <div className="bg-card rounded-lg p-6 shadow-sm">

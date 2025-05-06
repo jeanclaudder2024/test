@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { Menu, LogOut, Download, Home, Globe } from "lucide-react";
+import { Menu, LogOut, Download, Home, Globe, ChevronDown } from "lucide-react";
 import { useLanguage } from "@/hooks/use-language";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -8,6 +8,12 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import Sidebar from "./Sidebar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function Header() {
   const [location, navigate] = useLocation();
@@ -104,19 +110,55 @@ export default function Header() {
             {t("action.export")}
           </Button>
           
-          {/* Translation Button */}
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="hidden sm:flex border border-primary/20 hover:bg-primary/10 text-primary relative"
-            onClick={() => navigate('/translation')}
-          >
-            <Globe className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
-            Translate
-            <span className="absolute -top-2 -right-2 px-1.5 py-0.5 text-[0.6rem] bg-red-500 text-white rounded-full font-bold animate-pulse">
-              NEW
-            </span>
-          </Button>
+          {/* Translation Dropdown */}
+          <div className="hidden sm:block relative">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex border border-primary/20 hover:bg-primary/10 text-primary relative"
+                >
+                  <Globe className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
+                  Translate
+                  <ChevronDown className="h-3 w-3 ml-1" />
+                  <span className="absolute -top-2 -right-2 px-1.5 py-0.5 text-[0.6rem] bg-red-500 text-white rounded-full font-bold animate-pulse">
+                    NEW
+                  </span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onClick={() => navigate('/translation')}>
+                  <Globe className="mr-2 h-4 w-4" />
+                  <span>Translation Tool</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/translation?preset=english-to-arabic')}>
+                  <span className="mr-2">🇬🇧→🇸🇦</span>
+                  <span>English to Arabic</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/translation?preset=arabic-to-english')}>
+                  <span className="mr-2">🇸🇦→🇬🇧</span>
+                  <span>Arabic to English</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/translation?preset=english-to-spanish')}>
+                  <span className="mr-2">🇬🇧→🇪🇸</span>
+                  <span>English to Spanish</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/translation?preset=english-to-french')}>
+                  <span className="mr-2">🇬🇧→🇫🇷</span>
+                  <span>English to French</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/translation?preset=english-to-chinese')}>
+                  <span className="mr-2">🇬🇧→🇨🇳</span>
+                  <span>English to Chinese</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/translation?preset=english-to-russian')}>
+                  <span className="mr-2">🇬🇧→🇷🇺</span>
+                  <span>English to Russian</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
           
           {/* Theme Toggle */}
           <div className="hidden sm:block">

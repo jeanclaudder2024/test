@@ -24,16 +24,25 @@ const languages = [
 
 interface TranslationWidgetProps {
   initialText?: string;
+  initialSourceLanguage?: string;
+  initialTargetLanguage?: string;
+  initialAutoDetect?: boolean;
   className?: string;
 }
 
-export function TranslationWidget({ initialText = '', className = '' }: TranslationWidgetProps) {
+export function TranslationWidget({ 
+  initialText = '', 
+  initialSourceLanguage = 'en',
+  initialTargetLanguage = 'ar',
+  initialAutoDetect = true,
+  className = '' 
+}: TranslationWidgetProps) {
   const [sourceText, setSourceText] = useState(initialText);
   const [translatedText, setTranslatedText] = useState('');
-  const [targetLanguage, setTargetLanguage] = useState('ar'); // Default to Arabic
+  const [targetLanguage, setTargetLanguage] = useState(initialTargetLanguage); // Default from props
   const [detectedLanguage, setDetectedLanguage] = useState('');
-  const [autoDetect, setAutoDetect] = useState(true);
-  const [sourceLanguage, setSourceLanguage] = useState('en');
+  const [autoDetect, setAutoDetect] = useState(initialAutoDetect);
+  const [sourceLanguage, setSourceLanguage] = useState(initialSourceLanguage);
   
   const { translateText, detectLanguage, isTranslating } = useTranslation();
 
