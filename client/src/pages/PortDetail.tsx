@@ -82,6 +82,26 @@ export default function PortDetail() {
   // Use appropriate data source based on user selection
   const port = useWebSocketData ? (portInfo || portData?.port) : portData?.port;
   
+  // Show loading state if the port data is not available yet
+  if (isLoadingApi && !port) {
+    return (
+      <div className="container mx-auto py-6">
+        <Link href="/ports">
+          <Button variant="ghost" className="mb-4">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Ports
+          </Button>
+        </Link>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="flex flex-col items-center gap-2">
+            <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
+            <p className="text-muted-foreground">Loading port data...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
   // Format vessel data from both sources into a consistent format for display
   const nearbyVessels = useMemo(() => {
     if (useWebSocketData) {
@@ -163,14 +183,14 @@ export default function PortDetail() {
         <div>
           <h1 className="text-3xl font-bold flex items-center">
             <div className={`h-10 w-10 rounded-full flex items-center justify-center mr-3 ${
-              port.type === 'oil' ? 'bg-amber-100 text-amber-600' : 
-              port.type === 'container' ? 'bg-blue-100 text-blue-600' :
-              port.type === 'bulk' ? 'bg-emerald-100 text-emerald-600' :
+              port?.type === 'oil' ? 'bg-amber-100 text-amber-600' : 
+              port?.type === 'container' ? 'bg-blue-100 text-blue-600' :
+              port?.type === 'bulk' ? 'bg-emerald-100 text-emerald-600' :
               'bg-gray-100 text-gray-600'
             }`}>
               <Anchor className="h-6 w-6" />
             </div>
-            {port.name}
+            {port?.name || 'Unknown Port'}
           </h1>
           <p className="text-muted-foreground">
             {port.country}, {port.region}
@@ -179,11 +199,11 @@ export default function PortDetail() {
         
         <div className="flex items-center gap-4">
           <Badge variant={
-            port.status === 'active' ? 'default' : 
-            port.status === 'maintenance' ? 'warning' : 
+            port?.status === 'active' ? 'default' : 
+            port?.status === 'maintenance' ? 'outline' : 
             'outline'
           }>
-            {port.status}
+            {port?.status || 'unknown'}
           </Badge>
           <Button variant="outline" size="sm">
             <ExternalLink className="h-4 w-4 mr-2" />
