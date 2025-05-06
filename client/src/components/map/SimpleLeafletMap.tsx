@@ -30,18 +30,30 @@ const regionPositions: Record<string, { lat: number; lng: number; zoom: number }
   'southeast-asia-oceania': { lat: -10, lng: 130, zoom: 3 }
 };
 
+interface Marker {
+  id: number;
+  position: [number, number];
+  tooltip: string;
+  type: string;
+}
+
 interface SimpleLeafletMapProps {
-  vessels: Vessel[];
-  refineries: Refinery[];
-  selectedRegion: Region | null;
-  onVesselClick: (vessel: Vessel) => void;
+  vessels?: Vessel[];
+  refineries?: Refinery[];
+  markers?: Marker[];
+  selectedRegion?: Region | null;
+  onVesselClick?: (vessel: Vessel) => void;
   onRefineryClick?: (refinery: Refinery) => void;
   onPortClick?: (port: Port) => void;
   isLoading?: boolean;
   initialCenter?: [number, number]; // Optional [lat, lng] initial center
   initialZoom?: number;             // Optional initial zoom level
-  ports?: Port[];                  // Optional ports to display
-  showConnections?: boolean;       // Whether to show connections between refineries and ports
+  center?: [number, number];        // Optional [lat, lng] center (takes precedence over initialCenter)
+  zoom?: number;                    // Optional zoom level (takes precedence over initialZoom)
+  ports?: Port[];                   // Optional ports to display
+  showConnections?: boolean;        // Whether to show connections between refineries and ports
+  dragging?: boolean;               // Optional setting to enable/disable dragging
+  className?: string;               // Optional CSS class for styling
 }
 
 // Create a unique ID for this map instance
@@ -50,6 +62,7 @@ const MAP_CONTAINER_ID = 'leaflet-map-container';
 export default function SimpleLeafletMap({
   vessels = [],
   refineries = [],
+  markers = [],
   selectedRegion,
   onVesselClick,
   onRefineryClick,
@@ -57,8 +70,12 @@ export default function SimpleLeafletMap({
   isLoading = false,
   initialCenter,
   initialZoom,
+  center,
+  zoom,
   ports = [],
-  showConnections = false
+  showConnections = false,
+  dragging = true,
+  className = ''
 }: SimpleLeafletMapProps) {
   // Generate a stable instance ID for this component
   const instanceId = useMemo(() => `map-${Math.random().toString(36).substring(2, 9)}`, []);
@@ -189,17 +206,28 @@ export default function SimpleLeafletMap({
     let map = mapRef.current;
     
     if (!map) {
+      // Determine center and zoom levels from props
+      const mapCenter = center || initialCenter || [0, 0];
+      const mapZoom = zoom || initialZoom || 2;
+      
       // Create new map
       map = L.map(mapContainer, {
-        center: [0, 0],
-        zoom: 2,
+        center: mapCenter,
+        zoom: mapZoom,
         minZoom: 2,
         maxZoom: 18,
-        worldCopyJump: true
+        worldCopyJump: true,
+        dragging: dragging
       });
       
       mapRef.current = map;
     } else {
+      // Update center and zoom if provided
+      if (center) {
+        map.setView(center, zoom || map.getZoom());
+      } else if (initialCenter) {
+        map.setView(initialCenter, initialZoom || map.getZoom());
+      }
       // Clear existing markers before updating
       clearMarkers();
       
