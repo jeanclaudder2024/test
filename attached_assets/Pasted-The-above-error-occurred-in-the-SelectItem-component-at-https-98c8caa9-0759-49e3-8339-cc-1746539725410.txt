@@ -1,0 +1,38 @@
+The above error occurred in the <SelectItem> component:
+
+    at https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-select.js?v=ff144b86:844:7
+    at _c11 (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/src/components/ui/select.tsx:207:13)
+    at div
+    at https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-CPFL7ZFD.js?v=ff144b86:41:13
+    at https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-DKHUMOWT.js?v=ff144b86:52:11
+    at https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-DKHUMOWT.js?v=ff144b86:33:11
+    at https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OKX5DAGM.js?v=ff144b86:98:15
+    at https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-select.js?v=ff144b86:755:13
+    at div
+    at https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-DKHUMOWT.js?v=ff144b86:52:11
+    at https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-DKHUMOWT.js?v=ff144b86:33:11
+    at https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OKX5DAGM.js?v=ff144b86:98:15
+    at Provider (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-LSQNWB54.js?v=ff144b86:38:15)
+    at https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-select.js?v=ff144b86:299:58
+    at https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-DKHUMOWT.js?v=ff144b86:52:11
+    at https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-DKHUMOWT.js?v=ff144b86:33:11
+    at https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-CPFL7ZFD.js?v=ff144b86:41:13
+    at https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-BQXMF7ST.js?v=ff144b86:260:22
+    at SelectPortal
+    at _c7 (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/src/components/ui/select.tsx:122:12)
+    at Provider (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-LSQNWB54.js?v=ff144b86:38:15)
+    at Provider (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OKX5DAGM.js?v=ff144b86:28:15)
+    at CollectionProvider (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OKX5DAGM.js?v=ff144b86:89:13)
+    at Provider (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-LSQNWB54.js?v=ff144b86:38:15)
+    at Provider (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-NBIVFTP4.js?v=ff144b86:1915:15)
+    at Popper (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-NBIVFTP4.js?v=ff144b86:1972:11)
+    at Select (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-select.js?v=ff144b86:87:5)
+    at div
+    at div
+    at div
+    at https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-CPFL7ZFD.js?v=ff144b86:41:13
+    at https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-BQXMF7ST.js?v=ff144b86:61:7
+    at https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-DKHUMOWT.js?v=ff144b86:52:11
+    at https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-DKHUMOWT.js?v=ff144b86:33:11
+    at…
+A  must have a value prop that is not an empty string. This is because the Select value can be set to an empty string to clear the selection and show the placeholder.
