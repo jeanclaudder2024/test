@@ -24,22 +24,57 @@ export const supabase = createClient(
 
 console.log("Connecting to Supabase with client API");
 
-// Create a simplified db object that matches Drizzle's interface but uses Supabase
+// Create a more robust db object that matches Drizzle's interface but uses Supabase
 export const db = {
   select: () => {
     return {
       from: (table: any) => {
-        return {
+        const tableName = getTableName(table);
+        
+        // Return a query builder with common operations
+        const baseQuery = {
           where: (condition: any) => {
-            // This is a simplification, we'll replace with actual Supabase queries in the storage layer
-            const tableName = getTableName(table);
+            // For simplified condition handling, assuming eq() style conditions
+            // In a more complex implementation, we would parse the condition tree
+            if (condition && typeof condition === 'object') {
+              // Handle eq condition
+              if (condition.operator === '=') {
+                const field = condition.left.name;
+                const value = condition.right;
+                return supabase.from(tableName).select('*').eq(field, value);
+              }
+              
+              // Handle AND conditions
+              if (condition.operator === 'AND') {
+                let query = supabase.from(tableName).select('*');
+                
+                // Process each condition in the AND
+                if (Array.isArray(condition.conditions)) {
+                  condition.conditions.forEach((cond: any) => {
+                    if (cond.operator === '=') {
+                      const field = cond.left.name;
+                      const value = cond.right;
+                      query = query.eq(field, value);
+                    }
+                  });
+                }
+                
+                return query;
+              }
+            }
+            
+            // Default fallback
+            console.warn('Unhandled condition type in query, returning all rows', condition);
             return supabase.from(tableName).select('*');
           },
           orderBy: (field: any, order = 'asc') => {
-            const tableName = getTableName(table);
-            return supabase.from(tableName).select('*').order(field, { ascending: order === 'asc' });
+            // Extract field name if it's an object
+            const fieldName = typeof field === 'object' && field.name ? field.name : field;
+            return supabase.from(tableName).select('*').order(fieldName, { ascending: order === 'asc' });
           }
         };
+        
+        return baseQuery;
       }
     };
   },
@@ -56,11 +91,23 @@ export const db = {
   update: (table: any) => {
     return {
       set: (data: any) => {
+        const tableName = getTableName(table);
+        
         return {
           where: (condition: any) => {
-            const tableName = getTableName(table);
+            let query = supabase.from(tableName).update(data);
+            
+            // Handle conditions similarly to select where()
+            if (condition && typeof condition === 'object') {
+              if (condition.operator === '=') {
+                const field = condition.left.name;
+                const value = condition.right;
+                query = query.eq(field, value);
+              }
+            }
+            
             return {
-              returning: () => supabase.from(tableName).update(data).select()
+              returning: () => query.select()
             };
           }
         };
@@ -71,7 +118,18 @@ export const db = {
     return {
       where: (condition: any) => {
         const tableName = getTableName(table);
-        return supabase.from(tableName).delete();
+        let query = supabase.from(tableName).delete();
+        
+        // Handle conditions similarly to select where()
+        if (condition && typeof condition === 'object') {
+          if (condition.operator === '=') {
+            const field = condition.left.name;
+            const value = condition.right;
+            query = query.eq(field, value);
+          }
+        }
+        
+        return query;
       }
     };
   }
