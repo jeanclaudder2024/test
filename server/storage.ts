@@ -1,5 +1,5 @@
 import { eq, and } from "drizzle-orm";
-import { db, supabase } from "./db";
+import { db } from "./db";
 import {
   users, vessels, refineries, progressEvents, documents, brokers, stats as statsTable, ports, refineryPortConnections, companies,
   subscriptionPlans, subscriptions, paymentMethods, invoices,
@@ -131,36 +131,18 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   async getUser(id: number): Promise<User | undefined> {
-    const { data: user, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', id)
-      .single();
-    
-    if (error || !user) return undefined;
-    return user as User;
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const { data: user, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('username', username)
-      .single();
-    
-    if (error || !user) return undefined;
-    return user as User;
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const { data, error } = await supabase
-      .from('users')
-      .insert(insertUser)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data as User;
+    const [user] = await db.insert(users).values(insertUser).returning();
+    return user;
   }
   
   async getUserByStripeCustomerId(customerId: string): Promise<User | undefined> {
@@ -387,376 +369,86 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getVessels(): Promise<Vessel[]> {
-    const { data, error } = await supabase
-      .from('vessels')
-      .select('*');
-    
-    if (error) {
-      console.error("Error fetching vessels:", error);
-      return [];
-    }
-    
-    return data as Vessel[];
+    return await db.select().from(vessels);
   }
 
   async getVesselById(id: number): Promise<Vessel | undefined> {
-    const { data, error } = await supabase
-      .from('vessels')
-      .select('*')
-      .eq('id', id)
-      .single();
-    
-    if (error || !data) return undefined;
-    return data as Vessel;
+    const [vessel] = await db.select().from(vessels).where(eq(vessels.id, id));
+    return vessel || undefined;
   }
 
   async getVesselsByRegion(region: string): Promise<Vessel[]> {
-    const { data, error } = await supabase
-      .from('vessels')
-      .select('*')
-      .eq('current_region', region);
-    
-    if (error) {
-      console.error(`Error fetching vessels for region ${region}:`, error);
-      return [];
-    }
-    
-    return data as Vessel[];
+    return await db.select().from(vessels).where(eq(vessels.currentRegion, region));
   }
 
   async createVessel(insertVessel: InsertVessel): Promise<Vessel> {
-    try {
-      // Convert camelCase to snake_case for Supabase column names
-      const transformedVessel = {
-        name: insertVessel.name,
-        imo: insertVessel.imo,
-        mmsi: insertVessel.mmsi,
-        vessel_type: insertVessel.vesselType,
-        flag: insertVessel.flag,
-        built: insertVessel.built,
-        deadweight: insertVessel.deadweight,
-        current_lat: insertVessel.currentLat,
-        current_lng: insertVessel.currentLng,
-        departure_port: insertVessel.departurePort,
-        departure_date: insertVessel.departureDate,
-        departure_lat: insertVessel.departureLat,
-        departure_lng: insertVessel.departureLng,
-        destination_port: insertVessel.destinationPort,
-        destination_lat: insertVessel.destinationLat,
-        destination_lng: insertVessel.destinationLng,
-        eta: insertVessel.eta,
-        cargo_type: insertVessel.cargoType,
-        cargo_capacity: insertVessel.cargoCapacity,
-        current_region: insertVessel.currentRegion,
-        buyer_name: insertVessel.buyerName,
-        seller_name: insertVessel.sellerName,
-        metadata: insertVessel.metadata,
-      };
-      
-      const { data, error } = await supabase
-        .from('vessels')
-        .insert(transformedVessel)
-        .select()
-        .single();
-        
-      if (error) {
-        console.error(`Error creating vessel ${insertVessel.name}:`, error);
-        // Return a minimal vessel object to prevent app crashes
-        return {
-          id: 0,
-          name: insertVessel.name,
-          imo: insertVessel.imo,
-          mmsi: insertVessel.mmsi,
-          vesselType: insertVessel.vesselType,
-          flag: insertVessel.flag,
-          built: insertVessel.built || 0,
-          deadweight: insertVessel.deadweight || 0,
-          currentLat: insertVessel.currentLat || 0,
-          currentLng: insertVessel.currentLng || 0,
-          lastUpdated: new Date()
-        } as Vessel;
-      }
-
-      // Convert snake_case back to camelCase for our app
-      return {
-        id: data.id,
-        name: data.name,
-        imo: data.imo,
-        mmsi: data.mmsi,
-        vesselType: data.vessel_type,
-        flag: data.flag,
-        built: data.built,
-        deadweight: data.deadweight,
-        currentLat: data.current_lat,
-        currentLng: data.current_lng,
-        departurePort: data.departure_port,
-        departureDate: data.departure_date ? new Date(data.departure_date) : null,
-        departureLat: data.departure_lat,
-        departureLng: data.departure_lng,
-        destinationPort: data.destination_port,
-        destinationLat: data.destination_lat,
-        destinationLng: data.destination_lng,
-        eta: data.eta ? new Date(data.eta) : null,
-        cargoType: data.cargo_type,
-        cargoCapacity: data.cargo_capacity,
-        currentRegion: data.current_region,
-        buyerName: data.buyer_name,
-        sellerName: data.seller_name,
-        metadata: data.metadata,
-        lastUpdated: data.last_updated ? new Date(data.last_updated) : new Date()
-      } as Vessel;
-    } catch (err) {
-      console.error(`Exception creating vessel:`, err);
-      // Return a minimal vessel object to prevent app crashes
-      return {
-        id: 0,
-        name: insertVessel.name,
-        imo: insertVessel.imo,
-        mmsi: insertVessel.mmsi,
-        vesselType: insertVessel.vesselType,
-        flag: insertVessel.flag,
-        built: insertVessel.built || 0,
-        deadweight: insertVessel.deadweight || 0,
-        currentLat: insertVessel.currentLat || 0,
-        currentLng: insertVessel.currentLng || 0,
-        lastUpdated: new Date()
-      } as Vessel;
-    }
+    const [vessel] = await db.insert(vessels).values(insertVessel).returning();
+    return vessel;
   }
 
   async updateVessel(id: number, vesselUpdate: Partial<InsertVessel>): Promise<Vessel | undefined> {
-    const { data, error } = await supabase
-      .from('vessels')
-      .update(vesselUpdate)
-      .eq('id', id)
-      .select()
-      .single();
-    
-    if (error) {
-      console.error(`Error updating vessel ${id}:`, error);
-      return undefined;
-    }
-    
-    return data as Vessel;
+    const [updatedVessel] = await db
+      .update(vessels)
+      .set(vesselUpdate)
+      .where(eq(vessels.id, id))
+      .returning();
+    return updatedVessel || undefined;
   }
 
   async deleteVessel(id: number): Promise<boolean> {
-    const { error } = await supabase
-      .from('vessels')
-      .delete()
-      .eq('id', id);
-    
-    if (error) {
-      console.error(`Error deleting vessel ${id}:`, error);
-      return false;
-    }
-    
-    return true;
+    const result = await db.delete(vessels).where(eq(vessels.id, id));
+    return true; // PostgreSQL doesn't return count of affected rows in the way we need
   }
 
   async getRefineries(): Promise<Refinery[]> {
-    try {
-      const { data, error } = await supabase
-        .from('refineries')
-        .select('*');
-        
-      if (error) {
-        console.error('Error fetching refineries:', error);
-        return [];
-      }
-      
-      return data as Refinery[] || [];
-    } catch (err) {
-      console.error('Exception fetching refineries:', err);
-      return [];
-    }
+    return await db.select().from(refineries);
   }
 
   async getRefineryById(id: number): Promise<Refinery | undefined> {
-    try {
-      const { data, error } = await supabase
-        .from('refineries')
-        .select('*')
-        .eq('id', id)
-        .single();
-        
-      if (error) {
-        console.error(`Error fetching refinery ${id}:`, error);
-        return undefined;
-      }
-      
-      return data as Refinery;
-    } catch (err) {
-      console.error(`Exception fetching refinery ${id}:`, err);
-      return undefined;
-    }
+    const [refinery] = await db.select().from(refineries).where(eq(refineries.id, id));
+    return refinery || undefined;
   }
 
   async getRefineryByRegion(region: string): Promise<Refinery[]> {
-    try {
-      const { data, error } = await supabase
-        .from('refineries')
-        .select('*')
-        .eq('region', region);
-        
-      if (error) {
-        console.error(`Error fetching refineries by region ${region}:`, error);
-        return [];
-      }
-      
-      return data as Refinery[] || [];
-    } catch (err) {
-      console.error(`Exception fetching refineries by region ${region}:`, err);
-      return [];
-    }
+    return await db.select().from(refineries).where(eq(refineries.region, region));
   }
 
   async createRefinery(insertRefinery: InsertRefinery): Promise<Refinery> {
-    try {
-      // Convert camelCase fields to snake_case if needed
-      const transformedRefinery = {
-        name: insertRefinery.name,
-        country: insertRefinery.country,
-        region: insertRefinery.region,
-        lat: insertRefinery.lat,
-        lng: insertRefinery.lng,
-        capacity: insertRefinery.capacity,
-        status: insertRefinery.status,
-        description: insertRefinery.description
-      };
-      
-      const { data, error } = await supabase
-        .from('refineries')
-        .insert(transformedRefinery)
-        .select()
-        .single();
-        
-      if (error) {
-        console.error(`Error creating refinery ${insertRefinery.name}:`, error);
-        // Return a minimal refinery object to prevent app crashes
-        return {
-          id: 0,
-          name: insertRefinery.name,
-          country: insertRefinery.country,
-          region: insertRefinery.region, 
-          lat: insertRefinery.lat,
-          lng: insertRefinery.lng,
-          capacity: insertRefinery.capacity || 0,
-          status: 'unknown',
-          description: ''
-        } as Refinery;
-      }
-      
-      return data as Refinery;
-    } catch (err) {
-      console.error(`Exception creating refinery:`, err);
-      // Return a minimal refinery object to prevent app crashes
-      return {
-        id: 0,
-        name: insertRefinery.name,
-        country: insertRefinery.country,
-        region: insertRefinery.region,
-        lat: insertRefinery.lat,
-        lng: insertRefinery.lng,
-        capacity: insertRefinery.capacity || 0,
-        status: 'unknown',
-        description: ''
-      } as Refinery;
-    }
+    const [refinery] = await db.insert(refineries).values(insertRefinery).returning();
+    return refinery;
   }
 
   async updateRefinery(id: number, refineryUpdate: Partial<InsertRefinery>): Promise<Refinery | undefined> {
-    try {  
-      const { data, error } = await supabase
-        .from('refineries')
-        .update(refineryUpdate)
-        .eq('id', id)
-        .select()
-        .single();
-        
-      if (error) {
-        console.error(`Error updating refinery ${id}:`, error);
-        return undefined;
-      }
-      
-      return data as Refinery;
-    } catch (err) {
-      console.error(`Exception updating refinery ${id}:`, err);
-      return undefined;
-    }
+    const [updatedRefinery] = await db
+      .update(refineries)
+      .set(refineryUpdate)
+      .where(eq(refineries.id, id))
+      .returning();
+    return updatedRefinery || undefined;
   }
 
   async deleteRefinery(id: number): Promise<boolean> {
-    try {
-      const { error } = await supabase
-        .from('refineries')
-        .delete()
-        .eq('id', id);
-        
-      if (error) {
-        console.error(`Error deleting refinery ${id}:`, error);
-        return false;
-      }
-      
-      return true;
-    } catch (err) {
-      console.error(`Exception deleting refinery ${id}:`, err);
-      return false;
-    }
+    const result = await db.delete(refineries).where(eq(refineries.id, id));
+    return true;
   }
 
   // Port methods implementation
   async getPorts(): Promise<Port[]> {
-    const { data, error } = await supabase
-      .from('ports')
-      .select('*');
-    
-    if (error) {
-      console.error("Error fetching ports:", error);
-      return [];
-    }
-    
-    return data as Port[];
+    return await db.select().from(ports);
   }
 
   async getPortById(id: number): Promise<Port | undefined> {
-    const { data, error } = await supabase
-      .from('ports')
-      .select('*')
-      .eq('id', id)
-      .single();
-    
-    if (error || !data) return undefined;
-    return data as Port;
+    const [port] = await db.select().from(ports).where(eq(ports.id, id));
+    return port || undefined;
   }
 
   async getPortsByRegion(region: string): Promise<Port[]> {
-    const { data, error } = await supabase
-      .from('ports')
-      .select('*')
-      .eq('region', region);
-    
-    if (error) {
-      console.error(`Error fetching ports for region ${region}:`, error);
-      return [];
-    }
-    
-    return data as Port[];
+    return await db.select().from(ports).where(eq(ports.region, region));
   }
 
   async createPort(insertPort: InsertPort): Promise<Port> {
-    const { data, error } = await supabase
-      .from('ports')
-      .insert(insertPort)
-      .select()
-      .single();
-    
-    if (error) {
-      console.error("Error creating port:", error);
-      throw error;
-    }
-    
-    return data as Port;
+    const [port] = await db.insert(ports).values(insertPort).returning();
+    return port;
   }
   
   async createPortsBulk(insertPorts: InsertPort[]): Promise<Port[]> {
@@ -767,16 +459,8 @@ export class DatabaseStorage implements IStorage {
     
     try {
       // Insert all ports in a single database operation
-      const { data, error } = await supabase
-        .from('ports')
-        .insert(insertPorts)
-        .select();
-      
-      if (error) {
-        throw error;
-      }
-      
-      return data as Port[];
+      const createdPorts = await db.insert(ports).values(insertPorts).returning();
+      return createdPorts;
     } catch (error) {
       console.error("Error in bulk port insertion:", error);
       
@@ -786,14 +470,8 @@ export class DatabaseStorage implements IStorage {
       
       for (const port of insertPorts) {
         try {
-          const { data, error } = await supabase
-            .from('ports')
-            .insert(port)
-            .select()
-            .single();
-          
-          if (error) throw error;
-          if (data) results.push(data as Port);
+          const [createdPort] = await db.insert(ports).values(port).returning();
+          results.push(createdPort);
         } catch (singleError) {
           console.error(`Error inserting port ${port.name}:`, singleError);
           // Continue with the next port
@@ -805,32 +483,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updatePort(id: number, portUpdate: Partial<InsertPort>): Promise<Port | undefined> {
-    const { data, error } = await supabase
-      .from('ports')
-      .update(portUpdate)
-      .eq('id', id)
-      .select()
-      .single();
-    
-    if (error) {
-      console.error(`Error updating port ${id}:`, error);
-      return undefined;
-    }
-    
-    return data as Port;
+    const [updatedPort] = await db
+      .update(ports)
+      .set(portUpdate)
+      .where(eq(ports.id, id))
+      .returning();
+    return updatedPort || undefined;
   }
 
   async deletePort(id: number): Promise<boolean> {
-    const { error } = await supabase
-      .from('ports')
-      .delete()
-      .eq('id', id);
-    
-    if (error) {
-      console.error(`Error deleting port ${id}:`, error);
-      return false;
-    }
-    
+    const result = await db.delete(ports).where(eq(ports.id, id));
     return true;
   }
 
@@ -927,22 +589,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getStats(): Promise<Stats | undefined> {
-    try {
-      const result = await db.select().from(statsTable);
-      // If result is an array (which it should be from drizzle), use it
-      if (Array.isArray(result)) {
-        return result.length > 0 ? result[0] : undefined;
-      }
-      // Handle Supabase response
-      else if (result && typeof result === 'object' && 'data' in result) {
-        const data = (result as any).data;
-        return Array.isArray(data) && data.length > 0 ? data[0] : undefined;
-      }
-      return undefined;
-    } catch (error) {
-      console.error('Error getting stats:', error);
-      return undefined;
-    }
+    const [stats] = await db.select().from(statsTable);
+    return stats || undefined;
   }
 
   async updateStats(statsUpdate: Partial<InsertStats>): Promise<Stats | undefined> {
