@@ -27,6 +27,7 @@ import { useEffect } from "react";
 import { apiRequest, queryClient } from "./lib/queryClient";
 import { Layout } from "@/components/ui/layout";
 import { AuthProvider } from "@/hooks/use-auth";
+import { FirebaseAuthProvider } from "@/hooks/use-firebase-auth";
 import { LanguageProvider } from "@/hooks/use-language";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ThemeProvider } from "@/hooks/use-theme";
@@ -108,12 +109,14 @@ function App() {
   return (
     <ThemeProvider defaultTheme="system">
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <LanguageProvider>
-            <Router />
-            <Toaster />
-          </LanguageProvider>
-        </AuthProvider>
+        <FirebaseAuthProvider>
+          <AuthProvider>
+            <LanguageProvider>
+              <Router />
+              <Toaster />
+            </LanguageProvider>
+          </AuthProvider>
+        </FirebaseAuthProvider>
       </QueryClientProvider>
     </ThemeProvider>
   );

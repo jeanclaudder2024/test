@@ -1,11 +1,5 @@
-import { initializeApp } from "firebase/app";
-import { 
-  getAuth, 
-  GoogleAuthProvider, 
-  signInWithPopup, 
-  getRedirectResult 
-} from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { initializeApp } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 
 // Firebase configuration using environment variables
 const firebaseConfig = {
@@ -13,39 +7,20 @@ const firebaseConfig = {
   authDomain: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com`,
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
   storageBucket: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.appspot.com`,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '000000000000',
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase
+// Initialize Firebase with the configuration
 export const app = initializeApp(firebaseConfig);
-
-// Initialize Firebase Authentication
 export const auth = getAuth(app);
 
-// Initialize Firebase Firestore Database
-export const db = getFirestore(app);
-
-// Google Auth Provider
+// Set up provider for Google authentication
 export const googleProvider = new GoogleAuthProvider();
+// Always prompt for Google account selection
+googleProvider.setCustomParameters({ prompt: 'select_account' });
 
-// Sign in with Google (popup method)
-export const signInWithGoogle = async () => {
-  try {
-    const result = await signInWithPopup(auth, googleProvider);
-    return result;
-  } catch (error) {
-    console.error("Error signing in with Google:", error);
-    throw error;
-  }
-};
+// Phone auth requires a recaptcha verifier, which is set up in the FirebaseAuthProvider component
 
-// Handle redirect result for Google authentication
-export const handleRedirectResult = async () => {
-  try {
-    const result = await getRedirectResult(auth);
-    return result;
-  } catch (error) {
-    console.error("Error handling redirect result:", error);
-    throw error;
-  }
-};
+// Export providers and functions for use throughout the app
+export { GoogleAuthProvider };

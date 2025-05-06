@@ -13,6 +13,7 @@ import { updateRefineryCoordinates, seedMissingRefineries } from "./services/ref
 import { seedAllData, regenerateGlobalVessels } from "./services/seedService";
 import { portService } from "./services/portService";
 import { setupAuth } from "./auth";
+import { setupFirebaseAuthRoutes } from "./routes/firebaseAuth";
 import { db } from "./db";
 import { REGIONS } from "@shared/constants";
 import { 
@@ -55,6 +56,9 @@ import { seedBrokers } from "./services/seedService";
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication
   setupAuth(app);
+  
+  // Set up Firebase authentication routes
+  setupFirebaseAuthRoutes(app);
   
   const apiRouter = express.Router();
 
