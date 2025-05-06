@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useDataStream } from '@/hooks/useDataStream';
 import { Refinery, Vessel } from '@/types';
 import { useToast } from '@/hooks/use-toast';
-import SimpleLeafletMap from '@/components/map/SimpleLeafletMap';
+import RefineryMap from '@/components/map/RefineryMap';
 import {
   Card,
   CardContent,
@@ -17,10 +17,9 @@ import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { Link, useRoute } from 'wouter';
 import { 
-  ArrowLeft, Factory, Map, Edit, PieChart, Droplet, 
-  CalendarClock, MapPin, Building, Phone, Globe, BriefcaseBusiness,
-  Flame, Activity, Clock, Calendar, AlertTriangle, Ship, ExternalLink,
-  Anchor, RefreshCw, Plus
+  ArrowLeft, Factory, MapPin, Building, Phone, Globe, BriefcaseBusiness,
+  Flame, Activity, Clock, CalendarClock, AlertTriangle, Ship, ExternalLink,
+  Anchor, RefreshCw, Plus, BarChart, Gauge
 } from 'lucide-react';
 
 // Helper components for refinery details
@@ -37,12 +36,14 @@ const StatusBadge = ({ status }: { status: string }) => {
   
   switch(status.toLowerCase()) {
     case 'operational':
+    case 'active':
       variant = "success";
       break;
     case 'maintenance':
       variant = "warning";
       break;
     case 'offline':
+    case 'shutdown':
       variant = "destructive";
       break;
     default:
