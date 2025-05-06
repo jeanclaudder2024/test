@@ -5,12 +5,18 @@ import { z } from "zod";
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
-  password: text("password").notNull(),
+  password: text("password"), // Now nullable to support OAuth providers
   email: text("email").notNull(),
+  phone: text("phone"), // Add phone number field
   isSubscribed: boolean("is_subscribed"),
   subscriptionTier: text("subscription_tier").default("free"),
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
+  // OAuth provider fields
+  provider: text("provider"), // 'google', 'local', etc.
+  providerId: text("provider_id"), // ID from the provider
+  photoURL: text("photo_url"), // Profile photo URL from provider
+  displayName: text("display_name"), // Full name from provider
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -18,6 +24,11 @@ export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
   email: true,
+  phone: true,
+  provider: true,
+  providerId: true,
+  photoURL: true,
+  displayName: true,
 });
 
 // Vessels
