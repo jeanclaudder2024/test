@@ -5,6 +5,7 @@ import { getAccurateRefineries } from "./refineryCoordinates";
 import { isCoordinateAtSea } from "./vesselGenerator";
 import { REGIONS, OIL_PRODUCT_TYPES } from "@shared/constants";
 import { sql, ilike, eq } from "drizzle-orm";
+import { seedSubscriptionPlans } from "../scripts/seed-subscription-plans";
 
 /**
  * Add seed data for vessels if no vessels exist or if fewer than expected
@@ -488,7 +489,8 @@ export async function regenerateGlobalVessels(count: number = 5000): Promise<{
 export async function seedAllData(): Promise<{
   refineries: { count: number, seeded: boolean, active: number },
   vessels: { count: number, seeded: boolean, oilVessels: number, totalCargo: number },
-  brokers: { count: number, seeded: boolean }
+  brokers: { count: number, seeded: boolean },
+  subscriptionPlans: { count: number, seeded: boolean }
 }> {
   console.log("Starting database seeding process...");
   
@@ -504,9 +506,14 @@ export async function seedAllData(): Promise<{
   const brokerResult = await seedBrokers();
   console.log("Broker data seeded successfully:", brokerResult);
   
+  console.log("Seeding subscription plans...");
+  const subscriptionPlansResult = await seedSubscriptionPlans();
+  console.log("Subscription plans seeded successfully:", subscriptionPlansResult);
+  
   return {
     refineries: refineryResult,
     vessels: vesselResult,
-    brokers: brokerResult
+    brokers: brokerResult,
+    subscriptionPlans: subscriptionPlansResult
   };
 }

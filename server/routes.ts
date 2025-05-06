@@ -48,6 +48,7 @@ import { vesselDistributionRouter } from "./routes/vesselDistributionRoutes";
 import { refineryPortRouter } from "./routes/refineryPortRoutes";
 import { aiRouter } from "./routes/aiRoutes";
 import { companyRouter } from "./routes/companyRoutes";
+import { subscriptionRouter } from "./routes/subscriptionRoutes";
 import { seedBrokers } from "./services/seedService";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -2218,6 +2219,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // API routes for oil shipping companies
   app.use("/api/companies", companyRouter);
+  
+  // API routes for subscription management
+  app.use("/api/subscriptions", subscriptionRouter);
 
   // API tester routes (performance testing, etc.)
   app.use("/api/tester", apiTesterRouter);
