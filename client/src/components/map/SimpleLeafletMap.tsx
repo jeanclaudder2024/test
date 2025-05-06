@@ -30,30 +30,18 @@ const regionPositions: Record<string, { lat: number; lng: number; zoom: number }
   'southeast-asia-oceania': { lat: -10, lng: 130, zoom: 3 }
 };
 
-interface Marker {
-  id: number;
-  position: [number, number];
-  tooltip: string;
-  type: string;
-}
-
 interface SimpleLeafletMapProps {
-  vessels?: Vessel[];
-  refineries?: Refinery[];
-  markers?: Marker[];
-  selectedRegion?: Region | null;
-  onVesselClick?: (vessel: Vessel) => void;
+  vessels: Vessel[];
+  refineries: Refinery[];
+  selectedRegion: Region | null;
+  onVesselClick: (vessel: Vessel) => void;
   onRefineryClick?: (refinery: Refinery) => void;
   onPortClick?: (port: Port) => void;
   isLoading?: boolean;
   initialCenter?: [number, number]; // Optional [lat, lng] initial center
   initialZoom?: number;             // Optional initial zoom level
-  center?: [number, number];        // Optional [lat, lng] center (takes precedence over initialCenter)
-  zoom?: number;                    // Optional zoom level (takes precedence over initialZoom)
-  ports?: Port[];                   // Optional ports to display
-  showConnections?: boolean;        // Whether to show connections between refineries and ports
-  dragging?: boolean;               // Optional setting to enable/disable dragging
-  className?: string;               // Optional CSS class for styling
+  ports?: Port[];                  // Optional ports to display
+  showConnections?: boolean;       // Whether to show connections between refineries and ports
 }
 
 // Create a unique ID for this map instance
@@ -62,7 +50,6 @@ const MAP_CONTAINER_ID = 'leaflet-map-container';
 export default function SimpleLeafletMap({
   vessels = [],
   refineries = [],
-  markers = [],
   selectedRegion,
   onVesselClick,
   onRefineryClick,
@@ -70,12 +57,8 @@ export default function SimpleLeafletMap({
   isLoading = false,
   initialCenter,
   initialZoom,
-  center,
-  zoom,
   ports = [],
-  showConnections = false,
-  dragging = true,
-  className = ''
+  showConnections = false
 }: SimpleLeafletMapProps) {
   // Generate a stable instance ID for this component
   const instanceId = useMemo(() => `map-${Math.random().toString(36).substring(2, 9)}`, []);
@@ -206,28 +189,17 @@ export default function SimpleLeafletMap({
     let map = mapRef.current;
     
     if (!map) {
-      // Determine center and zoom levels from props
-      const mapCenter = center || initialCenter || [0, 0];
-      const mapZoom = zoom || initialZoom || 2;
-      
       // Create new map
       map = L.map(mapContainer, {
-        center: mapCenter,
-        zoom: mapZoom,
+        center: [0, 0],
+        zoom: 2,
         minZoom: 2,
         maxZoom: 18,
-        worldCopyJump: true,
-        dragging: dragging
+        worldCopyJump: true
       });
       
       mapRef.current = map;
     } else {
-      // Update center and zoom if provided
-      if (center) {
-        map.setView(center, zoom || map.getZoom());
-      } else if (initialCenter) {
-        map.setView(initialCenter, initialZoom || map.getZoom());
-      }
       // Clear existing markers before updating
       clearMarkers();
       
@@ -1291,84 +1263,6 @@ export default function SimpleLeafletMap({
       refineryMarkersRef.current.push(marker);
     });
     
-    // Add custom markers if provided
-    if (markers && markers.length > 0) {
-      console.log(`Processing ${markers.length} custom markers for display on map`);
-      
-      markers.forEach(marker => {
-        const [lat, lng] = marker.position;
-        
-        if (isNaN(lat) || isNaN(lng)) return;
-        
-        // Create custom marker icon based on marker type
-        const getMarkerEmoji = () => {
-          switch (marker.type) {
-            case 'warning': return '⚠️';
-            case 'alert': return '🚨';
-            case 'info': return 'ℹ️';
-            case 'ship': return '🚢';
-            case 'refinery': return '🏭';
-            case 'port': return '🚢';
-            case 'location': return '📍';
-            default: return '📌';
-          }
-        };
-        
-        // Get marker color
-        const getMarkerColor = () => {
-          switch (marker.type) {
-            case 'warning': return '#FFB020';
-            case 'alert': return '#FF4842';
-            case 'info': return '#2196F3';
-            case 'ship': return '#00AB55';
-            case 'refinery': return '#BA68C8';
-            case 'port': return '#0288D1';
-            case 'location': return '#F44336';
-            default: return '#637381';
-          }
-        };
-        
-        // Create custom icon
-        const customIcon = L.divIcon({
-          html: `
-            <div class="custom-marker-container">
-              <div class="custom-marker" style="
-                width: 30px;
-                height: 30px;
-                background: rgba(255,255,255,0.95);
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                border: 2px solid ${getMarkerColor()};
-                box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-                font-size: 16px;
-              ">
-                ${getMarkerEmoji()}
-              </div>
-            </div>
-          `,
-          className: 'custom-marker-wrapper',
-          iconSize: [30, 30],
-          iconAnchor: [15, 15]
-        });
-        
-        // Add marker with popup
-        const customMarker = L.marker([lat, lng], { icon: customIcon })
-          .bindPopup(`
-            <div class="custom-marker-popup">
-              <div style="font-weight: bold; margin-bottom: 5px; border-bottom: 2px solid ${getMarkerColor()}; padding-bottom: 5px;">
-                ${marker.tooltip}
-              </div>
-            </div>
-          `)
-          .addTo(map);
-          
-        // Store marker reference for later cleanup
-        refineryMarkersRef.current.push(customMarker);
-      });
-    }
-    
     // Add port markers
     if (ports && ports.length > 0) {
       console.log(`Processing ${ports.length} ports for display on map`);
@@ -1702,7 +1596,7 @@ export default function SimpleLeafletMap({
   }
   
   return (
-    <div className={`relative h-[500px] rounded-lg overflow-hidden border border-border bg-card ${className}`}>
+    <div className="relative h-[500px] rounded-lg overflow-hidden border border-border bg-card">
       {/* Stable Map Container - key prevents remounting */}
       <div className="absolute inset-0 w-full h-full z-0">
         <MapContainer id={MAP_CONTAINER_ID} className="w-full h-full" />

@@ -5,7 +5,7 @@ import Dashboard from "@/pages/Dashboard";
 import Vessels from "@/pages/Vessels";
 import VesselDetail from "@/pages/VesselDetail";
 import Refineries from "@/pages/Refineries";
-import RefineryOverview from "@/pages/RefineryOverview";
+import RefineryDetail from "@/pages/RefineryDetail";
 import Ports from "@/pages/Ports";
 import PortDetail from "@/pages/PortDetail";
 import PortImport from "@/pages/PortImport";
@@ -82,7 +82,7 @@ function Router() {
             <Route path="/vessels/:id" component={VesselDetail} />
             <Route path="/live-tracking" component={LiveTracking} />
             <Route path="/refineries" component={Refineries} />
-            <Route path="/refineries/:id" component={RefineryOverview} />
+            <Route path="/refineries/:id" component={RefineryDetail} />
             <Route path="/ports" component={Ports} />
             <Route path="/ports/import" component={PortImport} />
             <Route path="/ports/:id" component={PortDetail} />
