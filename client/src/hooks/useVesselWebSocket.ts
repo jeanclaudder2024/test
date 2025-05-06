@@ -127,7 +127,11 @@ export function useVesselWebSocket(props: UseVesselWebSocketProps = 'global') {
         if (!host) {
           throw new Error('Cannot create WebSocket URL: Host is undefined');
         }
+        // Ensure we're using the correct port by getting it from the window location
         const wsUrl = `${protocol}//${host}/ws`;
+        
+        // Log the full URL to help with debugging
+        console.log('Window location:', window.location.toString());
         
         console.log('Connecting to WebSocket URL:', wsUrl);
         

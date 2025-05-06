@@ -712,9 +712,11 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                   <div>
                     <p className="text-xs text-gray-500">Total Distance</p>
                     <p className="text-sm font-medium">
-                      {(voyageProgress?.distanceTraveled !== undefined && voyageProgress?.distanceRemaining !== undefined &&
-                          typeof voyageProgress.distanceTraveled === 'number' && typeof voyageProgress.distanceRemaining === 'number')
-                        ? `${(voyageProgress.distanceTraveled + voyageProgress.distanceRemaining).toLocaleString()} nautical miles`
+                      {(voyageProgress?.distanceTraveled !== undefined && voyageProgress?.distanceRemaining !== undefined)
+                        ? `${(
+                            (typeof voyageProgress.distanceTraveled === 'number' ? voyageProgress.distanceTraveled : parseFloat(String(voyageProgress.distanceTraveled))) + 
+                            (typeof voyageProgress.distanceRemaining === 'number' ? voyageProgress.distanceRemaining : parseFloat(String(voyageProgress.distanceRemaining)))
+                          ).toLocaleString()} nautical miles`
                         : "N/A"}
                     </p>
                   </div>
