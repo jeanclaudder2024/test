@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, MapPin, Ship, Anchor, RefreshCw, LocateFixed, Waves, Map } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import MapComponent from '@/components/PortVesselProximityMap';
+import MapComponent from '@/components/PortVesselProximityMap.tsx';
 
 export default function PortVesselProximityPage() {
   const [proximityRadius, setProximityRadius] = useState<number>(10);
@@ -124,7 +124,7 @@ export default function PortVesselProximityPage() {
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 Connection Summary
-                <Badge variant={isConnected ? "success" : "destructive"}>
+                <Badge variant={isConnected ? "default" : "destructive"} className={isConnected ? "bg-green-500" : ""}>
                   {isConnected ? "Connected" : "Disconnected"}
                 </Badge>
               </CardTitle>
