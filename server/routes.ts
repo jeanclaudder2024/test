@@ -2045,6 +2045,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get comprehensive refinery details for the overview page
+  apiRouter.get("/refineries/:id/details", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid refinery ID" });
+      }
+      
+      // 1. Get the refinery information
+      const refinery = await storage.getRefineryById(id);
+      if (!refinery) {
+        return res.status(404).json({ message: "Refinery not found" });
+      }
+      
+      // 2. Get nearby vessels - limited to 12 by default
+      const radius = req.query.radius ? parseInt(req.query.radius as string) : 20;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 12;
+      const nearbyVessels = await refineryService.getVesselsNearRefinery(id, radius, limit);
+      
+      // Return the combined data
+      return res.json({
+        refinery,
+        vessels: nearbyVessels
+      });
+    } catch (error) {
+      console.error("Error fetching refinery details:", error);
+      res.status(500).json({ 
+        message: "Error fetching refinery details",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
   // Get all vessels
   apiRouter.get("/vessels", async (req, res) => {
     try {

@@ -195,13 +195,13 @@ export default function RefineryOverview() {
   ];
   
   // Format the founded date if available
-  const foundedDate = refinery.founded_year 
-    ? new Date(refinery.founded_year, 0).getFullYear() 
+  const foundedDate = refinery.foundedYear 
+    ? new Date(refinery.foundedYear, 0).getFullYear() 
     : 'Unknown';
   
   // Calculate refinery age
-  const refineryAge = refinery.founded_year 
-    ? new Date().getFullYear() - new Date(refinery.founded_year, 0).getFullYear() 
+  const refineryAge = refinery.foundedYear 
+    ? new Date().getFullYear() - new Date(refinery.foundedYear, 0).getFullYear() 
     : null;
     
   // Format capacity with proper units
@@ -209,48 +209,39 @@ export default function RefineryOverview() {
     ? `${refinery.capacity.toLocaleString()} bpd` 
     : 'Unknown';
   
-  // Format ownership type
+  // Format ownership type (using securityLevel as a placeholder since we don't have an ownership_type field)
   const ownershipType = () => {
-    if (!refinery.ownership_type) return 'Unknown';
-    return refinery.ownership_type.charAt(0).toUpperCase() + refinery.ownership_type.slice(1);
+    if (!refinery.securityLevel) return 'Unknown';
+    return refinery.securityLevel.charAt(0).toUpperCase() + refinery.securityLevel.slice(1);
   };
   
-  // Format recent expansions from array or string
+  // Format recent expansions from lastModernization
   const recentExpansions = () => {
-    if (!refinery.recent_expansions) return [];
+    if (!refinery.lastModernization) return [];
     
-    if (typeof refinery.recent_expansions === 'string') {
-      try {
-        return JSON.parse(refinery.recent_expansions);
-      } catch (e) {
-        return [refinery.recent_expansions];
-      }
-    }
-    
-    return Array.isArray(refinery.recent_expansions) 
-      ? refinery.recent_expansions 
-      : [String(refinery.recent_expansions)];
+    // Use last modernization date as the expansion
+    return [`Modernization completed on ${new Date(refinery.lastModernization).toLocaleDateString()}`];
   };
   
   // Format operational status
   const operationalStatus = () => {
-    if (!refinery.operational_status) return 'Unknown';
+    if (!refinery.status) return 'Unknown';
     
-    const status = refinery.operational_status.toLowerCase();
-    if (status === 'active') return 'Active';
+    const status = refinery.status.toLowerCase();
+    if (status === 'active' || status === 'operational') return 'Active';
     if (status === 'maintenance') return 'Under Maintenance';
     if (status === 'offline') return 'Offline';
     if (status === 'construction') return 'Under Construction';
     
-    return refinery.operational_status.charAt(0).toUpperCase() + refinery.operational_status.slice(1);
+    return refinery.status.charAt(0).toUpperCase() + refinery.status.slice(1);
   };
   
   // Get status color
   const getStatusColor = () => {
-    if (!refinery.operational_status) return 'default';
+    if (!refinery.status) return 'default';
     
-    const status = refinery.operational_status.toLowerCase();
-    if (status === 'active') return 'success';
+    const status = refinery.status.toLowerCase();
+    if (status === 'active' || status === 'operational') return 'success';
     if (status === 'maintenance') return 'warning';
     if (status === 'offline') return 'destructive';
     if (status === 'construction') return 'secondary';
@@ -450,7 +441,7 @@ export default function RefineryOverview() {
                         <Truck className="h-3.5 w-3.5" />
                         Products
                       </p>
-                      <p className="font-medium">{refinery.primary_products?.split(',').length || 0} types</p>
+                      <p className="font-medium">{refinery.primaryProducts?.split(',').length || 0} types</p>
                     </div>
                     
                     <div className="space-y-1">
