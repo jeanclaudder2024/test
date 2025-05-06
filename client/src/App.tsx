@@ -14,6 +14,9 @@ import Documents from "@/pages/Documents";
 import AIAssistantPage from "@/pages/AIAssistant";
 import Settings from "@/pages/Settings";
 import Subscribe from "@/pages/Subscribe";
+import Pricing from "@/pages/Pricing";
+import AccountSubscription from "@/pages/AccountSubscription";
+import SubscriptionSuccess from "@/pages/SubscriptionSuccess";
 import LandingPage from "@/pages/LandingPage";
 import AuthPage from "@/pages/AuthPage";
 import TradingDashboard from "@/pages/TradingDashboard";
@@ -89,6 +92,9 @@ function Router() {
             <Route path="/trading" component={TradingDashboard} />
             <Route path="/settings" component={Settings} />
             <Route path="/subscribe" component={Subscribe} />
+            <Route path="/pricing" component={Pricing} />
+            <Route path="/account/subscription" component={AccountSubscription} />
+            <Route path="/subscription/success" component={SubscriptionSuccess} />
             <Route path="/api-test" component={ApiTest} />
             <Route component={NotFound} />
           </Switch>
