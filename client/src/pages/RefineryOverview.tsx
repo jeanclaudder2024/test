@@ -458,8 +458,8 @@ export default function RefineryOverview() {
                         Last Updated
                       </p>
                       <p className="font-medium">
-                        {refinery.last_updated 
-                          ? new Date(refinery.last_updated).toLocaleDateString() 
+                        {refinery.lastUpdated 
+                          ? new Date(refinery.lastUpdated).toLocaleDateString() 
                           : 'Unknown'}
                       </p>
                     </div>
@@ -533,9 +533,9 @@ export default function RefineryOverview() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {refinery.primary_products ? (
+                  {refinery.primaryProducts ? (
                     <div className="flex flex-wrap gap-2">
-                      {refinery.primary_products.split(',').map((product, index) => (
+                      {refinery.primaryProducts.split(',').map((product, index) => (
                         <Badge key={index} variant="outline" className="px-3 py-1 bg-background">
                           {product.trim()}
                         </Badge>
