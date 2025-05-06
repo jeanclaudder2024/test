@@ -162,7 +162,7 @@ export function Layout({ children }: LayoutProps) {
                   <RefreshCw className="mr-2 h-4 w-4" />
                   Refresh Data
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => window.location.href = '/account/subscription'}>
+                <DropdownMenuItem onClick={() => navigate('/account/subscription')}>
                   <CreditCard className="mr-2 h-4 w-4" />
                   Subscription
                 </DropdownMenuItem>
@@ -265,7 +265,7 @@ export function Layout({ children }: LayoutProps) {
                       <RefreshCw className="mr-2 h-4 w-4" />
                       Refresh Data
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => window.location.href = '/account/subscription'}>
+                    <DropdownMenuItem onClick={() => navigate('/account/subscription')}>
                       <CreditCard className="mr-2 h-4 w-4" />
                       Subscription
                     </DropdownMenuItem>
@@ -343,7 +343,7 @@ export function Layout({ children }: LayoutProps) {
                       <Settings className="mr-2 h-4 w-4" />
                       Settings
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => window.location.href = '/account/subscription'}>
+                    <DropdownMenuItem onClick={() => navigate('/account/subscription')}>
                       <CreditCard className="mr-2 h-4 w-4" />
                       Subscription
                     </DropdownMenuItem>
