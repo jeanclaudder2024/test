@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link, useParams, useLocation } from 'wouter';
 import { Refinery, Port } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest, queryClient } from '@/lib/queryClient';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Chart, BarElement, CategoryScale, 
@@ -228,7 +228,12 @@ export default function RefineryDetail() {
         description: "Using AI to generate additional details",
       });
       
-      const res = await apiRequest('POST', `/api/refineries/${refineryId}/enhance`);
+      const res = await fetch(`/api/refineries/${refineryId}/enhance`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
       
       if (res.status === 400) {
         const error = await res.json();
@@ -251,11 +256,11 @@ export default function RefineryDetail() {
       toast({
         title: "Refinery data enhanced",
         description: "Additional details have been generated successfully.",
-        variant: "success"
+        variant: "default"
       });
       
       // Force refetch of data
-      window.location.reload();
+      queryClient.invalidateQueries({ queryKey: ['/api/refineries', refineryId] });
     } catch (error) {
       console.error("Error enhancing refinery:", error);
       toast({
