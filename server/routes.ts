@@ -2528,6 +2528,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           console.log(`Port proximity tracking ${ws.trackPortProximity ? 'enabled' : 'disabled'} with radius ${ws.proximityRadius}km`);
           sendVesselData(ws);
+        } else if (data.type === 'subscribePortProximity') {
+          // This is our new command from the port-vessel proximity hook
+          ws.trackPortProximity = true;
+          
+          // Set proximity radius if provided
+          if (data.proximityRadius !== undefined) {
+            const radius = parseInt(String(data.proximityRadius));
+            ws.proximityRadius = !isNaN(radius) ? radius : 10;
+          }
+          
+          console.log(`Port-vessel proximity tracking enabled with radius ${ws.proximityRadius}km`);
+          
+          // Send the current vessel-port connections
+          sendPortVesselConnections(ws);
+        } else if (data.type === 'updateProximityRadius') {
+          // Update the proximity radius for port-vessel tracking
+          if (data.proximityRadius !== undefined) {
+            const radius = parseInt(String(data.proximityRadius));
+            ws.proximityRadius = !isNaN(radius) ? radius : ws.proximityRadius;
+            console.log(`Updated port-vessel proximity radius to ${ws.proximityRadius}km`);
+            
+            // Send updated vessel-port connections with new radius
+            if (ws.trackPortProximity) {
+              sendPortVesselConnections(ws);
+            }
+          }
+        } else if (data.type === 'requestPortVesselConnections') {
+          // Request for immediate port-vessel connection data
+          if (ws.trackPortProximity) {
+            console.log(`Client requested immediate port-vessel connection update`);
+            sendPortVesselConnections(ws);
+          }
         }
       } catch (error) {
         console.error('Error processing WebSocket message:', error);
@@ -2698,6 +2730,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(summaryMessage + connectionSummary);
     } catch (error) {
       console.error('Error sending vessel data via WebSocket:', error);
+    }
+  }
+
+  // Function to send only port-vessel connections (dedicated for the port detail/proximity views)
+  async function sendPortVesselConnections(ws: VesselTrackingWebSocket) {
+    try {
+      if (ws.readyState !== WebSocket.OPEN) return;
+      
+      const proximityRadius = ws.proximityRadius || 10; // Default to 10km
+      
+      console.log(`Sending port-vessel connections with radius ${proximityRadius}km`);
+      
+      try {
+        // Get all vessel-port connections within the specified radius
+        const connectionsData = vesselPositionService.getVesselsNearPorts(proximityRadius);
+        
+        // Format the connections for the client
+        const connections = connectionsData.connections.map(conn => ({
+          vesselId: conn.vessel.id,
+          portId: conn.port.id,
+          vesselName: conn.vessel.name,
+          portName: conn.port.name,
+          distance: conn.distance,
+          vesselType: conn.vessel.vesselType,
+          portType: conn.port.type,
+          coordinates: {
+            vessel: {
+              lat: conn.vessel.currentLat,
+              lng: conn.vessel.currentLng
+            },
+            port: {
+              lat: conn.port.lat,
+              lng: conn.port.lng
+            }
+          }
+        }));
+        
+        // Create unique list of vessels (for vessel count)
+        const uniqueVessels = new Set(connections.map(conn => conn.vesselId));
+        
+        // Send the connection data
+        const response = {
+          type: 'portVesselConnections',
+          connections,
+          timestamp: new Date().toISOString(),
+          count: connections.length,
+          vesselCount: uniqueVessels.size,
+          proximityRadius
+        };
+        
+        ws.send(JSON.stringify(response));
+        console.log(`Sent ${connections.length} port-vessel connections with ${uniqueVessels.size} unique vessels`);
+      } catch (connectionError) {
+        console.error('Error getting vessel-port connections:', connectionError);
+        
+        // Send error response
+        ws.send(JSON.stringify({
+          type: 'error',
+          message: 'Failed to retrieve vessel-port connections',
+          timestamp: new Date().toISOString()
+        }));
+      }
+    } catch (error) {
+      console.error('Error sending port-vessel connections via WebSocket:', error);
     }
   }
 
