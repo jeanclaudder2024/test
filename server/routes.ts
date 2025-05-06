@@ -884,12 +884,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get vessels by company name
+  apiRouter.get("/companies/:name/vessels", async (req, res) => {
+    try {
+      const companyName = req.params.name;
+      if (!companyName) {
+        return res.status(400).json({ message: "Company name is required" });
+      }
+      
+      // Get all vessels
+      const allVessels = await vesselService.getAllVessels();
+      
+      // Filter vessels by owner or seller name
+      const companyVessels = allVessels.filter(vessel => {
+        // We check both owner name and seller name fields, if they exist
+        return (
+          (vessel.ownerName && vessel.ownerName.toLowerCase() === companyName.toLowerCase()) || 
+          (vessel.sellerName && vessel.sellerName.toLowerCase() === companyName.toLowerCase()) ||
+          (vessel.buyerName && vessel.buyerName.toLowerCase() === companyName.toLowerCase())
+        );
+      });
+      
+      console.log(`Found ${companyVessels.length} vessels for company: ${companyName}`);
+      res.json(companyVessels);
+    } catch (error) {
+      console.error(`Error fetching vessels for company:`, error);
+      res.status(500).json({ message: "Failed to fetch vessels for company" });
+    }
+  });
+
   // Vessel endpoints
   apiRouter.get("/vessels", async (req, res) => {
     try {
       const region = req.query.region as string | undefined;
       const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
       const vesselType = req.query.type as string | undefined;
+      const companyName = req.query.company as string | undefined;
       
       // Apply filters based on query parameters
       let vessels;
@@ -897,6 +927,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         vessels = await vesselService.getVesselsByRegion(region);
       } else {
         vessels = await vesselService.getAllVessels();
+      }
+      
+      // Filter by company name if provided
+      if (companyName) {
+        vessels = vessels.filter(vessel => {
+          return (
+            (vessel.ownerName && vessel.ownerName.toLowerCase() === companyName.toLowerCase()) || 
+            (vessel.sellerName && vessel.sellerName.toLowerCase() === companyName.toLowerCase()) ||
+            (vessel.buyerName && vessel.buyerName.toLowerCase() === companyName.toLowerCase())
+          );
+        });
       }
       
       // Apply vessel type filter if specified

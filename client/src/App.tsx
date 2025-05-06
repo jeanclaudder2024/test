@@ -22,6 +22,7 @@ import AuthPage from "@/pages/AuthPage";
 import TradingDashboard from "@/pages/TradingDashboard";
 import LiveTracking from "@/pages/LiveTracking";
 import Companies from "@/pages/Companies";
+import CompanyFleet from "@/pages/CompanyFleet";
 import ApiTest from "@/pages/ApiTest";
 import { useEffect } from "react";
 import { apiRequest, queryClient } from "./lib/queryClient";
