@@ -927,8 +927,22 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getStats(): Promise<Stats | undefined> {
-    const [stats] = await db.select().from(statsTable);
-    return stats || undefined;
+    try {
+      const result = await db.select().from(statsTable);
+      // If result is an array (which it should be from drizzle), use it
+      if (Array.isArray(result)) {
+        return result.length > 0 ? result[0] : undefined;
+      }
+      // Handle Supabase response
+      else if (result && typeof result === 'object' && 'data' in result) {
+        const data = (result as any).data;
+        return Array.isArray(data) && data.length > 0 ? data[0] : undefined;
+      }
+      return undefined;
+    } catch (error) {
+      console.error('Error getting stats:', error);
+      return undefined;
+    }
   }
 
   async updateStats(statsUpdate: Partial<InsertStats>): Promise<Stats | undefined> {
