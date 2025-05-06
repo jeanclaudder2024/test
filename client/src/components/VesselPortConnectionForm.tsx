@@ -74,7 +74,7 @@ const VesselPortConnectionForm: React.FC<VesselPortConnectionFormProps> = ({
       }
       return response.json();
     },
-    placeholderData: (previousData) => previousData
+    staleTime: 10000
   });
 
   // Fetch vessels for dropdown
@@ -94,7 +94,7 @@ const VesselPortConnectionForm: React.FC<VesselPortConnectionFormProps> = ({
       }
       return response.json();
     },
-    placeholderData: (previousData) => previousData
+    staleTime: 10000
   });
 
   // Handle form submission

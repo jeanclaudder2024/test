@@ -49,7 +49,8 @@ export function useVesselPortConnection() {
         })
       });
       
-      const result = await response.json();
+      // apiRequest already returns parsed JSON, no need to call .json() again
+      const result = response;
       setLastConnection(result);
       
       // Invalidate related queries to refresh data

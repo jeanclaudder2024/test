@@ -30,6 +30,7 @@ import {
 
 import PortMiniMap from '@/components/map/PortMiniMap';
 import PortVesselsTable from '@/components/PortVesselsTable';
+import VesselPortConnectionForm from '@/components/VesselPortConnectionForm';
 import { usePortSpecificVessels } from '@/hooks/usePortSpecificVessels';
 
 export default function PortDetail() {
@@ -356,6 +357,33 @@ export default function PortDetail() {
                   showFilters={false}
                 />
               </div>
+            )}
+          </CardContent>
+        </Card>
+        
+        {/* Connect Vessel Component */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center">
+              <Anchor className="h-5 w-5 mr-2 text-primary" />
+              Connect Vessel
+            </CardTitle>
+            <CardDescription>
+              Connect a vessel to {port?.name}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {portId && (
+              <VesselPortConnectionForm 
+                initialPortId={portId}
+                hideTitle={true}
+                onSuccess={(result) => {
+                  // Force refresh of vessel data
+                  if (port) {
+                    refreshData();
+                  }
+                }}
+              />
             )}
           </CardContent>
         </Card>
