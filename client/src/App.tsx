@@ -24,6 +24,7 @@ import TradingDashboard from "@/pages/TradingDashboard";
 import LiveTracking from "@/pages/LiveTracking";
 import Companies from "@/pages/Companies";
 import ApiTest from "@/pages/ApiTest";
+import TranslationPage from "@/pages/TranslationPage";
 import { useEffect } from "react";
 import { apiRequest, queryClient } from "./lib/queryClient";
 import { Layout } from "@/components/ui/layout";
@@ -92,6 +93,7 @@ function Router() {
             <Route path="/documents" component={Documents} />
             <Route path="/ai-assistant" component={AIAssistantPage} />
             <Route path="/trading" component={TradingDashboard} />
+            <Route path="/translation" component={TranslationPage} />
             <Route path="/settings" component={Settings} />
             <Route path="/subscribe" component={Subscribe} />
             <Route path="/pricing" component={Pricing} />
