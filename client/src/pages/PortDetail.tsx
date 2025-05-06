@@ -193,7 +193,7 @@ export default function PortDetail() {
             {port?.name || 'Unknown Port'}
           </h1>
           <p className="text-muted-foreground">
-            {port.country}, {port.region}
+            {port?.country || 'Unknown Country'}, {port?.region || 'Unknown Region'}
           </p>
         </div>
         
@@ -230,7 +230,7 @@ export default function PortDetail() {
               <div className="rounded-lg border border-border bg-muted/10 p-4">
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="text-sm font-medium">Port Type</h4>
-                  <Badge className="capitalize">{port.type || 'Commercial'}</Badge>
+                  <Badge className="capitalize">{port?.type || 'Commercial'}</Badge>
                 </div>
                 
                 <Separator className="my-3" />
@@ -242,7 +242,7 @@ export default function PortDetail() {
                       Capacity
                     </span>
                     <span className="font-medium">
-                      {port.capacity ? port.capacity.toLocaleString() : 'N/A'}
+                      {port?.capacity ? port.capacity.toLocaleString() : 'N/A'}
                     </span>
                   </div>
                   
@@ -252,7 +252,7 @@ export default function PortDetail() {
                       Last Updated
                     </span>
                     <span className="font-medium">
-                      {port.lastUpdated 
+                      {port?.lastUpdated 
                         ? new Date(port.lastUpdated).toLocaleDateString() 
                         : 'Unknown'}
                     </span>
@@ -277,7 +277,7 @@ export default function PortDetail() {
                   <div className="flex items-center text-sm">
                     <MapPin className="h-4 w-4 mr-2 text-primary/70" />
                     <span>
-                      {port.lat && port.lng 
+                      {port?.lat && port?.lng 
                         ? `${typeof port.lat === 'number' 
                             ? port.lat.toFixed(4) 
                             : Number(port.lat).toFixed(4)}, ${typeof port.lng === 'number'
@@ -289,20 +289,20 @@ export default function PortDetail() {
                   <div className="flex items-center text-sm">
                     <Globe className="h-4 w-4 mr-2 text-primary/70" />
                     <span>
-                      {port.country}
+                      {port?.country || 'Unknown Country'}
                     </span>
                   </div>
                   <div className="flex items-center text-sm">
                     <PanelLeft className="h-4 w-4 mr-2 text-primary/70" />
                     <span>
-                      {port.region}
+                      {port?.region || 'Unknown Region'}
                     </span>
                   </div>
                 </div>
               </div>
               
               {/* Port Description */}
-              {port.description && (
+              {port?.description && (
                 <div className="rounded-lg border border-border bg-muted/10 p-4">
                   <h4 className="text-sm font-medium mb-2">Description</h4>
                   <p className="text-sm text-muted-foreground">
@@ -316,16 +316,16 @@ export default function PortDetail() {
                 <h4 className="text-sm font-medium mb-3">Activity Status</h4>
                 <div className="flex items-center gap-2 mb-2">
                   <div className={`h-3 w-3 rounded-full ${
-                    port.status === 'active' ? 'bg-green-500' : 
-                    port.status === 'maintenance' ? 'bg-amber-500' : 
+                    port?.status === 'active' ? 'bg-green-500' : 
+                    port?.status === 'maintenance' ? 'bg-amber-500' : 
                     'bg-red-500'
                   }`} />
-                  <span className="text-sm capitalize">{port.status}</span>
+                  <span className="text-sm capitalize">{port?.status || 'unknown'}</span>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {port.status === 'active' 
+                  {port?.status === 'active' 
                     ? 'Port is fully operational and accepting vessels.' 
-                    : port.status === 'maintenance'
+                    : port?.status === 'maintenance'
                     ? 'Port is undergoing scheduled maintenance with limited operations.'
                     : 'Port is currently not operational.'}
                 </p>
@@ -530,23 +530,23 @@ export default function PortDetail() {
                     Cargo Volume
                   </h3>
                   <span className="text-sm font-medium">
-                    {port.capacity ? (port.capacity / 1000).toFixed(0) + ' k' : 'N/A'}
+                    {port?.capacity ? (port.capacity / 1000).toFixed(0) + ' k' : 'N/A'}
                   </span>
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">
-                  {port.type === 'oil' 
+                  {port?.type === 'oil' 
                     ? 'Daily throughput capacity in barrels' 
                     : 'TEU handling capacity'}
                 </p>
-                {port.type === 'oil' && (
+                {port?.type === 'oil' && port?.capacity && (
                   <div className="mt-3 text-xs">
                     <div className="flex justify-between mb-1">
                       <span>Crude Oil</span>
-                      <span>{Math.round(port.capacity! * 0.6 / 1000)}k bpd</span>
+                      <span>{Math.round(port.capacity * 0.6 / 1000)}k bpd</span>
                     </div>
                     <div className="flex justify-between mb-1">
                       <span>Refined Products</span>
-                      <span>{Math.round(port.capacity! * 0.4 / 1000)}k bpd</span>
+                      <span>{Math.round(port.capacity * 0.4 / 1000)}k bpd</span>
                     </div>
                   </div>
                 )}
@@ -559,21 +559,21 @@ export default function PortDetail() {
                     Port Activity
                   </h3>
                   <Badge variant={
-                    port.status === 'active' ? 'default' : 
-                    port.status === 'maintenance' ? 'warning' : 
+                    port?.status === 'active' ? 'default' : 
+                    port?.status === 'maintenance' ? 'outline' : 
                     'outline'
                   }>
-                    {port.status}
+                    {port?.status || 'unknown'}
                   </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">
-                  {port.status === 'active' 
+                  {port?.status === 'active' 
                     ? 'The port is fully operational' 
-                    : port.status === 'maintenance'
+                    : port?.status === 'maintenance'
                     ? 'Limited operations during maintenance'
                     : 'Port is currently closed'}
                 </p>
-                {port.status === 'active' && (
+                {port?.status === 'active' && (
                   <div className="mt-3 text-xs">
                     <div className="flex justify-between mb-1">
                       <span>Berth Occupancy</span>
