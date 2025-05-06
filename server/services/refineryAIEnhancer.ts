@@ -51,7 +51,8 @@ interface RefineryEnhancement {
   description?: string;
 }
 
-interface EnhancedRefinery extends Refinery, RefineryEnhancement {}
+// Combine refinery types carefully
+interface EnhancedRefinery extends Omit<Refinery, keyof RefineryEnhancement>, RefineryEnhancement {}
 
 class RefineryAIEnhancer {
   /**
@@ -78,13 +79,25 @@ class RefineryAIEnhancer {
         response_format: { type: "json_object" }
       });
       
-      const result = JSON.parse(response.choices[0].message.content);
-      console.log(`Successfully enhanced refinery: ${refinery.name}`);
+      const content = response.choices[0].message.content;
+      // Handle null content case
+      if (!content) {
+        console.error(`Empty response from OpenAI for refinery ${refinery.name}`);
+        return refinery;
+      }
       
-      return {
-        ...refinery,
-        ...result
-      };
+      try {
+        const result = JSON.parse(content);
+        console.log(`Successfully enhanced refinery: ${refinery.name}`);
+        
+        return {
+          ...refinery,
+          ...result
+        };
+      } catch (parseError) {
+        console.error(`Failed to parse OpenAI response for refinery ${refinery.name}:`, parseError);
+        return refinery;
+      }
     } catch (error) {
       console.error(`Error enhancing refinery ${refinery.name}:`, error);
       // Return the original refinery if enhancement fails
