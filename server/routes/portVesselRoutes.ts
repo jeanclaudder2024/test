@@ -134,7 +134,7 @@ router.get('/:id/vessels', async (req, res) => {
  */
 router.post('/connect', async (req, res) => {
   try {
-    const { vesselId, portId } = req.body;
+    const { vesselId, portId, moveToPort = false } = req.body;
     
     if (!vesselId || !portId) {
       return res.status(400).json({ 
@@ -162,16 +162,36 @@ router.post('/connect', async (req, res) => {
       return res.status(404).json({ error: 'Port not found' });
     }
     
-    // Update vessel to set the port as destination
-    const updatedVessel = await storage.updateVessel(vesselIdNum, {
+    // Update object to store changes
+    const vesselUpdates: any = {
       destinationPort: port.name,
       destinationLat: port.lat,
       destinationLng: port.lng
-    });
+    };
+    
+    // Optionally move the vessel near the port
+    if (moveToPort) {
+      const portLat = typeof port.lat === 'string' ? parseFloat(port.lat) : port.lat;
+      const portLng = typeof port.lng === 'string' ? parseFloat(port.lng) : port.lng;
+      
+      if (!isNaN(portLat) && !isNaN(portLng)) {
+        // Add a small random offset to make vessel appear near but not exactly at the port
+        // This creates a more realistic position (within about 2km of the port)
+        const latOffset = (Math.random() * 0.03 - 0.015) / 111; // +/- ~1.5km in latitude
+        const lngFactor = Math.cos(portLat * Math.PI / 180);
+        const lngOffset = (Math.random() * 0.03 - 0.015) / (111 * lngFactor); // +/- ~1.5km in longitude
+        
+        vesselUpdates.currentLat = (portLat + latOffset).toString();
+        vesselUpdates.currentLng = (portLng + lngOffset).toString();
+      }
+    }
+    
+    // Update vessel with all changes
+    const updatedVessel = await storage.updateVessel(vesselIdNum, vesselUpdates);
     
     res.json({
       success: true,
-      message: `Vessel ${vessel.name} successfully connected to port ${port.name}`,
+      message: `Vessel ${vessel.name} successfully connected to port ${port.name}${moveToPort ? ' and moved near port' : ''}`,
       data: {
         vessel: updatedVessel,
         port
