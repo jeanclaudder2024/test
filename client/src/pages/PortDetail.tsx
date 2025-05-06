@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useRoute, Link } from 'wouter';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -21,19 +21,25 @@ import {
   Clock,
   PanelLeft,
   PanelRight,
-  ExternalLink
+  ExternalLink,
+  RefreshCw,
+  Signal,
+  Loader2
 } from 'lucide-react';
 
 import PortMiniMap from '@/components/map/PortMiniMap';
+import { usePortSpecificVessels } from '@/hooks/usePortSpecificVessels';
 
 export default function PortDetail() {
   const [, params] = useRoute('/ports/:id');
   const portId = params?.id ? parseInt(params.id) : null;
+  const [proximityRadius, setProximityRadius] = useState<number>(10);
+  const [useWebSocketData, setUseWebSocketData] = useState<boolean>(true);
   
-  // Fetch port details and nearby vessels
+  // Fetch port details and nearby vessels from API (traditional REST approach)
   const { 
     data: portData, 
-    isLoading, 
+    isLoading: isLoadingApi, 
     isError,
     error
   } = useQuery({
@@ -49,17 +55,56 @@ export default function PortDetail() {
       
       return response.json();
     },
-    enabled: !!portId
+    enabled: !!portId && !useWebSocketData
   });
   
-  const port = portData?.port;
-  const nearbyVessels = portData?.vessels || [];
+  // Fetch real-time vessel proximity data using WebSockets
+  const {
+    connections: vesselConnections,
+    vessels: nearbyVesselsRealtime,
+    portInfo,
+    isConnected: wsConnected,
+    error: wsError,
+    isLoading: isLoadingWs,
+    lastUpdated,
+    refreshData
+  } = usePortSpecificVessels({
+    portId: portId || 0,
+    proximityRadius,
+    autoConnect: useWebSocketData,
+    pollingInterval: 10000
+  });
   
-  if (isLoading) {
+  // Determine which data source to use
+  const isLoading = useWebSocketData ? isLoadingWs : isLoadingApi;
+  
+  // Use appropriate data source based on user selection
+  const port = useWebSocketData ? (portInfo || portData?.port) : portData?.port;
+  
+  // Format vessel data from both sources into a consistent format for display
+  const nearbyVessels = useMemo(() => {
+    if (useWebSocketData) {
+      return nearbyVesselsRealtime.map(v => ({
+        vessels: {
+          id: v.id,
+          name: v.name,
+          vesselType: v.type,
+          currentLat: v.coordinates?.lat,
+          currentLng: v.coordinates?.lng,
+          flag: ''
+        },
+        distance: v.distance
+      }));
+    } else {
+      return portData?.vessels || [];
+    }
+  }, [useWebSocketData, nearbyVesselsRealtime, portData?.vessels]);
+  
+  if (isLoading && !port) {
     return <PortDetailSkeleton />;
   }
   
-  if (isError || !port) {
+  if ((isError || !port) && !useWebSocketData) {
     return (
       <div className="container mx-auto py-6">
         <Link href="/ports">
@@ -78,6 +123,15 @@ export default function PortDetail() {
             <p className="text-sm text-muted-foreground mt-2">
               {error instanceof Error ? error.message : "Unknown error"}
             </p>
+            <div className="mt-4">
+              <Button 
+                onClick={() => setUseWebSocketData(true)}
+                variant="outline"
+                size="sm"
+              >
+                Try using WebSocket data
+              </Button>
+            </div>
           </CardContent>
           <CardFooter>
             <Link href="/ports">
@@ -281,11 +335,82 @@ export default function PortDetail() {
             </div>
             
             <div className="rounded-lg border border-border bg-muted/10 p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="text-sm font-medium flex items-center">
-                  <Ship className="h-4 w-4 mr-2 text-primary" />
-                  Nearby Vessels ({sortedVessels.length})
-                </h4>
+              <div className="flex flex-col space-y-3 mb-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-medium flex items-center">
+                    <Ship className="h-4 w-4 mr-2 text-primary" />
+                    Nearby Vessels ({sortedVessels.length})
+                  </h4>
+                  
+                  <Badge variant={useWebSocketData ? "default" : "outline"} className="flex items-center gap-1">
+                    {useWebSocketData ? (
+                      <>
+                        <Signal className="h-3 w-3" />
+                        Real-time
+                      </>
+                    ) : (
+                      <>Static</>
+                    )}
+                  </Badge>
+                </div>
+                
+                {useWebSocketData && (
+                  <div className="flex flex-col space-y-2 pt-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">Proximity Radius</span>
+                      <span className="text-xs font-medium">{proximityRadius} km</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Slider
+                        value={[proximityRadius]}
+                        min={1}
+                        max={50}
+                        step={1}
+                        onValueChange={(values) => setProximityRadius(values[0])}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">
+                        Last updated: {lastUpdated ? lastUpdated.toLocaleTimeString() : 'Never'}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 px-2"
+                        onClick={refreshData}
+                        disabled={isLoadingWs}
+                      >
+                        {isLoadingWs ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <RefreshCw className="h-3 w-3" />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-xs text-muted-foreground">Data Source</span>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant={useWebSocketData ? "default" : "outline"}
+                      size="sm"
+                      className="h-7 px-2 text-xs"
+                      onClick={() => setUseWebSocketData(true)}
+                    >
+                      WebSocket
+                    </Button>
+                    <Button
+                      variant={!useWebSocketData ? "default" : "outline"}
+                      size="sm"
+                      className="h-7 px-2 text-xs"
+                      onClick={() => setUseWebSocketData(false)}
+                    >
+                      REST API
+                    </Button>
+                  </div>
+                </div>
               </div>
               
               <div className="space-y-1 max-h-64 overflow-y-auto pr-2">
