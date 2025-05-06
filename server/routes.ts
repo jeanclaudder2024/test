@@ -57,6 +57,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   const apiRouter = express.Router();
 
+  // Register routes
+  app.use("/api/subscriptions", subscriptionRouter);
+
   // Endpoint to clear all vessel and refinery data from the database
   if (app.get("env") === "development") {
     apiRouter.post("/clear-data", async (req, res) => {
