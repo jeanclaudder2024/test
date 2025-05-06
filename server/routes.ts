@@ -2224,6 +2224,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // API routes for oil shipping companies
   app.use("/api/companies", companyRouter);
   
+  // API routes for enhanced port-vessel data
+  app.use("/api/port-vessels", portVesselRouter);
+  
   // API routes for subscription management
   app.use("/api/subscriptions", subscriptionRouter);
 
