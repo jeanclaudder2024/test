@@ -16,7 +16,8 @@ import {
   Map,
   Radio,
   Database,
-  Anchor
+  Anchor,
+  Globe
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -111,6 +112,12 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
       title: t("nav.ai_assistant"),
       path: "/ai-assistant",
       icon: <Brain className="h-5 w-5 mr-3" />,
+    },
+    {
+      title: "Translation",
+      path: "/translation",
+      icon: <Globe className="h-5 w-5 mr-3" />,
+      badge: "NEW",
     },
     {
       title: t("nav.settings"),
