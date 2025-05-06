@@ -310,7 +310,10 @@ export default function Ports() {
                       <div key={port.id} className="h-full">
                         <PortCard
                           port={port}
-                          vessels={[]} // Empty array initially, we'll fetch vessel details only when viewing a specific port
+                          vessels={(port.nearbyVessels || []).map(vessel => ({
+                            vessels: vessel.vessels,
+                            distance: vessel.distance
+                          }))}
                           isLoading={false}
                         />
                       </div>
