@@ -6,6 +6,7 @@ import {
   Bell, 
   ChevronDown, 
   Compass, 
+  CreditCard,
   Database, 
   FileText, 
   Home, 
@@ -161,6 +162,10 @@ export function Layout({ children }: LayoutProps) {
                   <RefreshCw className="mr-2 h-4 w-4" />
                   Refresh Data
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => window.location.href = '/account/subscription'}>
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  Subscription
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleHelpSupport}>
                   <LifeBuoy className="mr-2 h-4 w-4" />
                   Help & Support
@@ -260,6 +265,10 @@ export function Layout({ children }: LayoutProps) {
                       <RefreshCw className="mr-2 h-4 w-4" />
                       Refresh Data
                     </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => window.location.href = '/account/subscription'}>
+                      <CreditCard className="mr-2 h-4 w-4" />
+                      Subscription
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={handleHelpSupport}>
                       <LifeBuoy className="mr-2 h-4 w-4" />
                       Help & Support
@@ -333,6 +342,10 @@ export function Layout({ children }: LayoutProps) {
                     <DropdownMenuItem onClick={handleSettings}>
                       <Settings className="mr-2 h-4 w-4" />
                       Settings
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => window.location.href = '/account/subscription'}>
+                      <CreditCard className="mr-2 h-4 w-4" />
+                      Subscription
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={handleLogout}>
                       <LogOut className="mr-2 h-4 w-4" />
