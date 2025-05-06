@@ -369,36 +369,46 @@ export default function SimpleLeafletMap({
         // Check if vessel has valid coordinates
         if (!vessel.currentLat || !vessel.currentLng) return false;
         
+        // Use Number() instead of parseFloat to handle string conversions more consistently
         const lat = typeof vessel.currentLat === 'number' 
           ? vessel.currentLat 
-          : parseFloat(String(vessel.currentLat));
+          : Number(vessel.currentLat);
           
         const lng = typeof vessel.currentLng === 'number'
           ? vessel.currentLng
-          : parseFloat(String(vessel.currentLng));
+          : Number(vessel.currentLng);
           
         if (isNaN(lat) || isNaN(lng)) return false;
         
-        // Filter for cargo vessels only
-        const isCargoVessel = vessel.vesselType?.toLowerCase().includes('cargo') || false;
+        // Make sure coordinates are within valid range
+        if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return false;
         
-        // Only show cargo vessels that are at sea
-        return isCargoVessel && isCoordinateAtSea(lat, lng);
+        // Filter for cargo vessels only - include more vessel types
+        const isRelevantVessel = 
+          vessel.vesselType?.toLowerCase().includes('cargo') || 
+          vessel.vesselType?.toLowerCase().includes('tanker') ||
+          vessel.vesselType?.toLowerCase().includes('oil') ||
+          vessel.vesselType?.toLowerCase().includes('bulk') ||
+          false;
+        
+        // Only show relevant vessels that are at sea
+        return isRelevantVessel && isCoordinateAtSea(lat, lng);
       })
-      .slice(0, 500); // Show more cargo vessels - up to 500
+      .slice(0, 500); // Show more vessels - up to 500
       
     setDisplayVessels(filteredVessels);
     
     filteredVessels.forEach(vessel => {
       if (!vessel.currentLat || !vessel.currentLng) return;
       
+      // Use Number() instead of parseFloat to handle string conversions more consistently
       const lat = typeof vessel.currentLat === 'number'
         ? vessel.currentLat
-        : parseFloat(String(vessel.currentLat));
+        : Number(vessel.currentLat);
         
       const lng = typeof vessel.currentLng === 'number'
         ? vessel.currentLng
-        : parseFloat(String(vessel.currentLng));
+        : Number(vessel.currentLng);
         
       if (isNaN(lat) || isNaN(lng)) return;
       

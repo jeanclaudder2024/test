@@ -275,9 +275,9 @@ export default function RefineryDetail() {
                             {refinery.lat && refinery.lng 
                               ? `${typeof refinery.lat === 'number' 
                                    ? refinery.lat.toFixed(4) 
-                                   : parseFloat(String(refinery.lat) || '0').toFixed(4)}, ${typeof refinery.lng === 'number'
+                                   : Number(refinery.lat).toFixed(4)}, ${typeof refinery.lng === 'number'
                                    ? refinery.lng.toFixed(4)
-                                   : parseFloat(String(refinery.lng) || '0').toFixed(4)}`
+                                   : Number(refinery.lng).toFixed(4)}`
                               : 'Coordinates unavailable'}
                           </span>
                         </div>
@@ -404,12 +404,13 @@ export default function RefineryDetail() {
                       }}
                       isLoading={false}
                       initialCenter={[
+                        // Use Number() for more consistent type conversion of string coordinates
                         typeof refinery.lat === 'number' 
                           ? refinery.lat 
-                          : parseFloat(String(refinery.lat) || '0'),
+                          : Number(refinery.lat),
                         typeof refinery.lng === 'number'
                           ? refinery.lng
-                          : parseFloat(String(refinery.lng) || '0')
+                          : Number(refinery.lng)
                       ]}
                       initialZoom={7} // Slightly zoomed out to show nearby vessels
                     />
