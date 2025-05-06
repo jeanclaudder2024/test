@@ -2484,11 +2484,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           } else {
             ws.sendAllVessels = false;
             // Check if pagination parameters were provided
-            if (data.page) {
-              ws.page = parseInt(data.page) || 1;
+            if (data.page !== undefined) {
+              const parsedPage = parseInt(String(data.page));
+              ws.page = !isNaN(parsedPage) ? parsedPage : 1;
+              console.log(`Setting page to ${ws.page} from client request: ${data.page}`);
             }
-            if (data.pageSize) {
-              ws.pageSize = parseInt(data.pageSize) || 500;
+            if (data.pageSize !== undefined) {
+              const parsedPageSize = parseInt(String(data.pageSize));
+              ws.pageSize = !isNaN(parsedPageSize) ? parsedPageSize : 500;
+              console.log(`Setting pageSize to ${ws.pageSize} from client request: ${data.pageSize}`);
             }
           }
           console.log(`WebSocket request configuration: sendAllVessels=${ws.sendAllVessels}, page=${ws.page}, pageSize=${ws.pageSize}`);
