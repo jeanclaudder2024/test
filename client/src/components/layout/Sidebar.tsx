@@ -6,6 +6,7 @@ import {
   Building,
   FileText, 
   Users, 
+  LayoutDashboard, 
   User, 
   Brain,
   ChevronRight,
@@ -46,6 +47,12 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
   };
 
   const getNavItems = (): NavItem[] => [
+    {
+      title: t("nav.dashboard"),
+      path: "/dashboard",
+      icon: <LayoutDashboard className="h-5 w-5 mr-3" />,
+      section: "DASHBOARD"
+    },
     {
       title: t("nav.vessels"),
       path: "/vessels",

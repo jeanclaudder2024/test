@@ -1,6 +1,7 @@
 import { Switch, Route, useLocation } from "wouter";
 import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
+import Dashboard from "@/pages/Dashboard";
 import Vessels from "@/pages/Vessels";
 import VesselDetail from "@/pages/VesselDetail";
 import Refineries from "@/pages/Refineries";
@@ -77,7 +78,7 @@ function Router() {
           transition={{ duration: 0.3 }}
         >
           <Switch>
-
+            <Route path="/dashboard" component={Dashboard} />
             <Route path="/vessels" component={Vessels} />
             <Route path="/vessels/:id" component={VesselDetail} />
             <Route path="/live-tracking" component={LiveTracking} />
