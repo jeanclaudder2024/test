@@ -409,15 +409,27 @@ interface LiveVesselMapProps {
   showVesselHistory?: boolean;
   showHeatmap?: boolean;
   mapStyle?: string;
+  onRegionClick?: (region: string) => void;
+  vesselFilter?: string[];
+  companyFilter?: string[];
+  showRefineries?: boolean;
+  showVessels?: boolean;
+  showPorts?: boolean;
 }
 
 export default function LiveVesselMap({ 
   initialRegion, 
   height = '600px',
-  showRoutes = false, // Changed default to false
+  showRoutes = false,
   showVesselHistory = false,
   showHeatmap = false,
-  mapStyle: initialMapStyle = 'dark'
+  mapStyle: initialMapStyle = 'dark',
+  onRegionClick,
+  vesselFilter = [],
+  companyFilter = [],
+  showRefineries: initialShowRefineries = true,
+  showVessels: initialShowVessels = true,
+  showPorts: initialShowPorts = true
 }: LiveVesselMapProps) {
   const [mapStyle, setMapStyle] = useState<string>(initialMapStyle);
   const [selectedRegion, setSelectedRegion] = useState<string>(initialRegion || 'global');
