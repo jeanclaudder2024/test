@@ -409,27 +409,15 @@ interface LiveVesselMapProps {
   showVesselHistory?: boolean;
   showHeatmap?: boolean;
   mapStyle?: string;
-  onRegionClick?: (region: string) => void;
-  vesselFilter?: string[];
-  companyFilter?: string[];
-  showRefineries?: boolean;
-  showVessels?: boolean;
-  showPorts?: boolean;
 }
 
 export default function LiveVesselMap({ 
   initialRegion, 
   height = '600px',
-  showRoutes = false,
+  showRoutes = false, // Changed default to false
   showVesselHistory = false,
   showHeatmap = false,
-  mapStyle: initialMapStyle = 'dark',
-  onRegionClick,
-  vesselFilter = [],
-  companyFilter = [],
-  showRefineries: initialShowRefineries = true,
-  showVessels: initialShowVessels = true,
-  showPorts: initialShowPorts = true
+  mapStyle: initialMapStyle = 'dark'
 }: LiveVesselMapProps) {
   const [mapStyle, setMapStyle] = useState<string>(initialMapStyle);
   const [selectedRegion, setSelectedRegion] = useState<string>(initialRegion || 'global');
@@ -445,12 +433,6 @@ export default function LiveVesselMap({
   const [hoveredVessel, setHoveredVessel] = useState<Vessel | null>(null);
   const [vesselsWithRoutes, setVesselsWithRoutes] = useState<Record<number, boolean>>({});
   const [selectedOilType, setSelectedOilType] = useState<string>("all");
-  
-  // Apply filters from props
-  useEffect(() => {
-    setShowRefineries(initialShowRefineries);
-    setShowPorts(initialShowPorts);
-  }, [initialShowRefineries, initialShowPorts]);
   
   // Use our WebSocket hook for real-time vessel data with fallback to REST API polling
   const { 
@@ -495,11 +477,6 @@ export default function LiveVesselMap({
     setSelectedVessel(null);
     setSelectedRefinery(null);
     setSelectedPort(null);
-    
-    // If onRegionClick callback is provided, call it
-    if (onRegionClick) {
-      onRegionClick(region);
-    }
   };
   
   // Function to refresh all data
@@ -970,30 +947,15 @@ export default function LiveVesselMap({
             {/* Custom Performance Optimized Rendering with Viewport-Based Loading */}
             
             {/* Vessels with optimized rendering and clustering */}
-            {(displayMode === 'all' || displayMode === 'vessels') && initialShowVessels && (
+            {(displayMode === 'all' || displayMode === 'vessels') && (
               <OptimizedVesselLayer 
-                vessels={vessels.filter(vessel => {
-                  // Start with base filter for oil type from dropdown
-                  const matchesOilType = selectedOilType === 'all' ||
-                    (vessel.cargoType && vessel.cargoType.toLowerCase().includes(selectedOilType.toLowerCase())) ||
-                    (vessel.vesselType && vessel.vesselType.toLowerCase().includes(selectedOilType.toLowerCase()));
-                    
-                  // Apply additional product type filter from props
-                  const matchesProductFilter = !vesselFilter || vesselFilter.length === 0 ||
-                    vesselFilter.some(filter => 
-                      vessel.cargoType?.toLowerCase().includes(filter.toLowerCase())
-                    );
-                    
-                  // Apply company filter from props
-                  const matchesCompanyFilter = !companyFilter || companyFilter.length === 0 ||
-                    companyFilter.some(company => 
-                      (vessel.buyerName && vessel.buyerName.toLowerCase().includes(company.toLowerCase())) ||
-                      (vessel.sellerName && vessel.sellerName.toLowerCase().includes(company.toLowerCase()))
-                    );
-                    
-                  // Vessel must match all active filters
-                  return matchesOilType && matchesProductFilter && matchesCompanyFilter;
-                })}
+                vessels={selectedOilType === 'all' 
+                  ? vessels 
+                  : vessels.filter(v => 
+                      (v.cargoType && v.cargoType.toLowerCase().includes(selectedOilType.toLowerCase())) ||
+                      (v.vesselType && v.vesselType.toLowerCase().includes(selectedOilType.toLowerCase()))
+                    )
+                }
                 onVesselSelect={(vessel) => {
                   setSelectedVessel(vessel);
                   setSelectedRefinery(null);
@@ -1373,11 +1335,7 @@ export default function LiveVesselMap({
                       <div className="flex items-center">
                         <span className="text-muted-foreground">Capacity:</span>
                       </div>
-                      <div>
-                        {typeof selectedRefinery.capacity === 'number' 
-                          ? selectedRefinery.capacity.toLocaleString() 
-                          : String(selectedRefinery.capacity)} bpd
-                      </div>
+                      <div>{selectedRefinery.capacity.toLocaleString()} bpd</div>
                     </>
                   )}
                   
@@ -1394,20 +1352,18 @@ export default function LiveVesselMap({
                     <span className="text-muted-foreground">Location:</span>
                   </div>
                   <div>
-                    {selectedRefinery.lat !== undefined
-                      ? (typeof selectedRefinery.lat === 'string'
-                          ? parseFloat(selectedRefinery.lat).toFixed(4)
-                          : typeof selectedRefinery.lat === 'number'
-                            ? selectedRefinery.lat.toFixed(4)
-                            : '0.0000')
-                      : '0.0000'}, 
-                    {selectedRefinery.lng !== undefined
-                      ? (typeof selectedRefinery.lng === 'string'
-                          ? parseFloat(selectedRefinery.lng).toFixed(4)
-                          : typeof selectedRefinery.lng === 'number'
-                            ? selectedRefinery.lng.toFixed(4)
-                            : '0.0000')
-                      : '0.0000'}
+                    {(() => {
+                      const lat = selectedRefinery.lat;
+                      if (typeof lat === 'string') return parseFloat(lat).toFixed(4);
+                      if (typeof lat === 'number') return lat.toFixed(4);
+                      return '0.0000';
+                    })()}, 
+                    {(() => {
+                      const lng = selectedRefinery.lng;
+                      if (typeof lng === 'string') return parseFloat(lng).toFixed(4);
+                      if (typeof lng === 'number') return lng.toFixed(4);
+                      return '0.0000';
+                    })()}
                   </div>
                 </div>
                 
@@ -1490,11 +1446,7 @@ export default function LiveVesselMap({
                       <div className="flex items-center">
                         <span className="text-muted-foreground">Capacity:</span>
                       </div>
-                      <div>
-                        {typeof selectedPort.capacity === 'number'
-                          ? selectedPort.capacity.toLocaleString()
-                          : String(selectedPort.capacity)} tons/year
-                      </div>
+                      <div>{selectedPort.capacity.toLocaleString()} tons/year</div>
                     </>
                   )}
                   
@@ -1502,20 +1454,18 @@ export default function LiveVesselMap({
                     <span className="text-muted-foreground">Location:</span>
                   </div>
                   <div>
-                    {selectedPort.lat !== undefined
-                      ? (typeof selectedPort.lat === 'string'
-                          ? parseFloat(selectedPort.lat).toFixed(4)
-                          : typeof selectedPort.lat === 'number'
-                            ? selectedPort.lat.toFixed(4)
-                            : '0.0000')
-                      : '0.0000'}, 
-                    {selectedPort.lng !== undefined
-                      ? (typeof selectedPort.lng === 'string'
-                          ? parseFloat(selectedPort.lng).toFixed(4)
-                          : typeof selectedPort.lng === 'number'
-                            ? selectedPort.lng.toFixed(4)
-                            : '0.0000')
-                      : '0.0000'}
+                    {(() => {
+                      const lat = selectedPort.lat;
+                      if (typeof lat === 'string') return parseFloat(lat).toFixed(4);
+                      if (typeof lat === 'number') return lat.toFixed(4);
+                      return '0.0000';
+                    })()}, 
+                    {(() => {
+                      const lng = selectedPort.lng;
+                      if (typeof lng === 'string') return parseFloat(lng).toFixed(4);
+                      if (typeof lng === 'number') return lng.toFixed(4);
+                      return '0.0000';
+                    })()}
                   </div>
                 </div>
                 
@@ -1698,13 +1648,7 @@ export default function LiveVesselMap({
                         <div className="font-medium">{refinery.name}</div>
                         <div className="text-xs flex justify-between">
                           <span>{refinery.country}</span>
-                          {refinery.capacity && 
-                            <span>
-                              {typeof refinery.capacity === 'number' 
-                                ? refinery.capacity.toLocaleString() 
-                                : String(refinery.capacity)} bpd
-                            </span>
-                          }
+                          {refinery.capacity && <span>{refinery.capacity.toLocaleString()} bpd</span>}
                         </div>
                       </div>
                     ))}
