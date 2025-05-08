@@ -1373,7 +1373,11 @@ export default function LiveVesselMap({
                       <div className="flex items-center">
                         <span className="text-muted-foreground">Capacity:</span>
                       </div>
-                      <div>{selectedRefinery.capacity.toLocaleString()} bpd</div>
+                      <div>
+                        {typeof selectedRefinery.capacity === 'number' 
+                          ? selectedRefinery.capacity.toLocaleString() 
+                          : String(selectedRefinery.capacity)} bpd
+                      </div>
                     </>
                   )}
                   
@@ -1390,18 +1394,20 @@ export default function LiveVesselMap({
                     <span className="text-muted-foreground">Location:</span>
                   </div>
                   <div>
-                    {(() => {
-                      const lat = selectedRefinery.lat;
-                      if (typeof lat === 'string') return parseFloat(lat).toFixed(4);
-                      if (typeof lat === 'number') return lat.toFixed(4);
-                      return '0.0000';
-                    })()}, 
-                    {(() => {
-                      const lng = selectedRefinery.lng;
-                      if (typeof lng === 'string') return parseFloat(lng).toFixed(4);
-                      if (typeof lng === 'number') return lng.toFixed(4);
-                      return '0.0000';
-                    })()}
+                    {selectedRefinery.lat !== undefined
+                      ? (typeof selectedRefinery.lat === 'string'
+                          ? parseFloat(selectedRefinery.lat).toFixed(4)
+                          : typeof selectedRefinery.lat === 'number'
+                            ? selectedRefinery.lat.toFixed(4)
+                            : '0.0000')
+                      : '0.0000'}, 
+                    {selectedRefinery.lng !== undefined
+                      ? (typeof selectedRefinery.lng === 'string'
+                          ? parseFloat(selectedRefinery.lng).toFixed(4)
+                          : typeof selectedRefinery.lng === 'number'
+                            ? selectedRefinery.lng.toFixed(4)
+                            : '0.0000')
+                      : '0.0000'}
                   </div>
                 </div>
                 
@@ -1484,7 +1490,11 @@ export default function LiveVesselMap({
                       <div className="flex items-center">
                         <span className="text-muted-foreground">Capacity:</span>
                       </div>
-                      <div>{selectedPort.capacity.toLocaleString()} tons/year</div>
+                      <div>
+                        {typeof selectedPort.capacity === 'number'
+                          ? selectedPort.capacity.toLocaleString()
+                          : String(selectedPort.capacity)} tons/year
+                      </div>
                     </>
                   )}
                   
@@ -1492,18 +1502,20 @@ export default function LiveVesselMap({
                     <span className="text-muted-foreground">Location:</span>
                   </div>
                   <div>
-                    {(() => {
-                      const lat = selectedPort.lat;
-                      if (typeof lat === 'string') return parseFloat(lat).toFixed(4);
-                      if (typeof lat === 'number') return lat.toFixed(4);
-                      return '0.0000';
-                    })()}, 
-                    {(() => {
-                      const lng = selectedPort.lng;
-                      if (typeof lng === 'string') return parseFloat(lng).toFixed(4);
-                      if (typeof lng === 'number') return lng.toFixed(4);
-                      return '0.0000';
-                    })()}
+                    {selectedPort.lat !== undefined
+                      ? (typeof selectedPort.lat === 'string'
+                          ? parseFloat(selectedPort.lat).toFixed(4)
+                          : typeof selectedPort.lat === 'number'
+                            ? selectedPort.lat.toFixed(4)
+                            : '0.0000')
+                      : '0.0000'}, 
+                    {selectedPort.lng !== undefined
+                      ? (typeof selectedPort.lng === 'string'
+                          ? parseFloat(selectedPort.lng).toFixed(4)
+                          : typeof selectedPort.lng === 'number'
+                            ? selectedPort.lng.toFixed(4)
+                            : '0.0000')
+                      : '0.0000'}
                   </div>
                 </div>
                 
@@ -1686,7 +1698,13 @@ export default function LiveVesselMap({
                         <div className="font-medium">{refinery.name}</div>
                         <div className="text-xs flex justify-between">
                           <span>{refinery.country}</span>
-                          {refinery.capacity && <span>{refinery.capacity.toLocaleString()} bpd</span>}
+                          {refinery.capacity && 
+                            <span>
+                              {typeof refinery.capacity === 'number' 
+                                ? refinery.capacity.toLocaleString() 
+                                : String(refinery.capacity)} bpd
+                            </span>
+                          }
                         </div>
                       </div>
                     ))}
