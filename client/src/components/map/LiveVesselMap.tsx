@@ -446,6 +446,12 @@ export default function LiveVesselMap({
   const [vesselsWithRoutes, setVesselsWithRoutes] = useState<Record<number, boolean>>({});
   const [selectedOilType, setSelectedOilType] = useState<string>("all");
   
+  // Apply filters from props
+  useEffect(() => {
+    setShowRefineries(initialShowRefineries);
+    setShowPorts(initialShowPorts);
+  }, [initialShowRefineries, initialShowPorts]);
+  
   // Use our WebSocket hook for real-time vessel data with fallback to REST API polling
   const { 
     vessels, 
@@ -489,6 +495,11 @@ export default function LiveVesselMap({
     setSelectedVessel(null);
     setSelectedRefinery(null);
     setSelectedPort(null);
+    
+    // If onRegionClick callback is provided, call it
+    if (onRegionClick) {
+      onRegionClick(region);
+    }
   };
   
   // Function to refresh all data
@@ -959,15 +970,30 @@ export default function LiveVesselMap({
             {/* Custom Performance Optimized Rendering with Viewport-Based Loading */}
             
             {/* Vessels with optimized rendering and clustering */}
-            {(displayMode === 'all' || displayMode === 'vessels') && (
+            {(displayMode === 'all' || displayMode === 'vessels') && initialShowVessels && (
               <OptimizedVesselLayer 
-                vessels={selectedOilType === 'all' 
-                  ? vessels 
-                  : vessels.filter(v => 
-                      (v.cargoType && v.cargoType.toLowerCase().includes(selectedOilType.toLowerCase())) ||
-                      (v.vesselType && v.vesselType.toLowerCase().includes(selectedOilType.toLowerCase()))
-                    )
-                }
+                vessels={vessels.filter(vessel => {
+                  // Start with base filter for oil type from dropdown
+                  const matchesOilType = selectedOilType === 'all' ||
+                    (vessel.cargoType && vessel.cargoType.toLowerCase().includes(selectedOilType.toLowerCase())) ||
+                    (vessel.vesselType && vessel.vesselType.toLowerCase().includes(selectedOilType.toLowerCase()));
+                    
+                  // Apply additional product type filter from props
+                  const matchesProductFilter = !vesselFilter || vesselFilter.length === 0 ||
+                    vesselFilter.some(filter => 
+                      vessel.cargoType?.toLowerCase().includes(filter.toLowerCase())
+                    );
+                    
+                  // Apply company filter from props
+                  const matchesCompanyFilter = !companyFilter || companyFilter.length === 0 ||
+                    companyFilter.some(company => 
+                      (vessel.buyerName && vessel.buyerName.toLowerCase().includes(company.toLowerCase())) ||
+                      (vessel.sellerName && vessel.sellerName.toLowerCase().includes(company.toLowerCase()))
+                    );
+                    
+                  // Vessel must match all active filters
+                  return matchesOilType && matchesProductFilter && matchesCompanyFilter;
+                })}
                 onVesselSelect={(vessel) => {
                   setSelectedVessel(vessel);
                   setSelectedRefinery(null);
