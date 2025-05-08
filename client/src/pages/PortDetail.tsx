@@ -84,6 +84,25 @@ export default function PortDetail() {
   // Use appropriate data source based on user selection
   const port = useWebSocketData ? (portInfo || portData?.port) : portData?.port;
   
+  // Format vessel data from both sources into a consistent format for display
+  const nearbyVessels = useMemo(() => {
+    if (useWebSocketData) {
+      return nearbyVesselsRealtime.map(v => ({
+        vessels: {
+          id: v.id,
+          name: v.name,
+          vesselType: v.type,
+          currentLat: v.coordinates?.lat,
+          currentLng: v.coordinates?.lng,
+          flag: ''
+        },
+        distance: v.distance
+      }));
+    } else {
+      return portData?.vessels || [];
+    }
+  }, [useWebSocketData, nearbyVesselsRealtime, portData?.vessels]);
+  
   // Show loading state if the port data is not available yet
   if (isLoadingApi && !port) {
     return (
@@ -104,28 +123,15 @@ export default function PortDetail() {
     );
   }
   
-  // Format vessel data from both sources into a consistent format for display
-  const nearbyVessels = useMemo(() => {
-    if (useWebSocketData) {
-      return nearbyVesselsRealtime.map(v => ({
-        vessels: {
-          id: v.id,
-          name: v.name,
-          vesselType: v.type,
-          currentLat: v.coordinates?.lat,
-          currentLng: v.coordinates?.lng,
-          flag: ''
-        },
-        distance: v.distance
-      }));
-    } else {
-      return portData?.vessels || [];
-    }
-  }, [useWebSocketData, nearbyVesselsRealtime, portData?.vessels]);
-  
+  // Show skeleton while loading
   if (isLoading && !port) {
     return <PortDetailSkeleton />;
   }
+  
+  // Sort vessels by distance for display
+  const sortedVessels = useMemo(() => {
+    return [...nearbyVessels].sort((a, b) => a.distance - b.distance);
+  }, [nearbyVessels]);
   
   if ((isError || !port) && !useWebSocketData) {
     return (
@@ -168,9 +174,6 @@ export default function PortDetail() {
       </div>
     );
   }
-  
-  // Sort vessels by distance for display
-  const sortedVessels = [...nearbyVessels].sort((a, b) => a.distance - b.distance);
   
   return (
     <div className="container mx-auto py-6">
