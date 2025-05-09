@@ -1,15 +1,22 @@
 /**
  * Script to import real refinery data from Excel file
  */
-const { Pool } = require('@neondatabase/serverless');
-const XLSX = require('xlsx');
-const fs = require('fs');
-const path = require('path');
+import { Pool, neonConfig } from '@neondatabase/serverless';
+import XLSX from 'xlsx';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import ws from 'ws';
+
+// Configure neon database
+neonConfig.webSocketConstructor = ws;
 
 // Initialize database connection
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
-// Path to the Excel file
+// Path to the Excel file - ESM doesn't have __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const excelFilePath = path.join(__dirname, 'attached_assets', 'Complete_Real_Refineries_By_Region.xlsx');
 
 async function importRefineries() {
