@@ -151,7 +151,7 @@ export default function LandingPage() {
         }`}
       >
         <div className="flex items-center gap-2 font-bold text-2xl">
-          <img src="/assets/petrodealhub-logo.png" alt="PetroDealHub Logo" className="h-20 w-auto" />
+          <img src="/assets/petrodealhub-logo.png" alt="PetroDealHub Logo" className="h-28 w-auto" />
           <span className="text-white sr-only">PetroDealHub</span>
         </div>
         
@@ -1207,7 +1207,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
             <div className="lg:col-span-2">
               <div className="flex items-center gap-2 font-bold text-2xl mb-4">
-                <img src="/assets/petrodealhub-logo.png" alt="PetroDealHub Logo" className="h-20 w-auto" />
+                <img src="/assets/petrodealhub-logo.png" alt="PetroDealHub Logo" className="h-28 w-auto" />
                 <span className="text-white sr-only">PetroDealHub</span>
               </div>
               <p className="text-white/60 mb-6 max-w-md">

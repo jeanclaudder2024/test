@@ -95,15 +95,15 @@ export default function AuthPage() {
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-[#001f3f] to-[#003366] dark:from-[#001a33] dark:to-[#002b4d]">
       {/* Navigation */}
-      <header className="px-4 lg:px-6 h-20 flex items-center justify-between border-b border-orange-500/20 backdrop-blur-sm bg-background/50 dark:bg-slate-900/80 fixed w-full z-50">
+      <header className="px-4 lg:px-6 h-28 flex items-center justify-between border-b border-orange-500/20 backdrop-blur-sm bg-background/50 dark:bg-slate-900/80 fixed w-full z-50">
         <div className="flex items-center font-bold text-xl">
           <a href="/" className="flex items-center">
-            <img src="/assets/petrodealhub-logo.png" alt="PetroDealHub Logo" className="h-14 w-auto" />
+            <img src="/assets/petrodealhub-logo.png" alt="PetroDealHub Logo" className="h-24 w-auto" />
           </a>
         </div>
       </header>
       
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 items-center pt-20">
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 items-center pt-28">
         {/* Auth Form Column */}
         <div className="flex items-center justify-center p-4 md:p-8">
           <div className="w-full max-w-md mx-auto">
