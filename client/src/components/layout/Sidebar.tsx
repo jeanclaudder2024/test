@@ -137,20 +137,22 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
 
   return (
     <aside className={cn(
-      "backdrop-blur-sm bg-white/80 dark:bg-gray-900/80 border-r border-gray-100 dark:border-gray-800 flex-shrink-0 flex flex-col h-full transition-all duration-300 overflow-y-auto",
+      "backdrop-blur-sm bg-white/80 dark:bg-slate-900/80 border-r border-gray-100 dark:border-orange-500/20 flex-shrink-0 flex flex-col h-full transition-all duration-300 overflow-y-auto",
       mobile ? "fixed inset-y-0 left-0 z-50 w-64 h-screen" : "hidden md:flex",
       collapsed ? "w-16" : "w-64"
     )}>
       {/* Logo Area */}
-      <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between sticky top-0 backdrop-blur-sm bg-white/90 dark:bg-gray-900/90 z-10">
+      <div className="p-4 border-b border-gray-100 dark:border-orange-500/20 flex items-center justify-between sticky top-0 backdrop-blur-sm bg-white/90 dark:bg-slate-900/90 z-10">
         <Link href="/" className="cursor-pointer">
           {!collapsed && (
-            <h1 className="font-bold text-2xl tracking-tighter leading-none bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-primary">
-              SHIPBOAT<br />TRACKING
-            </h1>
+            <div className="flex items-center">
+              <img src="/assets/petrodealhub-logo.png" alt="PetroDealHub Logo" className="h-10 w-auto" />
+            </div>
           )}
           {collapsed && (
-            <span className="font-bold text-xl mx-auto bg-gradient-to-r from-blue-600 to-primary rounded-full p-2 text-white">🚢</span>
+            <div className="flex items-center justify-center">
+              <img src="/assets/petrodealhub-icon.png" alt="PetroDealHub Icon" className="h-8 w-auto" />
+            </div>
           )}
         </Link>
         
@@ -175,7 +177,7 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
       {/* Main Navigation */}
       <div className="flex-grow overflow-y-auto">
         <div className="mt-6 mb-2 px-6">
-          {!collapsed && <h2 className="font-heading uppercase text-primary/60 dark:text-primary/70 font-bold pb-2 text-xs tracking-wider">{t("nav.navigation")}</h2>}
+          {!collapsed && <h2 className="font-heading uppercase text-orange-500/70 dark:text-orange-500/80 font-bold pb-2 text-xs tracking-wider">{t("nav.navigation")}</h2>}
         </div>
         
         <nav>
@@ -190,14 +192,14 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
                     className={cn(
                       "flex items-center py-3 px-4 rounded-lg my-1 mx-2 transition-all duration-200",
                       isPathActive(item.path) 
-                        ? "bg-primary/10 text-primary font-medium dark:bg-primary/20" 
+                        ? "bg-orange-500/10 text-orange-500 font-medium dark:bg-orange-500/20" 
                         : "text-gray-700 dark:text-gray-300 hover:bg-gray-100/80 dark:hover:bg-gray-800/60",
                       collapsed && "justify-center px-2"
                     )}
                   >
                     <span className={cn(
                       "flex items-center justify-center",
-                      isPathActive(item.path) ? "text-primary" : "text-gray-500 dark:text-gray-400",
+                      isPathActive(item.path) ? "text-orange-500" : "text-gray-500 dark:text-gray-400",
                       collapsed ? "mr-0" : "mr-3"
                     )}>{item.icon}</span>
                     {!collapsed && (
@@ -218,9 +220,9 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
         </nav>
         
         <div className="mt-8">
-          <div className="border-t border-primary/10 dark:border-primary/20 my-5 mx-6"></div>
+          <div className="border-t border-orange-500/20 dark:border-orange-500/30 my-5 mx-6"></div>
           <div className="px-6 mb-2">
-            {!collapsed && <h2 className="font-heading uppercase text-primary/60 dark:text-primary/70 font-bold pb-2 text-xs tracking-wider">{t("nav.profile")}</h2>}
+            {!collapsed && <h2 className="font-heading uppercase text-orange-500/70 dark:text-orange-500/80 font-bold pb-2 text-xs tracking-wider">{t("nav.profile")}</h2>}
           </div>
           
           {userItems.map((item, index) => (
@@ -233,14 +235,14 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
                 className={cn(
                   "flex items-center py-3 px-4 rounded-lg my-1 mx-2 transition-all duration-200", 
                   isPathActive(item.path) 
-                    ? "bg-primary/10 text-primary font-medium dark:bg-primary/20" 
+                    ? "bg-orange-500/10 text-orange-500 font-medium dark:bg-orange-500/20" 
                     : "text-gray-700 dark:text-gray-300 hover:bg-gray-100/80 dark:hover:bg-gray-800/60",
                   collapsed && "justify-center px-2"
                 )}
               >
                 <span className={cn(
                   "flex items-center justify-center",
-                  isPathActive(item.path) ? "text-primary" : "text-gray-500 dark:text-gray-400",
+                  isPathActive(item.path) ? "text-orange-500" : "text-gray-500 dark:text-gray-400",
                   collapsed ? "mr-0" : "mr-3"
                 )}>{item.icon}</span>
                 {!collapsed && (

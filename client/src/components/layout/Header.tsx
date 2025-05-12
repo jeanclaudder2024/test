@@ -77,8 +77,8 @@ export default function Header() {
       )}
 
       {/* App Header */}
-      <header className="backdrop-blur-sm bg-white/80 dark:bg-gray-900/80 border-b border-gray-100 dark:border-gray-800 py-3 px-6 flex justify-between items-center">
-        <div className="flex items-center">
+      <header className="backdrop-blur-sm bg-white/80 dark:bg-slate-900/80 border-b border-gray-100 dark:border-orange-500/20 py-3 px-6 flex justify-between items-center">
+        <div className="flex items-center gap-3">
           <Button
             variant="ghost"
             size="icon"
@@ -87,14 +87,19 @@ export default function Header() {
           >
             <Menu className="h-5 w-5" />
           </Button>
-          <h2 className="font-heading text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-500">{getPageTitle()}</h2>
+          
+          <div className="hidden md:flex items-center mr-4">
+            <img src="/assets/petrodealhub-logo.png" alt="PetroDealHub Logo" className="h-8 w-auto" />
+          </div>
+          
+          <h2 className="font-heading text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-orange-500 to-orange-400">{getPageTitle()}</h2>
         </div>
         
         <div className="flex items-center space-x-4">
           <Button 
             variant="outline" 
             size="sm" 
-            className="hidden sm:flex border border-primary/20 hover:bg-primary/10 text-primary mr-2"
+            className="hidden sm:flex border border-orange-500/20 hover:bg-orange-500/10 text-orange-500 mr-2"
             onClick={() => navigate('/')}
           >
             <Home className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
@@ -104,7 +109,7 @@ export default function Header() {
           <Button 
             variant="outline" 
             size="sm" 
-            className="hidden sm:flex border border-primary/20 hover:bg-primary/10 text-primary"
+            className="hidden sm:flex border border-orange-500/20 hover:bg-orange-500/10 text-orange-500"
           >
             <Download className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
             {t("action.export")}
