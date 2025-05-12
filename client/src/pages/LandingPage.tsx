@@ -144,7 +144,7 @@ export default function LandingPage() {
     <div className="min-h-screen flex flex-col">
       {/* Navigation Bar */}
       <header 
-        className={`px-4 lg:px-6 h-32 flex items-center justify-between fixed w-full z-50 transition-all duration-300 ${
+        className={`px-4 lg:px-6 h-40 flex items-center justify-between fixed w-full z-50 transition-all duration-300 ${
           scrolled 
             ? "bg-slate-900/90 border-b border-orange-500/20 backdrop-blur-lg shadow-md" 
             : "bg-transparent"
@@ -235,7 +235,7 @@ export default function LandingPage() {
       
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 z-40 bg-slate-900/98 backdrop-blur-lg pt-32 px-4 py-6 flex flex-col">
+        <div className="lg:hidden fixed inset-0 z-40 bg-slate-900/98 backdrop-blur-lg pt-40 px-4 py-6 flex flex-col">
           <nav className="flex flex-col gap-4">
             <Link href="#features" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
               Features
@@ -268,7 +268,7 @@ export default function LandingPage() {
       )}
 
       {/* Hero Section */}
-      <section className="pt-32 min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-950 via-[#003366] to-slate-900 text-white flex items-center">
+      <section className="pt-40 min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-950 via-[#003366] to-slate-900 text-white flex items-center">
         {/* Animated background elements */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,rgba(255,111,0,0.15),transparent_50%)]"></div>
