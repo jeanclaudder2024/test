@@ -127,11 +127,16 @@ export default function LandingPage() {
       } else if (howItWorksRef.current && scrollPosition >= howItWorksRef.current.offsetTop && 
                 resultsRef.current && scrollPosition < resultsRef.current.offsetTop) {
         setActiveSection("how-it-works");
-      } else if (resultsRef.current && scrollPosition >= resultsRef.current.offsetTop && 
-                scrollPosition < document.getElementById('pricing')?.offsetTop) {
-        setActiveSection("results");
-      } else if (document.getElementById('pricing') && scrollPosition >= document.getElementById('pricing').offsetTop) {
-        setActiveSection("pricing");
+      } else if (resultsRef.current && scrollPosition >= resultsRef.current.offsetTop) {
+        const pricingSection = document.getElementById('pricing');
+        if (pricingSection && scrollPosition < pricingSection.offsetTop) {
+          setActiveSection("results");
+        }
+      } else if (document.getElementById('pricing')) {
+        const pricingSection = document.getElementById('pricing');
+        if (pricingSection && scrollPosition >= pricingSection.offsetTop) {
+          setActiveSection("pricing");
+        }
       } else {
         setActiveSection("");
       }

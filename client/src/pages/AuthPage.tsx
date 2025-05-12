@@ -218,8 +218,21 @@ export default function AuthPage() {
                       </Button>
                     </div>
                   </CardContent>
-                  <CardFooter className="flex flex-col">
-                    <div className="mt-2 text-center text-sm text-muted-foreground">
+                  <CardFooter className="flex flex-col space-y-4">
+                    {/* Quick Login Button */}
+                    <Button 
+                      type="button" 
+                      className="w-full bg-[#003366] hover:bg-[#002244] text-white font-bold py-3 border-b-4 border-orange-600"
+                      onClick={() => {
+                        loginForm.setValue("username", "demo");
+                        loginForm.setValue("password", "password");
+                        loginForm.handleSubmit(onLoginSubmit)();
+                      }}
+                    >
+                      PRESS TO LOGIN TO DASHBOARD
+                    </Button>
+                    
+                    <div className="text-center text-sm text-muted-foreground">
                       <span>Don't have an account? </span>
                       <a
                         href="#"
@@ -368,8 +381,27 @@ export default function AuthPage() {
                       </Button>
                     </div>
                   </CardContent>
-                  <CardFooter className="flex flex-col">
-                    <div className="mt-2 text-center text-sm text-muted-foreground">
+                  <CardFooter className="flex flex-col space-y-4">
+                    {/* Quick Login Button */}
+                    <Button 
+                      type="button" 
+                      className="w-full bg-[#003366] hover:bg-[#002244] text-white font-bold py-3 border-b-4 border-orange-600"
+                      onClick={() => {
+                        const tab = document.querySelector('[data-state="inactive"][value="login"]') as HTMLElement;
+                        tab?.click();
+                        
+                        // Use setTimeout to allow tab change to complete
+                        setTimeout(() => {
+                          loginForm.setValue("username", "demo");
+                          loginForm.setValue("password", "password");
+                          loginForm.handleSubmit(onLoginSubmit)();
+                        }, 100);
+                      }}
+                    >
+                      PRESS TO LOGIN TO DASHBOARD
+                    </Button>
+                    
+                    <div className="text-center text-sm text-muted-foreground">
                       <span>Already have an account? </span>
                       <a
                         href="#"
