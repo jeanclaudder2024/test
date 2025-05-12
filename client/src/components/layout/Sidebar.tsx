@@ -146,13 +146,13 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
         <Link href="/" className="cursor-pointer">
           {!collapsed && (
             <div className="flex items-center">
-              <img src="/assets/petrodealhub-logo.png" alt="PetroDealHub Logo" className="h-10 w-auto" />
+              <img src="/assets/petrodealhub-logo.png" alt="PetroDealHub Logo" className="h-14 w-auto" />
             </div>
           )}
           {collapsed && (
             <div className="flex items-center justify-center">
-              <div className="h-8 w-8 bg-orange-500 flex items-center justify-center text-white font-bold rounded-full">
-                P
+              <div className="h-10 w-10 bg-orange-500 flex items-center justify-center text-white font-bold rounded-full shadow-lg">
+                <span className="text-lg">P</span>
               </div>
             </div>
           )}

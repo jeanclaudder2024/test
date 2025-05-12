@@ -89,7 +89,7 @@ export default function Header() {
           </Button>
           
           <div className="hidden md:flex items-center mr-4">
-            <img src="/assets/petrodealhub-logo.png" alt="PetroDealHub Logo" className="h-8 w-auto" />
+            <img src="/assets/petrodealhub-logo.png" alt="PetroDealHub Logo" className="h-12 w-auto" />
           </div>
           
           <h2 className="font-heading text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-orange-500 to-orange-400">{getPageTitle()}</h2>
