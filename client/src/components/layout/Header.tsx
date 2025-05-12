@@ -122,12 +122,12 @@ export default function Header() {
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="flex border border-primary/20 hover:bg-primary/10 text-primary relative"
+                  className="flex border border-orange-500/20 hover:bg-orange-500/10 text-orange-500 relative"
                 >
                   <Globe className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
                   Translate
                   <ChevronDown className="h-3 w-3 ml-1" />
-                  <span className="absolute -top-2 -right-2 px-1.5 py-0.5 text-[0.6rem] bg-red-500 text-white rounded-full font-bold animate-pulse">
+                  <span className="absolute -top-2 -right-2 px-1.5 py-0.5 text-[0.6rem] bg-orange-500 text-white rounded-full font-bold animate-pulse">
                     NEW
                   </span>
                 </Button>
@@ -176,18 +176,18 @@ export default function Header() {
           </div>
           
           <div className="flex items-center">
-            <span className="mr-2 text-sm text-primary/80 font-medium hidden sm:inline">{t("action.logout")}</span>
+            <span className="mr-2 text-sm text-orange-500/80 font-medium hidden sm:inline">{t("action.logout")}</span>
             <Button 
               variant="ghost" 
               size="icon" 
-              className="h-9 w-9 rounded-full bg-primary/10 hover:bg-primary/20 transition-colors"
+              className="h-9 w-9 rounded-full bg-orange-500/10 hover:bg-orange-500/20 transition-colors"
               onClick={handleLogout}
               disabled={logoutMutation.isPending}
             >
               {logoutMutation.isPending ? (
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-orange-500 border-t-transparent" />
               ) : (
-                <LogOut className="h-4 w-4 text-primary" />
+                <LogOut className="h-4 w-4 text-orange-500" />
               )}
             </Button>
           </div>

@@ -151,7 +151,9 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
           )}
           {collapsed && (
             <div className="flex items-center justify-center">
-              <img src="/assets/petrodealhub-icon.png" alt="PetroDealHub Icon" className="h-8 w-auto" />
+              <div className="h-8 w-8 bg-orange-500 flex items-center justify-center text-white font-bold rounded-full">
+                P
+              </div>
             </div>
           )}
         </Link>
@@ -160,10 +162,10 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
           <Button
             variant="ghost"
             size="icon"
-            className="h-6 w-6 rounded-full hover:bg-primary/10"
+            className="h-6 w-6 rounded-full hover:bg-orange-500/10"
             onClick={toggleSidebar}
           >
-            {collapsed ? <ChevronRight className="h-4 w-4 text-primary" /> : <ChevronLeft className="h-4 w-4 text-primary" />}
+            {collapsed ? <ChevronRight className="h-4 w-4 text-orange-500" /> : <ChevronLeft className="h-4 w-4 text-orange-500" />}
           </Button>
         )}
         
