@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useDataStream } from '@/hooks/useDataStream';
-import { Refinery, Vessel, Port } from '@/types';
+import { Vessel } from '@/types';
+import { Refinery, Port } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
 import {
   Card,
@@ -19,7 +20,7 @@ import {
   ArrowLeft, Factory, MapPin, Building, Phone, Globe, BriefcaseBusiness,
   Flame, Activity, Clock, Calendar, AlertTriangle, Ship, ExternalLink,
   Anchor, RefreshCw, Gauge, Droplet, LocateFixed, PanelTop, Network, Layers,
-  ChevronDown, ChevronUp, Info, Pipeline
+  ChevronDown, ChevronUp, Info, Pipette
 } from 'lucide-react';
 import RefineryMap from '@/components/map/RefineryMap';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -899,7 +900,7 @@ export default function RefineryDetail() {
                 <Card className="md:col-span-1">
                   <CardHeader className="pb-3">
                     <CardTitle className="flex items-center">
-                      <PipeLine className="h-5 w-5 mr-2 text-primary" />
+                      <Pipette className="h-5 w-5 mr-2 text-primary" />
                       Connection Details
                     </CardTitle>
                     <CardDescription>
@@ -910,7 +911,7 @@ export default function RefineryDetail() {
                     <div className="space-y-4">
                       <div className="rounded-lg border border-border bg-muted/10 p-4">
                         <h4 className="text-sm font-medium flex items-center mb-3">
-                          <PipeLine className="h-4 w-4 mr-2 text-primary" />
+                          <Pipette className="h-4 w-4 mr-2 text-primary" />
                           Pipeline Network
                         </h4>
                         <div className="space-y-2 text-sm">
