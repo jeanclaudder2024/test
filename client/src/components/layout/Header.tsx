@@ -77,7 +77,7 @@ export default function Header() {
       )}
 
       {/* App Header */}
-      <header className="backdrop-blur-sm bg-white/80 dark:bg-slate-900/80 border-b border-gray-100 dark:border-orange-500/20 py-3 px-6 flex justify-between items-center">
+      <header className="backdrop-blur-sm bg-white/80 dark:bg-slate-900/80 border-b border-gray-100 dark:border-orange-500/20 py-4 px-6 flex justify-between items-center h-28">
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"
@@ -89,7 +89,7 @@ export default function Header() {
           </Button>
           
           <div className="hidden md:flex items-center mr-4">
-            <img src="/assets/petrodealhub-logo.png" alt="PetroDealHub Logo" className="h-12 w-auto" />
+            <img src="/assets/petrodealhub-logo.png" alt="PetroDealHub Logo" className="h-24 w-auto" />
           </div>
           
           <h2 className="font-heading text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-orange-500 to-orange-400">{getPageTitle()}</h2>

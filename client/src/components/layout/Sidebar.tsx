@@ -139,20 +139,20 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
     <aside className={cn(
       "backdrop-blur-sm bg-white/80 dark:bg-slate-900/80 border-r border-gray-100 dark:border-orange-500/20 flex-shrink-0 flex flex-col h-full transition-all duration-300 overflow-y-auto",
       mobile ? "fixed inset-y-0 left-0 z-50 w-64 h-screen" : "hidden md:flex",
-      collapsed ? "w-16" : "w-64"
+      collapsed ? "w-24" : "w-64"
     )}>
       {/* Logo Area */}
-      <div className="p-4 border-b border-gray-100 dark:border-orange-500/20 flex items-center justify-between sticky top-0 backdrop-blur-sm bg-white/90 dark:bg-slate-900/90 z-10">
+      <div className="p-6 border-b border-gray-100 dark:border-orange-500/20 flex items-center justify-between sticky top-0 backdrop-blur-sm bg-white/90 dark:bg-slate-900/90 z-10 h-28">
         <Link href="/" className="cursor-pointer">
           {!collapsed && (
             <div className="flex items-center">
-              <img src="/assets/petrodealhub-logo.png" alt="PetroDealHub Logo" className="h-14 w-auto" />
+              <img src="/assets/petrodealhub-logo.png" alt="PetroDealHub Logo" className="h-24 w-auto" />
             </div>
           )}
           {collapsed && (
             <div className="flex items-center justify-center">
-              <div className="h-10 w-10 bg-orange-500 flex items-center justify-center text-white font-bold rounded-full shadow-lg">
-                <span className="text-lg">P</span>
+              <div className="h-16 w-16 bg-orange-500 flex items-center justify-center text-white font-bold rounded-full shadow-lg">
+                <span className="text-2xl">P</span>
               </div>
             </div>
           )}

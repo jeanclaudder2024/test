@@ -144,7 +144,7 @@ export default function LandingPage() {
     <div className="min-h-screen flex flex-col">
       {/* Navigation Bar */}
       <header 
-        className={`px-4 lg:px-6 h-20 flex items-center justify-between fixed w-full z-50 transition-all duration-300 ${
+        className={`px-4 lg:px-6 h-32 flex items-center justify-between fixed w-full z-50 transition-all duration-300 ${
           scrolled 
             ? "bg-slate-900/90 border-b border-orange-500/20 backdrop-blur-lg shadow-md" 
             : "bg-transparent"
