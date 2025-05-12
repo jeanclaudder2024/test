@@ -1,6 +1,27 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useDataStream } from '@/hooks/useDataStream';
-import { Refinery } from '@/types';
+
+// Define Refinery type based on the data structure
+type Refinery = {
+  id: number;
+  name: string;
+  country: string;
+  region: string;
+  lat: string;
+  lng: string;
+  capacity: number | null;
+  status: string | null;
+  description: string | null;
+  operator?: string | null;
+  owner?: string | null;
+  type?: string | null;
+  products?: string | null;
+  year_built?: number | null;
+  complexity?: string | null;
+  city?: string | null;
+  // Add index signature to allow property access with string keys
+  [key: string]: string | number | null | undefined;
+};
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
@@ -49,7 +70,6 @@ import {
   Plus, 
   RefreshCw, 
   Filter, 
-  Map, 
   ListFilter, 
   ArrowUpDown, 
   Droplets, 
@@ -57,7 +77,7 @@ import {
   Globe,
   Grid3X3,
   Info,
-  Map as MapIcon,
+  MapPin,
   Eye,
   Settings,
   Download,
@@ -71,7 +91,7 @@ import axios from 'axios';
 import { useToast } from '@/hooks/use-toast';
 
 // Type for refinery view mode
-type ViewMode = 'grid' | 'list' | 'map' | 'analytics';
+type ViewMode = 'grid' | 'list' | 'analytics';
 
 // Type for sorting options
 type SortOption = {
@@ -635,7 +655,7 @@ export default function Refineries() {
             onValueChange={(value) => setViewMode(value as ViewMode)}
             className="w-full sm:w-auto"
           >
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="grid" className="flex items-center gap-1">
                 <Grid3X3 className="h-4 w-4" />
                 <span className="hidden sm:inline">Grid</span>
@@ -643,10 +663,6 @@ export default function Refineries() {
               <TabsTrigger value="list" className="flex items-center gap-1">
                 <ListFilter className="h-4 w-4" />
                 <span className="hidden sm:inline">List</span>
-              </TabsTrigger>
-              <TabsTrigger value="map" className="flex items-center gap-1">
-                <MapIcon className="h-4 w-4" />
-                <span className="hidden sm:inline">Map</span>
               </TabsTrigger>
               <TabsTrigger value="analytics" className="flex items-center gap-1">
                 <BarChart4 className="h-4 w-4" />
@@ -810,7 +826,7 @@ export default function Refineries() {
                       <div className="text-sm">
                         <span className="text-muted-foreground">Coordinates:</span>
                         <div className="font-medium flex items-center">
-                          <MapIcon className="h-3 w-3 mr-1 text-muted-foreground" />
+                          <MapPin className="h-3 w-3 mr-1 text-muted-foreground" />
                           <span>{refinery.lat}, {refinery.lng}</span>
                         </div>
                       </div>
@@ -903,33 +919,7 @@ export default function Refineries() {
             </div>
           )}
           
-          {/* Map View */}
-          {viewMode === 'map' && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Global Refinery Map</CardTitle>
-                <CardDescription>
-                  Interactive map showing all {filteredRefineries.length} refineries
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="aspect-[16/9] bg-muted rounded-md flex items-center justify-center">
-                  <div className="text-center space-y-4">
-                    <MapIcon className="h-12 w-12 text-muted-foreground mx-auto" />
-                    <div>
-                      <p className="text-muted-foreground">
-                        Interactive map view coming soon
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        This will display all refineries on a world map with clustering and filtering
-                      </p>
-                    </div>
-                    <Button variant="outline" disabled>Initialize Map</Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+
           
           {/* Analytics View */}
           {viewMode === 'analytics' && (
