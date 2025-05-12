@@ -151,10 +151,8 @@ export default function LandingPage() {
         }`}
       >
         <div className="flex items-center gap-2 font-bold text-2xl">
-          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-orange-500/20 backdrop-blur-sm">
-            <Droplets className="h-6 w-6 text-orange-500" />
-          </div>
-          <span className="text-white">PetroDealHub</span>
+          <img src="/assets/petrodealhub-logo.png" alt="PetroDealHub Logo" className="h-12 w-auto" />
+          <span className="text-white sr-only">PetroDealHub</span>
         </div>
         
         {/* Desktop Menu */}
@@ -1209,10 +1207,8 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
             <div className="lg:col-span-2">
               <div className="flex items-center gap-2 font-bold text-2xl mb-4">
-                <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-orange-500/20">
-                  <Droplets className="h-6 w-6 text-orange-500" />
-                </div>
-                <span className="text-white">PetroDealHub</span>
+                <img src="/assets/petrodealhub-logo.png" alt="PetroDealHub Logo" className="h-12 w-auto" />
+                <span className="text-white sr-only">PetroDealHub</span>
               </div>
               <p className="text-white/60 mb-6 max-w-md">
                 The premier platform for petroleum trading professionals, providing real-time tanker tracking, 
