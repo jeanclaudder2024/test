@@ -170,8 +170,8 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
         )}
         
         {mobile && (
-          <Button variant="ghost" size="icon" className="md:hidden hover:bg-primary/10" onClick={onClose}>
-            <ChevronLeft className="h-5 w-5 text-primary" />
+          <Button variant="ghost" size="icon" className="md:hidden hover:bg-orange-500/10" onClick={onClose}>
+            <ChevronLeft className="h-5 w-5 text-orange-500" />
           </Button>
         )}
       </div>

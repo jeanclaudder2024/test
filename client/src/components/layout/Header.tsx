@@ -82,10 +82,10 @@ export default function Header() {
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden mr-2 hover:bg-primary/10"
+            className="md:hidden mr-2 hover:bg-orange-500/10"
             onClick={toggleMobileSidebar}
           >
-            <Menu className="h-5 w-5" />
+            <Menu className="h-5 w-5 text-orange-500" />
           </Button>
           
           <div className="hidden md:flex items-center mr-4">
