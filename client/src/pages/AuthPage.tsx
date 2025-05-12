@@ -93,16 +93,17 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-gradient-to-br from-[#001f3f] to-[#003366] dark:from-[#001a33] dark:to-[#002b4d]">
       {/* Navigation */}
-      <header className="px-4 lg:px-6 h-16 flex items-center justify-between border-b backdrop-blur-sm bg-background/50 fixed w-full z-50">
-        <div className="flex items-center gap-2 font-bold text-xl text-primary">
-          <Anchor className="h-6 w-6" />
-          <a href="/">AsiStream</a>
+      <header className="px-4 lg:px-6 h-20 flex items-center justify-between border-b border-orange-500/20 backdrop-blur-sm bg-background/50 dark:bg-slate-900/80 fixed w-full z-50">
+        <div className="flex items-center font-bold text-xl">
+          <a href="/" className="flex items-center">
+            <img src="/assets/petrodealhub-logo.png" alt="PetroDealHub Logo" className="h-14 w-auto" />
+          </a>
         </div>
       </header>
       
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 items-center">
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 items-center pt-20">
         {/* Auth Form Column */}
         <div className="flex items-center justify-center p-4 md:p-8">
           <div className="w-full max-w-md mx-auto">
@@ -174,11 +175,11 @@ export default function AuthPage() {
                             />
                             <Label htmlFor="remember" className="text-sm">Remember me</Label>
                           </div>
-                          <a href="#" className="text-sm text-primary hover:underline">
+                          <a href="#" className="text-sm text-orange-500 hover:underline">
                             Forgot password?
                           </a>
                         </div>
-                        <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
+                        <Button type="submit" className="w-full bg-orange-500 hover:bg-orange-600" disabled={loginMutation.isPending}>
                           {loginMutation.isPending ? (
                             <div className="flex items-center justify-center">
                               <Loader2 className="animate-spin h-4 w-4 mr-2" />
@@ -319,16 +320,16 @@ export default function AuthPage() {
                           />
                           <Label htmlFor="terms" className="text-sm">
                             I agree to the{" "}
-                            <a href="#" className="text-primary hover:underline">
+                            <a href="#" className="text-orange-500 hover:underline">
                               Terms of Service
                             </a>{" "}
                             and{" "}
-                            <a href="#" className="text-primary hover:underline">
+                            <a href="#" className="text-orange-500 hover:underline">
                               Privacy Policy
                             </a>
                           </Label>
                         </div>
-                        <Button type="submit" className="w-full" disabled={registerMutation.isPending}>
+                        <Button type="submit" className="w-full bg-orange-500 hover:bg-orange-600" disabled={registerMutation.isPending}>
                           {registerMutation.isPending ? (
                             <div className="flex items-center justify-center">
                               <Loader2 className="animate-spin h-4 w-4 mr-2" />
