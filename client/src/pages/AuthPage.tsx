@@ -179,7 +179,7 @@ export default function AuthPage() {
                             Forgot password?
                           </a>
                         </div>
-                        <Button type="submit" className="w-full bg-orange-500 hover:bg-orange-600" disabled={loginMutation.isPending}>
+                        <Button type="submit" className="w-full bg-orange-500 hover:bg-orange-600 text-white" disabled={loginMutation.isPending}>
                           {loginMutation.isPending ? (
                             <div className="flex items-center justify-center">
                               <Loader2 className="animate-spin h-4 w-4 mr-2" />
@@ -228,7 +228,7 @@ export default function AuthPage() {
                           const tab = document.querySelector('[data-state="inactive"][value="register"]') as HTMLElement;
                           tab?.click();
                         }}
-                        className="font-medium text-primary hover:underline"
+                        className="font-medium text-orange-500 hover:underline"
                       >
                         Register now
                       </a>
@@ -329,7 +329,7 @@ export default function AuthPage() {
                             </a>
                           </Label>
                         </div>
-                        <Button type="submit" className="w-full bg-orange-500 hover:bg-orange-600" disabled={registerMutation.isPending}>
+                        <Button type="submit" className="w-full bg-orange-500 hover:bg-orange-600 text-white" disabled={registerMutation.isPending}>
                           {registerMutation.isPending ? (
                             <div className="flex items-center justify-center">
                               <Loader2 className="animate-spin h-4 w-4 mr-2" />
@@ -378,7 +378,7 @@ export default function AuthPage() {
                           const tab = document.querySelector('[data-state="inactive"][value="login"]') as HTMLElement;
                           tab?.click();
                         }}
-                        className="font-medium text-primary hover:underline"
+                        className="font-medium text-orange-500 hover:underline"
                       >
                         Sign in
                       </a>
