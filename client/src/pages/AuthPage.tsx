@@ -1,20 +1,26 @@
 import { useEffect } from "react";
-import { useLocation, Redirect } from "wouter";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useLocation } from "wouter";
 import { z } from "zod";
-import { Anchor, Lock, Mail, User, Globe, Loader2, Phone } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { Separator } from "@/components/ui/separator";
+import { Anchor, Globe, Loader2, Lock, Mail, User } from "lucide-react";
 
-// Form validation schemas
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
+
+// Form schemas
 const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),
   password: z.string().min(1, "Password is required"),
@@ -24,42 +30,17 @@ const registerSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  phone: z.string().optional(),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export default function AuthPage() {
-  const { toast } = useToast();
   const [, navigate] = useLocation();
-  const { user, isLoading, loginMutation, registerMutation, googleSignIn } = useAuth();
-  
-  // Redirect if already logged in
-  useEffect(() => {
-    if (user) {
-      navigate("/dashboard");
-    }
-  }, [user, navigate]);
-  
-  // Extract redirect from URL if present
-  const searchParams = new URLSearchParams(window.location.search);
-  const redirectTo = searchParams.get('redirect') || '/dashboard';
-  
-  // Handle successful login or registration
-  const handleSuccess = () => {
-    navigate(redirectTo);
-  };
-  
-  // Animation for login page elements
-  useEffect(() => {
-    const elements = document.querySelectorAll('.animate-fade-in');
-    elements.forEach((element, index) => {
-      (element as HTMLElement).style.animationDelay = `${index * 0.1}s`;
-    });
-  }, []);
+  const { toast } = useToast();
+  const { user, loginMutation, registerMutation } = useAuth();
 
-  // Login form
+  // Form definition
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -68,18 +49,6 @@ export default function AuthPage() {
     },
   });
 
-  const onLoginSubmit = async (data: LoginFormValues) => {
-    try {
-      await loginMutation.mutateAsync(data);
-      // After successful login, redirect to the specified page
-      handleSuccess();
-    } catch (error) {
-      console.error("Login error:", error);
-      // Toast handled in auth context
-    }
-  };
-
-  // Register form
   const registerForm = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -89,15 +58,37 @@ export default function AuthPage() {
     },
   });
 
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate("/");
+    }
+  }, [user, navigate]);
+
+  const onLoginSubmit = async (data: LoginFormValues) => {
+    try {
+      await loginMutation.mutateAsync(data);
+      navigate("/");
+    } catch (error) {
+      // Toast handled in auth context
+    }
+  };
+
   const onRegisterSubmit = async (data: RegisterFormValues) => {
     try {
       await registerMutation.mutateAsync(data);
-      // After successful registration, redirect to the specified page
-      handleSuccess();
+      navigate("/");
     } catch (error) {
-      console.error("Registration error:", error);
       // Toast handled in auth context
     }
+  };
+
+  // Google sign in (mock for now)
+  const googleSignIn = () => {
+    toast({
+      title: "Google Sign In",
+      description: "Google authentication is not implemented yet.",
+    });
   };
 
   return (
@@ -166,20 +157,20 @@ export default function AuthPage() {
         
         {/* Auth Form Column */}
         <div className="w-full flex-1 flex items-center justify-center p-6 sm:p-12 bg-gray-50 dark:bg-gray-900">
-            <div className="w-full max-w-md">
-              <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white mb-2">
-                Welcome back
-              </h2>
-              <p className="text-gray-500 dark:text-gray-400 mb-8">
-                Sign in to your account to continue
-              </p>
-              
-              <Tabs defaultValue="login" className="w-full">
-                <TabsList className="inline-flex h-10 rounded-lg bg-gray-100 dark:bg-gray-800 p-1 mb-6">
-                  <TabsTrigger value="login" className="rounded-md data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-sm">Login</TabsTrigger>
-                  <TabsTrigger value="register" className="rounded-md data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-sm">Register</TabsTrigger>
-                </TabsList>
-              
+          <div className="w-full max-w-md">
+            <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white mb-2">
+              Welcome back
+            </h2>
+            <p className="text-gray-500 dark:text-gray-400 mb-8">
+              Sign in to your account to continue
+            </p>
+            
+            <Tabs defaultValue="login" className="w-full">
+              <TabsList className="inline-flex h-10 rounded-lg bg-gray-100 dark:bg-gray-800 p-1 mb-6">
+                <TabsTrigger value="login" className="rounded-md data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-sm">Login</TabsTrigger>
+                <TabsTrigger value="register" className="rounded-md data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-sm">Register</TabsTrigger>
+              </TabsList>
+            
               {/* Login Form */}
               <TabsContent value="login">
                 <div className="space-y-6">
@@ -518,54 +509,6 @@ export default function AuthPage() {
                 </div>
               </TabsContent>
             </Tabs>
-          </div>
-        </div>
-        
-        {/* Hero/Info Column */}
-        <div className="hidden lg:flex flex-col justify-center px-8 bg-muted/50 h-full">
-          <div className="space-y-6 max-w-lg">
-            <div className="space-y-2">
-              <h1 className="text-3xl font-bold tracking-tight">AsiStream Maritime Intelligence</h1>
-              <p className="text-muted-foreground">
-                Join thousands of shipping professionals who rely on our platform for real-time vessel tracking, market
-                intelligence, and AI-powered insights.
-              </p>
-            </div>
-            <div className="space-y-4">
-              <div className="flex items-start gap-3">
-                <div className="p-2 rounded-lg bg-primary/10 mt-1">
-                  <Globe className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-medium">Global Tracking Network</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Real-time monitoring of over 22,000 vessels and 42 major refineries worldwide
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="p-2 rounded-lg bg-primary/10 mt-1">
-                  <Lock className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-medium">Secure & Reliable</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Enterprise-grade security with 99.9% uptime guarantee
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="p-2 rounded-lg bg-primary/10 mt-1">
-                  <Anchor className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-medium">Industry Leading</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Trusted by leading shipping companies, brokers, and oil majors worldwide
-                  </p>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
