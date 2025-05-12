@@ -178,7 +178,7 @@
 
 @layer base {
   :root {
-    /* Modern blue color palette - professional, maritime-inspired */
+    /* PetroDealHub color palette - Deep navy (#003366) and orange (#FF6F00) */
     --background: 210 40% 98%;
     --foreground: 214 60% 15%;
     
@@ -188,10 +188,10 @@
     --popover: 0 0% 100%;
     --popover-foreground: 214 60% 15%;
     
-    --primary: 210 90% 35%;
+    --primary: 24 100% 50%;
     --primary-foreground: 0 0% 100%;
     
-    --secondary: 200 98% 39%;
+    --secondary: 210 100% 20%;
     --secondary-foreground: 0 0% 100%;
     
     --muted: 210 20% 96%;
@@ -246,28 +246,28 @@
     --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
     --shadow-inner: inset 0 2px 4px 0 rgb(0 0 0 / 0.05);
     
-    /* Map Elements */
-    --vessel-oil: 354 70% 54%;
-    --vessel-lng: 173 58% 39%;
-    --vessel-container: 199 89% 48%;
-    --vessel-cargo: 38 92% 50%;
-    --vessel-chemical: 262 83% 58%;
+    /* Map Elements - PetroDealHub style */
+    --vessel-oil: 24 100% 50%;
+    --vessel-lng: 210 100% 30%;
+    --vessel-container: 24 80% 60%;
+    --vessel-cargo: 24 60% 50%;
+    --vessel-chemical: 210 80% 40%;
   }
   
   .dark {
-    --background: 214 60% 5%;
+    --background: 210 70% 7%;
     --foreground: 210 40% 98%;
     
-    --card: 214 60% 7%;
+    --card: 210 70% 10%;
     --card-foreground: 210 40% 98%;
     
-    --popover: 214 60% 7%;
+    --popover: 210 70% 10%;
     --popover-foreground: 210 40% 98%;
     
-    --primary: 210 90% 60%;
+    --primary: 24 100% 50%;
     --primary-foreground: 0 0% 100%;
     
-    --secondary: 200 98% 39%;
+    --secondary: 210 100% 30%;
     --secondary-foreground: 0 0% 100%;
     
     --muted: 214 40% 10%;
@@ -320,12 +320,12 @@
     --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.4), 0 8px 10px -6px rgb(0 0 0 / 0.4);
     --shadow-inner: inset 0 2px 4px 0 rgb(0 0 0 / 0.3);
     
-    /* Map Elements */
-    --vessel-oil: 354 70% 60%;
-    --vessel-lng: 173 58% 50%;
-    --vessel-container: 199 89% 60%;
-    --vessel-cargo: 38 92% 60%;
-    --vessel-chemical: 262 83% 70%;
+    /* Map Elements - PetroDealHub style */
+    --vessel-oil: 24 100% 60%;
+    --vessel-lng: 210 100% 50%;
+    --vessel-container: 24 80% 70%;
+    --vessel-cargo: 24 60% 65%;
+    --vessel-chemical: 210 80% 60%;
   }
   
   * {
@@ -407,7 +407,7 @@
   }
   
   .dark .leaflet-container {
-    background: #193549;
+    background: #003366;
   }
   
   /* Enhanced vessel markers */
