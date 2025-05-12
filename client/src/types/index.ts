@@ -14,6 +14,26 @@ export interface Port {
   lastUpdated?: Date | string | null;
 }
 
+export interface Refinery {
+  id: number;
+  name: string;
+  country: string;
+  region: string;
+  lat: string | number;
+  lng: string | number;
+  capacity: number | null;
+  status: string | null;
+  description: string | null;
+  operator?: string | null;
+  owner?: string | null;
+  type?: string | null;
+  products?: string | null;
+  yearBuilt?: number | null;
+  complexity?: number | null;
+  city?: string | null;
+  lastUpdated?: Date | string | null;
+}
+
 export interface Vessel {
   id: number;
   name: string;
@@ -41,6 +61,14 @@ export interface Vessel {
 }
 
 export interface PortWithVessels extends Port {
+  vesselCount: number;
+  nearbyVessels?: Array<{
+    vessels: Vessel;
+    distance: number;
+  }>;
+}
+
+export interface RefineryWithVessels extends Refinery {
   vesselCount: number;
   nearbyVessels?: Array<{
     vessels: Vessel;

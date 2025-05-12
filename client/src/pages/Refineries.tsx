@@ -42,7 +42,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import { 
   Factory, 
   Search, 
@@ -65,10 +65,17 @@ import {
   MoreHorizontal,
   FileBarChart,
   Zap,
-  Activity
+  Activity,
+  ChevronLeft,
+  ChevronRight,
+  Database
 } from 'lucide-react';
 import axios from 'axios';
 import { useToast } from '@/hooks/use-toast';
+import { REGIONS } from '../../../shared/constants';
+import { Skeleton } from '@/components/ui/skeleton';
+import RefineryCard from '@/components/refineries/RefineryCard';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 // Type for refinery view mode
 type ViewMode = 'grid' | 'list' | 'map' | 'analytics';
@@ -87,18 +94,108 @@ type FilterOption = {
   label: string;
 };
 
+// Define columns for the data table
+const columns = [
+  {
+    accessorKey: "name",
+    header: "Refinery Name",
+    cell: ({ row }: any) => {
+      const refinery = row.original;
+      return (
+        <div className="flex items-center space-x-2">
+          <Factory className="h-4 w-4 text-primary" />
+          <span className="font-medium">{refinery.name}</span>
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "country",
+    header: "Country",
+  },
+  {
+    accessorKey: "region",
+    header: "Region",
+    cell: ({ row }: any) => {
+      const region = row.getValue("region") as string;
+      return (
+        <Badge variant="outline" className="bg-secondary/30">
+          {region}
+        </Badge>
+      );
+    },
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ row }: any) => {
+      const status = row.getValue("status") as string;
+      let variant = "default";
+      
+      if (status?.toLowerCase().includes('active') || status?.toLowerCase().includes('operational')) {
+        variant = "success";
+      } else if (status?.toLowerCase().includes('maintenance') || status?.toLowerCase().includes('planned')) {
+        variant = "warning";
+      } else if (status?.toLowerCase().includes('offline') || status?.toLowerCase().includes('shutdown')) {
+        variant = "destructive";
+      }
+      
+      return (
+        <Badge variant={variant as any} className={variant === "success" ? "bg-green-500 text-white" : ""}>
+          {status || 'Unknown'}
+        </Badge>
+      );
+    },
+  },
+  {
+    accessorKey: "capacity",
+    header: "Capacity (bpd)",
+    cell: ({ row }: any) => {
+      const capacity = row.getValue("capacity") as number;
+      return capacity ? capacity.toLocaleString() : "N/A";
+    },
+  },
+  {
+    id: "actions",
+    cell: ({ row }: any) => {
+      const refinery = row.original;
+      const [, navigate] = useLocation();
+      
+      return (
+        <Button 
+          variant="ghost" 
+          size="sm"
+          onClick={() => navigate(`/refineries/${refinery.id}`)}
+        >
+          Details <ChevronRight className="ml-1 h-4 w-4" />
+        </Button>
+      );
+    },
+  },
+];
+
 export default function Refineries() {
   const { refineries, loading } = useDataStream();
   const [searchTerm, setSearchTerm] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [activeFilters, setActiveFilters] = useState<FilterOption[]>([]);
+  const [selectedRegion, setSelectedRegion] = useState<string>("all");
+  const [currentPage, setCurrentPage] = useState<number>(1);
   const [sortOption, setSortOption] = useState<SortOption>({ 
     label: 'Default', 
     value: 'none', 
     direction: 'asc' 
   });
+  const [, navigate] = useLocation();
   const { toast } = useToast();
+  
+  // Page size for pagination
+  const pageSize = 12;
+  
+  // Reset page when region changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedRegion, searchTerm]);
   
   // Total refinery capacity
   const totalCapacity = useMemo(() => {
@@ -166,59 +263,24 @@ export default function Refineries() {
     }
   };
   
-  // Toggle filter function
-  const toggleFilter = (filter: FilterOption) => {
-    const filterExists = activeFilters.some(
-      f => f.type === filter.type && f.value === filter.value
-    );
-    
-    if (filterExists) {
-      setActiveFilters(activeFilters.filter(
-        f => !(f.type === filter.type && f.value === filter.value)
-      ));
-    } else {
-      setActiveFilters([...activeFilters, filter]);
-    }
-  };
-  
-  // Clear all filters
-  const clearFilters = () => {
-    setActiveFilters([]);
-    setSearchTerm('');
-    setSortOption({ label: 'Default', value: 'none', direction: 'asc' });
-  };
-  
-  // Sort and filter refineries
+  // Filter and paginate refineries
   const filteredRefineries = useMemo(() => {
-    // First apply search term
-    let filtered = refineries.filter(refinery => 
-      refinery.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      refinery.country.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      refinery.region.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    // First apply region filter
+    let filtered = refineries;
     
-    // Then apply filters
-    if (activeFilters.length > 0) {
-      filtered = filtered.filter(refinery => {
-        return activeFilters.every(filter => {
-          switch (filter.type) {
-            case 'region':
-              return refinery.region?.includes(filter.value);
-            case 'status':
-              return refinery.status?.toLowerCase() === filter.value.toLowerCase();
-            case 'capacity':
-              if (filter.value === 'high') {
-                return (refinery.capacity || 0) > 500000;
-              } else if (filter.value === 'medium') {
-                return (refinery.capacity || 0) > 200000 && (refinery.capacity || 0) <= 500000;
-              } else {
-                return (refinery.capacity || 0) <= 200000;
-              }
-            default:
-              return true;
-          }
-        });
-      });
+    if (selectedRegion !== 'all') {
+      filtered = filtered.filter(refinery => 
+        refinery.region === selectedRegion
+      );
+    }
+    
+    // Then apply search term filter
+    if (searchTerm) {
+      filtered = filtered.filter(refinery => 
+        refinery.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        refinery.country.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (refinery.region && refinery.region.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
     }
     
     // Then apply sorting
@@ -246,7 +308,17 @@ export default function Refineries() {
     }
     
     return filtered;
-  }, [refineries, searchTerm, activeFilters, sortOption]);
+  }, [refineries, searchTerm, selectedRegion, sortOption]);
+  
+  // Calculate pagination
+  const totalItems = filteredRefineries.length;
+  const totalPages = Math.ceil(totalItems / pageSize);
+  
+  // Get current page items
+  const currentRefineries = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    return filteredRefineries.slice(startIndex, startIndex + pageSize);
+  }, [filteredRefineries, currentPage, pageSize]);
   
   // Function to render status badge with appropriate color
   const renderStatusBadge = (status: string) => {
@@ -282,756 +354,595 @@ export default function Refineries() {
       return `${(capacity / 1000).toFixed(0)} K bpd`;
     }
   };
-
-  // Get capacity level class
-  const getCapacityClass = (capacity: number | null | undefined) => {
-    if (!capacity) return 'bg-gray-300';
-    
-    if (capacity > 800000) return 'bg-indigo-600';
-    if (capacity > 500000) return 'bg-primary';
-    if (capacity > 300000) return 'bg-amber-500';
-    if (capacity > 100000) return 'bg-orange-500';
-    return 'bg-red-500';
-  };
-
-  // Get capacity percentage
-  const getCapacityPercentage = (capacity: number | null | undefined) => {
-    if (!capacity) return 0;
-    // Use 1.2M as the max capacity for scale
-    return Math.min(100, (capacity / 1200000) * 100);
-  };
   
-  // Get region icon
-  const getRegionIcon = (region: string | undefined) => {
-    if (!region) return <Globe className="h-5 w-5" />;
-    
-    if (region.includes('Middle East')) return <Droplets className="h-5 w-5 text-amber-500" />;
-    if (region.includes('Asia')) return <Globe className="h-5 w-5 text-blue-500" />;
-    if (region.includes('Europe')) return <Globe className="h-5 w-5 text-green-500" />;
-    if (region.includes('North America')) return <Globe className="h-5 w-5 text-red-500" />;
-    if (region.includes('Africa')) return <Globe className="h-5 w-5 text-amber-600" />;
-    if (region.includes('South America')) return <Globe className="h-5 w-5 text-purple-500" />;
-    
-    return <Globe className="h-5 w-5" />;
-  };
+  // If we're loading, return a loading state
+  if (loading) {
+    return <RefineryLoadingSkeleton />;
+  }
 
   return (
-    <div className="container mx-auto p-4 space-y-6">
-      {/* Header section with stats */}
-      <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-xl p-6 border border-muted">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-bold flex items-center">
-              <Factory className="h-8 w-8 mr-2 text-primary" />
-              Global Refineries Dashboard
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              {loading ? 'Loading refinery intelligence...' : `Monitoring ${refineries.length} refineries globally with ${formatCapacity(totalCapacity)} total processing capacity`}
-            </p>
-          </div>
-          
-          <div className="flex flex-wrap gap-2 items-center">
-            <Button 
-              variant="outline" 
-              onClick={updateRefineryWithRealData} 
-              disabled={isUpdating}
-              className="border-primary/20 text-primary hover:text-primary/90"
-            >
-              {isUpdating ? (
-                <>
-                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                  Updating...
-                </>
-              ) : (
-                <>
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Refresh Data
-                </>
-              )}
-            </Button>
-            
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Refinery
-            </Button>
-            
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <Download className="h-4 w-4 mr-2" />
-                  Export Data
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <FileBarChart className="h-4 w-4 mr-2" />
-                  Generate Report
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Share2 className="h-4 w-4 mr-2" />
-                  Share Dashboard
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Settings className="h-4 w-4 mr-2" />
-                  Settings
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+    <div className="container mx-auto py-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Refineries Dashboard</h1>
+          <p className="text-muted-foreground mt-1">
+            Monitor and analyze {refineries.length} global refineries with {formatCapacity(totalCapacity)} processing capacity
+          </p>
         </div>
-        
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
-          <Card className="bg-transparent border-primary/10">
-            <CardContent className="p-4 flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Refineries</p>
-                <h3 className="text-2xl font-bold">{refineries.length}</h3>
-              </div>
-              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                <Factory className="h-4 w-4 text-primary" />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-transparent border-primary/10">
-            <CardContent className="p-4 flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Processing Capacity</p>
-                <h3 className="text-2xl font-bold">{formatCapacity(totalCapacity)}</h3>
-              </div>
-              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                <Droplets className="h-4 w-4 text-primary" />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-transparent border-primary/10">
-            <CardContent className="p-4 flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Active Refineries</p>
-                <h3 className="text-2xl font-bold">{refineryStats.active}</h3>
-              </div>
-              <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
-                <Activity className="h-4 w-4 text-green-600" />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-transparent border-primary/10">
-            <CardContent className="p-4 flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Under Maintenance</p>
-                <h3 className="text-2xl font-bold">{refineryStats.maintenance}</h3>
-              </div>
-              <div className="h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center">
-                <Settings className="h-4 w-4 text-amber-600" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-      
-      {/* Filters and View Controls */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-card p-4 rounded-lg border">
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center w-full lg:w-auto">
-          <div className="relative w-full sm:w-auto">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search by name, country, region..."
-              className="pl-8 w-full md:w-[300px]"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="gap-2">
-                <Filter className="h-4 w-4" />
-                <span>Filter</span>
-                {activeFilters.length > 0 && (
-                  <Badge variant="secondary" className="ml-1 rounded-full">
-                    {activeFilters.length}
-                  </Badge>
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56">
-              <DropdownMenuLabel>Filter by Region</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {['Middle East', 'Asia Pacific', 'North America', 'Europe', 'Africa', 'South America'].map(region => (
-                <DropdownMenuItem 
-                  key={region}
-                  onClick={() => toggleFilter({type: 'region', value: region, label: region})}
-                  className={
-                    activeFilters.some(f => f.type === 'region' && f.value === region) 
-                      ? 'bg-primary/10'
-                      : ''
-                  }
-                >
-                  {getRegionIcon(region)}
-                  <span className="ml-2">{region}</span>
-                </DropdownMenuItem>
-              ))}
-              
-              <DropdownMenuSeparator />
-              <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              
-              <DropdownMenuItem 
-                onClick={() => toggleFilter({type: 'status', value: 'operational', label: 'Operational'})}
-                className={
-                  activeFilters.some(f => f.type === 'status' && f.value === 'operational') 
-                    ? 'bg-primary/10'
-                    : ''
-                }
-              >
-                <div className="h-2 w-2 rounded-full bg-green-500 mr-2" />
-                Operational
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem 
-                onClick={() => toggleFilter({type: 'status', value: 'maintenance', label: 'Maintenance'})}
-                className={
-                  activeFilters.some(f => f.type === 'status' && f.value === 'maintenance') 
-                    ? 'bg-primary/10'
-                    : ''
-                }
-              >
-                <div className="h-2 w-2 rounded-full bg-amber-500 mr-2" />
-                Maintenance
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem 
-                onClick={() => toggleFilter({type: 'status', value: 'offline', label: 'Offline'})}
-                className={
-                  activeFilters.some(f => f.type === 'status' && f.value === 'offline') 
-                    ? 'bg-primary/10'
-                    : ''
-                }
-              >
-                <div className="h-2 w-2 rounded-full bg-red-500 mr-2" />
-                Offline
-              </DropdownMenuItem>
-              
-              <DropdownMenuSeparator />
-              <DropdownMenuLabel>Filter by Capacity</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              
-              <DropdownMenuItem 
-                onClick={() => toggleFilter({type: 'capacity', value: 'high', label: 'High Capacity'})}
-                className={
-                  activeFilters.some(f => f.type === 'capacity' && f.value === 'high') 
-                    ? 'bg-primary/10'
-                    : ''
-                }
-              >
-                <Zap className="h-4 w-4 text-indigo-500 mr-2" />
-                High (&gt;500K bpd)
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem 
-                onClick={() => toggleFilter({type: 'capacity', value: 'medium', label: 'Medium Capacity'})}
-                className={
-                  activeFilters.some(f => f.type === 'capacity' && f.value === 'medium') 
-                    ? 'bg-primary/10'
-                    : ''
-                }
-              >
-                <Zap className="h-4 w-4 text-amber-500 mr-2" />
-                Medium (200K-500K bpd)
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem 
-                onClick={() => toggleFilter({type: 'capacity', value: 'low', label: 'Low Capacity'})}
-                className={
-                  activeFilters.some(f => f.type === 'capacity' && f.value === 'low') 
-                    ? 'bg-primary/10'
-                    : ''
-                }
-              >
-                <Zap className="h-4 w-4 text-gray-500 mr-2" />
-                Low (&lt;200K bpd)
-              </DropdownMenuItem>
-              
-              {activeFilters.length > 0 && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={clearFilters}>
-                    Clear All Filters
-                  </DropdownMenuItem>
-                </>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="gap-2">
-                <ArrowUpDown className="h-4 w-4" />
-                <span>{sortOption.label}</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-48">
-              <DropdownMenuLabel>Sort Refineries</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              
-              <DropdownMenuItem 
-                onClick={() => setSortOption({ label: 'Default', value: 'none', direction: 'asc' })}
-                className={sortOption.value === 'none' ? 'bg-primary/10' : ''}
-              >
-                Default
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem 
-                onClick={() => setSortOption({ label: 'Name (A-Z)', value: 'name', direction: 'asc' })}
-                className={sortOption.value === 'name' && sortOption.direction === 'asc' ? 'bg-primary/10' : ''}
-              >
-                Name (A-Z)
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem 
-                onClick={() => setSortOption({ label: 'Name (Z-A)', value: 'name', direction: 'desc' })}
-                className={sortOption.value === 'name' && sortOption.direction === 'desc' ? 'bg-primary/10' : ''}
-              >
-                Name (Z-A)
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem 
-                onClick={() => setSortOption({ label: 'Capacity (High-Low)', value: 'capacity', direction: 'desc' })}
-                className={sortOption.value === 'capacity' && sortOption.direction === 'desc' ? 'bg-primary/10' : ''}
-              >
-                Capacity (High-Low)
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem 
-                onClick={() => setSortOption({ label: 'Capacity (Low-High)', value: 'capacity', direction: 'asc' })}
-                className={sortOption.value === 'capacity' && sortOption.direction === 'asc' ? 'bg-primary/10' : ''}
-              >
-                Capacity (Low-High)
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem 
-                onClick={() => setSortOption({ label: 'Country (A-Z)', value: 'country', direction: 'asc' })}
-                className={sortOption.value === 'country' && sortOption.direction === 'asc' ? 'bg-primary/10' : ''}
-              >
-                Country (A-Z)
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-        
-        <div className="flex gap-2 w-full sm:w-auto">
-          <Tabs 
-            defaultValue="grid" 
-            value={viewMode} 
-            onValueChange={(value) => setViewMode(value as ViewMode)}
-            className="w-full sm:w-auto"
-          >
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="grid" className="flex items-center gap-1">
-                <Grid3X3 className="h-4 w-4" />
-                <span className="hidden sm:inline">Grid</span>
-              </TabsTrigger>
-              <TabsTrigger value="list" className="flex items-center gap-1">
-                <ListFilter className="h-4 w-4" />
-                <span className="hidden sm:inline">List</span>
-              </TabsTrigger>
-              <TabsTrigger value="map" className="flex items-center gap-1">
-                <MapIcon className="h-4 w-4" />
-                <span className="hidden sm:inline">Map</span>
-              </TabsTrigger>
-              <TabsTrigger value="analytics" className="flex items-center gap-1">
-                <BarChart4 className="h-4 w-4" />
-                <span className="hidden sm:inline">Analytics</span>
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-      </div>
-      
-      {/* Active Filters Display */}
-      {activeFilters.length > 0 && (
-        <div className="flex flex-wrap gap-2 items-center bg-muted/40 p-3 rounded-md">
-          <span className="text-sm font-medium mr-2">Active Filters:</span>
-          {activeFilters.map((filter, index) => (
-            <Badge 
-              key={index} 
-              variant="secondary"
-              className="flex items-center gap-1 px-2 py-1"
-            >
-              {filter.label}
-              <button 
-                className="ml-1 hover:bg-muted rounded-full"
-                onClick={() => toggleFilter(filter)}
-              >
-                ×
-              </button>
-            </Badge>
-          ))}
+        <div className="flex gap-2 flex-wrap">
           <Button 
             variant="outline" 
-            size="sm" 
-            onClick={clearFilters}
-            className="text-xs h-7 ml-auto"
+            onClick={updateRefineryWithRealData} 
+            disabled={isUpdating}
+            className="bg-primary/5 border-primary/20 text-primary hover:bg-primary/10"
           >
-            Clear All
+            {isUpdating ? (
+              <>
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                Updating...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh Data
+              </>
+            )}
+          </Button>
+          <Button variant="outline" onClick={() => navigate("/refineries/import")}>
+            <Database className="mr-2 h-4 w-4" /> Import Refineries
+          </Button>
+          <Button onClick={() => navigate("/refineries/new")}>
+            <Factory className="mr-2 h-4 w-4" /> Add New Refinery
           </Button>
         </div>
-      )}
+      </div>
 
-      {/* Content Area for Each View */}
-      {loading ? (
-        <div className="flex flex-col justify-center items-center h-64 space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-          <p className="text-muted-foreground">Loading global refinery data...</p>
+      <Tabs defaultValue={viewMode} className="mb-6" onValueChange={(value) => setViewMode(value as ViewMode)}>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+          <TabsList>
+            <TabsTrigger value="grid">
+              <Grid3X3 className="h-4 w-4 mr-2" />
+              Grid View
+            </TabsTrigger>
+            <TabsTrigger value="table">
+              <ArrowUpDown className="h-4 w-4 mr-2" />
+              Table View
+            </TabsTrigger>
+            <TabsTrigger value="map">
+              <Map className="h-4 w-4 mr-2" />
+              Map View
+            </TabsTrigger>
+            <TabsTrigger value="analytics">
+              <BarChart4 className="h-4 w-4 mr-2" />
+              Analytics
+            </TabsTrigger>
+          </TabsList>
+          
+          <div className="flex gap-2 w-full md:w-auto">
+            <div className="relative flex-grow">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search refineries..."
+                className="pl-9 h-10"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            
+            <Select defaultValue={selectedRegion} onValueChange={setSelectedRegion}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="All Regions" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Regions</SelectItem>
+                {Object.entries(refineryStats.regions).map(([region]) => (
+                  <SelectItem key={region} value={region}>
+                    {region}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-      ) : filteredRefineries.length === 0 ? (
-        <div className="text-center py-12 bg-card rounded-lg border">
-          <Factory className="h-12 w-12 mx-auto text-muted-foreground" />
-          <h3 className="mt-4 text-lg font-medium">No refineries found</h3>
-          <p className="text-muted-foreground mt-2 max-w-md mx-auto">
-            {searchTerm || activeFilters.length > 0 
-              ? `No refineries match your current filters. Try adjusting your search criteria.` 
-              : 'No refineries are currently available in the system.'}
-          </p>
-          {(searchTerm || activeFilters.length > 0) && (
-            <Button 
-              variant="outline" 
-              className="mt-4"
-              onClick={clearFilters}
-            >
-              Clear Filters
-            </Button>
-          )}
-        </div>
-      ) : (
-        <div className="space-y-6">
-          {/* Grid View */}
-          {viewMode === 'grid' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredRefineries.map((refinery) => (
-                <Card key={refinery.id} className="hover:shadow-md transition-all duration-200 group overflow-hidden">
-                  <div className="relative">
-                    {/* Background image based on refinery region */}
-                    <div 
-                      className="absolute inset-0 bg-cover bg-center opacity-15 h-32"
-                      style={{ 
-                        backgroundImage: `url(${
-                          refinery.region?.includes("Middle East") ? "https://images.unsplash.com/photo-1605023040084-89c87644e368?w=600&auto=format" : 
-                          refinery.region?.includes("Asia") ? "https://images.unsplash.com/photo-1500477967233-53333be64072?w=600&auto=format" : 
-                          refinery.region?.includes("Europe") ? "https://images.unsplash.com/photo-1552128427-2e5de3b3d614?w=600&auto=format" : 
-                          refinery.region?.includes("North America") ? "https://images.unsplash.com/photo-1532408840957-031d8034aeef?w=600&auto=format" : 
-                          refinery.region?.includes("Africa") ? "https://images.unsplash.com/photo-1504439904031-93ded9f93e4e?w=600&auto=format" :
-                          refinery.region?.includes("South America") ? "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=600&auto=format" :
-                          "https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?w=600&auto=format"
-                        })`
-                      }}
-                    />
-                    <CardHeader className="pb-2 relative z-10">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <CardTitle className="flex items-center">
-                            {/* Icon based on status */}
-                            <div className={`h-8 w-8 rounded-full flex items-center justify-center mr-2 ${
-                              refinery.status?.toLowerCase().includes('active') || refinery.status?.toLowerCase().includes('operational') 
-                                ? 'bg-green-100 text-green-600' :
-                              refinery.status?.toLowerCase().includes('maintenance') || refinery.status?.toLowerCase().includes('planned') 
-                                ? 'bg-orange-100 text-orange-600' :
-                              refinery.status?.toLowerCase().includes('offline') || refinery.status?.toLowerCase().includes('shutdown') 
-                                ? 'bg-red-100 text-red-600' :
-                              'bg-gray-100 text-gray-600'
-                            }`}>
-                              <Factory className="h-4 w-4" />
-                            </div>
-                            <span className="truncate">{refinery.name}</span>
-                          </CardTitle>
-                          <CardDescription className="flex items-center mt-1">
-                            {getRegionIcon(refinery.region)}
-                            <span className="ml-1.5 truncate">{refinery.country}, {refinery.region}</span>
-                          </CardDescription>
-                        </div>
-                        {renderStatusBadge(refinery.status || 'Unknown')}
+        
+        <TabsContent value="grid" className="mt-0">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle>Refinery Directory</CardTitle>
+              <CardDescription>
+                Managing {totalItems} refineries {selectedRegion !== 'all' && `in ${selectedRegion}`}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {currentRefineries.length > 0 ? (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {currentRefineries.map((refinery) => (
+                      <div key={refinery.id} className="h-full">
+                        <RefineryCard
+                          refinery={refinery}
+                          vessels={[]}
+                          isLoading={false}
+                        />
                       </div>
-                    </CardHeader>
+                    ))}
                   </div>
-                  <CardContent className="pb-2">
-                    <div className="space-y-3">
-                      <div className="space-y-1.5">
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-muted-foreground">Processing Capacity:</span>
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <span className="font-medium text-primary">
-                                  {formatCapacity(refinery.capacity)}
-                                </span>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>{refinery.capacity?.toLocaleString()} barrels per day</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </div>
-                        {refinery.capacity && (
-                          <div className="w-full bg-muted h-2 rounded-full overflow-hidden">
-                            <div 
-                              className={`h-full rounded-full ${getCapacityClass(refinery.capacity)}`}
-                              style={{ 
-                                width: `${getCapacityPercentage(refinery.capacity)}%` 
-                              }}
-                            />
-                          </div>
-                        )}
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="text-sm">
-                          <span className="text-muted-foreground">Operator:</span>
-                          <p className="font-medium truncate">
-                            {refinery.operator || 'Unknown'}
-                          </p>
-                        </div>
-                        <div className="text-sm">
-                          <span className="text-muted-foreground">Type:</span>
-                          <p className="font-medium truncate">
-                            {refinery.type || 'Standard'}
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="text-sm">
-                        <span className="text-muted-foreground">Coordinates:</span>
-                        <div className="font-medium flex items-center">
-                          <MapIcon className="h-3 w-3 mr-1 text-muted-foreground" />
-                          <span>{refinery.lat}, {refinery.lng}</span>
-                        </div>
-                      </div>
+                  
+                  {/* Pagination */}
+                  <div className="flex justify-between items-center mt-6">
+                    <div className="text-sm text-muted-foreground">
+                      Showing {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, totalItems)} of {totalItems} refineries
                     </div>
-                  </CardContent>
-                  <CardFooter className="pt-0 pb-4">
-                    <Link href={`/refineries/${refinery.id}`} className="w-full">
-                      <Button 
-                        variant="outline" 
-                        className="w-full group hover:border-primary hover:bg-primary/5 transition-all duration-200"
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                        disabled={currentPage === 1}
                       >
-                        <Eye className="h-4 w-4 mr-2" />
-                        View Details 
-                        <span className="ml-1 opacity-0 -translate-x-2 transition-all group-hover:opacity-100 group-hover:translate-x-0">→</span>
+                        <ChevronLeft className="h-4 w-4 mr-1" /> Previous
                       </Button>
-                    </Link>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
-          )}
-          
-          {/* List View */}
-          {viewMode === 'list' && (
-            <div className="bg-card rounded-lg border overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[300px]">Refinery</TableHead>
-                    <TableHead>Region</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Capacity</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredRefineries.map((refinery) => (
-                    <TableRow key={refinery.id}>
-                      <TableCell className="font-medium">
-                        <div className="flex items-center">
-                          <div className={`h-8 w-8 rounded-full flex items-center justify-center mr-2 ${
-                            refinery.status?.toLowerCase().includes('active') || refinery.status?.toLowerCase().includes('operational') 
-                              ? 'bg-green-100 text-green-600' :
-                            refinery.status?.toLowerCase().includes('maintenance') || refinery.status?.toLowerCase().includes('planned') 
-                              ? 'bg-orange-100 text-orange-600' :
-                            refinery.status?.toLowerCase().includes('offline') || refinery.status?.toLowerCase().includes('shutdown') 
-                              ? 'bg-red-100 text-red-600' :
-                            'bg-gray-100 text-gray-600'
-                          }`}>
-                            <Factory className="h-4 w-4" />
-                          </div>
-                          <div>
-                            <div className="font-medium">{refinery.name}</div>
-                            <div className="text-xs text-muted-foreground">{refinery.country}</div>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center">
-                          {getRegionIcon(refinery.region)}
-                          <span className="ml-2">{refinery.region}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {renderStatusBadge(refinery.status || 'Unknown')}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="font-medium">
-                          {formatCapacity(refinery.capacity)}
-                        </div>
-                        <div className="w-24 ml-auto mt-1 bg-muted h-1.5 rounded-full overflow-hidden">
-                          <div 
-                            className={`h-full rounded-full ${getCapacityClass(refinery.capacity)}`}
-                            style={{ width: `${getCapacityPercentage(refinery.capacity)}%` }}
-                          />
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Link href={`/refineries/${refinery.id}`}>
-                          <Button size="sm" variant="outline">
-                            <Eye className="h-3.5 w-3.5 mr-1" />
-                            Details
-                          </Button>
-                        </Link>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-          
-          {/* Map View */}
-          {viewMode === 'map' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                        disabled={currentPage === totalPages}
+                      >
+                        Next <ChevronRight className="h-4 w-4 ml-1" />
+                      </Button>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-12">
+                  <Factory className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                  <p className="text-lg font-medium">No Refineries Found</p>
+                  <p className="text-sm text-muted-foreground mb-6">
+                    {searchTerm 
+                      ? `No refineries matching "${searchTerm}"` 
+                      : selectedRegion === 'all' 
+                        ? "There are no refineries registered in the system." 
+                        : `No refineries found in the ${selectedRegion} region.`}
+                  </p>
+                  {searchTerm && (
+                    <Button variant="outline" onClick={() => setSearchTerm('')}>
+                      Clear Search
+                    </Button>
+                  )}
+                  {selectedRegion !== 'all' && !searchTerm && (
+                    <Button variant="outline" onClick={() => setSelectedRegion('all')}>
+                      View All Regions
+                    </Button>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="table" className="mt-0">
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <CardTitle>Refinery Directory</CardTitle>
+                  <CardDescription>
+                    Complete list of refineries in our system
+                  </CardDescription>
+                </div>
+                <div className="flex gap-2 items-center">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" className="gap-2">
+                        <ArrowUpDown className="h-4 w-4" />
+                        <span>{sortOption.label}</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-48">
+                      <DropdownMenuLabel>Sort Refineries</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      
+                      <DropdownMenuItem 
+                        onClick={() => setSortOption({ label: 'Default', value: 'none', direction: 'asc' })}
+                        className={sortOption.value === 'none' ? 'bg-primary/10' : ''}
+                      >
+                        Default
+                      </DropdownMenuItem>
+                      
+                      <DropdownMenuItem 
+                        onClick={() => setSortOption({ label: 'Name (A-Z)', value: 'name', direction: 'asc' })}
+                        className={sortOption.value === 'name' && sortOption.direction === 'asc' ? 'bg-primary/10' : ''}
+                      >
+                        Name (A-Z)
+                      </DropdownMenuItem>
+                      
+                      <DropdownMenuItem 
+                        onClick={() => setSortOption({ label: 'Name (Z-A)', value: 'name', direction: 'desc' })}
+                        className={sortOption.value === 'name' && sortOption.direction === 'desc' ? 'bg-primary/10' : ''}
+                      >
+                        Name (Z-A)
+                      </DropdownMenuItem>
+                      
+                      <DropdownMenuItem 
+                        onClick={() => setSortOption({ label: 'Capacity (High-Low)', value: 'capacity', direction: 'desc' })}
+                        className={sortOption.value === 'capacity' && sortOption.direction === 'desc' ? 'bg-primary/10' : ''}
+                      >
+                        Capacity (High-Low)
+                      </DropdownMenuItem>
+                      
+                      <DropdownMenuItem 
+                        onClick={() => setSortOption({ label: 'Capacity (Low-High)', value: 'capacity', direction: 'asc' })}
+                        className={sortOption.value === 'capacity' && sortOption.direction === 'asc' ? 'bg-primary/10' : ''}
+                      >
+                        Capacity (Low-High)
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {currentRefineries.length > 0 ? (
+                <>
+                  <div className="border rounded-md overflow-hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-[300px]">Refinery</TableHead>
+                          <TableHead>Country</TableHead>
+                          <TableHead>Region</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="text-right">Capacity</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {currentRefineries.map((refinery) => (
+                          <TableRow key={refinery.id}>
+                            <TableCell className="font-medium">
+                              <div className="flex items-center">
+                                <div className={`h-8 w-8 rounded-full flex items-center justify-center mr-2 ${
+                                  refinery.status?.toLowerCase().includes('active') || refinery.status?.toLowerCase().includes('operational') 
+                                    ? 'bg-green-100 text-green-600' :
+                                  refinery.status?.toLowerCase().includes('maintenance') || refinery.status?.toLowerCase().includes('planned') 
+                                    ? 'bg-orange-100 text-orange-600' :
+                                  refinery.status?.toLowerCase().includes('offline') || refinery.status?.toLowerCase().includes('shutdown') 
+                                    ? 'bg-red-100 text-red-600' :
+                                  'bg-gray-100 text-gray-600'
+                                }`}>
+                                  <Factory className="h-4 w-4" />
+                                </div>
+                                <div>
+                                  <div className="font-medium">{refinery.name}</div>
+                                  <div className="text-xs text-muted-foreground">{refinery.operator || 'Unknown'}</div>
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell>{refinery.country}</TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className="bg-secondary/30">
+                                {refinery.region}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              {renderStatusBadge(refinery.status || 'Unknown')}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="font-medium">
+                                {formatCapacity(refinery.capacity)}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Link href={`/refineries/${refinery.id}`}>
+                                <Button size="sm" variant="outline">
+                                  <Eye className="h-3.5 w-3.5 mr-1" />
+                                  Details
+                                </Button>
+                              </Link>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  
+                  {/* Pagination */}
+                  <div className="flex justify-between items-center mt-6">
+                    <div className="text-sm text-muted-foreground">
+                      Showing {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, totalItems)} of {totalItems} refineries
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                        disabled={currentPage === 1}
+                      >
+                        <ChevronLeft className="h-4 w-4 mr-1" /> Previous
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                        disabled={currentPage === totalPages}
+                      >
+                        Next <ChevronRight className="h-4 w-4 ml-1" />
+                      </Button>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-12">
+                  <Factory className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                  <p className="text-lg font-medium">No Refineries Found</p>
+                  <p className="text-sm text-muted-foreground mb-6">
+                    {searchTerm 
+                      ? `No refineries matching "${searchTerm}"` 
+                      : selectedRegion === 'all' 
+                        ? "There are no refineries registered in the system." 
+                        : `No refineries found in the ${selectedRegion} region.`}
+                  </p>
+                  {searchTerm && (
+                    <Button variant="outline" onClick={() => setSearchTerm('')}>
+                      Clear Search
+                    </Button>
+                  )}
+                  {selectedRegion !== 'all' && !searchTerm && (
+                    <Button variant="outline" onClick={() => setSelectedRegion('all')}>
+                      View All Regions
+                    </Button>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="map" className="mt-0">
+          <Card>
+            <CardHeader>
+              <CardTitle>Global Refinery Map</CardTitle>
+              <CardDescription>
+                Interactive map showing all refineries with geographical distribution
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="aspect-video bg-muted rounded-md flex items-center justify-center">
+                <div className="text-center space-y-4">
+                  <MapIcon className="h-12 w-12 text-muted-foreground mx-auto" />
+                  <div>
+                    <p className="text-muted-foreground">
+                      Interactive map view coming soon
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      This will display all refineries on a world map with clustering and filtering
+                    </p>
+                  </div>
+                  <Button variant="outline">Initialize Map</Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="analytics" className="mt-0">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <Card>
               <CardHeader>
-                <CardTitle>Global Refinery Map</CardTitle>
+                <CardTitle>Capacity Distribution</CardTitle>
                 <CardDescription>
-                  Interactive map showing all {filteredRefineries.length} refineries
+                  Breakdown of refinery processing capacity by region
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="aspect-[16/9] bg-muted rounded-md flex items-center justify-center">
+                <div className="space-y-4">
+                  {Object.entries(refineryStats.regions).map(([region, count]) => {
+                    const regionalCapacity = refineries
+                      .filter(r => r.region === region)
+                      .reduce((sum, refinery) => sum + (refinery.capacity || 0), 0);
+                    
+                    const percentOfTotal = totalCapacity 
+                      ? (regionalCapacity / totalCapacity * 100).toFixed(1) 
+                      : '0';
+                      
+                    return (
+                      <div key={region} className="space-y-1">
+                        <div className="flex justify-between">
+                          <span className="font-medium">{region}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-muted-foreground text-sm">
+                              {formatCapacity(regionalCapacity)}
+                            </span>
+                            <Badge variant="outline">
+                              {percentOfTotal}%
+                            </Badge>
+                          </div>
+                        </div>
+                        <Progress value={parseFloat(percentOfTotal)} className="h-2" />
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Operational Status</CardTitle>
+                <CardDescription>
+                  Current status of refineries worldwide
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-3 gap-4 mb-6">
+                  <div className="bg-card border rounded-lg p-4 text-center">
+                    <div className="text-2xl font-bold text-green-600">
+                      {refineryStats.active}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      Operational
+                    </div>
+                  </div>
+                  
+                  <div className="bg-card border rounded-lg p-4 text-center">
+                    <div className="text-2xl font-bold text-amber-600">
+                      {refineryStats.maintenance}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      Maintenance
+                    </div>
+                  </div>
+                  
+                  <div className="bg-card border rounded-lg p-4 text-center">
+                    <div className="text-2xl font-bold text-red-600">
+                      {refineryStats.offline}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      Offline
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="aspect-video bg-muted rounded-md flex items-center justify-center">
                   <div className="text-center space-y-4">
-                    <MapIcon className="h-12 w-12 text-muted-foreground mx-auto" />
+                    <BarChart4 className="h-12 w-12 text-muted-foreground mx-auto" />
                     <div>
                       <p className="text-muted-foreground">
-                        Interactive map view coming soon
+                        Detailed analytics charts coming soon
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        This will display all refineries on a world map with clustering and filtering
+                        This will display regional distribution, capacity trends, and operational efficiency
                       </p>
                     </div>
-                    <Button variant="outline" disabled>Initialize Map</Button>
                   </div>
                 </div>
               </CardContent>
             </Card>
-          )}
-          
-          {/* Analytics View */}
-          {viewMode === 'analytics' && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Capacity Distribution</CardTitle>
-                  <CardDescription>
-                    Breakdown of refinery processing capacity by region
-                  </CardDescription>
+          </div>
+        </TabsContent>
+      </Tabs>
+      
+      {/* Key Stats Row */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
+        <Card className="bg-card">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Total Refineries</p>
+              <h3 className="text-2xl font-bold">{refineries.length}</h3>
+            </div>
+            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+              <Factory className="h-4 w-4 text-primary" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-card">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Processing Capacity</p>
+              <h3 className="text-2xl font-bold">{formatCapacity(totalCapacity)}</h3>
+            </div>
+            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+              <Droplets className="h-4 w-4 text-primary" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-card">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Active Refineries</p>
+              <h3 className="text-2xl font-bold">{refineryStats.active}</h3>
+            </div>
+            <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
+              <Activity className="h-4 w-4 text-green-600" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-card">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Under Maintenance</p>
+              <h3 className="text-2xl font-bold">{refineryStats.maintenance}</h3>
+            </div>
+            <div className="h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center">
+              <Settings className="h-4 w-4 text-amber-600" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+function RefineryLoadingSkeleton() {
+  return (
+    <div className="container mx-auto py-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+        <div>
+          <Skeleton className="h-8 w-64 mb-2" />
+          <Skeleton className="h-4 w-96" />
+        </div>
+        <div className="flex gap-2">
+          <Skeleton className="h-10 w-32" />
+          <Skeleton className="h-10 w-40" />
+          <Skeleton className="h-10 w-40" />
+        </div>
+      </div>
+      
+      <Skeleton className="h-12 w-full mb-6" />
+      
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-6 w-48 mb-2" />
+          <Skeleton className="h-4 w-72" />
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Card key={i} className="overflow-hidden h-full">
+                <div className="h-1 bg-gray-200" />
+                <CardHeader className="pb-2">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <Skeleton className="h-5 w-40 mb-1" />
+                      <Skeleton className="h-3 w-24" />
+                    </div>
+                    <Skeleton className="h-5 w-16" />
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {Object.entries(refineryStats.regions).map(([region, count]) => {
-                      const regionalCapacity = filteredRefineries
-                        .filter(r => r.region === region)
-                        .reduce((sum, refinery) => sum + (refinery.capacity || 0), 0);
-                      
-                      const percentOfTotal = totalCapacity 
-                        ? (regionalCapacity / totalCapacity * 100).toFixed(1) 
-                        : '0';
-                        
-                      return (
-                        <div key={region} className="space-y-1">
-                          <div className="flex justify-between">
-                            <div className="flex items-center">
-                              {getRegionIcon(region)}
-                              <span className="ml-2 font-medium">{region}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-muted-foreground text-sm">
-                                {formatCapacity(regionalCapacity)}
-                              </span>
-                              <Badge variant="outline">
-                                {percentOfTotal}%
-                              </Badge>
-                            </div>
-                          </div>
-                          <Progress value={parseFloat(percentOfTotal)} className="h-2" />
-                        </div>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle>Operational Status</CardTitle>
-                  <CardDescription>
-                    Current status of refineries worldwide
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="aspect-video bg-muted rounded-md flex items-center justify-center">
-                    <div className="text-center space-y-4">
-                      <BarChart4 className="h-12 w-12 text-muted-foreground mx-auto" />
-                      <div>
-                        <p className="text-muted-foreground">
-                          Analytics charts coming soon
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          This will display detailed charts of refinery data
-                        </p>
-                      </div>
+                    <div>
+                      <Skeleton className="h-4 w-full mb-1" />
+                      <Skeleton className="h-2 w-full" />
                     </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-3 gap-4 mt-4">
-                    <div className="bg-card border rounded-lg p-4 text-center">
-                      <div className="text-2xl font-bold text-green-600">
-                        {refineryStats.active}
-                      </div>
-                      <div className="text-xs text-muted-foreground mt-1">
-                        Operational
-                      </div>
-                    </div>
-                    
-                    <div className="bg-card border rounded-lg p-4 text-center">
-                      <div className="text-2xl font-bold text-amber-600">
-                        {refineryStats.maintenance}
-                      </div>
-                      <div className="text-xs text-muted-foreground mt-1">
-                        Maintenance
-                      </div>
-                    </div>
-                    
-                    <div className="bg-card border rounded-lg p-4 text-center">
-                      <div className="text-2xl font-bold text-red-600">
-                        {refineryStats.offline}
-                      </div>
-                      <div className="text-xs text-muted-foreground mt-1">
-                        Offline
-                      </div>
+                    <Skeleton className="h-20 w-full" />
+                    <div className="grid grid-cols-2 gap-2">
+                      <Skeleton className="h-12 w-full" />
+                      <Skeleton className="h-12 w-full" />
                     </div>
                   </div>
                 </CardContent>
+                <CardFooter>
+                  <Skeleton className="h-9 w-full" />
+                </CardFooter>
               </Card>
-            </div>
-          )}
-        </div>
-      )}
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+      
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Card key={i}>
+            <CardContent className="p-4">
+              <Skeleton className="h-16 w-full" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 }
