@@ -24,10 +24,7 @@ import {
   FileText,
   Network,
   Flame,
-  Oil,
-  Fuel,
   Droplet,
-  Sparkles,
   ServerCrash,
   RefreshCw,
   Users,
@@ -40,7 +37,9 @@ import {
   Calendar,
   CheckCircle2,
   MenuIcon,
-  XIcon
+  XIcon,
+  Droplets,
+  Fuel
 } from "lucide-react";
 
 // Used for stats counter animation
@@ -153,7 +152,7 @@ export default function LandingPage() {
       >
         <div className="flex items-center gap-2 font-bold text-2xl">
           <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-orange-500/20 backdrop-blur-sm">
-            <Oil className="h-6 w-6 text-orange-500" />
+            <Droplets className="h-6 w-6 text-orange-500" />
           </div>
           <span className="text-white">PetroDealHub</span>
         </div>
@@ -699,7 +698,7 @@ export default function LandingPage() {
               <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-500 to-orange-400 transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
               <div className="p-8">
                 <div className="p-3 bg-orange-500/20 rounded-xl inline-flex mb-6">
-                  <Oil className="h-6 w-6 text-orange-500" />
+                  <Droplets className="h-6 w-6 text-orange-500" />
                 </div>
                 <h3 className="text-xl font-bold mb-3 text-white">Multi-Product Support</h3>
                 <p className="text-white/70 mb-4">
@@ -1211,7 +1210,7 @@ export default function LandingPage() {
             <div className="lg:col-span-2">
               <div className="flex items-center gap-2 font-bold text-2xl mb-4">
                 <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-orange-500/20">
-                  <Oil className="h-6 w-6 text-orange-500" />
+                  <Droplets className="h-6 w-6 text-orange-500" />
                 </div>
                 <span className="text-white">PetroDealHub</span>
               </div>
