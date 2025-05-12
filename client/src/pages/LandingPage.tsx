@@ -127,8 +127,11 @@ export default function LandingPage() {
       } else if (howItWorksRef.current && scrollPosition >= howItWorksRef.current.offsetTop && 
                 resultsRef.current && scrollPosition < resultsRef.current.offsetTop) {
         setActiveSection("how-it-works");
-      } else if (resultsRef.current && scrollPosition >= resultsRef.current.offsetTop) {
+      } else if (resultsRef.current && scrollPosition >= resultsRef.current.offsetTop && 
+                scrollPosition < document.getElementById('pricing')?.offsetTop) {
         setActiveSection("results");
+      } else if (document.getElementById('pricing') && scrollPosition >= document.getElementById('pricing').offsetTop) {
+        setActiveSection("pricing");
       } else {
         setActiveSection("");
       }
@@ -197,6 +200,16 @@ export default function LandingPage() {
           >
             Results
           </Link>
+          <Link 
+            href="#pricing" 
+            className={`text-sm font-medium transition-colors ${
+              activeSection === "pricing" 
+                ? "text-orange-500" 
+                : "text-white/80 hover:text-orange-500"
+            }`}
+          >
+            Pricing
+          </Link>
           <div className="h-6 w-px bg-slate-700"></div>
           <Link href="/refineries" className="text-sm font-medium text-white/80 hover:text-orange-500 transition-colors">
             Refineries
@@ -248,6 +261,9 @@ export default function LandingPage() {
             </Link>
             <Link href="#results" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
               Results
+            </Link>
+            <Link href="#pricing" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
+              Pricing
             </Link>
             <Link href="/refineries" className="text-lg font-medium py-2 border-b border-slate-800/80 text-white" onClick={() => setMobileMenuOpen(false)}>
               Refineries
@@ -1197,6 +1213,177 @@ export default function LandingPage() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Subscription Plans Section */}
+      <section id="pricing" className="bg-gradient-to-br from-slate-950 to-[#002244] py-20 lg:py-28 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(255,111,0,0.1),transparent_60%)]"></div>
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="text-center mb-16">
+            <Badge variant="outline" className="px-4 py-1 bg-orange-500/20 text-white border-orange-500/30 backdrop-blur-sm mb-6 inline-flex items-center">
+              <div className="w-2 h-2 rounded-full bg-orange-500 mr-2 animate-pulse"></div>
+              Flexible Pricing Plans
+            </Badge>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 text-white">
+              Choose the Perfect Plan for Your Business
+            </h2>
+            <p className="text-lg text-white/80 max-w-3xl mx-auto">
+              Our subscription plans are designed to meet the needs of oil trading operations of all sizes,
+              from independent brokers to large international corporations.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {/* Basic Plan */}
+            <div className="bg-slate-900/50 backdrop-blur-sm rounded-xl border border-slate-800/60 p-8 flex flex-col h-full transition-transform duration-300 hover:transform hover:-translate-y-2 relative overflow-hidden group">
+              <div className="absolute inset-0 bg-gradient-to-br from-slate-800/10 to-slate-900/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div className="relative z-10">
+                <h3 className="text-2xl font-bold text-white mb-4">Basic</h3>
+                <div className="mb-6">
+                  <span className="text-4xl font-bold text-white">$499</span>
+                  <span className="text-white/60 ml-2">/month</span>
+                </div>
+                <p className="text-white/70 mb-8">Perfect for independent brokers and small trading teams.</p>
+                
+                <ul className="space-y-3 mb-8">
+                  <li className="flex items-start">
+                    <CheckCircle2 className="h-5 w-5 text-orange-500 mr-3 mt-0.5 flex-shrink-0" />
+                    <span className="text-white/80">Up to 500 vessel tracking</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle2 className="h-5 w-5 text-orange-500 mr-3 mt-0.5 flex-shrink-0" />
+                    <span className="text-white/80">Basic refinery intelligence</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle2 className="h-5 w-5 text-orange-500 mr-3 mt-0.5 flex-shrink-0" />
+                    <span className="text-white/80">Standard documentation tools</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle2 className="h-5 w-5 text-orange-500 mr-3 mt-0.5 flex-shrink-0" />
+                    <span className="text-white/80">Email support</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle2 className="h-5 w-5 text-orange-500 mr-3 mt-0.5 flex-shrink-0" />
+                    <span className="text-white/80">1 user account</span>
+                  </li>
+                </ul>
+                
+                <div className="mt-auto">
+                  <Link href="/auth">
+                    <Button className="w-full bg-white/10 hover:bg-white/20 border border-white/20 text-white">
+                      Get Started
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+            
+            {/* Professional Plan */}
+            <div className="bg-gradient-to-br from-[#003366]/80 to-[#00264d]/80 backdrop-blur-sm rounded-xl border border-orange-500/30 p-8 flex flex-col h-full transform scale-105 shadow-xl relative overflow-hidden group">
+              <div className="absolute top-0 right-0">
+                <div className="bg-orange-500 text-white text-xs font-bold px-4 py-1 rounded-bl-lg shadow-md">
+                  POPULAR
+                </div>
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-blue-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div className="relative z-10">
+                <h3 className="text-2xl font-bold text-white mb-4">Professional</h3>
+                <div className="mb-6">
+                  <span className="text-4xl font-bold text-white">$1,299</span>
+                  <span className="text-white/60 ml-2">/month</span>
+                </div>
+                <p className="text-white/70 mb-8">Ideal for growing companies and trading departments.</p>
+                
+                <ul className="space-y-3 mb-8">
+                  <li className="flex items-start">
+                    <CheckCircle2 className="h-5 w-5 text-orange-500 mr-3 mt-0.5 flex-shrink-0" />
+                    <span className="text-white/80">Unlimited vessel tracking</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle2 className="h-5 w-5 text-orange-500 mr-3 mt-0.5 flex-shrink-0" />
+                    <span className="text-white/80">Advanced refinery intelligence</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle2 className="h-5 w-5 text-orange-500 mr-3 mt-0.5 flex-shrink-0" />
+                    <span className="text-white/80">Complete document automation</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle2 className="h-5 w-5 text-orange-500 mr-3 mt-0.5 flex-shrink-0" />
+                    <span className="text-white/80">Priority support & training</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle2 className="h-5 w-5 text-orange-500 mr-3 mt-0.5 flex-shrink-0" />
+                    <span className="text-white/80">Up to 5 user accounts</span>
+                  </li>
+                </ul>
+                
+                <div className="mt-auto">
+                  <Link href="/auth">
+                    <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white border border-orange-600/50">
+                      Get Started
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+            
+            {/* Enterprise Plan */}
+            <div className="bg-slate-900/50 backdrop-blur-sm rounded-xl border border-slate-800/60 p-8 flex flex-col h-full transition-transform duration-300 hover:transform hover:-translate-y-2 relative overflow-hidden group">
+              <div className="absolute inset-0 bg-gradient-to-br from-slate-800/10 to-slate-900/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div className="relative z-10">
+                <h3 className="text-2xl font-bold text-white mb-4">Enterprise</h3>
+                <div className="mb-6">
+                  <span className="text-4xl font-bold text-white">$2,999</span>
+                  <span className="text-white/60 ml-2">/month</span>
+                </div>
+                <p className="text-white/70 mb-8">Complete solution for large trading corporations.</p>
+                
+                <ul className="space-y-3 mb-8">
+                  <li className="flex items-start">
+                    <CheckCircle2 className="h-5 w-5 text-orange-500 mr-3 mt-0.5 flex-shrink-0" />
+                    <span className="text-white/80">Unlimited vessel & refinery tracking</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle2 className="h-5 w-5 text-orange-500 mr-3 mt-0.5 flex-shrink-0" />
+                    <span className="text-white/80">Premium market intelligence</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle2 className="h-5 w-5 text-orange-500 mr-3 mt-0.5 flex-shrink-0" />
+                    <span className="text-white/80">Advanced AI document generation</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle2 className="h-5 w-5 text-orange-500 mr-3 mt-0.5 flex-shrink-0" />
+                    <span className="text-white/80">24/7 dedicated support</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle2 className="h-5 w-5 text-orange-500 mr-3 mt-0.5 flex-shrink-0" />
+                    <span className="text-white/80">Unlimited user accounts</span>
+                  </li>
+                </ul>
+                
+                <div className="mt-auto">
+                  <Link href="/auth">
+                    <Button className="w-full bg-white/10 hover:bg-white/20 border border-white/20 text-white">
+                      Contact Sales
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-16 text-center">
+            <p className="text-white/70 mb-6">
+              Need a custom solution for your specific business requirements?
+            </p>
+            <Link href="/auth">
+              <Button variant="outline" className="border-white/20 text-white bg-white/5 hover:bg-white/10 font-medium px-6 py-2">
+                Contact Our Enterprise Team
+                <Phone className="h-4 w-4 ml-2" />
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
