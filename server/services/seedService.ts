@@ -95,7 +95,8 @@ export async function seedVessels(minDesiredVessels: number = 2500): Promise<{
 }
 
 /**
- * Add seed data for refineries if no refineries exist
+ * Add seed data for refineries if no refineries exist.
+ * Note: This function has been modified to maintain the imported Excel data.
  */
 export async function seedRefineries(): Promise<{ count: number, seeded: boolean, active: number }> {
   // Check existing refinery count
@@ -111,30 +112,37 @@ export async function seedRefineries(): Promise<{ count: number, seeded: boolean
     // Count active refineries for reporting
     const activeRefineries = await db.select({ count: refineries.id })
       .from(refineries)
-      .where(sql`${refineries.status} = ${'active'}`);
+      .where(sql`${refineries.status} IN ('active', 'operational')`);
     
     return { 
       count: existingCount, 
       seeded: false,
-      active: activeRefineries[0]?.count || 0 
+      active: activeRefineries.length > 0 ? (activeRefineries[0] as any).count || 0 : 0
     };
   }
+  
+  // Only seed if database is completely empty
+  console.log(`No refineries in database. Generating refinery data...`);
   
   // Generate refinery data
   const refineryData = getAccurateRefineries();
   
+  console.log(`Generated ${refineryData.length} refineries from dataset.`);
+  
   // Insert refineries
   await db.insert(refineries).values(refineryData);
+  
+  console.log(`Created ${refineryData.length} new refineries in database.`);
   
   // Count active refineries for reporting
   const activeRefineries = await db.select({ count: refineries.id })
     .from(refineries)
-    .where(sql`${refineries.status} = ${'active'}`);
+    .where(sql`${refineries.status} IN ('active', 'operational')`);
   
   return { 
     count: refineryData.length, 
     seeded: true,
-    active: activeRefineries[0]?.count || 0
+    active: activeRefineries.length > 0 ? (activeRefineries[0] as any).count || 0 : 0
   };
 }
 
