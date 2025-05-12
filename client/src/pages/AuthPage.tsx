@@ -101,90 +101,93 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Background with gradients and animated patterns */}
-      <div className="fixed inset-0 bg-gradient-to-br from-[#001f3f] to-[#003366] dark:from-[#001a33] dark:to-[#002b4d] overflow-hidden">
-        {/* Animated gradient orbs */}
-        <div className="absolute top-[10%] left-[20%] w-96 h-96 bg-orange-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-[15%] right-[20%] w-80 h-80 bg-blue-600/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-        <div className="absolute top-[60%] left-[10%] w-64 h-64 bg-blue-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1.5s' }}></div>
+    <div className="min-h-screen bg-white dark:bg-gray-900 flex">
+      {/* Left panel - Brand and photo */}
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-r from-blue-600 to-indigo-800 relative overflow-hidden">
+        {/* Decorative grid overlay */}
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAzNGgyLTJoLTJ6TTM1IDdoMWExIDEgMCAwIDAgMS0xVjRhMSAxIDAgMCAwLTEtMWgtMWExIDEgMCAwIDAtMSAxdjJhMSAxIDAgMCAwIDEgMXptNiAwaDFhMSAxIDAgMCAwIDEtMVY0YTEgMSAwIDAgMC0xLTFoLTFhMSAxIDAgMCAwLTEgMXYyYTEgMSAwIDAgMCAxIDF6bTYgMGgxYTEgMSAwIDAgMCAxLTFWNGExIDEgMCAwIDAtMS0xaC0xYTEgMSAwIDAgMC0xIDF2MmExIDEgMCAwIDAgMSAxeiIgZmlsbD0iI2ZmZiIgZmlsbC1vcGFjaXR5PSIuMTUiLz48cGF0aCBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9Ii4wNSIgZD0iTTMwIDBoNjB2NjBIMHoiLz48L2c+PC9zdmc+')] opacity-20"></div>
+      
+        <div className="relative w-full h-full flex flex-col z-10">
+          {/* Logo area */}
+          <div className="p-12">
+            <img src="/assets/petrodealhub-logo.png" alt="PetroDealHub Logo" className="h-24 w-auto" />
+          </div>
         
-        {/* Diagonal lines pattern */}
-        <div className="absolute inset-0 opacity-20" style={{ 
-          backgroundImage: 'linear-gradient(135deg, #FF6F00 1%, transparent 1%, transparent 50%, #FF6F00 50%, #FF6F00 51%, transparent 51%, transparent 100%)',
-          backgroundSize: '40px 40px'
-        }}></div>
-      </div>
-      
-      {/* Navigation */}
-      <header className="px-4 lg:px-6 h-40 flex items-center justify-between border-b border-orange-500/20 backdrop-blur-sm bg-white/5 fixed w-full z-50">
-        <div className="flex items-center font-bold text-xl">
-          <a href="/" className="flex items-center">
-            <img src="/assets/petrodealhub-logo.png" alt="PetroDealHub Logo" className="h-36 w-auto animate-fade-in" />
-          </a>
-        </div>
-      </header>
-      
-      <div className="flex-1 flex flex-col lg:flex-row items-center justify-center pt-40 relative z-10">
-        {/* Left side image */}
-        <div className="hidden lg:block lg:w-1/2 h-full p-12">
-          <div className="relative h-full w-full">
-            <div className="absolute inset-0 bg-gradient-to-br from-[#003366]/80 to-[#002244]/80 rounded-2xl backdrop-blur-sm border border-white/10 shadow-2xl overflow-hidden animate-fade-in">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(255,111,0,0.1),transparent_60%)]"></div>
-              <div className="p-12 flex flex-col h-full justify-center">
-                <h2 className="text-4xl font-bold text-white mb-6 animate-fade-in">Global Maritime Intelligence Platform</h2>
-                <p className="text-white/80 text-lg mb-8 animate-fade-in">Access real-time vessel tracking, refinery data, and market analytics to make informed trading decisions.</p>
-                
-                <div className="grid grid-cols-2 gap-6 animate-fade-in">
-                  <div className="flex items-start space-x-3">
-                    <div className="p-2 rounded-full bg-orange-500/20">
-                      <Anchor className="h-5 w-5 text-orange-500" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-white">Live Vessel Tracking</h3>
-                      <p className="text-white/70 text-sm">Monitor 2,500+ vessels in real-time</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start space-x-3">
-                    <div className="p-2 rounded-full bg-orange-500/20">
-                      <Globe className="h-5 w-5 text-orange-500" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-white">Global Refineries</h3>
-                      <p className="text-white/70 text-sm">Data on 100+ active refineries</p>
-                    </div>
-                  </div>
+          {/* Main content area */}
+          <div className="flex-1 flex flex-col justify-center px-12 mb-20">
+            <h1 className="text-5xl font-extrabold text-white mb-6">PetroDealHub</h1>
+            <p className="text-2xl font-light text-white/80 mb-8 leading-relaxed">
+              The ultimate intelligence platform for oil trading professionals
+            </p>
+            
+            <div className="space-y-6 max-w-md">
+              <div className="flex items-center space-x-4">
+                <div className="bg-white/20 rounded-full p-2">
+                  <Anchor className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <p className="text-white text-base">Track vessels and cargo in real-time across global shipping routes</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-4">
+                <div className="bg-white/20 rounded-full p-2">
+                  <Globe className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <p className="text-white text-base">Analyze refinery operations and connect with trading partners</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-4">
+                <div className="bg-white/20 rounded-full p-2">
+                  <Mail className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <p className="text-white text-base">Generate comprehensive trade documentation with AI support</p>
                 </div>
               </div>
             </div>
           </div>
+          
+          {/* Bottom content */}
+          <div className="p-12">
+            <p className="text-white/80 text-sm">© 2025 PetroDealHub. All rights reserved.</p>
+          </div>
+        </div>
+      </div>
+      
+      {/* Right panel - Login form */}
+      <div className="flex flex-col w-full lg:w-1/2">
+        {/* Mobile logo header */}
+        <div className="lg:hidden p-6 border-b bg-white dark:bg-gray-900 dark:border-gray-800">
+          <img src="/assets/petrodealhub-logo.png" alt="PetroDealHub Logo" className="h-20 w-auto" />
         </div>
         
         {/* Auth Form Column */}
-        <div className="w-full lg:w-1/2 flex items-center justify-center p-4 md:p-8">
-          <div className="w-full max-w-md mx-auto bg-white/5 backdrop-blur-md rounded-3xl border border-white/10 p-8 shadow-2xl animate-fade-in">
-            <Tabs defaultValue="login" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-8 bg-white/10">
-                <TabsTrigger value="login" className="data-[state=active]:bg-orange-500 data-[state=active]:text-white">Login</TabsTrigger>
-                <TabsTrigger value="register" className="data-[state=active]:bg-orange-500 data-[state=active]:text-white">Register</TabsTrigger>
-              </TabsList>
+        <div className="w-full flex-1 flex items-center justify-center p-6 sm:p-12 bg-gray-50 dark:bg-gray-900">
+            <div className="w-full max-w-md">
+              <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white mb-2">
+                Welcome back
+              </h2>
+              <p className="text-gray-500 dark:text-gray-400 mb-8">
+                Sign in to your account to continue
+              </p>
+              
+              <Tabs defaultValue="login" className="w-full">
+                <TabsList className="inline-flex h-10 rounded-lg bg-gray-100 dark:bg-gray-800 p-1 mb-6">
+                  <TabsTrigger value="login" className="rounded-md data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-sm">Login</TabsTrigger>
+                  <TabsTrigger value="register" className="rounded-md data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-sm">Register</TabsTrigger>
+                </TabsList>
               
               {/* Login Form */}
               <TabsContent value="login">
-                <div className="space-y-6 animate-fade-in">
-                  <div className="text-center space-y-2">
-                    <h2 className="text-2xl font-bold text-white">Welcome Back</h2>
-                    <p className="text-white/70">
-                      Sign in to access your maritime intelligence dashboard
-                    </p>
-                  </div>
-                  
-                  {/* Big Quick Login Button */}
-                  <div className="my-8 animate-fade-in">
+                <div className="space-y-6">
+                  {/* Quick login button - prominent */}
+                  <div className="mb-6">
                     <Button 
                       type="button" 
-                      className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold py-6 text-lg rounded-xl shadow-lg transform transition-transform hover:scale-105 border-b-4 border-orange-700"
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition-colors"
                       onClick={() => {
                         loginForm.setValue("username", "demo");
                         loginForm.setValue("password", "password");
@@ -193,23 +196,23 @@ export default function AuthPage() {
                     >
                       <div className="flex items-center justify-center">
                         {loginMutation.isPending ? (
-                          <Loader2 className="animate-spin h-6 w-6 mr-2" />
+                          <Loader2 className="animate-spin h-5 w-5 mr-2" />
                         ) : (
-                          <Lock className="h-6 w-6 mr-2" />
+                          <Lock className="h-5 w-5 mr-2" />
                         )}
-                        {loginMutation.isPending ? "Logging you in..." : "ONE-CLICK LOGIN TO DASHBOARD"}
+                        {loginMutation.isPending ? "Authenticating..." : "One-Click Login"}
                       </div>
                     </Button>
-                    <p className="text-center text-white/50 text-xs mt-2">No credentials needed - instant access</p>
+                    <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-2">No credentials required - instant access</p>
                   </div>
                   
                   <div className="relative my-6">
                     <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t border-white/10" />
+                      <span className="w-full border-t border-gray-200 dark:border-gray-700" />
                     </div>
                     <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-transparent px-2 text-white/50">
-                        Or sign in with credentials
+                      <span className="bg-gray-50 dark:bg-gray-900 px-2 text-gray-500 dark:text-gray-400">
+                        Sign in with credentials
                       </span>
                     </div>
                   </div>
@@ -221,18 +224,18 @@ export default function AuthPage() {
                         name="username"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-white">Username</FormLabel>
+                            <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Username</FormLabel>
                             <FormControl>
                               <div className="relative">
-                                <User className="absolute left-3 top-3 h-5 w-5 text-white/50" />
+                                <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                                 <Input 
-                                  placeholder="Enter your username"
-                                  className="pl-10 bg-white/10 border-white/10 text-white placeholder:text-white/40 h-12 rounded-xl focus:border-orange-500 focus:ring-orange-500"
+                                  placeholder="john.doe"
+                                  className="pl-10 h-12 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 rounded-lg focus:ring-blue-500 focus:border-blue-500"
                                   {...field}
                                 />
                               </div>
                             </FormControl>
-                            <FormMessage className="text-orange-300" />
+                            <FormMessage className="text-red-500" />
                           </FormItem>
                         )}
                       />
@@ -242,39 +245,41 @@ export default function AuthPage() {
                         render={({ field }) => (
                           <FormItem>
                             <div className="flex items-center justify-between">
-                              <FormLabel className="text-white">Password</FormLabel>
-                              <a href="#" className="text-xs text-orange-400 hover:text-orange-300">
+                              <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Password</FormLabel>
+                              <a href="#" className="text-xs text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 font-medium">
                                 Forgot password?
                               </a>
                             </div>
                             <FormControl>
                               <div className="relative">
-                                <Lock className="absolute left-3 top-3 h-5 w-5 text-white/50" />
+                                <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                                 <Input
                                   type="password"
-                                  placeholder="Enter your password"
-                                  className="pl-10 bg-white/10 border-white/10 text-white placeholder:text-white/40 h-12 rounded-xl focus:border-orange-500 focus:ring-orange-500"
+                                  placeholder="••••••••"
+                                  className="pl-10 h-12 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 rounded-lg focus:ring-blue-500 focus:border-blue-500"
                                   {...field}
                                 />
                               </div>
                             </FormControl>
-                            <FormMessage className="text-orange-300" />
+                            <FormMessage className="text-red-500" />
                           </FormItem>
                         )}
                       />
                       <div className="flex items-center pt-1">
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center">
                           <input
                             type="checkbox"
                             id="remember"
-                            className="h-4 w-4 rounded border-white/30 text-orange-500 focus:ring-orange-500 bg-white/10"
+                            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800"
                           />
-                          <Label htmlFor="remember" className="text-sm text-white/80">Remember me for 30 days</Label>
+                          <Label htmlFor="remember" className="ml-2 text-sm text-gray-600 dark:text-gray-300">
+                            Remember me
+                          </Label>
                         </div>
                       </div>
                       <Button 
                         type="submit" 
-                        className="w-full bg-[#003366] hover:bg-[#002244] text-white py-5 rounded-xl mt-4"
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 h-12 rounded-lg mt-6"
                         disabled={loginMutation.isPending}
                       >
                         {loginMutation.isPending ? (
@@ -282,30 +287,30 @@ export default function AuthPage() {
                             <Loader2 className="animate-spin h-4 w-4 mr-2" />
                             Signing in...
                           </div>
-                        ) : "Sign In to Dashboard"}
+                        ) : "Sign in to account"}
                       </Button>
                     </form>
                   </Form>
                   
                   <div className="relative my-6">
                     <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t border-white/10" />
+                      <span className="w-full border-t border-gray-200 dark:border-gray-700" />
                     </div>
                     <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-transparent px-2 text-white/50">
+                      <span className="bg-gray-50 dark:bg-gray-900 px-2 text-gray-500 dark:text-gray-400">
                         Or continue with
                       </span>
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-1 gap-2">
+                  <div className="grid grid-cols-1 gap-3">
                     <Button 
                       variant="outline" 
-                      className="flex items-center justify-center gap-2 bg-white/10 text-white border-white/10 hover:bg-white/20 py-5 rounded-xl"
+                      className="flex items-center justify-center h-12 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-200"
                       onClick={() => googleSignIn()}
                       type="button"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 48 48">
+                      <svg className="mr-2" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 48 48">
                         <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"></path>
                         <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"></path>
                         <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"></path>
@@ -315,7 +320,7 @@ export default function AuthPage() {
                     </Button>
                   </div>
                   
-                  <div className="text-center text-sm text-white/60 pt-4">
+                  <div className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
                     <span>Don't have an account? </span>
                     <a
                       href="#"
@@ -324,7 +329,7 @@ export default function AuthPage() {
                         const tab = document.querySelector('[data-state="inactive"][value="register"]') as HTMLElement;
                         tab?.click();
                       }}
-                      className="font-medium text-orange-400 hover:text-orange-300"
+                      className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
                     >
                       Create an account
                     </a>
@@ -334,19 +339,12 @@ export default function AuthPage() {
               
               {/* Register Form */}
               <TabsContent value="register">
-                <div className="space-y-6 animate-fade-in">
-                  <div className="text-center space-y-2">
-                    <h2 className="text-2xl font-bold text-white">Create an Account</h2>
-                    <p className="text-white/70">
-                      Sign up for access to maritime intelligence tools
-                    </p>
-                  </div>
-                  
+                <div className="space-y-6">
                   {/* Quick Login Button */}
-                  <div className="my-8 animate-fade-in">
+                  <div className="mb-6">
                     <Button 
                       type="button" 
-                      className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold py-6 text-lg rounded-xl shadow-lg transform transition-transform hover:scale-105 border-b-4 border-orange-700"
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition-colors"
                       onClick={() => {
                         const tab = document.querySelector('[data-state="inactive"][value="login"]') as HTMLElement;
                         tab?.click();
@@ -360,20 +358,20 @@ export default function AuthPage() {
                       }}
                     >
                       <div className="flex items-center justify-center">
-                        <Lock className="h-6 w-6 mr-2" />
-                        ONE-CLICK LOGIN TO DASHBOARD
+                        <Lock className="h-5 w-5 mr-2" />
+                        Try Demo Account
                       </div>
                     </Button>
-                    <p className="text-center text-white/50 text-xs mt-2">Skip registration - try our platform immediately</p>
+                    <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-2">Skip registration - explore platform features immediately</p>
                   </div>
                   
                   <div className="relative my-6">
                     <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t border-white/10" />
+                      <span className="w-full border-t border-gray-200 dark:border-gray-700" />
                     </div>
                     <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-transparent px-2 text-white/50">
-                        Or create a new account
+                      <span className="bg-gray-50 dark:bg-gray-900 px-2 text-gray-500 dark:text-gray-400">
+                        Create new account
                       </span>
                     </div>
                   </div>
@@ -385,18 +383,18 @@ export default function AuthPage() {
                         name="username"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-white">Username</FormLabel>
+                            <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Username</FormLabel>
                             <FormControl>
                               <div className="relative">
-                                <User className="absolute left-3 top-3 h-5 w-5 text-white/50" />
+                                <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                                 <Input
-                                  placeholder="Choose a username"
-                                  className="pl-10 bg-white/10 border-white/10 text-white placeholder:text-white/40 h-12 rounded-xl focus:border-orange-500 focus:ring-orange-500"
+                                  placeholder="johndoe"
+                                  className="pl-10 h-12 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 rounded-lg focus:ring-blue-500 focus:border-blue-500"
                                   {...field}
                                 />
                               </div>
                             </FormControl>
-                            <FormMessage className="text-orange-300" />
+                            <FormMessage className="text-red-500" />
                           </FormItem>
                         )}
                       />
@@ -405,19 +403,19 @@ export default function AuthPage() {
                         name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-white">Email</FormLabel>
+                            <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Email</FormLabel>
                             <FormControl>
                               <div className="relative">
-                                <Mail className="absolute left-3 top-3 h-5 w-5 text-white/50" />
+                                <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                                 <Input
                                   type="email"
-                                  placeholder="Enter your email"
-                                  className="pl-10 bg-white/10 border-white/10 text-white placeholder:text-white/40 h-12 rounded-xl focus:border-orange-500 focus:ring-orange-500"
+                                  placeholder="john@example.com"
+                                  className="pl-10 h-12 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 rounded-lg focus:ring-blue-500 focus:border-blue-500"
                                   {...field}
                                 />
                               </div>
                             </FormControl>
-                            <FormMessage className="text-orange-300" />
+                            <FormMessage className="text-red-500" />
                           </FormItem>
                         )}
                       />
@@ -426,43 +424,43 @@ export default function AuthPage() {
                         name="password"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-white">Password</FormLabel>
+                            <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Password</FormLabel>
                             <FormControl>
                               <div className="relative">
-                                <Lock className="absolute left-3 top-3 h-5 w-5 text-white/50" />
+                                <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                                 <Input
                                   type="password"
-                                  placeholder="Create a password"
-                                  className="pl-10 bg-white/10 border-white/10 text-white placeholder:text-white/40 h-12 rounded-xl focus:border-orange-500 focus:ring-orange-500"
+                                  placeholder="••••••••"
+                                  className="pl-10 h-12 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 rounded-lg focus:ring-blue-500 focus:border-blue-500"
                                   {...field}
                                 />
                               </div>
                             </FormControl>
-                            <FormMessage className="text-orange-300" />
+                            <FormMessage className="text-red-500" />
                           </FormItem>
                         )}
                       />
-                      <div className="flex items-center space-x-2 pt-1">
+                      <div className="flex items-center space-x-2 pt-2">
                         <input
                           type="checkbox"
                           id="terms"
-                          className="h-4 w-4 rounded border-white/30 text-orange-500 focus:ring-orange-500 bg-white/10"
+                          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800"
                           required
                         />
-                        <Label htmlFor="terms" className="text-sm text-white/80">
+                        <Label htmlFor="terms" className="text-sm text-gray-600 dark:text-gray-300">
                           I agree to the{" "}
-                          <a href="#" className="text-orange-400 hover:text-orange-300">
+                          <a href="#" className="text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300">
                             Terms of Service
                           </a>{" "}
                           and{" "}
-                          <a href="#" className="text-orange-400 hover:text-orange-300">
+                          <a href="#" className="text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300">
                             Privacy Policy
                           </a>
                         </Label>
                       </div>
                       <Button 
                         type="submit" 
-                        className="w-full bg-[#003366] hover:bg-[#002244] text-white py-5 rounded-xl mt-4"
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 h-12 rounded-lg mt-6"
                         disabled={registerMutation.isPending}
                       >
                         {registerMutation.isPending ? (
@@ -477,23 +475,23 @@ export default function AuthPage() {
                   
                   <div className="relative my-6">
                     <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t border-white/10" />
+                      <span className="w-full border-t border-gray-200 dark:border-gray-700" />
                     </div>
                     <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-transparent px-2 text-white/50">
+                      <span className="bg-gray-50 dark:bg-gray-900 px-2 text-gray-500 dark:text-gray-400">
                         Or register with
                       </span>
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-1 gap-2">
+                  <div className="grid grid-cols-1 gap-3">
                     <Button 
                       variant="outline" 
-                      className="flex items-center justify-center gap-2 bg-white/10 text-white border-white/10 hover:bg-white/20 py-5 rounded-xl"
+                      className="flex items-center justify-center h-12 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-200"
                       onClick={() => googleSignIn()}
                       type="button"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 48 48">
+                      <svg className="mr-2" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 48 48">
                         <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"></path>
                         <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"></path>
                         <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"></path>
@@ -503,7 +501,7 @@ export default function AuthPage() {
                     </Button>
                   </div>
                   
-                  <div className="text-center text-sm text-white/60 pt-4">
+                  <div className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
                     <span>Already have an account? </span>
                     <a
                       href="#"
@@ -512,7 +510,7 @@ export default function AuthPage() {
                         const tab = document.querySelector('[data-state="inactive"][value="login"]') as HTMLElement;
                         tab?.click();
                       }}
-                      className="font-medium text-orange-400 hover:text-orange-300"
+                      className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
                     >
                       Sign in
                     </a>
