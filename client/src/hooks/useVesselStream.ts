@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Vessel, Refinery, Port } from '@shared/schema';
 import { apiRequest } from '@/lib/queryClient';
-import { ACCURATE_REFINERIES, convertToRefineries, generateConnectedPorts } from '@/data/refineryData';
+import { generateConnectedPorts } from '@/data/refineryData';
 import { getVesselsForRefinery } from '@/services/marineTrafficService';
 
 interface VesselStreamData {
@@ -15,8 +15,8 @@ interface VesselStreamData {
 }
 
 /**
- * Hook to handle vessel and refinery data using hardcoded refinery locations
- * and AsiStream service for vessels at ports
+ * Hook to handle vessel and refinery data using database refineries
+ * and MarineTraffic service for vessels at ports
  */
 export function useVesselStream() {
   const [data, setData] = useState<VesselStreamData>({
@@ -30,19 +30,35 @@ export function useVesselStream() {
   });
 
   useEffect(() => {
-    // Function to prepare data from static sources
+    // Function to prepare data from database and API
     const fetchData = async () => {
       try {
         console.log('Fetching vessel and refinery data...');
         
-        // Convert static refinery data to app format
-        const refineriesData = convertToRefineries(ACCURATE_REFINERIES);
+        // Fetch refineries from database
+        const response = await fetch('/api/refineries');
+        if (!response.ok) {
+          throw new Error('Failed to fetch refineries from API');
+        }
+        
+        const refineriesData = await response.json();
         
         // Generate ports connected to refineries
         const portsData = generateConnectedPorts(refineriesData);
         
         // Get vessels at each refinery using MarineTraffic service
-        const vesselsPromises = ACCURATE_REFINERIES.map(refinery => getVesselsForRefinery(refinery));
+        // Convert refineries to the format expected by getVesselsForRefinery
+        const refineryFormatForAPI = refineriesData.map(r => ({
+          name: r.name,
+          country: r.country,
+          region: r.region,
+          lat: parseFloat(r.lat.toString()),
+          lng: parseFloat(r.lng.toString()),
+          capacity: r.capacity,
+          status: r.status
+        }));
+        
+        const vesselsPromises = refineryFormatForAPI.map(refinery => getVesselsForRefinery(refinery));
         const vesselsResults = await Promise.all(vesselsPromises);
         const vesselsAtRefineries = vesselsResults.flat();
         
