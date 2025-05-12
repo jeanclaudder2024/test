@@ -94,7 +94,7 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 flex">
       {/* Left panel - Brand and photo */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-r from-blue-600 to-indigo-800 relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 bg-[#003366] relative overflow-hidden">
         {/* Decorative grid overlay */}
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAzNGgyLTJoLTJ6TTM1IDdoMWExIDEgMCAwIDAgMS0xVjRhMSAxIDAgMCAwLTEtMWgtMWExIDEgMCAwIDAtMSAxdjJhMSAxIDAgMCAwIDEgMXptNiAwaDFhMSAxIDAgMCAwIDEtMVY0YTEgMSAwIDAgMC0xLTFoLTFhMSAxIDAgMCAwLTEgMXYyYTEgMSAwIDAgMCAxIDF6bTYgMGgxYTEgMSAwIDAgMCAxLTFWNGExIDEgMCAwIDAtMS0xaC0xYTEgMSAwIDAgMC0xIDF2MmExIDEgMCAwIDAgMSAxeiIgZmlsbD0iI2ZmZiIgZmlsbC1vcGFjaXR5PSIuMTUiLz48cGF0aCBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9Ii4wNSIgZD0iTTMwIDBoNjB2NjBIMHoiLz48L2c+PC9zdmc+')] opacity-20"></div>
       
@@ -167,8 +167,8 @@ export default function AuthPage() {
             
             <Tabs defaultValue="login" className="w-full">
               <TabsList className="inline-flex h-10 rounded-lg bg-gray-100 dark:bg-gray-800 p-1 mb-6">
-                <TabsTrigger value="login" className="rounded-md data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-sm">Login</TabsTrigger>
-                <TabsTrigger value="register" className="rounded-md data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 data-[state=active]:shadow-sm">Register</TabsTrigger>
+                <TabsTrigger value="login" className="rounded-md data-[state=active]:bg-[#003366] data-[state=active]:text-white data-[state=active]:shadow-sm">Login</TabsTrigger>
+                <TabsTrigger value="register" className="rounded-md data-[state=active]:bg-[#003366] data-[state=active]:text-white data-[state=active]:shadow-sm">Register</TabsTrigger>
               </TabsList>
             
               {/* Login Form */}
@@ -178,7 +178,7 @@ export default function AuthPage() {
                   <div className="mb-6">
                     <Button 
                       type="button" 
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition-colors"
+                      className="w-full bg-[#FF6F00] hover:bg-[#FF5000] text-white font-bold py-4 rounded-lg transition-colors shadow-lg"
                       onClick={() => {
                         loginForm.setValue("username", "demo");
                         loginForm.setValue("password", "password");
@@ -191,10 +191,10 @@ export default function AuthPage() {
                         ) : (
                           <Lock className="h-5 w-5 mr-2" />
                         )}
-                        {loginMutation.isPending ? "Authenticating..." : "One-Click Login"}
+                        {loginMutation.isPending ? "Authenticating..." : "3-DEAL FREE TRIAL"}
                       </div>
                     </Button>
-                    <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-2">No credentials required - instant access</p>
+                    <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-2">Try the platform with 3 free deals - no credit card required</p>
                   </div>
                   
                   <div className="relative my-6">
@@ -237,7 +237,7 @@ export default function AuthPage() {
                           <FormItem>
                             <div className="flex items-center justify-between">
                               <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Password</FormLabel>
-                              <a href="#" className="text-xs text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 font-medium">
+                              <a href="#" className="text-xs text-[#FF6F00] hover:text-[#FF5000] font-medium">
                                 Forgot password?
                               </a>
                             </div>
@@ -270,7 +270,7 @@ export default function AuthPage() {
                       </div>
                       <Button 
                         type="submit" 
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 h-12 rounded-lg mt-6"
+                        className="w-full bg-[#003366] hover:bg-[#002244] text-white font-medium py-2.5 h-12 rounded-lg mt-6"
                         disabled={loginMutation.isPending}
                       >
                         {loginMutation.isPending ? (
@@ -320,7 +320,7 @@ export default function AuthPage() {
                         const tab = document.querySelector('[data-state="inactive"][value="register"]') as HTMLElement;
                         tab?.click();
                       }}
-                      className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+                      className="font-medium text-[#FF6F00] hover:text-[#FF5000]"
                     >
                       Create an account
                     </a>
@@ -440,18 +440,18 @@ export default function AuthPage() {
                         />
                         <Label htmlFor="terms" className="text-sm text-gray-600 dark:text-gray-300">
                           I agree to the{" "}
-                          <a href="#" className="text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300">
+                          <a href="#" className="text-[#FF6F00] hover:text-[#FF5000]">
                             Terms of Service
                           </a>{" "}
                           and{" "}
-                          <a href="#" className="text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300">
+                          <a href="#" className="text-[#FF6F00] hover:text-[#FF5000]">
                             Privacy Policy
                           </a>
                         </Label>
                       </div>
                       <Button 
                         type="submit" 
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 h-12 rounded-lg mt-6"
+                        className="w-full bg-[#003366] hover:bg-[#002244] text-white font-medium py-2.5 h-12 rounded-lg mt-6"
                         disabled={registerMutation.isPending}
                       >
                         {registerMutation.isPending ? (
@@ -501,7 +501,7 @@ export default function AuthPage() {
                         const tab = document.querySelector('[data-state="inactive"][value="login"]') as HTMLElement;
                         tab?.click();
                       }}
-                      className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+                      className="font-medium text-[#FF6F00] hover:text-[#FF5000]"
                     >
                       Sign in
                     </a>
