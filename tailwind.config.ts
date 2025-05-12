@@ -152,6 +152,24 @@ export default {
           from: { transform: "scale(1)", opacity: 1 },
           to: { transform: "scale(0.95)", opacity: 0 },
         },
+        dash: {
+          to: { strokeDashoffset: "-1000" },
+        },
+        dashReverse: {
+          to: { strokeDashoffset: "1000" },
+        },
+        wave: {
+          "0%": { transform: "translateY(0)" },
+          "100%": { transform: "translateY(-30px)" },
+        },
+        fadeInUp: {
+          from: { opacity: 0, transform: "translateY(20px)" },
+          to: { opacity: 1, transform: "translateY(0)" },
+        },
+        slideInRight: {
+          from: { opacity: 0, transform: "translateX(40px)" },
+          to: { opacity: 1, transform: "translateX(0)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -165,6 +183,13 @@ export default {
         ping: "ping 1s cubic-bezier(0, 0, 0.2, 1) infinite",
         "scale-in": "scale-in 0.3s ease-out",
         "scale-out": "scale-out 0.3s ease-out",
+        dash: "dash 30s linear infinite",
+        "dash-reverse": "dashReverse 30s linear infinite",
+        "pulse-slow": "pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+        "ping-slow": "ping 3s cubic-bezier(0, 0, 0.2, 1) infinite", 
+        wave: "wave 5s ease-in-out infinite alternate",
+        "fade-in-up": "fadeInUp 1s ease-out",
+        "slide-in-right": "slideInRight 1s ease-out",
       },
       transitionTimingFunction: {
         "in-expo": "cubic-bezier(0.95, 0.05, 0.795, 0.035)",
