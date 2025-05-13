@@ -76,6 +76,25 @@ export const refineries = pgTable("refineries", {
   capacity: integer("capacity"), // in barrels per day
   status: text("status").default("active"),
   description: text("description"),
+  
+  // Existing fields from the database
+  operator: text("operator"),
+  owner: text("owner"),
+  type: text("type"),
+  products: text("products"),
+  year_built: integer("year_built"),
+  last_maintenance: timestamp("last_maintenance"),
+  next_maintenance: timestamp("next_maintenance"),
+  complexity: decimal("complexity", { precision: 10, scale: 2 }),
+  email: text("email"),
+  phone: text("phone"),
+  website: text("website"),
+  address: text("address"),
+  technical_specs: text("technical_specs"),
+  photo: text("photo"),
+  city: text("city"),
+  last_updated: timestamp("last_updated"),
+  utilization: decimal("utilization", { precision: 10, scale: 2 }),
 });
 
 export const insertRefinerySchema = createInsertSchema(refineries).omit({
@@ -376,3 +395,78 @@ export const insertInvoiceSchema = createInsertSchema(invoices).omit({
 
 export type InsertInvoice = z.infer<typeof insertInvoiceSchema>;
 export type Invoice = typeof invoices.$inferSelect;
+
+// Gate (بوابة)
+export const gates = pgTable("gates", {
+  id: serial("id").primaryKey(),
+  portId: integer("port_id").notNull().references(() => ports.id),
+  name: text("name").notNull(),
+  number: text("number").notNull(),
+  status: text("status").default("active").notNull(), // active, maintenance, closed
+  type: text("type").default("cargo").notNull(), // cargo, passenger, mixed
+  capacity: integer("capacity"), // vessels per day
+  currentOccupancy: integer("current_occupancy").default(0),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+  lastUpdated: timestamp("last_updated").defaultNow(),
+});
+
+export const insertGateSchema = createInsertSchema(gates).omit({
+  id: true,
+  createdAt: true,
+  lastUpdated: true,
+});
+
+export type InsertGate = z.infer<typeof insertGateSchema>;
+export type Gate = typeof gates.$inferSelect;
+
+// Assigned Job (عمل محدد للسفينة)
+export const vesselJobs = pgTable("vessel_jobs", {
+  id: serial("id").primaryKey(),
+  vesselId: integer("vessel_id").notNull().references(() => vessels.id),
+  jobType: text("job_type").notNull(), // loading, unloading, maintenance, waiting
+  status: text("status").notNull().default("pending"), // pending, in_progress, completed, cancelled
+  gateId: integer("gate_id").references(() => gates.id),
+  brokerId: integer("broker_id").references(() => brokers.id),
+  companyId: integer("company_id").references(() => companies.id),
+  startTime: timestamp("start_time"),
+  estimatedEndTime: timestamp("estimated_end_time"),
+  actualEndTime: timestamp("actual_end_time"),
+  cargoDetails: text("cargo_details"), // JSON string with cargo information
+  unloadingProgress: decimal("unloading_progress", { precision: 5, scale: 2 }).default("0"), // Percentage of completion (0-100)
+  createdAt: timestamp("created_at").defaultNow(),
+  lastUpdated: timestamp("last_updated").defaultNow(),
+  notes: text("notes"),
+});
+
+export const insertVesselJobSchema = createInsertSchema(vesselJobs).omit({
+  id: true,
+  createdAt: true,
+  lastUpdated: true,
+});
+
+export type InsertVesselJob = z.infer<typeof insertVesselJobSchema>;
+export type VesselJob = typeof vesselJobs.$inferSelect;
+
+// Update the vessels table to add relation to job status
+export const vesselExtraInfo = pgTable("vessel_extra_info", {
+  id: serial("id").primaryKey(),
+  vesselId: integer("vessel_id").notNull().references(() => vessels.id).unique(),
+  currentJobId: integer("current_job_id").references(() => vesselJobs.id),
+  currentGateId: integer("current_gate_id").references(() => gates.id),
+  loadingStatus: text("loading_status").default("waiting"), // waiting, loading, unloading, completed
+  colorCode: text("color_code").default("blue"), // blue=waiting, red=unloading, green=completed
+  lastStatusChange: timestamp("last_status_change").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+  lastUpdated: timestamp("last_updated").defaultNow(),
+});
+
+export const insertVesselExtraInfoSchema = createInsertSchema(vesselExtraInfo).omit({
+  id: true,
+  createdAt: true,
+  lastUpdated: true,
+  lastStatusChange: true,
+});
+
+export type InsertVesselExtraInfo = z.infer<typeof insertVesselExtraInfoSchema>;
+export type VesselExtraInfo = typeof vesselExtraInfo.$inferSelect;
