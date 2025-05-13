@@ -61,14 +61,14 @@ export default function AuthPage() {
   // Redirect if already logged in
   useEffect(() => {
     if (user) {
-      navigate("/");
+      navigate("/dashboard");
     }
   }, [user, navigate]);
 
   const onLoginSubmit = async (data: LoginFormValues) => {
     try {
       await loginMutation.mutateAsync(data);
-      navigate("/");
+      navigate("/dashboard");
     } catch (error) {
       // Toast handled in auth context
     }

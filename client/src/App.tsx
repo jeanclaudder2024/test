@@ -28,12 +28,35 @@ import TranslationPage from "@/pages/TranslationPage";
 import { useEffect } from "react";
 import { apiRequest, queryClient } from "./lib/queryClient";
 import { Layout } from "@/components/ui/layout";
-import { AuthProvider } from "@/hooks/use-auth";
+import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { LanguageProvider } from "@/hooks/use-language";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { motion, AnimatePresence } from "framer-motion";
+import { Redirect } from "wouter";
+import { Loader2 } from "lucide-react";
 import { QueryClientProvider } from "@tanstack/react-query";
+
+// Component to check auth status and redirect if logged in
+function LandingPageRedirect() {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // If user is logged in, redirect to dashboard
+  if (user) {
+    return <Redirect to="/dashboard" />;
+  }
+
+  // Otherwise show landing page
+  return <LandingPage />;
+}
 
 function Router() {
   const [location] = useLocation();
@@ -59,7 +82,9 @@ function Router() {
     return (
       <AnimatePresence mode="wait">
         <Switch>
-          <Route path="/" component={LandingPage} />
+          <Route path="/">
+            <LandingPageRedirect />
+          </Route>
           <Route path="/auth" component={AuthPage} />
         </Switch>
       </AnimatePresence>
