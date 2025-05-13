@@ -1,87 +1,33 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   MapContainer, 
   TileLayer, 
-  Marker, 
-  Popup, 
   useMap, 
   Polyline,
-  Rectangle,
   CircleMarker,
   Tooltip,
   Circle,
   ZoomControl
 } from 'react-leaflet';
-import L, { LatLngExpression, DomUtil, Control, LayerGroup } from 'leaflet';
+import L from 'leaflet';
 import { createPortal } from 'react-dom';
 import { OptimizedVesselLayer, OptimizedRefineryLayer, OptimizedPortLayer } from './OptimizedMarkerLayer';
-import { Vessel, Refinery, Port, RefineryPortConnection } from '@shared/schema';
-import { OIL_PRODUCT_TYPES } from '@shared/constants';
-
-// Helper function to generate coordinates for ports
-// In a real application, this would be replaced with actual port coordinates from the database
-function getRandomCoordinatesForPort(portName: string): [number, number] {
-  // Create a deterministic "random" value based on the port name
-  let hash = 0;
-  for (let i = 0; i < portName.length; i++) {
-    hash = ((hash << 5) - hash) + portName.charCodeAt(i);
-    hash |= 0; // Convert to 32bit integer
-  }
-  
-  // Use the hash to create a somewhat deterministic latitude and longitude
-  // This is just for demonstration - real world would use actual coordinates
-  const regions: Record<string, [number, number, number, number]> = {
-    'Rotterdam': [51.9225, 4.47917, 0.5, 0.5],
-    'Singapore': [1.29027, 103.851, 0.5, 0.5], 
-    'Shanghai': [31.2304, 121.474, 0.5, 0.5],
-    'Antwerp': [51.2194, 4.40026, 0.5, 0.5],
-    'New York': [40.7128, -74.006, 1, 1],
-    'Houston': [29.7604, -95.3698, 1, 1],
-    'Dubai': [25.2048, 55.2708, 0.5, 0.5],
-    'Tokyo': [35.6762, 139.6503, 0.5, 0.5],
-    'Hamburg': [53.5511, 9.9937, 0.5, 0.5],
-    'Los Angeles': [33.7701, -118.1937, 1, 1]
-  };
-  
-  // Check if this is a known major port
-  for (const [key, value] of Object.entries(regions)) {
-    if (portName.toLowerCase().includes(key.toLowerCase())) {
-      return [value[0], value[1]];
-    }
-  }
-  
-  // For ports we don't recognize, create a somewhat random but reasonable coordinate
-  // This ensures we stay in ocean regions roughly
-  const lat = ((Math.abs(hash % 140) - 70) + 5) % 75; // -65 to +70 degrees latitude
-  const lng = ((hash % 360) - 180) % 360; // -180 to +180 degrees longitude
-  
-  return [lat, lng];
-}
+import { Vessel, Refinery, Port } from '@shared/schema';
 import { useVesselWebSocket } from '@/hooks/useVesselWebSocket';
 import { useMaritimeData } from '@/hooks/useMaritimeData';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { 
-  Loader2, Anchor, Info, Navigation, Flag, Calendar, Ship, 
-  Factory, Warehouse, Anchor as AnchorIcon, Sparkles,
-  CheckCircle, FileText, MapPin, Layers, RefreshCw, Settings
+  Loader2, Info, Navigation, Ship, 
+  Factory, Anchor as AnchorIcon, MapPin, Route
 } from 'lucide-react';
-import { AIGenerationPanel } from '@/components/AIGenerationPanel';
-import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-// Import removed - using hardcoded regions instead
 
 // Ensure Leaflet CSS is imported
 import 'leaflet/dist/leaflet.css';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
-
-// Import MarkerCluster for performance optimization
-import 'leaflet.markercluster';
 
 // Fix Leaflet icon issues
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -194,87 +140,6 @@ const portIcon = () => {
   return cachedPortIcon;
 };
 
-// Create a custom clustering utility to improve performance
-const clusterPoints = (points: Array<{lat: number, lng: number, data: any}>, distance: number = 50) => {
-  // If we have few points, don't cluster
-  if (points.length < 100) return points.map(p => ({...p, cluster: false}));
-  
-  const clusters: Array<{
-    lat: number, 
-    lng: number, 
-    count: number, 
-    items: Array<{lat: number, lng: number, data: any}>,
-    radius: number
-  }> = [];
-  
-  const processed = new Set<number>();
-  
-  // Process each point
-  for (let i = 0; i < points.length; i++) {
-    if (processed.has(i)) continue;
-    
-    const point = points[i];
-    processed.add(i);
-    
-    // Find nearby points
-    const nearby: Array<{lat: number, lng: number, data: any, index: number}> = [];
-    
-    for (let j = 0; j < points.length; j++) {
-      if (i === j || processed.has(j)) continue;
-      
-      const otherPoint = points[j];
-      const pointDistance = Math.sqrt(
-        Math.pow(point.lat - otherPoint.lat, 2) + 
-        Math.pow(point.lng - otherPoint.lng, 2)
-      ) * 111; // Rough km conversion
-      
-      if (pointDistance < distance / 1000) {
-        nearby.push({...otherPoint, index: j});
-      }
-    }
-    
-    // If we have nearby points, create a cluster
-    if (nearby.length > 0) {
-      // Mark all nearby points as processed
-      nearby.forEach(n => processed.add(n.index));
-      
-      // Calculate cluster center and radius
-      const allPoints = [point, ...nearby.map(n => ({lat: n.lat, lng: n.lng, data: n.data}))];
-      const centerLat = allPoints.reduce((sum, p) => sum + p.lat, 0) / allPoints.length;
-      const centerLng = allPoints.reduce((sum, p) => sum + p.lng, 0) / allPoints.length;
-      
-      // Calculate radius - distance from center to furthest point
-      const radius = Math.max(...allPoints.map(p => 
-        Math.sqrt(Math.pow(centerLat - p.lat, 2) + Math.pow(centerLng - p.lng, 2))
-      )) * 111 * 1000; // Convert to meters
-      
-      clusters.push({
-        lat: centerLat,
-        lng: centerLng,
-        count: allPoints.length,
-        items: allPoints,
-        radius: Math.max(30, radius) // Minimum 30m radius for visibility
-      });
-    } else {
-      // Single point - add as individual marker
-      clusters.push({
-        lat: point.lat,
-        lng: point.lng,
-        count: 1,
-        items: [point],
-        radius: 20
-      });
-    }
-  }
-  
-  return clusters;
-};
-
-// MapUpdateComponent - handles updating the map when vessels change
-interface MapUpdateProps {
-  vessels: Vessel[];
-}
-
 // Custom viewport management to only render what's visible
 function useViewportRendering(map: L.Map | null) {
   const [bounds, setBounds] = useState<L.LatLngBounds | null>(null);
@@ -380,6 +245,11 @@ function MapEvents() {
   return null;
 }
 
+// MapUpdateComponent - handles updating the map when vessels change
+interface MapUpdateProps {
+  vessels: Vessel[];
+}
+
 function MapUpdate({ vessels }: MapUpdateProps) {
   const map = useMap();
 
@@ -387,7 +257,7 @@ function MapUpdate({ vessels }: MapUpdateProps) {
     if (vessels.length > 0) {
       // If we have vessels, fit bounds to include all vessels
       const points = vessels.map(vessel => 
-        [parseFloat(vessel.currentLat || '0'), parseFloat(vessel.currentLng || '0')] as [number, number]
+        [parseFloat(String(vessel.currentLat) || '0'), parseFloat(String(vessel.currentLng) || '0')] as [number, number]
       );
       
       // Only include valid coordinates
@@ -414,7 +284,7 @@ interface LiveVesselMapProps {
 export default function LiveVesselMap({ 
   initialRegion, 
   height = '600px',
-  showRoutes = false, // Changed default to false
+  showRoutes = false,
   showVesselHistory = false,
   showHeatmap = false,
   mapStyle: initialMapStyle = 'dark'
@@ -426,148 +296,88 @@ export default function LiveVesselMap({
   const [selectedPort, setSelectedPort] = useState<Port | null>(null);
   const [mapCenter, setMapCenter] = useState<[number, number]>([20, 0]);
   const [mapZoom, setMapZoom] = useState(3);
-  const [showRefineries, setShowRefineries] = useState<boolean>(true);
-  const [showPorts, setShowPorts] = useState<boolean>(true);
-  const [showConnections, setShowConnections] = useState<boolean>(true);
-  const [displayMode, setDisplayMode] = useState<string>("all");
-  const [hoveredVessel, setHoveredVessel] = useState<Vessel | null>(null);
-  const [vesselsWithRoutes, setVesselsWithRoutes] = useState<Record<number, boolean>>({});
-  const [selectedOilType, setSelectedOilType] = useState<string>("all");
   
-  // Use our WebSocket hook for real-time vessel data with fallback to REST API polling
+  // Use our WebSocket hook for real-time vessel data
   const { 
     vessels, 
     connected: isConnected, 
     lastUpdated, 
     error: vesselError, 
-    loading: vesselsLoading, 
-    refreshData: refreshVesselData,
-    connectionType: usingFallback
+    loading: vesselsLoading 
   } = useVesselWebSocket({ 
     region: selectedRegion,
-    pollingInterval: 30000, // 30 seconds polling interval for REST API fallback
-    loadAllVessels: true // Load all vessels at once for routing visualization
+    pollingInterval: 30000,
+    loadAllVessels: true
   });
   
-  // Use maritime data hook for refineries and ports with their connections
-  const {
+  // Use the maritime data hook for refineries, ports, etc.
+  const { 
     refineries,
     ports,
-    connections,
-    isLoading: infrastructureLoading,
-    error: infrastructureError,
-    refreshData: refreshInfrastructureData
-  } = useMaritimeData({
-    region: selectedRegion,
-    includeVessels: false, // Already getting vessels from WebSocket
-    includeRefineries: showRefineries,
-    includePorts: showPorts,
-    includeConnections: showConnections,
-    pollingInterval: 60000 // 1 minute polling interval
-  });
-
-  // Combine errors and loading states
-  const error = vesselError || infrastructureError;
-  const isLoading = vesselsLoading || infrastructureLoading;
-
-  // Handle region selection change
-  const handleRegionChange = (region: string) => {
-    setSelectedRegion(region);
-    // Reset selections when changing regions
-    setSelectedVessel(null);
-    setSelectedRefinery(null);
-    setSelectedPort(null);
+    loading: infrastructureLoading,
+    error: infrastructureError
+  } = useMaritimeData({ region: selectedRegion });
+  
+  // Handle vessel click
+  const handleVesselClick = (vessel: Vessel) => {
+    // Toggle selection if clicking the same vessel
+    if (selectedVessel && selectedVessel.id === vessel.id) {
+      setSelectedVessel(null);
+    } else {
+      setSelectedVessel(vessel);
+      setSelectedRefinery(null);
+      setSelectedPort(null);
+    }
   };
   
-  // Function to refresh all data
-  const refreshData = () => {
-    refreshVesselData();
-    refreshInfrastructureData();
+  // Handle refinery click
+  const handleRefineryClick = (refinery: Refinery) => {
+    // Toggle selection if clicking the same refinery
+    if (selectedRefinery && selectedRefinery.id === refinery.id) {
+      setSelectedRefinery(null);
+    } else {
+      setSelectedRefinery(refinery);
+      setSelectedVessel(null);
+      setSelectedPort(null);
+    }
   };
-
-  return (
-    <div className="flex flex-col w-full">
-      <div className="flex flex-wrap justify-between items-center mb-4 p-2 bg-card rounded-md">
-        <div className="flex items-center space-x-2">
-          <Ship className="h-5 w-5" />
-          <h2 className="text-lg font-semibold">Maritime Tracking</h2>
-          
-          {isConnected ? (
-            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-              Connected {usingFallback ? "(REST API)" : "(WebSocket)"}
-            </Badge>
-          ) : (
-            <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
-              Reconnecting...
-            </Badge>
-          )}
-          
-          {isLoading && <Loader2 className="h-4 w-4 animate-spin ml-2" />}
-        </div>
-        
-        <div className="flex flex-wrap items-center gap-2 mt-2 sm:mt-0">
-          <Select value={selectedRegion} onValueChange={handleRegionChange}>
-            <SelectTrigger className="w-[150px]">
-              <SelectValue placeholder="Select Region" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="global">Global</SelectItem>
-              <SelectItem value="middle_east">Middle East</SelectItem>
-              <SelectItem value="north_america">North America</SelectItem>
-              <SelectItem value="europe">Europe</SelectItem>
-              <SelectItem value="africa">Africa</SelectItem>
-              <SelectItem value="southeast_asia">Southeast Asia</SelectItem>
-              <SelectItem value="east_asia">East Asia</SelectItem>
-              <SelectItem value="oceania">Oceania</SelectItem>
-              <SelectItem value="south_america">South America</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          <Select value={displayMode} onValueChange={setDisplayMode}>
-            <SelectTrigger className="w-[150px]">
-              <SelectValue placeholder="Display Mode" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Maritime Assets</SelectItem>
-              <SelectItem value="vessels">Vessels Only</SelectItem>
-              <SelectItem value="infrastructure">Infrastructure Only</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          <Select value={selectedOilType} onValueChange={setSelectedOilType}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select Oil Type" />
-            </SelectTrigger>
-            <SelectContent className="max-h-[300px] overflow-auto">
-              <SelectItem value="all">All Oil Types</SelectItem>
-              {OIL_PRODUCT_TYPES.map(oilType => (
-                <SelectItem key={oilType} value={oilType.toLowerCase()}>
-                  {oilType}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          
-          <Button 
-            variant="outline" 
-            onClick={refreshData} 
-            disabled={(usingFallback ? false : !isConnected) || isLoading}
-          >
-            Refresh
-          </Button>
-        </div>
+  
+  // Handle port click
+  const handlePortClick = (port: Port) => {
+    // Toggle selection if clicking the same port
+    if (selectedPort && selectedPort.id === port.id) {
+      setSelectedPort(null);
+    } else {
+      setSelectedPort(port);
+      setSelectedVessel(null);
+      setSelectedRefinery(null);
+    }
+  };
+  
+  // Show error message if there's an issue
+  if (vesselError || infrastructureError) {
+    const error = vesselError || infrastructureError;
+    return (
+      <div className="p-4 rounded-lg bg-destructive/10 text-destructive border border-destructive/20">
+        <h3 className="font-medium mb-2">Error Loading Map Data</h3>
+        <p className="text-sm">{error?.toString()}</p>
       </div>
-      
-
-      
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-md mb-4">
-          {error}
+    );
+  }
+  
+  return (
+    <div className="relative">
+      {(vesselsLoading || infrastructureLoading) && (
+        <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10 backdrop-blur-sm">
+          <div className="flex flex-col items-center space-y-4 p-4">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <div className="text-sm font-medium">Loading maritime data...</div>
+          </div>
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className={`col-span-1 md:col-span-2 rounded-lg overflow-hidden`} style={{ height }}>
+      <div className="w-full">
+        <div className="w-full rounded-lg overflow-hidden" style={{ height }}>
           <MapContainer
             center={mapCenter}
             zoom={mapZoom}
@@ -583,16 +393,13 @@ export default function LiveVesselMap({
               <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
                 url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-                subdomains="abcd"
-                maxZoom={19}
               />
             )}
             
             {mapStyle === 'light' && (
               <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                maxZoom={19}
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
               />
             )}
             
@@ -600,1101 +407,238 @@ export default function LiveVesselMap({
               <TileLayer
                 attribution='Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
                 url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-                maxZoom={19}
               />
             )}
             
             {mapStyle === 'nautical' && (
               <TileLayer
-                attribution='Tiles &copy; ESRI &mdash; National Geographic, Esri, DeLorme, NAVTEQ, UNEP-WCMC, USGS, NASA, ESA, METI, NRCAN, GEBCO, NOAA, iPC'
-                url="https://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}"
-                maxZoom={16}
+                attribution='Map data: &copy; <a href="http://www.openseamap.org">OpenSeaMap</a> contributors'
+                url="https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png"
               />
             )}
             
-            {/* Add heatmap layer for traffic density if enabled */}
-            {showHeatmap && (
-              <div>
-                {/* Placeholder for heatmap - in a real implementation this would be a proper heatmap layer */}
-                <Rectangle 
-                  bounds={[[-60, -180], [70, 180]]} 
-                  pathOptions={{ 
-                    fillColor: '#ff9800', 
-                    fillOpacity: 0.05, 
-                    weight: 0 
-                  }} 
-                />
-              </div>
-            )}
-            
-            {/* Add a MapEvents component to handle fitWorld */}
+            {/* Fix map issues */}
             <MapEvents />
             
-            {/* Floating Map Control Panel with hover to expand */}
-            <MapControl position="topright" className="floating-map-control">
-              <div className="relative group">
-                {/* Control Panel Icon - Always Visible */}
-                <div className="absolute right-0 top-0 z-10 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm p-2 rounded-full shadow-lg border border-gray-200 dark:border-gray-800 cursor-pointer group-hover:opacity-0 transition-opacity duration-300">
-                  <Settings className="h-6 w-6 text-blue-600" />
-                </div>
-                
-                {/* Expanded Control Panel - Visible on Hover */}
-                <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm p-3 rounded-lg shadow-lg border border-gray-200 dark:border-gray-800 w-64 opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform scale-95 group-hover:scale-100 origin-top-right">
-                  <div className="mb-4">
-                    <h3 className="text-sm font-semibold mb-2 flex items-center">
-                      <MapPin className="h-4 w-4 mr-1.5 text-blue-600" />
-                      Region Filter
-                    </h3>
-                    <Select value={selectedRegion} onValueChange={handleRegionChange}>
-                      <SelectTrigger className="w-full text-sm h-8">
-                        <SelectValue placeholder="Select Region" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="global">Global</SelectItem>
-                        <SelectItem value="middle_east">Middle East</SelectItem>
-                        <SelectItem value="north_america">North America</SelectItem>
-                        <SelectItem value="europe">Europe</SelectItem>
-                        <SelectItem value="africa">Africa</SelectItem>
-                        <SelectItem value="southeast_asia">Southeast Asia</SelectItem>
-                        <SelectItem value="east_asia">East Asia</SelectItem>
-                        <SelectItem value="oceania">Oceania</SelectItem>
-                        <SelectItem value="south_america">South America</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="mb-4">
-                    <h3 className="text-sm font-semibold mb-2 flex items-center">
-                      <Ship className="h-4 w-4 mr-1.5 text-blue-600" />
-                      Oil Type Filter
-                    </h3>
-                    <Select value={selectedOilType} onValueChange={setSelectedOilType}>
-                      <SelectTrigger className="w-full text-sm h-8">
-                        <SelectValue placeholder="Select Oil Type" />
-                      </SelectTrigger>
-                      <SelectContent className="max-h-[200px] overflow-auto">
-                        <SelectItem value="all">All Oil Types</SelectItem>
-                        {OIL_PRODUCT_TYPES.map(oilType => (
-                          <SelectItem key={oilType} value={oilType.toLowerCase()}>
-                            {oilType}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="mb-4">
-                    <h3 className="text-sm font-semibold mb-2 flex items-center">
-                      <Layers className="h-4 w-4 mr-1.5 text-blue-600" />
-                      Map Style
-                    </h3>
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button 
-                        size="sm" 
-                        variant={mapStyle === 'dark' ? 'default' : 'outline'} 
-                        className="text-xs h-8" 
-                        onClick={() => setMapStyle('dark')}
-                      >
-                        Dark
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        variant={mapStyle === 'light' ? 'default' : 'outline'} 
-                        className="text-xs h-8" 
-                        onClick={() => setMapStyle('light')}
-                      >
-                        Light
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        variant={mapStyle === 'satellite' ? 'default' : 'outline'} 
-                        className="text-xs h-8" 
-                        onClick={() => setMapStyle('satellite')}
-                      >
-                        Satellite
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        variant={mapStyle === 'nautical' ? 'default' : 'outline'} 
-                        className="text-xs h-8" 
-                        onClick={() => setMapStyle('nautical')}
-                      >
-                        Nautical
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <h3 className="text-sm font-semibold mb-2 flex items-center">
-                      <Layers className="h-4 w-4 mr-1.5 text-blue-600" />
-                      Map Layers
-                    </h3>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <label className="text-sm flex items-center cursor-pointer">
-                          <Ship className="h-3.5 w-3.5 mr-1.5 text-blue-500" />
-                          Vessels
-                        </label>
-                        <Switch 
-                          checked={true}
-                          disabled={true}
-                        />
-                      </div>
-                      
-                      <div className="flex items-center justify-between">
-                        <label className="text-sm flex items-center cursor-pointer">
-                          <Factory className="h-3.5 w-3.5 mr-1.5 text-red-500" />
-                          Refineries
-                        </label>
-                        <Switch 
-                          checked={showRefineries}
-                          onCheckedChange={setShowRefineries}
-                        />
-                      </div>
-                      
-                      <div className="flex items-center justify-between">
-                        <label className="text-sm flex items-center cursor-pointer">
-                          <AnchorIcon className="h-3.5 w-3.5 mr-1.5 text-blue-600" />
-                          Ports
-                        </label>
-                        <Switch 
-                          checked={showPorts}
-                          onCheckedChange={setShowPorts}
-                        />
-                      </div>
-                      
-                      <div className="flex items-center justify-between">
-                        <label className="text-sm flex items-center cursor-pointer">
-                          <Warehouse className="h-3.5 w-3.5 mr-1.5 text-purple-500" />
-                          Connections
-                        </label>
-                        <Switch 
-                          checked={showConnections}
-                          onCheckedChange={setShowConnections}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-4 flex justify-center">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      className="text-xs w-full h-8 flex items-center"
-                      onClick={refreshData}
-                    >
-                      <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
-                      Refresh Data
-                    </Button>
-                  </div>
-                  
-                  <div className="mt-3 flex items-center justify-center">
-                    <div className={`h-2 w-2 rounded-full mr-1.5 ${isConnected ? 'bg-green-500' : 'bg-yellow-500'}`} />
-                    <p className="text-xs text-muted-foreground">
-                      {isConnected 
-                        ? `${vessels.length} vessels${usingFallback ? ' (REST API)' : ' (WebSocket)'}`
-                        : 'Reconnecting...'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </MapControl>
+            {/* Vessel Markers */}
+            <OptimizedVesselLayer
+              vessels={vessels}
+              onVesselClick={handleVesselClick}
+              selectedVessel={selectedVessel}
+              vesselIcon={vesselIcon}
+              showRoutes={showRoutes}
+            />
             
-            {/* Display vessel history if enabled */}
-            {showVesselHistory && (displayMode === 'all' || displayMode === 'vessels') && 
-              (selectedOilType === 'all' 
-                ? vessels 
-                : vessels.filter(v => 
-                    (v.cargoType && v.cargoType.toLowerCase().includes(selectedOilType.toLowerCase())) ||
-                    (v.vesselType && v.vesselType.toLowerCase().includes(selectedOilType.toLowerCase()))
-                  )
-              ).map(vessel => {
-              // For demonstration, we'll create synthetic vessel history paths
-              // In a real application, this would come from the vessel's actual historical positions
-              if (vessel.currentLat && vessel.currentLng) {
-                const currentLat = parseFloat(vessel.currentLat);
-                const currentLng = parseFloat(vessel.currentLng);
-                
-                if (isNaN(currentLat) || isNaN(currentLng)) return null;
-                
-                // Create a simple "wake" pattern behind the vessel using vessel ID to make it deterministic
-                const historyPoints: [number, number][] = [];
-                
-                // Use vessel ID to create a somewhat deterministic pattern
-                const vesselIdNum = parseInt(vessel.id.toString());
-                const direction = vesselIdNum % 8; // 0-7 for different directions
-                const directionMap = [
-                  [-0.01, 0], // North
-                  [-0.007, 0.007], // Northeast
-                  [0, 0.01], // East
-                  [0.007, 0.007], // Southeast
-                  [0.01, 0], // South
-                  [0.007, -0.007], // Southwest
-                  [0, -0.01], // West
-                  [-0.007, -0.007], // Northwest
-                ];
-                
-                // Use the direction to create history points
-                for (let i = 1; i <= 5; i++) {
-                  historyPoints.push([
-                    currentLat - (directionMap[direction][0] * i),
-                    currentLng - (directionMap[direction][1] * i)
-                  ]);
-                }
-                
-                // Add current position as first point
-                historyPoints.unshift([currentLat, currentLng]);
-                
-                return (
-                  <Polyline
-                    key={`history-${vessel.id}`}
-                    positions={historyPoints as LatLngExpression[]}
-                    pathOptions={{
-                      color: '#00ff00',
-                      weight: 2,
-                      opacity: 0.5,
-                      dashArray: '3, 6'
-                    }}
-                  />
-                );
-              }
-              return null;
-            })}
+            {/* Refinery Markers */}
+            <OptimizedRefineryLayer
+              refineries={refineries}
+              onRefineryClick={handleRefineryClick}
+              selectedRefinery={selectedRefinery}
+              refineryIcon={refineryIcon}
+            />
             
-            {/* Display vessel routes only for vessels with enabled routes */}
-            {(displayMode === 'all' || displayMode === 'vessels') && 
-              (selectedOilType === 'all' 
-                ? vessels 
-                : vessels.filter(v => 
-                    (v.cargoType && v.cargoType.toLowerCase().includes(selectedOilType.toLowerCase())) ||
-                    (v.vesselType && v.vesselType.toLowerCase().includes(selectedOilType.toLowerCase()))
-                  )
-              ).map(vessel => {
-                // Only show vessels with routes enabled and that have current coordinates
-                if (!vesselsWithRoutes[vessel.id] || !vessel.currentLat || !vessel.currentLng) {
-                  return null;
-                }
-                
-                // Get current vessel position
-                const currentCoords = [
-                  parseFloat(vessel.currentLat as string), 
-                  parseFloat(vessel.currentLng as string)
-                ];
-                
-                // Check if we have precise route coordinates
-                const hasDepartureCoords = vessel.departureLat && vessel.departureLng;
-                const hasDestinationCoords = vessel.destinationLat && vessel.destinationLng;
-                
-                // Get departure coordinates (precise or fallback)
-                let departureCoords = null;
-                if (hasDepartureCoords) {
-                  departureCoords = [
-                    parseFloat(vessel.departureLat as string), 
-                    parseFloat(vessel.departureLng as string)
-                  ];
-                } else if (vessel.departurePort) {
-                  departureCoords = getRandomCoordinatesForPort(vessel.departurePort);
-                }
-                
-                // Get destination coordinates (precise or fallback)
-                let destinationCoords = null;
-                if (hasDestinationCoords) {
-                  destinationCoords = [
-                    parseFloat(vessel.destinationLat as string), 
-                    parseFloat(vessel.destinationLng as string)
-                  ];
-                } else if (vessel.destinationPort) {
-                  destinationCoords = getRandomCoordinatesForPort(vessel.destinationPort);
-                }
-                
-                return (
-                  <div key={`route-${vessel.id}`} style={{ display: 'contents' }}>
-                    {/* Past route (from departure to current position) */}
-                    {departureCoords && (
-                      <Polyline 
-                        positions={[
-                          [departureCoords[0], departureCoords[1]] as LatLngExpression,
-                          [currentCoords[0], currentCoords[1]] as LatLngExpression
-                        ]}
-                        pathOptions={{ 
-                          color: '#3388ff', 
-                          weight: 2, 
-                          opacity: 0.6,
-                          dashArray: '6, 8'
-                        }}
-                      />
-                    )}
-                    
-                    {/* Future route (from current position to destination) */}
-                    {destinationCoords && (
-                      <Polyline 
-                        positions={[
-                          [currentCoords[0], currentCoords[1]] as LatLngExpression,
-                          [destinationCoords[0], destinationCoords[1]] as LatLngExpression
-                        ]}
-                        pathOptions={{ 
-                          color: '#ff3366', 
-                          weight: 2, 
-                          opacity: 0.4,
-                          dashArray: '3, 6'
-                        }}
-                      />
-                    )}
-                  </div>
-                );
-              })}
-            
-            {/* Custom Performance Optimized Rendering with Viewport-Based Loading */}
-            
-            {/* Vessels with optimized rendering and clustering */}
-            {(displayMode === 'all' || displayMode === 'vessels') && (
-              <OptimizedVesselLayer 
-                vessels={selectedOilType === 'all' 
-                  ? vessels 
-                  : vessels.filter(v => 
-                      (v.cargoType && v.cargoType.toLowerCase().includes(selectedOilType.toLowerCase())) ||
-                      (v.vesselType && v.vesselType.toLowerCase().includes(selectedOilType.toLowerCase()))
-                    )
-                }
-                onVesselSelect={(vessel) => {
-                  setSelectedVessel(vessel);
-                  setSelectedRefinery(null);
-                  setSelectedPort(null);
-                }}
-                vesselsWithRoutes={vesselsWithRoutes}
-                setVesselsWithRoutes={setVesselsWithRoutes}
-              />
-            )}
-            
-            {/* Refineries with optimized rendering */}
-            {showRefineries && (displayMode === 'all' || displayMode === 'infrastructure') && (
-              <OptimizedRefineryLayer
-                refineries={refineries}
-                onRefinerySelect={(refinery) => {
-                  setSelectedRefinery(refinery);
-                  setSelectedVessel(null);
-                  setSelectedPort(null);
-                }}
-              />
-            )}
-            
-            {/* Ports with optimized rendering */}
-            {showPorts && (displayMode === 'all' || displayMode === 'infrastructure') && (
-              <OptimizedPortLayer
-                ports={ports}
-                onPortSelect={(port) => {
-                  setSelectedPort(port);
-                  setSelectedVessel(null);
-                  setSelectedRefinery(null);
-                }}
-              />
-            )}
-            
-            {/* Display connections between refineries and ports */}
-            {showConnections && (displayMode === 'all' || displayMode === 'infrastructure') && connections.map(conn => {
-              const refinery = refineries.find(r => r.id === conn.refineryId);
-              const port = ports.find(p => p.id === conn.portId);
-              
-              if (!refinery || !port || !refinery.lat || !refinery.lng || !port.lat || !port.lng) {
-                return null;
-              }
-              
-              const refineryLat = typeof refinery.lat === 'string' ? parseFloat(refinery.lat) : refinery.lat;
-              const refineryLng = typeof refinery.lng === 'string' ? parseFloat(refinery.lng) : refinery.lng;
-              const portLat = typeof port.lat === 'string' ? parseFloat(port.lat) : port.lat;
-              const portLng = typeof port.lng === 'string' ? parseFloat(port.lng) : port.lng;
-              
-              if (isNaN(refineryLat) || isNaN(refineryLng) || isNaN(portLat) || isNaN(portLng)) {
-                return null;
-              }
-              
-              // Generate a slightly curved line for better visualization
-              // Calculate midpoint
-              const midLat = (refineryLat + portLat) / 2;
-              const midLng = (refineryLng + portLng) / 2;
-              
-              // Add a slight offset to create a curve
-              const latOffset = (refineryLng - portLng) * 0.1;
-              const lngOffset = (portLat - refineryLat) * 0.1;
-              const curvedMidLat = midLat + latOffset;
-              const curvedMidLng = midLng + lngOffset;
-              
-              // Create positions array with the midpoint
-              const positions: L.LatLngExpression[] = [
-                [refineryLat, refineryLng] as L.LatLngTuple,
-                [curvedMidLat, curvedMidLng] as L.LatLngTuple,
-                [portLat, portLng] as L.LatLngTuple
-              ];
-              
-              return (
-                <Polyline
-                  key={`connection-${conn.id}`}
-                  positions={positions}
-                  color="#9c27b0"
-                  weight={2}
-                  opacity={0.7}
-                  dashArray="5,5"
-                />
-              );
-            })}
+            {/* Port Markers */}
+            <OptimizedPortLayer
+              ports={ports}
+              onPortClick={handlePortClick}
+              selectedPort={selectedPort}
+              portIcon={portIcon}
+            />
             
             <MapUpdate vessels={vessels} />
-          </MapContainer>
-        </div>
-        
-        <div className="col-span-1 flex flex-col space-y-4" style={{ maxHeight: height, overflowY: 'auto' }}>
-          {/* Vessel Details */}
-          {selectedVessel ? (
-            <Card className="border-blue-200 shadow-lg">
-              <CardHeader className="bg-gradient-to-b from-blue-50 to-white border-b border-blue-100">
-                <div className="flex justify-between items-center">
-                  <Badge className="bg-blue-100 text-blue-700 mb-2 hover:bg-blue-200">{selectedVessel.vesselType}</Badge>
-                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Active</Badge>
-                </div>
-                <CardTitle className="flex items-center gap-2 text-blue-800">
-                  <Ship className="h-5 w-5 text-blue-600" />
-                  {selectedVessel.name}
-                </CardTitle>
-                <CardDescription className="text-blue-600">
-                  {selectedVessel.flag} • IMO: {selectedVessel.imo}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4 p-4">
-                <Tabs defaultValue="voyage" className="w-full">
-                  <TabsList className="w-full">
-                    <TabsTrigger value="voyage" className="flex gap-1 items-center text-xs">
-                      <Navigation className="h-3 w-3" /> Voyage
-                    </TabsTrigger>
-                    <TabsTrigger value="details" className="flex gap-1 items-center text-xs">
-                      <Info className="h-3 w-3" /> Details
-                    </TabsTrigger>
-                    <TabsTrigger value="position" className="flex gap-1 items-center text-xs">
-                      <MapPin className="h-3 w-3" /> Position
-                    </TabsTrigger>
-                    <TabsTrigger value="documents" className="flex gap-1 items-center text-xs">
-                      <FileText className="h-3 w-3" /> Docs
-                    </TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="voyage" className="pt-4">
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="text-center space-y-1">
-                          <div className="flex flex-col items-center">
-                            <AnchorIcon className="h-4 w-4 text-blue-600 mb-1" />
-                            <span className="text-xs text-muted-foreground">Origin</span>
-                          </div>
-                          <div className="font-semibold text-sm">{selectedVessel.departurePort || 'Unknown'}</div>
-                          {selectedVessel.departureDate && (
-                            <div className="text-xs text-muted-foreground">
-                              {new Date(selectedVessel.departureDate).toLocaleDateString()}
-                            </div>
-                          )}
-                        </div>
-                        
-                        <div className="flex-1 px-4">
-                          <div className="h-0.5 w-full bg-gradient-to-r from-blue-200 via-primary to-red-200 relative">
-                            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-blue-500 rounded-full h-3 w-3"></div>
-                          </div>
-                        </div>
-                        
-                        <div className="text-center space-y-1">
-                          <div className="flex flex-col items-center">
-                            <AnchorIcon className="h-4 w-4 text-red-600 mb-1" />
-                            <span className="text-xs text-muted-foreground">Destination</span>
-                          </div>
-                          <div className="font-semibold text-sm">{selectedVessel.destinationPort || 'Unknown'}</div>
-                          {selectedVessel.eta && (
-                            <div className="text-xs text-muted-foreground">
-                              ETA: {new Date(selectedVessel.eta).toLocaleDateString()}
-                            </div>
-                          )}
-                        </div>
+            
+            {/* Modal-style popup for selected vessel */}
+            {selectedVessel && (
+              <MapControl position="topright" className="w-96">
+                <Card className="border-blue-200 shadow-lg bg-white/95 backdrop-blur-sm">
+                  <CardHeader className="pb-2 bg-gradient-to-b from-blue-50 to-white border-b border-blue-100">
+                    <div className="flex justify-between items-center">
+                      <Badge className="bg-blue-100 text-blue-700 mb-1 hover:bg-blue-200">{selectedVessel.vesselType}</Badge>
+                      <Button variant="ghost" size="sm" onClick={() => setSelectedVessel(null)} className="h-6 w-6 p-0">×</Button>
+                    </div>
+                    <CardTitle className="flex items-center gap-2 text-blue-800 text-lg">
+                      <Ship className="h-5 w-5 text-blue-600" />
+                      {selectedVessel.name}
+                    </CardTitle>
+                    <CardDescription className="text-blue-600">
+                      {selectedVessel.flag} • IMO: {selectedVessel.imo}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3 pt-3 max-h-96 overflow-y-auto">
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <p className="text-gray-500">Position</p>
+                        <p className="font-medium">
+                          {typeof selectedVessel.currentLat === 'number' 
+                            ? selectedVessel.currentLat.toFixed(4) 
+                            : parseFloat(String(selectedVessel.currentLat) || '0').toFixed(4)}°, 
+                          {typeof selectedVessel.currentLng === 'number' 
+                            ? selectedVessel.currentLng.toFixed(4) 
+                            : parseFloat(String(selectedVessel.currentLng) || '0').toFixed(4)}°
+                        </p>
                       </div>
+                      <div>
+                        <p className="text-gray-500">Speed</p>
+                        <p className="font-medium">{selectedVessel.currentSpeed || 'N/A'} knots</p>
+                      </div>
+                    </div>
+                    
+                    <Separator className="my-1" />
+                    
+                    <div className="space-y-1">
+                      <h4 className="font-medium text-xs flex items-center gap-1">
+                        <Info className="h-3 w-3 text-blue-500" />
+                        Vessel Information
+                      </h4>
                       
-                      <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-sm bg-blue-50 rounded-md p-3">
-                        <div className="font-medium text-slate-700">Cargo Type:</div>
-                        <div>{selectedVessel.cargoType || 'Unknown'}</div>
-                        
-                        <div className="font-medium text-slate-700">Amount:</div>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
                         <div>
-                          {selectedVessel.cargoCapacity 
-                            ? selectedVessel.cargoCapacity.toLocaleString() + ' tons capacity' 
-                            : 'Unknown'}
+                          <p className="text-gray-500">Built</p>
+                          <p className="font-medium">{selectedVessel.built || 'N/A'}</p>
                         </div>
-                        
-                        <div className="font-medium text-slate-700">Status:</div>
-                        <div className="flex items-center">
-                          <span className="inline-block h-2 w-2 rounded-full bg-green-500 mr-1.5"></span>
-                          <span>In Transit</span>
-                        </div>
-                        
-                        <div className="font-medium text-slate-700">Progress:</div>
-                        <div className="flex items-center">
-                          <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
-                            <div className="h-full bg-blue-500 rounded-full" style={{ width: '65%' }}></div>
-                          </div>
+                        <div>
+                          <p className="text-gray-500">Deadweight</p>
+                          <p className="font-medium">{selectedVessel.deadweight?.toLocaleString() || 'N/A'} t</p>
                         </div>
                       </div>
                     </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="details" className="pt-4">
-                    <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-sm bg-slate-50 rounded-md p-3">
-                      <div className="font-medium text-slate-700">IMO Number:</div>
-                      <div>{selectedVessel.imo}</div>
+                    
+                    <div className="space-y-1">
+                      <h4 className="font-medium text-xs flex items-center gap-1">
+                        <Route className="h-3 w-3 text-blue-500" />
+                        Voyage
+                      </h4>
                       
-                      <div className="font-medium text-slate-700">MMSI:</div>
-                      <div>{selectedVessel.mmsi}</div>
-                      
-                      <div className="font-medium text-slate-700">Flag:</div>
-                      <div className="flex items-center gap-1">
-                        <Flag className="h-3 w-3 text-blue-600" />
-                        {selectedVessel.flag}
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                          <p className="text-gray-500">From</p>
+                          <p className="font-medium">{selectedVessel.departurePort || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500">To</p>
+                          <p className="font-medium">{selectedVessel.destinationPort || 'N/A'}</p>
+                        </div>
                       </div>
-                      
-                      <div className="font-medium text-slate-700">Vessel Type:</div>
-                      <div className="capitalize">{selectedVessel.vesselType}</div>
-                      
-                      {selectedVessel.built && (
-                        <>
-                          <div className="font-medium text-slate-700">Built:</div>
-                          <div className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3 text-blue-600" />
-                            {selectedVessel.built}
-                          </div>
-                        </>
-                      )}
-                      
-                      {selectedVessel.deadweight && (
-                        <>
-                          <div className="font-medium text-slate-700">Deadweight:</div>
-                          <div>{selectedVessel.deadweight.toLocaleString()} tons</div>
-                        </>
-                      )}
                     </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="position" className="pt-4">
-                    <div className="space-y-3">
-                      <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-sm bg-green-50 rounded-md p-3">
-                        {selectedVessel.currentLat && selectedVessel.currentLng && (
-                          <>
-                            <div className="font-medium text-slate-700">Coordinates:</div>
-                            <div>
-                              {parseFloat(selectedVessel.currentLat).toFixed(4)}, {parseFloat(selectedVessel.currentLng).toFixed(4)}
-                            </div>
-                          </>
-                        )}
-                        
-                        {selectedVessel.metadata && (() => {
-                          try {
-                            const metadata = JSON.parse(selectedVessel.metadata);
-                            return (
-                              <>
-                                <div className="font-medium text-slate-700">Course:</div>
-                                <div>{metadata.course || 0}°</div>
-                                
-                                <div className="font-medium text-slate-700">Speed:</div>
-                                <div>{metadata.speed || 0} knots</div>
-                                
-                                <div className="font-medium text-slate-700">Navigation Status:</div>
-                                <div className="flex items-center">
-                                  <span className="inline-block h-2 w-2 rounded-full bg-green-500 mr-1.5"></span>
-                                  <span>{metadata.status || 'Under way'}</span>
-                                </div>
-                              </>
-                            );
-                          } catch (e) {
-                            return null;
-                          }
-                        })()}
-                        
-                        <div className="font-medium text-slate-700">Last Update:</div>
-                        <div className="text-xs">{new Date().toLocaleString()}</div>
+                  </CardContent>
+                </Card>
+              </MapControl>
+            )}
+            
+            {/* Modal-style popup for selected refinery */}
+            {selectedRefinery && (
+              <MapControl position="topright" className="w-96">
+                <Card className="border-red-200 shadow-lg bg-white/95 backdrop-blur-sm">
+                  <CardHeader className="pb-2 bg-gradient-to-b from-red-50 to-white border-b border-red-100">
+                    <div className="flex justify-between items-center">
+                      <Badge className="bg-red-100 text-red-700 mb-1 hover:bg-red-200">Refinery</Badge>
+                      <Button variant="ghost" size="sm" onClick={() => setSelectedRefinery(null)} className="h-6 w-6 p-0">×</Button>
+                    </div>
+                    <CardTitle className="flex items-center gap-2 text-red-800 text-lg">
+                      <Factory className="h-5 w-5 text-red-600" />
+                      {selectedRefinery.name}
+                    </CardTitle>
+                    <CardDescription className="text-red-600">
+                      {selectedRefinery.country} • {selectedRefinery.region}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3 pt-3 max-h-96 overflow-y-auto">
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <p className="text-gray-500">Capacity</p>
+                        <p className="font-medium">{selectedRefinery.capacity?.toLocaleString() || 'Unknown'} bpd</p>
                       </div>
-                      
-                      <div className="text-xs text-slate-500">
-                        <p className="flex items-center">
-                          <CheckCircle className="h-3 w-3 text-green-500 mr-1" /> 
-                          Vessel position data verified and validated by AIS
+                      <div>
+                        <p className="text-gray-500">Status</p>
+                        <p className="font-medium capitalize">{selectedRefinery.status || 'Active'}</p>
+                      </div>
+                    </div>
+                    
+                    <Separator className="my-1" />
+                    
+                    {selectedRefinery.description && (
+                      <div className="space-y-2">
+                        <p className="text-xs text-gray-700 leading-relaxed">
+                          {selectedRefinery.description.substring(0, 200)}
+                          {selectedRefinery.description.length > 200 ? '...' : ''}
                         </p>
                       </div>
+                    )}
+                    
+                    <div className="mt-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="w-full text-xs border-red-200 text-red-700 hover:bg-red-50"
+                        onClick={() => {
+                          window.open(`/refineries/${selectedRefinery.id}`, '_blank');
+                        }}
+                      >
+                        View Full Details
+                      </Button>
                     </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="documents" className="pt-4">
-                    <div className="space-y-2">
-                      <div className="bg-amber-50 border border-amber-200 rounded-md p-3">
-                        <p className="text-xs text-amber-700 mb-2">
-                          No documents are currently associated with this vessel. Generate required documentation:
+                  </CardContent>
+                </Card>
+              </MapControl>
+            )}
+            
+            {/* Modal-style popup for selected port */}
+            {selectedPort && (
+              <MapControl position="topright" className="w-96">
+                <Card className="border-blue-200 shadow-lg bg-white/95 backdrop-blur-sm">
+                  <CardHeader className="pb-2 bg-gradient-to-b from-blue-50 to-white border-b border-blue-100">
+                    <div className="flex justify-between items-center">
+                      <Badge className="bg-blue-100 text-blue-700 mb-1 hover:bg-blue-200">{selectedPort.type || 'Port'}</Badge>
+                      <Button variant="ghost" size="sm" onClick={() => setSelectedPort(null)} className="h-6 w-6 p-0">×</Button>
+                    </div>
+                    <CardTitle className="flex items-center gap-2 text-blue-800 text-lg">
+                      <AnchorIcon className="h-5 w-5 text-blue-600" />
+                      {selectedPort.name}
+                    </CardTitle>
+                    <CardDescription className="text-blue-600">
+                      {selectedPort.country} • {selectedPort.region}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3 pt-3 max-h-96 overflow-y-auto">
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <p className="text-gray-500">Type</p>
+                        <p className="font-medium">{selectedPort.type || 'Commercial'}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">Status</p>
+                        <p className="font-medium capitalize">{selectedPort.status || 'Active'}</p>
+                      </div>
+                    </div>
+                    
+                    <Separator className="my-1" />
+                    
+                    {selectedPort.description && (
+                      <div className="space-y-2">
+                        <p className="text-xs text-gray-700 leading-relaxed">
+                          {selectedPort.description.substring(0, 200)}
+                          {selectedPort.description.length > 200 ? '...' : ''}
                         </p>
-                        <div className="grid grid-cols-2 gap-2">
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            className="text-xs h-8"
-                            onClick={() => window.alert('Document generation feature will open in a dedicated panel')}
-                          >
-                            <FileText className="h-3 w-3 mr-1" /> Bill of Lading
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            className="text-xs h-8"
-                            onClick={() => window.alert('Document generation feature will open in a dedicated panel')}
-                          >
-                            <FileText className="h-3 w-3 mr-1" /> Cargo Manifest
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            className="text-xs h-8"
-                            onClick={() => window.alert('Document generation feature will open in a dedicated panel')}
-                          >
-                            <FileText className="h-3 w-3 mr-1" /> Certificate of Origin
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            className="text-xs h-8"
-                            onClick={() => window.alert('Document generation feature will open in a dedicated panel')}
-                          >
-                            <FileText className="h-3 w-3 mr-1" /> Commercial Invoice
-                          </Button>
-                        </div>
                       </div>
+                    )}
+                    
+                    <div className="mt-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="w-full text-xs border-blue-200 text-blue-700 hover:bg-blue-50"
+                        onClick={() => {
+                          window.open(`/ports/${selectedPort.id}`, '_blank');
+                        }}
+                      >
+                        View Full Details
+                      </Button>
                     </div>
-                  </TabsContent>
-                </Tabs>
-              </CardContent>
-              <CardFooter className="bg-gradient-to-t from-blue-50 to-white border-t border-blue-100 flex flex-col gap-2">
-                <div className="w-full flex gap-2">
-                  <Button 
-                    variant="default" 
-                    className="flex-1"
-                    onClick={() => {
-                      window.location.href = `/vessels/${selectedVessel.id}`;
-                    }}
-                  >
-                    <Info className="h-4 w-4 mr-2" />
-                    Full Details
-                  </Button>
-                  
-                  <Button 
-                    variant="outline" 
-                    className="flex-1"
-                    onClick={() => setSelectedVessel(null)}
-                  >
-                    Close
-                  </Button>
-                </div>
-                
-                <Button 
-                  onClick={() => {
-                    // Toggle route visibility for this vessel
-                    setVesselsWithRoutes(prev => ({
-                      ...prev,
-                      [selectedVessel.id]: !prev[selectedVessel.id]
-                    }));
-                  }}
-                  className="w-full flex items-center justify-center gap-2"
-                  variant={vesselsWithRoutes[selectedVessel.id] ? "default" : "outline"}
-                >
-                  <Navigation className="h-4 w-4" /> 
-                  {vesselsWithRoutes[selectedVessel.id] ? "Hide Route on Map" : "Show Route on Map"}
-                </Button>
-              </CardFooter>
-            </Card>
-          ) : selectedRefinery ? (
-            /* Refinery Details */
-            <Card>
-              <CardContent className="pt-6">
-                <div className="bg-red-50 p-3 rounded-md mb-4 border-l-4 border-red-500 flex justify-between items-center">
-                  <div>
-                    <h3 className="text-xl font-bold text-red-800">{selectedRefinery.name}</h3>
-                    <p className="text-sm text-red-600">{selectedRefinery.region.toUpperCase()} REGION</p>
-                  </div>
-                  <Badge className="bg-red-100 text-red-800 border-red-200 text-sm">Refinery</Badge>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-y-2 text-sm mb-4">
-                  <div className="flex items-center">
-                    <Factory className="h-4 w-4 mr-2" />
-                    <span className="text-muted-foreground">Country:</span>
-                  </div>
-                  <div>{selectedRefinery.country}</div>
-                  
-                  <div className="flex items-center">
-                    <span className="text-muted-foreground">Region:</span>
-                  </div>
-                  <div>{selectedRefinery.region}</div>
-                  
-                  {selectedRefinery.capacity && (
-                    <>
-                      <div className="flex items-center">
-                        <span className="text-muted-foreground">Capacity:</span>
-                      </div>
-                      <div>{selectedRefinery.capacity.toLocaleString()} bpd</div>
-                    </>
-                  )}
-                  
-                  {selectedRefinery.status && (
-                    <>
-                      <div className="flex items-center">
-                        <span className="text-muted-foreground">Status:</span>
-                      </div>
-                      <div>{selectedRefinery.status}</div>
-                    </>
-                  )}
-                  
-                  <div className="flex items-center">
-                    <span className="text-muted-foreground">Location:</span>
-                  </div>
-                  <div>
-                    {(() => {
-                      const lat = selectedRefinery.lat;
-                      if (typeof lat === 'string') return parseFloat(lat).toFixed(4);
-                      if (typeof lat === 'number') return lat.toFixed(4);
-                      return '0.0000';
-                    })()}, 
-                    {(() => {
-                      const lng = selectedRefinery.lng;
-                      if (typeof lng === 'string') return parseFloat(lng).toFixed(4);
-                      if (typeof lng === 'number') return lng.toFixed(4);
-                      return '0.0000';
-                    })()}
-                  </div>
-                </div>
-                
-                <Separator className="my-4" />
-                
-                <h4 className="font-semibold mb-2">Connected Ports</h4>
-                
-                {connections
-                  .filter(conn => conn.refineryId === selectedRefinery.id)
-                  .map(conn => {
-                    const port = ports.find(p => p.id === conn.portId);
-                    if (!port) return null;
-                    
-                    return (
-                      <div 
-                        key={`conn-${conn.id}`} 
-                        className="p-2 mb-2 rounded border border-purple-200 bg-purple-50"
-                        onClick={() => setSelectedPort(port)}
-                        style={{ cursor: 'pointer' }}
-                      >
-                        <div className="font-medium text-sm flex items-center">
-                          <AnchorIcon className="h-3 w-3 mr-1 text-blue-600" />
-                          {port.name}
-                        </div>
-                        <div className="text-xs text-muted-foreground">{port.country}</div>
-                      </div>
-                    );
-                  })
-                }
-                
-                {connections.filter(conn => conn.refineryId === selectedRefinery.id).length === 0 && (
-                  <p className="text-sm text-muted-foreground">No connected ports found</p>
-                )}
-                
-                <Separator className="my-4" />
-                
-                {/* AI Description Generation Panel */}
-                <AIGenerationPanel
-                  entityType="refinery"
-                  entityId={selectedRefinery.id}
-                  entityName={selectedRefinery.name}
-                  currentDescription={selectedRefinery.description}
-                  onDescriptionGenerated={(description) => {
-                    // Update the selected refinery with the new description
-                    setSelectedRefinery({
-                      ...selectedRefinery,
-                      description: description
-                    });
-                    refreshInfrastructureData();
-                  }}
-                />
-              </CardContent>
-            </Card>
-          ) : selectedPort ? (
-            /* Port Details */
-            <Card>
-              <CardContent className="pt-6">
-                <div className="bg-blue-50 p-3 rounded-md mb-4 border-l-4 border-blue-500 flex justify-between items-center">
-                  <div>
-                    <h3 className="text-xl font-bold text-blue-800">{selectedPort.name}</h3>
-                    <p className="text-sm text-blue-600">{selectedPort.region.toUpperCase()} REGION</p>
-                  </div>
-                  <Badge className="bg-blue-100 text-blue-800 border-blue-200 text-sm">Port</Badge>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-y-2 text-sm mb-4">
-                  <div className="flex items-center">
-                    <AnchorIcon className="h-4 w-4 mr-2" />
-                    <span className="text-muted-foreground">Country:</span>
-                  </div>
-                  <div>{selectedPort.country}</div>
-                  
-                  <div className="flex items-center">
-                    <span className="text-muted-foreground">Region:</span>
-                  </div>
-                  <div>{selectedPort.region}</div>
-                  
-                  {selectedPort.capacity && (
-                    <>
-                      <div className="flex items-center">
-                        <span className="text-muted-foreground">Capacity:</span>
-                      </div>
-                      <div>{selectedPort.capacity.toLocaleString()} tons/year</div>
-                    </>
-                  )}
-                  
-                  <div className="flex items-center">
-                    <span className="text-muted-foreground">Location:</span>
-                  </div>
-                  <div>
-                    {(() => {
-                      const lat = selectedPort.lat;
-                      if (typeof lat === 'string') return parseFloat(lat).toFixed(4);
-                      if (typeof lat === 'number') return lat.toFixed(4);
-                      return '0.0000';
-                    })()}, 
-                    {(() => {
-                      const lng = selectedPort.lng;
-                      if (typeof lng === 'string') return parseFloat(lng).toFixed(4);
-                      if (typeof lng === 'number') return lng.toFixed(4);
-                      return '0.0000';
-                    })()}
-                  </div>
-                </div>
-                
-                {selectedPort.description && (
-                  <>
-                    <Separator className="my-4" />
-                    <h4 className="font-semibold mb-2">Description</h4>
-                    <p className="text-sm">{selectedPort.description}</p>
-                  </>
-                )}
-                
-                <Separator className="my-4" />
-                
-                <h4 className="font-semibold mb-2">Connected Refineries</h4>
-                
-                {connections
-                  .filter(conn => conn.portId === selectedPort.id)
-                  .map(conn => {
-                    const refinery = refineries.find(r => r.id === conn.refineryId);
-                    if (!refinery) return null;
-                    
-                    return (
-                      <div 
-                        key={`conn-${conn.id}`} 
-                        className="p-2 mb-2 rounded border border-red-200 bg-red-50"
-                        onClick={() => setSelectedRefinery(refinery)}
-                        style={{ cursor: 'pointer' }}
-                      >
-                        <div className="font-medium text-sm flex items-center">
-                          <Factory className="h-3 w-3 mr-1 text-red-600" />
-                          {refinery.name}
-                        </div>
-                        <div className="text-xs text-muted-foreground">{refinery.country}</div>
-                      </div>
-                    );
-                  })
-                }
-                
-                {connections.filter(conn => conn.portId === selectedPort.id).length === 0 && (
-                  <p className="text-sm text-muted-foreground">No connected refineries found</p>
-                )}
-                
-                <Separator className="my-4" />
-                
-                {/* AI Description Generation Panel */}
-                <AIGenerationPanel
-                  entityType="port"
-                  entityId={selectedPort.id}
-                  entityName={selectedPort.name}
-                  currentDescription={selectedPort.description}
-                  onDescriptionGenerated={(description) => {
-                    // Update the selected port with the new description
-                    setSelectedPort({
-                      ...selectedPort,
-                      description: description
-                    });
-                    refreshInfrastructureData();
-                  }}
-                />
-              </CardContent>
-            </Card>
-          ) : (
-            /* No Selection - Summary Card */
-            <Card>
-              <CardContent className="pt-6">
-                <h3 className="text-lg font-semibold mb-4">Maritime Assets</h3>
-                <p className="text-muted-foreground mb-4">Select an item on the map to view details</p>
-                
-                <div className="grid grid-cols-3 gap-3 mb-4">
-                  <div className="bg-blue-50 border border-blue-100 rounded-md p-2 text-center">
-                    <div className="text-lg font-semibold text-blue-700">{vessels.length}</div>
-                    <div className="text-xs text-blue-600">Vessels</div>
-                  </div>
-                  
-                  <div className="bg-red-50 border border-red-100 rounded-md p-2 text-center">
-                    <div className="text-lg font-semibold text-red-700">{refineries.length}</div>
-                    <div className="text-xs text-red-600">Refineries</div>
-                  </div>
-                  
-                  <div className="bg-blue-50 border border-blue-100 rounded-md p-2 text-center">
-                    <div className="text-lg font-semibold text-blue-700">{ports.length}</div>
-                    <div className="text-xs text-blue-600">Ports</div>
-                  </div>
-                </div>
-                
-                <p className="text-xs text-muted-foreground mt-4">
-                  {lastUpdated 
-                    ? `Last updated: ${new Date(lastUpdated).toLocaleString()}`
-                    : 'Waiting for data...'}
-                </p>
-                
-                {/* Connection status indicator */}
-                <div className="mt-2 flex items-center">
-                  <div className={`h-2 w-2 rounded-full mr-2 ${isConnected ? 'bg-green-500' : 'bg-yellow-500'}`} />
-                  <p className="text-xs text-muted-foreground">
-                    {isConnected 
-                      ? `Using ${usingFallback ? 'REST API' : 'WebSocket'} ${usingFallback ? '(fallback)' : '(real-time)'}`
-                      : 'Reconnecting...'}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-          
-          {/* Tabs for Lists */}
-          <Card>
-            <CardContent className="pt-6">
-              <Tabs defaultValue="vessels">
-                <TabsList className="mb-4 w-full">
-                  <TabsTrigger value="vessels" className="flex-1">
-                    <Ship className="h-4 w-4 mr-1" />
-                    Vessels
-                  </TabsTrigger>
-                  <TabsTrigger value="refineries" className="flex-1">
-                    <Factory className="h-4 w-4 mr-1" />
-                    Refineries
-                  </TabsTrigger>
-                  <TabsTrigger value="ports" className="flex-1">
-                    <AnchorIcon className="h-4 w-4 mr-1" />
-                    Ports
-                  </TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="vessels">
-                  <h3 className="text-lg font-semibold mb-2">Vessels List</h3>
-                  <p className="text-xs text-muted-foreground mb-4">
-                    Showing {vessels.length} vessels in {selectedRegion.charAt(0).toUpperCase() + selectedRegion.slice(1).replace('_', ' ')}
-                  </p>
-                  
-                  <div className="space-y-2 max-h-96 overflow-y-auto">
-                    {vessels.slice(0, 20).map((vessel) => (
-                      <div 
-                        key={vessel.id}
-                        className={`p-2 rounded-md cursor-pointer hover:bg-accent ${
-                          selectedVessel?.id === vessel.id ? 'bg-accent' : ''
-                        }`}
-                        onClick={() => {
-                          window.location.href = `/vessels/${vessel.id}`;
-                        }}
-                      >
-                        <div className="font-medium">{vessel.name}</div>
-                        <div className="text-xs flex justify-between">
-                          <span>{vessel.vesselType}</span>
-                          <span>IMO: {vessel.imo}</span>
-                        </div>
-                      </div>
-                    ))}
-                    
-                    {vessels.length > 20 && (
-                      <p className="text-xs text-center text-muted-foreground pt-2">
-                        + {vessels.length - 20} more vessels
-                      </p>
-                    )}
-                    
-                    {vessels.length === 0 && !isLoading && (
-                      <p className="text-sm text-muted-foreground">
-                        No vessels found in this region
-                      </p>
-                    )}
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="refineries">
-                  <h3 className="text-lg font-semibold mb-2">Refineries List</h3>
-                  <p className="text-xs text-muted-foreground mb-4">
-                    Showing {refineries.length} refineries in {selectedRegion.charAt(0).toUpperCase() + selectedRegion.slice(1).replace('_', ' ')}
-                  </p>
-                  
-                  <div className="space-y-2 max-h-96 overflow-y-auto">
-                    {refineries.map((refinery) => (
-                      <div 
-                        key={refinery.id}
-                        className={`p-2 rounded-md cursor-pointer hover:bg-accent ${
-                          selectedRefinery?.id === refinery.id ? 'bg-accent' : ''
-                        }`}
-                        onClick={() => {
-                          window.location.href = `/refineries/${refinery.id}`;
-                        }}
-                      >
-                        <div className="font-medium">{refinery.name}</div>
-                        <div className="text-xs flex justify-between">
-                          <span>{refinery.country}</span>
-                          {refinery.capacity && <span>{refinery.capacity.toLocaleString()} bpd</span>}
-                        </div>
-                      </div>
-                    ))}
-                    
-                    {refineries.length === 0 && !infrastructureLoading && (
-                      <p className="text-sm text-muted-foreground">
-                        No refineries found in this region
-                      </p>
-                    )}
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="ports">
-                  <h3 className="text-lg font-semibold mb-2">Ports List</h3>
-                  <p className="text-xs text-muted-foreground mb-4">
-                    Showing {ports.length} ports in {selectedRegion.charAt(0).toUpperCase() + selectedRegion.slice(1).replace('_', ' ')}
-                  </p>
-                  
-                  <div className="space-y-2 max-h-96 overflow-y-auto">
-                    {ports.map((port) => (
-                      <div 
-                        key={port.id}
-                        className={`p-2 rounded-md cursor-pointer hover:bg-accent ${
-                          selectedPort?.id === port.id ? 'bg-accent' : ''
-                        }`}
-                        onClick={() => {
-                          window.location.href = `/ports/${port.id}`;
-                        }}
-                      >
-                        <div className="font-medium">{port.name}</div>
-                        <div className="text-xs flex justify-between">
-                          <span>{port.country}</span>
-                        </div>
-                      </div>
-                    ))}
-                    
-                    {ports.length === 0 && !infrastructureLoading && (
-                      <p className="text-sm text-muted-foreground">
-                        No ports found in this region
-                      </p>
-                    )}
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
+                  </CardContent>
+                </Card>
+              </MapControl>
+            )}
+          </MapContainer>
         </div>
       </div>
     </div>
