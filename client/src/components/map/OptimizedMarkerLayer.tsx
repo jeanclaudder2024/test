@@ -1,19 +1,27 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { useMap } from 'react-leaflet';
-import { Marker, Popup, Circle, CircleMarker } from 'react-leaflet';
+import React, { useState, useEffect } from 'react';
+import { CircleMarker, Marker, Popup, useMap, Polyline, LayerGroup, Tooltip } from 'react-leaflet';
 import L from 'leaflet';
 import { Vessel, Refinery, Port } from '@shared/schema';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { 
-  Ship, Navigation, Factory, Anchor
+import {
+  Ship,
+  Navigation,
+  Anchor,
+  Factory,
+  Info,
+  ArrowRight,
+  MapPin,
+  AlertTriangle,
+  Flag,
 } from 'lucide-react';
-
-// Cache for icons to improve performance
-const iconCache: Record<string, L.Icon> = {};
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 
 // Create custom vessel icon with caching for performance
-const vesselIcon = (heading: number = 0, speed: number = 0, vesselType: string = 'oil products tanker') => {
+const iconCache: Record<string, L.Icon> = {};
+
+const defaultVesselIcon = (heading: number = 0, speed: number = 0, vesselType: string = 'oil products tanker') => {
   // Create a cache key based on icon parameters
   const cacheKey = `${heading}-${speed}-${vesselType}`;
   
@@ -60,7 +68,7 @@ const vesselIcon = (heading: number = 0, speed: number = 0, vesselType: string =
 
 // Create and cache single instance of refinery icon
 let cachedRefineryIcon: L.Icon | null = null;
-const refineryIcon = () => {
+const defaultRefineryIcon = () => {
   if (cachedRefineryIcon) return cachedRefineryIcon;
   
   // Create an SVG factory icon
@@ -84,7 +92,7 @@ const refineryIcon = () => {
 
 // Create and cache single instance of port icon
 let cachedPortIcon: L.Icon | null = null;
-const portIcon = () => {
+const defaultPortIcon = () => {
   if (cachedPortIcon) return cachedPortIcon;
   
   // Create an SVG anchor icon
@@ -109,182 +117,154 @@ const portIcon = () => {
 // Custom clustering solution with viewport filtering
 interface OptimizedVesselLayerProps {
   vessels: Vessel[];
-  onVesselSelect: (vessel: Vessel) => void;
-  vesselsWithRoutes: Record<number, boolean>;
-  setVesselsWithRoutes: React.Dispatch<React.SetStateAction<Record<number, boolean>>>;
+  onVesselClick?: (vessel: Vessel) => void;
+  selectedVessel?: Vessel | null;
+  vesselIcon?: (heading: number, speed: number, vesselType: string) => L.Icon;
+  showRoutes?: boolean;
 }
 
 export function OptimizedVesselLayer({ 
   vessels, 
-  onVesselSelect,
-  vesselsWithRoutes,
-  setVesselsWithRoutes
+  onVesselClick,
+  selectedVessel,
+  vesselIcon = defaultVesselIcon,
+  showRoutes = false
 }: OptimizedVesselLayerProps) {
   const map = useMap();
   const [mapBounds, setMapBounds] = useState<L.LatLngBounds | null>(null);
   const [zoom, setZoom] = useState<number>(0);
   const [clusters, setClusters] = useState<any[]>([]);
   const [renderedVessels, setRenderedVessels] = useState<Vessel[]>([]);
+  const [vesselsWithRoutes, setVesselsWithRoutes] = useState<Record<number, boolean>>({});
   
   // Update bounds when map moves or zooms
   useEffect(() => {
-    if (!map) return;
+    // Get current map bounds
+    const bounds = map.getBounds();
+    const currentZoom = map.getZoom();
     
-    const handleMove = () => {
-      setMapBounds(map.getBounds());
-      setZoom(map.getZoom());
+    setMapBounds(bounds);
+    setZoom(currentZoom);
+    
+    // When map moves or zoom changes, update visible vessels
+    const updateViewport = () => {
+      const newBounds = map.getBounds();
+      const newZoom = map.getZoom();
+      
+      setMapBounds(newBounds);
+      setZoom(newZoom);
     };
     
-    // Initial set
-    handleMove();
-    
-    // Event listeners
-    map.on('moveend', handleMove);
-    map.on('zoomend', handleMove);
+    map.on('moveend', updateViewport);
+    map.on('zoomend', updateViewport);
     
     return () => {
-      map.off('moveend', handleMove);
-      map.off('zoomend', handleMove);
+      map.off('moveend', updateViewport);
+      map.off('zoomend', updateViewport);
     };
   }, [map]);
   
-  // Process vessels based on viewport - only do expensive calculations when bounds or zoom changes
+  // Cluster vessels based on zoom level and bounds
   useEffect(() => {
     if (!mapBounds) return;
     
-    // Decide whether to cluster or not based on zoom level and number of vessels
-    const shouldCluster = zoom < 6 && vessels.length > 100;
+    // Simplified clustering logic
+    const visibleVessels = vessels.filter(vessel => {
+      // Skip vessels without valid coordinates
+      if (!vessel.currentLat || !vessel.currentLng) return false;
+      
+      const lat = typeof vessel.currentLat === 'number' ? vessel.currentLat : parseFloat(String(vessel.currentLat));
+      const lng = typeof vessel.currentLng === 'number' ? vessel.currentLng : parseFloat(String(vessel.currentLng));
+      
+      // Check if vessel is within map bounds
+      return mapBounds.contains([lat, lng]);
+    });
     
-    // Filter to only vessels in bounds (with padding to ensure smooth panning)
-    let visibleVessels: Vessel[] = [];
-    
-    // Create a padded bounds for smoother rendering during panning
-    const padding = 0.5; // 50% padding around viewport
-    const paddedBounds = mapBounds.pad(padding);
-    
-    for (const vessel of vessels) {
-      if (!vessel.currentLat || !vessel.currentLng) continue;
-      
-      const lat = parseFloat(vessel.currentLat);
-      const lng = parseFloat(vessel.currentLng);
-      
-      if (isNaN(lat) || isNaN(lng)) continue;
-      
-      // Check if in padded bounds
-      if (paddedBounds.contains([lat, lng])) {
-        visibleVessels.push(vessel);
-      }
-    }
-    
-    // Cap the number of vessels to render based on zoom level to maintain performance
-    const maxVessels = zoom < 3 ? 200 : zoom < 5 ? 500 : 2500;
-    if (visibleVessels.length > maxVessels) {
-      // If we have too many vessels, sample them
-      const samplingRate = maxVessels / visibleVessels.length;
-      visibleVessels = visibleVessels.filter(() => Math.random() < samplingRate);
-    }
-    
-    // For clustering at low zoom levels
-    if (shouldCluster) {
-      // Convert vessels to points for clustering
-      const points = visibleVessels.map(vessel => ({
-        lat: parseFloat(vessel.currentLat || '0'),
-        lng: parseFloat(vessel.currentLng || '0'),
-        data: vessel
-      }));
-      
-      // Define cluster distance based on zoom
-      const clusterDistance = zoom < 3 ? 100 : zoom < 5 ? 50 : 30;
-      
-      // Do clustering
-      const clusteredPoints: Array<{
-        lat: number;
-        lng: number;
-        count: number;
-        points: Array<{lat: number, lng: number, data: Vessel}>;
-      }> = [];
-      
-      // Simple clustering algorithm
-      const processed = new Set<number>();
-      
-      for (let i = 0; i < points.length; i++) {
-        if (processed.has(i)) continue;
-        
-        const point = points[i];
-        processed.add(i);
-        
-        // Find nearby points
-        const nearby = [];
-        for (let j = 0; j < points.length; j++) {
-          if (i === j || processed.has(j)) continue;
-          
-          const otherPoint = points[j];
-          const distance = Math.sqrt(
-            Math.pow((point.lat - otherPoint.lat) * 111, 2) +
-            Math.pow((point.lng - otherPoint.lng) * 111 * Math.cos(point.lat * Math.PI / 180), 2)
-          );
-          
-          if (distance < clusterDistance / 111) {
-            nearby.push(otherPoint);
-            processed.add(j);
-          }
-        }
-        
-        if (nearby.length > 0) {
-          // Create a cluster
-          const allPoints = [point, ...nearby];
-          
-          // Calculate center
-          const centerLat = allPoints.reduce((sum, p) => sum + p.lat, 0) / allPoints.length;
-          const centerLng = allPoints.reduce((sum, p) => sum + p.lng, 0) / allPoints.length;
-          
-          clusteredPoints.push({
-            lat: centerLat,
-            lng: centerLng,
-            count: allPoints.length,
-            points: allPoints
-          });
-        } else {
-          // Individual point
-          clusteredPoints.push({
-            lat: point.lat,
-            lng: point.lng,
-            count: 1,
-            points: [point]
-          });
-        }
-      }
-      
-      setClusters(clusteredPoints);
-      setRenderedVessels([]); // Clear individual vessels when clustered
-    } else {
-      // No clustering, just render individual vessels
+    // If zoom is high enough, don't cluster
+    if (zoom >= 8) {
       setClusters([]);
-      setRenderedVessels(visibleVessels);
+      setRenderedVessels(visibleVessels.slice(0, 1000)); // Limit for performance
+      return;
     }
-  }, [mapBounds, zoom, vessels]);
+    
+    // Simple grid-based clustering
+    const cellSize = 1.0; // degrees
+    const grid: Record<string, any> = {};
+    
+    // Put vessels into grid cells
+    visibleVessels.forEach(vessel => {
+      const lat = typeof vessel.currentLat === 'number' ? vessel.currentLat : parseFloat(String(vessel.currentLat) || '0');
+      const lng = typeof vessel.currentLng === 'number' ? vessel.currentLng : parseFloat(String(vessel.currentLng) || '0');
+      
+      const cellX = Math.floor(lng / cellSize);
+      const cellY = Math.floor(lat / cellSize);
+      const cellKey = `${cellX}-${cellY}`;
+      
+      if (!grid[cellKey]) {
+        grid[cellKey] = {
+          points: [],
+          lat: (cellY * cellSize) + (cellSize / 2),
+          lng: (cellX * cellSize) + (cellSize / 2)
+        };
+      }
+      
+      grid[cellKey].points.push({
+        data: vessel,
+        lat,
+        lng
+      });
+    });
+    
+    // Convert grid to clusters
+    const newClusters = Object.values(grid)
+      .filter((cell: any) => cell.points.length > 1)
+      .map((cell: any) => ({
+        ...cell,
+        count: cell.points.length
+      }));
+    
+    // For cells with only one vessel, add directly to rendered vessels
+    const singleVessels = Object.values(grid)
+      .filter((cell: any) => cell.points.length === 1)
+      .flatMap((cell: any) => cell.points.map((p: any) => p.data));
+    
+    setClusters(newClusters);
+    setRenderedVessels(singleVessels.slice(0, 500)); // Limit for performance
+  }, [vessels, mapBounds, zoom]);
   
-  // Split rendering between clusters (for low zoom) and individual vessels (for high zoom)
+  // If no vessels, show empty message
+  if (vessels.length === 0) {
+    return (
+      <CircleMarker
+        center={[0, 0]}
+        radius={10}
+        pathOptions={{ color: 'red', fillColor: 'red', fillOpacity: 0.5 }}
+      >
+        <Popup>No vessels found</Popup>
+      </CircleMarker>
+    );
+  }
+  
   return (
-    <>
-      {/* Render clusters at low zoom levels */}
-      {clusters.length > 0 && clusters.map((cluster, index) => (
+    <LayerGroup>
+      {/* Render clusters at lower zoom levels */}
+      {clusters.map((cluster, index) => (
         <CircleMarker
           key={`cluster-${index}`}
           center={[cluster.lat, cluster.lng]}
-          radius={Math.min(20, 10 + Math.log(cluster.count) * 3)}
+          radius={Math.min(20, 10 + Math.log(cluster.count) * 2)}
           pathOptions={{
-            fillColor: '#3388ff',
-            fillOpacity: 0.6,
+            color: '#3388ff',
             weight: 1,
-            color: '#fff'
+            fillColor: '#3388ff',
+            fillOpacity: 0.5
           }}
           eventHandlers={{
             click: () => {
               // If fewer vessels, show them individually
               if (cluster.count <= 5) {
                 // Show all vessels in this cluster
-                setRenderedVessels(cluster.points.map((p: any) => p.data));
+                setRenderedVessels(prev => [...prev, ...cluster.points.map((p: any) => p.data)]);
                 setClusters(clusters.filter((_, i) => i !== index));
               } else {
                 // Zoom in to see more detail
@@ -324,48 +304,77 @@ export function OptimizedVesselLayer({
         
         try {
           if (vessel.metadata) {
-            metadata = JSON.parse(vessel.metadata);
+            if (typeof vessel.metadata === 'string') {
+              metadata = JSON.parse(vessel.metadata);
+            } else {
+              metadata = vessel.metadata as any;
+            }
           }
         } catch (e) {
-          console.error('Failed to parse vessel metadata:', e);
+          console.error('Error parsing vessel metadata', e);
         }
         
-        // Only render if we have valid coordinates
-        if (vessel.currentLat && vessel.currentLng) {
-          const lat = parseFloat(vessel.currentLat);
-          const lng = parseFloat(vessel.currentLng);
-          
-          if (isNaN(lat) || isNaN(lng)) return null;
-          
-          return (
+        // Get coordinates
+        const lat = typeof vessel.currentLat === 'number' ? vessel.currentLat : parseFloat(String(vessel.currentLat) || '0');
+        const lng = typeof vessel.currentLng === 'number' ? vessel.currentLng : parseFloat(String(vessel.currentLng) || '0');
+        
+        // Skip if invalid coordinates
+        if (isNaN(lat) || isNaN(lng)) return null;
+        
+        // Create icon based on vessel data
+        const heading = metadata.heading || metadata.course || 0;
+        const speed = typeof vessel.currentSpeed === 'number' 
+          ? vessel.currentSpeed 
+          : parseFloat(String(vessel.currentSpeed) || '0');
+        
+        const icon = vesselIcon(heading, speed, vessel.vesselType || '');
+        
+        return (
+          <React.Fragment key={`vessel-${vessel.id}`}>
             <Marker
-              key={`vessel-${vessel.id}`}
               position={[lat, lng]}
-              icon={vesselIcon(metadata.heading, metadata.speed, vessel.vesselType)}
+              icon={icon}
               eventHandlers={{
                 click: () => {
-                  onVesselSelect(vessel);
+                  if (onVesselClick) onVesselClick(vessel);
                 }
               }}
             >
+              <Tooltip direction="top" permanent={selectedVessel?.id === vessel.id}>
+                <div className="text-xs font-semibold">{vessel.name}</div>
+                <div className="text-xs">{vessel.vesselType}</div>
+              </Tooltip>
+              
               <Popup>
-                <div className="text-sm">
-                  <div className="bg-blue-50 p-2 rounded-md mb-2 border-l-4 border-blue-500">
-                    <p className="font-bold text-base text-blue-700">{vessel.name}</p>
-                    <p className="text-xs text-blue-600">{vessel.vesselType.toUpperCase()}</p>
+                <div className="text-sm space-y-2 w-64 max-w-xs">
+                  <div className="flex items-center space-x-2">
+                    <Ship className="h-4 w-4 text-blue-600" />
+                    <h4 className="font-medium text-blue-800">{vessel.name}</h4>
                   </div>
-                  <div className="grid grid-cols-2 gap-1 text-xs mb-2">
-                    <div className="font-semibold">IMO:</div>
-                    <div>{vessel.imo}</div>
-                    
-                    <div className="font-semibold">MMSI:</div>
-                    <div>{vessel.mmsi}</div>
-                    
-                    <div className="font-semibold">Flag:</div>
-                    <div>{vessel.flag}</div>
-                    
-                    <div className="font-semibold">Speed:</div>
-                    <div>{metadata.speed} knots</div>
+                  
+                  <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200">
+                    {vessel.vesselType}
+                  </Badge>
+                  
+                  <Separator className="my-1" />
+                  
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <p className="text-gray-500">IMO</p>
+                      <p className="font-medium">{vessel.imo || 'Unknown'}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">Flag</p>
+                      <p className="font-medium">{vessel.flag || 'Unknown'}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">Speed</p>
+                      <p className="font-medium">{vessel.currentSpeed || '0'} knots</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">Built</p>
+                      <p className="font-medium">{vessel.built || 'Unknown'}</p>
+                    </div>
                     
                     {vessel.cargoType && (
                       <>
@@ -382,283 +391,246 @@ export function OptimizedVesselLayer({
                       Show Vessel Route
                     </label>
                     <Switch 
-                      checked={!!vesselsWithRoutes[vessel.id]}
+                      checked={!!vesselsWithRoutes[vessel.id || 0]}
                       onCheckedChange={(checked) => {
                         setVesselsWithRoutes(prev => ({
                           ...prev,
-                          [vessel.id]: checked
+                          [vessel.id || 0]: checked
                         }));
                       }}
-                      className="scale-75 origin-right"
                     />
                   </div>
                   
-                  <Button 
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs py-1 mt-2"
-                    onClick={(e) => {
-                      e.stopPropagation(); // Prevent map click from interfering
-                      // Close the popup
-                      const closeButton = e.currentTarget.closest('.leaflet-popup')?.querySelector('.leaflet-popup-close-button');
-                      if (closeButton instanceof HTMLElement) {
-                        closeButton.click();
-                      }
-                      // Navigate to vessel detail page
-                      window.location.href = `/vessels/${vessel.id}`;
-                    }}
+                  <Button
+                    size="sm"
+                    className="w-full text-xs"
+                    onClick={() => onVesselClick && onVesselClick(vessel)}
                   >
-                    <Ship className="h-3 w-3 mr-1" />
-                    Show Details
+                    View Details
                   </Button>
                 </div>
               </Popup>
             </Marker>
-          );
-        }
-        
-        return null;
+            
+            {/* Render vessel route if enabled */}
+            {vesselsWithRoutes[vessel.id || 0] && vessel.routeHistory && (
+              <Polyline
+                positions={
+                  vessel.routeHistory.map(point => [
+                    typeof point.lat === 'number' ? point.lat : parseFloat(String(point.lat) || '0'),
+                    typeof point.lng === 'number' ? point.lng : parseFloat(String(point.lng) || '0')
+                  ] as [number, number])
+                }
+                pathOptions={{
+                  color: 'blue',
+                  weight: 2,
+                  opacity: 0.7,
+                  dashArray: '5, 5'
+                }}
+              />
+            )}
+          </React.Fragment>
+        );
       })}
-    </>
+    </LayerGroup>
   );
 }
 
-// Similar component for refineries
 interface OptimizedRefineryLayerProps {
   refineries: Refinery[];
-  onRefinerySelect: (refinery: Refinery) => void;
+  onRefineryClick?: (refinery: Refinery) => void;
+  selectedRefinery?: Refinery | null;
+  refineryIcon?: () => L.Icon;
 }
 
-export function OptimizedRefineryLayer({ 
-  refineries, 
-  onRefinerySelect 
+export function OptimizedRefineryLayer({
+  refineries,
+  onRefineryClick,
+  selectedRefinery,
+  refineryIcon = defaultRefineryIcon
 }: OptimizedRefineryLayerProps) {
   const map = useMap();
-  const [mapBounds, setMapBounds] = useState<L.LatLngBounds | null>(null);
   
-  // Update bounds when map moves
-  useEffect(() => {
-    if (!map) return;
-    
-    const handleMove = () => {
-      setMapBounds(map.getBounds());
-    };
-    
-    // Initial set
-    handleMove();
-    
-    // Event listeners
-    map.on('moveend', handleMove);
-    
-    return () => {
-      map.off('moveend', handleMove);
-    };
-  }, [map]);
-  
-  // Only render refineries in viewport (with padding)
-  const visibleRefineries = useMemo(() => {
-    if (!mapBounds) return [];
-    
-    // Add padding for smoother rendering during panning
-    const paddedBounds = mapBounds.pad(0.5);
-    
-    return refineries.filter(refinery => {
-      if (!refinery.lat || !refinery.lng) return false;
-      
-      const lat = typeof refinery.lat === 'string' ? parseFloat(refinery.lat) : refinery.lat;
-      const lng = typeof refinery.lng === 'string' ? parseFloat(refinery.lng) : refinery.lng;
-      
-      if (isNaN(lat) || isNaN(lng)) return false;
-      
-      return paddedBounds.contains([lat, lng]);
-    });
-  }, [refineries, mapBounds]);
+  if (refineries.length === 0) return null;
   
   return (
-    <>
-      {visibleRefineries.map(refinery => {
-        // Only render if we have valid coordinates
-        if (refinery.lat && refinery.lng) {
-          const lat = typeof refinery.lat === 'string' ? parseFloat(refinery.lat) : refinery.lat;
-          const lng = typeof refinery.lng === 'string' ? parseFloat(refinery.lng) : refinery.lng;
-          
-          if (isNaN(lat) || isNaN(lng)) return null;
-          
-          return (
-            <Marker
-              key={`refinery-${refinery.id}`}
-              position={[lat, lng]}
-              icon={refineryIcon()}
-              eventHandlers={{
-                click: () => {
-                  onRefinerySelect(refinery);
-                }
-              }}
-            >
-              <Popup>
-                <div className="text-sm">
-                  <div className="bg-red-50 p-2 rounded-md mb-2 border-l-4 border-red-500">
-                    <p className="font-bold text-base text-red-700">{refinery.name}</p>
-                    <p className="text-xs text-red-600">{refinery.region.toUpperCase()} REGION</p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-1 text-xs mb-2">
-                    <div className="font-semibold">Country:</div>
-                    <div>{refinery.country}</div>
-                    {refinery.capacity && (
-                      <>
-                        <div className="font-semibold">Capacity:</div>
-                        <div>{refinery.capacity.toLocaleString()} bpd</div>
-                      </>
-                    )}
-                    {refinery.status && (
-                      <>
-                        <div className="font-semibold">Status:</div>
-                        <div className="capitalize">{refinery.status}</div>
-                      </>
-                    )}
-                  </div>
-                  <Button 
-                    className="w-full bg-red-600 hover:bg-red-700 text-white text-xs py-1 mt-2"
-                    onClick={(e) => {
-                      e.stopPropagation(); // Prevent map click from interfering
-                      // Close the popup
-                      const closeButton = e.currentTarget.closest('.leaflet-popup')?.querySelector('.leaflet-popup-close-button');
-                      if (closeButton instanceof HTMLElement) {
-                        closeButton.click();
-                      }
-                      // Navigate to refinery detail page
-                      window.location.href = `/refineries/${refinery.id}`;
-                    }}
-                  >
-                    <Factory className="h-3 w-3 mr-1" />
-                    Show Details
-                  </Button>
+    <LayerGroup>
+      {refineries.map(refinery => {
+        // Skip if invalid coordinates
+        if (!refinery.lat || !refinery.lng) return null;
+        
+        const lat = typeof refinery.lat === 'number' ? refinery.lat : parseFloat(String(refinery.lat) || '0');
+        const lng = typeof refinery.lng === 'number' ? refinery.lng : parseFloat(String(refinery.lng) || '0');
+        
+        if (isNaN(lat) || isNaN(lng)) return null;
+        
+        const icon = refineryIcon();
+        
+        return (
+          <Marker
+            key={`refinery-${refinery.id}`}
+            position={[lat, lng]}
+            icon={icon}
+            eventHandlers={{
+              click: () => {
+                if (onRefineryClick) onRefineryClick(refinery);
+              }
+            }}
+          >
+            <Tooltip direction="top" permanent={selectedRefinery?.id === refinery.id}>
+              <div className="text-xs font-semibold">{refinery.name}</div>
+              <div className="text-xs">{refinery.country}</div>
+            </Tooltip>
+            
+            <Popup>
+              <div className="text-sm space-y-2 w-64 max-w-xs">
+                <div className="flex items-center space-x-2">
+                  <Factory className="h-4 w-4 text-red-600" />
+                  <h4 className="font-medium text-red-800">{refinery.name}</h4>
                 </div>
-              </Popup>
-            </Marker>
-          );
-        }
-        return null;
+                
+                <Badge className="bg-red-100 text-red-800 hover:bg-red-200">
+                  Refinery
+                </Badge>
+                
+                <Separator className="my-1" />
+                
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <p className="text-gray-500">Country</p>
+                    <p className="font-medium">{refinery.country || 'Unknown'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Region</p>
+                    <p className="font-medium">{refinery.region || 'Unknown'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Capacity</p>
+                    <p className="font-medium">{refinery.capacity?.toLocaleString() || 'Unknown'} bpd</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Status</p>
+                    <p className="font-medium capitalize">{refinery.status || 'Active'}</p>
+                  </div>
+                </div>
+                
+                <Button
+                  size="sm"
+                  className="w-full text-xs"
+                  onClick={() => {
+                    window.open(`/refineries/${refinery.id}`, '_blank');
+                  }}
+                >
+                  View Details
+                </Button>
+              </div>
+            </Popup>
+          </Marker>
+        );
       })}
-    </>
+    </LayerGroup>
   );
 }
 
-// Similar component for ports
 interface OptimizedPortLayerProps {
   ports: Port[];
-  onPortSelect: (port: Port) => void;
+  onPortClick?: (port: Port) => void;
+  selectedPort?: Port | null;
+  portIcon?: () => L.Icon;
 }
 
-export function OptimizedPortLayer({ 
-  ports, 
-  onPortSelect 
+export function OptimizedPortLayer({
+  ports,
+  onPortClick,
+  selectedPort,
+  portIcon = defaultPortIcon
 }: OptimizedPortLayerProps) {
   const map = useMap();
-  const [mapBounds, setMapBounds] = useState<L.LatLngBounds | null>(null);
   
-  // Update bounds when map moves
-  useEffect(() => {
-    if (!map) return;
-    
-    const handleMove = () => {
-      setMapBounds(map.getBounds());
-    };
-    
-    // Initial set
-    handleMove();
-    
-    // Event listeners
-    map.on('moveend', handleMove);
-    
-    return () => {
-      map.off('moveend', handleMove);
-    };
-  }, [map]);
-  
-  // Only render ports in viewport (with padding)
-  const visiblePorts = useMemo(() => {
-    if (!mapBounds) return [];
-    
-    // Add padding for smoother rendering during panning
-    const paddedBounds = mapBounds.pad(0.5);
-    
-    return ports.filter(port => {
-      if (!port.lat || !port.lng) return false;
-      
-      const lat = typeof port.lat === 'string' ? parseFloat(port.lat) : port.lat;
-      const lng = typeof port.lng === 'string' ? parseFloat(port.lng) : port.lng;
-      
-      if (isNaN(lat) || isNaN(lng)) return false;
-      
-      return paddedBounds.contains([lat, lng]);
-    });
-  }, [ports, mapBounds]);
+  if (ports.length === 0) return null;
   
   return (
-    <>
-      {visiblePorts.map(port => {
-        // Only render if we have valid coordinates
-        if (port.lat && port.lng) {
-          const lat = typeof port.lat === 'string' ? parseFloat(port.lat) : port.lat;
-          const lng = typeof port.lng === 'string' ? parseFloat(port.lng) : port.lng;
-          
-          if (isNaN(lat) || isNaN(lng)) return null;
-          
-          return (
-            <Marker
-              key={`port-${port.id}`}
-              position={[lat, lng]}
-              icon={portIcon()}
-              eventHandlers={{
-                click: () => {
-                  onPortSelect(port);
-                }
-              }}
-            >
-              <Popup>
-                <div className="text-sm">
-                  <div className="bg-blue-50 p-2 rounded-md mb-2 border-l-4 border-blue-500">
-                    <p className="font-bold text-base text-blue-700">{port.name}</p>
-                    <p className="text-xs text-blue-600">{port.region.toUpperCase()} REGION</p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-1 text-xs mb-2">
-                    <div className="font-semibold">Country:</div>
-                    <div>{port.country}</div>
-                    {port.capacity && (
-                      <>
-                        <div className="font-semibold">Capacity:</div>
-                        <div>{port.capacity.toLocaleString()} tons/year</div>
-                      </>
-                    )}
-                    {port.type && (
-                      <>
-                        <div className="font-semibold">Type:</div>
-                        <div className="capitalize">{port.type.replace('_', ' ')}</div>
-                      </>
-                    )}
-                  </div>
-                  <Button 
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs py-1 mt-2"
-                    onClick={(e) => {
-                      e.stopPropagation(); // Prevent map click from interfering
-                      // Close the popup
-                      const closeButton = e.currentTarget.closest('.leaflet-popup')?.querySelector('.leaflet-popup-close-button');
-                      if (closeButton instanceof HTMLElement) {
-                        closeButton.click();
-                      }
-                      // Navigate to port detail page
-                      window.location.href = `/ports/${port.id}`;
-                    }}
-                  >
-                    <Anchor className="h-3 w-3 mr-1" />
-                    Show Details
-                  </Button>
+    <LayerGroup>
+      {ports.map(port => {
+        // Skip if invalid coordinates
+        if (!port.lat || !port.lng) return null;
+        
+        const lat = typeof port.lat === 'number' ? port.lat : parseFloat(String(port.lat) || '0');
+        const lng = typeof port.lng === 'number' ? port.lng : parseFloat(String(port.lng) || '0');
+        
+        if (isNaN(lat) || isNaN(lng)) return null;
+        
+        const icon = portIcon();
+        
+        return (
+          <Marker
+            key={`port-${port.id}`}
+            position={[lat, lng]}
+            icon={icon}
+            eventHandlers={{
+              click: () => {
+                if (onPortClick) onPortClick(port);
+              }
+            }}
+          >
+            <Tooltip direction="top" permanent={selectedPort?.id === port.id}>
+              <div className="text-xs font-semibold">{port.name}</div>
+              <div className="text-xs">{port.country}</div>
+            </Tooltip>
+            
+            <Popup>
+              <div className="text-sm space-y-2 w-64 max-w-xs">
+                <div className="flex items-center space-x-2">
+                  <Anchor className="h-4 w-4 text-blue-600" />
+                  <h4 className="font-medium text-blue-800">{port.name}</h4>
                 </div>
-              </Popup>
-            </Marker>
-          );
-        }
-        return null;
+                
+                <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200">
+                  {port.type || 'Port'}
+                </Badge>
+                
+                <Separator className="my-1" />
+                
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <p className="text-gray-500">Country</p>
+                    <p className="font-medium">{port.country || 'Unknown'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Region</p>
+                    <p className="font-medium">{port.region || 'Unknown'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Type</p>
+                    <p className="font-medium">{port.type || 'Commercial'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Status</p>
+                    <p className="font-medium capitalize">{port.status || 'Active'}</p>
+                  </div>
+                </div>
+                
+                {port.description && (
+                  <div className="mt-2 text-xs text-gray-600">
+                    {port.description.substring(0, 100)}
+                    {port.description.length > 100 ? '...' : ''}
+                  </div>
+                )}
+                
+                <Button
+                  size="sm"
+                  className="w-full text-xs"
+                  onClick={() => {
+                    window.open(`/ports/${port.id}`, '_blank');
+                  }}
+                >
+                  View Details
+                </Button>
+              </div>
+            </Popup>
+          </Marker>
+        );
       })}
-    </>
+    </LayerGroup>
   );
 }
