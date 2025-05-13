@@ -52,6 +52,7 @@ import { companyRouter } from "./routes/companyRoutes";
 import portVesselRouter from "./routes/portVesselRoutes";
 import { subscriptionRouter } from "./routes/subscriptionRoutes";
 import translationRouter from "./routes/translationRoutes";
+import vesselDashboardRouter from "./routes/vessel-dashboard";
 import { seedBrokers } from "./services/seedService";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -2232,6 +2233,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // API routes for subscription management
   app.use("/api/subscriptions", subscriptionRouter);
+
+  // API routes for vessel dashboard
+  app.use(vesselDashboardRouter);
 
   // API tester routes (performance testing, etc.)
   app.use("/api/tester", apiTesterRouter);
