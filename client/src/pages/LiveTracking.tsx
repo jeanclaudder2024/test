@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import MapboxMap from '@/components/map/MapboxMap';
+import LeafletMap from '@/components/map/LeafletMap';
 import { 
   Ship, 
   Anchor, 
@@ -365,7 +365,7 @@ export default function LiveTracking() {
             )}
           </CardHeader>
           <CardContent className="p-0">
-            <MapboxMap 
+            <LeafletMap 
               initialRegion={selectedRegion} 
               height="1200px" 
               showRoutes={showRoutes}

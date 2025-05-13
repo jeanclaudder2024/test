@@ -1,372 +1,523 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
-import L from 'leaflet';
-import '@maplibre/maplibre-gl-leaflet';
-import { Vessel, Refinery, Region } from '@/types';
-import { Badge } from '@/components/ui/badge';
-import { Navigation as NavigationIcon } from 'lucide-react';
-import { OIL_PRODUCT_TYPES } from '@/../../shared/constants';
+import { useState, useEffect, useRef } from 'react';
+import { 
+  MapContainer, 
+  TileLayer, 
+  Marker, 
+  Popup, 
+  ZoomControl,
+  useMap,
+  CircleMarker
+} from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+import { Vessel, Refinery, Port } from '@shared/schema';
+import { useVesselWebSocket } from '@/hooks/useVesselWebSocket';
+import { useMaritimeData } from '@/hooks/useMaritimeData';
+import { Loader2, Ship, Factory, Anchor, Navigation, MapPin } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-// Region center positions
-const regionPositions: Record<string, { lat: number; lng: number; zoom: number }> = {
-  'north-america': { lat: 40, lng: -100, zoom: 3 },
-  'south-america': { lat: -15, lng: -60, zoom: 3 },
-  'central-america': { lat: 15, lng: -85, zoom: 4 },
-  'western-europe': { lat: 50, lng: 0, zoom: 4 },
-  'eastern-europe': { lat: 50, lng: 25, zoom: 4 },
-  'middle-east': { lat: 28, lng: 45, zoom: 4 },
-  'north-africa': { lat: 25, lng: 20, zoom: 4 },
-  'southern-africa': { lat: -10, lng: 20, zoom: 3 },
-  'russia': { lat: 60, lng: 80, zoom: 3 },
-  'china': { lat: 35, lng: 105, zoom: 4 },
-  'asia-pacific': { lat: 20, lng: 110, zoom: 3 },
-  'southeast-asia-oceania': { lat: -10, lng: 130, zoom: 3 }
+// Fix Leaflet marker icons
+import icon from 'leaflet/dist/images/marker-icon.png';
+import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+
+// Create custom icon types
+let DefaultIcon = L.icon({
+  iconUrl: icon,
+  shadowUrl: iconShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41]
+});
+
+// Define vessel icon
+const vesselIcon = (vesselType: string) => {
+  let color = '#FF6F00'; // Default orange
+  
+  if (vesselType?.toLowerCase().includes('crude')) {
+    color = '#e53935'; // Red for crude oil tankers
+  } else if (vesselType?.toLowerCase().includes('lng')) {
+    color = '#43a047'; // Green for LNG carriers
+  } else if (vesselType?.toLowerCase().includes('lpg')) {
+    color = '#ffb300'; // Amber for LPG carriers
+  } else if (vesselType?.toLowerCase().includes('product')) {
+    color = '#1e88e5'; // Blue for product tankers
+  } else if (vesselType?.toLowerCase().includes('chemical')) {
+    color = '#8e24aa'; // Purple for chemical tankers
+  }
+  
+  return {
+    color,
+    fillColor: color,
+    fillOpacity: 0.8,
+    weight: 2,
+    radius: 6
+  };
 };
 
-interface LeafletMapProps {
-  vessels: Vessel[];
-  refineries: Refinery[];
-  selectedRegion: Region | null;
-  trackedVessel?: Vessel | null;
-  onVesselClick: (vessel: Vessel) => void;
-  onRefineryClick?: (refinery: Refinery) => void;
-  isLoading?: boolean;
-}
+// Define different map styles
+const MAP_STYLES = {
+  standard: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+  dark: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+  light: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+  satellite: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+  nautical: 'https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png'
+};
 
-// Available free map styles
-const mapStyles = [
-  { 
-    id: 'https://tiles.openfreemap.org/styles/liberty',
-    name: 'Liberty',
-    description: 'OpenFreeMap Liberty style'
-  },
-  { 
-    id: 'https://tiles.openfreemap.org/styles/osm-bright',
-    name: 'OSM Bright',
-    description: 'OpenFreeMap bright style'
-  },
-  { 
-    id: 'https://api.maptiler.com/maps/streets/style.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL',
-    name: 'Streets',
-    description: 'MapTiler Streets (demo)'
-  }
-];
+// Define map tile attribution
+const ATTRIBUTIONS = {
+  standard: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  dark: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+  light: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+  satellite: '&copy; <a href="https://www.arcgis.com/">Esri</a>',
+  nautical: '&copy; <a href="https://www.openseamap.org/">OpenSeaMap</a> contributors'
+};
 
-export default function LeafletMap({
-  vessels,
-  refineries,
-  selectedRegion,
-  trackedVessel,
-  onVesselClick,
-  onRefineryClick,
-  isLoading = false
-}: LeafletMapProps) {
-  const mapRef = useRef<HTMLDivElement>(null);
-  const leafletMap = useRef<L.Map | null>(null);
-  const markersRef = useRef<Record<string, L.Marker>>({});
-  const layerGroupRef = useRef<L.LayerGroup | null>(null);
-  const [mapStyle, setMapStyle] = useState(mapStyles[0].id);
-  
-  // Default center and zoom
-  const defaultCenter: [number, number] = [25, 10];
-  const defaultZoom = 1.5;
-  
-  // Initialize map
+// Component to update map center
+const SetViewOnRegionChange = ({ center, zoom }: { center: [number, number], zoom: number }) => {
+  const map = useMap();
   useEffect(() => {
-    if (isLoading || !mapRef.current) return;
+    map.setView(center, zoom);
+  }, [center, zoom, map]);
+  return null;
+};
 
-    // Don't create a new map if one already exists
-    if (leafletMap.current) return;
-    
-    // Create map instance
-    leafletMap.current = L.map(mapRef.current).setView(defaultCenter, defaultZoom);
-    
-    // Add MapLibre layer with OpenFreeMap style
-    // @ts-ignore - maplibreGL plugin is not properly typed
-    L.maplibreGL({
-      style: mapStyle,
-      attribution: '&copy; <a href="https://openfreemap.org/">OpenFreeMap</a>'
-    }).addTo(leafletMap.current);
-    
-    // Add scale control
-    L.control.scale().addTo(leafletMap.current);
-    
-    // Create a layer group for markers
-    layerGroupRef.current = L.layerGroup().addTo(leafletMap.current);
-    
-    // Add markers
-    updateMarkers();
-    
-    return () => {
-      if (leafletMap.current) {
-        leafletMap.current.remove();
-        leafletMap.current = null;
-      }
-    };
-  }, [isLoading]);
-
-  // Update the map style when it changes
-  useEffect(() => {
-    if (!leafletMap.current) return;
-    
-    // Remove the current layer
-    leafletMap.current.eachLayer(layer => {
-      if (layer instanceof L.TileLayer || layer instanceof L.MaplibreGL) {
-        leafletMap.current?.removeLayer(layer);
-      }
-    });
-    
-    // Add the new style layer
-    // @ts-ignore - maplibreGL plugin is not properly typed
-    L.maplibreGL({
-      style: mapStyle,
-      attribution: '&copy; <a href="https://openfreemap.org/">OpenFreeMap</a>'
-    }).addTo(leafletMap.current);
-    
-  }, [mapStyle]);
+// Create marker clusters component
+function MarkerCluster({ vessels }: { vessels: Vessel[] }) {
+  const map = useMap();
+  const clustersRef = useRef<L.LayerGroup>();
   
-  // Check if vessel matches any oil product type
-  const matchesOilProductType = (vesselType: string | null) => {
-    if (!vesselType) return false;
-    
-    // Check exact match with oil product types
-    if (OIL_PRODUCT_TYPES.some(product => vesselType.includes(product))) {
-      return true;
+  useEffect(() => {
+    // Remove existing markers
+    if (clustersRef.current) {
+      clustersRef.current.clearLayers();
+    } else {
+      clustersRef.current = L.layerGroup().addTo(map);
     }
     
-    // Check generic oil vessel types
-    return (
-      vesselType.toLowerCase().includes('oil') ||
-      vesselType.toLowerCase().includes('tanker') ||
-      vesselType.toLowerCase().includes('crude') ||
-      vesselType.toLowerCase().includes('vlcc') ||
-      vesselType.toLowerCase().includes('diesel') ||
-      vesselType.toLowerCase().includes('petroleum') ||
-      vesselType.toLowerCase().includes('gas') ||
-      vesselType.toLowerCase().includes('gasoline') ||
-      vesselType.toLowerCase().includes('fuel')
-    );
-  };
-  
-  // Filter down vessels for better performance
-  const filteredVessels = vessels.filter(vessel => 
-    vessel.currentLat && vessel.currentLng && // Must have coordinates
-    matchesOilProductType(vessel.vesselType) // Only show oil vessels or vessels carrying oil products
-  ).slice(0, 500); // Limit to 500 vessels for performance
-  
-  // Get vessel marker color based on type
-  const getVesselColor = (type: string) => {
-    if (type.toLowerCase().includes('lng')) return "#4ECDC4";
-    if (type.toLowerCase().includes('cargo')) return "#FFD166";
-    if (type.toLowerCase().includes('container')) return "#118AB2";
-    if (type.toLowerCase().includes('chemical')) return "#9A48D0";
-    return "#FF6B6B"; // Default to oil tanker color
-  };
-  
-  // Get vessel emoji based on type
-  const getVesselEmoji = (type: string): string => {
-    if (type.toLowerCase().includes('lng')) return '🔋';
-    if (type.toLowerCase().includes('container')) return '📦';
-    if (type.toLowerCase().includes('chemical')) return '⚗️';
-    if (type.toLowerCase().includes('cargo')) return '🚢';
-    return '🛢️';
-  };
-  
-  // Create a custom icon for markers
-  const createCustomIcon = (emoji: string, borderColor: string) => {
-    const html = `
-      <div style="
-        width: 25px;
-        height: 25px;
-        border-radius: 50%;
-        background: rgba(255,255,255,0.9);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: 2px solid ${borderColor};
-        box-shadow: 0 0 0 2px rgba(0,0,0,0.1);
-      ">
-        <span style="font-size: 14px;">${emoji}</span>
-      </div>
-    `;
-    
-    return L.divIcon({
-      html: html,
-      className: 'custom-marker',
-      iconSize: [25, 25],
-      iconAnchor: [12, 12],
-    });
-  };
-  
-  // Update markers
-  const updateMarkers = useCallback(() => {
-    if (!leafletMap.current || !layerGroupRef.current) return;
-    
-    // Clear existing markers
-    layerGroupRef.current.clearLayers();
-    
-    // Add vessel markers
-    filteredVessels.forEach(vessel => {
-      if (!vessel.currentLat || !vessel.currentLng) return;
-      
-      const lat = typeof vessel.currentLat === 'number' ? vessel.currentLat : parseFloat(String(vessel.currentLat));
-      const lng = typeof vessel.currentLng === 'number' ? vessel.currentLng : parseFloat(String(vessel.currentLng));
-      
-      // Create marker with custom icon
-      const icon = createCustomIcon(
-        getVesselEmoji(vessel.vesselType || 'Oil Tanker'),
-        getVesselColor(vessel.vesselType || 'Oil Tanker')
-      );
-      
-      const marker = L.marker([lat, lng], { icon }).addTo(layerGroupRef.current!);
-      
-      // Add popup
-      marker.bindPopup(`
-        <div class="p-2 max-w-[200px]">
-          <h3 class="font-bold text-sm">${vessel.name}</h3>
-          <div class="text-xs mt-1">
-            <div><span class="font-semibold">Type:</span> ${vessel.vesselType || 'Unknown'}</div>
-            <div><span class="font-semibold">IMO:</span> ${vessel.imo || 'Unknown'}</div>
-            <div><span class="font-semibold">Flag:</span> ${vessel.flag || 'Unknown'}</div>
-            ${vessel.departurePort ? `<div><span class="font-semibold">From:</span> ${vessel.departurePort}</div>` : ''}
-            ${vessel.destinationPort ? `<div><span class="font-semibold">To:</span> ${vessel.destinationPort}</div>` : ''}
-          </div>
-        </div>
-      `);
-      
-      // Add click event
-      marker.on('click', () => {
-        onVesselClick(vessel);
-      });
-      
-      // Store reference
-      markersRef.current[`vessel-${vessel.id}`] = marker;
-    });
-    
-    // Add refinery markers
-    refineries.forEach(refinery => {
-      // Create marker with custom icon
-      const icon = createCustomIcon('⛽', '#dc3545');
-      
-      const marker = L.marker([refinery.lat, refinery.lng], { icon }).addTo(layerGroupRef.current!);
-      
-      // Add popup
-      marker.bindPopup(`
-        <div class="p-2 max-w-[200px]">
-          <h3 class="font-bold text-sm">${refinery.name}</h3>
-          <div class="text-xs mt-1">
-            <div><span class="font-semibold">Country:</span> ${refinery.country || 'Unknown'}</div>
-            <div><span class="font-semibold">Region:</span> ${refinery.region || 'Unknown'}</div>
-            <div><span class="font-semibold">Status:</span> ${refinery.status || 'Unknown'}</div>
-            ${refinery.capacity ? `<div><span class="font-semibold">Capacity:</span> ${refinery.capacity.toLocaleString()} bpd</div>` : ''}
-          </div>
-        </div>
-      `);
-      
-      // Add click event
-      marker.on('click', () => {
-        if (onRefineryClick) {
-          onRefineryClick(refinery);
+    // Add markers to layer group
+    vessels.forEach(vessel => {
+      if (vessel.currentLat && vessel.currentLng) {
+        try {
+          const lat = parseFloat(String(vessel.currentLat));
+          const lng = parseFloat(String(vessel.currentLng));
+          
+          if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+            return;
+          }
+          
+          const marker = L.circleMarker([lat, lng], vesselIcon(vessel.vesselType || 'oil tanker'))
+            .addTo(clustersRef.current as L.LayerGroup);
+          
+          marker.bindPopup(() => {
+            const content = document.createElement('div');
+            content.className = 'p-2 max-w-[250px]';
+            content.innerHTML = `
+              <h3 class="font-bold text-sm">${vessel.name}</h3>
+              <p class="text-xs text-muted-foreground">${vessel.vesselType || 'Unknown vessel type'}</p>
+              <div class="mt-2 text-xs">
+                <p>IMO: ${vessel.imo || 'N/A'}</p>
+                <p>Flag: ${vessel.flag || 'N/A'}</p>
+              </div>
+              <button 
+                class="mt-2 w-full text-xs px-2 py-1 bg-blue-600 text-white rounded flex items-center justify-center gap-1" 
+                onclick="window.location.href='/vessels/${vessel.id}'"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 9V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9"/>
+                  <path d="M9 3 C9 3 9 15 12 15 S15 3 15 3"/>
+                  <path d="M5 3a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v4a1 1 0 0 1-1 1 1 1 0 0 1-1-1 1 1 0 0 0-1-1H8a1 1 0 0 0-1 1 1 1 0 0 1-1 1 1 1 0 0 1-1-1z"/>
+                </svg>
+                View Details
+              </button>
+            `;
+            
+            return content;
+          });
+        } catch (err) {
+          console.error('Error creating marker:', err);
         }
-      });
-      
-      // Store reference
-      markersRef.current[`refinery-${refinery.id}`] = marker;
+      }
     });
-  }, [filteredVessels, refineries, onVesselClick, onRefineryClick]);
-  
-  // Update markers when data changes
-  useEffect(() => {
-    updateMarkers();
-  }, [filteredVessels, refineries, updateMarkers]);
-  
-  // Update map view when region changes
-  useEffect(() => {
-    if (!leafletMap.current || !selectedRegion) return;
     
-    const position = regionPositions[selectedRegion];
-    if (position) {
-      leafletMap.current.setView([position.lat, position.lng], position.zoom);
+    return () => {
+      if (clustersRef.current) {
+        clustersRef.current.clearLayers();
+      }
+    };
+  }, [vessels, map]);
+  
+  return null;
+}
+
+function RefineryMarkers({ refineries }: { refineries: Refinery[] }) {
+  const map = useMap();
+  const markersRef = useRef<L.LayerGroup>();
+  
+  useEffect(() => {
+    if (markersRef.current) {
+      markersRef.current.clearLayers();
+    } else {
+      markersRef.current = L.layerGroup().addTo(map);
+    }
+    
+    refineries.forEach(refinery => {
+      if (refinery.lat && refinery.lng) {
+        try {
+          const lat = parseFloat(String(refinery.lat));
+          const lng = parseFloat(String(refinery.lng));
+          
+          if (isNaN(lat) || isNaN(lng)) return;
+          
+          const marker = L.circleMarker([lat, lng], {
+            radius: 8,
+            color: '#f44336',
+            fillColor: '#f44336',
+            fillOpacity: 0.8,
+            weight: 2
+          }).addTo(markersRef.current as L.LayerGroup);
+          
+          marker.bindPopup(() => {
+            const content = document.createElement('div');
+            content.className = 'p-2 max-w-[250px]';
+            content.innerHTML = `
+              <h3 class="font-bold text-sm">${refinery.name}</h3>
+              <p class="text-xs text-muted-foreground">${refinery.country}</p>
+              <div class="mt-2 text-xs">
+                <p>Region: ${refinery.region}</p>
+                <p>Capacity: ${refinery.capacity ? `${Math.round(refinery.capacity / 1000)}k bpd` : 'N/A'}</p>
+              </div>
+              <button 
+                class="mt-2 w-full text-xs px-2 py-1 bg-red-600 text-white rounded flex items-center justify-center gap-1" 
+                onclick="window.location.href='/refineries/${refinery.id}'"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M19 8V4"/>
+                  <path d="M15 4v4"/>
+                  <path d="M11 4v4"/>
+                  <path d="M7 4v4"/>
+                  <path d="M20 12 H4c0 0 0 8 8 8s8-8 8-8z"/>
+                </svg>
+                View Details
+              </button>
+            `;
+            
+            return content;
+          });
+        } catch (err) {
+          console.error('Error creating refinery marker:', err);
+        }
+      }
+    });
+    
+    return () => {
+      if (markersRef.current) {
+        markersRef.current.clearLayers();
+      }
+    };
+  }, [refineries, map]);
+  
+  return null;
+}
+
+function PortMarkers({ ports }: { ports: Port[] }) {
+  const map = useMap();
+  const markersRef = useRef<L.LayerGroup>();
+  
+  useEffect(() => {
+    if (markersRef.current) {
+      markersRef.current.clearLayers();
+    } else {
+      markersRef.current = L.layerGroup().addTo(map);
+    }
+    
+    ports.forEach(port => {
+      if (port.lat && port.lng) {
+        try {
+          const lat = parseFloat(String(port.lat));
+          const lng = parseFloat(String(port.lng));
+          
+          if (isNaN(lat) || isNaN(lng)) return;
+          
+          const marker = L.circleMarker([lat, lng], {
+            radius: 6,
+            color: '#2196f3',
+            fillColor: '#2196f3',
+            fillOpacity: 0.8,
+            weight: 2
+          }).addTo(markersRef.current as L.LayerGroup);
+          
+          marker.bindPopup(() => {
+            const content = document.createElement('div');
+            content.className = 'p-2 max-w-[250px]';
+            content.innerHTML = `
+              <h3 class="font-bold text-sm">${port.name}</h3>
+              <p class="text-xs text-muted-foreground">${port.country}</p>
+              <div class="mt-2 text-xs">
+                <p>Region: ${port.region}</p>
+                <p>Type: ${port.type || 'Standard'}</p>
+              </div>
+              <button 
+                class="mt-2 w-full text-xs px-2 py-1 bg-blue-600 text-white rounded flex items-center justify-center gap-1" 
+                onclick="window.location.href='/ports/${port.id}'"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 4V1m0 3L8 7m4-4l4 4"/>
+                  <path d="M2 22h20"/>
+                  <path d="M3 11c0 5 3 10 11 10s7-5 7-10"/>
+                </svg>
+                View Details
+              </button>
+            `;
+            
+            return content;
+          });
+        } catch (err) {
+          console.error('Error creating port marker:', err);
+        }
+      }
+    });
+    
+    return () => {
+      if (markersRef.current) {
+        markersRef.current.clearLayers();
+      }
+    };
+  }, [ports, map]);
+  
+  return null;
+}
+
+// Map Layers control component
+function MapLayers({ mapStyle }: { mapStyle: string }) {
+  const map = useMap();
+  
+  useEffect(() => {
+    // Remove current tile layers
+    map.eachLayer((layer) => {
+      if (layer instanceof L.TileLayer) {
+        map.removeLayer(layer);
+      }
+    });
+    
+    // Add selected style tile layer
+    const url = MAP_STYLES[mapStyle as keyof typeof MAP_STYLES] || MAP_STYLES.standard;
+    const attribution = ATTRIBUTIONS[mapStyle as keyof typeof ATTRIBUTIONS] || ATTRIBUTIONS.standard;
+    L.tileLayer(url, {
+      attribution,
+      maxZoom: 19
+    }).addTo(map);
+    
+    // Add nautical layer if style is nautical
+    if (mapStyle === 'nautical') {
+      L.tileLayer(MAP_STYLES.standard, {
+        attribution: ATTRIBUTIONS.standard,
+        maxZoom: 19
+      }).addTo(map);
+      
+      L.tileLayer(MAP_STYLES.nautical, {
+        attribution: ATTRIBUTIONS.nautical,
+        maxZoom: 19
+      }).addTo(map);
+    }
+  }, [mapStyle, map]);
+  
+  return null;
+}
+
+// Main Leaflet Map component
+interface LeafletMapProps {
+  initialRegion?: string;
+  height?: string;
+  showRoutes?: boolean;
+  showVesselHistory?: boolean;
+  showHeatmap?: boolean;
+  mapStyle?: 'standard' | 'dark' | 'light' | 'satellite' | 'nautical';
+}
+
+export default function LeafletMap({
+  initialRegion = 'global',
+  height = '600px',
+  showRoutes = false,
+  showVesselHistory = false,
+  showHeatmap = false,
+  mapStyle: initialMapStyle = 'standard'
+}: LeafletMapProps) {
+  // State
+  const [mapStyle, setMapStyle] = useState(initialMapStyle);
+  const [selectedRegion, setSelectedRegion] = useState(initialRegion);
+  const [center, setCenter] = useState<[number, number]>([20, 0]);
+  const [zoom, setZoom] = useState(2);
+  
+  // Get vessel data from WebSocket
+  const { 
+    vessels, 
+    connected, 
+    lastUpdated, 
+    loading: vesselsLoading 
+  } = useVesselWebSocket({
+    region: selectedRegion,
+    loadAllVessels: true
+  });
+
+  // Get maritime infrastructure data
+  const { 
+    refineries, 
+    ports, 
+    loading: infrastructureLoading 
+  } = useMaritimeData({ 
+    region: selectedRegion 
+  });
+  
+  // Set center based on region
+  useEffect(() => {
+    switch (selectedRegion) {
+      case 'middle_east':
+        setCenter([25, 50]);
+        setZoom(5);
+        break;
+      case 'north_america':
+        setCenter([40, -100]);
+        setZoom(4);
+        break;
+      case 'europe':
+        setCenter([50, 10]);
+        setZoom(4);
+        break;
+      case 'southeast_asia':
+        setCenter([5, 115]);
+        setZoom(4);
+        break;
+      case 'east_asia':
+        setCenter([30, 120]);
+        setZoom(4);
+        break;
+      case 'africa':
+        setCenter([0, 20]);
+        setZoom(3);
+        break;
+      case 'oceania':
+        setCenter([-25, 135]);
+        setZoom(4);
+        break;
+      case 'south_america':
+        setCenter([-20, -60]);
+        setZoom(3);
+        break;
+      default:
+        setCenter([20, 0]);
+        setZoom(2);
     }
   }, [selectedRegion]);
   
-  // Update map when tracked vessel changes
+  // Update selected region when initialRegion changes
   useEffect(() => {
-    if (!leafletMap.current || !trackedVessel || !trackedVessel.currentLat || !trackedVessel.currentLng) return;
-    
-    const lat = typeof trackedVessel.currentLat === 'number' ? trackedVessel.currentLat : parseFloat(String(trackedVessel.currentLat));
-    const lng = typeof trackedVessel.currentLng === 'number' ? trackedVessel.currentLng : parseFloat(String(trackedVessel.currentLng));
-    
-    leafletMap.current.setView([lat, lng], 8);
-  }, [trackedVessel]);
+    setSelectedRegion(initialRegion);
+  }, [initialRegion]);
+
+  // Update map style when initialMapStyle changes
+  useEffect(() => {
+    setMapStyle(initialMapStyle);
+  }, [initialMapStyle]);
   
-  // Handle map style change
-  const handleStyleChange = (styleId: string) => {
-    setMapStyle(styleId);
-  };
-  
-  if (isLoading) {
-    return (
-      <div className="relative h-96 md:h-[500px] bg-gray-100 flex items-center justify-center">
-        <div className="text-primary text-lg">Loading map...</div>
-      </div>
-    );
-  }
-  
+  // Loading state
+  const isLoading = vesselsLoading || infrastructureLoading;
+
   return (
-    <div className="relative h-96 md:h-[500px] rounded-lg overflow-hidden">
-      <div ref={mapRef} className="absolute inset-0 w-full h-full" />
-      
-      {/* Map Style Selector */}
-      <div className="absolute bottom-4 left-4 z-10 bg-white/90 backdrop-blur-sm rounded-md shadow-md p-2 flex flex-wrap gap-1.5 max-w-[320px]">
-        {mapStyles.map(style => (
-          <button
-            key={style.id}
-            className={`flex flex-col items-center justify-center py-1 px-3 h-auto rounded border ${
-              style.id === mapStyle 
-                ? 'bg-primary text-white border-primary' 
-                : 'border-primary/20 hover:bg-primary/10 text-gray-700'
-            }`}
-            onClick={() => handleStyleChange(style.id)}
-            title={style.description}
-          >
-            <span className="text-xs font-medium">{style.name}</span>
-          </button>
-        ))}
-      </div>
-      
-      {/* Tracked Vessel Info */}
-      {trackedVessel && trackedVessel.currentLat && trackedVessel.currentLng && (
-        <div className="absolute top-20 right-4 z-10 bg-white rounded-lg shadow-md p-3 max-w-[220px]">
-          <div className="flex items-center justify-between mb-2">
-            <h4 className="text-xs font-bold flex items-center">
-              <NavigationIcon className="h-3 w-3 mr-1 text-blue-500"/>
-              Tracking Vessel
-            </h4>
-            <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 text-[10px]">LIVE</Badge>
-          </div>
-          <div className="space-y-1 text-xs">
-            <div className="font-medium">{trackedVessel.name}</div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Vessel Type:</span>
-              <span>{trackedVessel.vesselType}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Position:</span>
-              <span>
-                {typeof trackedVessel.currentLat === 'number' ? trackedVessel.currentLat.toFixed(3) : parseFloat(String(trackedVessel.currentLat)).toFixed(3)}, 
-                {typeof trackedVessel.currentLng === 'number' ? trackedVessel.currentLng.toFixed(3) : parseFloat(String(trackedVessel.currentLng)).toFixed(3)}
-              </span>
-            </div>
-            {trackedVessel.destinationPort && (
-              <div className="flex justify-between">
-                <span className="text-gray-500">Heading to:</span>
-                <span>{trackedVessel.destinationPort.split(',')[0]}</span>
-              </div>
-            )}
+    <div className="relative w-full" style={{ height }}>
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-[1000] backdrop-blur-sm">
+          <div className="flex flex-col items-center space-y-4 p-4">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <div className="text-sm font-medium">Loading maritime data...</div>
           </div>
         </div>
       )}
+
+      {/* Map Controls */}
+      <div className="absolute top-3 right-3 z-[1000] flex flex-col gap-2">
+        <Card className="w-48 bg-background/90 backdrop-blur-sm">
+          <CardHeader className="p-3 pb-2">
+            <CardTitle className="text-sm">Map Style</CardTitle>
+          </CardHeader>
+          <CardContent className="p-3 pt-0">
+            <Tabs value={mapStyle} onValueChange={(v) => setMapStyle(v as any)}>
+              <TabsList className="w-full grid grid-cols-2 h-8">
+                <TabsTrigger value="standard" className="text-xs">
+                  Standard
+                </TabsTrigger>
+                <TabsTrigger value="dark" className="text-xs">
+                  Dark
+                </TabsTrigger>
+                <TabsTrigger value="light" className="text-xs">
+                  Light
+                </TabsTrigger>
+                <TabsTrigger value="satellite" className="text-xs">
+                  Satellite
+                </TabsTrigger>
+                <TabsTrigger value="nautical" className="text-xs">
+                  Nautical
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </CardContent>
+        </Card>
+        
+        {/* Stats */}
+        <Card className="w-48 bg-background/90 backdrop-blur-sm">
+          <CardHeader className="p-3 pb-2">
+            <CardTitle className="text-sm flex items-center">
+              <Ship className="h-4 w-4 mr-2" />
+              Statistics
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-3 pt-0 space-y-2 text-xs">
+            <div>Vessels: {vessels.length}</div>
+            <div>Refineries: {refineries.length}</div>
+            <div>Ports: {ports.length}</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Leaflet Map */}
+      <MapContainer
+        center={center}
+        zoom={zoom}
+        style={{ width: '100%', height: '100%' }}
+        zoomControl={false}
+        className="z-10"
+      >
+        <ZoomControl position="topleft" />
+        <TileLayer
+          attribution={ATTRIBUTIONS.standard}
+          url={MAP_STYLES.standard}
+        />
+        <SetViewOnRegionChange center={center} zoom={zoom} />
+        <MapLayers mapStyle={mapStyle} />
+        <MarkerCluster vessels={vessels} />
+        <RefineryMarkers refineries={refineries} />
+        <PortMarkers ports={ports} />
+      </MapContainer>
+
+      {/* Connection Status */}
+      <div className="absolute bottom-3 left-3 z-[1000]">
+        <Badge 
+          variant={connected ? "outline" : "destructive"} 
+          className={connected 
+            ? "bg-green-50 text-green-700 border-green-200" 
+            : ""
+          }
+        >
+          {connected ? "Connected" : "Connecting..."}
+        </Badge>
+        
+        {lastUpdated && (
+          <div className="text-xs text-white bg-black/40 backdrop-blur-sm rounded px-2 py-1 mt-1">
+            Last updated: {new Date(lastUpdated).toLocaleString()}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
