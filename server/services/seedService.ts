@@ -6,6 +6,7 @@ import { isCoordinateAtSea } from "./vesselGenerator";
 import { REGIONS, OIL_PRODUCT_TYPES } from "@shared/constants";
 import { sql, ilike, eq } from "drizzle-orm";
 import { seedSubscriptionPlans } from "../scripts/seed-subscription-plans";
+import { seedVesselJobs } from "../scripts/seed-vessel-jobs";
 
 /**
  * Add seed data for vessels if no vessels exist or if fewer than expected
@@ -498,7 +499,8 @@ export async function seedAllData(): Promise<{
   refineries: { count: number, seeded: boolean, active: number },
   vessels: { count: number, seeded: boolean, oilVessels: number, totalCargo: number },
   brokers: { count: number, seeded: boolean },
-  subscriptionPlans: { count: number, seeded: boolean }
+  subscriptionPlans: { count: number, seeded: boolean },
+  vesselJobs?: { jobs: number, seeded: boolean }
 }> {
   console.log("Starting database seeding process...");
   
@@ -518,10 +520,21 @@ export async function seedAllData(): Promise<{
   const subscriptionPlansResult = await seedSubscriptionPlans();
   console.log("Subscription plans seeded successfully:", subscriptionPlansResult);
   
+  console.log("Seeding vessel jobs and dashboard data...");
+  let vesselJobsResult;
+  try {
+    vesselJobsResult = await seedVesselJobs();
+    console.log("Vessel jobs seeded successfully:", vesselJobsResult);
+  } catch (error) {
+    console.error("Error seeding vessel jobs:", error);
+    vesselJobsResult = { jobs: 0, seeded: false };
+  }
+  
   return {
     refineries: refineryResult,
     vessels: vesselResult,
     brokers: brokerResult,
-    subscriptionPlans: subscriptionPlansResult
+    subscriptionPlans: subscriptionPlansResult,
+    vesselJobs: vesselJobsResult
   };
 }

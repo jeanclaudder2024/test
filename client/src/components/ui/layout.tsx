@@ -9,6 +9,7 @@ import {
   CreditCard,
   Database, 
   FileText, 
+  HelpCircle,
   Home, 
   Layers, 
   LifeBuoy, 
@@ -25,7 +26,10 @@ import {
   Sun, 
   User, 
   UserPlus, 
-  X
+  X,
+  Anchor,
+  Briefcase,
+  LogOut
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -56,6 +60,7 @@ export function Layout({ children }: LayoutProps) {
   const navigation = [
     { name: "Dashboard", href: "/dashboard", icon: Home },
     { name: "Vessels", href: "/vessels", icon: Ship },
+    { name: "Vessel Dashboard", href: "/vessel-dashboard", icon: Layers },
     { name: "Refineries", href: "/refineries", icon: Database },
     { name: "Ports", href: "/ports", icon: Anchor },
     { name: "Live Tracking", href: "/live-tracking", icon: Compass },
@@ -378,8 +383,8 @@ export function Layout({ children }: LayoutProps) {
   );
 }
 
-// Missing icons
-const Anchor = (props: React.SVGProps<SVGSVGElement>) => (
+// Missing icons - using CustomIcons prefix to avoid conflicts with lucide imports
+const CustomAnchor = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
     {...props}
     xmlns="http://www.w3.org/2000/svg"
@@ -398,7 +403,7 @@ const Anchor = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
-const Briefcase = (props: React.SVGProps<SVGSVGElement>) => (
+const CustomBriefcase = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
     {...props}
     xmlns="http://www.w3.org/2000/svg"
@@ -416,7 +421,7 @@ const Briefcase = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
-const LogOut = (props: React.SVGProps<SVGSVGElement>) => (
+const CustomLogOut = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
     {...props}
     xmlns="http://www.w3.org/2000/svg"

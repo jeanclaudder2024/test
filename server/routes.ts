@@ -11,6 +11,7 @@ import { brokerService } from "./services/brokerService";
 import { stripeService } from "./services/stripeService";
 import { updateRefineryCoordinates, seedMissingRefineries } from "./services/refineryUpdate";
 import { seedAllData, regenerateGlobalVessels } from "./services/seedService";
+import { seedVesselJobs } from "./scripts/seed-vessel-jobs";
 import { portService } from "./services/portService";
 import { vesselPositionService } from "./services/vesselPositionService";
 import { setupAuth } from "./auth";
@@ -238,6 +239,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         // Return whatever data we managed to seed
+        // Check for vessel job data
+        let vesselJobsResult = { jobs: 0, extraInfo: 0, docs: 0, seeded: false };
+        try {
+          const seedJobsResult = await seedVesselJobs();
+          // Ensure we have all required properties
+          vesselJobsResult = {
+            jobs: seedJobsResult.jobs || 0,
+            extraInfo: seedJobsResult.extraInfo || 0,
+            docs: seedJobsResult.docs || 0,
+            seeded: seedJobsResult.seeded
+          };
+          console.log("Vessel job data seeded successfully:", vesselJobsResult);
+        } catch (jobError) {
+          console.error("Error seeding vessel job data:", jobError);
+          // Continue with what we have
+        }
+        
         res.json({ 
           success: true, 
           message: "Seed data process completed",
@@ -248,7 +266,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             refineries: refineryResult.refineries || 0,
             active: refineryResult.active || 0,
             brokers: brokerResult.count || 0,
-            ports: portResult.ports || 0
+            ports: portResult.ports || 0,
+            vesselJobs: vesselJobsResult.jobs || 0,
+            vesselDocs: vesselJobsResult.docs || 0
           }
         });
       } catch (error) {
