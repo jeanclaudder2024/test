@@ -10,6 +10,44 @@ import {
 } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import 'leaflet.markercluster/dist/leaflet.markercluster';
+import 'leaflet.markercluster/dist/MarkerCluster.css';
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
+
+// Define missing types for MarkerClusterGroup
+declare module 'leaflet' {
+  interface MarkerClusterGroupOptions extends L.LayerOptions {
+    maxClusterRadius?: number;
+    spiderfyOnMaxZoom?: boolean;
+    showCoverageOnHover?: boolean;
+    zoomToBoundsOnClick?: boolean;
+    disableClusteringAtZoom?: number;
+    iconCreateFunction?: (cluster: MarkerCluster) => L.Icon | L.DivIcon;
+    // Add other options as needed
+  }
+  
+  interface MarkerCluster {
+    getChildCount(): number;
+    getAllChildMarkers(): L.Marker[];
+    // Add other methods as needed
+  }
+  
+  interface MarkerClusterGroupStatic {
+    new(options?: MarkerClusterGroupOptions): MarkerClusterGroup;
+  }
+  
+  interface MarkerClusterGroup extends L.FeatureGroup {
+    options: MarkerClusterGroupOptions;
+    addLayer(layer: L.Layer): this;
+    removeLayer(layer: L.Layer): this;
+    clearLayers(): this;
+    // Add other methods as needed
+  }
+  
+  let MarkerClusterGroup: MarkerClusterGroupStatic;
+  
+  function markerClusterGroup(options?: MarkerClusterGroupOptions): MarkerClusterGroup;
+}
 import { Vessel, Refinery, Port } from '@shared/schema';
 import { useVesselWebSocket } from '@/hooks/useVesselWebSocket';
 import { useMaritimeData } from '@/hooks/useMaritimeData';
@@ -19,16 +57,17 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-// Fix Leaflet marker icons
-import icon from 'leaflet/dist/images/marker-icon.png';
-import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+// Custom icons for map markers
+const vesselIconUrl = '/assets/vessel-icon.svg';
+const refineryIconUrl = '/assets/refinery-icon.svg';
+const portIconUrl = '/assets/port-icon.svg';
 
 // Create custom icon types
-let DefaultIcon = L.icon({
-  iconUrl: icon,
-  shadowUrl: iconShadow,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41]
+const createVesselIcon = (color: string = '#FF6F00') => L.divIcon({
+  className: 'custom-div-icon',
+  html: `<div style="background-color: ${color}; width: 10px; height: 10px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.5);"></div>`,
+  iconSize: [10, 10],
+  iconAnchor: [5, 5]
 });
 
 // Define vessel icon
@@ -86,17 +125,79 @@ const SetViewOnRegionChange = ({ center, zoom }: { center: [number, number], zoo
 // Create marker clusters component
 function MarkerCluster({ vessels }: { vessels: Vessel[] }) {
   const map = useMap();
-  const clustersRef = useRef<L.LayerGroup>();
+  const clusterGroupRef = useRef<L.MarkerClusterGroup | null>(null);
   
   useEffect(() => {
-    // Remove existing markers
-    if (clustersRef.current) {
-      clustersRef.current.clearLayers();
+    // Initialize or clear marker cluster group
+    if (!clusterGroupRef.current) {
+      clusterGroupRef.current = L.markerClusterGroup({
+        maxClusterRadius: 50,
+        spiderfyOnMaxZoom: true,
+        showCoverageOnHover: false,
+        zoomToBoundsOnClick: true,
+        disableClusteringAtZoom: 15,
+        iconCreateFunction: (cluster) => {
+          const childCount = cluster.getChildCount();
+          
+          // Calculate size based on number of points
+          let size = 'small';
+          if (childCount > 100) {
+            size = 'large';
+          } else if (childCount > 30) {
+            size = 'medium';
+          }
+          
+          // Custom cluster style
+          return L.divIcon({
+            html: `<div class="custom-cluster-icon ${size}">
+                     <span>${childCount}</span>
+                   </div>`,
+            className: `custom-cluster ${size}`,
+            iconSize: L.point(40, 40)
+          });
+        }
+      });
+      
+      // Add CSS style for clusters in head
+      const style = document.createElement('style');
+      style.textContent = `
+        .custom-cluster-icon {
+          background-color: rgba(0, 51, 102, 0.8);
+          color: white;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 2px solid #FF6F00;
+          box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+          font-weight: bold;
+          font-family: sans-serif;
+        }
+        .custom-cluster-icon.small {
+          width: 30px;
+          height: 30px;
+          font-size: 12px;
+        }
+        .custom-cluster-icon.medium {
+          width: 40px;
+          height: 40px;
+          font-size: 14px;
+        }
+        .custom-cluster-icon.large {
+          width: 50px;
+          height: 50px;
+          font-size: 16px;
+        }
+      `;
+      document.head.appendChild(style);
+      
+      // Add to map
+      map.addLayer(clusterGroupRef.current);
     } else {
-      clustersRef.current = L.layerGroup().addTo(map);
+      clusterGroupRef.current.clearLayers();
     }
     
-    // Add markers to layer group
+    // Add vessel markers to cluster group
     vessels.forEach(vessel => {
       if (vessel.currentLat && vessel.currentLng) {
         try {
@@ -107,43 +208,63 @@ function MarkerCluster({ vessels }: { vessels: Vessel[] }) {
             return;
           }
           
-          const marker = L.circleMarker([lat, lng], vesselIcon(vessel.vesselType || 'oil tanker'))
-            .addTo(clustersRef.current as L.LayerGroup);
+          // Get vessel type color
+          let markerColor = '#FF6F00'; // Default orange
           
-          marker.bindPopup(() => {
-            const content = document.createElement('div');
-            content.className = 'p-2 max-w-[250px]';
-            content.innerHTML = `
-              <h3 class="font-bold text-sm">${vessel.name}</h3>
-              <p class="text-xs text-muted-foreground">${vessel.vesselType || 'Unknown vessel type'}</p>
-              <div class="mt-2 text-xs">
-                <p>IMO: ${vessel.imo || 'N/A'}</p>
-                <p>Flag: ${vessel.flag || 'N/A'}</p>
-              </div>
-              <button 
-                class="mt-2 w-full text-xs px-2 py-1 bg-blue-600 text-white rounded flex items-center justify-center gap-1" 
-                onclick="window.location.href='/vessels/${vessel.id}'"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M21 9V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9"/>
-                  <path d="M9 3 C9 3 9 15 12 15 S15 3 15 3"/>
-                  <path d="M5 3a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v4a1 1 0 0 1-1 1 1 1 0 0 1-1-1 1 1 0 0 0-1-1H8a1 1 0 0 0-1 1 1 1 0 0 1-1 1 1 1 0 0 1-1-1z"/>
-                </svg>
-                View Details
-              </button>
-            `;
-            
-            return content;
-          });
+          if (vessel.vesselType?.toLowerCase().includes('crude')) {
+            markerColor = '#e53935'; // Red for crude oil tankers
+          } else if (vessel.vesselType?.toLowerCase().includes('lng')) {
+            markerColor = '#43a047'; // Green for LNG carriers
+          } else if (vessel.vesselType?.toLowerCase().includes('lpg')) {
+            markerColor = '#ffb300'; // Amber for LPG carriers
+          } else if (vessel.vesselType?.toLowerCase().includes('product')) {
+            markerColor = '#1e88e5'; // Blue for product tankers
+          } else if (vessel.vesselType?.toLowerCase().includes('chemical')) {
+            markerColor = '#8e24aa'; // Purple for chemical tankers
+          }
+          
+          // Create custom vessel icon
+          const icon = createVesselIcon(markerColor);
+          
+          // Create and add marker to cluster
+          const marker = L.marker([lat, lng], { icon });
+          
+          // Create popup content
+          const popupContent = document.createElement('div');
+          popupContent.className = 'p-2 max-w-[250px]';
+          popupContent.innerHTML = `
+            <h3 class="font-bold text-sm">${vessel.name}</h3>
+            <p class="text-xs text-muted-foreground">${vessel.vesselType || 'Unknown vessel type'}</p>
+            <div class="mt-2 text-xs">
+              <p>IMO: ${vessel.imo || 'N/A'}</p>
+              <p>Flag: ${vessel.flag || 'N/A'}</p>
+              <p>Deadweight: ${vessel.deadweight ? `${vessel.deadweight.toLocaleString()} tons` : 'N/A'}</p>
+            </div>
+            <button 
+              class="mt-2 w-full text-xs px-2 py-1 bg-blue-600 text-white rounded flex items-center justify-center gap-1" 
+              onclick="window.location.href='/vessels/${vessel.id}'"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 9V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9"/>
+                <path d="M9 3 C9 3 9 15 12 15 S15 3 15 3"/>
+                <path d="M5 3a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v4a1 1 0 0 1-1 1 1 1 0 0 1-1-1 1 1 0 0 0-1-1H8a1 1 0 0 0-1 1 1 1 0 0 1-1 1 1 1 0 0 1-1-1z"/>
+              </svg>
+              View Details
+            </button>
+          `;
+          
+          marker.bindPopup(popupContent);
+          clusterGroupRef.current?.addLayer(marker);
         } catch (err) {
-          console.error('Error creating marker:', err);
+          console.error('Error creating vessel marker:', err);
         }
       }
     });
     
     return () => {
-      if (clustersRef.current) {
-        clustersRef.current.clearLayers();
+      if (clusterGroupRef.current) {
+        map.removeLayer(clusterGroupRef.current);
+        clusterGroupRef.current = null;
       }
     };
   }, [vessels, map]);
@@ -153,15 +274,68 @@ function MarkerCluster({ vessels }: { vessels: Vessel[] }) {
 
 function RefineryMarkers({ refineries }: { refineries: Refinery[] }) {
   const map = useMap();
-  const markersRef = useRef<L.LayerGroup>();
+  const refineryClusterRef = useRef<L.MarkerClusterGroup | null>(null);
   
   useEffect(() => {
-    if (markersRef.current) {
-      markersRef.current.clearLayers();
+    // Initialize refinery cluster group if needed
+    if (!refineryClusterRef.current) {
+      refineryClusterRef.current = L.markerClusterGroup({
+        maxClusterRadius: 80,
+        spiderfyOnMaxZoom: true,
+        showCoverageOnHover: false,
+        zoomToBoundsOnClick: true,
+        disableClusteringAtZoom: 10,
+        iconCreateFunction: (cluster) => {
+          const childCount = cluster.getChildCount();
+          
+          return L.divIcon({
+            html: `<div class="refinery-cluster-icon">
+                     <span>${childCount}</span>
+                   </div>`,
+            className: 'refinery-cluster',
+            iconSize: L.point(40, 40)
+          });
+        }
+      });
+      
+      // Add CSS for refinery clusters
+      const style = document.createElement('style');
+      style.textContent = `
+        .refinery-cluster-icon {
+          background-color: rgba(211, 47, 47, 0.8);
+          color: white;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 2px solid #ff9800;
+          box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+          font-weight: bold;
+          font-family: sans-serif;
+          width: 36px;
+          height: 36px;
+          font-size: 14px;
+        }
+      `;
+      document.head.appendChild(style);
+      
+      // Add to map
+      map.addLayer(refineryClusterRef.current);
     } else {
-      markersRef.current = L.layerGroup().addTo(map);
+      refineryClusterRef.current.clearLayers();
     }
     
+    // Create a custom refinery icon
+    const refineryIcon = L.divIcon({
+      className: 'custom-refinery-icon',
+      html: `<div style="background-color: #d32f2f; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.5);">
+              <div style="position: absolute; bottom: -3px; right: -3px; width: 6px; height: 6px; background-color: #ff5722; border-radius: 50%; border: 1px solid white;"></div>
+            </div>`,
+      iconSize: [16, 16],
+      iconAnchor: [8, 8]
+    });
+    
+    // Add refineries to cluster group
     refineries.forEach(refinery => {
       if (refinery.lat && refinery.lng) {
         try {
@@ -170,41 +344,69 @@ function RefineryMarkers({ refineries }: { refineries: Refinery[] }) {
           
           if (isNaN(lat) || isNaN(lng)) return;
           
-          const marker = L.circleMarker([lat, lng], {
-            radius: 8,
-            color: '#f44336',
-            fillColor: '#f44336',
-            fillOpacity: 0.8,
-            weight: 2
-          }).addTo(markersRef.current as L.LayerGroup);
+          // Create marker with custom icon
+          const marker = L.marker([lat, lng], { icon: refineryIcon });
           
-          marker.bindPopup(() => {
-            const content = document.createElement('div');
-            content.className = 'p-2 max-w-[250px]';
-            content.innerHTML = `
-              <h3 class="font-bold text-sm">${refinery.name}</h3>
-              <p class="text-xs text-muted-foreground">${refinery.country}</p>
-              <div class="mt-2 text-xs">
-                <p>Region: ${refinery.region}</p>
-                <p>Capacity: ${refinery.capacity ? `${Math.round(refinery.capacity / 1000)}k bpd` : 'N/A'}</p>
-              </div>
-              <button 
-                class="mt-2 w-full text-xs px-2 py-1 bg-red-600 text-white rounded flex items-center justify-center gap-1" 
-                onclick="window.location.href='/refineries/${refinery.id}'"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          // Create popup content
+          const content = document.createElement('div');
+          content.className = 'p-3 max-w-[280px]';
+          content.innerHTML = `
+            <div class="flex items-center gap-2 mb-2">
+              <div class="w-6 h-6 flex-shrink-0 rounded-full bg-red-600 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M19 8V4"/>
                   <path d="M15 4v4"/>
                   <path d="M11 4v4"/>
                   <path d="M7 4v4"/>
                   <path d="M20 12 H4c0 0 0 8 8 8s8-8 8-8z"/>
                 </svg>
-                View Details
-              </button>
-            `;
-            
-            return content;
-          });
+              </div>
+              <div>
+                <h3 class="font-bold text-sm">${refinery.name}</h3>
+                <p class="text-xs text-muted-foreground">${refinery.country}</p>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-y-1 gap-x-3 mt-3 text-xs">
+              <div class="flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/>
+                  <path d="M2 12h20"/>
+                </svg>
+                <span>Region:</span>
+              </div>
+              <div>${refinery.region}</div>
+              
+              <div class="flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M6 9v9a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V9M6 9V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v4M6 9h12"/>
+                </svg>
+                <span>Capacity:</span>
+              </div>
+              <div>${refinery.capacity ? `${Math.round(refinery.capacity / 1000)}k bpd` : 'N/A'}</div>
+              
+              <div class="flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M12 8v4l3 3"/>
+                </svg>
+                <span>Status:</span>
+              </div>
+              <div>${refinery.status || 'Active'}</div>
+            </div>
+            <button 
+              class="mt-3 w-full text-xs px-2 py-1.5 bg-red-600 text-white rounded flex items-center justify-center gap-1 hover:bg-red-700 transition-colors" 
+              onclick="window.location.href='/refineries/${refinery.id}'"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 8h2a2 2 0 0 1 2 2v2m-1.5 6.5L12 18l-1-5-5-1 14.5-7.5"/>
+              </svg>
+              View Details
+            </button>
+          `;
+          
+          marker.bindPopup(content);
+          refineryClusterRef.current?.addLayer(marker);
         } catch (err) {
           console.error('Error creating refinery marker:', err);
         }
@@ -212,8 +414,9 @@ function RefineryMarkers({ refineries }: { refineries: Refinery[] }) {
     });
     
     return () => {
-      if (markersRef.current) {
-        markersRef.current.clearLayers();
+      if (refineryClusterRef.current) {
+        map.removeLayer(refineryClusterRef.current);
+        refineryClusterRef.current = null;
       }
     };
   }, [refineries, map]);
@@ -223,15 +426,68 @@ function RefineryMarkers({ refineries }: { refineries: Refinery[] }) {
 
 function PortMarkers({ ports }: { ports: Port[] }) {
   const map = useMap();
-  const markersRef = useRef<L.LayerGroup>();
+  const portClusterRef = useRef<L.MarkerClusterGroup | null>(null);
   
   useEffect(() => {
-    if (markersRef.current) {
-      markersRef.current.clearLayers();
+    // Initialize port cluster group if needed
+    if (!portClusterRef.current) {
+      portClusterRef.current = L.markerClusterGroup({
+        maxClusterRadius: 80,
+        spiderfyOnMaxZoom: true,
+        showCoverageOnHover: false,
+        zoomToBoundsOnClick: true,
+        disableClusteringAtZoom: 10,
+        iconCreateFunction: (cluster) => {
+          const childCount = cluster.getChildCount();
+          
+          return L.divIcon({
+            html: `<div class="port-cluster-icon">
+                     <span>${childCount}</span>
+                   </div>`,
+            className: 'port-cluster',
+            iconSize: L.point(40, 40)
+          });
+        }
+      });
+      
+      // Add CSS for port clusters
+      const style = document.createElement('style');
+      style.textContent = `
+        .port-cluster-icon {
+          background-color: rgba(2, 119, 189, 0.8);
+          color: white;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 2px solid #00bcd4;
+          box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+          font-weight: bold;
+          font-family: sans-serif;
+          width: 36px;
+          height: 36px;
+          font-size: 14px;
+        }
+      `;
+      document.head.appendChild(style);
+      
+      // Add to map
+      map.addLayer(portClusterRef.current);
     } else {
-      markersRef.current = L.layerGroup().addTo(map);
+      portClusterRef.current.clearLayers();
     }
     
+    // Create a custom port icon
+    const portIcon = L.divIcon({
+      className: 'custom-port-icon',
+      html: `<div style="background-color: #0277bd; width: 10px; height: 10px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.5);">
+              <div style="position: absolute; bottom: -2px; right: -2px; width: 5px; height: 5px; background-color: #00bcd4; border-radius: 50%; border: 1px solid white;"></div>
+            </div>`,
+      iconSize: [14, 14],
+      iconAnchor: [7, 7]
+    });
+    
+    // Add ports to cluster group
     ports.forEach(port => {
       if (port.lat && port.lng) {
         try {
@@ -240,39 +496,60 @@ function PortMarkers({ ports }: { ports: Port[] }) {
           
           if (isNaN(lat) || isNaN(lng)) return;
           
-          const marker = L.circleMarker([lat, lng], {
-            radius: 6,
-            color: '#2196f3',
-            fillColor: '#2196f3',
-            fillOpacity: 0.8,
-            weight: 2
-          }).addTo(markersRef.current as L.LayerGroup);
+          // Create marker with custom icon
+          const marker = L.marker([lat, lng], { icon: portIcon });
           
-          marker.bindPopup(() => {
-            const content = document.createElement('div');
-            content.className = 'p-2 max-w-[250px]';
-            content.innerHTML = `
-              <h3 class="font-bold text-sm">${port.name}</h3>
-              <p class="text-xs text-muted-foreground">${port.country}</p>
-              <div class="mt-2 text-xs">
-                <p>Region: ${port.region}</p>
-                <p>Type: ${port.type || 'Standard'}</p>
-              </div>
-              <button 
-                class="mt-2 w-full text-xs px-2 py-1 bg-blue-600 text-white rounded flex items-center justify-center gap-1" 
-                onclick="window.location.href='/ports/${port.id}'"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          // Create popup content
+          const content = document.createElement('div');
+          content.className = 'p-3 max-w-[280px]';
+          content.innerHTML = `
+            <div class="flex items-center gap-2 mb-2">
+              <div class="w-6 h-6 flex-shrink-0 rounded-full bg-blue-600 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M12 4V1m0 3L8 7m4-4l4 4"/>
                   <path d="M2 22h20"/>
                   <path d="M3 11c0 5 3 10 11 10s7-5 7-10"/>
                 </svg>
-                View Details
-              </button>
-            `;
-            
-            return content;
-          });
+              </div>
+              <div>
+                <h3 class="font-bold text-sm">${port.name}</h3>
+                <p class="text-xs text-muted-foreground">${port.country}</p>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-y-1 gap-x-3 mt-3 text-xs">
+              <div class="flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M12 2a14.5 14.5 0 0 0 0 20a14.5 14.5 0 0 0 0-20"/>
+                  <path d="M2 12h20"/>
+                </svg>
+                <span>Region:</span>
+              </div>
+              <div>${port.region}</div>
+              
+              <div class="flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 9h18M9 20H6a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v11a3 3 0 0 1-3 3h-3"/>
+                  <path d="M16 20h2"/>
+                  <path d="M12 20h2"/>
+                </svg>
+                <span>Type:</span>
+              </div>
+              <div>${port.type || 'Standard'}</div>
+            </div>
+            <button 
+              class="mt-3 w-full text-xs px-2 py-1.5 bg-blue-600 text-white rounded flex items-center justify-center gap-1 hover:bg-blue-700 transition-colors" 
+              onclick="window.location.href='/ports/${port.id}'"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M15 9h.01M9 9h.01M15 15h.01M9 15h.01M9 3h6l2 2h4a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4l2-2Z"/>
+              </svg>
+              View Details
+            </button>
+          `;
+          
+          marker.bindPopup(content);
+          portClusterRef.current?.addLayer(marker);
         } catch (err) {
           console.error('Error creating port marker:', err);
         }
@@ -280,8 +557,9 @@ function PortMarkers({ ports }: { ports: Port[] }) {
     });
     
     return () => {
-      if (markersRef.current) {
-        markersRef.current.clearLayers();
+      if (portClusterRef.current) {
+        map.removeLayer(portClusterRef.current);
+        portClusterRef.current = null;
       }
     };
   }, [ports, map]);

@@ -1,69 +1,58 @@
-import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Refinery, Port } from '@shared/schema';
 
-interface MaritimeDataProps {
+interface UseMaritimeDataProps {
   region?: string;
 }
 
-interface MaritimeDataResult {
-  refineries: Refinery[];
-  ports: Port[];
-  loading: boolean;
-  error: Error | null;
-  refetch: () => void;
-}
-
-export function useMaritimeData({ region = 'global' }: MaritimeDataProps): MaritimeDataResult {
+export function useMaritimeData({ region = 'global' }: UseMaritimeDataProps = {}) {
   // Fetch refineries
-  const {
-    data: refineries = [],
-    error: refineriesError,
+  const { 
+    data: refineries = [], 
     isLoading: refineriesLoading,
-    refetch: refetchRefineries
+    error: refineriesError
   } = useQuery<Refinery[]>({
     queryKey: ['/api/refineries', region],
     queryFn: async () => {
       const url = region === 'global' 
         ? '/api/refineries' 
         : `/api/refineries?region=${encodeURIComponent(region)}`;
+        
       const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Failed to fetch refineries');
+      }
       return response.json();
-    },
+    }
   });
-
+  
   // Fetch ports
-  const {
-    data: ports = [],
-    error: portsError,
+  const { 
+    data: ports = [], 
     isLoading: portsLoading,
-    refetch: refetchPorts
+    error: portsError
   } = useQuery<Port[]>({
     queryKey: ['/api/ports', region],
     queryFn: async () => {
       const url = region === 'global' 
         ? '/api/ports' 
         : `/api/ports?region=${encodeURIComponent(region)}`;
+        
       const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Failed to fetch ports');
+      }
       return response.json();
-    },
+    }
   });
-
-  // Combine loading states and errors
+  
   const loading = refineriesLoading || portsLoading;
   const error = refineriesError || portsError;
-
-  // Combined refetch function
-  const refetch = () => {
-    refetchRefineries();
-    refetchPorts();
-  };
-
+  
   return {
     refineries,
     ports,
     loading,
-    error: error as Error | null,
-    refetch
+    error
   };
 }
