@@ -7,10 +7,14 @@ import Map, {
   GeolocateControl,
   FullscreenControl,
   ScaleControl,
-  ViewStateChangeEvent,
+  ViewStateChangeEvent as ViewState,
+  ControlPosition
 } from 'react-map-gl';
 import type { MapRef } from 'react-map-gl';
 import type { MapLayerMouseEvent } from 'mapbox-gl';
+
+// Use a type alias for the event to fix TypeScript errors
+type ViewStateChangeEvent = ViewState;
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Vessel, Refinery, Port } from '@shared/schema';

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import EnhancedMapboxMap from '@/components/map/EnhancedMapboxMap';
+import MapboxMap from '@/components/map/MapboxMap';
 import { 
   Ship, 
   Anchor, 
@@ -365,13 +365,13 @@ export default function LiveTracking() {
             )}
           </CardHeader>
           <CardContent className="p-0">
-            <LiveVesselMap 
+            <MapboxMap 
               initialRegion={selectedRegion} 
               height="1200px" 
               showRoutes={showRoutes}
               showVesselHistory={showVesselHistory}
               showHeatmap={showHeatmap}
-              mapStyle={mapStyle}
+              mapStyle={mapStyle as any}
             />
           </CardContent>
           <CardFooter className="bg-gradient-to-r from-[#003366] to-[#004080] p-3 text-sm text-white">
