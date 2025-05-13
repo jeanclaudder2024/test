@@ -28,8 +28,16 @@ export function useVesselWebSocket({
   useEffect(() => {
     const connectWebSocket = () => {
       try {
+        // Get the host from the current window location
+        const hostname = window.location.hostname;
+        const port = window.location.port ? window.location.port : '';
+        
+        // Determine whether to use secure WebSocket or not
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsUrl = `${protocol}//${window.location.host}/ws`;
+        
+        // Build the WebSocket URL with the current host and correct path
+        const wsUrl = `${protocol}//${hostname}${port ? ':' + port : ''}/ws`;
+        console.log('Connecting to WebSocket at:', wsUrl);
         
         const socket = new WebSocket(wsUrl);
         wsRef.current = socket;
