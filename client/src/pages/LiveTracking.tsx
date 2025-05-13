@@ -346,19 +346,19 @@ export default function LiveTracking() {
           Interactive Vessel Map
         </h2>
         
-        <Card className="border-none shadow-lg">
-          <CardHeader className="pb-3 bg-card rounded-t-lg">
-            <CardTitle className="flex items-center gap-2">
-              <MapPin className="h-5 w-5 text-primary" />
-              Advanced Maritime Intelligence Map
+        <Card className="border-none shadow-xl w-full max-w-full">
+          <CardHeader className="pb-3 bg-gradient-to-r from-[#003366] to-[#004080] text-white rounded-t-lg">
+            <CardTitle className="flex items-center gap-2 text-2xl">
+              <MapPin className="h-6 w-6 text-[#FF6F00]" />
+              SUPER BIG MARITIME INTELLIGENCE MAP
             </CardTitle>
-            <CardDescription>
-              Real-time vessel tracking with route prediction
+            <CardDescription className="text-gray-100">
+              Ultra-high resolution real-time vessel tracking with advanced route prediction
             </CardDescription>
             
             {totalCount > 0 && (
               <div className="mt-2">
-                <div className="text-sm text-muted-foreground">
+                <div className="text-sm text-gray-200">
                   Displaying all {totalCount.toLocaleString()} vessels with active routes and connections
                 </div>
               </div>
@@ -367,17 +367,24 @@ export default function LiveTracking() {
           <CardContent className="p-0">
             <LiveVesselMap 
               initialRegion={selectedRegion} 
-              height="700px" 
+              height="1200px" 
               showRoutes={showRoutes}
               showVesselHistory={showVesselHistory}
               showHeatmap={showHeatmap}
               mapStyle={mapStyle}
             />
           </CardContent>
-          <CardFooter className="bg-muted/40 p-2 text-xs text-muted-foreground">
+          <CardFooter className="bg-gradient-to-r from-[#003366] to-[#004080] p-3 text-sm text-white">
             <div className="flex justify-between w-full">
-              <span>Zoom: Use mouse wheel or pinch gesture | Pan: Click and drag</span>
-              <span>Click on vessels for detailed information</span>
+              <div className="flex items-center gap-2">
+                <span className="bg-[#FF6F00] text-white px-2 py-1 rounded-md font-bold">PRO TIP</span>
+                <span>Zoom: Use mouse wheel or pinch gesture | Pan: Click and drag</span>
+              </div>
+              <div className="flex items-center">
+                <span className="px-4 py-2 bg-[#003366]/80 rounded-lg border border-[#FF6F00]/30">
+                  Click on vessels for ultra-detailed information
+                </span>
+              </div>
             </div>
           </CardFooter>
         </Card>
