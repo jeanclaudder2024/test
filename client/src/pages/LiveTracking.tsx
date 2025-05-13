@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import LiveVesselMap from '@/components/map/LiveVesselMap';
+import EnhancedMapboxMap from '@/components/map/EnhancedMapboxMap';
 import { 
   Ship, 
   Anchor, 

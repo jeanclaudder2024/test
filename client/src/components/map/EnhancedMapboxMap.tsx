@@ -3,14 +3,14 @@ import Map, {
   Source, 
   Layer, 
   Popup, 
-  MapRef, 
   NavigationControl,
   GeolocateControl,
   FullscreenControl,
   ScaleControl,
-  MapLayerMouseEvent,
-  ViewStateChangeEvent
+  ViewStateChangeEvent,
 } from 'react-map-gl';
+import type { MapRef } from 'react-map-gl';
+import type { MapLayerMouseEvent } from 'mapbox-gl';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Vessel, Refinery, Port } from '@shared/schema';
