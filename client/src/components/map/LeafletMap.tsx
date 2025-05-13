@@ -125,11 +125,12 @@ const SetViewOnRegionChange = ({ center, zoom }: { center: [number, number], zoo
 // Create marker clusters component
 function MarkerCluster({ vessels }: { vessels: Vessel[] }) {
   const map = useMap();
-  const clusterGroupRef = useRef<L.MarkerClusterGroup | null>(null);
+  const clusterGroupRef = useRef<any>(null);
   
   useEffect(() => {
     // Initialize or clear marker cluster group
     if (!clusterGroupRef.current) {
+      // @ts-ignore: MarkerClusterGroup is not in the type definitions
       clusterGroupRef.current = L.markerClusterGroup({
         maxClusterRadius: 50,
         spiderfyOnMaxZoom: true,
@@ -274,11 +275,12 @@ function MarkerCluster({ vessels }: { vessels: Vessel[] }) {
 
 function RefineryMarkers({ refineries }: { refineries: Refinery[] }) {
   const map = useMap();
-  const refineryClusterRef = useRef<L.MarkerClusterGroup | null>(null);
+  const refineryClusterRef = useRef<any>(null);
   
   useEffect(() => {
     // Initialize refinery cluster group if needed
     if (!refineryClusterRef.current) {
+      // @ts-ignore: MarkerClusterGroup is not in the type definitions
       refineryClusterRef.current = L.markerClusterGroup({
         maxClusterRadius: 80,
         spiderfyOnMaxZoom: true,
@@ -426,11 +428,12 @@ function RefineryMarkers({ refineries }: { refineries: Refinery[] }) {
 
 function PortMarkers({ ports }: { ports: Port[] }) {
   const map = useMap();
-  const portClusterRef = useRef<L.MarkerClusterGroup | null>(null);
+  const portClusterRef = useRef<any>(null);
   
   useEffect(() => {
     // Initialize port cluster group if needed
     if (!portClusterRef.current) {
+      // @ts-ignore: MarkerClusterGroup is not in the type definitions
       portClusterRef.current = L.markerClusterGroup({
         maxClusterRadius: 80,
         spiderfyOnMaxZoom: true,
@@ -612,7 +615,15 @@ interface LeafletMapProps {
   showVesselHistory?: boolean;
   showHeatmap?: boolean;
   mapStyle?: 'standard' | 'dark' | 'light' | 'satellite' | 'nautical';
+  filterVesselTypes?: boolean;
 }
+
+type VesselTypeFilter = {
+  type: string;
+  label: string;
+  color: string;
+  enabled: boolean;
+};
 
 export default function LeafletMap({
   initialRegion = 'global',
@@ -620,23 +631,47 @@ export default function LeafletMap({
   showRoutes = false,
   showVesselHistory = false,
   showHeatmap = false,
-  mapStyle: initialMapStyle = 'standard'
+  mapStyle: initialMapStyle = 'standard',
+  filterVesselTypes = true
 }: LeafletMapProps) {
   // State
   const [mapStyle, setMapStyle] = useState(initialMapStyle);
   const [selectedRegion, setSelectedRegion] = useState(initialRegion);
   const [center, setCenter] = useState<[number, number]>([20, 0]);
   const [zoom, setZoom] = useState(2);
+  const [vesselTypeFilters, setVesselTypeFilters] = useState<VesselTypeFilter[]>([
+    { type: 'crude', label: 'Crude Oil', color: '#e53935', enabled: true },
+    { type: 'product', label: 'Product', color: '#1e88e5', enabled: true },
+    { type: 'lng', label: 'LNG', color: '#43a047', enabled: true },
+    { type: 'lpg', label: 'LPG', color: '#ffb300', enabled: true },
+    { type: 'chemical', label: 'Chemical', color: '#8e24aa', enabled: true },
+    { type: 'other', label: 'Other', color: '#FF6F00', enabled: true }
+  ]);
   
   // Get vessel data from WebSocket
   const { 
-    vessels, 
+    vessels: allVessels, 
     connected, 
     lastUpdated, 
     loading: vesselsLoading 
   } = useVesselWebSocket({
     region: selectedRegion,
     loadAllVessels: true
+  });
+  
+  // Filter vessels based on selected vessel types
+  const vessels = allVessels.filter(vessel => {
+    if (!vessel.vesselType) return vesselTypeFilters.find(f => f.type === 'other')?.enabled || false;
+    
+    const vesselTypeLC = vessel.vesselType.toLowerCase();
+    
+    for (const filter of vesselTypeFilters) {
+      if (filter.type === 'other') continue;
+      if (vesselTypeLC.includes(filter.type) && filter.enabled) return true;
+    }
+    
+    // If no specific type matches, it's considered "other"
+    return vesselTypeFilters.find(f => f.type === 'other')?.enabled || false;
   });
 
   // Get maritime infrastructure data
@@ -715,13 +750,50 @@ export default function LeafletMap({
 
       {/* Map Controls */}
       <div className="absolute top-3 right-3 z-[1000] flex flex-col gap-2">
-        <Card className="w-48 bg-background/90 backdrop-blur-sm">
-          <CardHeader className="p-3 pb-2">
-            <CardTitle className="text-sm">Map Style</CardTitle>
+        <Card className="w-[280px] bg-background/90 backdrop-blur-sm">
+          <CardHeader className="p-3 pb-1">
+            <CardTitle className="text-sm flex items-center">
+              <MapPin className="h-4 w-4 mr-2" />
+              Region Filter
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-3 pt-0">
+            <div className="flex flex-wrap gap-1">
+              {[
+                { id: 'global', name: 'Global' },
+                { id: 'middle_east', name: 'Middle East' },
+                { id: 'europe', name: 'Europe' },
+                { id: 'north_america', name: 'North America' },
+                { id: 'east_asia', name: 'East Asia' },
+                { id: 'southeast_asia', name: 'Southeast Asia' },
+                { id: 'south_america', name: 'South America' },
+                { id: 'africa', name: 'Africa' },
+                { id: 'oceania', name: 'Oceania' }
+              ].map(region => (
+                <Button
+                  key={region.id}
+                  variant={selectedRegion === region.id ? "default" : "outline"}
+                  size="sm"
+                  className="text-xs h-7 px-2"
+                  onClick={() => setSelectedRegion(region.id)}
+                >
+                  {region.name}
+                </Button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="w-[280px] bg-background/90 backdrop-blur-sm">
+          <CardHeader className="p-3 pb-1">
+            <CardTitle className="text-sm flex items-center">
+              <Navigation className="h-4 w-4 mr-2" />
+              Map Style
+            </CardTitle>
           </CardHeader>
           <CardContent className="p-3 pt-0">
             <Tabs value={mapStyle} onValueChange={(v) => setMapStyle(v as any)}>
-              <TabsList className="w-full grid grid-cols-2 h-8">
+              <TabsList className="w-full grid grid-cols-5 h-8">
                 <TabsTrigger value="standard" className="text-xs">
                   Standard
                 </TabsTrigger>
@@ -742,18 +814,125 @@ export default function LeafletMap({
           </CardContent>
         </Card>
         
+        {/* Vessel Type Filters */}
+        {filterVesselTypes && (
+          <Card className="w-[280px] bg-background/90 backdrop-blur-sm">
+            <CardHeader className="p-3 pb-2">
+              <CardTitle className="text-sm flex items-center">
+                <Ship className="h-4 w-4 mr-2" />
+                Vessel Types
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-3 pt-0">
+              <div className="grid grid-cols-2 gap-2">
+                {vesselTypeFilters.map((filter) => (
+                  <div 
+                    key={filter.type}
+                    className="flex items-center gap-2 text-xs"
+                    onClick={() => {
+                      setVesselTypeFilters(filters => 
+                        filters.map(f => 
+                          f.type === filter.type 
+                            ? { ...f, enabled: !f.enabled } 
+                            : f
+                        )
+                      );
+                    }}
+                  >
+                    <div 
+                      className={`w-4 h-4 rounded cursor-pointer flex items-center justify-center ${filter.enabled ? 'bg-primary' : 'bg-muted'}`}
+                      style={{ 
+                        backgroundColor: filter.enabled ? filter.color : undefined,
+                        borderColor: filter.color,
+                        borderWidth: filter.enabled ? 0 : 1,
+                        borderStyle: 'solid'
+                      }}
+                    >
+                      {filter.enabled && (
+                        <svg 
+                          xmlns="http://www.w3.org/2000/svg" 
+                          width="10" 
+                          height="10" 
+                          viewBox="0 0 24 24" 
+                          fill="none" 
+                          stroke="white" 
+                          strokeWidth="3"
+                          strokeLinecap="round" 
+                          strokeLinejoin="round"
+                        >
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      )}
+                    </div>
+                    <label className="cursor-pointer">{filter.label}</label>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        
         {/* Stats */}
-        <Card className="w-48 bg-background/90 backdrop-blur-sm">
+        <Card className="w-[280px] bg-background/90 backdrop-blur-sm">
           <CardHeader className="p-3 pb-2">
             <CardTitle className="text-sm flex items-center">
               <Ship className="h-4 w-4 mr-2" />
               Statistics
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-3 pt-0 space-y-2 text-xs">
-            <div>Vessels: {vessels.length}</div>
-            <div>Refineries: {refineries.length}</div>
-            <div>Ports: {ports.length}</div>
+          <CardContent className="p-3 pt-0">
+            <div className="grid grid-cols-3 gap-2 mb-3">
+              <div className="flex flex-col items-center bg-primary/10 rounded p-2">
+                <span className="text-xs text-muted-foreground">Vessels</span>
+                <span className="text-sm font-bold">{vessels.length}</span>
+              </div>
+              <div className="flex flex-col items-center bg-red-500/10 rounded p-2">
+                <span className="text-xs text-muted-foreground">Refineries</span>
+                <span className="text-sm font-bold">{refineries.length}</span>
+              </div>
+              <div className="flex flex-col items-center bg-blue-500/10 rounded p-2">
+                <span className="text-xs text-muted-foreground">Ports</span>
+                <span className="text-sm font-bold">{ports.length}</span>
+              </div>
+            </div>
+            
+            {/* Vessel type breakdown */}
+            <div className="text-xs text-muted-foreground mb-1">Vessel Types:</div>
+            <div className="space-y-1">
+              {vesselTypeFilters.map(filter => {
+                // Count vessels by type
+                const count = allVessels.filter(vessel => {
+                  if (!vessel.vesselType && filter.type === 'other') return true;
+                  if (!vessel.vesselType) return false;
+                  
+                  const vesselTypeLC = vessel.vesselType.toLowerCase();
+                  if (filter.type === 'other') {
+                    // Count as "other" if doesn't match any specific filter
+                    return !vesselTypeFilters
+                      .filter(f => f.type !== 'other')
+                      .some(f => vesselTypeLC.includes(f.type));
+                  }
+                  
+                  return vesselTypeLC.includes(filter.type);
+                }).length;
+                
+                // Skip if no vessels of this type
+                if (count === 0) return null;
+                
+                return (
+                  <div key={filter.type} className="flex items-center gap-2">
+                    <div 
+                      className="w-3 h-3 rounded-full" 
+                      style={{ backgroundColor: filter.color }}
+                    />
+                    <div className="flex-1 flex justify-between">
+                      <span>{filter.label}:</span>
+                      <span className="font-medium">{count}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </CardContent>
         </Card>
       </div>
