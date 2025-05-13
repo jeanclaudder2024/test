@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 // Access token from environment variable
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4M29iazA2Z2gycXA4N2pmbDZmangifQ.-g_vE53SD2WrJ6tFX7QHmA'; // Public token as fallback
 
 // Define map styles
 const MAP_STYLES = {
@@ -285,9 +285,9 @@ export default function MapboxMap({
         interactiveLayerIds={[VESSEL_LAYER, REFINERY_LAYER, PORT_LAYER]}
         onClick={onClick}
       >
-        <NavigationControl position="top-left" />
-        <FullscreenControl position="top-left" />
-        <ScaleControl position="bottom-left" />
+        <NavigationControl />
+        <FullscreenControl />
+        <ScaleControl />
 
         {/* Vessels */}
         <Source id="vessels-source" type="geojson" data={vesselGeoJson} cluster={true} clusterMaxZoom={14} clusterRadius={50}>
