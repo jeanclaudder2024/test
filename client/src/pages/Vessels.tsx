@@ -320,9 +320,22 @@ export default function Vessels() {
   // Filter vessels based on search term and selected oil types
   const filteredVessels = useMemo(() => {
     return vesselsWithCategories.filter(vessel => {
-      // Only show cargo vessels
-      const isCargoVessel = vessel.vesselType?.toLowerCase().includes('cargo') || false;
-      if (!isCargoVessel) return false;
+      // Only show oil-related vessels
+      const isOilVessel = 
+        vessel.vesselType?.toLowerCase().includes('oil') || 
+        vessel.vesselType?.toLowerCase().includes('tanker') || 
+        vessel.vesselType?.toLowerCase().includes('crude') ||
+        vessel.vesselType?.toLowerCase().includes('vlcc') ||
+        vessel.vesselType?.toLowerCase().includes('lng') ||
+        vessel.vesselType?.toLowerCase().includes('gas') ||
+        vessel.cargoType?.toLowerCase().includes('oil') ||
+        vessel.cargoType?.toLowerCase().includes('fuel') ||
+        vessel.cargoType?.toLowerCase().includes('diesel') ||
+        vessel.cargoType?.toLowerCase().includes('gas') ||
+        vessel.cargoType?.toLowerCase().includes('petrol') ||
+        false;
+      
+      if (!isOilVessel) return false;
       
       // Search term filter
       const matchesSearch = 
@@ -420,18 +433,81 @@ export default function Vessels() {
 
   return (
     <div className="container mx-auto p-4">
+      {/* Premium header with statistics */}
+      <div className="bg-gradient-to-r from-[#003366] to-[#00264d] rounded-lg shadow-lg p-6 mb-8">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+          <div>
+            <h1 className="text-3xl font-bold flex items-center text-white">
+              <Ship className="h-8 w-8 mr-3 text-[#FF6F00]" />
+              Maritime Oil Vessel Tracker
+            </h1>
+            <p className="text-gray-300 mt-2 max-w-2xl">
+              Track global oil shipping vessels in real-time. Monitor crude oil tankers, LNG carriers, 
+              and product vessels with accurate position data and voyage details.
+            </p>
+          </div>
+          
+          {/* Connection status indicator */}
+          <div className="mt-4 md:mt-0 bg-opacity-20 bg-white p-2 rounded-md flex items-center">
+            {wsConnected ? (
+              <Badge className="bg-green-600 text-white border-0 flex items-center gap-2 px-3 py-1">
+                <Wifi className="h-3.5 w-3.5" />
+                <span>Live Data</span>
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 flex items-center gap-2 px-3 py-1">
+                <WifiOff className="h-3.5 w-3.5" />
+                <span>Using Cached Data</span>
+              </Badge>
+            )}
+          </div>
+        </div>
+        
+        {/* Stats cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+          <div className="bg-white bg-opacity-10 p-4 rounded-md backdrop-blur-sm">
+            <h3 className="text-gray-200 font-medium text-sm">Total Vessels</h3>
+            <p className="text-white text-xl font-bold mt-1">
+              {loading ? '—' : totalCount?.toLocaleString() || vessels.length.toLocaleString()}
+            </p>
+          </div>
+          <div className="bg-white bg-opacity-10 p-4 rounded-md backdrop-blur-sm">
+            <h3 className="text-gray-200 font-medium text-sm">Oil Tankers</h3>
+            <p className="text-white text-xl font-bold mt-1">
+              {loading ? '—' : 
+                vessels.filter(v => v.vesselType?.toLowerCase().includes('oil') || 
+                  v.vesselType?.toLowerCase().includes('tanker')).length.toLocaleString()}
+            </p>
+          </div>
+          <div className="bg-white bg-opacity-10 p-4 rounded-md backdrop-blur-sm">
+            <h3 className="text-gray-200 font-medium text-sm">LNG Carriers</h3>
+            <p className="text-white text-xl font-bold mt-1">
+              {loading ? '—' : 
+                vessels.filter(v => v.vesselType?.toLowerCase().includes('lng')).length.toLocaleString()}
+            </p>
+          </div>
+          <div className="bg-white bg-opacity-10 p-4 rounded-md backdrop-blur-sm">
+            <h3 className="text-gray-200 font-medium text-sm">Data Source</h3>
+            <p className="text-white font-medium text-md mt-1 flex items-center">
+              {loading ? '—' : dataSource === 'websocket' ? 
+                <span className="flex items-center"><Wifi className="h-3.5 w-3.5 mr-1.5 text-green-400" /> Real-time WebSocket</span> : 
+                dataSource}
+            </p>
+          </div>
+        </div>
+      </div>
+
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold flex items-center">
-            <Ship className="h-8 w-8 mr-2 text-primary" />
-            Vessels
-          </h1>
+          <h2 className="text-2xl font-bold flex items-center">
+            <Droplet className="h-6 w-6 mr-2 text-primary" />
+            Oil Vessels Database
+          </h2>
           <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
             <p className="text-muted-foreground">
-              {loading ? 'Loading vessels...' : 
-                totalCount ? 
-                  `${totalCount.toLocaleString()} vessels in the system (showing page ${page} of ${totalPages})` : 
-                  `${vessels.length} vessels in the system`
+              {loading ? 'Loading oil vessels...' : 
+                filteredVessels.length === 0 ? 'No vessels match your filters' :
+                `${filteredVessels.length.toLocaleString()} oil vessels found (showing ${currentVessels.length} per page)`
               }
             </p>
             
@@ -439,9 +515,9 @@ export default function Vessels() {
             <div className="flex items-center flex-wrap gap-1">
               {/* Error indicator */}
               {fetchError && (
-                <Badge variant="outline" className="ml-2 bg-red-50 text-red-700 border-red-200 flex items-center gap-1">
-                  <AlertCircle className="h-3 w-3 text-red-600" />
-                  <span>Error</span>
+                <Badge variant="destructive" className="ml-2 flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
+                  <span>Error: {fetchError}</span>
                 </Badge>
               )}
             </div>
@@ -453,8 +529,8 @@ export default function Vessels() {
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
-              placeholder="Search vessels..."
-              className="pl-8 w-full md:w-[260px]"
+              placeholder="Search vessels by name, IMO, flag..."
+              className="pl-8 w-full md:w-[340px] border-primary/20 focus:border-primary"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
