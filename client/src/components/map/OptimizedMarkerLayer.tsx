@@ -262,52 +262,98 @@ export const OptimizedVesselLayer: React.FC<{
       return;
     }
     
+    // Log sample vessel for debugging coordinate format
+    if (vessels.length > 0) {
+      const sample = vessels[0];
+      console.log('Sample vessel for debugging:', {
+        id: sample.id,
+        name: sample.name,
+        currentLat: sample.currentLat,
+        currentLng: sample.currentLng,
+        latType: typeof sample.currentLat,
+        lngType: typeof sample.currentLng
+      });
+    }
+    
     console.log('Adding vessel markers to map...');
     
     // Add markers for all vessels
     let validCount = 0;
     let invalidCount = 0;
+    let coordinateErrors = 0;
     
     vessels.forEach(vessel => {
-      if (!vessel.currentLat || !vessel.currentLng) {
-        invalidCount++;
-        return;
-      }
-      
-      const lat = parseFloat(vessel.currentLat.toString());
-      const lng = parseFloat(vessel.currentLng.toString());
-      
-      if (isNaN(lat) || isNaN(lng)) {
-        invalidCount++;
-        return;
-      }
-      
-      validCount++;
-      
-      // Use fallback icon for simplicity (to test if icons are causing the issue)
-      const marker = L.marker([lat, lng], {
-        icon: fallbackVesselIcon,
-        title: vessel.name || 'Unknown vessel'
-      });
-      
-      // Add popup
-      marker.bindPopup(createVesselPopupContent(vessel));
-      
-      // Add click handler
-      marker.on('click', () => {
-        onVesselSelect(vessel);
-      });
-      
-      // Store reference and add to cluster group
       try {
+        // Check if coordinates exist
+        if (vessel.currentLat === null || vessel.currentLat === undefined || 
+            vessel.currentLng === null || vessel.currentLng === undefined) {
+          console.warn(`Vessel ${vessel.id} (${vessel.name}) has null/undefined coordinates`);
+          invalidCount++;
+          return;
+        }
+        
+        // Try to parse coordinates as numbers (they might be stored as strings)
+        let lat: number, lng: number;
+        
+        try {
+          lat = typeof vessel.currentLat === 'number' 
+            ? vessel.currentLat 
+            : parseFloat(vessel.currentLat);
+            
+          lng = typeof vessel.currentLng === 'number' 
+            ? vessel.currentLng 
+            : parseFloat(vessel.currentLng);
+        } catch (parseError) {
+          console.warn(`Coordinate parsing error for vessel ${vessel.id} (${vessel.name}):`, parseError);
+          coordinateErrors++;
+          return;
+        }
+        
+        // Check for NaN after parsing
+        if (isNaN(lat) || isNaN(lng)) {
+          console.warn(`Vessel ${vessel.id} (${vessel.name}) has NaN coordinates after parsing:`, {
+            lat, lng, originalLat: vessel.currentLat, originalLng: vessel.currentLng
+          });
+          invalidCount++;
+          return;
+        }
+        
+        // Validate coordinates are in reasonable range
+        if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+          console.warn(`Vessel ${vessel.id} (${vessel.name}) has invalid coordinate range:`, {
+            lat, lng
+          });
+          invalidCount++;
+          return;
+        }
+        
+        validCount++;
+        
+        // Create marker with custom icon
+        const customIcon = getVesselIcon(vessel);
+        const marker = L.marker([lat, lng], {
+          icon: customIcon || fallbackVesselIcon,
+          title: vessel.name || 'Unknown vessel'
+        });
+        
+        // Add popup
+        marker.bindPopup(createVesselPopupContent(vessel));
+        
+        // Add click handler
+        marker.on('click', () => {
+          onVesselSelect(vessel);
+        });
+        
+        // Store reference and add to cluster group
         vesselMarkers.current[vessel.id] = marker;
         markerClusterGroup.current?.addLayer(marker);
       } catch (error) {
-        console.error('Error adding vessel marker to map:', error);
+        console.error(`Error processing vessel ${vessel.id} (${vessel.name}):`, error);
+        invalidCount++;
       }
     });
     
-    console.log(`Added ${validCount} valid vessel markers to map. Skipped ${invalidCount} invalid vessels.`);
+    console.log(`Added ${validCount} valid vessel markers to map. Skipped ${invalidCount} invalid vessels. Parse errors: ${coordinateErrors}`);
     console.log('Final marker count in cluster group:', 
       markerClusterGroup.current ? markerClusterGroup.current.getLayers().length : 0);
     

@@ -970,8 +970,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             currentLng: "-41.004669",
             imo: "9876543",
             mmsi: "123456789",
-            status: "Active",
-            destination: "Rotterdam"
+            vesselStatus: "Active",
+            destination: "Rotterdam",
+            length: 250,
+            beam: 40,
+            draught: 12.5,
+            built: 2010,
+            deadweight: 120000,
+            grossTonnage: 65000
           },
           {
             id: 2,
@@ -982,8 +988,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             currentLng: "72.825185",
             imo: "8765432",
             mmsi: "234567890",
-            status: "Active",
-            destination: "Singapore"
+            vesselStatus: "Active",
+            destination: "Singapore",
+            length: 280,
+            beam: 45,
+            draught: 14.2,
+            built: 2015,
+            deadweight: 160000,
+            grossTonnage: 85000
           },
           {
             id: 3,
@@ -994,8 +1006,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             currentLng: "-40.199942",
             imo: "7654321",
             mmsi: "345678901",
-            status: "Active",
-            destination: "New York"
+            vesselStatus: "Active",
+            destination: "New York",
+            length: 290,
+            beam: 46,
+            draught: 13.8,
+            built: 2018,
+            deadweight: 145000,
+            grossTonnage: 95000
           }
         ];
       }
