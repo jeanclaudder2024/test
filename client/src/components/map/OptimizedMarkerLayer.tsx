@@ -245,20 +245,44 @@ export const OptimizedVesselLayer: React.FC<{
   
   // Update vessel markers when vessels change
   useEffect(() => {
-    if (!map || !markerClusterGroup.current) return;
+    console.log('OptimizedVesselLayer received vessels:', vessels ? vessels.length : 0);
+    
+    if (!map || !markerClusterGroup.current) {
+      console.warn('Map or marker cluster group not initialized');
+      return;
+    }
     
     // Clear existing markers
     markerClusterGroup.current.clearLayers();
     vesselMarkers.current = {};
     
+    // Check if we have vessels
+    if (!vessels || vessels.length === 0) {
+      console.warn('No vessels provided to OptimizedVesselLayer');
+      return;
+    }
+    
+    console.log('Adding vessel markers to map...');
+    
     // Add markers for all vessels
+    let validCount = 0;
+    let invalidCount = 0;
+    
     vessels.forEach(vessel => {
-      if (!vessel.currentLat || !vessel.currentLng) return;
+      if (!vessel.currentLat || !vessel.currentLng) {
+        invalidCount++;
+        return;
+      }
       
       const lat = parseFloat(vessel.currentLat.toString());
       const lng = parseFloat(vessel.currentLng.toString());
       
-      if (isNaN(lat) || isNaN(lng)) return;
+      if (isNaN(lat) || isNaN(lng)) {
+        invalidCount++;
+        return;
+      }
+      
+      validCount++;
       
       // Create marker with custom icon
       const vesselIcon = new L.Icon({

@@ -256,9 +256,27 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
   
   // Filter vessels based on search term and vessel type
   const filteredVessels = useMemo(() => {
-    if (!vessels) return [];
+    console.log('Vessels received in EnhancedVesselMap:', vessels ? vessels.length : 0, 'vessels');
+    if (!vessels || vessels.length === 0) {
+      console.warn('No vessels data available to filter');
+      return [];
+    }
+    
+    console.log('Sample vessel data:', vessels[0]);
     
     return vessels.filter(vessel => {
+      // Ensure we have valid coordinates
+      const hasValidCoordinates = 
+        vessel.currentLat != null && vessel.currentLng != null && 
+        !isNaN(parseFloat(vessel.currentLat.toString())) && 
+        !isNaN(parseFloat(vessel.currentLng.toString()));
+      
+      // Log if coordinates are missing
+      if (!hasValidCoordinates) {
+        console.warn('Vessel missing valid coordinates:', vessel.name, vessel.id);
+        return false;
+      }
+      
       // Filter by search term
       const matchesSearch = 
         !searchTerm || 
@@ -273,7 +291,7 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
         vesselTypeFilter === 'all' || 
         (vessel.vesselType && vessel.vesselType.toLowerCase().includes(vesselTypeFilter.toLowerCase()));
       
-      return matchesSearch && matchesType;
+      return hasValidCoordinates && matchesSearch && matchesType;
     });
   }, [vessels, searchTerm, vesselTypeFilter]);
   
