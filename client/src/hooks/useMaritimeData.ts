@@ -1,58 +1,72 @@
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
 import { Refinery, Port } from '@shared/schema';
+import { useQuery } from '@tanstack/react-query';
 
 interface UseMaritimeDataProps {
   region?: string;
 }
 
 export function useMaritimeData({ region = 'global' }: UseMaritimeDataProps = {}) {
-  // Fetch refineries
+  const [refineries, setRefineries] = useState<Refinery[]>([]);
+  const [ports, setPorts] = useState<Port[]>([]);
+
+  // Fetch refineries with region filter
   const { 
-    data: refineries = [], 
+    data: refineriesData, 
     isLoading: refineriesLoading,
     error: refineriesError
   } = useQuery<Refinery[]>({
-    queryKey: ['/api/refineries', region],
+    queryKey: ['/api/refineries', region !== 'global' ? region : undefined],
     queryFn: async () => {
-      const url = region === 'global' 
-        ? '/api/refineries' 
-        : `/api/refineries?region=${encodeURIComponent(region)}`;
-        
-      const response = await fetch(url);
+      const queryParams = region && region !== 'global' ? `?region=${encodeURIComponent(region)}` : '';
+      const response = await fetch(`/api/refineries${queryParams}`);
+      
       if (!response.ok) {
         throw new Error('Failed to fetch refineries');
       }
+      
       return response.json();
-    }
+    },
+    staleTime: 60000, // 1 minute
   });
-  
-  // Fetch ports
+
+  // Fetch ports with region filter
   const { 
-    data: ports = [], 
+    data: portsData, 
     isLoading: portsLoading,
     error: portsError
   } = useQuery<Port[]>({
-    queryKey: ['/api/ports', region],
+    queryKey: ['/api/ports', region !== 'global' ? region : undefined],
     queryFn: async () => {
-      const url = region === 'global' 
-        ? '/api/ports' 
-        : `/api/ports?region=${encodeURIComponent(region)}`;
-        
-      const response = await fetch(url);
+      const queryParams = region && region !== 'global' ? `?region=${encodeURIComponent(region)}` : '';
+      const response = await fetch(`/api/ports${queryParams}`);
+      
       if (!response.ok) {
         throw new Error('Failed to fetch ports');
       }
+      
       return response.json();
-    }
+    },
+    staleTime: 60000, // 1 minute
   });
-  
-  const loading = refineriesLoading || portsLoading;
-  const error = refineriesError || portsError;
-  
+
+  // Update state when data changes
+  useEffect(() => {
+    if (refineriesData) {
+      setRefineries(refineriesData);
+    }
+  }, [refineriesData]);
+
+  useEffect(() => {
+    if (portsData) {
+      setPorts(portsData);
+    }
+  }, [portsData]);
+
   return {
     refineries,
     ports,
-    loading,
-    error
+    loading: refineriesLoading || portsLoading,
+    error: refineriesError || portsError,
   };
 }

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import ReactDOM from 'react-dom';
 import { 
   MapContainer, 
   TileLayer, 
@@ -59,7 +60,8 @@ import {
   XCircle,
   Globe,
   MapPin,
-  Zap
+  Zap,
+  Info
 } from 'lucide-react';
 import {
   Select,
@@ -141,23 +143,41 @@ L.Marker.prototype.options.icon = DefaultIcon;
 // MapControl component for displaying info cards and controls
 const MapControl = ({ position, children }: { position: 'topleft' | 'topright' | 'bottomleft' | 'bottomright', children: React.ReactNode }) => {
   const map = useMap();
-  const [container] = useState(() => L.DomUtil.create('div', `leaflet-control leaflet-bar leaflet-control-${position}`));
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [portalContainer, setPortalContainer] = useState<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    const control = L.control({ position });
-    control.onAdd = () => container;
+    // Create control container
+    const container = L.DomUtil.create('div', `leaflet-control leaflet-bar leaflet-control-${position}`);
+    
+    // Create control
+    const mapControl = L.Control.extend({
+      options: {
+        position
+      },
+      onAdd: function() {
+        return container;
+      }
+    });
+    
+    const control = new mapControl();
     control.addTo(map);
     
     // Disable map interactions when interacting with controls
     L.DomEvent.disableClickPropagation(container);
     L.DomEvent.disableScrollPropagation(container);
     
+    // Set container for portal
+    setPortalContainer(container);
+    containerRef.current = container;
+    
     return () => {
       control.remove();
+      setPortalContainer(null);
     };
-  }, [map, container, position]);
+  }, [map, position]);
 
-  return React.createPortal(children, container);
+  return portalContainer ? ReactDOM.createPortal(children, portalContainer) : null;
 };
 
 interface EnhancedVesselMapProps {

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MainLayout } from '@/components/layout/MainLayout';
+import MainLayout from '@/components/layout/MainLayout';
 import EnhancedVesselMap from '@/components/map/EnhancedVesselMap';
 import { 
   Card, 
