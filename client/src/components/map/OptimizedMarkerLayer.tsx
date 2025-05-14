@@ -261,8 +261,16 @@ export const OptimizedVesselLayer: React.FC<{
       if (isNaN(lat) || isNaN(lng)) return;
       
       // Create marker with custom icon
+      const vesselIcon = new L.Icon({
+        iconUrl: new URL('@/assets/vessel-icon.svg', import.meta.url).href,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12],
+        popupAnchor: [0, -12],
+        className: `vessel-type-${vessel.vesselType?.toLowerCase().replace(/\s+/g, '-') || 'default'}`
+      });
+      
       const marker = L.marker([lat, lng], {
-        icon: getVesselIcon(vessel),
+        icon: vesselIcon || getVesselIcon(vessel),
         title: vessel.name || 'Unknown vessel'
       });
       
@@ -449,8 +457,16 @@ export const OptimizedPortLayer: React.FC<{
       if (isNaN(lat) || isNaN(lng)) return;
       
       // Create marker with custom icon
+      const portIcon = new L.Icon({
+        iconUrl: new URL('@/assets/port-icon.svg', import.meta.url).href,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12],
+        popupAnchor: [0, -12],
+        className: `port-type-${port.type?.toLowerCase().replace(/\s+/g, '-') || 'default'}`
+      });
+      
       const marker = L.marker([lat, lng], {
-        icon: fallbackPortIcon,
+        icon: portIcon || fallbackPortIcon,
         title: port.name || 'Unknown port'
       });
       

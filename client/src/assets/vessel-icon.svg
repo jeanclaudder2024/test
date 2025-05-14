@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg">
   <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-    <path d="M18,17 C18,17 14,19 12,19 C10,19 6,17 6,17 L6,15 L18,15 L18,17 Z" stroke="#003366" stroke-width="2" fill="#003366" stroke-linecap="round"/>
-    <path d="M12,2 L12,9" stroke="#003366" stroke-width="2" stroke-linecap="round"/>
-    <path d="M4.93,10 L19.07,10" stroke="#003366" stroke-width="2" stroke-linecap="round"/>
-    <path d="M12,18 L12,22" stroke="#003366" stroke-width="2" stroke-linecap="round"/>
+    <path d="M12,3 L22,18 L2,18 L12,3 Z" stroke="#003366" stroke-width="2" fill="#FFFFFF"/>
+    <line x1="12" y1="8" x2="12" y2="14" stroke="#003366" stroke-width="2" stroke-linecap="round"/>
+    <line x1="9" y1="18" x2="15" y2="18" stroke="#003366" stroke-width="2" stroke-linecap="round"/>
   </g>
 </svg>

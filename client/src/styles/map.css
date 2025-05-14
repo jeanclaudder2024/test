@@ -1,0 +1,127 @@
+/* Custom map icon styles */
+
+/* Vessel icons based on type */
+.vessel-type-crude-oil-tanker svg path,
+.vessel-type-crude svg path {
+  fill: #ef4444 !important; /* red-500 */
+  stroke: #ef4444 !important;
+}
+
+.vessel-type-product-tanker svg path,
+.vessel-type-products svg path {
+  fill: #3b82f6 !important; /* blue-500 */
+  stroke: #3b82f6 !important;
+}
+
+.vessel-type-lng-carrier svg path,
+.vessel-type-lng svg path {
+  fill: #10b981 !important; /* emerald-500 */
+  stroke: #10b981 !important;
+}
+
+.vessel-type-lpg-carrier svg path,
+.vessel-type-lpg svg path {
+  fill: #f59e0b !important; /* amber-500 */
+  stroke: #f59e0b !important;
+}
+
+.vessel-type-chemical-tanker svg path,
+.vessel-type-chemical svg path {
+  fill: #8b5cf6 !important; /* purple-500 */
+  stroke: #8b5cf6 !important;
+}
+
+.vessel-type-default svg path {
+  fill: #003366 !important; /* navy blue */
+  stroke: #003366 !important;
+}
+
+/* Port icons based on type */
+.port-type-oil-terminal svg path,
+.port-type-oil_terminal svg path {
+  fill: #3b82f6 !important; /* blue-500 */
+  stroke: #3b82f6 !important;
+}
+
+.port-type-lng-terminal svg path,
+.port-type-lng_terminal svg path {
+  fill: #10b981 !important; /* emerald-500 */
+  stroke: #10b981 !important;
+}
+
+.port-type-commercial svg path {
+  fill: #f59e0b !important; /* amber-500 */
+  stroke: #f59e0b !important;
+}
+
+.port-type-default svg path {
+  fill: #0080FF !important; /* blue */
+  stroke: #0080FF !important;
+}
+
+/* Refinery icon */
+.custom-refinery-marker svg path {
+  fill: #FF6F00 !important; /* orange */
+  stroke: #FF6F00 !important;
+}
+
+/* Custom popup styles */
+.leaflet-popup-content-wrapper {
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.leaflet-popup-content {
+  margin: 0.75rem 1rem;
+  min-width: 200px;
+}
+
+.leaflet-container {
+  font-family: inherit;
+}
+
+/* Cluster styles */
+.vessel-cluster {
+  background-color: rgba(0, 51, 102, 0.7);
+  color: white;
+  border-radius: 50%;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.refinery-cluster {
+  background-color: rgba(255, 111, 0, 0.7);
+  color: white;
+  border-radius: 50%;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.port-cluster {
+  background-color: rgba(0, 128, 255, 0.7);
+  color: white;
+  border-radius: 50%;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Connection lines */
+.connection-line {
+  stroke-dasharray: 5, 5;
+  animation: dash 15s linear infinite;
+}
+
+@keyframes dash {
+  to {
+    stroke-dashoffset: -1000;
+  }
+}
