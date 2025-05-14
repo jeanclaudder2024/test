@@ -9,6 +9,7 @@ import {
   documents
 } from "@shared/schema";
 import { eq, desc, sql } from "drizzle-orm";
+import { seedVesselDocuments } from "./seed-vessel-documents";
 
 /**
  * This script seeds the database with vessel jobs, gates, brokers, documents
@@ -22,8 +23,14 @@ export async function seedVesselJobs() {
   
   if (existingJobs[0].count > 0) {
     console.log(`Database already contains ${existingJobs[0].count} vessel jobs.`);
+    
+    // Even if jobs already exist, seed documents if needed
+    const docResult = await seedVesselDocuments();
+    
     return {
       jobs: existingJobs[0].count,
+      docs: docResult.count,
+      extraInfo: 0,
       seeded: false
     };
   }
@@ -292,10 +299,16 @@ export async function seedVesselJobs() {
     console.log(`Created ${extraInfoCreated} vessel extra info records`);
     console.log(`Created ${docsCreated} vessel documents`);
     
+    // Additionally seed more formatted documents for the document viewer
+    const docResult = await seedVesselDocuments();
+    const totalDocs = docsCreated + docResult.count;
+    
+    console.log(`Seeded an additional ${docResult.count} vessel documents with the document seeder`);
+    
     return {
       jobs: jobsCreated,
       extraInfo: extraInfoCreated,
-      docs: docsCreated,
+      docs: totalDocs,
       brokers: allBrokers.length,
       gates: createdGates.length,
       seeded: true

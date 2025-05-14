@@ -1,59 +1,37 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'wouter';
+import { useState, useEffect } from "react";
+import { useLocation, Link } from "wouter";
+import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
-  Dialog, 
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle 
-} from "@/components/ui/dialog";
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue 
-} from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
-import { 
-  Tabs, 
-  TabsContent,
-  TabsList,
-  TabsTrigger 
-} from "@/components/ui/tabs";
-import { 
-  ArrowUpDown, 
-  ChevronLeft, 
-  Copy, 
-  File, 
-  FileText, 
-  Filter, 
-  MoreHorizontal, 
-  Plus, 
-  RefreshCw, 
-  Search, 
-  Ship, 
-  Store, 
-  GanttChart 
-} from 'lucide-react';
-import { LawJustice } from "@/components/icons/LawJustice";
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { apiRequest, queryClient } from '@/lib/queryClient';
-import { formatDate } from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast';
-import { DOCUMENT_TYPES } from '@shared/constants';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { ChevronLeft, FileText, Download, Clock, AlertTriangle, CheckCircle, PlusCircle, Loader2 } from "lucide-react";
+import MainLayout from "@/components/layout/MainLayout";
 
+// Define Document type interface
 interface Document {
   id: number;
   vesselId: number;
@@ -62,645 +40,367 @@ interface Document {
   content: string;
   status: string;
   issueDate: string;
-  expiryDate?: string;
-  reference?: string;
-  issuer?: string;
-  recipientName?: string;
-  recipientOrg?: string;
+  expiryDate: string | null;
+  reference: string;
+  issuer: string;
+  recipientName: string | null;
+  recipientOrg: string | null;
+  language: string;
 }
-
-interface Vessel {
-  id: number;
-  name: string;
-  imo: string;
-  mmsi: string;
-  vesselType: string;
-  flag: string;
-}
-
-// Document list component
-const DocumentList = ({ 
-  documents, 
-  isLoading, 
-  onViewDocument 
-}: { 
-  documents: Document[], 
-  isLoading: boolean,
-  onViewDocument: (doc: Document) => void
-}) => {
-  if (isLoading) {
-    return (
-      <div className="p-4">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="mb-4 p-4 border rounded-lg">
-            <div className="flex justify-between items-start">
-              <div className="space-y-2">
-                <Skeleton className="h-5 w-64" />
-                <Skeleton className="h-4 w-48" />
-              </div>
-              <Skeleton className="h-8 w-24" />
-            </div>
-            <div className="mt-4 space-y-2">
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-full" />
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  if (!documents.length) {
-    return (
-      <div className="text-center py-12">
-        <FileText className="mx-auto h-12 w-12 text-gray-300" />
-        <h3 className="mt-4 text-lg font-medium">No documents found</h3>
-        <p className="mt-2 text-sm text-gray-500">
-          There are no documents matching your current filters.
-        </p>
-      </div>
-    );
-  }
-
-  const getStatusBadge = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'active':
-        return <Badge variant="default" className="bg-green-500">Active</Badge>;
-      case 'expired':
-        return <Badge variant="secondary" className="bg-amber-500 text-white">Expired</Badge>;
-      case 'pending':
-        return <Badge variant="secondary" className="bg-blue-500 text-white">Pending</Badge>;
-      case 'revoked':
-        return <Badge variant="destructive">Revoked</Badge>;
-      case 'draft':
-        return <Badge variant="outline">Draft</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
-
-  const getDocumentIcon = (type: string) => {
-    const lowerType = type.toLowerCase();
-    
-    if (lowerType.includes('bill') || lowerType.includes('lading')) {
-      return <File className="w-5 h-5 text-blue-500" />;
-    }
-    
-    if (lowerType.includes('certificate') || lowerType.includes('legal')) {
-      return <LawJustice className="w-5 h-5 text-red-500" />;
-    }
-    
-    if (lowerType.includes('invoice') || lowerType.includes('commercial')) {
-      return <GanttChart className="w-5 h-5 text-green-500" />;
-    }
-    
-    if (lowerType.includes('manifest') || lowerType.includes('cargo')) {
-      return <Ship className="w-5 h-5 text-purple-500" />;
-    }
-    
-    return <FileText className="w-5 h-5 text-gray-500" />;
-  };
-
-  return (
-    <div className="divide-y">
-      {documents.map((doc) => (
-        <div 
-          key={doc.id} 
-          className="p-4 hover:bg-gray-50 transition-colors cursor-pointer"
-          onClick={() => onViewDocument(doc)}
-        >
-          <div className="flex justify-between items-start">
-            <div className="flex items-start space-x-3">
-              <div className="mt-1">
-                {getDocumentIcon(doc.type)}
-              </div>
-              <div>
-                <h4 className="font-medium">{doc.title}</h4>
-                <div className="flex flex-wrap gap-2 mt-1">
-                  <Badge variant="outline" className="text-xs">
-                    {doc.type}
-                  </Badge>
-                  {getStatusBadge(doc.status || 'Active')}
-                  {doc.reference && (
-                    <Badge variant="outline" className="text-xs">
-                      Ref: {doc.reference}
-                    </Badge>
-                  )}
-                </div>
-                <div className="text-sm text-gray-500 mt-2">
-                  {doc.issueDate && (
-                    <span className="mr-4">Issued: {formatDate(doc.issueDate)}</span>
-                  )}
-                  {doc.expiryDate && (
-                    <span>Expires: {formatDate(doc.expiryDate)}</span>
-                  )}
-                </div>
-              </div>
-            </div>
-            
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={(e) => {
-                  e.stopPropagation();
-                  navigator.clipboard.writeText(doc.content);
-                }}>
-                  <Copy className="mr-2 h-4 w-4" />
-                  Copy Content
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={(e) => {
-                  e.stopPropagation();
-                  onViewDocument(doc);
-                }}>
-                  <FileText className="mr-2 h-4 w-4" />
-                  View Document
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-          
-          <p className="text-sm text-gray-600 mt-2 line-clamp-2">
-            {doc.content.substring(0, 150)}...
-          </p>
-        </div>
-      ))}
-    </div>
-  );
-};
 
 export default function VesselDocuments() {
-  const { id } = useParams<{ id: string }>();
-  const vesselId = parseInt(id);
+  const [location] = useLocation();
   const { toast } = useToast();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [documentType, setDocumentType] = useState<string>('');
-  const [showGenerateDialog, setShowGenerateDialog] = useState(false);
-  const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
-  const [activeTab, setActiveTab] = useState<string>('all');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-
-  // Query to fetch vessel details
-  const {
-    data: vessel,
-    isLoading: isLoadingVessel,
-  } = useQuery({
-    queryKey: [`/api/vessels/${vesselId}`],
-    queryFn: async () => {
-      const response = await apiRequest(`/api/vessels/${vesselId}`);
-      return response;
-    },
+  const [activeDocument, setActiveDocument] = useState<Document | null>(null);
+  
+  // Extract vessel ID from URL
+  const vesselId = parseInt(location.split("/")[2]);
+  
+  // Fetch vessel data
+  const { data: vessel, isLoading: isLoadingVessel } = useQuery({
+    queryKey: ["/api/vessels", vesselId],
+    enabled: !!vesselId,
   });
-
-  // Query to fetch vessel documents
-  const { 
-    data: documents = [], 
-    isLoading: isLoadingDocuments,
-    refetch: refetchDocuments,
-  } = useQuery({
-    queryKey: [`/api/vessels/${vesselId}/documents`],
-    queryFn: async () => {
-      return apiRequest(`/api/vessels/${vesselId}/documents`);
-    }
+  
+  // Fetch vessel documents
+  const { data: documents, isLoading: isLoadingDocuments } = useQuery({
+    queryKey: ["/api/vessels", vesselId, "documents"],
+    enabled: !!vesselId,
   });
-
-  // Mutation to generate new document
-  const generateDocumentMutation = useMutation({
-    mutationFn: ({ documentType }: { documentType: string }) => {
-      return apiRequest('/api/ai/generate-document', {
-        method: 'POST',
-        body: JSON.stringify({ vesselId, documentType }),
-      });
-    },
-    onSuccess: () => {
-      toast({
-        title: 'Document generated',
-        description: 'The document was successfully generated.',
-      });
-      setShowGenerateDialog(false);
-      queryClient.invalidateQueries({ queryKey: [`/api/vessels/${vesselId}/documents`] });
-    },
-    onError: (error) => {
-      toast({
-        title: 'Error',
-        description: 'Failed to generate document. Please try again.',
-        variant: 'destructive',
-      });
-      console.error('Error generating document:', error);
+  
+  // Set first document as active when documents load
+  useEffect(() => {
+    if (documents && documents.length > 0 && !activeDocument) {
+      setActiveDocument(documents[0]);
     }
-  });
-
-  // Filter documents based on search term, active tab, and status
-  const documentArray = Array.isArray(documents) ? documents : [];
-  const filteredDocuments = documentArray.filter((doc: Document) => {
-    // Apply search filter
-    const matchesSearch = !searchTerm || 
-      doc.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      doc.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.type.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    // Apply status filter
-    const matchesStatus = statusFilter === 'all' || (doc.status || 'active') === statusFilter;
-    
-    // Only proceed if it passes both search and status filters
-    if (!matchesSearch || !matchesStatus) return false;
-    
-    // Apply tab filter based on document categories
-    if (activeTab === 'all') return true;
-    
-    // Legal document types
-    if (activeTab === 'legal') {
-      return doc.type.toLowerCase().includes('contract') || 
-             doc.type.toLowerCase().includes('agreement') || 
-             doc.type.toLowerCase().includes('certificate') ||
-             doc.type.toLowerCase().includes('compliance') ||
-             doc.type.toLowerCase().includes('legal');
+  }, [documents, activeDocument]);
+  
+  // Function to get color based on document status
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'active':
+        return 'bg-green-500/10 text-green-500 hover:bg-green-500/20';
+      case 'pending':
+        return 'bg-amber-500/10 text-amber-500 hover:bg-amber-500/20';
+      case 'expired':
+        return 'bg-red-500/10 text-red-500 hover:bg-red-500/20';
+      case 'revoked':
+        return 'bg-slate-500/10 text-slate-500 hover:bg-slate-500/20';
+      default:
+        return 'bg-blue-500/10 text-blue-500 hover:bg-blue-500/20';
     }
-    
-    // Commercial document types
-    if (activeTab === 'commercial') {
-      return doc.type.toLowerCase().includes('invoice') || 
-             doc.type.toLowerCase().includes('commercial') || 
-             doc.type.toLowerCase().includes('sales') ||
-             doc.type.toLowerCase().includes('purchase') ||
-             doc.type.toLowerCase().includes('trading');
-    }
-    
-    // Shipping document types
-    if (activeTab === 'shipping') {
-      return doc.type.toLowerCase().includes('shipping') || 
-             doc.type.toLowerCase().includes('transport') || 
-             doc.type.toLowerCase().includes('delivery') ||
-             doc.type.toLowerCase().includes('cargo');
-    }
-    
-    // Bills of Lading
-    if (activeTab === 'bills' && doc.type.toLowerCase().includes('bill')) return true;
-    
-    // Letters of Intent
-    if (activeTab === 'loi' && (
-      doc.type.toLowerCase().includes('loi') || 
-      doc.type.toLowerCase().includes('letter of intent') ||
-      doc.type.toLowerCase().includes('letter of indemnity')
-    )) return true;
-    
-    // Sales/Purchase Agreements
-    if (activeTab === 'spa' && (
-      doc.type.toLowerCase().includes('spa') || 
-      doc.type.toLowerCase().includes('sales and purchase') ||
-      doc.type.toLowerCase().includes('purchase agreement')
-    )) return true;
-    
-    // Manifests
-    if (activeTab === 'manifests' && doc.type.toLowerCase().includes('manifest')) return true;
-    
-    // Others - anything that doesn't fit in above categories
-    if (activeTab === 'others') {
-      const commonTypes = [
-        'bill', 'manifest', 'inspection', 'loading',
-        'contract', 'agreement', 'certificate', 'compliance', 'legal',
-        'invoice', 'commercial', 'sales', 'purchase', 'trading',
-        'shipping', 'transport', 'delivery', 'cargo',
-        'loi', 'letter of intent', 'letter of indemnity',
-        'spa', 'sales and purchase', 'purchase agreement'
-      ];
-      
-      return !commonTypes.some(type => doc.type.toLowerCase().includes(type));
-    }
-    return false;
-  });
-
-  const handleGenerateDocument = () => {
-    if (!documentType) {
-      toast({
-        title: 'Missing information',
-        description: 'Please select a document type.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    generateDocumentMutation.mutate({ documentType });
   };
-
-  if (isLoadingVessel) {
+  
+  const renderDocumentContent = (content: string) => {
+    // Split by newlines and render each line
+    return content.split('\n').map((line, index) => (
+      <p key={index} className={line.trim().startsWith('-') ? 'pl-4 py-1 my-1' : 'py-1 my-1'}>
+        {line}
+      </p>
+    ));
+  };
+  
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+  
+  if (isLoadingVessel || isLoadingDocuments) {
     return (
-      <div className="container py-6 mx-auto">
-        <div className="flex justify-center items-center h-60">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <MainLayout>
+        <div className="flex items-center justify-center min-h-[70vh]">
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
         </div>
-      </div>
+      </MainLayout>
     );
   }
-
+  
   if (!vessel) {
     return (
-      <div className="container py-6 mx-auto">
-        <div className="text-center py-12">
-          <Ship className="mx-auto h-12 w-12 text-gray-300" />
-          <h3 className="mt-4 text-lg font-medium">Vessel not found</h3>
-          <p className="mt-2 text-sm text-gray-500">
-            The requested vessel could not be found.
+      <MainLayout>
+        <div className="flex flex-col items-center justify-center min-h-[70vh]">
+          <h2 className="text-2xl font-bold mb-4">Vessel Not Found</h2>
+          <p className="text-muted-foreground mb-8">
+            We couldn't find the vessel you're looking for.
           </p>
-          <Button asChild className="mt-4">
+          <Button asChild>
             <Link href="/vessels">Back to Vessels</Link>
           </Button>
         </div>
-      </div>
+      </MainLayout>
     );
   }
-
+  
   return (
-    <div className="container py-6 mx-auto">
-      <div className="flex flex-col space-y-4">
-        <div className="flex items-center gap-2 mb-4">
-          <Button variant="outline" size="sm" asChild>
-            <Link href={`/vessels/${vesselId}`}>
-              <ChevronLeft className="mr-1 h-4 w-4" />
-              Back to Vessel
-            </Link>
-          </Button>
-        </div>
-        
-        <div className="flex flex-col sm:flex-row justify-between gap-4 items-start sm:items-center">
+    <MainLayout>
+      <div className="container px-4 py-6 mx-auto max-w-7xl">
+        <div className="flex flex-col md:flex-row justify-between items-start mb-8">
           <div>
-            <h1 className="text-2xl font-bold">{vessel.name} - Documents</h1>
-            <p className="text-muted-foreground">
-              IMO: {vessel.imo} • {vessel.vesselType} • {vessel.flag}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="mb-4"
+              asChild
+            >
+              <Link href={`/vessels/${vesselId}`}>
+                <ChevronLeft className="mr-2 h-4 w-4" />
+                Back to Vessel
+              </Link>
+            </Button>
+            <h1 className="text-3xl font-bold tracking-tight">
+              {vessel.name} Documents
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              IMO: {vessel.imo} • Type: {vessel.vesselType}
             </p>
           </div>
           
-          <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-            <Button 
-              variant="outline" 
-              onClick={() => refetchDocuments()}
-              disabled={isLoadingDocuments}
-              className="flex-1 sm:flex-initial"
-            >
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Refresh
-            </Button>
-            
-            <Button 
-              onClick={() => setShowGenerateDialog(true)}
-              className="flex-1 sm:flex-initial"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Generate Document
-            </Button>
-          </div>
+          <Button className="mt-4 md:mt-0">
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add Document
+          </Button>
         </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-          <div className="col-span-1 lg:sticky lg:top-4 lg:self-start h-auto">
-            <div className="bg-white rounded-lg shadow p-4">
-              <h3 className="font-medium mb-3">Document Filters</h3>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm text-gray-500">Search</label>
-                  <div className="relative">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
-                    <Input
-                      placeholder="Search documents..."
-                      className="pl-8"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                    />
+        
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Document List */}
+          <div className="lg:col-span-1">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <FileText className="mr-2 h-5 w-5 text-primary" />
+                  Document List
+                </CardTitle>
+                <CardDescription>
+                  {documents?.length || 0} documents found
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {!documents || documents.length === 0 ? (
+                  <div className="p-8 text-center">
+                    <FileText className="mx-auto h-12 w-12 text-muted-foreground opacity-25" />
+                    <h3 className="mt-4 text-lg font-semibold">No Documents</h3>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      This vessel doesn't have any documents yet.
+                    </p>
                   </div>
-                </div>
-                
-                <div>
-                  <label className="text-sm text-gray-500">Status</label>
-                  <Select 
-                    value={statusFilter}
-                    onValueChange={setStatusFilter}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="All statuses" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All statuses</SelectItem>
-                      <SelectItem value="active">
-                        <div className="flex items-center">
-                          <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                          Active
+                ) : (
+                  <div className="space-y-2">
+                    {documents.map((doc: Document) => (
+                      <div
+                        key={doc.id}
+                        className={`p-3 rounded-md cursor-pointer transition-all ${
+                          activeDocument?.id === doc.id
+                            ? "bg-primary text-primary-foreground"
+                            : "hover:bg-muted"
+                        }`}
+                        onClick={() => setActiveDocument(doc)}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h4 className="font-medium line-clamp-1">{doc.title}</h4>
+                            <p className="text-xs opacity-80 mt-1">
+                              {doc.type} • {formatDate(doc.issueDate)}
+                            </p>
+                          </div>
+                          <Badge 
+                            variant="outline" 
+                            className={`ml-2 uppercase text-xs ${
+                              activeDocument?.id === doc.id 
+                                ? "bg-primary-foreground/20 text-primary-foreground"
+                                : getStatusColor(doc.status)
+                            }`}
+                          >
+                            {doc.status}
+                          </Badge>
                         </div>
-                      </SelectItem>
-                      <SelectItem value="pending">
-                        <div className="flex items-center">
-                          <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
-                          Pending
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="expired">
-                        <div className="flex items-center">
-                          <div className="w-2 h-2 bg-amber-500 rounded-full mr-2"></div>
-                          Expired
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="revoked">
-                        <div className="flex items-center">
-                          <div className="w-2 h-2 bg-red-500 rounded-full mr-2"></div>
-                          Revoked
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="draft">
-                        <div className="flex items-center">
-                          <div className="w-2 h-2 bg-gray-500 rounded-full mr-2"></div>
-                          Draft
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div>
-                  <Button 
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => {
-                      setSearchTerm('');
-                      setStatusFilter('all');
-                    }}
-                  >
-                    Clear Filters
-                  </Button>
-                </div>
-              </div>
-            </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
           
-          <div className="col-span-1 lg:col-span-3">
-            <Card className="bg-white">
-              <Tabs
-                defaultValue="all"
-                value={activeTab}
-                onValueChange={setActiveTab}
-                className="w-full"
-              >
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 pt-4 gap-2">
-                  <TabsList className="overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
-                    <TabsTrigger value="all">All</TabsTrigger>
-                    <TabsTrigger value="legal" className="whitespace-nowrap">
-                      <div className="flex items-center">
-                        <LawJustice className="w-3 h-3 mr-1" />
-                        Legal
-                      </div>
-                    </TabsTrigger>
-                    <TabsTrigger value="commercial" className="whitespace-nowrap">
-                      <div className="flex items-center">
-                        <Store className="w-3 h-3 mr-1" />
-                        Commercial
-                      </div>
-                    </TabsTrigger>
-                    <TabsTrigger value="shipping" className="whitespace-nowrap">
-                      <div className="flex items-center">
-                        <Ship className="w-3 h-3 mr-1" />
-                        Shipping
-                      </div>
-                    </TabsTrigger>
-                    <TabsTrigger value="bills" className="whitespace-nowrap">Bills of Lading</TabsTrigger>
-                    <TabsTrigger value="loi" className="whitespace-nowrap">LOI</TabsTrigger>
-                    <TabsTrigger value="manifests" className="whitespace-nowrap">Manifests</TabsTrigger>
-                    <TabsTrigger value="others">Others</TabsTrigger>
-                  </TabsList>
-                  
-                  <div className="text-sm text-gray-500 w-full sm:w-auto text-right">
-                    {filteredDocuments.length} document{filteredDocuments.length !== 1 ? 's' : ''}
+          {/* Document Viewer */}
+          <div className="lg:col-span-2">
+            {activeDocument ? (
+              <Card className="h-full">
+                <CardHeader className="bg-muted/50">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <CardTitle>{activeDocument.title}</CardTitle>
+                      <CardDescription className="mt-1">
+                        {activeDocument.type} • Ref: {activeDocument.reference}
+                      </CardDescription>
+                    </div>
+                    
+                    <Badge 
+                      variant="outline" 
+                      className={`ml-2 uppercase ${getStatusColor(activeDocument.status)}`}
+                    >
+                      {activeDocument.status}
+                    </Badge>
                   </div>
-                </div>
-
-                <TabsContent value="all" className="mt-0">
-                  <DocumentList 
-                    documents={filteredDocuments} 
-                    isLoading={isLoadingDocuments}
-                    onViewDocument={setSelectedDocument}
-                  />
-                </TabsContent>
+                </CardHeader>
                 
-                {['bills', 'legal', 'commercial', 'shipping', 'loi', 'spa', 'manifests', 'others'].map((tab) => (
-                  <TabsContent key={tab} value={tab} className="mt-0">
-                    <DocumentList 
-                      documents={filteredDocuments} 
-                      isLoading={isLoadingDocuments}
-                      onViewDocument={setSelectedDocument}
-                    />
+                <Tabs defaultValue="content" className="w-full">
+                  <div className="px-4 pt-2">
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="content">Document Content</TabsTrigger>
+                      <TabsTrigger value="details">Document Details</TabsTrigger>
+                    </TabsList>
+                  </div>
+                  
+                  <TabsContent value="content" className="mt-0">
+                    <CardContent className="pt-6 pb-4 px-6">
+                      <div className="prose prose-sm max-w-none dark:prose-invert">
+                        <div className="font-mono bg-muted p-4 rounded-md whitespace-pre-line text-sm">
+                          {renderDocumentContent(activeDocument.content)}
+                        </div>
+                      </div>
+                    </CardContent>
                   </TabsContent>
-                ))}
-              </Tabs>
-            </Card>
+                  
+                  <TabsContent value="details" className="mt-0">
+                    <CardContent className="pt-6">
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <h4 className="text-sm font-medium text-muted-foreground">Issue Date</h4>
+                            <p className="text-sm font-medium flex items-center mt-1">
+                              <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
+                              {formatDate(activeDocument.issueDate)}
+                            </p>
+                          </div>
+                          
+                          <div>
+                            <h4 className="text-sm font-medium text-muted-foreground">Expiry Date</h4>
+                            <p className="text-sm font-medium flex items-center mt-1">
+                              {activeDocument.expiryDate ? (
+                                <>
+                                  <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
+                                  {formatDate(activeDocument.expiryDate)}
+                                </>
+                              ) : (
+                                <span className="text-muted-foreground">No expiry date</span>
+                              )}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <Separator />
+                        
+                        <div>
+                          <h4 className="text-sm font-medium text-muted-foreground">Issuer</h4>
+                          <p className="text-sm mt-1">{activeDocument.issuer}</p>
+                        </div>
+                        
+                        {(activeDocument.recipientName || activeDocument.recipientOrg) && (
+                          <>
+                            <Separator />
+                            <div>
+                              <h4 className="text-sm font-medium text-muted-foreground">Recipient</h4>
+                              <p className="text-sm mt-1">
+                                {activeDocument.recipientName} 
+                                {activeDocument.recipientOrg && ` (${activeDocument.recipientOrg})`}
+                              </p>
+                            </div>
+                          </>
+                        )}
+                        
+                        <Separator />
+                        
+                        <Accordion type="single" collapsible>
+                          <AccordionItem value="status">
+                            <AccordionTrigger className="text-sm py-2">
+                              Document Status Information
+                            </AccordionTrigger>
+                            <AccordionContent>
+                              <div className="p-3 rounded-md bg-muted/50 flex items-start">
+                                {activeDocument.status === 'active' && (
+                                  <>
+                                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
+                                    <div>
+                                      <p className="font-medium">This document is active and valid</p>
+                                      <p className="text-sm text-muted-foreground mt-1">
+                                        The document has been verified and is currently valid for use.
+                                      </p>
+                                    </div>
+                                  </>
+                                )}
+                                
+                                {activeDocument.status === 'pending' && (
+                                  <>
+                                    <Clock className="h-5 w-5 text-amber-500 mt-0.5 mr-3 flex-shrink-0" />
+                                    <div>
+                                      <p className="font-medium">This document is pending verification</p>
+                                      <p className="text-sm text-muted-foreground mt-1">
+                                        The document has been submitted but is still awaiting verification.
+                                      </p>
+                                    </div>
+                                  </>
+                                )}
+                                
+                                {activeDocument.status === 'expired' && (
+                                  <>
+                                    <AlertTriangle className="h-5 w-5 text-red-500 mt-0.5 mr-3 flex-shrink-0" />
+                                    <div>
+                                      <p className="font-medium">This document has expired</p>
+                                      <p className="text-sm text-muted-foreground mt-1">
+                                        The document is no longer valid as it has passed its expiry date.
+                                      </p>
+                                    </div>
+                                  </>
+                                )}
+                                
+                                {activeDocument.status === 'revoked' && (
+                                  <>
+                                    <AlertTriangle className="h-5 w-5 text-slate-500 mt-0.5 mr-3 flex-shrink-0" />
+                                    <div>
+                                      <p className="font-medium">This document has been revoked</p>
+                                      <p className="text-sm text-muted-foreground mt-1">
+                                        The document has been invalidated by the issuer.
+                                      </p>
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                            </AccordionContent>
+                          </AccordionItem>
+                        </Accordion>
+                      </div>
+                    </CardContent>
+                  </TabsContent>
+                </Tabs>
+                
+                <CardFooter className="bg-muted/50 border-t flex justify-between">
+                  <div className="text-xs text-muted-foreground">
+                    Document ID: {activeDocument.id} • Last updated: {formatDate(activeDocument.issueDate)}
+                  </div>
+                  
+                  <Button variant="outline" size="sm">
+                    <Download className="mr-2 h-4 w-4" />
+                    Download
+                  </Button>
+                </CardFooter>
+              </Card>
+            ) : (
+              <Card className="h-full flex flex-col items-center justify-center p-12">
+                <FileText className="h-16 w-16 text-muted-foreground/25 mb-6" />
+                <h3 className="text-xl font-semibold text-center">No Document Selected</h3>
+                <p className="text-muted-foreground text-center mt-2 mb-6 max-w-md">
+                  Select a document from the list on the left to view its details here.
+                </p>
+              </Card>
+            )}
           </div>
         </div>
       </div>
-
-      {/* Generate Document Dialog */}
-      <Dialog open={showGenerateDialog} onOpenChange={setShowGenerateDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Generate Document</DialogTitle>
-            <DialogDescription>
-              Generate a new document for {vessel?.name}. Select the type of document you need.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <label htmlFor="documentType">Document Type</label>
-              <Select
-                value={documentType}
-                onValueChange={setDocumentType}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select document type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {DOCUMENT_TYPES.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {type}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button
-              variant="secondary"
-              onClick={() => setShowGenerateDialog(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleGenerateDocument}
-              disabled={generateDocumentMutation.isPending}
-            >
-              {generateDocumentMutation.isPending ? (
-                <>
-                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                'Generate Document'
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* View Document Dialog */}
-      {selectedDocument && (
-        <Dialog open={!!selectedDocument} onOpenChange={() => setSelectedDocument(null)}>
-          <DialogContent className="max-w-3xl">
-            <DialogHeader>
-              <DialogTitle>{selectedDocument.title}</DialogTitle>
-              <DialogDescription>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  <Badge variant="outline">{selectedDocument.type}</Badge>
-                  {selectedDocument.issueDate && (
-                    <Badge variant="outline">
-                      Issued: {formatDate(selectedDocument.issueDate)}
-                    </Badge>
-                  )}
-                  {selectedDocument.expiryDate && (
-                    <Badge variant="outline">
-                      Expires: {formatDate(selectedDocument.expiryDate)}
-                    </Badge>
-                  )}
-                  {selectedDocument.reference && (
-                    <Badge variant="outline">
-                      Ref: {selectedDocument.reference}
-                    </Badge>
-                  )}
-                </div>
-              </DialogDescription>
-            </DialogHeader>
-            
-            <div className="max-h-96 overflow-y-auto">
-              <div className="whitespace-pre-wrap p-4 bg-gray-50 rounded-md">
-                {selectedDocument.content}
-              </div>
-            </div>
-            
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => navigator.clipboard.writeText(selectedDocument.content)}
-              >
-                <Copy className="mr-2 h-4 w-4" />
-                Copy Content
-              </Button>
-              <Button onClick={() => setSelectedDocument(null)}>
-                Close
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
-    </div>
+    </MainLayout>
   );
 }

@@ -48,6 +48,7 @@ import { brokerRouter } from "./routes/brokerRoutes";
 import { tradingRouter } from "./routes/tradingRoutes";
 import { vesselDistributionRouter } from "./routes/vesselDistributionRoutes";
 import { refineryPortRouter } from "./routes/refineryPortRoutes";
+import { documentRouter } from "./routes/document-routes";
 import { aiRouter } from "./routes/aiRoutes";
 import { companyRouter } from "./routes/companyRoutes";
 import portVesselRouter from "./routes/portVesselRoutes";
@@ -55,7 +56,6 @@ import { subscriptionRouter } from "./routes/subscriptionRoutes";
 import translationRouter from "./routes/translationRoutes";
 import vesselDashboardRouter from "./routes/vessel-dashboard";
 import { cargoManifestRouter } from "./routes/cargo-manifest-router";
-import documentRouter from "./routes/document-routes";
 import { seedBrokers } from "./services/seedService";
 
 export async function registerRoutes(app: Express): Promise<Server> {
