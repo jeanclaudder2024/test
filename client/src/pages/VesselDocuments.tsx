@@ -134,88 +134,89 @@ export default function VesselDocuments() {
   
   return (
     <div className="container px-4 py-6 mx-auto max-w-7xl">
-        <div className="flex flex-col md:flex-row justify-between items-start mb-8">
-          <div>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="mb-4"
-              asChild
-            >
-              <Link href={`/vessels/${vesselId}`}>
-                <ChevronLeft className="mr-2 h-4 w-4" />
-                Back to Vessel
-              </Link>
-            </Button>
-            <h1 className="text-3xl font-bold tracking-tight">
-              {vessel.name} Documents
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              IMO: {vessel.imo} • Type: {vessel.vesselType}
-            </p>
+      <div className="flex flex-col md:flex-row justify-between items-start mb-8">
+        <div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="mb-4"
+            asChild
+          >
+            <Link href={`/vessels/${vesselId}`}>
+              <ChevronLeft className="mr-2 h-4 w-4" />
+              Back to Vessel
+            </Link>
+          </Button>
+          <h1 className="text-3xl font-bold tracking-tight">
+            {vessel && typeof vessel === 'object' ? vessel.name : ''} Documents
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            IMO: {vessel && typeof vessel === 'object' ? vessel.imo : ''} • 
+            Type: {vessel && typeof vessel === 'object' ? vessel.vesselType : ''}
+          </p>
           </div>
           
-          <Button className="mt-4 md:mt-0">
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Add Document
-          </Button>
-        </div>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Document List */}
-          <div className="lg:col-span-1">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <FileText className="mr-2 h-5 w-5 text-primary" />
-                  Document List
-                </CardTitle>
-                <CardDescription>
-                  {documents?.length || 0} documents found
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {!documents || documents.length === 0 ? (
-                  <div className="p-8 text-center">
-                    <FileText className="mx-auto h-12 w-12 text-muted-foreground opacity-25" />
-                    <h3 className="mt-4 text-lg font-semibold">No Documents</h3>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      This vessel doesn't have any documents yet.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {documents.map((doc: Document) => (
-                      <div
-                        key={doc.id}
-                        className={`p-3 rounded-md cursor-pointer transition-all ${
-                          activeDocument?.id === doc.id
-                            ? "bg-primary text-primary-foreground"
-                            : "hover:bg-muted"
-                        }`}
-                        onClick={() => setActiveDocument(doc)}
-                      >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h4 className="font-medium line-clamp-1">{doc.title}</h4>
-                            <p className="text-xs opacity-80 mt-1">
-                              {doc.type} • {formatDate(doc.issueDate)}
-                            </p>
-                          </div>
-                          <Badge 
-                            variant="outline" 
-                            className={`ml-2 uppercase text-xs ${
-                              activeDocument?.id === doc.id 
-                                ? "bg-primary-foreground/20 text-primary-foreground"
-                                : getStatusColor(doc.status)
-                            }`}
-                          >
-                            {doc.status}
-                          </Badge>
+        <Button className="mt-4 md:mt-0">
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Add Document
+        </Button>
+      </div>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Document List */}
+        <div className="lg:col-span-1">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <FileText className="mr-2 h-5 w-5 text-primary" />
+                Document List
+              </CardTitle>
+              <CardDescription>
+                {documents && Array.isArray(documents) ? documents.length : 0} documents found
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {!documents || !Array.isArray(documents) || documents.length === 0 ? (
+                <div className="p-8 text-center">
+                  <FileText className="mx-auto h-12 w-12 text-muted-foreground opacity-25" />
+                  <h3 className="mt-4 text-lg font-semibold">No Documents</h3>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    This vessel doesn't have any documents yet.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {documents.map((doc: Document) => (
+                    <div
+                      key={doc.id}
+                      className={`p-3 rounded-md cursor-pointer transition-all ${
+                        activeDocument?.id === doc.id
+                          ? "bg-primary text-primary-foreground"
+                          : "hover:bg-muted"
+                      }`}
+                      onClick={() => setActiveDocument(doc)}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4 className="font-medium line-clamp-1">{doc.title}</h4>
+                          <p className="text-xs opacity-80 mt-1">
+                            {doc.type} • {formatDate(doc.issueDate)}
+                          </p>
                         </div>
+                        <Badge 
+                          variant="outline" 
+                          className={`ml-2 uppercase text-xs ${
+                            activeDocument?.id === doc.id 
+                              ? "bg-primary-foreground/20 text-primary-foreground"
+                              : getStatusColor(doc.status)
+                          }`}
+                        >
+                          {doc.status}
+                        </Badge>
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))}
+                </div>
                 )}
               </CardContent>
             </Card>
