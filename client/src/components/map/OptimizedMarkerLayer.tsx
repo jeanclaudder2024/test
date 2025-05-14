@@ -284,17 +284,9 @@ export const OptimizedVesselLayer: React.FC<{
       
       validCount++;
       
-      // Create marker with custom icon
-      const vesselIcon = new L.Icon({
-        iconUrl: new URL('@/assets/vessel-icon.svg', import.meta.url).href,
-        iconSize: [24, 24],
-        iconAnchor: [12, 12],
-        popupAnchor: [0, -12],
-        className: `vessel-type-${vessel.vesselType?.toLowerCase().replace(/\s+/g, '-') || 'default'}`
-      });
-      
+      // Use fallback icon for simplicity (to test if icons are causing the issue)
       const marker = L.marker([lat, lng], {
-        icon: vesselIcon || getVesselIcon(vessel),
+        icon: fallbackVesselIcon,
         title: vessel.name || 'Unknown vessel'
       });
       
@@ -307,9 +299,17 @@ export const OptimizedVesselLayer: React.FC<{
       });
       
       // Store reference and add to cluster group
-      vesselMarkers.current[vessel.id] = marker;
-      markerClusterGroup.current?.addLayer(marker);
+      try {
+        vesselMarkers.current[vessel.id] = marker;
+        markerClusterGroup.current?.addLayer(marker);
+      } catch (error) {
+        console.error('Error adding vessel marker to map:', error);
+      }
     });
+    
+    console.log(`Added ${validCount} valid vessel markers to map. Skipped ${invalidCount} invalid vessels.`);
+    console.log('Final marker count in cluster group:', 
+      markerClusterGroup.current ? markerClusterGroup.current.getLayers().length : 0);
     
     return () => {
       // Clean up markers when component unmounts or vessels change
