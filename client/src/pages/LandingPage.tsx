@@ -152,15 +152,15 @@ export default function LandingPage() {
     <div className="min-h-screen flex flex-col">
       {/* Navigation Bar */}
       <header 
-        className={`px-4 lg:px-6 h-44 flex items-center justify-between fixed w-full z-50 transition-all duration-300 ${
+        className={`px-4 lg:px-6 h-40 flex items-center justify-between fixed w-full z-50 transition-all duration-300 ${
           scrolled 
             ? "bg-slate-900/90 border-b border-orange-500/20 backdrop-blur-lg shadow-md" 
             : "bg-transparent"
         }`}
       >
-        <div className="flex items-center gap-3 font-bold text-3xl">
-          <Ship className="h-14 w-14 text-orange-500" />
-          <span className="text-white">MyShip Tracking</span>
+        <div className="flex items-center gap-2 font-bold text-2xl">
+          <img src="/assets/petrodealhub-logo.png" alt="PetroDealHub Logo" className="h-36 w-auto" />
+          <span className="text-white sr-only">PetroDealHub</span>
         </div>
         
         {/* Desktop Menu */}
