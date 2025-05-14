@@ -72,13 +72,39 @@ export function useVesselWebSocket({
         // Listen for messages
         socket.current.addEventListener('message', (event) => {
           try {
+            console.log('WebSocket message received, length:', event.data.length);
             const data = JSON.parse(event.data);
             
             // Handle different message types
             if (data.type === 'vessels') {
-              setVessels(data.vessels || []);
-              setLastUpdated(new Date().toISOString());
-              setLoading(false);
+              console.log(`WebSocket vessels message contains ${data.vessels?.length || 0} vessels`);
+              
+              // Check if vessels have all the needed properties
+              if (data.vessels && data.vessels.length > 0) {
+                console.log('Sample vessel from WebSocket:', data.vessels[0]);
+                
+                // Make sure vessels have proper coordinates
+                const vesselsWithCoordinates = data.vessels.filter(v => 
+                  v.currentLat != null && v.currentLng != null &&
+                  !isNaN(parseFloat(v.currentLat.toString())) &&
+                  !isNaN(parseFloat(v.currentLng.toString()))
+                );
+                
+                if (vesselsWithCoordinates.length > 0) {
+                  console.log(`${vesselsWithCoordinates.length} vessels have valid coordinates`);
+                  setVessels(vesselsWithCoordinates);
+                } else {
+                  console.warn('No vessels have valid coordinates, using original data');
+                  setVessels(data.vessels || []);
+                }
+                
+                setLastUpdated(new Date().toISOString());
+                setLoading(false);
+              } else {
+                console.warn('Received empty vessels data from WebSocket');
+                setVessels([]);
+                setLoading(false);
+              }
             } 
             else if (data.type === 'error') {
               console.error('WebSocket error:', data.message);
@@ -139,42 +165,97 @@ export function useVesselWebSocket({
         if (pageSize) params.append('pageSize', pageSize.toString());
         if (loadAllVessels) params.append('all', 'true');
         
-        console.log(`Fetching vessels from REST API with params: ${params.toString()}`);
-        
+        // Try several endpoints in sequence
+
+        // 1. Try the vessels/polling endpoint (optimized for real-time)
+        console.log('Trying polling endpoint first...');
         try {
-          const response = await fetch(`/api/vessels?${params.toString()}`);
-          console.log('REST API response status:', response.status);
+          const pollingResponse = await fetch(`/api/vessels/polling?${params.toString()}`);
+          console.log('Polling endpoint status:', pollingResponse.status);
           
-          if (!response.ok) {
-            throw new Error(`Failed to fetch vessels: ${response.status}`);
+          if (pollingResponse.ok) {
+            const pollingData = await pollingResponse.json();
+            console.log(`Polling endpoint returned vessels object with ${pollingData.vessels?.length || 0} vessels`);
+            
+            if (pollingData.vessels && pollingData.vessels.length > 0) {
+              console.log('Sample vessel from polling:', pollingData.vessels[0]);
+              setVessels(pollingData.vessels);
+              setLastUpdated(pollingData.timestamp || new Date().toISOString());
+              setLoading(false);
+              return;
+            } else {
+              console.log('Polling endpoint returned empty vessels array, trying next option');
+            }
           }
-          
-          const data = await response.json();
-          console.log(`REST API returned ${data?.length || 0} vessels`);
-          setVessels(data || []);
-          setLastUpdated(new Date().toISOString());
-          setLoading(false);
-        } catch (fetchError) {
-          console.error('Fetch error details:', fetchError.message);
-          
-          // Provide some fallback data if the API is completely unavailable
-          console.log('Using locally generated vessel data as fallback');
-          
-          // Fetch from static endpoint as emergency fallback
+        } catch (pollingError) {
+          console.warn('Polling endpoint failed:', pollingError);
+        }
+        
+        // 2. Try the static backup endpoint
+        console.log('Trying static endpoint...');
+        try {
           const staticResponse = await fetch('/api/vessels/static');
+          console.log('Static endpoint status:', staticResponse.status);
+          
           if (staticResponse.ok) {
             const staticData = await staticResponse.json();
-            setVessels(staticData || []);
-            setLastUpdated(new Date().toISOString());
-            setLoading(false);
-          } else {
-            throw new Error('Both REST API and static fallback failed');
+            console.log(`Static endpoint returned ${staticData?.length || 0} vessels`);
+            
+            if (staticData && staticData.length > 0) {
+              console.log('Sample vessel from static endpoint:', staticData[0]);
+              setVessels(staticData);
+              setLastUpdated(new Date().toISOString());
+              setLoading(false);
+              return;
+            } else {
+              console.log('Static endpoint returned empty array, trying regular endpoint');
+            }
           }
+        } catch (staticError) {
+          console.warn('Static endpoint failed:', staticError);
         }
-      } catch (err) {
-        console.error('Error fetching vessels via REST:', err);
-        setError(err instanceof Error ? err : new Error('Unknown error fetching vessels'));
+        
+        // 3. Try the regular vessels endpoint
+        console.log('Trying regular vessels endpoint...');
+        const response = await fetch(`/api/vessels?${params.toString()}`);
+        console.log('Regular API response status:', response.status);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch vessels: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log(`Regular API returned ${data?.length || 0} vessels`);
+        
+        if (data && data.length > 0) {
+          console.log('Sample vessel from regular endpoint:', data[0]);
+          
+          // Filter out vessels with invalid coordinates
+          const vesselsWithCoordinates = data.filter((v: any) => 
+            v.currentLat != null && v.currentLng != null &&
+            !isNaN(parseFloat(v.currentLat.toString())) &&
+            !isNaN(parseFloat(v.currentLng.toString()))
+          );
+          
+          if (vesselsWithCoordinates.length > 0) {
+            console.log(`${vesselsWithCoordinates.length} vessels have valid coordinates`);
+            setVessels(vesselsWithCoordinates);
+          } else {
+            console.warn('No vessels have valid coordinates, using original data');
+            setVessels(data);
+          }
+        } else {
+          console.warn('Regular endpoint returned empty array, using empty vessel array');
+          setVessels([]);
+        }
+        
+        setLastUpdated(new Date().toISOString());
         setLoading(false);
+      } catch (err) {
+        console.error('All REST API fallbacks failed:', err);
+        setError(err instanceof Error ? err : new Error('Failed to fetch vessel data from all sources'));
+        setLoading(false);
+        setVessels([]); // Set empty array to avoid undefined issues
       }
     };
     

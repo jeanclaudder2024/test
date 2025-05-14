@@ -951,7 +951,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Static vessels fallback endpoint requested");
       
       // Get a small subset of vessels from the database
-      let vessels = await storage.getVessels(25); // Limit to 25 vessels for quick loading
+      let vessels = await storage.getVessels();
+      
+      // Only take up to 25 vessels for quick loading
+      if (vessels && vessels.length > 0) {
+        vessels = vessels.slice(0, 25);
+      }
       
       if (!vessels || vessels.length === 0) {
         // Create some emergency static vessels if database fails
@@ -961,8 +966,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             name: "Pacific Navigator",
             vesselType: "Oil Tanker",
             flag: "Panama",
-            currentLat: 43.427844,
-            currentLng: -41.004669,
+            currentLat: "43.427844",
+            currentLng: "-41.004669",
             imo: "9876543",
             mmsi: "123456789",
             status: "Active",
@@ -973,8 +978,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             name: "Western Commander",
             vesselType: "Crude Oil Tanker",
             flag: "Liberia",
-            currentLat: -6.265956,
-            currentLng: 72.825185,
+            currentLat: "-6.265956",
+            currentLng: "72.825185",
             imo: "8765432",
             mmsi: "234567890",
             status: "Active",
@@ -985,8 +990,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             name: "Arctic Aurora",
             vesselType: "LNG Carrier",
             flag: "Marshall Islands",
-            currentLat: 35.600700,
-            currentLng: -40.199942,
+            currentLat: "35.600700",
+            currentLng: "-40.199942",
             imo: "7654321",
             mmsi: "345678901",
             status: "Active",
