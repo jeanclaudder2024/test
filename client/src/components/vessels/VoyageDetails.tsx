@@ -420,7 +420,12 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                         <div className="flex items-center">
                           <p className="text-sm font-medium">
                             {currentLocation.currentLat && currentLocation.currentLng ? 
-                              `${parseFloat(String(currentLocation.currentLat)).toFixed(4)}°, ${parseFloat(String(currentLocation.currentLng)).toFixed(4)}°` : 
+                              `${typeof currentLocation.currentLat === 'number' 
+                                ? currentLocation.currentLat.toFixed(4) 
+                                : parseFloat(String(currentLocation.currentLat)).toFixed(4)}°, 
+                                ${typeof currentLocation.currentLng === 'number'
+                                ? currentLocation.currentLng.toFixed(4)
+                                : parseFloat(String(currentLocation.currentLng)).toFixed(4)}°` : 
                               "Position not available"
                             }
                           </p>
@@ -450,7 +455,12 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                       <div>
                         <p className="text-sm font-medium">
                           {vessel.currentLat && vessel.currentLng
-                            ? `${parseFloat(String(vessel.currentLat)).toFixed(4)}°, ${parseFloat(String(vessel.currentLng)).toFixed(4)}°`
+                            ? `${typeof vessel.currentLat === 'number' 
+                                ? vessel.currentLat.toFixed(4) 
+                                : parseFloat(String(vessel.currentLat)).toFixed(4)}°, 
+                                ${typeof vessel.currentLng === 'number' 
+                                ? vessel.currentLng.toFixed(4) 
+                                : parseFloat(String(vessel.currentLng)).toFixed(4)}°`
                             : "Position not available"}
                         </p>
                         <p className="text-xs text-gray-500">From vessel database record</p>
@@ -567,7 +577,10 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                       
                       {/* Current Position Marker */}
                       <Marker 
-                        position={[Number(vessel.currentLat), Number(vessel.currentLng)]}
+                        position={[
+                          typeof vessel.currentLat === 'number' ? vessel.currentLat : parseFloat(String(vessel.currentLat)), 
+                          typeof vessel.currentLng === 'number' ? vessel.currentLng : parseFloat(String(vessel.currentLng))
+                        ]}
                         icon={L.divIcon({
                           className: 'custom-div-icon',
                           html: `<div style="background-color: #047857; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; position: relative;">
@@ -581,8 +594,16 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                           <div className="text-sm">
                             <strong>Current Position</strong><br/>
                             <span className="text-xs">
-                              {vessel.currentLat ? parseFloat(String(vessel.currentLat)).toFixed(4) : 'N/A'}°, 
-                              {vessel.currentLng ? parseFloat(String(vessel.currentLng)).toFixed(4) : 'N/A'}°
+                              {vessel.currentLat ? 
+                                (typeof vessel.currentLat === 'number' 
+                                  ? vessel.currentLat.toFixed(4) 
+                                  : parseFloat(String(vessel.currentLat)).toFixed(4)) 
+                                : 'N/A'}°, 
+                              {vessel.currentLng ? 
+                                (typeof vessel.currentLng === 'number' 
+                                  ? vessel.currentLng.toFixed(4) 
+                                  : parseFloat(String(vessel.currentLng)).toFixed(4)) 
+                                : 'N/A'}°
                             </span>
                             {currentLocation?.speed && (
                               <div className="text-xs text-gray-500 mt-1">
