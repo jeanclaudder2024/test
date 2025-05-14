@@ -1158,7 +1158,15 @@ export default function VesselDetail() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-center py-8 text-muted-foreground">
-                    No documents available for this vessel
+                    No documents available for preview
+                  </div>
+                  <div className="flex justify-center mt-4">
+                    <Button variant="outline" asChild>
+                      <Link href={`/vessels/${vesselId}/documents`}>
+                        <FileText className="h-4 w-4 mr-2" />
+                        View All Documents
+                      </Link>
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
