@@ -56,13 +56,15 @@ interface Document {
   title: string;
   content: string;
   status: string;
-  issueDate: string;
+  issueDate: string | null;
   expiryDate: string | null;
-  reference: string;
-  issuer: string;
+  reference: string | null;
+  issuer: string | null;
   recipientName: string | null;
   recipientOrg: string | null;
-  language: string;
+  language: string | null;
+  createdAt?: string | Date | null;
+  lastModified?: string | Date | null;
 }
 
 export default function VesselDocuments() {
@@ -446,7 +448,7 @@ export default function VesselDocuments() {
                             <h4 className="text-sm font-medium text-muted-foreground">Issue Date</h4>
                             <p className="text-sm font-medium flex items-center mt-1">
                               <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
-                              {formatDate(activeDocument.issueDate)}
+                              {formatDate(activeDocument.issueDate || activeDocument.createdAt)}
                             </p>
                           </div>
                           
