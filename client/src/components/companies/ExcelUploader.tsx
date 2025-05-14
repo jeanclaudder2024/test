@@ -154,11 +154,11 @@ export default function ExcelUploader({ onImportSuccess }: ExcelUploaderProps) {
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Building className="h-5 w-5 text-primary" />
-          Import Shipping Companies
+          <Ship className="h-5 w-5 text-primary" />
+          Import Oil Shipping Companies
         </CardTitle>
         <CardDescription>
-          Upload an Excel file (.xlsx) containing shipping company data
+          Upload an Excel file (.xlsx) containing oil shipping company data
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -274,7 +274,7 @@ export default function ExcelUploader({ onImportSuccess }: ExcelUploaderProps) {
         </Button>
         {file && importedCount === 0 && (
           <Button onClick={handleUpload} disabled={isUploading || !file}>
-            {isUploading ? "Importing..." : "Import Companies"}
+            {isUploading ? "Importing..." : "Import Oil Companies"}
           </Button>
         )}
       </CardFooter>
