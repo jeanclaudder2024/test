@@ -29,7 +29,7 @@ import { Label } from '@/components/ui/label';
 import {
   ArrowLeft, Ship, Calendar, Map, Info, Edit, Plus, Navigation, Anchor,
   Flag, Droplet, Package, AlertCircle, Truck, Gauge, BarChart, History,
-  Users, Clock, Compass, ArrowRight, FileText, Clipboard, Download, Globe,
+  Users, Clock, Compass, ArrowRight, FileText, FileCheck, Clipboard, Download, Globe,
   ZoomIn, ZoomOut, Fuel, Activity, Layers, Filter, Tag, Check, RotateCw,
   MapPin, ExternalLink, Factory
 } from 'lucide-react';
@@ -526,6 +526,25 @@ export default function VesselDetail() {
                 <Edit className="h-4 w-4 mr-2" />
                 Edit Vessel
               </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => generateCargoManifest()}
+                disabled={isGeneratingManifest}
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                {isGeneratingManifest ? 'Generating...' : 'Cargo Manifest'}
+              </Button>
+              {vessel && vessel.cargoType && vessel.cargoType.toLowerCase().includes('nut') && (
+                <Button 
+                  variant="outline" 
+                  onClick={generateNutManifest}
+                  disabled={isGeneratingManifest}
+                  className="text-amber-600 border-amber-600 hover:bg-amber-50"
+                >
+                  <FileCheck className="h-4 w-4 mr-2" />
+                  {isGeneratingManifest ? 'Generating...' : 'Nut Cargo Manifest'}
+                </Button>
+              )}
             </div>
           </div>
           
