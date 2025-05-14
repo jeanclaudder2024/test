@@ -642,6 +642,8 @@ export default function RefineryDetail() {
                         <RefineryMap 
                           refinery={refinery}
                           height="500px"
+                          showControls={true}
+                          showConnections={true}
                         />
                       ) : (
                         <div className="h-[500px] bg-muted flex items-center justify-center">

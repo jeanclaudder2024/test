@@ -1,7 +1,12 @@
-import { useEffect, useRef } from 'react';
-import { Refinery } from '@shared/schema';
-import { Compass, ZoomIn, ZoomOut, Map as MapIcon } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Refinery, Port } from '@shared/schema';
+import { Vessel } from '@/types'; 
+import { Compass, ZoomIn, ZoomOut, Map as MapIcon, Layers, Eye, EyeOff, Anchor, Ship, Factory } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
 
 // Define Leaflet types
 declare global {
@@ -14,12 +19,31 @@ interface RefineryMapProps {
   refinery: Refinery;
   height?: string;
   className?: string;
+  showControls?: boolean;
+  showConnections?: boolean;
 }
 
-export default function RefineryMap({ refinery, height = '400px', className = '' }: RefineryMapProps) {
+export default function RefineryMap({ 
+  refinery, 
+  height = '400px', 
+  className = '',
+  showControls = true,
+  showConnections = true
+}: RefineryMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const leafletMap = useRef<any>(null);
   const mapInitialized = useRef(false);
+  
+  // State for controlling layer visibility
+  const [showPorts, setShowPorts] = useState(true);
+  const [showVessels, setShowVessels] = useState(true);
+  const [connectedPorts, setConnectedPorts] = useState<any[]>([]);
+  const [nearbyVessels, setNearbyVessels] = useState<Vessel[]>([]);
+  const [loading, setLoading] = useState(false);
+  
+  // Layer groups to store markers
+  const portLayerGroup = useRef<any>(null);
+  const vesselLayerGroup = useRef<any>(null);
 
   useEffect(() => {
     // Wait for the component to mount
@@ -184,6 +208,213 @@ export default function RefineryMap({ refinery, height = '400px', className = ''
     };
   }, [refinery]);
 
+  // Fetch connected ports and vessels when component mounts
+  useEffect(() => {
+    if (!showConnections || !refinery.id) return;
+    
+    const fetchConnections = async () => {
+      setLoading(true);
+      
+      try {
+        // Fetch connected ports
+        const portsResponse = await fetch(`/api/refinery-port/refinery/${refinery.id}/ports`);
+        if (portsResponse.ok) {
+          const portsData = await portsResponse.json();
+          setConnectedPorts(portsData);
+        }
+        
+        // Fetch nearby vessels
+        const vesselsResponse = await fetch(`/api/vessels/near-refinery/${refinery.id}`);
+        if (vesselsResponse.ok) {
+          const vesselsData = await vesselsResponse.json();
+          setNearbyVessels(vesselsData);
+        }
+      } catch (error) {
+        console.error('Failed to fetch connections:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchConnections();
+  }, [refinery.id, showConnections]);
+  
+  // Add connected ports and vessels to map when data is available
+  useEffect(() => {
+    if (!leafletMap.current || !showConnections) return;
+    
+    const L = window.L;
+    
+    // Clear existing layers
+    if (portLayerGroup.current) {
+      portLayerGroup.current.clearLayers();
+    } else {
+      portLayerGroup.current = L.layerGroup().addTo(leafletMap.current);
+    }
+    
+    if (vesselLayerGroup.current) {
+      vesselLayerGroup.current.clearLayers();
+    } else {
+      vesselLayerGroup.current = L.layerGroup().addTo(leafletMap.current);
+    }
+    
+    // Update layer visibility
+    if (portLayerGroup.current) {
+      if (showPorts) {
+        leafletMap.current.addLayer(portLayerGroup.current);
+      } else {
+        leafletMap.current.removeLayer(portLayerGroup.current);
+      }
+    }
+    
+    if (vesselLayerGroup.current) {
+      if (showVessels) {
+        leafletMap.current.addLayer(vesselLayerGroup.current);
+      } else {
+        leafletMap.current.removeLayer(vesselLayerGroup.current);
+      }
+    }
+    
+    // Create port icons and add to map
+    if (showPorts && connectedPorts.length > 0) {
+      const portIcon = L.divIcon({
+        html: `
+          <div class="relative group">
+            <div class="absolute -inset-0.5 rounded-full bg-blue-500 opacity-25 blur group-hover:opacity-50 transition"></div>
+            <div class="relative flex items-center justify-center w-8 h-8 bg-background rounded-full border-2 border-blue-500 shadow-lg">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-500">
+                <circle cx="12" cy="5" r="3"></circle>
+                <line x1="12" y1="22" x2="12" y2="8"></line>
+                <path d="M5 12H2a10 10 0 0 0 20 0h-3"></path>
+              </svg>
+            </div>
+          </div>
+        `,
+        className: 'custom-port-icon',
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
+      });
+      
+      connectedPorts.forEach(port => {
+        try {
+          const lat = typeof port.lat === 'number' ? port.lat : Number(port.lat || 0);
+          const lng = typeof port.lng === 'number' ? port.lng : Number(port.lng || 0);
+          
+          if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+            console.error('Invalid port coordinates:', { lat, lng, port });
+            return;
+          }
+          
+          // Add port marker
+          const marker = L.marker([lat, lng], { 
+            icon: portIcon,
+            title: port.name
+          })
+          .addTo(portLayerGroup.current)
+          .bindPopup(`
+            <div class="port-popup">
+              <div class="font-medium text-base mb-1">${port.name}</div>
+              <div class="text-xs text-muted-foreground mb-2">${port.country || 'Unknown'}</div>
+              
+              <div class="text-xs font-medium mb-1 text-blue-500">Port Type</div>
+              <div class="text-sm">${port.type || 'Commercial'}</div>
+              
+              <div class="mt-3 text-xs">
+                <span class="px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">${port.status || 'Operational'}</span>
+              </div>
+            </div>
+          `, {
+            className: 'custom-popup',
+            closeButton: false,
+            maxWidth: 300,
+            minWidth: 200
+          });
+          
+          // Add connection line from refinery to port
+          const refineryLat = typeof refinery.lat === 'number' ? refinery.lat : Number(refinery.lat || 0);
+          const refineryLng = typeof refinery.lng === 'number' ? refinery.lng : Number(refinery.lng || 0);
+          
+          L.polyline([[refineryLat, refineryLng], [lat, lng]], {
+            color: 'rgba(59, 130, 246, 0.6)', // blue-500 with opacity
+            weight: 2,
+            dashArray: '5, 5',
+            className: 'connection-line'
+          }).addTo(portLayerGroup.current);
+          
+        } catch (error) {
+          console.error('Error adding port marker:', error);
+        }
+      });
+    }
+    
+    // Create vessel icons and add to map
+    if (showVessels && nearbyVessels.length > 0) {
+      const vesselIcon = L.divIcon({
+        html: `
+          <div class="relative group">
+            <div class="absolute -inset-0.5 rounded-full bg-emerald-500 opacity-25 blur group-hover:opacity-50 transition"></div>
+            <div class="relative flex items-center justify-center w-8 h-8 bg-background rounded-full border-2 border-emerald-500 shadow-lg">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-500">
+                <path d="M18 17 A 10 10 0 0 1 6 17 H18"></path>
+                <path d="M12 2v7"></path>
+                <path d="M4.93 10H19.07"></path>
+                <path d="M12 18v4"></path>
+              </svg>
+            </div>
+          </div>
+        `,
+        className: 'custom-vessel-icon',
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
+      });
+      
+      nearbyVessels.forEach(vessel => {
+        try {
+          if (!vessel.currentLat || !vessel.currentLng) return;
+          
+          const lat = typeof vessel.currentLat === 'number' ? vessel.currentLat : Number(vessel.currentLat || 0);
+          const lng = typeof vessel.currentLng === 'number' ? vessel.currentLng : Number(vessel.currentLng || 0);
+          
+          if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+            console.error('Invalid vessel coordinates:', { lat, lng, vessel });
+            return;
+          }
+          
+          // Add vessel marker
+          const marker = L.marker([lat, lng], { 
+            icon: vesselIcon,
+            title: vessel.name
+          })
+          .addTo(vesselLayerGroup.current)
+          .bindPopup(`
+            <div class="vessel-popup">
+              <div class="font-medium text-base mb-1">${vessel.name}</div>
+              <div class="text-xs text-muted-foreground mb-2">${vessel.flag || 'Unknown'}</div>
+              
+              <div class="text-xs font-medium mb-1 text-emerald-500">Vessel Type</div>
+              <div class="text-sm">${vessel.vesselType || 'Tanker'}</div>
+              
+              <div class="mt-2 text-xs font-medium mb-1 text-emerald-500">Cargo Capacity</div>
+              <div class="text-sm">${vessel.cargoCapacity ? `${(vessel.cargoCapacity / 1000).toFixed(0)}k DWT` : 'N/A'}</div>
+              
+              <div class="mt-3 text-xs">
+                <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">${vessel.status || 'At Sea'}</span>
+              </div>
+            </div>
+          `, {
+            className: 'custom-popup',
+            closeButton: false,
+            maxWidth: 300,
+            minWidth: 200
+          });
+        } catch (error) {
+          console.error('Error adding vessel marker:', error);
+        }
+      });
+    }
+    
+  }, [connectedPorts, nearbyVessels, showPorts, showVessels, refinery.lat, refinery.lng, showConnections]);
+  
   // Handle window resize to update map
   useEffect(() => {
     const handleResize = () => {
@@ -276,6 +507,87 @@ export default function RefineryMap({ refinery, height = '400px', className = ''
           <span>Refinery Location</span>
         </div>
       </div>
+      
+      {/* Layer Controls */}
+      {showControls && showConnections && (
+        <div className="absolute top-3 left-3 z-20">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="bg-background/80 backdrop-blur-sm h-8 px-3 text-xs shadow-sm">
+                <Layers className="h-3.5 w-3.5 mr-1.5" />
+                <span>Layers</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-56 p-3" align="start" side="bottom">
+              <div className="space-y-3">
+                <h4 className="text-sm font-medium">Map Layers</h4>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="show-ports" className="flex items-center cursor-pointer text-sm">
+                      <Anchor className="h-4 w-4 mr-2 text-blue-500" />
+                      <span>Connected Ports</span>
+                      {connectedPorts.length > 0 && (
+                        <Badge className="ml-2 bg-blue-100 text-blue-800 hover:bg-blue-200" variant="outline">
+                          {connectedPorts.length}
+                        </Badge>
+                      )}
+                    </Label>
+                    <Switch 
+                      id="show-ports" 
+                      checked={showPorts}
+                      onCheckedChange={setShowPorts}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="show-vessels" className="flex items-center cursor-pointer text-sm">
+                      <Ship className="h-4 w-4 mr-2 text-emerald-500" />
+                      <span>Nearby Vessels</span>
+                      {nearbyVessels.length > 0 && (
+                        <Badge className="ml-2 bg-emerald-100 text-emerald-800 hover:bg-emerald-200" variant="outline">
+                          {nearbyVessels.length}
+                        </Badge>
+                      )}
+                    </Label>
+                    <Switch 
+                      id="show-vessels" 
+                      checked={showVessels}
+                      onCheckedChange={setShowVessels}
+                    />
+                  </div>
+                </div>
+                
+                <div className="text-xs text-muted-foreground pt-2 border-t">
+                  {loading ? (
+                    <div className="flex items-center justify-center py-1">
+                      <div className="h-3.5 w-3.5 rounded-full border-2 border-primary/30 border-t-primary animate-spin mr-2"></div>
+                      <span>Loading data...</span>
+                    </div>
+                  ) : (
+                    <div className="flex justify-between">
+                      <span>
+                        {connectedPorts.length === 0 && nearbyVessels.length === 0 
+                          ? 'No connections found'
+                          : `${connectedPorts.length + nearbyVessels.length} total connections`}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+      )}
+      
+      {/* Loading Indicator */}
+      {loading && (
+        <div className="absolute inset-0 bg-background/20 backdrop-blur-sm flex items-center justify-center z-30">
+          <div className="bg-background rounded-lg shadow-lg p-4 flex items-center gap-3">
+            <div className="h-5 w-5 rounded-full border-2 border-primary/30 border-t-primary animate-spin"></div>
+            <span className="text-sm">Loading connections...</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
