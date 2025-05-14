@@ -35,21 +35,6 @@ interface Vessel {
   imo: string;
   vesselType: string;
 }
-interface Document {
-  id: number;
-  vesselId: number;
-  type: string;
-  title: string;
-  content: string;
-  status: string;
-  issueDate: string;
-  expiryDate: string | null;
-  reference: string;
-  issuer: string | null;
-  recipientName: string | null;
-  recipientOrg: string | null;
-  language: string;
-}
 
 const VesselDocuments: React.FC = () => {
   const { vesselId } = useParams<{ vesselId: string }>();
@@ -58,12 +43,12 @@ const VesselDocuments: React.FC = () => {
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
 
   // Fetch vessel documents
-  const { data: vessel, isLoading: vesselLoading } = useQuery({
+  const { data: vessel, isLoading: vesselLoading } = useQuery<Vessel>({
     queryKey: [`/api/vessels/${vesselId}`],
     enabled: !!vesselId,
   });
 
-  const { data: documents, isLoading: documentsLoading, refetch: refetchDocuments } = useQuery({
+  const { data: documents, isLoading: documentsLoading, refetch: refetchDocuments } = useQuery<Document[]>({
     queryKey: [`/api/vessels/${vesselId}/documents`],
     enabled: !!vesselId,
   });
@@ -166,12 +151,16 @@ const VesselDocuments: React.FC = () => {
   }
 
   // Group documents by type for tabs
-  const documentTypes = documents ? [...new Set(documents.map((doc: Document) => doc.type))] : [];
+  const documentTypes = documents && Array.isArray(documents) 
+    ? Array.from(new Set(documents.map((doc: Document) => doc.type)))
+    : [];
 
   // Set selected document if none is selected yet
-  if (documents && documents.length > 0 && !selectedDocument) {
-    setSelectedDocument(documents[0]);
-  }
+  React.useEffect(() => {
+    if (documents && Array.isArray(documents) && documents.length > 0 && !selectedDocument) {
+      setSelectedDocument(documents[0]);
+    }
+  }, [documents, selectedDocument]);
 
   // Render document status badge with appropriate color
   const getStatusColor = (status: string) => {
