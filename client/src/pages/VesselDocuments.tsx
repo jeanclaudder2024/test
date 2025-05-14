@@ -241,14 +241,15 @@ const VesselDocuments: React.FC = () => {
         </div>
         
         <h1 className="text-3xl font-bold mb-2">
-          Documents for {vessel.name}
-          <span className="text-muted-foreground text-sm ml-2">IMO {vessel.imo}</span>
+          Documents for {vessel?.name || 'Vessel'}
+          {vessel?.imo && <span className="text-muted-foreground text-sm ml-2">IMO {vessel.imo}</span>}
         </h1>
         <p className="text-muted-foreground mb-6">
-          View and manage all documents related to {vessel.name} ({vessel.vesselType})
+          View and manage all documents related to {vessel?.name || 'this vessel'}
+          {vessel?.vesselType && ` (${vessel.vesselType})`}
         </p>
         
-        {!documents || documents.length === 0 ? (
+        {!documents || !Array.isArray(documents) || documents.length === 0 ? (
           <Card className="mx-auto max-w-md">
             <CardHeader>
               <CardTitle className="text-center">No Documents Available</CardTitle>
@@ -274,7 +275,7 @@ const VesselDocuments: React.FC = () => {
                     Documents
                   </CardTitle>
                   <CardDescription>
-                    {documents.length} document{documents.length !== 1 ? "s" : ""} available
+                    {Array.isArray(documents) ? documents.length : 0} document{Array.isArray(documents) && documents.length === 1 ? "" : "s"} available
                   </CardDescription>
                 </CardHeader>
                 
