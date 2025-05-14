@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import MainLayout from '@/components/layout/MainLayout';
 import EnhancedVesselMap from '@/components/map/EnhancedVesselMap';
 import { 
   Card, 
@@ -61,7 +60,6 @@ const AdvancedMapPage: React.FC = () => {
   };
   
   return (
-    <MainLayout>
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
           <div>
@@ -269,7 +267,6 @@ const AdvancedMapPage: React.FC = () => {
           <p>Real-time maritime data provided by PetroDealHub tracking system. Last updated: {new Date().toLocaleString()}</p>
         </div>
       </div>
-    </MainLayout>
   );
 };
 
