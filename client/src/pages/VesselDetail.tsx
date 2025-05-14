@@ -433,13 +433,18 @@ export default function VesselDetail() {
     
     setIsGeneratingManifest(true);
     try {
-      // Open the manifest in a new tab directly
-      const manifestUrl = `/api/vessels/${vesselId}/cargo-manifest?type=${manifestType}`;
-      window.open(manifestUrl, '_blank');
+      // Create a link element to trigger the download
+      const downloadLink = document.createElement('a');
+      downloadLink.href = `/api/vessels/${vesselId}/cargo-manifest?type=${manifestType}`;
+      downloadLink.target = '_blank';
+      downloadLink.download = `cargo_manifest_${vessel?.name || 'vessel'}.pdf`;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
       
       toast({
         title: "Cargo Manifest Generated",
-        description: "Downloading cargo manifest for " + vessel.name,
+        description: "Downloading cargo manifest for " + (vessel?.name || 'vessel'),
         variant: "default",
       });
     } catch (error) {

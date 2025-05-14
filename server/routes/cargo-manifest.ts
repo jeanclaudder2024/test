@@ -2,8 +2,7 @@ import { Request, Response } from 'express';
 import { db } from '../db';
 import { vessels } from '@shared/schema';
 import { eq } from 'drizzle-orm';
-import { generateCargoManifestPDF } from '../services/cargo-manifest-service';
-import { generateNutManifestPDF } from '../services/cargo-manifest-service';
+import { generateCargoManifestPDF, generateNutManifestPDF } from '../services/cargo-manifest-service';
 
 /**
  * Generate a cargo manifest for a vessel
