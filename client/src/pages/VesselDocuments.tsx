@@ -102,11 +102,34 @@ export default function VesselDocuments() {
     }
     
     // Split by newlines and render each line
-    return content.split('\n').map((line, index) => (
-      <p key={index} className={line.trim().startsWith('-') ? 'pl-4 py-1 my-1' : 'py-1 my-1'}>
-        {line}
-      </p>
-    ));
+    return content.split('\n').map((line, index) => {
+      // Check if the line is a header (all caps or starts with "#")
+      const isHeader = line.trim() === line.trim().toUpperCase() && line.trim().length > 3;
+      const isSubHeader = line.trim().startsWith('#') || line.trim().startsWith('**');
+      
+      // Check if the line is a list item (starts with "-", "•", "*", or "1.", "2.", etc.)
+      const isListItem = /^\s*[-•*]\s+/.test(line) || /^\s*\d+\.\s+/.test(line);
+      
+      // Apply appropriate styling
+      let className = 'py-1 my-1 break-words';
+      
+      if (isHeader) {
+        className += ' font-bold text-lg mt-4';
+      } else if (isSubHeader) {
+        className += ' font-semibold mt-3';
+      } else if (isListItem) {
+        className += ' pl-4';
+      } else if (line.trim() === '') {
+        className += ' h-4'; // Empty line height
+      }
+      
+      // Return formatted paragraph
+      return (
+        <p key={index} className={className}>
+          {line.trim()}
+        </p>
+      );
+    });
   };
   
   const formatDate = (dateString: string | null) => {
