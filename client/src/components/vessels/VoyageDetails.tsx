@@ -384,7 +384,7 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                     <p className="text-xs text-gray-500">DEPARTURE</p>
                     <p className="text-sm font-medium">{vessel.departurePort || "N/A"}</p>
                     <p className="text-xs text-gray-500">
-                      {vessel.departureDate ? formatDate(new Date(vessel.departureDate)) : "N/A"}
+                      {vessel.departureTime ? formatDate(new Date(vessel.departureTime)) : "N/A"}
                     </p>
                   </div>
                 </div>
@@ -565,7 +565,7 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                             <div className="text-sm">
                               <strong>Departure:</strong> {routeData.departurePosition.portName || vessel.departurePort}<br/>
                               <span className="text-xs text-gray-500">
-                                {vessel.departureDate ? formatDate(new Date(vessel.departureDate)) : "Unknown date"}
+                                {vessel.departureTime ? formatDate(new Date(vessel.departureTime)) : "Unknown date"}
                               </span>
                               {routeData.departurePosition.isEstimated && (
                                 <div className="text-xs text-amber-600 mt-1">Estimated position</div>
@@ -744,8 +744,8 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                   <div>
                     <p className="text-xs text-gray-500">Estimated Duration</p>
                     <p className="text-sm font-medium">
-                      {vessel?.eta && vessel?.departureDate
-                        ? `${Math.ceil((new Date(vessel.eta).getTime() - new Date(vessel.departureDate).getTime()) / (1000 * 60 * 60 * 24))} days`
+                      {vessel?.eta && vessel?.departureTime
+                        ? `${Math.ceil((new Date(vessel.eta).getTime() - new Date(vessel.departureTime).getTime()) / (1000 * 60 * 60 * 24))} days`
                         : "N/A"}
                     </p>
                   </div>
