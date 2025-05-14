@@ -208,14 +208,22 @@ export default function VesselDocuments() {
     });
   };
   
-  const formatDate = (dateString: string | null) => {
+  const formatDate = (dateString: string | Date | null) => {
     if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    try {
+      const date = new Date(dateString);
+      // Check if date is valid
+      if (isNaN(date.getTime())) return 'N/A';
+      
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch (error) {
+      console.error("Error formatting date:", dateString, error);
+      return 'N/A';
+    }
   };
   
   if (isLoadingVessel || isLoadingDocuments) {
@@ -365,9 +373,9 @@ export default function VesselDocuments() {
                     >
                       <div className="flex justify-between items-start">
                         <div>
-                          <h4 className="font-medium line-clamp-1">{doc.title}</h4>
+                          <h4 className="font-medium line-clamp-1">{doc.title || `${doc.type || 'Document'}`}</h4>
                           <p className="text-xs opacity-80 mt-1">
-                            {doc.type} • {formatDate(doc.issueDate)}
+                            {doc.type || 'Document'} • {formatDate(doc.issueDate || doc.createdAt)}
                           </p>
                         </div>
                         <Badge 
@@ -378,7 +386,7 @@ export default function VesselDocuments() {
                               : getStatusColor(doc.status)
                           }`}
                         >
-                          {doc.status}
+                          {doc.status || 'draft'}
                         </Badge>
                       </div>
                     </div>
@@ -396,9 +404,10 @@ export default function VesselDocuments() {
                 <CardHeader className="bg-muted/50">
                   <div className="flex justify-between items-start">
                     <div>
-                      <CardTitle>{activeDocument.title}</CardTitle>
+                      <CardTitle>{activeDocument.title || `${activeDocument.type || 'Document'}`}</CardTitle>
                       <CardDescription className="mt-1">
-                        {activeDocument.type} • Ref: {activeDocument.reference}
+                        {activeDocument.type || 'Document'} 
+                        {activeDocument.reference ? ` • Ref: ${activeDocument.reference}` : ''}
                       </CardDescription>
                     </div>
                     
