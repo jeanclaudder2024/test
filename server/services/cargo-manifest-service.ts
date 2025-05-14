@@ -1,4 +1,14 @@
 import PDFDocument from 'pdfkit';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Get current file path in ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Get the logo path
+const logoPath = path.join(__dirname, '../assets/petrodeal-logo.png');
 
 interface CargoManifestData {
   vesselId: number;
@@ -62,20 +72,17 @@ export async function generateCargoManifestPDF(data: CargoManifestData): Promise
       .fillColor('#003366')
       .fill();
       
-    // Add PetroDealHub text as logo
-    doc.fontSize(24)
-      .fillColor('#FFFFFF')
-      .font('Helvetica-Bold')
-      .text('PETRO', 70, 65, { continued: true })
-      .fillColor('#FF6F00')
-      .text('DEAL')
-      .fillColor('#FFFFFF')
-      .text('HUB', { continued: false });
-      
+    // Add the actual PetroDealHub logo
+    if (fs.existsSync(logoPath)) {
+      // Scale and position the logo properly
+      doc.image(logoPath, 60, 55, { width: 70, height: 70 });
+    }
+    
     // Add cargo manifest title
     doc.fontSize(22)
       .fillColor('#FFFFFF')
-      .text('CARGO MANIFEST', 70, 95)
+      .font('Helvetica-Bold')
+      .text('CARGO MANIFEST', 140, 75)
       .font('Helvetica');
       
     // Add decorative element (orange vertical strip)
@@ -292,20 +299,17 @@ export async function generateNutManifestPDF(data: NutCargoManifestData): Promis
       .fillColor('#003366')
       .fill();
       
-    // Add PetroDealHub text as logo
-    doc.fontSize(24)
-      .fillColor('#FFFFFF')
-      .font('Helvetica-Bold')
-      .text('PETRO', 70, 65, { continued: true })
-      .fillColor('#FF6F00')
-      .text('DEAL')
-      .fillColor('#FFFFFF')
-      .text('HUB', { continued: false });
-      
+    // Add the actual PetroDealHub logo
+    if (fs.existsSync(logoPath)) {
+      // Scale and position the logo properly
+      doc.image(logoPath, 60, 55, { width: 70, height: 70 });
+    }
+    
     // Add cargo manifest title
     doc.fontSize(22)
       .fillColor('#FFFFFF')
-      .text('NUT CARGO MANIFEST', 70, 95)
+      .font('Helvetica-Bold')
+      .text('NUT CARGO MANIFEST', 140, 75)
       .font('Helvetica');
       
     // Add decorative element
