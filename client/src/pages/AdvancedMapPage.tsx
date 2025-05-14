@@ -33,8 +33,10 @@ import {
   Maximize2,
   Globe,
   HelpCircle,
-  FileText
+  FileText,
+  ChevronLeft
 } from 'lucide-react';
+import { Link } from 'wouter';
 
 const AdvancedMapPage: React.FC = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -60,8 +62,16 @@ const AdvancedMapPage: React.FC = () => {
   };
   
   return (
-      <div className="container mx-auto px-4 py-6">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+      <div className="w-full h-full">
+        <div className="absolute top-4 left-4 z-10">
+          <Link href="/dashboard">
+            <Button variant="outline" className="flex items-center space-x-1 bg-background/80 backdrop-blur-sm shadow-md">
+              <ChevronLeft className="h-4 w-4" />
+              <span>Back to Dashboard</span>
+            </Button>
+          </Link>
+        </div>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 px-4 pt-4">
           <div>
             <h1 className="text-3xl font-bold">Advanced Maritime Map</h1>
             <p className="text-muted-foreground">

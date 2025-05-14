@@ -112,7 +112,11 @@ function Router() {
             <Route path="/vessels/:id" component={VesselDetail} />
             <Route path="/vessel-dashboard" component={VesselDashboard} />
             <Route path="/live-tracking" component={LiveTracking} />
-            <Route path="/advanced-map" component={AdvancedMapPage} />
+            <Route path="/advanced-map">
+              <div className="fixed inset-0 z-50 bg-background">
+                <AdvancedMapPage />
+              </div>
+            </Route>
             <Route path="/refineries" component={Refineries} />
             <Route path="/refineries/:id" component={RefineryDetail} />
             <Route path="/ports" component={Ports} />
