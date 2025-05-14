@@ -513,7 +513,7 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
         
         <div className="grid grid-cols-2 gap-2 text-sm">
           <div className="font-medium">Type:</div>
-          <div>{port.portType || 'N/A'}</div>
+          <div>{port.type || 'N/A'}</div>
           
           <div className="font-medium">Coordinates:</div>
           <div>{`${parseFloat(port.lat.toString()).toFixed(4)}, ${parseFloat(port.lng.toString()).toFixed(4)}`}</div>
