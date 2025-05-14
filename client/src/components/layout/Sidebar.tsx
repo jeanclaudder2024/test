@@ -146,12 +146,13 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
         <Link href="/" className="cursor-pointer">
           {!collapsed && (
             <div className="flex items-center">
-              {/* Logo removed as requested */}
+              <Ship className="h-8 w-8 text-orange-500 mr-2" />
+              <span className="font-bold text-gray-800 dark:text-white">MyShip Tracking</span>
             </div>
           )}
           {collapsed && (
             <div className="flex items-center justify-center">
-              {/* Logo removed as requested */}
+              <Ship className="h-8 w-8 text-orange-500" />
             </div>
           )}
         </Link>

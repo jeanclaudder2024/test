@@ -158,9 +158,9 @@ export default function LandingPage() {
             : "bg-transparent"
         }`}
       >
-        <div className="flex items-center gap-2 font-bold text-2xl">
-          <img src="/assets/petrodealhub-logo.png" alt="PetroDealHub Logo" className="h-40 w-auto" />
-          <span className="text-white sr-only">PetroDealHub</span>
+        <div className="flex items-center gap-3 font-bold text-3xl">
+          <Ship className="h-14 w-14 text-orange-500" />
+          <span className="text-white">MyShip Tracking</span>
         </div>
         
         {/* Desktop Menu */}
