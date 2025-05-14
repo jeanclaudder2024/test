@@ -54,6 +54,7 @@ import portVesselRouter from "./routes/portVesselRoutes";
 import { subscriptionRouter } from "./routes/subscriptionRoutes";
 import translationRouter from "./routes/translationRoutes";
 import vesselDashboardRouter from "./routes/vessel-dashboard";
+import { cargoManifestRouter } from "./routes/cargo-manifest-router";
 import { seedBrokers } from "./services/seedService";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -2256,6 +2257,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // API routes for vessel dashboard
   app.use(vesselDashboardRouter);
+  
+  // API routes for cargo manifests
+  app.use(cargoManifestRouter);
 
   // API tester routes (performance testing, etc.)
   app.use("/api/tester", apiTesterRouter);
