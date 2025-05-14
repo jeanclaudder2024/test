@@ -57,20 +57,20 @@ export default function VesselDocuments() {
   const vesselId = parseInt(location.split("/")[2]);
   
   // Fetch vessel data
-  const { data: vessel, isLoading: isLoadingVessel } = useQuery({
+  const { data: vessel, isLoading: isLoadingVessel } = useQuery<any>({
     queryKey: ["/api/vessels", vesselId],
     enabled: !!vesselId,
   });
   
   // Fetch vessel documents
-  const { data: documents, isLoading: isLoadingDocuments } = useQuery({
+  const { data: documents, isLoading: isLoadingDocuments } = useQuery<any[]>({
     queryKey: ["/api/vessels", vesselId, "documents"],
     enabled: !!vesselId,
   });
   
   // Set first document as active when documents load
   useEffect(() => {
-    if (documents && documents.length > 0 && !activeDocument) {
+    if (documents && Array.isArray(documents) && documents.length > 0 && !activeDocument) {
       setActiveDocument(documents[0]);
     }
   }, [documents, activeDocument]);
