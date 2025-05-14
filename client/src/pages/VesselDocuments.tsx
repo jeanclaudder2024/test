@@ -106,9 +106,15 @@ export default function VesselDocuments() {
   const generateDocumentMutation = useMutation({
     mutationFn: async (documentType: string) => {
       setIsGenerating(true);
-      const response = await apiRequest("POST", "/api/generate-document", {
-        vesselId,
-        documentType
+      const response = await fetch("/api/generate-document", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          vesselId,
+          documentType
+        })
       });
       return response.json();
     },
@@ -258,10 +264,69 @@ export default function VesselDocuments() {
           </p>
           </div>
           
-        <Button className="mt-4 md:mt-0">
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Add Document
-        </Button>
+        <Dialog open={openGenerateDialog} onOpenChange={setOpenGenerateDialog}>
+          <DialogTrigger asChild>
+            <Button className="mt-4 md:mt-0">
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Generate Document
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Generate New Document</DialogTitle>
+              <DialogDescription>
+                Create a new vessel document using AI. Select the document type you need.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <label htmlFor="docType" className="text-right text-sm font-medium col-span-1">
+                  Document Type
+                </label>
+                <Select
+                  value={selectedDocType}
+                  onValueChange={setSelectedDocType}
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select document type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {documentTypes.map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {type}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setOpenGenerateDialog(false)}
+                disabled={isGenerating}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => generateDocumentMutation.mutate(selectedDocType)}
+                disabled={!selectedDocType || isGenerating}
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Generate
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
