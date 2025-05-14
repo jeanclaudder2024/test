@@ -108,6 +108,7 @@ export default function VesselDocuments() {
   const generateDocumentMutation = useMutation({
     mutationFn: async (documentType: string) => {
       setIsGenerating(true);
+      console.log("Generating document:", documentType, "for vessel ID:", vesselId);
       const response = await fetch("/api/generate-document", {
         method: "POST",
         headers: {
@@ -118,6 +119,12 @@ export default function VesselDocuments() {
           documentType
         })
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to generate document");
+      }
+      
       return response.json();
     },
     onSuccess: (data) => {
@@ -377,7 +384,7 @@ export default function VesselDocuments() {
                         <div>
                           <h4 className="font-medium line-clamp-1">{doc.title || `${doc.type || 'Document'}`}</h4>
                           <p className="text-xs opacity-80 mt-1">
-                            {doc.type || 'Document'} • {formatDate(doc.issueDate || doc.createdAt)}
+                            {doc.type || 'Document'} • {doc.createdAt ? new Date(doc.createdAt).toLocaleDateString() : (doc.issueDate ? new Date(doc.issueDate).toLocaleDateString() : 'N/A')}
                           </p>
                         </div>
                         <Badge 
@@ -448,7 +455,8 @@ export default function VesselDocuments() {
                             <h4 className="text-sm font-medium text-muted-foreground">Issue Date</h4>
                             <p className="text-sm font-medium flex items-center mt-1">
                               <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
-                              {formatDate(activeDocument.issueDate || activeDocument.createdAt)}
+                              {activeDocument.createdAt ? new Date(activeDocument.createdAt).toLocaleDateString() : 
+                               (activeDocument.issueDate ? new Date(activeDocument.issueDate).toLocaleDateString() : 'N/A')}
                             </p>
                           </div>
                           
@@ -554,7 +562,9 @@ export default function VesselDocuments() {
                 
                 <CardFooter className="bg-muted/50 border-t flex justify-between">
                   <div className="text-xs text-muted-foreground">
-                    Document ID: {activeDocument.id} • Last updated: {formatDate(activeDocument.issueDate)}
+                    Document ID: {activeDocument.id} • Last updated: {activeDocument.lastModified ? new Date(activeDocument.lastModified).toLocaleDateString() : 
+                     (activeDocument.createdAt ? new Date(activeDocument.createdAt).toLocaleDateString() : 
+                      (activeDocument.issueDate ? new Date(activeDocument.issueDate).toLocaleDateString() : 'N/A'))}
                   </div>
                   
                   <Button variant="outline" size="sm">
