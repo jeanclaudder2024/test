@@ -327,6 +327,7 @@ export default function VesselDetail() {
   const [isLoadingVoyage, setIsLoadingVoyage] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<any>(null);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const [isGeneratingManifest, setIsGeneratingManifest] = useState(false);
   
   // Function to fetch vessel data directly using REST API
   const fetchVesselData = async () => {
@@ -424,6 +425,38 @@ export default function VesselDetail() {
     } finally {
       setIsLoadingLocation(false);
     }
+  };
+  
+  // Function to generate cargo manifest
+  const generateCargoManifest = async (manifestType = "standard") => {
+    if (!vesselId) return;
+    
+    setIsGeneratingManifest(true);
+    try {
+      // Open the manifest in a new tab directly
+      const manifestUrl = `/api/vessels/${vesselId}/cargo-manifest?type=${manifestType}`;
+      window.open(manifestUrl, '_blank');
+      
+      toast({
+        title: "Cargo Manifest Generated",
+        description: "Downloading cargo manifest for " + vessel.name,
+        variant: "default",
+      });
+    } catch (error) {
+      console.error('Error generating cargo manifest:', error);
+      toast({
+        title: "Failed to generate manifest",
+        description: "There was an error generating the cargo manifest.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingManifest(false);
+    }
+  };
+  
+  // Function to generate nut-specific cargo manifest
+  const generateNutManifest = () => {
+    generateCargoManifest("nut");
   };
   
   // Fetch vessel data on component mount
