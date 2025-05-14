@@ -95,7 +95,12 @@ export default function VesselDocuments() {
     }
   };
   
-  const renderDocumentContent = (content: string) => {
+  const renderDocumentContent = (content: string | undefined | null) => {
+    // Handle undefined/null content
+    if (!content) {
+      return <p className="py-1 my-1 text-muted-foreground">No content available</p>;
+    }
+    
     // Split by newlines and render each line
     return content.split('\n').map((line, index) => (
       <p key={index} className={line.trim().startsWith('-') ? 'pl-4 py-1 my-1' : 'py-1 my-1'}>
@@ -260,7 +265,7 @@ export default function VesselDocuments() {
                     <CardContent className="pt-6 pb-4 px-6">
                       <div className="prose prose-sm max-w-none dark:prose-invert">
                         <div className="font-mono bg-muted p-4 rounded-md whitespace-pre-line text-sm">
-                          {renderDocumentContent(activeDocument.content)}
+                          {renderDocumentContent(activeDocument?.content)}
                         </div>
                       </div>
                     </CardContent>
