@@ -527,7 +527,10 @@ export default function VesselDetail() {
             </div>
             
             <div className="flex gap-4 mt-4 md:mt-0">
-              <Button variant="outline">
+              <Button 
+                variant="outline" 
+                className="border-gray-400 hover:bg-gray-100"
+              >
                 <Edit className="h-4 w-4 mr-2" />
                 Edit Vessel
               </Button>
@@ -535,6 +538,7 @@ export default function VesselDetail() {
                 variant="outline" 
                 onClick={() => generateCargoManifest()}
                 disabled={isGeneratingManifest}
+                className="bg-gradient-to-r from-[#003366] to-[#004080] text-white border-[#003366] hover:bg-[#004080] hover:text-white"
               >
                 <FileText className="h-4 w-4 mr-2" />
                 {isGeneratingManifest ? 'Generating...' : 'Cargo Manifest'}
@@ -544,7 +548,7 @@ export default function VesselDetail() {
                   variant="outline" 
                   onClick={generateNutManifest}
                   disabled={isGeneratingManifest}
-                  className="text-amber-600 border-amber-600 hover:bg-amber-50"
+                  className="bg-gradient-to-r from-amber-600 to-amber-700 text-white border-amber-600 hover:bg-amber-700 hover:text-white"
                 >
                   <FileCheck className="h-4 w-4 mr-2" />
                   {isGeneratingManifest ? 'Generating...' : 'Nut Cargo Manifest'}
