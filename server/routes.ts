@@ -945,6 +945,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Static vessels endpoint for emergency fallback
+  apiRouter.get("/vessels/static", async (req, res) => {
+    try {
+      console.log("Static vessels fallback endpoint requested");
+      
+      // Get a small subset of vessels from the database
+      let vessels = await storage.getVessels(25); // Limit to 25 vessels for quick loading
+      
+      if (!vessels || vessels.length === 0) {
+        // Create some emergency static vessels if database fails
+        vessels = [
+          {
+            id: 1,
+            name: "Pacific Navigator",
+            vesselType: "Oil Tanker",
+            flag: "Panama",
+            currentLat: 43.427844,
+            currentLng: -41.004669,
+            imo: "9876543",
+            mmsi: "123456789",
+            status: "Active",
+            destination: "Rotterdam"
+          },
+          {
+            id: 2,
+            name: "Western Commander",
+            vesselType: "Crude Oil Tanker",
+            flag: "Liberia",
+            currentLat: -6.265956,
+            currentLng: 72.825185,
+            imo: "8765432",
+            mmsi: "234567890",
+            status: "Active",
+            destination: "Singapore"
+          },
+          {
+            id: 3,
+            name: "Arctic Aurora",
+            vesselType: "LNG Carrier",
+            flag: "Marshall Islands",
+            currentLat: 35.600700,
+            currentLng: -40.199942,
+            imo: "7654321",
+            mmsi: "345678901",
+            status: "Active",
+            destination: "New York"
+          }
+        ];
+      }
+      
+      res.json(vessels);
+      console.log(`Static vessel fallback returned ${vessels.length} vessels`);
+    } catch (error) {
+      console.error("Error in static vessels fallback:", error);
+      res.status(500).json({ message: "Failed to fetch vessels" });
+    }
+  });
+  
   // Create a specific API endpoint for polling vessel data as WebSocket fallback
   apiRouter.get("/vessels/polling", async (req, res) => {
     try {

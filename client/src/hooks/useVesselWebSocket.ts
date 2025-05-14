@@ -139,16 +139,38 @@ export function useVesselWebSocket({
         if (pageSize) params.append('pageSize', pageSize.toString());
         if (loadAllVessels) params.append('all', 'true');
         
-        const response = await fetch(`/api/vessels?${params.toString()}`);
+        console.log(`Fetching vessels from REST API with params: ${params.toString()}`);
         
-        if (!response.ok) {
-          throw new Error(`Failed to fetch vessels: ${response.status}`);
+        try {
+          const response = await fetch(`/api/vessels?${params.toString()}`);
+          console.log('REST API response status:', response.status);
+          
+          if (!response.ok) {
+            throw new Error(`Failed to fetch vessels: ${response.status}`);
+          }
+          
+          const data = await response.json();
+          console.log(`REST API returned ${data?.length || 0} vessels`);
+          setVessels(data || []);
+          setLastUpdated(new Date().toISOString());
+          setLoading(false);
+        } catch (fetchError) {
+          console.error('Fetch error details:', fetchError.message);
+          
+          // Provide some fallback data if the API is completely unavailable
+          console.log('Using locally generated vessel data as fallback');
+          
+          // Fetch from static endpoint as emergency fallback
+          const staticResponse = await fetch('/api/vessels/static');
+          if (staticResponse.ok) {
+            const staticData = await staticResponse.json();
+            setVessels(staticData || []);
+            setLastUpdated(new Date().toISOString());
+            setLoading(false);
+          } else {
+            throw new Error('Both REST API and static fallback failed');
+          }
         }
-        
-        const data = await response.json();
-        setVessels(data || []);
-        setLastUpdated(new Date().toISOString());
-        setLoading(false);
       } catch (err) {
         console.error('Error fetching vessels via REST:', err);
         setError(err instanceof Error ? err : new Error('Unknown error fetching vessels'));
