@@ -29,7 +29,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { ChevronLeft, FileText, Download, Clock, AlertTriangle, CheckCircle, PlusCircle, Loader2 } from "lucide-react";
-import MainLayout from "@/components/layout/MainLayout";
+// No need for MainLayout import as it's already provided by App.tsx
 
 // Define Document type interface
 interface Document {
@@ -112,33 +112,28 @@ export default function VesselDocuments() {
   
   if (isLoadingVessel || isLoadingDocuments) {
     return (
-      <MainLayout>
-        <div className="flex items-center justify-center min-h-[70vh]">
-          <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        </div>
-      </MainLayout>
+      <div className="flex items-center justify-center min-h-[70vh]">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      </div>
     );
   }
   
   if (!vessel) {
     return (
-      <MainLayout>
-        <div className="flex flex-col items-center justify-center min-h-[70vh]">
-          <h2 className="text-2xl font-bold mb-4">Vessel Not Found</h2>
-          <p className="text-muted-foreground mb-8">
-            We couldn't find the vessel you're looking for.
-          </p>
-          <Button asChild>
-            <Link href="/vessels">Back to Vessels</Link>
-          </Button>
-        </div>
-      </MainLayout>
+      <div className="flex flex-col items-center justify-center min-h-[70vh]">
+        <h2 className="text-2xl font-bold mb-4">Vessel Not Found</h2>
+        <p className="text-muted-foreground mb-8">
+          We couldn't find the vessel you're looking for.
+        </p>
+        <Button asChild>
+          <Link href="/vessels">Back to Vessels</Link>
+        </Button>
+      </div>
     );
   }
   
   return (
-    <MainLayout>
-      <div className="container px-4 py-6 mx-auto max-w-7xl">
+    <div className="container px-4 py-6 mx-auto max-w-7xl">
         <div className="flex flex-col md:flex-row justify-between items-start mb-8">
           <div>
             <Button 
@@ -401,6 +396,5 @@ export default function VesselDocuments() {
           </div>
         </div>
       </div>
-    </MainLayout>
   );
 }
