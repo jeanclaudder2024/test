@@ -473,7 +473,7 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
           </div>
           
           <div className="font-medium">Coordinates:</div>
-          <div>{`${parseFloat(refinery.lat.toString()).toFixed(4)}, ${parseFloat(refinery.lng.toString()).toFixed(4)}`}</div>
+          <div>{`${typeof refinery.lat === 'number' ? refinery.lat.toFixed(4) : parseFloat(refinery.lat).toFixed(4)}, ${typeof refinery.lng === 'number' ? refinery.lng.toFixed(4) : parseFloat(refinery.lng).toFixed(4)}`}</div>
         </div>
         
         {refinery.description && (
@@ -516,7 +516,7 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
           <div>{port.type || 'N/A'}</div>
           
           <div className="font-medium">Coordinates:</div>
-          <div>{`${parseFloat(port.lat.toString()).toFixed(4)}, ${parseFloat(port.lng.toString()).toFixed(4)}`}</div>
+          <div>{`${typeof port.lat === 'number' ? port.lat.toFixed(4) : parseFloat(port.lat).toFixed(4)}, ${typeof port.lng === 'number' ? port.lng.toFixed(4) : parseFloat(port.lng).toFixed(4)}`}</div>
           
           <div className="font-medium">Status:</div>
           <div>
@@ -877,6 +877,8 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
         style={{ height: "100%", width: "100%" }}
         zoomControl={false}
         attributionControl={false}
+        maxBounds={[[-85, -180], [85, 180]]}
+        preferCanvas={true}
       >
         {/* Selected map style */}
         <TileLayer
