@@ -352,8 +352,15 @@ export const OptimizedRefineryLayer: React.FC<{
       if (isNaN(lat) || isNaN(lng)) return;
       
       // Create marker with custom icon
+      const refIcon = new L.Icon({
+        iconUrl: new URL('@/assets/refinery-icon.svg', import.meta.url).href,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12],
+        popupAnchor: [0, -12]
+      });
+      
       const marker = L.marker([lat, lng], {
-        icon: fallbackRefineryIcon,
+        icon: refIcon || fallbackRefineryIcon,
         title: refinery.name || 'Unknown refinery'
       });
       
