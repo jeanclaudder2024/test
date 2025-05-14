@@ -78,26 +78,29 @@ export async function generateCargoManifestPDF(data: CargoManifestData): Promise
       .text('CARGO MANIFEST', 70, 95)
       .font('Helvetica');
       
-    // Add decorative element
+    // Add decorative element (orange vertical strip)
     doc.rect(495, 50, 50, 80)
       .fillColor('#FF6F00')
       .fill();
       
-    doc.moveDown(2.5);
-
-    // Add top border line
-    doc.moveTo(50, 90)
-      .lineTo(545, 90)
+    // Add decorative line below header
+    doc.moveTo(50, 150)
+      .lineTo(545, 150)
       .strokeColor('#FF6F00')
-      .lineWidth(3)
+      .lineWidth(2)
       .stroke();
 
     // Add vessel information section
-    doc.moveDown(1)
+    doc.moveDown(2)
       .fontSize(16)
       .fillColor('#003366')
       .text('VESSEL INFORMATION', { underline: true })
       .moveDown(0.5);
+
+    // Create section background
+    doc.rect(50, doc.y - 10, 495, 125)
+      .fillColor('#f8f9fa')
+      .fill();
 
     // Vessel details table
     const vesselDetails = [
@@ -114,18 +117,23 @@ export async function generateCargoManifestPDF(data: CargoManifestData): Promise
         .fillColor('#000000');
       
       doc.font('Helvetica-Bold')
-        .text(item.label, 50, doc.y, { continued: true, width: 150 })
+        .text(item.label, 60, doc.y, { continued: true, width: 150 })
         .font('Helvetica')
         .text(String(item.value), { width: 350 })
         .moveDown(0.5);
     });
 
-    // Add cargo information section
+    // Add cargo information section with nicer styling
     doc.moveDown(1)
       .fontSize(16)
       .fillColor('#003366')
       .text('CARGO INFORMATION', { underline: true })
       .moveDown(0.5);
+
+    // Create section background
+    doc.rect(50, doc.y - 10, 495, 125)
+      .fillColor('#f0f8ff')
+      .fill();
 
     // Cargo details table
     const cargoDetails = [
@@ -142,7 +150,7 @@ export async function generateCargoManifestPDF(data: CargoManifestData): Promise
         .fillColor('#000000');
       
       doc.font('Helvetica-Bold')
-        .text(item.label, 50, doc.y, { continued: true, width: 150 })
+        .text(item.label, 60, doc.y, { continued: true, width: 150 })
         .font('Helvetica')
         .text(String(item.value), { width: 350 })
         .moveDown(0.5);
@@ -155,6 +163,11 @@ export async function generateCargoManifestPDF(data: CargoManifestData): Promise
       .text('COMMERCIAL INFORMATION', { underline: true })
       .moveDown(0.5);
 
+    // Create section background
+    doc.rect(50, doc.y - 10, 495, 60)
+      .fillColor('#fff8f0')
+      .fill();
+
     const commercialDetails = [
       { label: 'Buyer:', value: data.buyerName || 'Not specified' },
       { label: 'Seller:', value: data.sellerName || 'Not specified' }
@@ -165,7 +178,7 @@ export async function generateCargoManifestPDF(data: CargoManifestData): Promise
         .fillColor('#000000');
       
       doc.font('Helvetica-Bold')
-        .text(item.label, 50, doc.y, { continued: true, width: 150 })
+        .text(item.label, 60, doc.y, { continued: true, width: 150 })
         .font('Helvetica')
         .text(String(item.value), { width: 350 })
         .moveDown(0.5);
@@ -176,10 +189,17 @@ export async function generateCargoManifestPDF(data: CargoManifestData): Promise
       .fontSize(14)
       .fillColor('#003366')
       .text('CERTIFICATION', { underline: true })
-      .moveDown(0.5)
-      .fontSize(11)
+      .moveDown(0.5);
+    
+    // Add certification box with border
+    doc.rect(50, doc.y - 5, 495, 60)
+      .lineWidth(1)
+      .strokeColor('#003366')
+      .stroke();
+    
+    doc.fontSize(11)
       .fillColor('#000000')
-      .text('This cargo manifest certifies that the cargo described above is loaded onboard the named vessel.', { align: 'left' })
+      .text('This cargo manifest certifies that the cargo described above is loaded onboard the named vessel.', { align: 'left', width: 475, indent: 10 })
       .moveDown(2);
 
     // Add signature lines
@@ -190,26 +210,28 @@ export async function generateCargoManifestPDF(data: CargoManifestData): Promise
       .text('________________', 350, doc.y)
       .text('Date', 350);
 
-    // Add bottom border line
-    doc.moveTo(50, 730)
-      .lineTo(545, 730)
-      .strokeColor('#FF6F00')
-      .lineWidth(2)
-      .stroke();
+    // Add fancy footer with gradient appearance
+    doc.rect(50, 730, 495, 50)
+      .fillColor('#003366')
+      .fill();
+    
+    doc.rect(50, 730, 495, 5)
+      .fillColor('#FF6F00')
+      .fill();
 
     // Add footer
     doc.fontSize(10)
-      .fillColor('#666666')
+      .fillColor('#FFFFFF')
       .text(
         `Document generated on: ${new Date().toLocaleString()}`,
         50,
-        750,
+        745,
         { align: 'center' }
       )
       .text(
         'PetroDealHub Maritime System - Confidential Document',
         50,
-        765,
+        760,
         { align: 'center' }
       );
 
@@ -222,7 +244,7 @@ export async function generateCargoManifestPDF(data: CargoManifestData): Promise
       // Add page number at bottom of each page
       doc.switchToPage(currentPage - 1);
       doc.fontSize(10)
-         .fillColor('#666666')
+         .fillColor('#FFFFFF')
          .text(
            `Page ${currentPage} of ${pageCount}`,
            50,
@@ -291,21 +313,24 @@ export async function generateNutManifestPDF(data: NutCargoManifestData): Promis
       .fillColor('#FF6F00')
       .fill();
       
-    doc.moveDown(2.5);
-
-    // Add top border line
-    doc.moveTo(50, 90)
-      .lineTo(545, 90)
+    // Add decorative line below header
+    doc.moveTo(50, 150)
+      .lineTo(545, 150)
       .strokeColor('#FF6F00')
-      .lineWidth(3)
+      .lineWidth(2)
       .stroke();
 
     // Add vessel information section
-    doc.moveDown(1)
+    doc.moveDown(2)
       .fontSize(16)
       .fillColor('#003366')
       .text('VESSEL INFORMATION', { underline: true })
       .moveDown(0.5);
+
+    // Create section background
+    doc.rect(50, doc.y - 10, 495, 105)
+      .fillColor('#f8f9fa')
+      .fill();
 
     // Vessel details table
     const vesselDetails = [
@@ -321,18 +346,23 @@ export async function generateNutManifestPDF(data: NutCargoManifestData): Promis
         .fillColor('#000000');
       
       doc.font('Helvetica-Bold')
-        .text(item.label, 50, doc.y, { continued: true, width: 150 })
+        .text(item.label, 60, doc.y, { continued: true, width: 150 })
         .font('Helvetica')
         .text(String(item.value), { width: 350 })
         .moveDown(0.5);
     });
 
-    // Add nut cargo information section
+    // Add nut cargo information section with nice styling
     doc.moveDown(1)
       .fontSize(16)
       .fillColor('#003366')
       .text('NUT CARGO SPECIFICATIONS', { underline: true })
       .moveDown(0.5);
+
+    // Create section background with nut-themed color
+    doc.rect(50, doc.y - 10, 495, 155)
+      .fillColor('#fff8dc') // Cream color for nut theme
+      .fill();
 
     // Nut cargo details table
     const nutDetails = [
@@ -350,7 +380,7 @@ export async function generateNutManifestPDF(data: NutCargoManifestData): Promis
         .fillColor('#000000');
       
       doc.font('Helvetica-Bold')
-        .text(item.label, 50, doc.y, { continued: true, width: 150 })
+        .text(item.label, 60, doc.y, { continued: true, width: 150 })
         .font('Helvetica')
         .text(String(item.value), { width: 350 })
         .moveDown(0.5);
@@ -362,6 +392,11 @@ export async function generateNutManifestPDF(data: NutCargoManifestData): Promis
       .fillColor('#003366')
       .text('SHIPPING INFORMATION', { underline: true })
       .moveDown(0.5);
+
+    // Create section background
+    doc.rect(50, doc.y - 10, 495, 125)
+      .fillColor('#f0f8ff')
+      .fill();
 
     const shippingDetails = [
       { label: 'Departure Port:', value: data.departurePort || 'Not specified' },
@@ -377,7 +412,7 @@ export async function generateNutManifestPDF(data: NutCargoManifestData): Promis
         .fillColor('#000000');
       
       doc.font('Helvetica-Bold')
-        .text(item.label, 50, doc.y, { continued: true, width: 150 })
+        .text(item.label, 60, doc.y, { continued: true, width: 150 })
         .font('Helvetica')
         .text(String(item.value), { width: 350 })
         .moveDown(0.5);
@@ -388,10 +423,21 @@ export async function generateNutManifestPDF(data: NutCargoManifestData): Promis
       .fontSize(16)
       .fillColor('#003366')
       .text('FOOD SAFETY CERTIFICATION', { underline: true })
-      .moveDown(0.5)
-      .fontSize(11)
+      .moveDown(0.5);
+      
+    // Create section background with a light green for food safety
+    doc.rect(50, doc.y - 5, 495, 60)
+      .fillColor('#f0fff0')
+      .fill()
+      .rect(50, doc.y - 5, 495, 60)
+      .lineWidth(1)
+      .strokeColor('#003366')
+      .stroke();
+      
+    doc.fontSize(11)
       .fillColor('#000000')
-      .text('This cargo has been inspected and certified to meet all international food safety standards for nut products, including absence of prohibited pesticides, mycotoxins within acceptable limits, and proper handling procedures to prevent contamination.', { align: 'left' })
+      .text('This cargo has been inspected and certified to meet all international food safety standards for nut products, including absence of prohibited pesticides, mycotoxins within acceptable limits, and proper handling procedures to prevent contamination.', 
+            { align: 'left', width: 475, indent: 10 })
       .moveDown(1);
 
     // Add certification section
@@ -419,26 +465,28 @@ export async function generateNutManifestPDF(data: NutCargoManifestData): Promis
       .text('________________', 350, doc.y)
       .text('Date', 350);
 
-    // Add bottom border line
-    doc.moveTo(50, 730)
-      .lineTo(545, 730)
-      .strokeColor('#FF6F00')
-      .lineWidth(2)
-      .stroke();
+    // Add fancy footer with gradient appearance
+    doc.rect(50, 730, 495, 50)
+      .fillColor('#003366')
+      .fill();
+    
+    doc.rect(50, 730, 495, 5)
+      .fillColor('#FF6F00')
+      .fill();
 
     // Add footer
     doc.fontSize(10)
-      .fillColor('#666666')
+      .fillColor('#FFFFFF')
       .text(
         `Document generated on: ${new Date().toLocaleString()}`,
         50,
-        750,
+        745,
         { align: 'center' }
       )
       .text(
         'PetroDealHub Maritime System - Confidential Document',
         50,
-        765,
+        760,
         { align: 'center' }
       );
 
@@ -451,7 +499,7 @@ export async function generateNutManifestPDF(data: NutCargoManifestData): Promis
       // Add page number at bottom of each page
       doc.switchToPage(currentPage - 1);
       doc.fontSize(10)
-         .fillColor('#666666')
+         .fillColor('#FFFFFF')
          .text(
            `Page ${currentPage} of ${pageCount}`,
            50,
