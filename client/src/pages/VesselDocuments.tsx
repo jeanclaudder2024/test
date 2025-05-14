@@ -76,7 +76,11 @@ export default function VesselDocuments() {
   }, [documents, activeDocument]);
   
   // Function to get color based on document status
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string | undefined | null) => {
+    if (!status) {
+      return 'bg-blue-500/10 text-blue-500 hover:bg-blue-500/20';
+    }
+    
     switch (status.toLowerCase()) {
       case 'active':
         return 'bg-green-500/10 text-green-500 hover:bg-green-500/20';
