@@ -40,7 +40,10 @@ export function useVesselWebSocket({
     
     // Create WebSocket connection
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    const host = window.location.host;
+    const wsUrl = `${protocol}//${host}/ws`;
+    
+    console.log('Attempting to connect WebSocket to URL:', wsUrl);
     
     const connectWebSocket = () => {
       try {
@@ -138,7 +141,19 @@ export function useVesselWebSocket({
           if (!reconnectInterval.current) {
             reconnectInterval.current = setInterval(() => {
               if (socket.current?.readyState !== WebSocket.OPEN) {
-                connectWebSocket();
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const host = window.location.host;
+                const reconnectUrl = `${protocol}//${host}/ws`;
+                
+                console.log('Attempting to reconnect WebSocket to URL:', reconnectUrl);
+                try {
+                  socket.current = new WebSocket(reconnectUrl);
+                  // Re-attach event listeners
+                  setupSocketEventListeners(socket.current);
+                } catch (err) {
+                  console.error('Failed to reconnect WebSocket:', err);
+                  fetchVesselsViaREST();
+                }
               }
             }, 5000); // Try to reconnect every 5 seconds
           }
