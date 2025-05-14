@@ -1,6 +1,7 @@
 import { pgTable, text, serial, integer, boolean, timestamp, jsonb, varchar, decimal, primaryKey } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { relations } from "drizzle-orm";
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -470,3 +471,50 @@ export const insertVesselExtraInfoSchema = createInsertSchema(vesselExtraInfo).o
 
 export type InsertVesselExtraInfo = z.infer<typeof insertVesselExtraInfoSchema>;
 export type VesselExtraInfo = typeof vesselExtraInfo.$inferSelect;
+
+// Define relations
+export const vesselsRelations = relations(vessels, ({ many, one }) => ({
+  currentJobs: many(vesselJobs),
+  extraInfo: one(vesselExtraInfo, {
+    fields: [vessels.id],
+    references: [vesselExtraInfo.vesselId],
+  }),
+}));
+
+export const vesselJobsRelations = relations(vesselJobs, ({ one }) => ({
+  vessel: one(vessels, {
+    fields: [vesselJobs.vesselId],
+    references: [vessels.id],
+  }),
+  gate: one(gates, {
+    fields: [vesselJobs.gateId],
+    references: [gates.id],
+  }),
+  broker: one(brokers, {
+    fields: [vesselJobs.brokerId],
+    references: [brokers.id],
+  }),
+}));
+
+export const vesselExtraInfoRelations = relations(vesselExtraInfo, ({ one }) => ({
+  vessel: one(vessels, {
+    fields: [vesselExtraInfo.vesselId],
+    references: [vessels.id],
+  }),
+  currentJob: one(vesselJobs, {
+    fields: [vesselExtraInfo.currentJobId],
+    references: [vesselJobs.id],
+  }),
+  currentGate: one(gates, {
+    fields: [vesselExtraInfo.currentGateId],
+    references: [gates.id],
+  }),
+}));
+
+export const gatesRelations = relations(gates, ({ many, one }) => ({
+  vesselJobs: many(vesselJobs),
+  port: one(ports, {
+    fields: [gates.portId],
+    references: [ports.id],
+  }),
+}));
