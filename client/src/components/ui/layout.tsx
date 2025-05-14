@@ -64,6 +64,7 @@ export function Layout({ children }: LayoutProps) {
     { name: "Refineries", href: "/refineries", icon: Database },
     { name: "Ports", href: "/ports", icon: Anchor },
     { name: "Live Tracking", href: "/live-tracking", icon: Compass },
+    { name: "Advanced Map", href: "/advanced-map", icon: Map },
     { name: "Documents", href: "/documents", icon: FileText },
     { name: "Companies", href: "/companies", icon: Briefcase },
     { name: "Brokers", href: "/brokers", icon: UserPlus },

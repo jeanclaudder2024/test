@@ -24,6 +24,7 @@ import LandingPage from "@/pages/LandingPage";
 import AuthPage from "@/pages/AuthPage";
 import TradingDashboard from "@/pages/TradingDashboard";
 import LiveTracking from "@/pages/LiveTracking";
+import AdvancedMapPage from "@/pages/AdvancedMapPage";
 import Companies from "@/pages/Companies";
 import ApiTest from "@/pages/ApiTest";
 import TranslationPage from "@/pages/TranslationPage";
@@ -111,6 +112,7 @@ function Router() {
             <Route path="/vessels/:id" component={VesselDetail} />
             <Route path="/vessel-dashboard" component={VesselDashboard} />
             <Route path="/live-tracking" component={LiveTracking} />
+            <Route path="/advanced-map" component={AdvancedMapPage} />
             <Route path="/refineries" component={Refineries} />
             <Route path="/refineries/:id" component={RefineryDetail} />
             <Route path="/ports" component={Ports} />
