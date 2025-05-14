@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useLocation, useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import MainLayout from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -74,7 +73,6 @@ const VesselDocuments: React.FC = () => {
   // Loading state
   if (vesselLoading || documentsLoading) {
     return (
-      <MainLayout>
         <div className="container mx-auto py-6">
           <div className="flex items-center mb-6">
             <Button variant="ghost" size="sm" onClick={() => setLocation(`/vessels/${vesselId}`)}>
@@ -117,14 +115,12 @@ const VesselDocuments: React.FC = () => {
             </div>
           </div>
         </div>
-      </MainLayout>
     );
   }
 
   // Error state if vessel not found
   if (!vessel) {
     return (
-      <MainLayout>
         <div className="container mx-auto py-6">
           <div className="flex items-center mb-6">
             <Button variant="ghost" size="sm" onClick={() => setLocation(`/vessels`)}>
@@ -146,7 +142,6 @@ const VesselDocuments: React.FC = () => {
             </CardFooter>
           </Card>
         </div>
-      </MainLayout>
     );
   }
 
@@ -219,7 +214,6 @@ const VesselDocuments: React.FC = () => {
   };
 
   return (
-    <MainLayout>
       <div className="container mx-auto py-6">
         <div className="flex items-center justify-between mb-6">
           <Button variant="ghost" size="sm" onClick={() => setLocation(`/vessels/${vesselId}`)}>
@@ -477,7 +471,6 @@ const VesselDocuments: React.FC = () => {
           </div>
         )}
       </div>
-    </MainLayout>
   );
 };
 
