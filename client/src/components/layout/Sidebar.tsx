@@ -142,18 +142,16 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
       collapsed ? "w-32" : "w-64"
     )}>
       {/* Logo Area */}
-      <div className="p-6 border-b border-gray-100 dark:border-orange-500/20 flex items-center justify-between sticky top-0 backdrop-blur-sm bg-white/90 dark:bg-slate-900/90 z-10 h-40">
+      <div className="p-6 border-b border-gray-100 dark:border-orange-500/20 flex items-center justify-between sticky top-0 backdrop-blur-sm bg-white/90 dark:bg-slate-900/90 z-10 h-16">
         <Link href="/" className="cursor-pointer">
           {!collapsed && (
             <div className="flex items-center">
-              <img src="/assets/petrodealhub-logo.png" alt="PetroDealHub Logo" className="h-36 w-auto" />
+              {/* Logo removed as requested */}
             </div>
           )}
           {collapsed && (
             <div className="flex items-center justify-center">
-              <div className="h-24 w-24 bg-orange-500 flex items-center justify-center text-white font-bold rounded-full shadow-lg">
-                <span className="text-3xl">P</span>
-              </div>
+              {/* Logo removed as requested */}
             </div>
           )}
         </Link>
