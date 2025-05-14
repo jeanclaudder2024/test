@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useLocation, Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import {
   Card,
   CardHeader,
@@ -28,7 +29,23 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { ChevronLeft, FileText, Download, Clock, AlertTriangle, CheckCircle, PlusCircle, Loader2 } from "lucide-react";
+import { ChevronLeft, FileText, Download, Clock, AlertTriangle, CheckCircle, PlusCircle, Loader2, RefreshCw, Plus } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 // No need for MainLayout import as it's already provided by App.tsx
 
 // Define Document type interface
@@ -51,7 +68,24 @@ interface Document {
 export default function VesselDocuments() {
   const [location] = useLocation();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [activeDocument, setActiveDocument] = useState<Document | null>(null);
+  const [openGenerateDialog, setOpenGenerateDialog] = useState(false);
+  const [selectedDocType, setSelectedDocType] = useState<string>("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  
+  // Available document types for generation
+  const documentTypes = [
+    "Bill of Lading",
+    "Certificate of Origin",
+    "Inspection Report",
+    "Customs Declaration", 
+    "Letter of Protest",
+    "Sea Waybill",
+    "Cargo Manifest",
+    "Maritime Labour Certificate",
+    "Charter Party Agreement"
+  ];
   
   // Extract vessel ID from URL
   const vesselId = parseInt(location.split("/")[2]);
@@ -66,6 +100,42 @@ export default function VesselDocuments() {
   const { data: documents, isLoading: isLoadingDocuments } = useQuery<any[]>({
     queryKey: ["/api/vessels", vesselId, "documents"],
     enabled: !!vesselId,
+  });
+  
+  // Document generation mutation
+  const generateDocumentMutation = useMutation({
+    mutationFn: async (documentType: string) => {
+      setIsGenerating(true);
+      const response = await apiRequest("POST", "/api/generate-document", {
+        vesselId,
+        documentType
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setIsGenerating(false);
+      setOpenGenerateDialog(false);
+      setSelectedDocType("");
+      
+      // Show success message
+      toast({
+        title: "Document Generated",
+        description: `Successfully generated ${data.document.type} document.`,
+      });
+      
+      // Refresh documents list
+      queryClient.invalidateQueries({ queryKey: ["/api/vessels", vesselId, "documents"] });
+    },
+    onError: (error) => {
+      setIsGenerating(false);
+      console.error("Error generating document:", error);
+      
+      toast({
+        title: "Error",
+        description: "Failed to generate document. Please try again.",
+        variant: "destructive",
+      });
+    }
   });
   
   // Set first document as active when documents load

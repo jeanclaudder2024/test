@@ -50,6 +50,7 @@ import { vesselDistributionRouter } from "./routes/vesselDistributionRoutes";
 import { refineryPortRouter } from "./routes/refineryPortRoutes";
 import { documentRouter } from "./routes/document-routes";
 import { aiRouter } from "./routes/aiRoutes";
+import { generateDocumentRouter } from "./routes/generate-document-route";
 import { companyRouter } from "./routes/companyRoutes";
 import portVesselRouter from "./routes/portVesselRoutes";
 import { subscriptionRouter } from "./routes/subscriptionRoutes";
@@ -2264,6 +2265,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Document routes for vessel documents
   app.use(documentRouter);
+  
+  // Document generation routes using OpenAI
+  app.use(generateDocumentRouter);
 
   // API tester routes (performance testing, etc.)
   app.use("/api/tester", apiTesterRouter);
