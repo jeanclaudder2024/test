@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useVesselWebSocket } from '@/hooks/useVesselWebSocket';
 import { Vessel } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
@@ -320,13 +319,46 @@ const LocationUpdateForm = ({
 export default function VesselDetail() {
   const [, params] = useRoute('/vessels/:id');
   const vesselId = params?.id ? parseInt(params.id) : null;
-  const { vessels, loading } = useVesselWebSocket('global');
   const { toast } = useToast();
+  const [vessel, setVessel] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [isUpdatingLocation, setIsUpdatingLocation] = useState(false);
   const [voyageProgress, setVoyageProgress] = useState<any>(null);
   const [isLoadingVoyage, setIsLoadingVoyage] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<any>(null);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  
+  // Function to fetch vessel data directly using REST API
+  const fetchVesselData = async () => {
+    if (!vesselId) return;
+    
+    setLoading(true);
+    try {
+      const response = await axios.get(`/api/vessels/${vesselId}`);
+      console.log("Vessel API response:", response.data);
+      
+      if (response.data) {
+        setVessel(response.data);
+        console.log("Setting vessel data:", response.data);
+      } else {
+        console.warn("Vessel API returned unexpected format:", response.data);
+        toast({
+          title: "Unexpected data format",
+          description: "The server returned vessel data in an unexpected format.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching vessel data:', error);
+      toast({
+        title: "Failed to fetch vessel data",
+        description: "We couldn't retrieve the vessel information.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
   
   // Function to fetch voyage progress data
   const fetchVoyageProgress = async () => {
@@ -394,12 +426,12 @@ export default function VesselDetail() {
     }
   };
   
-  // Find the vessel from our stream data
-  console.log('VesselDetail: Looking for vessel with ID:', vesselId);
-  console.log('VesselDetail: Number of vessels in data:', vessels.length);
-  console.log('VesselDetail: First few vessel IDs:', vessels.slice(0, 5).map((v: any) => v.id));
-  
-  const vessel = vessels.find((v: any) => v.id === vesselId);
+  // Fetch vessel data on component mount
+  useEffect(() => {
+    if (vesselId) {
+      fetchVesselData();
+    }
+  }, [vesselId]);
   
   // Load voyage data and location when vessel is available
   useEffect(() => {
@@ -408,13 +440,6 @@ export default function VesselDetail() {
       fetchCurrentLocation();
     }
   }, [vessel?.id]);
-  
-  // Log result of search
-  if (vessel) {
-    console.log('VesselDetail: Found vessel:', vessel.name, vessel.id);
-  } else {
-    console.log('VesselDetail: Vessel not found with ID:', vesselId);
-  }
   
   // Redirect to vessels page if vessel not found and not loading
   if (!loading && !vessel) {
