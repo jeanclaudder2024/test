@@ -120,7 +120,7 @@ export const insertProgressEventSchema = createInsertSchema(progressEvents).omit
 // Documents
 export const documents = pgTable("documents", {
   id: serial("id").primaryKey(),
-  vesselId: integer("vessel_id").notNull(),
+  vesselId: integer("vessel_id").notNull().references(() => vessels.id),
   type: text("type").notNull(), // e.g., SDS, LOI, BL
   title: text("title").notNull(),
   content: text("content").notNull(),
@@ -479,6 +479,7 @@ export const vesselsRelations = relations(vessels, ({ many, one }) => ({
     fields: [vessels.id],
     references: [vesselExtraInfo.vesselId],
   }),
+  documents: many(documents),
 }));
 
 export const vesselJobsRelations = relations(vesselJobs, ({ one }) => ({
@@ -516,5 +517,12 @@ export const gatesRelations = relations(gates, ({ many, one }) => ({
   port: one(ports, {
     fields: [gates.portId],
     references: [ports.id],
+  }),
+}));
+
+export const documentsRelations = relations(documents, ({ one }) => ({
+  vessel: one(vessels, {
+    fields: [documents.vesselId],
+    references: [vessels.id],
   }),
 }));
