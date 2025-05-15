@@ -129,48 +129,54 @@ export default function ProfessionalMaritimeMap({
   const { toast } = useToast();
   const mapRef = useRef<L.Map | null>(null);
   
-  // Map style options
+  // Map style options with high-quality satellite imagery and professional styles
   const MAP_STYLES: Record<string, MapStyle> = {
-    standard: {
-      url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-      name: 'Standard',
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      maxZoom: 19
-    },
     satellite: {
       url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
       name: 'Satellite',
       attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
       maxZoom: 19
     },
+    satelliteStreets: {
+      url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+      name: 'Satellite Streets',
+      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom, 2012',
+      maxZoom: 19
+    },
+    ocean: {
+      url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}',
+      name: 'Ocean',
+      attribution: 'Tiles &copy; Esri &mdash; Sources: GEBCO, NOAA, CHS, OSU, UNH, CSUMB, National Geographic, DeLorme, NAVTEQ, and Esri',
+      maxZoom: 19
+    },
+    oceanLabels: {
+      url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Reference/MapServer/tile/{z}/{y}/{x}',
+      name: 'Ocean with Labels',
+      attribution: 'Tiles &copy; Esri &mdash; Sources: GEBCO, NOAA, CHS, OSU, UNH, CSUMB, National Geographic, DeLorme, NAVTEQ, and Esri',
+      maxZoom: 19
+    },
     dark: {
       url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-      name: 'Dark',
+      name: 'Dark Mode',
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
       maxZoom: 19
     },
     terrain: {
-      url: 'https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}{r}.png',
+      url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Terrain_Base/MapServer/tile/{z}/{y}/{x}',
       name: 'Terrain',
-      attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      maxZoom: 18
+      attribution: 'Tiles &copy; Esri &mdash; Source: USGS, Esri, TANA, DeLorme, and NPS',
+      maxZoom: 19
     },
-    toner: {
-      url: 'https://stamen-tiles-{s}.a.ssl.fastly.net/toner/{z}/{x}/{y}{r}.png',
-      name: 'Toner',
-      attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      maxZoom: 18
-    },
-    watercolor: {
-      url: 'https://stamen-tiles-{s}.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.png',
-      name: 'Watercolor',
-      attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      maxZoom: 16
+    navigationCharts: {
+      url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      name: 'Navigation Charts',
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19
     }
   };
 
   // State management
-  const [mapStyle, setMapStyle] = useState<string>(themeMode === 'dark' ? 'dark' : 'standard');
+  const [mapStyle, setMapStyle] = useState<string>(themeMode === 'dark' ? 'dark' : 'satellite');
   const [showVessels, setShowVessels] = useState<boolean>(true);
   const [showPorts, setShowPorts] = useState<boolean>(true);
   const [showRefineries, setShowRefineries] = useState<boolean>(true);
@@ -264,8 +270,8 @@ export default function ProfessionalMaritimeMap({
         }}
       >
         <TileLayer
-          url={MAP_STYLES[mapStyle]?.url || MAP_STYLES.standard.url}
-          attribution={MAP_STYLES[mapStyle]?.attribution || MAP_STYLES.standard.attribution}
+          url={MAP_STYLES[mapStyle]?.url || MAP_STYLES.satellite.url}
+          attribution={MAP_STYLES[mapStyle]?.attribution || MAP_STYLES.satellite.attribution}
           maxZoom={MAP_STYLES[mapStyle]?.maxZoom || 19}
         />
         
