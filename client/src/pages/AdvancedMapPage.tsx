@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import ProfessionalMaritimeMap from '@/components/map/ProfessionalMaritimeMap';
+import ProfessionalMaritimeMap from '@/components/map/NewProfessionalMaritimeMap';
 import { 
   Card, 
   CardContent, 

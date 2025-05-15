@@ -188,7 +188,12 @@ export default function ProfessionalMaritimeMap({
   defaultCenter = [0, 0], 
   defaultZoom = 3, 
   fullScreen = false,
-  themeMode = 'light'
+  themeMode = 'light',
+  vessels = [],
+  ports = [],
+  refineries = [],
+  portConnections = [],
+  loading = false
 }: ProfessionalMaritimeMapProps) {
   const { toast } = useToast();
   const mapRef = useRef<L.Map | null>(null);
@@ -266,51 +271,12 @@ export default function ProfessionalMaritimeMap({
     popupAnchor: [0, -15]
   });
 
-  // Setup WebSocket connection for vessel data
-  const { 
-    vessels, 
-    loading: vesselsLoading, 
-    error: wsError, 
-    lastUpdated: lastUpdate 
-  } = useVesselWebSocket({
-    region: selectedRegion,
-    page: 1,
-    pageSize: 1000,
-    loadAllVessels: true,
-    trackPortProximity: true,
-    proximityRadius: 50
-  });
-  
-  // Fetch ports and refineries
-  const { data: ports = [], isLoading: portsLoading } = useQuery<PortType[]>({
-    queryKey: ['/api/ports'],
-  });
-  
-  const { data: refineries = [], isLoading: refineriesLoading } = useQuery<RefineryType[]>({
-    queryKey: ['/api/refineries'],
-  });
-
-  // Handle errors
-  useEffect(() => {
-    if (wsError) {
-      toast({
-        title: "Connection error",
-        description: "Failed to connect to vessel tracking service.",
-        variant: "destructive"
-      });
-    }
-  }, [wsError, toast]);
-
-  // Update last updated timestamp
-  useEffect(() => {
-    if (lastUpdate) {
-      setLastUpdated(new Date());
-    }
-  }, [lastUpdate]);
+  // Data is now provided directly from props via the parent component
+  // which handles the WebSocket connection
 
   // Filter assets based on search and region
   const filteredVessels = vessels
-    ? vessels.filter(v => !searchTerm || v.name?.toLowerCase().includes(searchTerm.toLowerCase()))
+    ? vessels.filter((v: VesselType) => !searchTerm || v.name?.toLowerCase().includes(searchTerm.toLowerCase()))
     : [];
 
   const filteredPorts = ports
@@ -325,7 +291,7 @@ export default function ProfessionalMaritimeMap({
 
   // Count assets in selected region
   const assetCount = {
-    vessels: vessels.filter(v => selectedRegion === 'global' || v.currentRegion === selectedRegion).length,
+    vessels: vessels.filter((v: VesselType) => selectedRegion === 'global' || v.currentRegion === selectedRegion).length,
     ports: ports.filter((p: PortType) => selectedRegion === 'global' || p.region === selectedRegion).length,
     refineries: refineries.filter((r: RefineryType) => selectedRegion === 'global' || r.region === selectedRegion).length
   };
@@ -343,8 +309,8 @@ export default function ProfessionalMaritimeMap({
     );
   };
 
-  // Loading state
-  const isLoading = vesselsLoading || portsLoading || refineriesLoading;
+  // Loading state now comes directly from props
+  const isLoading = loading;
 
   return (
     <div className={cn(
