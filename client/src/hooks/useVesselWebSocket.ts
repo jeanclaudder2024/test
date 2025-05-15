@@ -205,11 +205,19 @@ export function useVesselWebSocket({
                 setVessels(data.vessels || []);
               }
               
+              // Update total count if available
+              if (data.totalCount !== undefined) {
+                setTotalCount(data.totalCount);
+              } else {
+                setTotalCount(data.vessels?.length || 0);
+              }
+              
               setLastUpdated(new Date().toISOString());
               setLoading(false);
             } else {
               console.warn('Received empty vessels data from WebSocket');
               setVessels([]);
+              setTotalCount(0);
               setLoading(false);
             }
           } 
@@ -331,6 +339,7 @@ export function useVesselWebSocket({
     error,
     loading,
     lastUpdated,
+    totalCount,
     sendMessage
   };
 }
