@@ -199,8 +199,17 @@ export const OptimizedVesselLayer: React.FC<{
       
       // Create new route line if showing route
       if (showRoute && vessel.currentLat && vessel.currentLng && vessel.destinationLat && vessel.destinationLng) {
-        const startLatLng = L.latLng(parseFloat(vessel.currentLat.toString()), parseFloat(vessel.currentLng.toString()));
-        const endLatLng = L.latLng(parseFloat(vessel.destinationLat.toString()), parseFloat(vessel.destinationLng.toString()));
+        // Parse coordinates safely
+        const parseLat = (lat: any): number => {
+          return typeof lat === 'number' ? lat : parseFloat(String(lat));
+        };
+        
+        const parseLng = (lng: any): number => {
+          return typeof lng === 'number' ? lng : parseFloat(String(lng));
+        };
+        
+        const startLatLng = L.latLng(parseLat(vessel.currentLat), parseLng(vessel.currentLng));
+        const endLatLng = L.latLng(parseLat(vessel.destinationLat), parseLng(vessel.destinationLng));
         
         // Generate intermediate waypoints for a curved path
         const waypoints = [startLatLng];
@@ -296,13 +305,25 @@ export const OptimizedVesselLayer: React.FC<{
         let lat: number, lng: number;
         
         try {
-          lat = typeof vessel.currentLat === 'number' 
-            ? vessel.currentLat 
-            : parseFloat(vessel.currentLat);
+          // Enhanced parsing to handle both number and string types safely
+          if (vessel.currentLat === null || vessel.currentLng === null) {
+            throw new Error("Null coordinates");
+          }
+          
+          if (typeof vessel.currentLat === 'number') {
+            lat = vessel.currentLat;
+          } else {
+            lat = parseFloat(String(vessel.currentLat));
+          }
             
-          lng = typeof vessel.currentLng === 'number' 
-            ? vessel.currentLng 
-            : parseFloat(vessel.currentLng);
+          if (typeof vessel.currentLng === 'number') {
+            lng = vessel.currentLng;
+          } else {
+            lng = parseFloat(String(vessel.currentLng));
+          }
+          
+          // Additional debugging
+          console.log(`Vessel ${vessel.name} coordinates parsed: ${lat}, ${lng} (from ${typeof vessel.currentLat}: ${vessel.currentLat}, ${typeof vessel.currentLng}: ${vessel.currentLng})`);
         } catch (parseError) {
           console.warn(`Coordinate parsing error for vessel ${vessel.id} (${vessel.name}):`, parseError);
           coordinateErrors++;
