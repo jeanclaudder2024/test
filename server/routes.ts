@@ -1990,6 +1990,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
         refineries = await storage.getRefineries();
       }
       
+      // Enhance up to 3 refineries with AI data if they're missing information
+      // This improves the professional appearance of the map with more complete data
+      const refineryEnhancementNeeded = refineries
+        .filter(r => (!r.operator || !r.products || !r.type || !r.capacity) && r.name && r.lat && r.lng)
+        .slice(0, 3);
+        
+      if (refineryEnhancementNeeded.length > 0) {
+        try {
+          console.log(`Enhancing ${refineryEnhancementNeeded.length} refineries with AI data...`);
+          
+          // Process refineries in parallel
+          const enhancedRefineries = await Promise.all(
+            refineryEnhancementNeeded.map(refinery => 
+              AIEnhancementService.enhanceRefineryData(refinery)
+            )
+          );
+          
+          // Update the refineries array
+          enhancedRefineries.forEach(enhancedRefinery => {
+            if (enhancedRefinery.id) {
+              const index = refineries.findIndex(r => r.id === enhancedRefinery.id);
+              if (index !== -1) {
+                refineries[index] = {...refineries[index], ...enhancedRefinery};
+                console.log(`Enhanced refinery: ${refineries[index].name}`);
+              }
+            }
+          });
+        } catch (enhanceError) {
+          console.error('Error enhancing refinery data:', enhanceError);
+          // Continue with unenhanced data
+        }
+      }
+      
       res.json(refineries);
     } catch (error) {
       console.error("Error fetching refineries:", error);
@@ -2773,6 +2806,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           vessels = filteredVessels;
           console.log(`Filtered vessels by region ${ws.subscribedRegion}: ${beforeFilter} → ${vessels.length}`);
+        }
+      }
+      
+      // Enhance a small batch of vessels with AI data before sending
+      if (vessels.length > 0) {
+        // Select up to 3 vessels that lack complete data for enhancement
+        const vesselsForEnhancement = vessels
+          .filter(v => (!v.cargoType || !v.flag || !v.vesselType || !v.built || !v.deadweight) &&
+                       v.name && v.currentLat && v.currentLng)
+          .slice(0, 3); // Limit to 3 per batch to avoid excessive API calls
+          
+        if (vesselsForEnhancement.length > 0) {
+          try {
+            console.log(`Enhancing ${vesselsForEnhancement.length} vessels with AI data...`);
+            // Process enhancements in parallel
+            const enhancementPromises = vesselsForEnhancement.map(vessel => 
+              AIEnhancementService.enhanceVesselData(vessel)
+            );
+            
+            const enhancedVessels = await Promise.all(enhancementPromises);
+            
+            // Update the vessels array with enhanced data
+            enhancedVessels.forEach(enhancedVessel => {
+              if (enhancedVessel.id) {
+                const index = vessels.findIndex(v => v.id === enhancedVessel.id);
+                if (index !== -1) {
+                  vessels[index] = {...vessels[index], ...enhancedVessel} as Vessel;
+                  console.log(`Enhanced vessel: ${vessels[index].name}`);
+                }
+              }
+            });
+          } catch (enhanceError) {
+            console.error('Error enhancing vessel data:', enhanceError);
+            // Continue with unenhanced data
+          }
         }
       }
       
