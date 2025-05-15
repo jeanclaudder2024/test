@@ -306,8 +306,8 @@ export default function LiveVesselMap({
     loading: vesselsLoading 
   } = useVesselWebSocket({ 
     region: selectedRegion,
-    pollingInterval: 30000,
-    loadAllVessels: true
+    loadAllVessels: true,
+    pageSize: 500
   });
   
   // Use the maritime data hook for refineries, ports, etc.
