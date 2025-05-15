@@ -754,21 +754,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Get optional type and limit from query parameters
-      const vesselType = req.query.type as string | undefined;
-      const limit = parseInt(req.query.limit as string || '100');
+      // Fetch vessels from MyShipTracking using the same service
+      const vessels = await marineTrafficService.fetchVessels();
+      console.log(`Fetched ${vessels.length} vessels from MyShipTracking API for direct integration`);
       
-      // Fetch vessels from MyShipTracking using the updated API endpoint
-      const vessels = await marineTrafficService.fetchVessels(vesselType, limit);
-      console.log(`Fetched ${vessels.length} vessels from MyShipTracking API v2 for direct integration`);
-      
-      // Return the vessels in the same format with timestamp
-      res.json({
-        vessels,
-        count: vessels.length,
-        timestamp: new Date().toISOString(),
-        source: 'myshiptracking-api-v2'
-      });
+      // Return the vessels in the same format
+      res.json(vessels);
     } catch (error) {
       console.error("Error fetching vessels from MyShipTracking direct API:", error);
       res.status(500).json({ message: "Failed to fetch vessels from MyShipTracking API" });
@@ -2592,99 +2583,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     proximityRadius?: number;
   }
 
-  // Simple in-memory vessel cache
-  const vesselCache: {
-    vessels: Vessel[];
-    updated: Date | null;
-  } = {
-    vessels: [],
-    updated: null
-  };
-  
-  // Get vessels from cache
-  function getCachedVessels(): Vessel[] {
-    return vesselCache.vessels || [];
-  }
-  
-  // Set vessels in cache
-  function setCachedVessels(vessels: Vessel[]) {
-    vesselCache.vessels = vessels;
-    vesselCache.updated = new Date();
-  }
-  
-  // Get minimal fallback vessels as a last resort
-  function getFallbackVessels(): Vessel[] {
-    // Create a small set of emergency vessels to use as absolute fallback
-    return [
-      {
-        id: 1,
-        name: "Pacific Navigator",
-        vesselType: "Oil Tanker",
-        flag: "Panama",
-        currentLat: "43.427844",
-        currentLng: "-41.004669",
-        imo: "9876543",
-        mmsi: "123456789",
-        departurePort: "Singapore",
-        departureDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3), // 3 days ago
-        departureLat: "1.29027",
-        departureLng: "103.851959",
-        destinationPort: "Rotterdam",
-        destinationLat: "51.9225",
-        destinationLng: "4.47917",
-        eta: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7), // 7 days from now
-        cargoType: "Crude Oil",
-        cargoCapacity: 100000,
-        currentRegion: "Atlantic",
-        lastUpdated: new Date()
-      },
-      {
-        id: 2,
-        name: "Western Commander",
-        vesselType: "Crude Oil Tanker",
-        flag: "Liberia",
-        currentLat: "-6.265956",
-        currentLng: "72.825185",
-        imo: "8765432",
-        mmsi: "234567890",
-        departurePort: "Dubai",
-        departureDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5), // 5 days ago
-        departureLat: "25.204849",
-        departureLng: "55.270783",
-        destinationPort: "Houston",
-        destinationLat: "29.7604",
-        destinationLng: "-95.3698",
-        eta: new Date(Date.now() + 1000 * 60 * 60 * 24 * 10), // 10 days from now
-        cargoType: "Crude Oil",
-        cargoCapacity: 140000,
-        currentRegion: "Indian Ocean",
-        lastUpdated: new Date()
-      },
-      {
-        id: 3,
-        name: "Arctic Aurora",
-        vesselType: "LNG Carrier",
-        flag: "Marshall Islands",
-        currentLat: "35.6007",
-        currentLng: "-40.1999",
-        imo: "7654321",
-        mmsi: "345678901",
-        departurePort: "Hammerfest",
-        departureDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 4), // 4 days ago
-        departureLat: "70.6634",
-        departureLng: "23.6820",
-        destinationPort: "Tokyo",
-        destinationLat: "35.6762",
-        destinationLng: "139.6503",
-        eta: new Date(Date.now() + 1000 * 60 * 60 * 24 * 8), // 8 days from now
-        cargoType: "LNG",
-        cargoCapacity: 170000,
-        currentRegion: "Atlantic",
-        lastUpdated: new Date()
-      }
-    ];
-  }
-  
   // Set up WebSocket server for live vessel updates
   wss.on('connection', (ws: VesselTrackingWebSocket) => {
     console.log('Client connected to vessel tracking WebSocket');
@@ -2810,72 +2708,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       let vessels: Vessel[] = [];
       
-      // First try to use the MyShipTracking API for live vessel data
+      // First try to use the vessel position service for the most up-to-date positions
       try {
-        if (marineTrafficService.isConfigured()) {
-          // Prioritize the external API for the most up-to-date positions
-          console.log('Fetching vessels from MyShipTracking API v2');
+        const positionData = vesselPositionService.getAllVesselPositions();
+        if (positionData.vessels.length > 0) {
+          vessels = positionData.vessels;
+          console.log(`Using vessel position service data (${vessels.length} vessels)`);
+        } else {
+          throw new Error("No vessels in position service, falling back to cache/database");
+        }
+      } catch (positionError) {
+        console.log('Position service error, trying cache/database:', positionError);
+        
+        try {
+          // Check cached vessels next
+          const cachedVessels = getCachedVessels();
           
-          // Fetch vessels from the API with type filter if specified
-          const vesselType = ws.subscribedRegion === 'global' ? undefined : 
-                            (ws.subscribedRegion === 'tankers' ? 'tanker' : undefined);
+          if (cachedVessels && cachedVessels.length > 0) {
+            // Use cached vessels if available
+            vessels = cachedVessels;
+            console.log(`Using cached vessels data (${vessels.length} vessels)`);
+          } else {
+            // Otherwise fetch from database and update cache
+            vessels = await storage.getVessels();
+            console.log(`Retrieved ${vessels.length} vessels from database`);
+            
+            // Cache the vessels for future requests
+            setCachedVessels(vessels);
+            console.log(`Cached ${vessels.length} vessels for future requests`);
+          }
+        } catch (dbError) {
+          console.log('Database error, fetching from API instead:', dbError);
           
-          const apiVessels = await marineTrafficService.fetchVessels(vesselType, pageSize);
-          
-          if (apiVessels && apiVessels.length > 0) {
+          // If database is not available, fetch from API
+          if (marineTrafficService.isConfigured()) {
+            const apiVessels = await marineTrafficService.fetchVessels();
+            
             // API vessels might not have IDs, so we need to add them
             vessels = apiVessels.map((v: any, idx: number) => ({
               ...v,
               id: (v.id !== undefined) ? v.id : idx + 1 // Use index + 1 as fallback ID if needed
             })) as Vessel[];
-            
-            console.log(`Using MyShipTracking API v2 data (${vessels.length} vessels)`);
-            
-            // Cache the vessels for future requests
-            setCachedVessels(vessels);
-          } else {
-            throw new Error("No vessels from API, falling back to position service");
-          }
-        } else {
-          throw new Error("MyShipTracking API not configured, falling back to position service");
-        }
-      } catch (apiError) {
-        console.log('MyShipTracking API error, trying position service:', apiError);
-        
-        try {
-          // Use the vessel position service next if API failed
-          const positionData = vesselPositionService.getAllVesselPositions();
-          if (positionData.vessels.length > 0) {
-            vessels = positionData.vessels;
-            console.log(`Using vessel position service data (${vessels.length} vessels)`);
-          } else {
-            throw new Error("No vessels in position service, falling back to cache/database");
-          }
-        } catch (positionError) {
-          console.log('Position service error, trying cache/database:', positionError);
-          
-          try {
-            // Check cached vessels next
-            const cachedVessels = getCachedVessels();
-            
-            if (cachedVessels && cachedVessels.length > 0) {
-              // Use cached vessels if available
-              vessels = cachedVessels;
-              console.log(`Using cached vessels data (${vessels.length} vessels)`);
-            } else {
-              // Otherwise fetch from database and update cache
-              vessels = await storage.getVessels();
-              console.log(`Retrieved ${vessels.length} vessels from database`);
-              
-              // Cache the vessels for future requests
-              setCachedVessels(vessels);
-              console.log(`Cached ${vessels.length} vessels for future requests`);
-            }
-          } catch (dbError) {
-            console.log('Database error, using fallback vessels:', dbError);
-            
-            // Use minimal fallback vessels if all else fails
-            vessels = getFallbackVessels();
           }
         }
       }
