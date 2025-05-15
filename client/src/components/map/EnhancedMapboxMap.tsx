@@ -276,7 +276,7 @@ export default function EnhancedMapboxMap({
           name: port.name,
           country: port.country,
           region: port.region,
-          portType: port.portType,
+          portType: port.type,
           capacity: port.capacity,
           color: '#2196f3', // Blue for ports
           port: JSON.stringify(port)
@@ -422,7 +422,7 @@ export default function EnhancedMapboxMap({
             
             mapRef.current.easeTo({
               center: (feature.geometry as any).coordinates,
-              zoom: zoom + 1
+              zoom: (zoom || 5) + 1
             });
           });
         }
@@ -725,7 +725,7 @@ export default function EnhancedMapboxMap({
           <CardContent className="p-3 pt-0 space-y-2">
             <div className="text-xs grid grid-cols-2 gap-1">
               <span className="text-muted-foreground">Total Vessels:</span>
-              <span className="font-medium text-right">{vessels.length.toLocaleString()}</span>
+              <span className="font-medium text-right">{totalCount ? totalCount.toLocaleString() : vessels.length.toLocaleString()}</span>
               
               <span className="text-muted-foreground">Crude Tankers:</span>
               <span className="font-medium text-right">{vessels.filter(v => v.vesselType?.toLowerCase().includes('crude')).length}</span>
@@ -1093,12 +1093,16 @@ export default function EnhancedMapboxMap({
                   <div>{selectedRefinery.region}</div>
                   
                   <div className="font-semibold">Capacity:</div>
-                  <div>{(selectedRefinery.capacity / 1000).toFixed(0)}k bpd</div>
+                  <div>
+                    {selectedRefinery.capacity !== null && selectedRefinery.capacity !== undefined 
+                      ? `${(Number(selectedRefinery.capacity) / 1000).toFixed(0)}k bpd`
+                      : 'Unknown'}
+                  </div>
                   
                   <div className="font-semibold">Status:</div>
                   <div>
-                    <Badge variant={selectedRefinery.status === 'active' ? 'success' : 'secondary'}>
-                      {selectedRefinery.status}
+                    <Badge variant={selectedRefinery.status === 'active' ? 'default' : 'secondary'}>
+                      {selectedRefinery.status || 'Unknown'}
                     </Badge>
                   </div>
                 </div>
@@ -1126,7 +1130,7 @@ export default function EnhancedMapboxMap({
                 
                 <div className="grid grid-cols-2 gap-1 text-xs mb-2">
                   <div className="font-semibold">Type:</div>
-                  <div>{selectedPort.portType || 'Standard'}</div>
+                  <div>{selectedPort.type || 'Standard'}</div>
                   
                   <div className="font-semibold">Region:</div>
                   <div>{selectedPort.region}</div>
