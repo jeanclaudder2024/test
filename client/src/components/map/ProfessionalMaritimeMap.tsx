@@ -4,9 +4,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
-import { useVesselWebSocket } from '@/hooks/useVesselWebSocket';
-import { Port as PortType, Refinery as RefineryType } from '@shared/schema';
-import { useQuery } from '@tanstack/react-query';
+import { Port as PortType, Refinery as RefineryType, Vessel as VesselType } from '@shared/schema';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -103,11 +101,31 @@ interface MapControlProps {
   children: React.ReactNode;
 }
 
+interface PortConnection {
+  vesselId: number;
+  portId: number;
+  vesselName: string;
+  portName: string;
+  distance: number;
+  vesselType?: string;
+  portType?: string;
+  coordinates: {
+    vessel: { lat: number | string; lng: number | string };
+    port: { lat: number | string; lng: number | string };
+  };
+}
+
 interface ProfessionalMaritimeMapProps {
   defaultCenter?: [number, number];
   defaultZoom?: number;
   fullScreen?: boolean;
   themeMode?: 'light' | 'dark';
+  // Maritime data passed directly from parent component
+  vessels?: VesselType[];
+  ports?: PortType[];
+  refineries?: RefineryType[];
+  portConnections?: PortConnection[];
+  loading?: boolean;
 }
 
 // Utility functions for consistent coordinate handling

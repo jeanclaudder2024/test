@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import ProfessionalMaritimeMap from '@/components/map/ProfessionalMaritimeMap';
 import { 
   Card, 
@@ -34,13 +34,233 @@ import {
   Globe,
   HelpCircle,
   FileText,
-  ChevronLeft
+  ChevronLeft,
+  AlertCircle
 } from 'lucide-react';
 import { Link } from 'wouter';
+import { useToast } from '@/hooks/use-toast';
+import { Vessel, Port, Refinery } from '@shared/schema';
+import { useQuery } from '@tanstack/react-query';
+
+// Custom hook for maritime WebSocket connection
+function useMaritimeWebSocket(selectedRegion = 'global') {
+  const [vessels, setVessels] = useState<Vessel[]>([]);
+  const [portConnections, setPortConnections] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  const [connected, setConnected] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const socketRef = useRef<WebSocket | null>(null);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const { toast } = useToast();
+  
+  // Fetch vessels fallback via REST API
+  const fetchVesselsFallback = useCallback(async () => {
+    try {
+      console.log('Fetching vessels via REST API fallback');
+      setLoading(true);
+      
+      const params = new URLSearchParams();
+      if (selectedRegion !== 'global') {
+        params.append('region', selectedRegion);
+      }
+      
+      const response = await fetch(`/api/vessels/polling?${params.toString()}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch vessels: ${response.status} ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      if (data.vessels && Array.isArray(data.vessels)) {
+        console.log(`Received ${data.vessels.length} vessels from REST API`);
+        setVessels(data.vessels);
+      } else {
+        console.warn('No vessels data in REST API response', data);
+      }
+      
+      setLastUpdated(new Date());
+      setLoading(false);
+    } catch (err) {
+      console.error('Error fetching vessels via REST:', err);
+      setError(err instanceof Error ? err : new Error('Failed to fetch vessels'));
+      setLoading(false);
+      setVessels([]);
+    }
+  }, [selectedRegion]);
+  
+  // Initialize and manage WebSocket connection
+  useEffect(() => {
+    // Clean up any existing connection
+    if (socketRef.current) {
+      socketRef.current.close();
+      socketRef.current = null;
+    }
+    
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+    }
+    
+    setLoading(true);
+    
+    // Create WebSocket URL properly
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const host = window.location.host;
+    const wsUrl = `${protocol}//${host}/ws`;
+    
+    console.log(`Connecting to WebSocket at: ${wsUrl}`);
+    
+    try {
+      // Create new WebSocket connection
+      const socket = new WebSocket(wsUrl);
+      socketRef.current = socket;
+      
+      // Connection opened handler
+      socket.addEventListener('open', () => {
+        console.log('WebSocket connection established');
+        setConnected(true);
+        setError(null);
+        
+        // Send configuration message
+        if (socket.readyState === WebSocket.OPEN) {
+          const configMessage = JSON.stringify({
+            type: 'config',
+            region: selectedRegion,
+            loadAllVessels: true,
+            page: 1,
+            pageSize: 1000,
+            trackPortProximity: true,
+            proximityRadius: 50
+          });
+          
+          socket.send(configMessage);
+          console.log('Sent configuration to server', configMessage);
+        }
+      });
+      
+      // Message handler
+      socket.addEventListener('message', (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          console.log(`Received WebSocket message of type: ${data.type}`);
+          
+          if (data.type === 'vessel_update' || data.type === 'vessels') {
+            if (data.vessels && Array.isArray(data.vessels)) {
+              console.log(`Received ${data.vessels.length} vessels via WebSocket`);
+              
+              // Filter vessels with valid coordinates
+              const validVessels = data.vessels.filter((v: any) => 
+                v.currentLat != null && v.currentLng != null &&
+                !isNaN(parseFloat(String(v.currentLat))) &&
+                !isNaN(parseFloat(String(v.currentLng)))
+              );
+              
+              if (validVessels.length > 0) {
+                setVessels(validVessels);
+              } else {
+                console.warn('No vessels with valid coordinates');
+              }
+              
+              // Handle port connections if present
+              if (data.portConnections && Array.isArray(data.portConnections)) {
+                setPortConnections(data.portConnections);
+                console.log(`Received ${data.portConnections.length} port connections`);
+              }
+              
+              setLastUpdated(new Date());
+              setLoading(false);
+            }
+          } else if (data.type === 'error') {
+            console.error('WebSocket error from server:', data.message);
+            setError(new Error(data.message));
+          }
+        } catch (err) {
+          console.error('Error parsing WebSocket message:', err);
+        }
+      });
+      
+      // Error handler
+      socket.addEventListener('error', (event) => {
+        console.error('WebSocket connection error:', event);
+        setConnected(false);
+        setError(new Error('WebSocket connection error'));
+        
+        // Fall back to REST API
+        fetchVesselsFallback();
+        
+        // Show error toast
+        toast({
+          title: 'Connection Error',
+          description: 'Failed to connect to vessel tracking service. Using fallback data.',
+          variant: 'destructive'
+        });
+      });
+      
+      // Close handler
+      socket.addEventListener('close', () => {
+        console.log('WebSocket connection closed');
+        setConnected(false);
+        
+        // Set up reconnection if not intentionally closed
+        if (!socketRef.current) return;
+        
+        reconnectTimeoutRef.current = setTimeout(() => {
+          console.log('Attempting to reconnect WebSocket...');
+          // Recursively call this effect to reconnect
+          socketRef.current = null;
+        }, 5000);
+      });
+      
+    } catch (err) {
+      console.error('Failed to create WebSocket:', err);
+      setError(err instanceof Error ? err : new Error('Failed to create WebSocket connection'));
+      setConnected(false);
+      setLoading(false);
+      
+      // Fall back to REST API
+      fetchVesselsFallback();
+    }
+    
+    // Cleanup function
+    return () => {
+      if (socketRef.current) {
+        console.log('Closing WebSocket connection due to cleanup');
+        socketRef.current.close();
+        socketRef.current = null;
+      }
+      
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
+      }
+    };
+  }, [selectedRegion, fetchVesselsFallback, toast]);
+  
+  return {
+    vessels,
+    portConnections,
+    loading,
+    error,
+    connected,
+    lastUpdated
+  };
+}
 
 const AdvancedMapPage: React.FC = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [themeMode, setThemeMode] = useState<'light' | 'dark'>('dark');
+  const [selectedRegion, setSelectedRegion] = useState<string>('global');
+  
+  // Fetch maritime data using the custom WebSocket hook
+  const { vessels, portConnections, loading, error, connected, lastUpdated } = useMaritimeWebSocket(selectedRegion);
+  
+  // Fetch static data from API
+  const { data: ports = [] } = useQuery<Port[]>({
+    queryKey: ['/api/ports'],
+  });
+  
+  const { data: refineries = [] } = useQuery<Refinery[]>({
+    queryKey: ['/api/refineries'],
+  });
   
   // Toggle fullscreen mode
   const toggleFullscreen = () => {
@@ -269,12 +489,35 @@ const AdvancedMapPage: React.FC = () => {
           </Card>
         </div>
         
-        {/* Main Map */}
-        <ProfessionalMaritimeMap fullScreen={isFullscreen} themeMode={themeMode} />
+        {/* Status indicator */}
+        {error && (
+          <div className="mb-4 p-2 bg-destructive/10 border border-destructive text-destructive rounded-md flex items-center">
+            <AlertCircle className="w-4 h-4 mr-2" />
+            <span>Connection error: {error.message}</span>
+          </div>
+        )}
+        
+        {/* Main Map - pass all maritime data to map component */}
+        <ProfessionalMaritimeMap 
+          fullScreen={isFullscreen} 
+          themeMode={themeMode}
+          vessels={vessels}
+          ports={ports}
+          refineries={refineries}
+          portConnections={portConnections}
+          loading={loading}
+        />
         
         {/* Bottom disclaimer */}
         <div className="mt-4 text-xs text-center text-muted-foreground">
-          <p>Real-time maritime data provided by PetroDealHub tracking system. Last updated: {new Date().toLocaleString()}</p>
+          <div className="flex items-center justify-center gap-2">
+            <span className={`w-2 h-2 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'}`}></span>
+            <p>
+              {connected ? 'Connected to real-time tracking' : 'Using fallback data'} • 
+              Last updated: {lastUpdated ? lastUpdated.toLocaleString() : 'Never'}
+            </p>
+          </div>
+          <p className="mt-1">Real-time maritime data provided by PetroDealHub tracking system.</p>
         </div>
       </div>
   );
