@@ -129,19 +129,26 @@ function MapControl({ position, children }: MapControlProps) {
 
   useEffect(() => {
     if (controlRef.current) {
-      const control = L.control({ position });
+      // Create the control with the right position
+      const controlInstance = new L.Control({ position });
       const container = controlRef.current;
 
-      control.onAdd = () => {
-        L.DomUtil.disableClickPropagation(container);
-        L.DomUtil.disableScrollPropagation(container);
+      // Set up the control's onAdd method
+      controlInstance.onAdd = () => {
+        if (container) {
+          // Prevent click and scroll propagation to map
+          L.DomEvent.disableClickPropagation(container);
+          L.DomEvent.disableScrollPropagation(container);
+        }
         return container;
       };
 
-      control.addTo(map);
+      // Add the control to the map
+      controlInstance.addTo(map);
 
+      // Clean up when component unmounts
       return () => {
-        control.remove();
+        controlInstance.remove();
       };
     }
   }, [map, position]);
@@ -241,7 +248,7 @@ export default function ProfessionalMaritimeMap({
     vessels, 
     loading: vesselsLoading, 
     error: wsError, 
-    lastUpdate 
+    lastUpdated: lastUpdate 
   } = useVesselWebSocket({
     region: selectedRegion,
     page: 1,
@@ -274,7 +281,7 @@ export default function ProfessionalMaritimeMap({
   // Update last updated timestamp
   useEffect(() => {
     if (lastUpdate) {
-      setLastUpdated(new Date(lastUpdate));
+      setLastUpdated(new Date());
     }
   }, [lastUpdate]);
 
@@ -335,8 +342,8 @@ export default function ProfessionalMaritimeMap({
         zoom={defaultZoom} 
         className="h-full w-full" 
         attributionControl={false}
-        whenCreated={(map) => {
-          mapRef.current = map;
+        ref={(map) => {
+          if (map) mapRef.current = map;
         }}
       >
         <TileLayer

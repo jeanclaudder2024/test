@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="20px" height="20px" viewBox="0 0 20 20" version="1.1" xmlns="http://www.w3.org/2000/svg">
-    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <circle stroke="#FFFFFF" stroke-width="2" fill="#3B82F6" cx="10" cy="10" r="7"></circle>
-        <path d="M10,6 L13,10 L7,10 L10,6 Z" fill="#FFFFFF"></path>
+<svg width="32px" height="32px" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg">
+    <title>Vessel Icon</title>
+    <g id="Vessel-Icon" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <circle id="Background" fill="#2563EB" cx="16" cy="16" r="14" opacity="0.8"></circle>
+        <path d="M16,6 L24,16 L20,16 L20,24 L12,24 L12,16 L8,16 L16,6 Z" id="Ship" fill="#FFFFFF" fill-rule="nonzero"></path>
+        <circle id="Dot" fill="#FFFFFF" cx="16" cy="16" r="2"></circle>
     </g>
 </svg>
