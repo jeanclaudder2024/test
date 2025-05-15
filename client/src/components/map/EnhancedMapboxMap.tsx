@@ -189,8 +189,8 @@ export default function EnhancedMapboxMap({
     totalCount
   } = useVesselWebSocket({ 
     region: selectedRegion,
-    pollingInterval: 30000,
-    loadAllVessels: true
+    loadAllVessels: true,
+    pageSize: 500
   });
   
   // Use maritime data hook for refineries, ports, etc.

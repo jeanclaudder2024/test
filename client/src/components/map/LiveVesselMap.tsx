@@ -423,10 +423,13 @@ export default function LiveVesselMap({
             {/* Vessel Markers */}
             <OptimizedVesselLayer
               vessels={vessels}
-              onVesselClick={handleVesselClick}
-              selectedVessel={selectedVessel}
-              vesselIcon={vesselIcon}
-              showRoutes={showRoutes}
+              onVesselSelect={handleVesselClick}
+              vesselsWithRoutes={vessels.reduce((acc, vessel) => {
+                // Only show routes for vessels with destination coordinates
+                acc[vessel.id] = showRoutes && !!vessel.destinationLat && !!vessel.destinationLng;
+                return acc;
+              }, {} as Record<number, boolean>)}
+              setVesselsWithRoutes={() => {}} // Empty function since we're not changing it dynamically
             />
             
             {/* Refinery Markers */}
