@@ -88,6 +88,20 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from '@/lib/utils';
 
+// Helper function to safely format coordinates
+const formatCoordinate = (value: string | number | null | undefined): string => {
+  if (value === null || value === undefined) {
+    return 'N/A';
+  }
+  
+  try {
+    return parseFloat(String(value)).toFixed(4);
+  } catch (error) {
+    console.warn('Error formatting coordinate:', error);
+    return 'N/A';
+  }
+};
+
 // Map tile layer URLs
 interface MapStyle {
   url: string;
@@ -499,7 +513,9 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
           </div>
           
           <div className="font-medium">Coordinates:</div>
-          <div>{`${typeof refinery.lat === 'number' ? refinery.lat.toFixed(4) : parseFloat(refinery.lat).toFixed(4)}, ${typeof refinery.lng === 'number' ? refinery.lng.toFixed(4) : parseFloat(refinery.lng).toFixed(4)}`}</div>
+          <div>
+            {`${formatCoordinate(refinery.lat)}, ${formatCoordinate(refinery.lng)}`}
+          </div>
         </div>
         
         {refinery.description && (
@@ -543,10 +559,7 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
           
           <div className="font-medium">Coordinates:</div>
           <div>
-            {port.lat && port.lng 
-              ? `${parseFloat(String(port.lat)).toFixed(4)}, ${parseFloat(String(port.lng)).toFixed(4)}` 
-              : 'N/A'
-            }
+            {`${formatCoordinate(port.lat)}, ${formatCoordinate(port.lng)}`}
           </div>
           
           <div className="font-medium">Status:</div>
