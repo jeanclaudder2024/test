@@ -488,7 +488,6 @@ export default function ProfessionalMaritimeMap({
                       id="show-vessels" 
                       checked={showVessels}
                       onCheckedChange={setShowVessels}
-                      size="sm"
                     />
                     <Label htmlFor="show-vessels" className="text-xs cursor-pointer">
                       <div className="flex items-center">
@@ -503,7 +502,6 @@ export default function ProfessionalMaritimeMap({
                       id="show-ports" 
                       checked={showPorts}
                       onCheckedChange={setShowPorts}
-                      size="sm"
                     />
                     <Label htmlFor="show-ports" className="text-xs cursor-pointer">
                       <div className="flex items-center">
@@ -518,7 +516,6 @@ export default function ProfessionalMaritimeMap({
                       id="show-refineries" 
                       checked={showRefineries}
                       onCheckedChange={setShowRefineries}
-                      size="sm"
                     />
                     <Label htmlFor="show-refineries" className="text-xs cursor-pointer">
                       <div className="flex items-center">
@@ -533,7 +530,6 @@ export default function ProfessionalMaritimeMap({
                       id="use-cluster" 
                       checked={useCluster}
                       onCheckedChange={setUseCluster}
-                      size="sm"
                     />
                     <Label htmlFor="use-cluster" className="text-xs cursor-pointer">
                       <div className="flex items-center">
