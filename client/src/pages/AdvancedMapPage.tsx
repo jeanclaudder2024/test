@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import EnhancedVesselMap from '@/components/map/EnhancedVesselMap';
+import ProfessionalMaritimeMap from '@/components/map/ProfessionalMaritimeMap';
 import { 
   Card, 
   CardContent, 
@@ -270,7 +270,7 @@ const AdvancedMapPage: React.FC = () => {
         </div>
         
         {/* Main Map */}
-        <EnhancedVesselMap fullScreen={isFullscreen} themeMode={themeMode} />
+        <ProfessionalMaritimeMap fullScreen={isFullscreen} themeMode={themeMode} />
         
         {/* Bottom disclaimer */}
         <div className="mt-4 text-xs text-center text-muted-foreground">
