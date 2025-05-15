@@ -6,6 +6,7 @@ import 'leaflet/dist/leaflet.css';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import { useVesselWebSocket } from '@/hooks/useVesselWebSocket';
+import { Port as PortType, Refinery as RefineryType } from '@shared/schema';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -203,7 +204,7 @@ const ProfessionalMaritimeMap: React.FC<ProfessionalMaritimeMapProps> = ({
   defaultZoom = 3,
   fullScreen = false,
   themeMode = 'light'
-}) => {
+}): React.ReactNode => {
   // Map state
   const [mapStyle, setMapStyle] = useState<string>(themeMode === 'dark' ? 'dark' : 'standard');
   const [showVessels, setShowVessels] = useState<boolean>(true);
@@ -220,7 +221,7 @@ const ProfessionalMaritimeMap: React.FC<ProfessionalMaritimeMapProps> = ({
   // WebSocket connection for real-time vessel data
   const { 
     vessels, 
-    wsConnected, 
+    connected: wsConnected, 
     lastUpdated, 
     loading: vesselsLoading,
     error: wsError 
@@ -234,11 +235,11 @@ const ProfessionalMaritimeMap: React.FC<ProfessionalMaritimeMapProps> = ({
   });
   
   // Fetch ports and refineries
-  const { data: ports = [], isLoading: portsLoading } = useQuery({
+  const { data: ports = [], isLoading: portsLoading } = useQuery<PortType[]>({
     queryKey: ['/api/ports'],
   });
   
-  const { data: refineries = [], isLoading: refineriesLoading } = useQuery({
+  const { data: refineries = [], isLoading: refineriesLoading } = useQuery<RefineryType[]>({
     queryKey: ['/api/refineries'],
   });
 
@@ -505,8 +506,8 @@ const ProfessionalMaritimeMap: React.FC<ProfessionalMaritimeMapProps> = ({
         zoom={defaultZoom}
         style={{ height: '100%', width: '100%' }}
         zoomControl={false}
-        whenCreated={(map) => {
-          mapRef.current = map;
+        whenReady={(map) => {
+          mapRef.current = map.target;
         }}
       >
         <TileLayer
