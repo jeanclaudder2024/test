@@ -43,7 +43,8 @@ export class AIEnhancementService {
           });
 
           try {
-            const enhancedData = JSON.parse(response.choices[0].message.content);
+            const content = response.choices[0].message.content || '{}';
+            const enhancedData = JSON.parse(content);
             console.log(`Enhanced data for ${vessel.name}:`, enhancedData);
             
             // Merge the AI-enhanced data with existing vessel data
@@ -97,7 +98,8 @@ export class AIEnhancementService {
           });
 
           try {
-            const enhancedData = JSON.parse(response.choices[0].message.content);
+            const content = response.choices[0].message.content || '{}';
+            const enhancedData = JSON.parse(content);
             console.log(`Enhanced data for ${port.name}:`, enhancedData);
             
             // Merge the AI-enhanced data with existing port data
@@ -153,7 +155,8 @@ export class AIEnhancementService {
           });
 
           try {
-            const enhancedData = JSON.parse(response.choices[0].message.content);
+            const content = response.choices[0].message.content || '{}';
+            const enhancedData = JSON.parse(content);
             console.log(`Enhanced data for ${refinery.name}:`, enhancedData);
             
             // Merge the AI-enhanced data with existing refinery data

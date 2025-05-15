@@ -156,7 +156,10 @@ export default function ProfessionalMaritimeMap({
               url: style.url,
               name: style.name,
               attribution: style.attribution,
-              maxZoom: style.maxZoom
+              maxZoom: style.maxZoom,
+              preview: style.preview || `/assets/${style.id}-preview.png`,
+              description: style.description,
+              type: style.type
             };
           });
           setMapStyles(stylesMap);
@@ -186,27 +189,67 @@ export default function ProfessionalMaritimeMap({
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  // Custom icons
+  // Custom icons with professional styling
   const vesselIcon = L.icon({
     iconUrl: '/assets/vessel-icon.svg',
-    iconSize: [32, 32],
-    iconAnchor: [16, 16],
-    popupAnchor: [0, -16]
+    iconSize: [36, 36],
+    iconAnchor: [18, 18],
+    popupAnchor: [0, -18],
+    className: 'vessel-icon-pulse'  // Will add pulse animation
   });
 
   const portIcon = L.icon({
     iconUrl: '/assets/port-icon.svg',
-    iconSize: [28, 28],
-    iconAnchor: [14, 14],
-    popupAnchor: [0, -14]
+    iconSize: [32, 32], 
+    iconAnchor: [16, 16],
+    popupAnchor: [0, -16],
+    className: 'port-icon-highlight'  // Will add highlight effect
   });
 
   const refineryIcon = L.icon({
     iconUrl: '/assets/refinery-icon.svg',
-    iconSize: [30, 30],
-    iconAnchor: [15, 15],
-    popupAnchor: [0, -15]
+    iconSize: [34, 34],
+    iconAnchor: [17, 17],
+    popupAnchor: [0, -17],
+    className: 'refinery-icon-highlight'  // Will add highlight effect
   });
+  
+  // Create styles for icon animations once component loads
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      // Create a style element for our custom icon effects
+      const styleEl = document.createElement('style');
+      styleEl.innerHTML = `
+        .vessel-icon-pulse {
+          animation: pulse 2s infinite;
+          transform-origin: center center;
+          filter: drop-shadow(0 0 2px rgba(33, 150, 243, 0.8));
+        }
+        
+        @keyframes pulse {
+          0% { transform: scale(1); }
+          50% { transform: scale(1.05); }
+          100% { transform: scale(1); }
+        }
+        
+        .port-icon-highlight, .refinery-icon-highlight {
+          filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.7));
+          transition: all 0.3s ease;
+        }
+        
+        .port-icon-highlight:hover, .refinery-icon-highlight:hover {
+          filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.9));
+          transform: scale(1.1);
+        }
+      `;
+      document.head.appendChild(styleEl);
+      
+      return () => {
+        // Clean up on unmount
+        document.head.removeChild(styleEl);
+      };
+    }
+  }, []);
 
   // Filter assets based on search and region
   const filteredVessels = vessels
@@ -447,7 +490,7 @@ export default function ProfessionalMaritimeMap({
                               <div 
                                 className="w-6 h-6 rounded overflow-hidden border border-border" 
                                 style={{
-                                  backgroundImage: `url(${(style as any).preview || `/assets/${key}-preview.png`})`,
+                                  backgroundImage: `url(${styleData.preview || `/assets/${key}-preview.png`})`,
                                   backgroundSize: 'cover',
                                   backgroundPosition: 'center'
                                 }}
