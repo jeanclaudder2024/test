@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { vesselService } from "./services/vesselService";
 import { refineryService } from "./services/refineryService";
 import { openaiService } from "./services/openaiService";
+import { AIEnhancementService } from "./services/aiEnhancementService";
 // Replace dataService from asiStreamService with marineTrafficService
 import { marineTrafficService } from "./services/marineTrafficService";
 import { refineryDataService } from "./services/refineryDataService";

@@ -12,7 +12,8 @@ export class AIEnhancementService {
   static async enhanceVesselData(vessel: Partial<Vessel>): Promise<Partial<Vessel>> {
     try {
       // Only enhance if the vessel has minimal data but valid coordinates
-      if (vessel.currentLat && vessel.currentLng && vessel.name) {
+      if (vessel.currentLat && vessel.currentLng && vessel.name && vessel.name.trim() !== '') {
+        const vesselName = vessel.name || 'Unknown Vessel';
         // Check what data is missing
         const missingFields = [];
         
@@ -35,7 +36,7 @@ export class AIEnhancementService {
               },
               {
                 role: "user",
-                content: `I need realistic data for a vessel named "${vessel.name}". Please provide a JSON object with these missing fields: ${missingFields.join(', ')}. The vessel is currently at coordinates ${vessel.currentLat}, ${vessel.currentLng}.`,
+                content: `I need realistic data for a vessel named "${vesselName}". Please provide a JSON object with these missing fields: ${missingFields.join(', ')}. The vessel is currently at coordinates ${vessel.currentLat || 0}, ${vessel.currentLng || 0}.`,
               },
             ],
             response_format: { type: "json_object" },
@@ -66,7 +67,8 @@ export class AIEnhancementService {
   static async enhancePortData(port: Partial<Port>): Promise<Partial<Port>> {
     try {
       // Only enhance if the port has minimal data but valid coordinates
-      if (port.lat && port.lng && port.name) {
+      if (port.lat && port.lng && port.name && port.name.trim() !== '') {
+        const portName = port.name || 'Unknown Port';
         // Check what data is missing
         const missingFields = [];
         
@@ -88,7 +90,7 @@ export class AIEnhancementService {
               },
               {
                 role: "user",
-                content: `I need realistic data for a port named "${port.name}" in ${port.country || 'unknown country'}. Please provide a JSON object with these missing fields: ${missingFields.join(', ')}. The port is located at coordinates ${port.lat}, ${port.lng}.`,
+                content: `I need realistic data for a port named "${portName}" in ${port.country || 'unknown country'}. Please provide a JSON object with these missing fields: ${missingFields.join(', ')}. The port is located at coordinates ${port.lat || 0}, ${port.lng || 0}.`,
               },
             ],
             response_format: { type: "json_object" },
@@ -119,7 +121,8 @@ export class AIEnhancementService {
   static async enhanceRefineryData(refinery: Partial<Refinery>): Promise<Partial<Refinery>> {
     try {
       // Only enhance if the refinery has minimal data but valid coordinates
-      if (refinery.lat && refinery.lng && refinery.name) {
+      if (refinery.lat && refinery.lng && refinery.name && refinery.name.trim() !== '') {
+        const refineryName = refinery.name || 'Unknown Refinery';
         // Check what data is missing
         const missingFields = [];
         
@@ -143,7 +146,7 @@ export class AIEnhancementService {
               },
               {
                 role: "user",
-                content: `I need realistic data for a refinery named "${refinery.name}" in ${refinery.country || 'unknown country'}. Please provide a JSON object with these missing fields: ${missingFields.join(', ')}. The refinery is located at coordinates ${refinery.lat}, ${refinery.lng}.`,
+                content: `I need realistic data for a refinery named "${refineryName}" in ${refinery.country || 'unknown country'}. Please provide a JSON object with these missing fields: ${missingFields.join(', ')}. The refinery is located at coordinates ${refinery.lat || 0}, ${refinery.lng || 0}.`,
               },
             ],
             response_format: { type: "json_object" },
