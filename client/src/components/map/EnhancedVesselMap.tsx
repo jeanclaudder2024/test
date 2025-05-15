@@ -89,7 +89,15 @@ import {
 import { cn } from '@/lib/utils';
 
 // Map tile layer URLs
-const MAP_STYLES = {
+interface MapStyle {
+  url: string;
+  name: string;
+  attribution: string;
+  maxZoom: number;
+  className: string;
+}
+
+const MAP_STYLES: Record<string, MapStyle> = {
   'osm-light': {
     url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
     name: 'Light',
@@ -534,7 +542,12 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
           <div>{port.type || 'N/A'}</div>
           
           <div className="font-medium">Coordinates:</div>
-          <div>{`${typeof port.lat === 'number' ? port.lat.toFixed(4) : parseFloat(port.lat).toFixed(4)}, ${typeof port.lng === 'number' ? port.lng.toFixed(4) : parseFloat(port.lng).toFixed(4)}`}</div>
+          <div>
+            {port.lat && port.lng 
+              ? `${parseFloat(String(port.lat)).toFixed(4)}, ${parseFloat(String(port.lng)).toFixed(4)}` 
+              : 'N/A'
+            }
+          </div>
           
           <div className="font-medium">Status:</div>
           <div>
@@ -900,10 +913,10 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
       >
         {/* Selected map style */}
         <TileLayer
-          url={MAP_STYLES[mapStyle].url}
-          attribution={MAP_STYLES[mapStyle].attribution}
-          maxZoom={MAP_STYLES[mapStyle].maxZoom}
-          className={MAP_STYLES[mapStyle].className}
+          url={MAP_STYLES[mapStyle]?.url || MAP_STYLES['osm-light'].url}
+          attribution={MAP_STYLES[mapStyle]?.attribution || MAP_STYLES['osm-light'].attribution}
+          maxZoom={MAP_STYLES[mapStyle]?.maxZoom || MAP_STYLES['osm-light'].maxZoom}
+          className={MAP_STYLES[mapStyle]?.className || MAP_STYLES['osm-light'].className}
         />
         
         {/* Controls */}

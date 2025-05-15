@@ -445,10 +445,36 @@ export const OptimizedRefineryLayer: React.FC<{
     refineries.forEach(refinery => {
       if (!refinery.lat || !refinery.lng) return;
       
-      const lat = parseFloat(refinery.lat.toString());
-      const lng = parseFloat(refinery.lng.toString());
+      // Parse coordinates safely
+      let lat: number, lng: number;
       
-      if (isNaN(lat) || isNaN(lng)) return;
+      try {
+        if (typeof refinery.lat === 'number') {
+          lat = refinery.lat;
+        } else {
+          lat = parseFloat(String(refinery.lat));
+        }
+          
+        if (typeof refinery.lng === 'number') {
+          lng = refinery.lng;
+        } else {
+          lng = parseFloat(String(refinery.lng));
+        }
+      } catch (error) {
+        console.warn(`Error parsing refinery coordinates for ${refinery.name}:`, error);
+        return;
+      }
+      
+      if (isNaN(lat) || isNaN(lng)) {
+        console.warn(`Invalid refinery coordinates for ${refinery.name}: ${lat}, ${lng}`);
+        return;
+      }
+      
+      // Validate coordinate range
+      if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+        console.warn(`Refinery ${refinery.name} has out-of-range coordinates: ${lat}, ${lng}`);
+        return;
+      }
       
       // Create marker with custom icon
       const refIcon = new L.Icon({
@@ -542,10 +568,36 @@ export const OptimizedPortLayer: React.FC<{
     ports.forEach(port => {
       if (!port.lat || !port.lng) return;
       
-      const lat = parseFloat(port.lat.toString());
-      const lng = parseFloat(port.lng.toString());
+      // Parse coordinates safely
+      let lat: number, lng: number;
       
-      if (isNaN(lat) || isNaN(lng)) return;
+      try {
+        if (typeof port.lat === 'number') {
+          lat = port.lat;
+        } else {
+          lat = parseFloat(String(port.lat));
+        }
+          
+        if (typeof port.lng === 'number') {
+          lng = port.lng;
+        } else {
+          lng = parseFloat(String(port.lng));
+        }
+      } catch (error) {
+        console.warn(`Error parsing port coordinates for ${port.name}:`, error);
+        return;
+      }
+      
+      if (isNaN(lat) || isNaN(lng)) {
+        console.warn(`Invalid port coordinates for ${port.name}: ${lat}, ${lng}`);
+        return;
+      }
+      
+      // Validate coordinate range
+      if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+        console.warn(`Port ${port.name} has out-of-range coordinates: ${lat}, ${lng}`);
+        return;
+      }
       
       // Create marker with custom icon
       const portIcon = new L.Icon({
