@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import ReactDOM from 'react-dom';
-import { MapContainer, TileLayer, Marker, Popup, LayerGroup, useMap, ZoomControl } from 'react-leaflet';
+import React, { useState, useRef, useEffect } from 'react';
+import { MapContainer, TileLayer, ZoomControl, LayerGroup, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
@@ -11,12 +10,12 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Loader2, Search, Ship, Anchor, Factory, Map as MapIcon, Layers } from 'lucide-react';
+import { Loader2, Map, Ship, Database, Search, Factory, ArrowDown, FileDown, FileUp, Settings } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import MarkerClusterGroup from 'react-leaflet-cluster';
@@ -27,48 +26,68 @@ interface Vessel {
   name: string;
   imo?: string;
   mmsi?: string;
-  callSign?: string;
-  flag?: string;
   vesselType?: string;
-  status?: string;
-  length?: number;
-  beam?: number;
+  flag?: string;
+  built?: number | null;
+  deadweight?: number | null;
   currentLat: string | number;
   currentLng: string | number;
-  speedKnots?: number;
-  courseHeading?: number;
-  destination?: string;
-  eta?: string | Date;
-  cargo?: string;
-  cargoCapacity?: number;
-  yearBuilt?: number;
-  vesselClass?: string;
+  departurePort?: string | null;
+  departureDate?: Date | null;
+  departureLat?: string | number | null;
+  departureLng?: string | number | null;
+  destinationPort?: string | null;
+  destinationLat?: string | number | null;
+  destinationLng?: string | number | null;
+  eta?: Date | null;
+  cargoType?: string | null;
+  cargoCapacity?: number | null;
+  currentRegion?: string | null;
+  metadata?: string | null;
+  lastUpdated?: Date | null;
 }
 
 interface Port {
   id: number;
   name: string;
   country: string;
-  type?: string;
-  status?: string;
-  region?: string;
-  lat: string | number;
-  lng: string | number;
-  capacity?: number;
-  description?: string;
+  type: string | null;
+  status: string | null;
+  region: string;
+  lat: string;
+  lng: string;
+  capacity: number | null;
+  description: string | null;
+  lastUpdated: Date | null;
 }
 
 interface Refinery {
   id: number;
   name: string;
-  company?: string;
   country: string;
-  region?: string;
-  status?: string;
-  capacity?: number;
-  lat: string | number;
-  lng: string | number;
-  description?: string;
+  region: string;
+  lat: string;
+  lng: string;
+  capacity: number | null;
+  status: string | null;
+  description: string | null;
+  operator: string | null;
+  owner: string | null;
+  type: string | null;
+  products: string | null;
+  year_built: number | null;
+  last_maintenance: Date | null;
+  next_maintenance: Date | null;
+  complexity: string | null;
+  email: string | null;
+  phone: string | null;
+  website: string | null;
+  address: string | null;
+  technical_specs: string | null;
+  photo: string | null;
+  city: string | null;
+  last_updated: Date | null;
+  utilization: string | null;
 }
 
 // Map styling
@@ -79,119 +98,11 @@ interface MapStyle {
   maxZoom: number;
 }
 
-const MAP_STYLES: Record<string, MapStyle> = {
-  standard: {
-    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-    name: 'Standard',
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    maxZoom: 19
-  },
-  dark: {
-    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-    name: 'Dark',
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-    maxZoom: 19
-  },
-  satellite: {
-    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    name: 'Satellite',
-    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
-    maxZoom: 19
-  },
-  nautical: {
-    url: 'https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png',
-    name: 'Nautical',
-    attribution: 'Map data: &copy; <a href="http://www.openseamap.org">OpenSeaMap</a> contributors',
-    maxZoom: 19
-  },
-  terrain: {
-    url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
-    name: 'Terrain',
-    attribution: 'Map data: &copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a>',
-    maxZoom: 17
-  }
-};
-
-// Helper for safely formatting coordinates
-const formatCoordinate = (value: string | number | null | undefined): string => {
-  if (value === null || value === undefined) {
-    return 'N/A';
-  }
-  
-  try {
-    return parseFloat(String(value)).toFixed(4);
-  } catch (error) {
-    console.warn('Error formatting coordinate:', error);
-    return 'N/A';
-  }
-};
-
-// Helper to safely parse coordinates for the map
-const parseCoordinate = (value: string | number | null | undefined): number | null => {
-  if (value === null || value === undefined) {
-    return null;
-  }
-  
-  try {
-    const parsed = parseFloat(String(value));
-    if (isNaN(parsed)) {
-      return null;
-    }
-    return parsed;
-  } catch (error) {
-    console.warn('Error parsing coordinate:', error);
-    return null;
-  }
-};
-
-// Custom icons for different map elements
-const createCustomIcon = (iconUrl: string, size: number = 25) => {
-  return L.icon({
-    iconUrl,
-    iconSize: [size, size],
-    iconAnchor: [size/2, size/2],
-    popupAnchor: [0, -size/2]
-  });
-};
-
-// Map control component for custom controls
 interface MapControlProps {
   position: 'topleft' | 'topright' | 'bottomleft' | 'bottomright';
   children: React.ReactNode;
 }
 
-const MapControl: React.FC<MapControlProps> = ({ position, children }) => {
-  const map = useMap();
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const [portalContainer, setPortalContainer] = useState<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    const container = L.DomUtil.create('div', `leaflet-control leaflet-bar custom-map-control-${position}`);
-    
-    const mapControl = L.Control.extend({
-      options: { position },
-      onAdd: function() {
-        L.DomEvent.disableClickPropagation(container);
-        L.DomEvent.disableScrollPropagation(container);
-        return container;
-      }
-    });
-    
-    map.addControl(new mapControl());
-    containerRef.current = container;
-    setPortalContainer(container);
-    
-    return () => {
-      if (container && container.parentNode) {
-        container.parentNode.removeChild(container);
-      }
-    };
-  }, [map, position]);
-
-  return portalContainer ? ReactDOM.createPortal(children, portalContainer) : null;
-};
-
-// Main Map Component
 interface ProfessionalMaritimeMapProps {
   defaultCenter?: [number, number];
   defaultZoom?: number;
@@ -199,37 +110,143 @@ interface ProfessionalMaritimeMapProps {
   themeMode?: 'light' | 'dark';
 }
 
-const ProfessionalMaritimeMap: React.FC<ProfessionalMaritimeMapProps> = ({
-  defaultCenter = [20, 0],
-  defaultZoom = 3,
+// Utility functions for consistent coordinate handling
+const parseCoordinate = (coord: string | number | null | undefined): number | null => {
+  if (coord === null || coord === undefined) return null;
+  const parsed = typeof coord === 'string' ? parseFloat(coord) : coord;
+  return isNaN(parsed) ? null : parsed;
+};
+
+const formatCoordinate = (coord: string | number | null | undefined): string => {
+  const parsed = parseCoordinate(coord);
+  return parsed !== null ? parsed.toFixed(6) : 'N/A';
+};
+
+// Custom Control for Leaflet
+function MapControl({ position, children }: MapControlProps) {
+  const map = useMap();
+  const controlRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (controlRef.current) {
+      const control = L.control({ position });
+      const container = controlRef.current;
+
+      control.onAdd = () => {
+        L.DomUtil.disableClickPropagation(container);
+        L.DomUtil.disableScrollPropagation(container);
+        return container;
+      };
+
+      control.addTo(map);
+
+      return () => {
+        control.remove();
+      };
+    }
+  }, [map, position]);
+
+  return (
+    <div ref={controlRef} className="leaflet-control">
+      {children}
+    </div>
+  );
+}
+
+// Custom map component
+export default function ProfessionalMaritimeMap({ 
+  defaultCenter = [0, 0], 
+  defaultZoom = 3, 
   fullScreen = false,
   themeMode = 'light'
-}): React.ReactNode => {
-  // Map state
+}: ProfessionalMaritimeMapProps) {
+  const { toast } = useToast();
+  const mapRef = useRef<L.Map | null>(null);
+  
+  // Map style options
+  const MAP_STYLES: Record<string, MapStyle> = {
+    standard: {
+      url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      name: 'Standard',
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19
+    },
+    satellite: {
+      url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      name: 'Satellite',
+      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+      maxZoom: 19
+    },
+    dark: {
+      url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+      name: 'Dark',
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      maxZoom: 19
+    },
+    terrain: {
+      url: 'https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}{r}.png',
+      name: 'Terrain',
+      attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 18
+    },
+    toner: {
+      url: 'https://stamen-tiles-{s}.a.ssl.fastly.net/toner/{z}/{x}/{y}{r}.png',
+      name: 'Toner',
+      attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 18
+    },
+    watercolor: {
+      url: 'https://stamen-tiles-{s}.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.png',
+      name: 'Watercolor',
+      attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 16
+    }
+  };
+
+  // State management
   const [mapStyle, setMapStyle] = useState<string>(themeMode === 'dark' ? 'dark' : 'standard');
   const [showVessels, setShowVessels] = useState<boolean>(true);
   const [showPorts, setShowPorts] = useState<boolean>(true);
   const [showRefineries, setShowRefineries] = useState<boolean>(true);
+  const [showConnections, setShowConnections] = useState<boolean>(false);
   const [useCluster, setUseCluster] = useState<boolean>(true);
-  const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedRegion, setSelectedRegion] = useState<string>('global');
-  const { toast } = useToast();
-  
-  // References
-  const mapRef = useRef<L.Map | null>(null);
-  
-  // WebSocket connection for real-time vessel data
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+
+  // Custom icons
+  const vesselIcon = L.icon({
+    iconUrl: '/assets/vessel-icon.svg',
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+    popupAnchor: [0, -16]
+  });
+
+  const portIcon = L.icon({
+    iconUrl: '/assets/port-icon.svg',
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+    popupAnchor: [0, -14]
+  });
+
+  const refineryIcon = L.icon({
+    iconUrl: '/assets/refinery-icon.svg',
+    iconSize: [30, 30],
+    iconAnchor: [15, 15],
+    popupAnchor: [0, -15]
+  });
+
+  // Setup WebSocket connection for vessel data
   const { 
     vessels, 
-    connected: wsConnected, 
-    lastUpdated, 
-    loading: vesselsLoading,
-    error: wsError 
+    loading: vesselsLoading, 
+    error: wsError, 
+    lastUpdate 
   } = useVesselWebSocket({
-    page: 1,
-    pageSize: 2500,
-    loadAllVessels: true,
     region: selectedRegion,
+    page: 1,
+    pageSize: 1000,
+    loadAllVessels: true,
     trackPortProximity: true,
     proximityRadius: 50
   });
@@ -247,239 +264,51 @@ const ProfessionalMaritimeMap: React.FC<ProfessionalMaritimeMapProps> = ({
   useEffect(() => {
     if (wsError) {
       toast({
-        title: "Connection Error",
-        description: "Unable to connect to vessel tracking service. Using cached data.",
+        title: "Connection error",
+        description: "Failed to connect to vessel tracking service.",
         variant: "destructive"
       });
     }
   }, [wsError, toast]);
 
-  // Apply the right map style when theme changes
+  // Update last updated timestamp
   useEffect(() => {
-    setMapStyle(themeMode === 'dark' ? 'dark' : 'standard');
-  }, [themeMode]);
+    if (lastUpdate) {
+      setLastUpdated(new Date(lastUpdate));
+    }
+  }, [lastUpdate]);
 
-  // Filter assets based on search term
-  const filteredVessels = searchTerm
-    ? vessels.filter(v => v.name?.toLowerCase().includes(searchTerm.toLowerCase()))
-    : vessels;
+  // Filter assets based on search and region
+  const filteredVessels = vessels
+    ? vessels.filter(v => !searchTerm || v.name?.toLowerCase().includes(searchTerm.toLowerCase()))
+    : [];
 
-  const filteredPorts = searchTerm
-    ? ports.filter((p: Port) => p.name?.toLowerCase().includes(searchTerm.toLowerCase()))
-    : ports;
+  const filteredPorts = ports
+    ? ports.filter((p: PortType) => (!searchTerm || p.name?.toLowerCase().includes(searchTerm.toLowerCase())) && 
+        (selectedRegion === 'global' || p.region === selectedRegion))
+    : [];
 
-  const filteredRefineries = searchTerm
-    ? refineries.filter((r: Refinery) => r.name?.toLowerCase().includes(searchTerm.toLowerCase()))
-    : refineries;
+  const filteredRefineries = refineries
+    ? refineries.filter((r: RefineryType) => (!searchTerm || r.name?.toLowerCase().includes(searchTerm.toLowerCase())) && 
+        (selectedRegion === 'global' || r.region === selectedRegion))
+    : [];
 
-  // Count assets by region
-  const regionCounts = {
-    vessels: vessels.filter(v => selectedRegion === 'global' || v.region === selectedRegion).length,
-    ports: ports.filter((p: Port) => selectedRegion === 'global' || p.region === selectedRegion).length,
-    refineries: refineries.filter((r: Refinery) => selectedRegion === 'global' || r.region === selectedRegion).length
+  // Count assets in selected region
+  const assetCount = {
+    vessels: vessels.filter(v => selectedRegion === 'global' || v.currentRegion === selectedRegion).length,
+    ports: ports.filter((p: PortType) => selectedRegion === 'global' || p.region === selectedRegion).length,
+    refineries: refineries.filter((r: RefineryType) => selectedRegion === 'global' || r.region === selectedRegion).length
   };
 
-  // Calculate statistics
-  const vesselStats = {
-    totalVessels: vessels.length,
-    activeVessels: vessels.filter(v => v.status === 'active').length,
-    totalCargoVolume: vessels.reduce((sum, vessel) => sum + (vessel.cargoCapacity || 0), 0)
-  };
-
-  // Icons
-  const vesselIcon = createCustomIcon('/assets/vessel-icon.svg', 20);
-  const portIcon = createCustomIcon('/assets/port-icon.svg', 22);
-  const refineryIcon = createCustomIcon('/assets/refinery-icon.svg', 24);
-
-  // Fallback icons if custom icons are unavailable
-  useEffect(() => {
-    // Create default icons if custom icons fail to load
-    const defaultVesselIcon = L.divIcon({
-      className: 'custom-div-icon',
-      html: `<div style="background-color: #3b82f6; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></div>`,
-      iconSize: [12, 12],
-      iconAnchor: [6, 6],
-      popupAnchor: [0, -6]
-    });
-
-    const defaultPortIcon = L.divIcon({
-      className: 'custom-div-icon',
-      html: `<div style="background-color: #10b981; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white;"></div>`,
-      iconSize: [14, 14],
-      iconAnchor: [7, 7],
-      popupAnchor: [0, -7]
-    });
-
-    const defaultRefineryIcon = L.divIcon({
-      className: 'custom-div-icon',
-      html: `<div style="background-color: #f59e0b; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white;"></div>`,
-      iconSize: [16, 16],
-      iconAnchor: [8, 8],
-      popupAnchor: [0, -8]
-    });
-
-    // Set the default icons on the prototype
-    L.Marker.prototype.options.icon = defaultVesselIcon;
-  }, []);
-
-  // Render control panels
-  const renderControlPanel = () => {
+  // Render counter badge for each asset type
+  const AssetCounter = ({ label, count, icon }: { label: string, count: number, icon: React.ReactNode }) => {
     return (
-      <div className="bg-card rounded-lg border border-border shadow-md p-4 w-full max-w-xs">
-        <Tabs defaultValue="controls">
-          <TabsList className="w-full mb-4">
-            <TabsTrigger className="flex-1" value="controls">Controls</TabsTrigger>
-            <TabsTrigger className="flex-1" value="layers">Layers</TabsTrigger>
-            <TabsTrigger className="flex-1" value="stats">Statistics</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="controls">
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="search">Search Assets</Label>
-                <div className="relative">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="search"
-                    placeholder="Search vessels, ports, refineries..."
-                    className="pl-8"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <Label htmlFor="region">Region Filter</Label>
-                <Select 
-                  value={selectedRegion} 
-                  onValueChange={setSelectedRegion}
-                >
-                  <SelectTrigger id="region">
-                    <SelectValue placeholder="Select region" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="global">Global</SelectItem>
-                    <SelectItem value="north_america">North America</SelectItem>
-                    <SelectItem value="south_america">South America</SelectItem>
-                    <SelectItem value="europe">Europe</SelectItem>
-                    <SelectItem value="africa">Africa</SelectItem>
-                    <SelectItem value="asia">Asia</SelectItem>
-                    <SelectItem value="oceania">Oceania</SelectItem>
-                    <SelectItem value="middle_east">Middle East</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <Label htmlFor="map-style">Map Style</Label>
-                <Select 
-                  value={mapStyle} 
-                  onValueChange={setMapStyle}
-                >
-                  <SelectTrigger id="map-style">
-                    <SelectValue placeholder="Select map style" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(MAP_STYLES).map(([key, style]) => (
-                      <SelectItem key={key} value={key}>{style.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <Label htmlFor="clustering">Use Clustering</Label>
-                <Switch 
-                  id="clustering" 
-                  checked={useCluster} 
-                  onCheckedChange={setUseCluster} 
-                />
-              </div>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="layers">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Ship className="h-4 w-4 text-blue-500" />
-                  <Label htmlFor="show-vessels">Vessels</Label>
-                </div>
-                <Switch 
-                  id="show-vessels" 
-                  checked={showVessels} 
-                  onCheckedChange={setShowVessels}
-                />
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Anchor className="h-4 w-4 text-green-500" />
-                  <Label htmlFor="show-ports">Ports</Label>
-                </div>
-                <Switch 
-                  id="show-ports" 
-                  checked={showPorts} 
-                  onCheckedChange={setShowPorts}
-                />
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Factory className="h-4 w-4 text-amber-500" />
-                  <Label htmlFor="show-refineries">Refineries</Label>
-                </div>
-                <Switch 
-                  id="show-refineries" 
-                  checked={showRefineries} 
-                  onCheckedChange={setShowRefineries}
-                />
-              </div>
-              
-              <div className="pt-2 border-t border-border">
-                <div className="flex gap-2 flex-wrap">
-                  <Badge variant="outline" className="bg-blue-500/10 text-blue-600 hover:bg-blue-500/20">
-                    Vessels: {regionCounts.vessels}
-                  </Badge>
-                  <Badge variant="outline" className="bg-green-500/10 text-green-600 hover:bg-green-500/20">
-                    Ports: {regionCounts.ports}
-                  </Badge>
-                  <Badge variant="outline" className="bg-amber-500/10 text-amber-600 hover:bg-amber-500/20">
-                    Refineries: {regionCounts.refineries}
-                  </Badge>
-                </div>
-              </div>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="stats">
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Total Vessels:</span>
-                <span className="font-medium">{vesselStats.totalVessels.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Active Vessels:</span>
-                <span className="font-medium">{vesselStats.activeVessels.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Total Cargo:</span>
-                <span className="font-medium">{vesselStats.totalCargoVolume.toLocaleString()} DWT</span>
-              </div>
-            </div>
-          </TabsContent>
-        </Tabs>
-        
-        <div className="flex justify-between items-center text-xs text-muted-foreground mt-6">
-          <div className="flex items-center gap-1">
-            <div className={wsConnected ? "h-2 w-2 bg-green-500 rounded-full" : "h-2 w-2 bg-red-500 rounded-full"}></div>
-            <span>{wsConnected ? "Connected" : "Disconnected"}</span>
-          </div>
-          <div>
-            {lastUpdated && `Last update: ${new Date(lastUpdated).toLocaleTimeString()}`}
-          </div>
-        </div>
+      <div className="flex items-center gap-1">
+        <Badge variant="outline" className="px-1 py-0 h-5">
+          <span className="mr-1">{icon}</span>
+          <span>{count}</span>
+        </Badge>
+        <span className="text-xs text-muted-foreground">{label}</span>
       </div>
     );
   };
@@ -500,14 +329,14 @@ const ProfessionalMaritimeMap: React.FC<ProfessionalMaritimeMapProps> = ({
           </div>
         </div>
       )}
-      
-      <MapContainer
-        center={defaultCenter}
-        zoom={defaultZoom}
-        style={{ height: '100%', width: '100%' }}
-        zoomControl={false}
-        whenReady={(map) => {
-          mapRef.current = map.target;
+
+      <MapContainer 
+        center={defaultCenter} 
+        zoom={defaultZoom} 
+        className="h-full w-full" 
+        attributionControl={false}
+        whenCreated={(map) => {
+          mapRef.current = map;
         }}
       >
         <TileLayer
@@ -539,14 +368,14 @@ const ProfessionalMaritimeMap: React.FC<ProfessionalMaritimeMapProps> = ({
                         <h3 className="font-bold text-sm">{vessel.name || 'Unknown Vessel'}</h3>
                         <div className="text-xs mt-1">
                           <div><span className="font-medium">Type:</span> {vessel.vesselType || 'N/A'}</div>
-                          <div><span className="font-medium">Status:</span> {vessel.status || 'N/A'}</div>
                           <div><span className="font-medium">Flag:</span> {vessel.flag || 'N/A'}</div>
                           <div>
                             <span className="font-medium">Coordinates:</span> {formatCoordinate(vessel.currentLat)}, {formatCoordinate(vessel.currentLng)}
                           </div>
-                          {vessel.cargo && <div><span className="font-medium">Cargo:</span> {vessel.cargo}</div>}
-                          {vessel.destination && <div><span className="font-medium">Destination:</span> {vessel.destination}</div>}
-                          {vessel.speedKnots && <div><span className="font-medium">Speed:</span> {vessel.speedKnots} knots</div>}
+                          {vessel.cargoType && <div><span className="font-medium">Cargo:</span> {vessel.cargoType}</div>}
+                          {vessel.destinationPort && <div><span className="font-medium">Destination:</span> {vessel.destinationPort}</div>}
+                          {vessel.built && <div><span className="font-medium">Built:</span> {vessel.built}</div>}
+                          {vessel.deadweight && <div><span className="font-medium">Deadweight:</span> {vessel.deadweight} tons</div>}
                         </div>
                       </div>
                     </Popup>
@@ -573,14 +402,14 @@ const ProfessionalMaritimeMap: React.FC<ProfessionalMaritimeMapProps> = ({
                         <h3 className="font-bold text-sm">{vessel.name || 'Unknown Vessel'}</h3>
                         <div className="text-xs mt-1">
                           <div><span className="font-medium">Type:</span> {vessel.vesselType || 'N/A'}</div>
-                          <div><span className="font-medium">Status:</span> {vessel.status || 'N/A'}</div>
                           <div><span className="font-medium">Flag:</span> {vessel.flag || 'N/A'}</div>
                           <div>
                             <span className="font-medium">Coordinates:</span> {formatCoordinate(vessel.currentLat)}, {formatCoordinate(vessel.currentLng)}
                           </div>
-                          {vessel.cargo && <div><span className="font-medium">Cargo:</span> {vessel.cargo}</div>}
-                          {vessel.destination && <div><span className="font-medium">Destination:</span> {vessel.destination}</div>}
-                          {vessel.speedKnots && <div><span className="font-medium">Speed:</span> {vessel.speedKnots} knots</div>}
+                          {vessel.cargoType && <div><span className="font-medium">Cargo:</span> {vessel.cargoType}</div>}
+                          {vessel.destinationPort && <div><span className="font-medium">Destination:</span> {vessel.destinationPort}</div>}
+                          {vessel.built && <div><span className="font-medium">Built:</span> {vessel.built}</div>}
+                          {vessel.deadweight && <div><span className="font-medium">Deadweight:</span> {vessel.deadweight} tons</div>}
                         </div>
                       </div>
                     </Popup>
@@ -590,12 +419,12 @@ const ProfessionalMaritimeMap: React.FC<ProfessionalMaritimeMapProps> = ({
             </LayerGroup>
           )
         )}
-        
+
         {/* Ports Layer */}
         {showPorts && (
           useCluster ? (
             <MarkerClusterGroup chunkedLoading>
-              {filteredPorts.map((port: Port) => {
+              {filteredPorts.map((port: PortType) => {
                 const lat = parseCoordinate(port.lat);
                 const lng = parseCoordinate(port.lng);
                 
@@ -609,18 +438,13 @@ const ProfessionalMaritimeMap: React.FC<ProfessionalMaritimeMapProps> = ({
                   >
                     <Popup className="port-popup">
                       <div className="p-1">
-                        <h3 className="font-bold text-sm">{port.name}</h3>
+                        <h3 className="font-bold text-sm">{port.name || 'Unnamed Port'}</h3>
                         <div className="text-xs mt-1">
-                          <div><span className="font-medium">Country:</span> {port.country}</div>
+                          <div><span className="font-medium">Country:</span> {port.country || 'N/A'}</div>
                           <div><span className="font-medium">Type:</span> {port.type || 'N/A'}</div>
                           <div><span className="font-medium">Status:</span> {port.status || 'N/A'}</div>
-                          <div>
-                            <span className="font-medium">Coordinates:</span> {formatCoordinate(port.lat)}, {formatCoordinate(port.lng)}
-                          </div>
-                          {port.capacity && <div><span className="font-medium">Capacity:</span> {port.capacity.toLocaleString()} DWT</div>}
-                          {port.description && (
-                            <div className="mt-1 text-xs text-muted-foreground">{port.description}</div>
-                          )}
+                          <div><span className="font-medium">Region:</span> {port.region || 'N/A'}</div>
+                          <div><span className="font-medium">Capacity:</span> {port.capacity ? `${port.capacity.toLocaleString()} units` : 'N/A'}</div>
                         </div>
                       </div>
                     </Popup>
@@ -630,7 +454,7 @@ const ProfessionalMaritimeMap: React.FC<ProfessionalMaritimeMapProps> = ({
             </MarkerClusterGroup>
           ) : (
             <LayerGroup>
-              {filteredPorts.map((port: Port) => {
+              {filteredPorts.map((port: PortType) => {
                 const lat = parseCoordinate(port.lat);
                 const lng = parseCoordinate(port.lng);
                 
@@ -644,18 +468,13 @@ const ProfessionalMaritimeMap: React.FC<ProfessionalMaritimeMapProps> = ({
                   >
                     <Popup className="port-popup">
                       <div className="p-1">
-                        <h3 className="font-bold text-sm">{port.name}</h3>
+                        <h3 className="font-bold text-sm">{port.name || 'Unnamed Port'}</h3>
                         <div className="text-xs mt-1">
-                          <div><span className="font-medium">Country:</span> {port.country}</div>
+                          <div><span className="font-medium">Country:</span> {port.country || 'N/A'}</div>
                           <div><span className="font-medium">Type:</span> {port.type || 'N/A'}</div>
                           <div><span className="font-medium">Status:</span> {port.status || 'N/A'}</div>
-                          <div>
-                            <span className="font-medium">Coordinates:</span> {formatCoordinate(port.lat)}, {formatCoordinate(port.lng)}
-                          </div>
-                          {port.capacity && <div><span className="font-medium">Capacity:</span> {port.capacity.toLocaleString()} DWT</div>}
-                          {port.description && (
-                            <div className="mt-1 text-xs text-muted-foreground">{port.description}</div>
-                          )}
+                          <div><span className="font-medium">Region:</span> {port.region || 'N/A'}</div>
+                          <div><span className="font-medium">Capacity:</span> {port.capacity ? `${port.capacity.toLocaleString()} units` : 'N/A'}</div>
                         </div>
                       </div>
                     </Popup>
@@ -665,12 +484,12 @@ const ProfessionalMaritimeMap: React.FC<ProfessionalMaritimeMapProps> = ({
             </LayerGroup>
           )
         )}
-        
+
         {/* Refineries Layer */}
         {showRefineries && (
           useCluster ? (
             <MarkerClusterGroup chunkedLoading>
-              {filteredRefineries.map((refinery: Refinery) => {
+              {filteredRefineries.map((refinery: RefineryType) => {
                 const lat = parseCoordinate(refinery.lat);
                 const lng = parseCoordinate(refinery.lng);
                 
@@ -684,18 +503,14 @@ const ProfessionalMaritimeMap: React.FC<ProfessionalMaritimeMapProps> = ({
                   >
                     <Popup className="refinery-popup">
                       <div className="p-1">
-                        <h3 className="font-bold text-sm">{refinery.name}</h3>
+                        <h3 className="font-bold text-sm">{refinery.name || 'Unnamed Refinery'}</h3>
                         <div className="text-xs mt-1">
-                          <div><span className="font-medium">Company:</span> {refinery.company || 'N/A'}</div>
-                          <div><span className="font-medium">Country:</span> {refinery.country}</div>
-                          <div><span className="font-medium">Status:</span> {refinery.status || 'Active'}</div>
-                          <div>
-                            <span className="font-medium">Coordinates:</span> {formatCoordinate(refinery.lat)}, {formatCoordinate(refinery.lng)}
-                          </div>
-                          {refinery.capacity && <div><span className="font-medium">Capacity:</span> {refinery.capacity.toLocaleString()} bbl/day</div>}
-                          {refinery.description && (
-                            <div className="mt-1 text-xs text-muted-foreground">{refinery.description}</div>
-                          )}
+                          <div><span className="font-medium">Country:</span> {refinery.country || 'N/A'}</div>
+                          <div><span className="font-medium">Region:</span> {refinery.region || 'N/A'}</div>
+                          <div><span className="font-medium">Status:</span> {refinery.status || 'N/A'}</div>
+                          <div><span className="font-medium">Capacity:</span> {refinery.capacity ? `${refinery.capacity.toLocaleString()} bpd` : 'N/A'}</div>
+                          <div><span className="font-medium">Owner:</span> {refinery.owner || 'N/A'}</div>
+                          <div><span className="font-medium">Operator:</span> {refinery.operator || 'N/A'}</div>
                         </div>
                       </div>
                     </Popup>
@@ -705,7 +520,7 @@ const ProfessionalMaritimeMap: React.FC<ProfessionalMaritimeMapProps> = ({
             </MarkerClusterGroup>
           ) : (
             <LayerGroup>
-              {filteredRefineries.map((refinery: Refinery) => {
+              {filteredRefineries.map((refinery: RefineryType) => {
                 const lat = parseCoordinate(refinery.lat);
                 const lng = parseCoordinate(refinery.lng);
                 
@@ -719,18 +534,14 @@ const ProfessionalMaritimeMap: React.FC<ProfessionalMaritimeMapProps> = ({
                   >
                     <Popup className="refinery-popup">
                       <div className="p-1">
-                        <h3 className="font-bold text-sm">{refinery.name}</h3>
+                        <h3 className="font-bold text-sm">{refinery.name || 'Unnamed Refinery'}</h3>
                         <div className="text-xs mt-1">
-                          <div><span className="font-medium">Company:</span> {refinery.company || 'N/A'}</div>
-                          <div><span className="font-medium">Country:</span> {refinery.country}</div>
-                          <div><span className="font-medium">Status:</span> {refinery.status || 'Active'}</div>
-                          <div>
-                            <span className="font-medium">Coordinates:</span> {formatCoordinate(refinery.lat)}, {formatCoordinate(refinery.lng)}
-                          </div>
-                          {refinery.capacity && <div><span className="font-medium">Capacity:</span> {refinery.capacity.toLocaleString()} bbl/day</div>}
-                          {refinery.description && (
-                            <div className="mt-1 text-xs text-muted-foreground">{refinery.description}</div>
-                          )}
+                          <div><span className="font-medium">Country:</span> {refinery.country || 'N/A'}</div>
+                          <div><span className="font-medium">Region:</span> {refinery.region || 'N/A'}</div>
+                          <div><span className="font-medium">Status:</span> {refinery.status || 'N/A'}</div>
+                          <div><span className="font-medium">Capacity:</span> {refinery.capacity ? `${refinery.capacity.toLocaleString()} bpd` : 'N/A'}</div>
+                          <div><span className="font-medium">Owner:</span> {refinery.owner || 'N/A'}</div>
+                          <div><span className="font-medium">Operator:</span> {refinery.operator || 'N/A'}</div>
                         </div>
                       </div>
                     </Popup>
@@ -740,14 +551,145 @@ const ProfessionalMaritimeMap: React.FC<ProfessionalMaritimeMapProps> = ({
             </LayerGroup>
           )
         )}
-        
-        {/* Control Panel */}
+
+        {/* Map Controls */}
         <MapControl position="topleft">
-          {renderControlPanel()}
+          <Card className="w-64 shadow-md">
+            <CardHeader className="p-3 pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Map className="h-4 w-4" />
+                Maritime Assets
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-3 pt-0">
+              <Tabs defaultValue="layers" className="w-full">
+                <TabsList className="w-full mb-2 grid grid-cols-3">
+                  <TabsTrigger value="layers">Layers</TabsTrigger>
+                  <TabsTrigger value="filter">Filter</TabsTrigger>
+                  <TabsTrigger value="settings">Display</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="layers" className="space-y-2 mt-0">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Switch id="vessels" checked={showVessels} onCheckedChange={setShowVessels} />
+                      <Label htmlFor="vessels" className="text-sm flex items-center gap-1">
+                        <Ship className="h-3.5 w-3.5" /> Vessels
+                      </Label>
+                    </div>
+                    <AssetCounter label="vessels" count={assetCount.vessels} icon={<Ship className="h-3 w-3" />} />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Switch id="ports" checked={showPorts} onCheckedChange={setShowPorts} />
+                      <Label htmlFor="ports" className="text-sm flex items-center gap-1">
+                        <Database className="h-3.5 w-3.5" /> Ports
+                      </Label>
+                    </div>
+                    <AssetCounter label="ports" count={assetCount.ports} icon={<Database className="h-3 w-3" />} />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Switch id="refineries" checked={showRefineries} onCheckedChange={setShowRefineries} />
+                      <Label htmlFor="refineries" className="text-sm flex items-center gap-1">
+                        <Factory className="h-3.5 w-3.5" /> Refineries
+                      </Label>
+                    </div>
+                    <AssetCounter label="refineries" count={assetCount.refineries} icon={<Factory className="h-3 w-3" />} />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Switch id="connections" checked={showConnections} onCheckedChange={setShowConnections} />
+                      <Label htmlFor="connections" className="text-sm flex items-center gap-1">
+                        <ArrowDown className="h-3.5 w-3.5" /> Connections
+                      </Label>
+                    </div>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="filter" className="space-y-2 mt-0">
+                  <div className="flex flex-col gap-1">
+                    <Label htmlFor="search" className="text-xs">Search</Label>
+                    <div className="relative">
+                      <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input 
+                        id="search" 
+                        placeholder="Search assets..." 
+                        className="pl-8 h-8 text-sm" 
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col gap-1">
+                    <Label htmlFor="region" className="text-xs">Region</Label>
+                    <Select value={selectedRegion} onValueChange={setSelectedRegion}>
+                      <SelectTrigger id="region" className="h-8 text-sm">
+                        <SelectValue placeholder="Select region" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="global">Global</SelectItem>
+                          <SelectItem value="americas">Americas</SelectItem>
+                          <SelectItem value="europe">Europe</SelectItem>
+                          <SelectItem value="middle_east">Middle East</SelectItem>
+                          <SelectItem value="africa">Africa</SelectItem>
+                          <SelectItem value="asia_pacific">Asia Pacific</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="settings" className="space-y-2 mt-0">
+                  <div className="flex flex-col gap-1">
+                    <Label htmlFor="mapStyle" className="text-xs">Map Style</Label>
+                    <Select value={mapStyle} onValueChange={setMapStyle}>
+                      <SelectTrigger id="mapStyle" className="h-8 text-sm">
+                        <SelectValue placeholder="Select map style" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          {Object.entries(MAP_STYLES).map(([key, style]) => (
+                            <SelectItem key={key} value={key}>{style.name}</SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Switch id="clustering" checked={useCluster} onCheckedChange={setUseCluster} />
+                      <Label htmlFor="clustering" className="text-sm">Use clustering</Label>
+                    </div>
+                  </div>
+                </TabsContent>
+              </Tabs>
+              
+              <div className="mt-3 pt-2 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" className="h-7 px-2 text-xs">
+                    <FileDown className="h-3.5 w-3.5 mr-1" />
+                    Export
+                  </Button>
+                  <Button variant="outline" size="sm" className="h-7 px-2 text-xs">
+                    <FileUp className="h-3.5 w-3.5 mr-1" />
+                    Import
+                  </Button>
+                </div>
+                <div>
+                  {lastUpdated && `Last update: ${new Date(lastUpdated).toLocaleTimeString()}`}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </MapControl>
       </MapContainer>
     </div>
   );
-};
-
-export default ProfessionalMaritimeMap;
+}
