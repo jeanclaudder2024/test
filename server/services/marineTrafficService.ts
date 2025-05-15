@@ -10,7 +10,7 @@ export class MarineTrafficService {
   
   constructor() {
     this.apiKey = process.env.MARINE_TRAFFIC_API_KEY;
-    this.baseUrl = 'https://api.myshiptracking.com/v1';
+    this.baseUrl = 'https://api.myshiptracking.com/api/v2';
     
     console.log(`MyShipTracking API configuration status: ${this.apiKey ? 'API Key present' : 'API Key missing'}`);
   }
@@ -44,8 +44,8 @@ export class MarineTrafficService {
         params.type = type;
       }
       
-      // Make API request
-      const response = await axios.get(`${this.baseUrl}/vessels`, {
+      // Make API request using updated endpoint structure
+      const response = await axios.get(`${this.baseUrl}/vessel`, {
         params,
         headers: {
           'API-KEY': this.apiKey
@@ -85,8 +85,8 @@ export class MarineTrafficService {
       const queryParam = isIMO ? 'imo' : 'mmsi';
       const queryValue = isIMO ? identifier.substring(3) : identifier;
       
-      // Make API request
-      const response = await axios.get(`${this.baseUrl}/vessels`, {
+      // Make API request with updated endpoint
+      const response = await axios.get(`${this.baseUrl}/vessel`, {
         params: {
           [queryParam]: queryValue
         },
@@ -169,8 +169,8 @@ export class MarineTrafficService {
       const queryParam = isIMO ? 'imo' : 'mmsi';
       const queryValue = isIMO ? identifier.substring(3) : identifier;
       
-      // Make API request
-      const response = await axios.get(`${this.baseUrl}/vessels/positions`, {
+      // Make API request with updated endpoint
+      const response = await axios.get(`${this.baseUrl}/vessel/position`, {
         params: {
           [queryParam]: queryValue
         },
@@ -228,7 +228,7 @@ export class MarineTrafficService {
       
       // Get additional voyage data if API provides it
       try {
-        const voyageResponse = await axios.get(`${this.baseUrl}/vessels/voyages`, {
+        const voyageResponse = await axios.get(`${this.baseUrl}/vessel/voyage`, {
           params: {
             imo: identifier
           },
