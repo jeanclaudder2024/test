@@ -39,6 +39,9 @@ interface MapStyle {
   name: string;
   attribution: string;
   maxZoom: number;
+  preview?: string;
+  description?: string;
+  type?: string;
 }
 
 interface MapControlProps {
@@ -130,50 +133,47 @@ export default function ProfessionalMaritimeMap({
   const mapRef = useRef<L.Map | null>(null);
   
   // Map style options with high-quality satellite imagery and professional styles
-  const MAP_STYLES: Record<string, MapStyle> = {
+  // Fetch map styles from the API
+  const [mapStyles, setMapStyles] = useState<Record<string, MapStyle>>({
     satellite: {
       url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-      name: 'Satellite',
+      name: 'Satellite Imagery',
       attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
       maxZoom: 19
-    },
-    satelliteStreets: {
-      url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
-      name: 'Satellite Streets',
-      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom, 2012',
-      maxZoom: 19
-    },
-    ocean: {
-      url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}',
-      name: 'Ocean',
-      attribution: 'Tiles &copy; Esri &mdash; Sources: GEBCO, NOAA, CHS, OSU, UNH, CSUMB, National Geographic, DeLorme, NAVTEQ, and Esri',
-      maxZoom: 19
-    },
-    oceanLabels: {
-      url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Reference/MapServer/tile/{z}/{y}/{x}',
-      name: 'Ocean with Labels',
-      attribution: 'Tiles &copy; Esri &mdash; Sources: GEBCO, NOAA, CHS, OSU, UNH, CSUMB, National Geographic, DeLorme, NAVTEQ, and Esri',
-      maxZoom: 19
-    },
-    dark: {
-      url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-      name: 'Dark Mode',
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-      maxZoom: 19
-    },
-    terrain: {
-      url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Terrain_Base/MapServer/tile/{z}/{y}/{x}',
-      name: 'Terrain',
-      attribution: 'Tiles &copy; Esri &mdash; Source: USGS, Esri, TANA, DeLorme, and NPS',
-      maxZoom: 19
-    },
-    navigationCharts: {
-      url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-      name: 'Navigation Charts',
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      maxZoom: 19
     }
-  };
+  });
+
+  // Fetch map styles from the API on component mount
+  useEffect(() => {
+    const fetchMapStyles = async () => {
+      try {
+        const response = await fetch('/api/map-styles');
+        const styles = await response.json();
+        if (styles && styles.length > 0) {
+          const stylesMap: Record<string, MapStyle> = {};
+          styles.forEach((style: any) => {
+            stylesMap[style.id] = {
+              url: style.url,
+              name: style.name,
+              attribution: style.attribution,
+              maxZoom: style.maxZoom
+            };
+          });
+          setMapStyles(stylesMap);
+          console.log('Loaded professional map styles:', styles.length);
+        }
+      } catch (error) {
+        console.error('Failed to load map styles:', error);
+        toast({
+          title: 'Warning',
+          description: 'Using default map styles due to API error.',
+          variant: 'destructive'
+        });
+      }
+    };
+
+    fetchMapStyles();
+  }, [toast]);
 
   // State management
   const [mapStyle, setMapStyle] = useState<string>(themeMode === 'dark' ? 'dark' : 'satellite');
@@ -270,9 +270,9 @@ export default function ProfessionalMaritimeMap({
         }}
       >
         <TileLayer
-          url={MAP_STYLES[mapStyle]?.url || MAP_STYLES.satellite.url}
-          attribution={MAP_STYLES[mapStyle]?.attribution || MAP_STYLES.satellite.attribution}
-          maxZoom={MAP_STYLES[mapStyle]?.maxZoom || 19}
+          url={mapStyles[mapStyle]?.url || mapStyles.satellite.url}
+          attribution={mapStyles[mapStyle]?.attribution || mapStyles.satellite.attribution}
+          maxZoom={mapStyles[mapStyle]?.maxZoom || 19}
         />
         
         <ZoomControl position="bottomright" />
@@ -438,11 +438,25 @@ export default function ProfessionalMaritimeMap({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
-                      {Object.entries(MAP_STYLES).map(([key, style]) => (
-                        <SelectItem key={key} value={key} className="text-xs">
-                          {style.name}
-                        </SelectItem>
-                      ))}
+                      {Object.entries(mapStyles).map(([key, style]) => {
+                        const styleData = style as MapStyle;
+                        return (
+                          <SelectItem key={key} value={key} className="text-xs">
+                            <div className="flex items-center gap-2">
+                              {/* Show preview image if available or use a placeholder */}
+                              <div 
+                                className="w-6 h-6 rounded overflow-hidden border border-border" 
+                                style={{
+                                  backgroundImage: `url(${(style as any).preview || `/assets/${key}-preview.png`})`,
+                                  backgroundSize: 'cover',
+                                  backgroundPosition: 'center'
+                                }}
+                              />
+                              <span>{styleData.name}</span>
+                            </div>
+                          </SelectItem>
+                        );
+                      })}
                     </SelectGroup>
                   </SelectContent>
                 </Select>
