@@ -1828,6 +1828,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ports = await storage.getPorts();
       }
       
+      // Enhance a small batch of ports with AI data for more professional display
+      if (ports.length > 0) {
+        // Select up to 3 ports that lack complete data for enhancement
+        const portsForEnhancement = ports
+          .filter(p => (!p.type || !p.status || !p.capacity || !p.description) && 
+                     p.name && p.lat && p.lng)
+          .slice(0, 3); // Limit to 3 per batch to avoid excessive API calls
+          
+        if (portsForEnhancement.length > 0) {
+          try {
+            console.log(`Enhancing ${portsForEnhancement.length} ports with AI data...`);
+            
+            // Process ports in parallel
+            const enhancedPorts = await Promise.all(
+              portsForEnhancement.map(port => 
+                AIEnhancementService.enhancePortData(port)
+              )
+            );
+            
+            // Update the ports array
+            enhancedPorts.forEach(enhancedPort => {
+              if (enhancedPort.id) {
+                const index = ports.findIndex(p => p.id === enhancedPort.id);
+                if (index !== -1) {
+                  ports[index] = {...ports[index], ...enhancedPort};
+                  console.log(`Enhanced port: ${ports[index].name}`);
+                }
+              }
+            });
+          } catch (enhanceError) {
+            console.error('Error enhancing port data:', enhanceError);
+            // Continue with unenhanced data
+          }
+        }
+      }
+      
       res.json(ports);
     } catch (error) {
       console.error("Error fetching ports:", error);
@@ -2027,6 +2063,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching refineries:", error);
       res.status(500).json({ message: "Failed to fetch refineries" });
+    }
+  });
+  
+  // Map styles endpoint for professional maritime map
+  apiRouter.get("/map-styles", (req, res) => {
+    try {
+      // Return a collection of high-quality map styles that can be used for professional maritime mapping
+      const mapStyles = [
+        {
+          id: "satellite",
+          name: "Satellite Imagery",
+          url: "https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw",
+          attribution: "© Mapbox © OpenStreetMap",
+          maxZoom: 19,
+          type: "satellite",
+          preview: "/assets/satellite-preview.png",
+          description: "High-resolution satellite imagery of the Earth's surface"
+        },
+        {
+          id: "ocean",
+          name: "Ocean Base Map",
+          url: "https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}",
+          attribution: "Esri, GEBCO, NOAA, National Geographic, and other contributors",
+          maxZoom: 16,
+          type: "ocean",
+          preview: "/assets/ocean-preview.png",
+          description: "Detailed bathymetry and ocean floor topography"
+        },
+        {
+          id: "navigation",
+          name: "Navigation Charts",
+          url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+          attribution: "© OpenStreetMap contributors",
+          maxZoom: 19,
+          type: "navigation",
+          preview: "/assets/navigation-preview.png",
+          description: "Maritime navigation charts with shipping lanes and nautical features"
+        },
+        {
+          id: "satellite-streets",
+          name: "Satellite Streets",
+          url: "https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v11/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw",
+          attribution: "© Mapbox © OpenStreetMap",
+          maxZoom: 19,
+          type: "hybrid",
+          preview: "/assets/satellite-streets-preview.png",
+          description: "Satellite imagery with road and place name overlays"
+        },
+        {
+          id: "dark",
+          name: "Dark Mode",
+          url: "https://api.mapbox.com/styles/v1/mapbox/dark-v10/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw",
+          attribution: "© Mapbox © OpenStreetMap",
+          maxZoom: 19,
+          type: "dark",
+          preview: "/assets/dark-preview.png",
+          description: "Dark-themed map ideal for nighttime operations and low-light conditions"
+        }
+      ];
+      
+      res.json(mapStyles);
+    } catch (error) {
+      console.error("Error fetching map styles:", error);
+      res.status(500).json({ message: "Failed to fetch map styles" });
     }
   });
 

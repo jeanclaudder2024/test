@@ -1,20 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="32px" height="32px" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg">
-    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <circle fill="#009933" cx="16" cy="16" r="16" opacity="0.15"></circle>
-        <path d="M16,4 C9.373,4 4,9.373 4,16 C4,22.627 9.373,28 16,28 C22.627,28 28,22.627 28,16 C28,9.373 22.627,4 16,4 Z M16,6 C21.523,6 26,10.477 26,16 C26,21.523 21.523,26 16,26 C10.477,26 6,21.523 6,16 C6,10.477 10.477,6 16,6 Z" fill="#009933"></path>
-        <circle fill="#009933" cx="16" cy="16" r="4"></circle>
-        <rect fill="#009933" x="15" y="2" width="2" height="4" rx="1"></rect>
-        <rect fill="#009933" x="7" y="7" width="2" height="4" rx="1" transform="translate(8, 9) rotate(-45) translate(-8, -9)"></rect>
-        <rect fill="#009933" x="2" y="15" width="4" height="2" rx="1"></rect>
-        <rect fill="#009933" x="7" y="23" width="2" height="4" rx="1" transform="translate(8, 25) rotate(-45) translate(-8, -25)"></rect>
-        <rect fill="#009933" x="15" y="26" width="2" height="4" rx="1"></rect>
-        <rect fill="#009933" x="23" y="23" width="2" height="4" rx="1" transform="translate(24, 25) rotate(-45) translate(-24, -25)"></rect>
-        <rect fill="#009933" x="26" y="15" width="4" height="2" rx="1"></rect>
-        <rect fill="#009933" x="23" y="7" width="2" height="4" rx="1" transform="translate(24, 9) rotate(-45) translate(-24, -9)"></rect>
-        <path d="M12,10 L12,20 C12,20.552 12.448,21 13,21 L19,21 C19.552,21 20,20.552 20,20 L20,10 L12,10 Z" stroke="#009933" stroke-width="1.5" stroke-linecap="round"></path>
-        <line x1="10" y1="10" x2="22" y2="10" stroke="#009933" stroke-width="1.5" stroke-linecap="round"></line>
-        <line x1="14" y1="10" x2="14" y2="21" stroke="#009933" stroke-width="1.5" stroke-linecap="round"></line>
-        <line x1="18" y1="10" x2="18" y2="21" stroke="#009933" stroke-width="1.5" stroke-linecap="round"></line>
-    </g>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg">
+  <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+    <path d="M19,9h-1.5V6c0-0.8-0.7-1.5-1.5-1.5h-2c-0.8,0-1.5,0.7-1.5,1.5v3H11V3c0-0.8-0.7-1.5-1.5-1.5h-2C6.7,1.5,6,2.2,6,3v6 H4.5c-0.8,0-1.5,0.7-1.5,1.5V12h0v7.5c0,0.8,0.7,1.5,1.5,1.5h15c0.8,0,1.5-0.7,1.5-1.5V12v-1.5C20.5,9.7,19.8,9,19,9z" fill="#F44336"/>
+    <path d="M18,21H6v-8h12V21z M13,6.5h3V9h-3V6.5z M8,3.5h3v7H8V3.5z" fill="#FFFFFF"/>
+    <path d="M10,14h4v2h-4V14z M10,17h4v2h-4V17z" fill="#FFFFFF"/>
+  </g>
 </svg>
