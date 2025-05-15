@@ -147,6 +147,7 @@ export function useVesselWebSocket({
     // Create WebSocket connection
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = window.location.host;
+    // Always use the current domain for WebSocket connections
     const wsUrl = `${protocol}//${host}/ws`;
     
     console.log('Attempting to connect WebSocket to URL:', wsUrl);
@@ -243,10 +244,24 @@ export function useVesselWebSocket({
       return ws;
     };
     
-    // Connect to WebSocket
+    // Connect to WebSocket with additional error handling
     try {
-      socket.current = new WebSocket(wsUrl);
-      setupSocketEventListeners(socket.current);
+      // Check host availability
+      if (!host) {
+        console.error('WebSocket connection failed: Host is undefined');
+        throw new Error('Host is undefined');
+      }
+      
+      // Create WebSocket connection with error handling
+      try {
+        socket.current = new WebSocket(wsUrl);
+        setupSocketEventListeners(socket.current);
+      } catch (wsError) {
+        console.error('Initial WebSocket connection failed:', wsError);
+        // Fallback to REST immediately
+        fetchVesselsViaREST();
+        throw wsError; // Propagate the error
+      }
       
       // Set up reconnection interval
       if (!reconnectInterval.current) {
@@ -254,9 +269,19 @@ export function useVesselWebSocket({
           if (socket.current?.readyState !== WebSocket.OPEN) {
             try {
               console.log('Attempting to reconnect WebSocket...');
+              // Ensure we're connecting to the correct WebSocket URL
               const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
               const host = window.location.host;
+              
+              // Make sure host is not empty
+              if (!host) {
+                console.error('WebSocket reconnection failed: Host is undefined');
+                fetchVesselsViaREST();
+                return;
+              }
+              
               const reconnectUrl = `${protocol}//${host}/ws`;
+              console.log('WebSocket reconnect URL:', reconnectUrl);
               
               socket.current = new WebSocket(reconnectUrl);
               setupSocketEventListeners(socket.current);

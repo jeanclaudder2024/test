@@ -127,30 +127,35 @@ function MapControl({ position, children }: MapControlProps) {
   const map = useMap();
   const controlRef = useRef<HTMLDivElement>(null);
 
+  // Create a custom control for the map
   useEffect(() => {
-    if (controlRef.current) {
-      // Create the control with the right position
-      const controlInstance = new L.Control({ position });
-      const container = controlRef.current;
+    if (!controlRef.current) return;
 
-      // Set up the control's onAdd method
-      controlInstance.onAdd = () => {
-        if (container) {
-          // Prevent click and scroll propagation to map
-          L.DomEvent.disableClickPropagation(container);
-          L.DomEvent.disableScrollPropagation(container);
-        }
+    // Store reference to the container
+    const container = controlRef.current;
+    
+    // Create a custom control class
+    const CustomControl = L.Control.extend({
+      options: {
+        position: position
+      },
+      
+      onAdd: function() {
+        // Prevent map events from propagating to control
+        L.DomEvent.disableClickPropagation(container);
+        L.DomEvent.disableScrollPropagation(container);
         return container;
-      };
-
-      // Add the control to the map
-      controlInstance.addTo(map);
-
-      // Clean up when component unmounts
-      return () => {
-        controlInstance.remove();
-      };
-    }
+      }
+    });
+    
+    // Create and add the control to the map
+    const customControl = new CustomControl();
+    customControl.addTo(map);
+    
+    // Clean up on unmount
+    return () => {
+      map.removeControl(customControl);
+    };
   }, [map, position]);
 
   return (
