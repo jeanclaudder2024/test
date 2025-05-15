@@ -23,6 +23,7 @@ export function useVesselWebSocket({
   const [error, setError] = useState<Error | null>(null);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  const [totalCount, setTotalCount] = useState<number>(0);
   const socket = useRef<WebSocket | null>(null);
   const reconnectInterval = useRef<NodeJS.Timeout | null>(null);
 

@@ -435,17 +435,13 @@ export default function LiveVesselMap({
             {/* Refinery Markers */}
             <OptimizedRefineryLayer
               refineries={refineries}
-              onRefineryClick={handleRefineryClick}
-              selectedRefinery={selectedRefinery}
-              refineryIcon={refineryIcon}
+              onRefinerySelect={handleRefineryClick}
             />
             
             {/* Port Markers */}
             <OptimizedPortLayer
               ports={ports}
-              onPortClick={handlePortClick}
-              selectedPort={selectedPort}
-              portIcon={portIcon}
+              onPortSelect={handlePortClick}
             />
             
             <MapUpdate vessels={vessels} />
@@ -472,17 +468,36 @@ export default function LiveVesselMap({
                       <div>
                         <p className="text-gray-500">Position</p>
                         <p className="font-medium">
-                          {typeof selectedVessel.currentLat === 'number' 
-                            ? selectedVessel.currentLat.toFixed(4) 
-                            : parseFloat(String(selectedVessel.currentLat) || '0').toFixed(4)}°, 
-                          {typeof selectedVessel.currentLng === 'number' 
-                            ? selectedVessel.currentLng.toFixed(4) 
-                            : parseFloat(String(selectedVessel.currentLng) || '0').toFixed(4)}°
+                          {(() => {
+                            try {
+                              const lat = typeof selectedVessel.currentLat === 'string' ? 
+                                parseFloat(selectedVessel.currentLat) : 
+                                selectedVessel.currentLat || 0;
+                              const lng = typeof selectedVessel.currentLng === 'string' ? 
+                                parseFloat(selectedVessel.currentLng) : 
+                                selectedVessel.currentLng || 0;
+                              return `${lat.toFixed(4)}°, ${lng.toFixed(4)}°`;
+                            } catch (e) {
+                              return "N/A";
+                            }
+                          })()}
                         </p>
                       </div>
                       <div>
                         <p className="text-gray-500">Speed</p>
-                        <p className="font-medium">{selectedVessel.currentSpeed || 'N/A'} knots</p>
+                        <p className="font-medium">
+                          {(() => {
+                            try {
+                              if (selectedVessel.metadata) {
+                                const metadata = JSON.parse(selectedVessel.metadata);
+                                return metadata.speed ? `${metadata.speed} knots` : 'N/A';
+                              }
+                              return 'N/A';
+                            } catch (e) {
+                              return 'N/A';
+                            }
+                          })()}
+                        </p>
                       </div>
                     </div>
                     
