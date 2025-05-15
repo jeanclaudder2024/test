@@ -754,12 +754,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Fetch vessels from MyShipTracking using the same service
-      const vessels = await marineTrafficService.fetchVessels();
-      console.log(`Fetched ${vessels.length} vessels from MyShipTracking API for direct integration`);
+      // Get optional type and limit from query parameters
+      const vesselType = req.query.type as string | undefined;
+      const limit = parseInt(req.query.limit as string || '100');
       
-      // Return the vessels in the same format
-      res.json(vessels);
+      // Fetch vessels from MyShipTracking using the updated API endpoint
+      const vessels = await marineTrafficService.fetchVessels(vesselType, limit);
+      console.log(`Fetched ${vessels.length} vessels from MyShipTracking API v2 for direct integration`);
+      
+      // Return the vessels in the same format with timestamp
+      res.json({
+        vessels,
+        count: vessels.length,
+        timestamp: new Date().toISOString(),
+        source: 'myshiptracking-api-v2'
+      });
     } catch (error) {
       console.error("Error fetching vessels from MyShipTracking direct API:", error);
       res.status(500).json({ message: "Failed to fetch vessels from MyShipTracking API" });
