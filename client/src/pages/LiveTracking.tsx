@@ -262,7 +262,7 @@ export default function LiveTracking() {
             
             <Button 
               variant="outline" 
-              onClick={() => refreshData()}
+              onClick={() => sendMessage({ type: 'refresh' })}
               className="flex items-center gap-2"
             >
               <RefreshCw className="h-4 w-4" />
