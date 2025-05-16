@@ -293,7 +293,9 @@ export function useVesselWebSocket({
                 return;
               }
               
-              const reconnectUrl = `${protocol}//${host}/ws`;
+              // Add a unique token to prevent caching issues
+              const reconnectToken = Math.random().toString(36).substring(2, 15);
+              const reconnectUrl = `${protocol}//${host}/ws?token=${reconnectToken}`;
               console.log('WebSocket reconnect URL:', reconnectUrl);
               
               socket.current = new WebSocket(reconnectUrl);
@@ -332,7 +334,18 @@ export function useVesselWebSocket({
   const sendMessage = (message: any) => {
     if (socket.current?.readyState === WebSocket.OPEN) {
       socket.current.send(JSON.stringify(message));
+      
+      // If refresh message, update the last updated timestamp
+      if (message.type === 'refresh') {
+        setLastUpdated(new Date().toISOString());
+      }
       return true;
+    } else {
+      console.warn('WebSocket not connected, cannot send message. Trying fallback...');
+      // For refresh messages, fallback to REST API
+      if (message.type === 'refresh') {
+        fetchVesselsViaREST();
+      }
     }
     return false;
   };
