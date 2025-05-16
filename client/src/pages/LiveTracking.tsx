@@ -45,9 +45,9 @@ export default function LiveTracking() {
     vessels, 
     connected: isConnected, 
     lastUpdated, 
-    refreshData,
     totalCount,
-    connectionType
+    connectionType,
+    sendMessage
   } = useVesselWebSocket({ 
     region: selectedRegion,
     page: 1,

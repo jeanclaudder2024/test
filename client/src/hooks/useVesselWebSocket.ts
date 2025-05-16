@@ -333,6 +333,52 @@ export function useVesselWebSocket({
     return false;
   };
   
+  // Calculate total pages based on total count and page size
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+  
+  // Function to go to a specific page
+  const goToPage = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      // Update configuration via WebSocket if connected
+      if (socket.current?.readyState === WebSocket.OPEN) {
+        const configMessage = JSON.stringify({
+          type: 'config',
+          region,
+          loadAllVessels,
+          page: newPage,
+          pageSize,
+          trackPortProximity,
+          proximityRadius
+        });
+        
+        socket.current.send(configMessage);
+      }
+    }
+  };
+  
+  // Function to change page size
+  const changePageSize = (newPageSize: number) => {
+    if (newPageSize > 0) {
+      // Update configuration via WebSocket if connected
+      if (socket.current?.readyState === WebSocket.OPEN) {
+        const configMessage = JSON.stringify({
+          type: 'config',
+          region,
+          loadAllVessels,
+          page: 1, // Reset to page 1 when changing page size
+          pageSize: newPageSize,
+          trackPortProximity,
+          proximityRadius
+        });
+        
+        socket.current.send(configMessage);
+      }
+    }
+  };
+  
+  // Determine connection type
+  const connectionType = connected ? 'websocket' : 'rest';
+  
   return {
     vessels,
     connected,
@@ -340,6 +386,12 @@ export function useVesselWebSocket({
     loading,
     lastUpdated,
     totalCount,
+    totalPages,
+    page,
+    pageSize,
+    goToPage,
+    changePageSize,
+    connectionType,
     sendMessage
   };
 }
