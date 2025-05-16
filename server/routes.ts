@@ -2700,6 +2700,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Add missing endpoints for refineries and ports
+  apiRouter.get("/refineries", async (req, res) => {
+    try {
+      const refineryList = await storage.getRefineries();
+      res.json(refineryList);
+    } catch (error) {
+      console.error("Error fetching refineries:", error);
+      res.status(500).json({ message: "Failed to fetch refineries" });
+    }
+  });
+  
+  apiRouter.get("/ports", async (req, res) => {
+    try {
+      const portList = await storage.getPorts();
+      res.json(portList);
+    } catch (error) {
+      console.error("Error fetching ports:", error);
+      res.status(500).json({ message: "Failed to fetch ports" });
+    }
+  });
+
   app.use("/api", apiRouter);
 
   const httpServer = createServer(app);
