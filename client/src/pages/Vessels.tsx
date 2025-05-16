@@ -370,21 +370,43 @@ export default function Vessels() {
     setCurrentPage(1);
   }, [searchTerm, selectedOilTypes, selectedTab]);
   
-  // Local pagination handlers for the filtered table results
-  const handleGoToPage = (page: number) => {
-    setCurrentPage(page);
+  // Hybrid pagination handlers that work with both WebSocket and local pagination
+  const handleGoToPage = (newPage: number) => {
+    if (connectionType === 'websocket') {
+      // Use WebSocket pagination for real-time data
+      goToPage(newPage);
+    } else {
+      // Use local pagination for API data
+      setCurrentPage(newPage);
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
   
   const handleGoToPreviousPage = () => {
-    if (currentPage > 1) {
-      handleGoToPage(currentPage - 1);
+    if (connectionType === 'websocket') {
+      // Use WebSocket pagination
+      if (page > 1) {
+        goToPage(page - 1);
+      }
+    } else {
+      // Use local pagination
+      if (currentPage > 1) {
+        setCurrentPage(currentPage - 1);
+      }
     }
   };
   
   const handleGoToNextPage = () => {
-    if (currentPage < totalPages) {
-      handleGoToPage(currentPage + 1);
+    if (connectionType === 'websocket') {
+      // Use WebSocket pagination
+      if (page < totalPages) {
+        goToPage(page + 1);
+      }
+    } else {
+      // Use local pagination
+      if (currentPage < totalPages) {
+        setCurrentPage(currentPage + 1);
+      }
     }
   };
   
