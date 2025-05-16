@@ -151,7 +151,11 @@ export function useVesselWebSocket({
     // Always use the current domain for WebSocket connections
     const wsUrl = `${protocol}//${host}/ws`;
     
-    console.log('Attempting to connect WebSocket to URL:', wsUrl);
+    // Add a unique token to prevent caching issues
+    const uniqueToken = Math.random().toString(36).substring(2, 15);
+    const finalWsUrl = `${wsUrl}?token=${uniqueToken}`;
+    
+    console.log('Attempting to connect WebSocket to URL:', finalWsUrl);
     
     const setupSocketEventListeners = (ws: WebSocket) => {
       // Connection opened
@@ -263,7 +267,7 @@ export function useVesselWebSocket({
       
       // Create WebSocket connection with error handling
       try {
-        socket.current = new WebSocket(wsUrl);
+        socket.current = new WebSocket(finalWsUrl);
         setupSocketEventListeners(socket.current);
       } catch (wsError) {
         console.error('Initial WebSocket connection failed:', wsError);
