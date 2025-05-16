@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import LeafletMap from '@/components/map/LeafletMap';
 import { 
   Ship, 
@@ -40,20 +40,29 @@ export default function LiveTracking() {
   const [vesselTypeFilter, setVesselTypeFilter] = useState<string[]>([]);
   const [cargoTypeFilter, setCargoTypeFilter] = useState<string[]>([]);
   
-  // Get vessel data with WebSocket
+  // Get vessel data with WebSocket and automatic REST API fallback
   const { 
     vessels, 
     connected: isConnected, 
     lastUpdated, 
     totalCount,
     connectionType,
-    sendMessage
+    sendMessage,
+    error
   } = useVesselWebSocket({ 
     region: selectedRegion,
     page: 1,
     pageSize: 500,
     loadAllVessels: true // Show all vessels at once instead of paginating
   });
+  
+  // If we have a WebSocket error, log it so we know what happened
+  useEffect(() => {
+    if (error) {
+      console.warn('WebSocket error occurred:', error.message);
+      console.log('Using REST API fallback data instead');
+    }
+  }, [error]);
   
   // Statistics based on vessel data
   const statistics = {

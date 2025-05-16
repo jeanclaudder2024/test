@@ -153,6 +153,9 @@ export function useVesselWebSocket({
     
     console.log('Attempting to connect WebSocket to URL:', wsUrl);
     
+    // Immediately start REST API fetch to ensure we have data regardless of WebSocket status
+    fetchVesselsViaREST();
+    
     const setupSocketEventListeners = (ws: WebSocket) => {
       // Connection opened
       ws.addEventListener('open', () => {
@@ -201,8 +204,9 @@ export function useVesselWebSocket({
                 console.log(`${vesselsWithCoordinates.length} vessels have valid coordinates`);
                 setVessels(vesselsWithCoordinates);
               } else {
-                console.warn('No vessels have valid coordinates, using original data');
-                setVessels(data.vessels || []);
+                console.warn('No vessels have valid coordinates, falling back to REST API');
+                // Instead of using potentially invalid data, fetch from REST API
+                fetchVesselsViaREST();
               }
               
               // Update total count if available
@@ -215,19 +219,22 @@ export function useVesselWebSocket({
               setLastUpdated(new Date().toISOString());
               setLoading(false);
             } else {
-              console.warn('Received empty vessels data from WebSocket');
-              setVessels([]);
-              setTotalCount(0);
-              setLoading(false);
+              console.warn('Received empty vessels data from WebSocket, using REST API fallback');
+              // Don't clear vessels array here, use fallback data
+              fetchVesselsViaREST();
             }
           } 
           else if (data.type === 'error') {
             console.error('WebSocket error:', data.message);
             setError(new Error(data.message));
+            // When server reports an error, use REST API
+            fetchVesselsViaREST();
           }
         } catch (err) {
           console.error('Error processing WebSocket message:', err);
           setError(err instanceof Error ? err : new Error('Unknown error processing message'));
+          // If we can't parse the message, use REST API
+          fetchVesselsViaREST();
         }
       });
       
