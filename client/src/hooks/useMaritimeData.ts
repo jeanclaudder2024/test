@@ -25,15 +25,7 @@ export function useMaritimeData({ region = 'global' }: UseMaritimeDataProps = {}
         throw new Error('Failed to fetch refineries');
       }
       
-      const data = await response.json();
-      
-      // Check if the response is in the error format from our updated API endpoints
-      if (data && data.error && Array.isArray(data.items)) {
-        console.warn('API Warning (refineries):', data.error);
-        return data.items; // Return empty array to prevent UI errors
-      }
-      
-      return data;
+      return response.json();
     },
     staleTime: 60000, // 1 minute
   });
@@ -53,15 +45,7 @@ export function useMaritimeData({ region = 'global' }: UseMaritimeDataProps = {}
         throw new Error('Failed to fetch ports');
       }
       
-      const data = await response.json();
-      
-      // Check if the response is in the error format from our updated API endpoints
-      if (data && data.error && Array.isArray(data.items)) {
-        console.warn('API Warning (ports):', data.error);
-        return data.items; // Return empty array to prevent UI errors
-      }
-      
-      return data;
+      return response.json();
     },
     staleTime: 60000, // 1 minute
   });

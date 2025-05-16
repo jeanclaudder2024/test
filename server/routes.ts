@@ -2700,39 +2700,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Add missing endpoints for refineries and ports with better error handling
-  apiRouter.get("/refineries", async (req, res) => {
-    try {
-      const refineryList = await storage.getRefineries();
-      res.json(refineryList);
-    } catch (error) {
-      console.error("Error fetching refineries:", error);
-      
-      // Send a more graceful error response with empty array instead of 500
-      // This prevents client-side crashes while still indicating an error occurred
-      res.status(200).json({
-        items: [],
-        error: "Database temporarily unavailable. Please try again later."
-      });
-    }
-  });
-  
-  apiRouter.get("/ports", async (req, res) => {
-    try {
-      const portList = await storage.getPorts();
-      res.json(portList);
-    } catch (error) {
-      console.error("Error fetching ports:", error);
-      
-      // Send a more graceful error response with empty array instead of 500
-      // This prevents client-side crashes while still indicating an error occurred
-      res.status(200).json({
-        items: [],
-        error: "Database temporarily unavailable. Please try again later."
-      });
-    }
-  });
-
   app.use("/api", apiRouter);
 
   const httpServer = createServer(app);
