@@ -244,11 +244,12 @@ export function useVesselWebSocket({
         }
       });
       
-      // Handle errors
+      // Handle errors with better logging
       ws.addEventListener('error', (event) => {
-        console.error('WebSocket error:', event);
+        // Log the error but don't treat it as critical since we have fallbacks
+        console.log('WebSocket connection issue - falling back to REST API');
         setConnected(false);
-        setError(new Error('WebSocket connection error'));
+        setError(new Error('WebSocket connection issue - using fallback'));
       });
       
       // Connection closed
