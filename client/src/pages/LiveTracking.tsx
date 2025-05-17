@@ -372,6 +372,7 @@ export default function LiveTracking() {
               showVesselHistory={showVesselHistory}
               showHeatmap={showHeatmap}
               mapStyle={mapStyle as any}
+              vessels={vessels}
             />
           </CardContent>
           <CardFooter className="bg-gradient-to-r from-[#003366] to-[#004080] p-3 text-sm text-white">
