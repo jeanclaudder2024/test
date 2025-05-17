@@ -118,11 +118,7 @@ function Router() {
                 <AdvancedMapPage />
               </div>
             </Route>
-            <Route path="/enhanced-map">
-              <div className="fixed inset-0 z-50 bg-background">
-                <EnhancedLiveMapPage />
-              </div>
-            </Route>
+            <Route path="/enhanced-map" component={EnhancedLiveMapPage} />
             <Route path="/refineries" component={Refineries} />
             <Route path="/refineries/:id" component={RefineryDetail} />
             <Route path="/ports" component={Ports} />
