@@ -616,6 +616,7 @@ interface LeafletMapProps {
   showHeatmap?: boolean;
   mapStyle?: 'standard' | 'dark' | 'light' | 'satellite' | 'nautical';
   filterVesselTypes?: boolean;
+  vessels?: any[]; // Add vessels data from parent component
 }
 
 type VesselTypeFilter = {

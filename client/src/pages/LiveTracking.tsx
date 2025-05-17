@@ -1,6 +1,14 @@
 import { useState } from 'react';
 import LeafletMap from '@/components/map/LeafletMap';
 import { 
+  MapContainer, 
+  TileLayer, 
+  ZoomControl,
+  CircleMarker,
+  Tooltip
+} from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import { 
   Ship, 
   Anchor, 
   MapPin, 
@@ -365,15 +373,22 @@ export default function LiveTracking() {
             )}
           </CardHeader>
           <CardContent className="p-0">
-            <LeafletMap 
-              initialRegion={selectedRegion} 
-              height="1200px" 
-              showRoutes={showRoutes}
-              showVesselHistory={showVesselHistory}
-              showHeatmap={showHeatmap}
-              mapStyle={mapStyle as any}
-              vessels={vessels}
-            />
+            <div className="w-full h-[800px] border border-gray-200 rounded-md overflow-hidden">
+              {vessels.length > 0 ? (
+                <iframe 
+                  src="/enhanced-map" 
+                  className="w-full h-full border-none"
+                  title="Enhanced Maritime Map"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center">
+                  <div className="text-center">
+                    <h3 className="text-xl font-semibold mb-2">Loading vessel data...</h3>
+                    <p className="text-muted-foreground">Please wait while we fetch the latest maritime intelligence</p>
+                  </div>
+                </div>
+              )}
+            </div>
           </CardContent>
           <CardFooter className="bg-gradient-to-r from-[#003366] to-[#004080] p-3 text-sm text-white">
             <div className="flex justify-between w-full">
