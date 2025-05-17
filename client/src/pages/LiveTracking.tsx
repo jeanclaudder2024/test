@@ -1,13 +1,14 @@
-import { useState } from 'react';
-import LeafletMap from '@/components/map/LeafletMap';
+import { useState, useEffect } from 'react';
+import 'leaflet/dist/leaflet.css';
 import { 
   MapContainer, 
   TileLayer, 
   ZoomControl,
   CircleMarker,
-  Tooltip
+  Tooltip,
+  Popup
 } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 import { 
   Ship, 
   Anchor, 
@@ -374,20 +375,45 @@ export default function LiveTracking() {
           </CardHeader>
           <CardContent className="p-0">
             <div className="w-full h-[800px] border border-gray-200 rounded-md overflow-hidden">
-              {vessels.length > 0 ? (
-                <iframe 
-                  src="/enhanced-map" 
-                  className="w-full h-full border-none"
-                  title="Enhanced Maritime Map"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center">
-                  <div className="text-center">
-                    <h3 className="text-xl font-semibold mb-2">Loading vessel data...</h3>
-                    <p className="text-muted-foreground">Please wait while we fetch the latest maritime intelligence</p>
-                  </div>
-                </div>
-              )}
+              <div className="h-full">
+                <MapContainer
+                  center={[20, 0]}
+                  zoom={2}
+                  style={{ height: "100%", width: "100%" }}
+                  zoomControl={false}
+                >
+                  <ZoomControl position="topright" />
+                  <TileLayer
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution="&copy; OpenStreetMap contributors"
+                  />
+                  {vessels && vessels.map(vessel => (
+                    <CircleMarker
+                      key={vessel.id}
+                      center={[
+                        parseFloat(String(vessel.currentLat) || "0"), 
+                        parseFloat(String(vessel.currentLng) || "0")
+                      ]}
+                      radius={5}
+                      pathOptions={{ 
+                        fillColor: vessel.vesselType?.includes('Crude') ? '#e74c3c' : '#3498db', 
+                        color: vessel.vesselType?.includes('Crude') ? '#c0392b' : '#2980b9', 
+                        weight: 1, 
+                        fillOpacity: 0.8 
+                      }}
+                    >
+                      <Tooltip>
+                        <div className="p-2">
+                          <div className="font-bold">{vessel.name}</div>
+                          <div>Type: {vessel.vesselType || 'Unknown'}</div>
+                          <div>Cargo: {vessel.cargoType || 'Unknown'}</div>
+                          <div>Flag: {vessel.flag || 'Unknown'}</div>
+                        </div>
+                      </Tooltip>
+                    </CircleMarker>
+                  ))}
+                </MapContainer>
+              </div>
             </div>
           </CardContent>
           <CardFooter className="bg-gradient-to-r from-[#003366] to-[#004080] p-3 text-sm text-white">
