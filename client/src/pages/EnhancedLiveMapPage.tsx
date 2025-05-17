@@ -496,8 +496,8 @@ export default function EnhancedLiveMapPage() {
                         <div className="flex justify-between items-center">
                           <span className="text-sm">{selectedVessel.cargoType}</span>
                           <Badge variant="secondary">
-                            {selectedVessel.cargoAmount && selectedVessel.cargoUnit
-                              ? `${selectedVessel.cargoAmount.toLocaleString()} ${selectedVessel.cargoUnit}`
+                            {selectedVessel.deadweight
+                              ? `${selectedVessel.deadweight.toLocaleString()} DWT`
                               : 'Unknown quantity'}
                           </Badge>
                         </div>
@@ -540,7 +540,7 @@ export default function EnhancedLiveMapPage() {
                       
                       <div className="text-muted-foreground">Status:</div>
                       <div className="font-medium">
-                        <Badge variant={selectedRefinery.status === 'Active' ? 'success' : 'secondary'}>
+                        <Badge variant={selectedRefinery.status === 'Active' ? 'default' : 'secondary'}>
                           {selectedRefinery.status || 'Unknown'}
                         </Badge>
                       </div>
@@ -589,12 +589,12 @@ export default function EnhancedLiveMapPage() {
                       <div className="text-muted-foreground">Region:</div>
                       <div className="font-medium">{selectedPort.region || 'N/A'}</div>
                       
-                      <div className="text-muted-foreground">Size:</div>
-                      <div className="font-medium">{selectedPort.size || 'N/A'}</div>
+                      <div className="text-muted-foreground">Type:</div>
+                      <div className="font-medium">{selectedPort.type || 'N/A'}</div>
                       
                       <div className="text-muted-foreground">Status:</div>
                       <div className="font-medium">
-                        <Badge variant={selectedPort.status === 'Open' ? 'success' : 'secondary'}>
+                        <Badge variant={selectedPort.status === 'Open' ? 'default' : 'secondary'}>
                           {selectedPort.status || 'Unknown'}
                         </Badge>
                       </div>
