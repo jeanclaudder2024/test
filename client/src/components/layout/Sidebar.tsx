@@ -60,15 +60,20 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
     },
     {
       title: t("nav.live_tracking"),
-      path: "/tracking",
+      path: "/live-tracking",
       icon: <Radio className="h-5 w-5 mr-3" />,
       badge: "LIVE",
+    },
+    {
+      title: "New Live Tracking",
+      path: "/new-tracking",
+      icon: <Globe className="h-5 w-5 mr-3" />,
+      badge: "NEW",
     },
     {
       title: "Enhanced Map",
       path: "/enhanced-map",
       icon: <Map className="h-5 w-5 mr-3" />,
-      badge: "NEW",
     },
     {
       title: t("nav.refineries"),

@@ -24,6 +24,7 @@ import LandingPage from "@/pages/LandingPage";
 import AuthPage from "@/pages/AuthPage";
 import TradingDashboard from "@/pages/TradingDashboard";
 import LiveTracking from "@/pages/LiveTracking";
+import NewLiveTracking from "@/pages/NewLiveTracking";
 import AdvancedMapPage from "@/pages/AdvancedMapPage";
 import Companies from "@/pages/Companies";
 import ApiTest from "@/pages/ApiTest";
@@ -113,6 +114,7 @@ function Router() {
             <Route path="/vessels/:id" component={VesselDetail} />
             <Route path="/vessel-dashboard" component={VesselDashboard} />
             <Route path="/live-tracking" component={LiveTracking} />
+            <Route path="/new-tracking" component={NewLiveTracking} />
             <Route path="/advanced-map">
               <div className="fixed inset-0 z-50 bg-background">
                 <AdvancedMapPage />
