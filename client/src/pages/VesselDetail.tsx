@@ -503,7 +503,7 @@ export default function VesselDetail() {
   return (
     <div className="container mx-auto p-4">
       <Link href="/vessels">
-        <Button variant="ghost" className="mb-4">
+        <Button variant="ghost" className="mb-4 hover:bg-blue-50 transition-colors">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Vessels
         </Button>
@@ -515,59 +515,96 @@ export default function VesselDetail() {
         </div>
       ) : vessel ? (
         <>
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-            <div>
-              <h1 className="text-3xl font-bold flex items-center">
-                <Ship className="h-8 w-8 mr-2 text-primary" />
-                {vessel.name}
-              </h1>
-              <p className="text-muted-foreground">
-                IMO: {vessel.imo} | MMSI: {vessel.mmsi} | {vessel.flag}
-              </p>
+          {/* Header with vessel name, status badge and actions */}
+          <div className="relative overflow-hidden bg-gradient-to-r from-blue-900 to-blue-800 rounded-lg p-6 mb-6 shadow-lg">
+            <div className="absolute opacity-10 right-0 bottom-0">
+              <Ship className="h-64 w-64 text-white" />
             </div>
             
-            <div className="flex gap-4 mt-4 md:mt-0">
-              <Button 
-                variant="outline" 
-                className="border-gray-400 hover:bg-gray-100"
-              >
-                <Edit className="h-4 w-4 mr-2" />
-                Edit Vessel
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => generateCargoManifest()}
-                disabled={isGeneratingManifest}
-                className="bg-gradient-to-r from-[#003366] to-[#004080] text-white border-[#003366] hover:bg-[#004080] hover:text-white"
-              >
-                <FileText className="h-4 w-4 mr-2" />
-                {isGeneratingManifest ? 'Generating...' : 'Cargo Manifest'}
-              </Button>
-              {vessel && vessel.cargoType && vessel.cargoType.toLowerCase().includes('nut') && (
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center relative z-10">
+              <div className="text-white">
+                <div className="flex items-center space-x-3 mb-1">
+                  <h1 className="text-3xl font-bold flex items-center">
+                    {vessel.name}
+                  </h1>
+                  <Badge className="bg-blue-600 hover:bg-blue-700">
+                    {getOilCategory(vessel.cargoType)}
+                  </Badge>
+                </div>
+                <div className="flex flex-wrap items-center gap-3 mt-2">
+                  <div className="flex items-center bg-blue-800/80 rounded-full px-3 py-1 text-sm">
+                    <FileText className="h-4 w-4 mr-2" />
+                    IMO: {vessel.imo}
+                  </div>
+                  <div className="flex items-center bg-blue-800/80 rounded-full px-3 py-1 text-sm">
+                    <Compass className="h-4 w-4 mr-2" />
+                    MMSI: {vessel.mmsi}
+                  </div>
+                  <div className="flex items-center bg-blue-800/80 rounded-full px-3 py-1 text-sm">
+                    <Flag className="h-4 w-4 mr-2" />
+                    {vessel.flag}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex gap-3 mt-4 md:mt-0">
                 <Button 
                   variant="outline" 
-                  onClick={generateNutManifest}
-                  disabled={isGeneratingManifest}
-                  className="bg-gradient-to-r from-amber-600 to-amber-700 text-white border-amber-600 hover:bg-amber-700 hover:text-white"
+                  className="bg-white/10 backdrop-blur-sm text-white border-white/20 hover:bg-white/20"
                 >
-                  <FileCheck className="h-4 w-4 mr-2" />
-                  {isGeneratingManifest ? 'Generating...' : 'Nut Cargo Manifest'}
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit Vessel
                 </Button>
-              )}
+                <Button 
+                  onClick={() => generateCargoManifest()}
+                  disabled={isGeneratingManifest}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  {isGeneratingManifest ? 'Generating...' : 'Cargo Manifest'}
+                </Button>
+                {vessel && vessel.cargoType && vessel.cargoType.toLowerCase().includes('nut') && (
+                  <Button 
+                    variant="outline" 
+                    onClick={generateNutManifest}
+                    disabled={isGeneratingManifest}
+                    className="bg-amber-600 text-white border-amber-600/50 hover:bg-amber-700"
+                  >
+                    <FileCheck className="h-4 w-4 mr-2" />
+                    {isGeneratingManifest ? 'Generating...' : 'Nut Cargo Manifest'}
+                  </Button>
+                )}
+              </div>
             </div>
+            
+            {/* Live status indicator */}
+            {vessel.status && (
+              <div className="mt-4 flex items-center">
+                <div className="flex items-center mr-4">
+                  <span className="relative flex h-3 w-3 mr-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                  </span>
+                  <span className="text-white text-sm">Live Tracking</span>
+                </div>
+                <div className="bg-blue-800/50 backdrop-blur-sm rounded-full px-3 py-1 text-sm text-white">
+                  Status: {vessel.status || 'At Sea'}
+                </div>
+              </div>
+            )}
           </div>
           
-          <Tabs defaultValue="details">
-            <TabsList className="mb-4">
-              <TabsTrigger value="details">
+          <Tabs defaultValue="details" className="mt-6">
+            <TabsList className="mb-4 bg-slate-100 p-1 rounded-lg">
+              <TabsTrigger value="details" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">
                 <Info className="h-4 w-4 mr-2" />
                 Details
               </TabsTrigger>
-              <TabsTrigger value="journey">
+              <TabsTrigger value="journey" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">
                 <Map className="h-4 w-4 mr-2" />
                 Journey
               </TabsTrigger>
-              <TabsTrigger value="documents">
+              <TabsTrigger value="documents" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">
                 <Calendar className="h-4 w-4 mr-2" />
                 Documents
               </TabsTrigger>
@@ -575,17 +612,17 @@ export default function VesselDetail() {
             
             <TabsContent value="details">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="md:col-span-2">
-                  <CardHeader className="pb-3">
+                <Card className="md:col-span-2 overflow-hidden border-0 shadow-md">
+                  <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-slate-50 border-b">
                     <CardTitle className="flex items-center">
-                      <Ship className="h-5 w-5 mr-2 text-primary" />
+                      <Ship className="h-5 w-5 mr-2 text-blue-600" />
                       Vessel Information
                     </CardTitle>
                     <CardDescription>
                       Technical details and specifications
                     </CardDescription>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="p-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
                         <h3 className="text-sm font-medium mb-3 flex items-center">
