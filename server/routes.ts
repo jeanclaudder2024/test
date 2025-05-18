@@ -746,7 +746,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // New endpoint for MyShipTracking API
+  // New endpoint for MyShipTracking API vessel details by MMSI
+  apiRouter.get("/vessels/lookup/:mmsi", async (req, res) => {
+    try {
+      const { mmsi } = req.params;
+      
+      if (!process.env.MYSHIPTRACKING_API_KEY) {
+        return res.status(503).json({ 
+          message: "MyShipTracking API is not configured. Please set MYSHIPTRACKING_API_KEY environment variable." 
+        });
+      }
+      
+      // Import the shiptracking functions
+      const { getVesselByMmsi } = await import("./shiptracking");
+      
+      // Call the vessel lookup handler
+      return getVesselByMmsi(req, res);
+    } catch (error) {
+      console.error("Error looking up vessel with MMSI:", error);
+      return res.status(500).json({ 
+        message: "Failed to fetch vessel details from MyShipTracking API" 
+      });
+    }
+  });
+  
+  // Batch lookup for multiple vessels by MMSI
+  apiRouter.post("/vessels/lookup/batch", async (req, res) => {
+    try {
+      if (!process.env.MYSHIPTRACKING_API_KEY) {
+        return res.status(503).json({ 
+          message: "MyShipTracking API is not configured. Please set MYSHIPTRACKING_API_KEY environment variable." 
+        });
+      }
+      
+      // Import the shiptracking functions
+      const { getBatchVesselDetails } = await import("./shiptracking");
+      
+      // Call the batch vessel lookup handler
+      return getBatchVesselDetails(req, res);
+    } catch (error) {
+      console.error("Error in batch vessel lookup:", error);
+      return res.status(500).json({ 
+        message: "Failed to fetch vessel details batch from MyShipTracking API" 
+      });
+    }
+  });
+  
+  // Legacy endpoint for MyShipTracking API - compatibility
   apiRouter.get("/vessels/myshiptracking", async (req, res) => {
     try {
       if (!marineTrafficService.isConfigured()) {

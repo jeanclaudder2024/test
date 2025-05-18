@@ -1,13 +1,12 @@
 /**
- * Vessel tracking API module
- * Provides functions to fetch vessel information from the MyShipTracking API
+ * MyShipTracking API Client
+ * 
+ * This module provides functions to interact with the MyShipTracking API via
+ * our server-side API endpoint, which handles authentication securely.
  */
 
-import axios from 'axios';
-
-// API configuration
-const API_CONFIG = {
-  baseURL: 'https://api.myshiptracking.com/api/v2',
+// Default options for API requests
+const defaultOptions = {
   headers: {
     'Content-Type': 'application/json',
   }
@@ -31,7 +30,6 @@ export interface VesselDetails {
   speed: number;
   nav_status: string;
   received: string;
-  // Additional fields that might be returned
   flag?: string;
   destination?: string;
   eta?: string;
@@ -42,109 +40,166 @@ export interface VesselDetails {
 }
 
 /**
- * Fetches detailed information about a vessel by its MMSI number
- *
- * @param mmsi - The 9-digit MMSI identifier of the vessel
- * @param apiKey - Optional API key override (otherwise uses environment variable)
- * @returns Promise resolving to the vessel details
- * @throws Error if the API request fails or returns invalid data
+ * Error class for API responses
  */
-export async function getVesselDetails(mmsi: string | number, apiKey = API_KEY): Promise<VesselDetails> {
-  // Validate MMSI format
-  const mmsiString = String(mmsi);
-  if (!/^\d{9}$/.test(mmsiString)) {
-    throw new Error('Invalid MMSI format. Must be a 9-digit number.');
-  }
-
-  // Validate API key
-  if (!apiKey) {
-    throw new Error('No API key provided. Set MYSHIPTRACKING_API_KEY environment variable or pass it as a parameter.');
-  }
-
-  try {
-    // Create request configuration
-    const requestConfig = {
-      ...API_CONFIG,
-      headers: {
-        ...API_CONFIG.headers,
-        // Use Bearer token format for authorization
-        'Authorization': `Bearer ${apiKey}`,
-        // Alternative method (uncomment if needed)
-        // 'x-api-key': apiKey
-      }
-    };
-
-    // Make the API request
-    const response = await axios.get(`${API_CONFIG.baseURL}/vessel`, {
-      ...requestConfig,
-      params: {
-        mmsi: mmsiString,
-        response: 'extended'
-      }
-    });
-
-    // Check if we got a valid response
-    if (!response.data || response.status !== 200) {
-      throw new Error(`API returned status ${response.status}: ${response.statusText}`);
-    }
-
-    // Return the vessel details
-    return response.data as VesselDetails;
-  } catch (error) {
-    // Handle different types of errors
-    if (axios.isAxiosError(error)) {
-      if (error.response) {
-        // The request was made and the server responded with a non-2xx status
-        if (error.response.status === 401 || error.response.status === 403) {
-          throw new Error('API authentication failed. Please check your API key.');
-        } else if (error.response.status === 404) {
-          throw new Error(`Vessel with MMSI ${mmsi} not found.`);
-        } else if (error.response.status === 429) {
-          throw new Error('API rate limit exceeded. Please try again later.');
-        } else {
-          throw new Error(`API error: ${error.response.status} ${error.response.statusText}`);
-        }
-      } else if (error.request) {
-        // The request was made but no response was received
-        throw new Error('No response received from API. Please check your network connection.');
-      } else {
-        // Something happened in setting up the request
-        throw new Error(`Error setting up API request: ${error.message}`);
-      }
-    }
-    
-    // For non-Axios errors, rethrow with a generic message
-    throw new Error(`Failed to fetch vessel details: ${error instanceof Error ? error.message : 'Unknown error'}`);
+export class VesselAPIError extends Error {
+  status: number;
+  
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = 'VesselAPIError';
+    this.status = status;
   }
 }
 
 /**
- * Fetches detailed information for multiple vessels by their MMSI numbers
+ * Get detailed information about a vessel by its MMSI number
  * 
- * @param mmsiList - Array of MMSI numbers to fetch
- * @param apiKey - Optional API key override
- * @returns Promise resolving to an array of vessel details
- * @throws Error if the API requests fail
+ * @param mmsi The 9-digit MMSI number of the vessel
+ * @param apiKey Optional API key, if not using the server endpoint
+ * @returns Promise with vessel details
  */
-export async function getBatchVesselDetails(
-  mmsiList: (string | number)[],
-  apiKey = API_KEY
-): Promise<VesselDetails[]> {
-  // Don't attempt if API key is missing
-  if (!apiKey) {
-    throw new Error('No API key provided. Set MYSHIPTRACKING_API_KEY environment variable or pass it as a parameter.');
-  }
-  
-  // Limit batch size to avoid excessive API usage
-  const MAX_BATCH_SIZE = 10;
-  const safeMmsiList = mmsiList.slice(0, MAX_BATCH_SIZE);
-  
+export async function getVesselDetails(mmsi: string, apiKey?: string): Promise<VesselDetails> {
   try {
-    // Make concurrent requests for all vessels
-    const promises = safeMmsiList.map(mmsi => getVesselDetails(mmsi, apiKey));
-    return await Promise.all(promises);
+    // Input validation
+    if (!mmsi || !/^\d{9}$/.test(mmsi)) {
+      throw new VesselAPIError('Invalid MMSI format. Must be a 9-digit number.', 400);
+    }
+    
+    // Check if we should use direct API call (with apiKey) or server endpoint
+    if (apiKey) {
+      // Direct API call with provided key (not recommended for production)
+      return getVesselDirectFromAPI(mmsi, apiKey);
+    } else {
+      // Server-side endpoint (recommended for production)
+      return getVesselFromServerEndpoint(mmsi);
+    }
   } catch (error) {
-    throw new Error(`Failed to fetch batch vessel details: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    if (error instanceof VesselAPIError) {
+      throw error;
+    }
+    
+    // Handle other errors
+    const message = error instanceof Error ? error.message : 'Unknown error occurred';
+    throw new VesselAPIError(`Failed to fetch vessel details: ${message}`, 500);
+  }
+}
+
+/**
+ * Get vessel details from our server endpoint
+ * The server handles API authentication securely
+ * 
+ * @param mmsi The vessel MMSI
+ * @returns Promise with vessel details
+ */
+async function getVesselFromServerEndpoint(mmsi: string): Promise<VesselDetails> {
+  try {
+    const response = await fetch(`/api/vessels/lookup/${mmsi}`, defaultOptions);
+    
+    if (!response.ok) {
+      // Handle error responses from our server
+      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+      const errorMessage = errorData.error || errorData.message || 'API request failed';
+      throw new VesselAPIError(errorMessage, response.status);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    if (error instanceof VesselAPIError) {
+      throw error;
+    }
+    
+    // Network errors or JSON parsing errors
+    const message = error instanceof Error ? error.message : 'Unknown error occurred';
+    throw new VesselAPIError(`Server API request failed: ${message}`, 500);
+  }
+}
+
+/**
+ * Get vessel details directly from MyShipTracking API
+ * Note: This should only be used for testing, as it exposes the API key to the client
+ * 
+ * @param mmsi The vessel MMSI
+ * @param apiKey The MyShipTracking API key
+ * @returns Promise with vessel details
+ */
+async function getVesselDirectFromAPI(mmsi: string, apiKey: string): Promise<VesselDetails> {
+  try {
+    // Direct API call to MyShipTracking (not recommended for production)
+    const response = await fetch(`https://api.myshiptracking.com/api/v2/vessel?mmsi=${mmsi}&response=extended`, {
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      // Handle API error responses
+      const status = response.status;
+      let errorMessage = 'API request failed';
+      
+      if (status === 401 || status === 403) {
+        errorMessage = 'API authentication failed';
+      } else if (status === 404) {
+        errorMessage = `Vessel with MMSI ${mmsi} not found`;
+      } else if (status === 429) {
+        errorMessage = 'API rate limit exceeded';
+      }
+      
+      throw new VesselAPIError(errorMessage, status);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    if (error instanceof VesselAPIError) {
+      throw error;
+    }
+    
+    // Network errors or JSON parsing errors
+    const message = error instanceof Error ? error.message : 'Unknown error occurred';
+    throw new VesselAPIError(`API request failed: ${message}`, 500);
+  }
+}
+
+/**
+ * Batch lookup multiple vessels by MMSI numbers
+ * 
+ * @param mmsiList Array of MMSI numbers to look up
+ * @returns Promise with array of vessel details
+ */
+export async function batchVesselLookup(mmsiList: string[]): Promise<VesselDetails[]> {
+  try {
+    // Input validation
+    if (!Array.isArray(mmsiList) || mmsiList.length === 0) {
+      throw new VesselAPIError('Invalid MMSI list. Must be an array of MMSI numbers.', 400);
+    }
+    
+    // Use server endpoint to get multiple vessels
+    const response = await fetch(`/api/vessels/lookup/batch`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ mmsiList })
+    });
+    
+    if (!response.ok) {
+      // Handle error responses
+      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+      const errorMessage = errorData.error || errorData.message || 'Batch lookup failed';
+      throw new VesselAPIError(errorMessage, response.status);
+    }
+    
+    const data = await response.json();
+    return data.vessels || [];
+  } catch (error) {
+    if (error instanceof VesselAPIError) {
+      throw error;
+    }
+    
+    // Network errors or JSON parsing errors
+    const message = error instanceof Error ? error.message : 'Unknown error occurred';
+    throw new VesselAPIError(`Batch lookup failed: ${message}`, 500);
   }
 }
 
