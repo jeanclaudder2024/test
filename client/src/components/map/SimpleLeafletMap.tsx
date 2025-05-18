@@ -432,28 +432,37 @@ export default function SimpleLeafletMap({
         return '🛢️'; // Default oil tanker emoji
       };
       
-      // Create simple circle marker without emoji/icon for better performance
+      // Create beautiful Google Maps style marker
       const customIcon = L.divIcon({
         html: `
           <div class="vessel-marker-container">
-            <div class="vessel-marker-pulse" style="border-color: ${getVesselColor()};"></div>
             <div class="vessel-marker" style="
-              width: 20px;
-              height: 20px;
-              border-radius: 50%;
+              width: 24px;
+              height: 24px;
               background: ${getVesselColor()};
-              opacity: 0.9;
-              border: 2px solid white;
-              box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-              z-index: 900;
+              border-radius: 50% 50% 50% 0;
+              transform: rotate(-45deg);
+              box-shadow: 0 1px 4px rgba(0,0,0,0.5);
               position: relative;
+              top: -12px;
+              left: -12px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
             ">
+              <div style="
+                width: 12px;
+                height: 12px;
+                background: white;
+                border-radius: 50%;
+                transform: rotate(45deg);
+              "></div>
             </div>
           </div>
         `,
         className: 'vessel-marker-wrapper',
         iconSize: [24, 24],
-        iconAnchor: [12, 12]
+        iconAnchor: [12, 36]
       });
       
       // Add marker with enhanced popup
@@ -868,21 +877,32 @@ export default function SimpleLeafletMap({
         html: `
           <div class="refinery-marker-container">
             <div class="refinery-marker" style="
-              width: 18px;
-              height: 18px;
+              width: 28px;
+              height: 28px;
               background: ${getRefineryColor()};
-              border: 2px solid white;
-              box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-              transform: rotate(45deg);
+              border-radius: 8px;
+              box-shadow: 0 2px 5px rgba(0,0,0,0.4);
               z-index: 910;
               position: relative;
+              top: -14px;
+              left: -14px;
+              border: 3px solid white;
+              display: flex;
+              align-items: center;
+              justify-content: center;
             ">
+              <div style="
+                width: 10px;
+                height: 10px;
+                background: white;
+                border-radius: 50%;
+              "></div>
             </div>
           </div>
         `,
         className: 'refinery-marker-wrapper',
-        iconSize: [22, 22],
-        iconAnchor: [11, 11]
+        iconSize: [28, 28],
+        iconAnchor: [14, 28]
       });
       
       // Create the popup content with buttons that have proper onclick handlers
