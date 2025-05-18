@@ -892,7 +892,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // So we'll use the general query and filter by distance
           const allVessels = await marineTrafficService.fetchVessels();
           
-          // Filter vessels by distance from refinery (within ~500km)
+          // Function to check if coordinates are likely in water
+          const isLikelyInWater = (lat: number, lng: number): boolean => {
+            // Check valid coordinate range
+            if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return false;
+            
+            // Check for major land masses
+            
+            // North America mainland
+            if (lat >= 25 && lat <= 60 && lng >= -120 && lng <= -70) {
+              // Exceptions for navigable waters
+              if (
+                (lat >= 41 && lat <= 49 && lng >= -93 && lng <= -76) || // Great Lakes
+                (lat >= 29 && lat <= 31 && lng >= -91 && lng <= -89) || // Mississippi Delta
+                (lat >= 37 && lat <= 40 && lng >= -77 && lng <= -75)    // Chesapeake Bay
+              ) return true;
+              
+              return false; // Otherwise assume land
+            }
+            
+            // Central Asia/Europe - far from coastlines
+            if (lat >= 40 && lat <= 55 && lng >= 75 && lng <= 110) return false;
+            
+            // Central Africa/Sahara Desert
+            if (lat >= 15 && lat <= 30 && lng >= 10 && lng <= 30) return false;
+            
+            // Central South America/Amazon
+            if (lat >= -10 && lat <= 5 && lng >= -70 && lng <= -50) return false;
+            
+            // Central Australia
+            if (lat >= -30 && lat <= -20 && lng >= 125 && lng <= 140) return false;
+            
+            // Major shipping lanes (definitely water)
+            
+            // Gulf of Mexico & Caribbean
+            if (lat >= 15 && lat <= 30 && lng >= -98 && lng <= -65) return true;
+            
+            // Persian Gulf (oil shipping)
+            if (lat >= 24 && lat <= 30 && lng >= 48 && lng <= 57) return true;
+            
+            // South China Sea
+            if (lat >= 0 && lat <= 25 && lng >= 105 && lng <= 120) return true;
+            
+            // Mediterranean
+            if (lat >= 30 && lat <= 45 && lng >= -5 && lng <= 36) return true;
+            
+            // North Sea & Baltic
+            if (lat >= 50 && lat <= 62 && lng >= -4 && lng <= 25) return true;
+            
+            // Major oceans - these are generally safe
+            if (
+              // Atlantic
+              (lng >= -65 && lng <= -10 && lat >= -50 && lat <= 60) ||
+              // Pacific
+              ((lng <= -120 || lng >= 120) && lat >= -50 && lat <= 60) ||
+              // Indian Ocean
+              (lng >= 45 && lng <= 100 && lat >= -40 && lat <= 25)
+            ) return true;
+            
+            // Assume water unless very clearly on land
+            return true;
+          };
+          
+          // Filter vessels by distance from refinery (within ~500km) and in water
           const nearbyVessels = allVessels.filter(vessel => {
             if (!vessel.currentLat || !vessel.currentLng) return false;
             

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Info, Map, Navigation, Globe2 } from 'lucide-react';
 import { mapStyles, LanguageOption } from './MapStyles';
 import MapContainer from './MapContainer';
+import { isLikelyInWater } from '@/utils/mapUtils';
 
 // Define Leaflet types
 declare global {
@@ -391,8 +392,11 @@ export default function SimpleLeafletMap({
           vessel.vesselType?.toLowerCase().includes('bulk') ||
           false;
         
-        // Only show relevant vessels that are at sea
-        return isRelevantVessel && isCoordinateAtSea(lat, lng);
+        // Check if vessel is likely in water using our utility function
+        const isInWater = isLikelyInWater(lat, lng);
+        
+        // Only show relevant vessels that are at sea (not on land)
+        return isRelevantVessel && isInWater && isCoordinateAtSea(lat, lng);
       })
       .slice(0, 500); // Show more vessels - up to 500
       
