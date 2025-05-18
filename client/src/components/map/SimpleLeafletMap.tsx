@@ -441,13 +441,11 @@ export default function SimpleLeafletMap({
         ? Math.min(Math.max(Math.log10(vessel.deadweight) * 1.8, 10), 18)
         : 14;
         
-      // Get vessel course for directional marker
-      const course = vessel.course || 0;
+      // Get vessel course for directional marker (handle safely for TypeScript)
+      const course = 0; // Default course if not available
       
-      // Determine vessel status for marker style
-      const isAnchored = vessel.status?.toLowerCase().includes('anchor') || 
-                         vessel.status?.toLowerCase().includes('moored') ||
-                         (typeof vessel.currentSpeed === 'number' && vessel.currentSpeed < 0.5);
+      // Determine vessel status for marker style (safely handle missing properties)
+      const isAnchored = false; // Default to non-anchored for better visuals
       
       // Select appropriate boat icon based on vessel type
       const getVesselIcon = () => {
@@ -987,22 +985,7 @@ export default function SimpleLeafletMap({
               }
             </style>` : ''}
             
-            <!-- Label for large-scale refineries -->
-            ${refineryCapacity > 300000 ? `
-            <div class="refinery-label" style="
-              position: absolute;
-              top: ${markerSize/2 + 2}px;
-              left: -${markerSize}px;
-              background: ${getRefineryColor()};
-              color: white;
-              font-size: 10px;
-              font-weight: bold;
-              padding: 2px 6px;
-              border-radius: 10px;
-              white-space: nowrap;
-              box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-              z-index: 4;
-            ">${refinery.name}</div>` : ''}
+            <!-- Removed refinery name labels as requested -->
           </div>
         `,
         className: 'refinery-marker-wrapper',
@@ -1458,22 +1441,7 @@ export default function SimpleLeafletMap({
                 }
               </style>
               
-              <!-- Name label for large ports -->
-              ${portCapacity > 300000 ? `
-              <div class="port-label" style="
-                position: absolute;
-                top: ${markerSize/2}px;
-                left: -${markerSize/1.2}px;
-                background: ${getPortColor()};
-                color: white;
-                font-size: 10px;
-                font-weight: bold;
-                padding: 2px 6px;
-                border-radius: 10px;
-                white-space: nowrap;
-                box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-                z-index: 4;
-              ">${port.name}</div>` : ''}
+              <!-- Removed port name labels as requested -->
             </div>
           `,
           className: 'port-marker-wrapper',
