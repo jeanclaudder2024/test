@@ -10,6 +10,11 @@ import {
 } from 'react-leaflet';
 import L from 'leaflet';
 import { 
+  X, 
+  Factory,
+} from 'lucide-react';
+import { useMaritimeData } from '@/hooks/useMaritimeData';
+import { 
   Ship, 
   Anchor, 
   MapPin, 
@@ -49,6 +54,19 @@ export default function LiveTracking() {
   const [vesselTypeFilter, setVesselTypeFilter] = useState<string[]>([]);
   const [cargoTypeFilter, setCargoTypeFilter] = useState<string[]>([]);
   
+  // Layer visibility controls
+  const [showVessels, setShowVessels] = useState<boolean>(true);
+  const [showRefineries, setShowRefineries] = useState<boolean>(true);
+  const [showPorts, setShowPorts] = useState<boolean>(true);
+  
+  // Selected item states
+  const [selectedVessel, setSelectedVessel] = useState<any>(null);
+  const [selectedRefinery, setSelectedRefinery] = useState<any>(null);
+  const [selectedPort, setSelectedPort] = useState<any>(null);
+  
+  // Vessel type filter
+  const [selectedVesselTypes, setSelectedVesselTypes] = useState<string[]>([]);
+  
   // Get vessel data with WebSocket
   const { 
     vessels, 
@@ -63,6 +81,65 @@ export default function LiveTracking() {
     pageSize: 500,
     loadAllVessels: true // Show all vessels at once instead of paginating
   });
+  
+  // Get refineries and ports data
+  const { refineries, ports } = useMaritimeData();
+  
+  // Vessel types for filtering
+  const vesselTypes = [
+    { id: 'crude', name: 'Crude Oil Tankers', keyword: 'crude' },
+    { id: 'product', name: 'Product Tankers', keyword: 'product' },
+    { id: 'lng', name: 'LNG Carriers', keyword: 'lng' },
+    { id: 'lpg', name: 'LPG Carriers', keyword: 'lpg' }
+  ];
+  
+  // Map styles
+  const mapStyles = {
+    dark: {
+      url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+    },
+    light: {
+      url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+    },
+    satellite: {
+      url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+    },
+    nautical: {
+      url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }
+  };
+  
+  // Toggle vessel type in filter
+  const toggleVesselType = (typeId: string) => {
+    setSelectedVesselTypes(prev => 
+      prev.includes(typeId) 
+        ? prev.filter(id => id !== typeId) 
+        : [...prev, typeId]
+    );
+  };
+  
+  // Get color for vessel marker based on vessel type
+  const getVesselColor = (vesselType: string | undefined) => {
+    if (!vesselType) return { fillColor: '#95a5a6', color: '#7f8c8d', weight: 1, fillOpacity: 0.8 };
+    
+    const type = vesselType.toLowerCase();
+    
+    if (type.includes('crude')) {
+      return { fillColor: '#e74c3c', color: '#c0392b', weight: 1, fillOpacity: 0.8 };
+    } else if (type.includes('product')) {
+      return { fillColor: '#3498db', color: '#2980b9', weight: 1, fillOpacity: 0.8 };
+    } else if (type.includes('lng')) {
+      return { fillColor: '#2ecc71', color: '#27ae60', weight: 1, fillOpacity: 0.8 };
+    } else if (type.includes('lpg')) {
+      return { fillColor: '#9b59b6', color: '#8e44ad', weight: 1, fillOpacity: 0.8 };
+    } else {
+      return { fillColor: '#f1c40f', color: '#f39c12', weight: 1, fillOpacity: 0.8 };
+    }
+  };
   
   // Statistics based on vessel data
   const statistics = {
@@ -374,7 +451,81 @@ export default function LiveTracking() {
             )}
           </CardHeader>
           <CardContent className="p-0">
-            <div className="w-full h-[800px] border border-gray-200 rounded-md overflow-hidden">
+            <div className="w-full h-[800px] border border-gray-200 rounded-md overflow-hidden relative">
+              {/* Map Controls Overlay */}
+              <div className="absolute top-4 right-4 z-10 bg-white/90 backdrop-blur-sm dark:bg-gray-900/90 p-4 rounded-lg shadow-lg border border-gray-200 dark:border-gray-800 w-72">
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="font-semibold text-sm mb-2">Map Layers</h3>
+                    <div className="grid grid-cols-3 gap-2">
+                      <Badge 
+                        variant={showVessels ? "default" : "outline"} 
+                        className="cursor-pointer"
+                        onClick={() => setShowVessels(!showVessels)}
+                      >
+                        <Ship className="h-3 w-3 mr-1" /> Vessels
+                      </Badge>
+                      <Badge 
+                        variant={showRefineries ? "default" : "outline"} 
+                        className="cursor-pointer"
+                        onClick={() => setShowRefineries(!showRefineries)}
+                      >
+                        <Factory className="h-3 w-3 mr-1" /> Refineries
+                      </Badge>
+                      <Badge 
+                        variant={showPorts ? "default" : "outline"} 
+                        className="cursor-pointer"
+                        onClick={() => setShowPorts(!showPorts)}
+                      >
+                        <Anchor className="h-3 w-3 mr-1" /> Ports
+                      </Badge>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-semibold text-sm mb-2">Region Filter</h3>
+                    <Select 
+                      value={selectedRegion} 
+                      onValueChange={(value) => setSelectedRegion(value)}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select Region" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="global">Global</SelectItem>
+                        <SelectItem value="middle_east">Middle East</SelectItem>
+                        <SelectItem value="north_america">North America</SelectItem>
+                        <SelectItem value="europe">Europe</SelectItem>
+                        <SelectItem value="africa">Africa</SelectItem>
+                        <SelectItem value="southeast_asia">Southeast Asia</SelectItem>
+                        <SelectItem value="east_asia">East Asia</SelectItem>
+                        <SelectItem value="oceania">Oceania</SelectItem>
+                        <SelectItem value="south_america">South America</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-semibold text-sm mb-2">Vessel Type Filter</h3>
+                    <div className="grid grid-cols-2 gap-1">
+                      {vesselTypes.map(type => (
+                        <div key={type.id} className="flex items-center space-x-2 text-xs">
+                          <input 
+                            type="checkbox" 
+                            id={`vessel-type-${type.id}`} 
+                            checked={selectedVesselTypes.includes(type.id)}
+                            onChange={() => toggleVesselType(type.id)}
+                            className="rounded-sm border-gray-300"
+                          />
+                          <label htmlFor={`vessel-type-${type.id}`} className="cursor-pointer">{type.name}</label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Main Map */}
               <div className="h-full">
                 <MapContainer
                   center={[20, 0]}
@@ -382,38 +533,224 @@ export default function LiveTracking() {
                   style={{ height: "100%", width: "100%" }}
                   zoomControl={false}
                 >
-                  <ZoomControl position="topright" />
+                  <ZoomControl position="topleft" />
                   <TileLayer
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    attribution="&copy; OpenStreetMap contributors"
+                    url={mapStyles[mapStyle].url}
+                    attribution={mapStyles[mapStyle].attribution}
                   />
-                  {vessels && vessels.map(vessel => (
-                    <CircleMarker
-                      key={vessel.id}
-                      center={[
-                        parseFloat(String(vessel.currentLat) || "0"), 
-                        parseFloat(String(vessel.currentLng) || "0")
-                      ]}
-                      radius={5}
-                      pathOptions={{ 
-                        fillColor: vessel.vesselType?.includes('Crude') ? '#e74c3c' : '#3498db', 
-                        color: vessel.vesselType?.includes('Crude') ? '#c0392b' : '#2980b9', 
-                        weight: 1, 
-                        fillOpacity: 0.8 
-                      }}
-                    >
-                      <Tooltip>
-                        <div className="p-2">
+                  
+                  {/* Vessel Markers */}
+                  {showVessels && vessels && vessels
+                    .filter(vessel => 
+                      (selectedRegion === 'global' || vessel.currentRegion === selectedRegion) &&
+                      (selectedVesselTypes.length === 0 || 
+                        selectedVesselTypes.some(typeId => 
+                          vessel.vesselType?.toLowerCase().includes(vesselTypes.find(t => t.id === typeId)?.keyword || '')
+                        )
+                      )
+                    )
+                    .map(vessel => (
+                      <CircleMarker
+                        key={vessel.id}
+                        center={[
+                          parseFloat(String(vessel.currentLat) || "0"), 
+                          parseFloat(String(vessel.currentLng) || "0")
+                        ]}
+                        radius={5}
+                        pathOptions={getVesselColor(vessel.vesselType)}
+                        eventHandlers={{
+                          click: () => setSelectedVessel(vessel)
+                        }}
+                      >
+                        <Tooltip>
                           <div className="font-bold">{vessel.name}</div>
-                          <div>Type: {vessel.vesselType || 'Unknown'}</div>
-                          <div>Cargo: {vessel.cargoType || 'Unknown'}</div>
-                          <div>Flag: {vessel.flag || 'Unknown'}</div>
-                        </div>
-                      </Tooltip>
-                    </CircleMarker>
-                  ))}
+                        </Tooltip>
+                      </CircleMarker>
+                    ))
+                  }
+                  
+                  {/* Refinery Markers */}
+                  {showRefineries && refineries && refineries
+                    .filter(refinery => selectedRegion === 'global' || refinery.region.toLowerCase().replace(' ', '_') === selectedRegion)
+                    .map(refinery => (
+                      <CircleMarker
+                        key={refinery.id}
+                        center={[
+                          parseFloat(String(refinery.lat) || "0"), 
+                          parseFloat(String(refinery.lng) || "0")
+                        ]}
+                        radius={6}
+                        pathOptions={{
+                          fillColor: '#f39c12',
+                          color: '#d35400',
+                          weight: 1,
+                          fillOpacity: 0.7
+                        }}
+                        eventHandlers={{
+                          click: () => setSelectedRefinery(refinery)
+                        }}
+                      >
+                        <Tooltip>
+                          <div className="font-bold">{refinery.name}</div>
+                        </Tooltip>
+                      </CircleMarker>
+                    ))
+                  }
+                  
+                  {/* Port Markers */}
+                  {showPorts && ports && ports
+                    .filter(port => selectedRegion === 'global' || port.region.toLowerCase().replace(' ', '_') === selectedRegion)
+                    .map(port => (
+                      <CircleMarker
+                        key={port.id}
+                        center={[
+                          parseFloat(String(port.lat) || "0"), 
+                          parseFloat(String(port.lng) || "0")
+                        ]}
+                        radius={4}
+                        pathOptions={{
+                          fillColor: '#3498db',
+                          color: '#2980b9',
+                          weight: 1,
+                          fillOpacity: 0.7
+                        }}
+                        eventHandlers={{
+                          click: () => setSelectedPort(port)
+                        }}
+                      >
+                        <Tooltip>
+                          <div className="font-bold">{port.name}</div>
+                        </Tooltip>
+                      </CircleMarker>
+                    ))
+                  }
                 </MapContainer>
               </div>
+              
+              {/* Selected Item Details */}
+              {(selectedVessel || selectedRefinery || selectedPort) && (
+                <div className="absolute bottom-4 left-4 z-10 bg-white/90 backdrop-blur-sm dark:bg-gray-900/90 p-4 rounded-lg shadow-lg border border-gray-200 dark:border-gray-800 w-80 max-h-[500px] overflow-y-auto">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="absolute top-2 right-2"
+                    onClick={() => {
+                      setSelectedVessel(null);
+                      setSelectedRefinery(null);
+                      setSelectedPort(null);
+                    }}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                  
+                  {selectedVessel && (
+                    <div className="space-y-3">
+                      <div className="flex items-center">
+                        <Ship className="h-5 w-5 mr-2 text-blue-600" />
+                        <h3 className="text-lg font-bold">{selectedVessel.name}</h3>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div className="space-y-1">
+                          <p className="text-gray-500 dark:text-gray-400">Type</p>
+                          <p>{selectedVessel.vesselType || 'Unknown'}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-gray-500 dark:text-gray-400">Flag</p>
+                          <p>{selectedVessel.flag || 'Unknown'}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-gray-500 dark:text-gray-400">IMO</p>
+                          <p>{selectedVessel.imo || 'Unknown'}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-gray-500 dark:text-gray-400">MMSI</p>
+                          <p>{selectedVessel.mmsi || 'Unknown'}</p>
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-gray-500 dark:text-gray-400">Cargo</p>
+                        <p>{selectedVessel.cargoType || 'Unknown'}</p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div className="space-y-1">
+                          <p className="text-gray-500 dark:text-gray-400">Departure</p>
+                          <p>{selectedVessel.departurePort || 'Unknown'}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-gray-500 dark:text-gray-400">Destination</p>
+                          <p>{selectedVessel.destinationPort || 'Unknown'}</p>
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-gray-500 dark:text-gray-400">ETA</p>
+                        <p>{selectedVessel.eta ? new Date(selectedVessel.eta).toLocaleDateString() : 'Unknown'}</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {selectedRefinery && (
+                    <div className="space-y-3">
+                      <div className="flex items-center">
+                        <Factory className="h-5 w-5 mr-2 text-orange-600" />
+                        <h3 className="text-lg font-bold">{selectedRefinery.name}</h3>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div className="space-y-1">
+                          <p className="text-gray-500 dark:text-gray-400">Country</p>
+                          <p>{selectedRefinery.country || 'Unknown'}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-gray-500 dark:text-gray-400">Region</p>
+                          <p>{selectedRefinery.region || 'Unknown'}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-gray-500 dark:text-gray-400">Capacity</p>
+                          <p>{selectedRefinery.capacity ? `${selectedRefinery.capacity.toLocaleString()} bpd` : 'Unknown'}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-gray-500 dark:text-gray-400">Status</p>
+                          <p>{selectedRefinery.status || 'Unknown'}</p>
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-gray-500 dark:text-gray-400">Description</p>
+                        <p className="text-sm">{selectedRefinery.description || 'No description available'}</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {selectedPort && (
+                    <div className="space-y-3">
+                      <div className="flex items-center">
+                        <Anchor className="h-5 w-5 mr-2 text-blue-600" />
+                        <h3 className="text-lg font-bold">{selectedPort.name}</h3>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div className="space-y-1">
+                          <p className="text-gray-500 dark:text-gray-400">Country</p>
+                          <p>{selectedPort.country || 'Unknown'}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-gray-500 dark:text-gray-400">Region</p>
+                          <p>{selectedPort.region || 'Unknown'}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-gray-500 dark:text-gray-400">Type</p>
+                          <p>{selectedPort.type ? selectedPort.type.replace('_', ' ') : 'Unknown'}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-gray-500 dark:text-gray-400">Capacity</p>
+                          <p>{selectedPort.capacity ? `${selectedPort.capacity.toLocaleString()} tons` : 'Unknown'}</p>
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-gray-500 dark:text-gray-400">Description</p>
+                        <p className="text-sm">{selectedPort.description || 'No description available'}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </CardContent>
           <CardFooter className="bg-gradient-to-r from-[#003366] to-[#004080] p-3 text-sm text-white">
