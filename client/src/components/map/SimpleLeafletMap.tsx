@@ -919,36 +919,82 @@ export default function SimpleLeafletMap({
       
       // We'll use the existing getRefineryColor function instead of creating a duplicate
       
+      // Calculate size based on refinery capacity
+      const refineryCapacity = refinery.capacity || 100000;
+      const sizeMultiplier = Math.log10(refineryCapacity) / 5; // Logarithmic scale
+      const markerSize = Math.min(Math.max(sizeMultiplier * 28, 24), 40); // Between 24 and 40px
+
       const refineryIcon = L.divIcon({
         html: `
           <div class="refinery-marker-container">
             <div class="refinery-marker" style="
-              width: 28px;
-              height: 28px;
+              width: ${markerSize}px;
+              height: ${markerSize}px;
               background: ${getRefineryColor()};
               border-radius: 8px;
-              box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+              box-shadow: 0 3px 8px rgba(0,0,0,0.5);
               z-index: 910;
               position: relative;
-              top: -14px;
-              left: -14px;
+              top: -${markerSize/2}px;
+              left: -${markerSize/2}px;
               border: 3px solid white;
               display: flex;
               align-items: center;
               justify-content: center;
             ">
               <div style="
-                width: 10px;
-                height: 10px;
-                background: white;
-                border-radius: 50%;
-              "></div>
+                font-size: ${markerSize/2.5}px;
+                color: white;
+                text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              ">🏭</div>
             </div>
+            
+            <!-- Pulsing effect for active refineries -->
+            ${refinery.status?.toLowerCase().includes('operational') ? `
+            <div class="refinery-pulse" style="
+              position: absolute;
+              top: -${markerSize}px;
+              left: -${markerSize}px;
+              width: ${markerSize * 2}px;
+              height: ${markerSize * 2}px;
+              background: ${getRefineryColor()};
+              opacity: 0.2;
+              border-radius: 50%;
+              animation: refinery-pulse-${refinery.id} 3s infinite;
+              z-index: 1;
+            "></div>
+            <style>
+              @keyframes refinery-pulse-${refinery.id} {
+                0% { transform: scale(0.5); opacity: 0.2; }
+                70% { transform: scale(1.2); opacity: 0; }
+                100% { transform: scale(0.5); opacity: 0; }
+              }
+            </style>` : ''}
+            
+            <!-- Label for large-scale refineries -->
+            ${refineryCapacity > 300000 ? `
+            <div class="refinery-label" style="
+              position: absolute;
+              top: ${markerSize/2 + 2}px;
+              left: -${markerSize}px;
+              background: ${getRefineryColor()};
+              color: white;
+              font-size: 10px;
+              font-weight: bold;
+              padding: 2px 6px;
+              border-radius: 10px;
+              white-space: nowrap;
+              box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+              z-index: 4;
+            ">${refinery.name}</div>` : ''}
           </div>
         `,
         className: 'refinery-marker-wrapper',
-        iconSize: [28, 28],
-        iconAnchor: [14, 28]
+        iconSize: [markerSize, markerSize],
+        iconAnchor: [markerSize/2, markerSize/2]
       });
       
       // Create the popup content with buttons that have proper onclick handlers
@@ -1311,35 +1357,115 @@ export default function SimpleLeafletMap({
           
         if (isNaN(lat) || isNaN(lng)) return;
         
-        // Create custom port icon
+        // Get port color based on type for better visual differentiation
+        const getPortColor = () => {
+          const type = port.type?.toLowerCase() || '';
+          if (type.includes('oil_terminal')) return "#e63946"; // Red for oil terminals
+          if (type.includes('container')) return "#118AB2"; // Blue for container ports
+          if (type.includes('cargo')) return "#FFB703"; // Yellow/orange for cargo ports
+          if (type.includes('cruise')) return "#06d6a0"; // Green for cruise ports
+          return "#3772FF"; // Default blue for other ports
+        };
+        
+        // Calculate port size based on capacity for visual scaling
+        const portCapacity = port.capacity || 100000;
+        const sizeMultiplier = Math.log10(portCapacity) / 5; // Logarithmic scale
+        const markerSize = Math.min(Math.max(sizeMultiplier * 24, 20), 38); // Between 20 and 38px
+        
+        // Create enhanced port icon with wave animation
         const customIcon = L.divIcon({
           html: `
             <div class="port-marker-container">
+              <!-- Port marker with pulsing effect -->
               <div class="port-marker" style="
-                width: 28px;
-                height: 28px;
-                background: rgba(255,255,255,0.95);
-                border-radius: 4px;
+                width: ${markerSize}px;
+                height: ${markerSize}px;
+                background: white;
+                border-radius: 6px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                border: 2px solid #3772FF;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                border: 3px solid ${getPortColor()};
+                box-shadow: 0 3px 8px rgba(0,0,0,0.4);
                 text-align: center;
                 z-index: 880;
                 position: relative;
+                top: -${markerSize/2}px;
+                left: -${markerSize/2}px;
               ">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3772FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M12 3v19"></path>
-                  <path d="M5 8h14"></path>
-                  <path d="M19 8a7 7 0 0 0-14 0"></path>
-                </svg>
+                <!-- Port icon - use appropriate icon based on port type -->
+                ${port.type?.toLowerCase().includes('oil') 
+                  ? `<div style="font-size: ${markerSize/2.2}px; color: ${getPortColor()};">⚓</div>`
+                  : `<svg xmlns="http://www.w3.org/2000/svg" width="${markerSize/1.5}" height="${markerSize/1.5}" viewBox="0 0 24 24" fill="none" stroke="${getPortColor()}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 3v19"></path>
+                      <path d="M5 8h14"></path>
+                      <path d="M19 8a7 7 0 0 0-14 0"></path>
+                    </svg>`
+                }
               </div>
+              
+              <!-- Water animation for active ports -->
+              <div class="port-water" style="
+                position: absolute;
+                top: -${markerSize/2 + 5}px;
+                left: -${markerSize}px;
+                width: ${markerSize * 2}px;
+                height: ${markerSize/3}px;
+                background: linear-gradient(90deg, transparent, ${getPortColor()}40, transparent);
+                border-radius: 50%;
+                animation: port-wave-${port.id} 2s infinite;
+                z-index: 1;
+                opacity: 0.5;
+              "></div>
+              
+              <!-- Second water animation wave -->
+              <div class="port-water-2" style="
+                position: absolute;
+                top: -${markerSize/2 + 10}px;
+                left: -${markerSize * 1.2}px;
+                width: ${markerSize * 2.4}px;
+                height: ${markerSize/4}px;
+                background: linear-gradient(90deg, transparent, ${getPortColor()}30, transparent);
+                border-radius: 50%;
+                animation: port-wave-2-${port.id} 3s infinite;
+                z-index: 1;
+                opacity: 0.4;
+              "></div>
+              
+              <style>
+                @keyframes port-wave-${port.id} {
+                  0% { transform: translateY(0) scaleX(1); opacity: 0.5; }
+                  50% { transform: translateY(${markerSize/5}px) scaleX(1.1); opacity: 0.3; }
+                  100% { transform: translateY(0) scaleX(1); opacity: 0.5; }
+                }
+                @keyframes port-wave-2-${port.id} {
+                  0% { transform: translateY(${markerSize/8}px) scaleX(1.05); opacity: 0.4; }
+                  50% { transform: translateY(0) scaleX(1); opacity: 0.2; }
+                  100% { transform: translateY(${markerSize/8}px) scaleX(1.05); opacity: 0.4; }
+                }
+              </style>
+              
+              <!-- Name label for large ports -->
+              ${portCapacity > 300000 ? `
+              <div class="port-label" style="
+                position: absolute;
+                top: ${markerSize/2}px;
+                left: -${markerSize/1.2}px;
+                background: ${getPortColor()};
+                color: white;
+                font-size: 10px;
+                font-weight: bold;
+                padding: 2px 6px;
+                border-radius: 10px;
+                white-space: nowrap;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+                z-index: 4;
+              ">${port.name}</div>` : ''}
             </div>
           `,
           className: 'port-marker-wrapper',
-          iconSize: [34, 34],
-          iconAnchor: [17, 17]
+          iconSize: [markerSize, markerSize],
+          iconAnchor: [markerSize/2, markerSize/2]
         });
         
         // Add marker with enhanced popup
