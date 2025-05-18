@@ -303,9 +303,26 @@ export default function Vessels() {
     return "Other";
   };
   
-  // Process vessels with oil categories
+  // Process vessels with oil categories and force oil vessel filter
   const vesselsWithCategories = useMemo(() => {
-    return vessels.map(vessel => ({
+    // Filter to only include oil vessels first
+    const oilVesselsOnly = vessels.filter(vessel => {
+      return vessel.vesselType?.toLowerCase().includes('oil') || 
+        vessel.vesselType?.toLowerCase().includes('tanker') || 
+        vessel.vesselType?.toLowerCase().includes('crude') ||
+        vessel.vesselType?.toLowerCase().includes('vlcc') ||
+        vessel.vesselType?.toLowerCase().includes('lng') ||
+        vessel.vesselType?.toLowerCase().includes('gas') ||
+        vessel.cargoType?.toLowerCase().includes('oil') ||
+        vessel.cargoType?.toLowerCase().includes('fuel') ||
+        vessel.cargoType?.toLowerCase().includes('diesel') ||
+        vessel.cargoType?.toLowerCase().includes('gas') ||
+        vessel.cargoType?.toLowerCase().includes('petrol') ||
+        false;
+    });
+    
+    // Then add the oil category to each vessel
+    return oilVesselsOnly.map(vessel => ({
       ...vessel,
       oilCategory: getOilCategory(vessel.cargoType)
     }));
