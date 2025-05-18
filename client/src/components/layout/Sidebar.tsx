@@ -58,7 +58,12 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
       path: "/vessels",
       icon: <Ship className="h-5 w-5 mr-3" />,
     },
-    // Live tracking and map pages removed as requested
+    {
+      title: "Vessel Tracking Map",
+      path: "/vessel-tracking-map",
+      icon: <Map className="h-5 w-5 mr-3" />,
+      badge: "NEW",
+    },
     {
       title: t("nav.refineries"),
       path: "/refineries",
