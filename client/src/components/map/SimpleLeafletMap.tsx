@@ -436,10 +436,10 @@ export default function SimpleLeafletMap({
         return '🛢️'; // Default oil tanker emoji
       };
       
-      // Calculate vessel size based on deadweight tonnage
+      // Calculate vessel size based on deadweight tonnage (make smaller as requested)
       const vesselSize = vessel.deadweight 
-        ? Math.min(Math.max(Math.log10(vessel.deadweight) * 2.5, 12), 24)
-        : 16;
+        ? Math.min(Math.max(Math.log10(vessel.deadweight) * 1.8, 10), 18)
+        : 14;
         
       // Get vessel course for directional marker
       const course = vessel.course || 0;
@@ -449,58 +449,71 @@ export default function SimpleLeafletMap({
                          vessel.status?.toLowerCase().includes('moored') ||
                          (typeof vessel.currentSpeed === 'number' && vessel.currentSpeed < 0.5);
       
-      // Create professional vessel marker with animation and direction
+      // Select appropriate boat icon based on vessel type
+      const getVesselIcon = () => {
+        const type = vessel.vesselType?.toLowerCase() || '';
+        
+        // SVG boat icons for different vessel types
+        if (isAnchored) {
+          return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="${vesselSize/1.5}" height="${vesselSize/1.5}" fill="white" stroke="${getVesselColor()}" stroke-width="1">
+            <path d="M22 16.5h-1.88c.06-.52.06-.84.06-1.28 0-3.98-3.13-7.38-7.1-7.62V5.47h1.65a.47.47 0 0 0 .47-.47.5.5 0 0 0-.47-.5H9.27a.47.47 0 0 0-.47.5c0 .28.21.47.47.47h1.65v2.13c-3.97.24-7.1 3.64-7.1 7.62 0 .44 0 .76.06 1.28H2c-.56 0-1 .44-1 1s.44 1 1 1h20c.56 0 1-.44 1-1s-.44-1-1-1zM8.88 16.5c-.03-.28-.06-.56-.06-.84 0-2.92 2.4-5.32 5.43-5.32s5.43 2.4 5.43 5.32c0 .28-.03.56-.06.84H8.88z"/>
+          </svg>`;
+        }
+        
+        if (type.includes('tanker') || type.includes('oil')) {
+          // Oil tanker icon
+          return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="${vesselSize/1.5}" height="${vesselSize/1.5}" fill="white">
+            <path d="M366 159L328 101H184L146 159H94V189H418V159H366Z" stroke="${getVesselColor()}" stroke-width="8"/>
+            <path d="M121 198L122 313C122 348 150 376 185 376H327C362 376 390 348 390 313V198H121Z" stroke="${getVesselColor()}" stroke-width="8"/>
+          </svg>`;
+        }
+        
+        if (type.includes('cargo') || type.includes('container')) {
+          // Cargo ship icon
+          return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="${vesselSize/1.5}" height="${vesselSize/1.5}" fill="white" stroke="${getVesselColor()}" stroke-width="1.5">
+            <path d="M3,10V13H21V10H3M10,16H14V22H10V16M2,4.27L3.28,3L21,20.72L19.73,22L18.28,20.54C18.19,20.84 17.94,21.08 17.64,21.16L16,21.68C15.81,21.75 15.61,21.75 15.42,21.68L13.78,21.16C13.5,21.08 13.3,20.88 13.22,20.6L12.7,18.96C12.62,18.77 12.62,18.56 12.7,18.37L13.22,16.73C13.3,16.45 13.5,16.25 13.78,16.16L15.42,15.64C15.61,15.57 15.81,15.57 16,15.64L17.64,16.16C18,16.28 18.23,16.63 18.22,17L16.28,15.06L16,15L14,15L14,13.28L2,1.28V4.27Z"/>
+          </svg>`;
+        }
+          
+        // Default boat icon
+        return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="${vesselSize/1.5}" height="${vesselSize/1.5}" fill="white" stroke="${getVesselColor()}" stroke-width="1.5">
+          <path d="M20.96 19.29H20.95C19.62 17.74 15.8 16 12 16C8.2 16 4.38 17.74 3.05 19.29H3.04C2.39 18.16 2 16.88 2 15.5C2 13.82 2.5 12.15 3.57 10.73L4.37 11.61L5.67 10.12L4.86 9.27C6.14 7.58 8.07 6.3 10.31 5.69L10.5 6.89L12.17 6.5L11.95 5.1C11.97 5.1 12 5.1 12 5.1C12.68 5.1 13.33 5.18 14 5.31L14 6.66L15.67 6.67L15.67 5.68C17.91 6.43 19.82 7.96 21.06 9.92L20.12 10.67L21.42 12.16L22.33 11.43C23.38 12.93 24 14.71 24 16.5C24 17.79 23.64 19 23.04 20.05L20.96 19.29M2.71 6.77L5 6.77L5 5.79L2.71 5.79L2.71 6.77M7.16 6.77H9.46V5.79H7.16V6.77M14.96 2.65L14.96 1.68L12.67 1.68L12.67 2.65H14.96"/>
+        </svg>`;
+      };
+      
+      // Create smaller, more beautiful boat icon markers
       const customIcon = L.divIcon({
         html: `
           <div class="vessel-marker-container">
-            <div class="vessel-marker" style="
-              width: ${vesselSize}px;
-              height: ${vesselSize}px;
-              background: ${getVesselColor()};
-              border-radius: ${isAnchored ? '50%' : '50% 50% 50% 0'};
-              transform: ${isAnchored ? 'none' : `rotate(${course - 45}deg)`};
-              box-shadow: 0 2px 5px rgba(0,0,0,0.6);
+            <!-- Actual vessel icon -->
+            <div class="vessel-icon" style="
               position: relative;
               top: -${vesselSize/2}px;
               left: -${vesselSize/2}px;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              border: 2px solid white;
+              transform: ${isAnchored ? 'none' : `rotate(${course}deg)`};
               z-index: 10;
             ">
-              <div style="
-                width: ${vesselSize/2}px;
-                height: ${vesselSize/2}px;
-                background: white;
-                border-radius: 50%;
-                transform: ${isAnchored ? 'none' : `rotate(${45 - course}deg)`};
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: ${vesselSize/3}px;
-                color: ${getVesselColor()};
-                font-weight: bold;
-              ">${isAnchored ? '⚓' : ''}</div>
+              ${getVesselIcon()}
             </div>
             
+            <!-- Small pulse effect for moving vessels -->
             ${!isAnchored ? `
             <div class="vessel-pulse" style="
               position: absolute;
-              top: -${vesselSize}px;
-              left: -${vesselSize}px;
-              width: ${vesselSize * 2}px;
-              height: ${vesselSize * 2}px;
+              top: -${vesselSize/1.5}px;
+              left: -${vesselSize/1.5}px;
+              width: ${vesselSize * 1.5}px;
+              height: ${vesselSize * 1.5}px;
               border-radius: 50%;
               background: ${getVesselColor()};
-              opacity: 0.3;
-              animation: pulse-${vessel.id} 3s infinite;
+              opacity: 0.2;
+              animation: pulse-${vessel.id} 2s infinite;
               z-index: 1;
             "></div>
             <style>
               @keyframes pulse-${vessel.id} {
-                0% { transform: scale(0.5); opacity: 0.3; }
-                70% { transform: scale(1.2); opacity: 0; }
+                0% { transform: scale(0.5); opacity: 0.2; }
+                70% { transform: scale(1); opacity: 0; }
                 100% { transform: scale(0.5); opacity: 0; }
               }
             </style>` : ''}
