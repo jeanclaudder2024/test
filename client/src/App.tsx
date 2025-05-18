@@ -123,6 +123,7 @@ function Router() {
             <Route path="/ai-assistant" component={AIAssistantPage} />
             <Route path="/trading" component={TradingDashboard} />
             <Route path="/translation" component={TranslationPage} />
+            <Route path="/traffic-insights" component={TrafficInsights} />
             <Route path="/settings" component={Settings} />
             <Route path="/subscribe" component={Subscribe} />
             <Route path="/pricing" component={Pricing} />

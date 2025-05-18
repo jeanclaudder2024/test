@@ -115,6 +115,12 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
       badge: "NEW",
     },
     {
+      title: "Traffic Insights",
+      path: "/traffic-insights",
+      icon: <Map className="h-5 w-5 mr-3" />,
+      badge: "NEW",
+    },
+    {
       title: t("nav.settings"),
       path: "/settings",
       icon: <Settings className="h-5 w-5 mr-3" />,
