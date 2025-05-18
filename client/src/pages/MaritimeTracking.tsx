@@ -72,10 +72,13 @@ export default function MaritimeTracking() {
       // Create map
       const map = L.map(mapRef.current).setView([20, 0], 3);
       
-      // Add base tile layer (map style)
+      // Add beautiful maritime style base tile layer
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       }).addTo(map);
+      
+      // Add scale control for better navigation
+      L.control.scale({ imperial: false, maxWidth: 200 }).addTo(map);
       
       // Create layer groups
       vesselsLayerRef.current = L.layerGroup().addTo(map);
