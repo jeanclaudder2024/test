@@ -89,12 +89,13 @@ export default function LiveTracking() {
   const vesselTypes = [
     { id: 'crude', name: 'Crude Oil Tankers', keyword: 'crude' },
     { id: 'product', name: 'Product Tankers', keyword: 'product' },
+    { id: 'oil', name: 'Oil Vessels', keyword: 'oil' },
     { id: 'lng', name: 'LNG Carriers', keyword: 'lng' },
     { id: 'lpg', name: 'LPG Carriers', keyword: 'lpg' }
   ];
   
   // Map styles
-  const mapStyles = {
+  const mapStyles: Record<string, {url: string, attribution: string}> = {
     dark: {
       url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
@@ -132,6 +133,9 @@ export default function LiveTracking() {
       return { fillColor: '#e74c3c', color: '#c0392b', weight: 1, fillOpacity: 0.8 };
     } else if (type.includes('product')) {
       return { fillColor: '#3498db', color: '#2980b9', weight: 1, fillOpacity: 0.8 };
+    } else if (type.includes('oil')) {
+      // Highlight oil vessels with a more vivid orange color
+      return { fillColor: '#FF5722', color: '#E64A19', weight: 1.5, fillOpacity: 0.9 };
     } else if (type.includes('lng')) {
       return { fillColor: '#2ecc71', color: '#27ae60', weight: 1, fillOpacity: 0.8 };
     } else if (type.includes('lpg')) {
@@ -535,39 +539,36 @@ export default function LiveTracking() {
                 >
                   <ZoomControl position="topleft" />
                   <TileLayer
-                    url={mapStyles[mapStyle].url}
-                    attribution={mapStyles[mapStyle].attribution}
+                    url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                   />
                   
-                  {/* Vessel Markers */}
-                  {showVessels && vessels && vessels
-                    .filter(vessel => 
-                      (selectedRegion === 'global' || vessel.currentRegion === selectedRegion) &&
-                      (selectedVesselTypes.length === 0 || 
-                        selectedVesselTypes.some(typeId => 
-                          vessel.vesselType?.toLowerCase().includes(vesselTypes.find(t => t.id === typeId)?.keyword || '')
-                        )
-                      )
-                    )
-                    .map(vessel => (
-                      <CircleMarker
-                        key={vessel.id}
-                        center={[
-                          parseFloat(String(vessel.currentLat) || "0"), 
-                          parseFloat(String(vessel.currentLng) || "0")
-                        ]}
-                        radius={5}
-                        pathOptions={getVesselColor(vessel.vesselType)}
-                        eventHandlers={{
-                          click: () => setSelectedVessel(vessel)
-                        }}
-                      >
-                        <Tooltip>
-                          <div className="font-bold">{vessel.name}</div>
-                        </Tooltip>
-                      </CircleMarker>
-                    ))
-                  }
+                  {/* Vessel Markers - Simple direct implementation */}
+                  {vessels && vessels.map(vessel => (
+                    <CircleMarker
+                      key={vessel.id}
+                      center={[
+                        parseFloat(String(vessel.currentLat) || "0"), 
+                        parseFloat(String(vessel.currentLng) || "0")
+                      ]}
+                      radius={6}
+                      pathOptions={{ 
+                        fillColor: vessel.vesselType?.toLowerCase().includes('crude') ? '#e74c3c' : 
+                                   vessel.vesselType?.toLowerCase().includes('oil') ? '#FF5722' : '#3498db', 
+                        color: '#2c3e50',
+                        weight: 1.5, 
+                        fillOpacity: 0.9 
+                      }}
+                      eventHandlers={{
+                        click: () => setSelectedVessel(vessel)
+                      }}
+                    >
+                      <Tooltip>
+                        <div className="font-bold">{vessel.name}</div>
+                        <div>{vessel.vesselType || 'Unknown'}</div>
+                      </Tooltip>
+                    </CircleMarker>
+                  ))}
                   
                   {/* Refinery Markers */}
                   {showRefineries && refineries && refineries
