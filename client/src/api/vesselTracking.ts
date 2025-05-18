@@ -15,7 +15,7 @@ const API_CONFIG = {
 
 // API Key should be stored securely in environment variables
 // and accessed here - this is a placeholder
-const API_KEY = process.env.MYSHIPTRACKING_API_KEY || '';
+const API_KEY = import.meta.env.VITE_MYSHIPTRACKING_API_KEY || '';
 
 /**
  * Interface for vessel details returned by the API
@@ -152,19 +152,19 @@ export async function getBatchVesselDetails(
  * Demonstration function to show API usage
  * This should only be used for testing, not in production
  */
-export async function demoVesselLookup(): Promise<void> {
+export async function demoVesselLookup(apiKey: string): Promise<VesselDetails | null> {
   // Example MMSI - this is just a placeholder and might not be valid
   const exampleMmsi = '366943250'; // Example: a USCG vessel
   
   console.log(`Fetching details for vessel with MMSI: ${exampleMmsi}...`);
   
   try {
-    const vesselInfo = await getVesselDetails(exampleMmsi);
+    const vesselInfo = await getVesselDetails(exampleMmsi, apiKey);
     console.log('Vessel details found:');
     console.log(JSON.stringify(vesselInfo, null, 2));
     return vesselInfo;
   } catch (error) {
     console.error('Demo lookup failed:', error instanceof Error ? error.message : 'Unknown error');
-    throw error;
+    return null;
   }
 }
