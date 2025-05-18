@@ -59,8 +59,8 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
       icon: <Ship className="h-5 w-5 mr-3" />,
     },
     {
-      title: "Vessel Tracking Map",
-      path: "/vessel-tracking-map",
+      title: "Maritime Tracking",
+      path: "/maritime-tracking",
       icon: <Map className="h-5 w-5 mr-3" />,
       badge: "NEW",
     },
