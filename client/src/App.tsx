@@ -26,6 +26,7 @@ import TradingDashboard from "@/pages/TradingDashboard";
 import Companies from "@/pages/Companies";
 import ApiTest from "@/pages/ApiTest";
 import TranslationPage from "@/pages/TranslationPage";
+import TrafficInsights from "@/pages/TrafficInsights";
 import { useEffect } from "react";
 import { apiRequest, queryClient } from "./lib/queryClient";
 import { Layout } from "@/components/ui/layout";
