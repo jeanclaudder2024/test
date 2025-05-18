@@ -432,33 +432,28 @@ export default function SimpleLeafletMap({
         return '🛢️'; // Default oil tanker emoji
       };
       
-      // Create custom icon with pulsing animation for better visibility
+      // Create simple circle marker without emoji/icon for better performance
       const customIcon = L.divIcon({
         html: `
           <div class="vessel-marker-container">
             <div class="vessel-marker-pulse" style="border-color: ${getVesselColor()};"></div>
             <div class="vessel-marker" style="
-              width: 26px;
-              height: 26px;
+              width: 20px;
+              height: 20px;
               border-radius: 50%;
-              background: rgba(255,255,255,0.95);
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              border: 2px solid ${getVesselColor()};
+              background: ${getVesselColor()};
+              opacity: 0.9;
+              border: 2px solid white;
               box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-              font-size: 14px;
-              text-align: center;
               z-index: 900;
               position: relative;
             ">
-              ${getVesselEmoji()}
             </div>
           </div>
         `,
         className: 'vessel-marker-wrapper',
-        iconSize: [36, 36],
-        iconAnchor: [18, 18]
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
       });
       
       // Add marker with enhanced popup
@@ -867,52 +862,27 @@ export default function SimpleLeafletMap({
         return "#6b7280"; // gray default
       };
       
-      // Create SVG icon based on refinery icon image - improved version
-      const getRefineryIcon = () => {
-        return `
-          <svg width="28" height="28" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M138.142 85.9479C138.142 63.2129 156.562 44.8 179.307 44.8H261.689V119.703H138.142V85.9479Z" fill="#004D99"/>
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M138.142 119.703H261.689V159.573H138.142V119.703Z" fill="#0066CC"/>
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M187.142 199.443C171.797 199.443 158.462 188.463 158.462 174.861C158.462 161.282 171.797 158.881 187.142 158.881H212.689C228.034 158.881 241.369 161.282 241.369 174.861C241.369 188.463 228.034 199.443 212.689 199.443H187.142Z" fill="#1a1a1a"/>
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M138.142 199.443H261.689V399.36H138.142V199.443Z" fill="#004D99"/>
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M138.142 399.36H261.689V439.231H138.142V399.36Z" fill="#0066CC"/>
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M123.867 439.231H275.964C283.62 439.231 289.724 445.334 289.724 452.991V506.24C289.724 513.341 283.62 519.444 275.964 519.444H123.867C116.211 519.444 110.107 513.341 110.107 506.24V452.991C110.107 445.334 116.211 439.231 123.867 439.231Z" fill="#00264D"/>
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M397.64 379.093H336.396C327.697 379.093 322.064 369.32 326.598 362.053L356.935 311.936C358.157 309.908 358.563 307.485 358.563 305.064V127.823C358.563 122.149 363.292 117.421 369.039 117.421H378.491C392.306 117.421 406.317 117.269 406.317 137.177V305.064C406.317 307.485 406.722 309.908 407.944 311.936L438.281 362.053C442.814 369.32 437.182 379.093 428.483 379.093Z" fill="#0066CC"/>
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M319.112 299.109H259.112C250.413 299.109 244.78 288.806 249.314 281.539L279.651 233.942C280.873 231.914 281.279 229.491 281.279 227.07C281.279 221.395 286.008 216.667 291.754 216.667C294.178 216.667 296.599 217.072 298.63 218.293L348.773 248.607C356.048 253.134 356.048 264.358 348.773 268.885L298.63 299.225C296.599 300.446 294.178 300.851 291.754 300.851H319.112Z" fill="#004D99"/>
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M468.444 379.093V479.629C468.444 485.303 463.716 490.031 457.969 490.031H448.517C442.77 490.031 438.041 485.303 438.041 479.629V379.093H468.444Z" fill="#0066CC"/>
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M417.778 439.23C424.115 439.23 429.448 444.562 429.448 450.9V460.341C429.448 466.679 424.115 472.011 417.778 472.011C411.44 472.011 406.107 466.679 406.107 460.341V450.9C406.107 444.562 411.44 439.23 417.778 439.23Z" fill="#004D99"/>
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M417.778 399.36C424.115 399.36 429.448 404.693 429.448 411.03V420.471C429.448 426.809 424.115 432.141 417.778 432.141C411.44 432.141 406.107 426.809 406.107 420.471V411.03C406.107 404.693 411.44 399.36 417.778 399.36Z" fill="#004D99"/>
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M509.333 44.8H397.64V85.948H509.333V44.8Z" fill="#0066CC"/>
-          </svg>
-        `;
-      };
+      // We'll use the existing getRefineryColor function instead of creating a duplicate
       
       const refineryIcon = L.divIcon({
         html: `
           <div class="refinery-marker-container">
-            <div class="refinery-marker-glow" style="background-color: ${getRefineryColor()}33;"></div>
             <div class="refinery-marker" style="
-              width: 42px;
-              height: 42px;
-              border-radius: 8px;
-              background: rgba(255,255,255,0.98);
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              border: 3px solid ${getRefineryColor()};
-              box-shadow: 0 3px 6px rgba(0,0,0,0.3);
-              text-align: center;
+              width: 18px;
+              height: 18px;
+              background: ${getRefineryColor()};
+              border: 2px solid white;
+              box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+              transform: rotate(45deg);
               z-index: 910;
               position: relative;
-              padding: 2px;
             ">
-              ${getRefineryIcon()}
             </div>
           </div>
         `,
         className: 'refinery-marker-wrapper',
-        iconSize: [40, 40],
-        iconAnchor: [20, 20]
+        iconSize: [22, 22],
+        iconAnchor: [11, 11]
       });
       
       // Create the popup content with buttons that have proper onclick handlers
@@ -924,23 +894,19 @@ export default function SimpleLeafletMap({
           padding: 8px;
           margin: -8px -8px 8px -8px;
           background-color: rgba(255,255,255,0.9);
-          border-top-left-radius: 8px;
-          border-top-right-radius: 8px;
+          border-top-left-radius:.25rem;
+          border-top-right-radius: .25rem;
           display: flex;
           align-items: center;
           gap: 8px;
         ">
           <div style="
-            width: 26px;
-            height: 26px;
-            border-radius: 4px;
-            background: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 2px solid ${getRefineryColor()};
-            padding: 1px;
-          ">${getRefineryIcon()}</div>
+            width: 14px;
+            height: 14px;
+            background: ${getRefineryColor()};
+            border: 2px solid white;
+            transform: rotate(45deg);
+          "></div>
           <h3 style="
             font-weight: bold;
             margin: 0;
@@ -1552,7 +1518,9 @@ export default function SimpleLeafletMap({
         map.setView([0, 0], 2); // Default to world view on error
       }
     } else if (selectedRegion) {
-      const position = regionPositions[selectedRegion];
+      // Convert region to string key since Region is a type, not a string
+      const regionKey = String(selectedRegion).toLowerCase().replace(/\s+/g, '-');
+      const position = regionPositions[regionKey as keyof typeof regionPositions];
       if (position) {
         map.setView([position.lat, position.lng], position.zoom);
       }
