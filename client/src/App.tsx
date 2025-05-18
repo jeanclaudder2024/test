@@ -23,13 +23,9 @@ import SubscriptionSuccess from "@/pages/SubscriptionSuccess";
 import LandingPage from "@/pages/LandingPage";
 import AuthPage from "@/pages/AuthPage";
 import TradingDashboard from "@/pages/TradingDashboard";
-import LiveTracking from "@/pages/LiveTracking";
-import NewLiveTracking from "@/pages/NewLiveTracking";
-import AdvancedMapPage from "@/pages/AdvancedMapPage";
 import Companies from "@/pages/Companies";
 import ApiTest from "@/pages/ApiTest";
 import TranslationPage from "@/pages/TranslationPage";
-import EnhancedLiveMapPage from "@/pages/EnhancedLiveMapPage";
 import { useEffect } from "react";
 import { apiRequest, queryClient } from "./lib/queryClient";
 import { Layout } from "@/components/ui/layout";
@@ -113,14 +109,7 @@ function Router() {
             <Route path="/vessels/:id/documents" component={VesselDocuments} />
             <Route path="/vessels/:id" component={VesselDetail} />
             <Route path="/vessel-dashboard" component={VesselDashboard} />
-            <Route path="/live-tracking" component={LiveTracking} />
-            <Route path="/new-tracking" component={NewLiveTracking} />
-            <Route path="/advanced-map">
-              <div className="fixed inset-0 z-50 bg-background">
-                <AdvancedMapPage />
-              </div>
-            </Route>
-            <Route path="/enhanced-map" component={EnhancedLiveMapPage} />
+            {/* Map pages removed as requested */}
             <Route path="/refineries" component={Refineries} />
             <Route path="/refineries/:id" component={RefineryDetail} />
             <Route path="/ports" component={Ports} />

@@ -58,23 +58,7 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
       path: "/vessels",
       icon: <Ship className="h-5 w-5 mr-3" />,
     },
-    {
-      title: t("nav.live_tracking"),
-      path: "/live-tracking",
-      icon: <Radio className="h-5 w-5 mr-3" />,
-      badge: "LIVE",
-    },
-    {
-      title: "New Live Tracking",
-      path: "/new-tracking",
-      icon: <Globe className="h-5 w-5 mr-3" />,
-      badge: "NEW",
-    },
-    {
-      title: "Enhanced Map",
-      path: "/enhanced-map",
-      icon: <Map className="h-5 w-5 mr-3" />,
-    },
+    // Live tracking and map pages removed as requested
     {
       title: t("nav.refineries"),
       path: "/refineries",
