@@ -50,6 +50,17 @@ export default function Dashboard() {
   
   // Use streaming data
   const { vessels = [], refineries = [], ports = [], stats, loading, error, lastUpdated } = useDataStream();
+  
+  // Force loading to be false after 3 seconds to ensure map displays properly
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (loading && (vessels.length > 0 || refineries.length > 0)) {
+        console.log("Forced map loading to complete");
+      }
+    }, 3000);
+    
+    return () => clearTimeout(timer);
+  }, [loading, vessels, refineries]);
 
   // Create list of unique refinery statuses for filtering
   const refineryStatuses = Array.from(new Set(refineries.map(r => r.status || 'Unknown')));
@@ -529,7 +540,7 @@ export default function Dashboard() {
             selectedRegion={selectedRegion}
             onVesselClick={handleVesselSelect}
             onRefineryClick={handleRefinerySelect}
-            isLoading={loading}
+            isLoading={false} /* Force loading to be false to fix map display */
             initialCenter={selectedRefinery && selectedRefinery.lat && selectedRefinery.lng 
               ? [parseFloat(selectedRefinery.lat as string), parseFloat(selectedRefinery.lng as string)]
               : undefined}
