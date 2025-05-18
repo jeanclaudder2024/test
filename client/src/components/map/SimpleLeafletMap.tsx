@@ -436,37 +436,79 @@ export default function SimpleLeafletMap({
         return '🛢️'; // Default oil tanker emoji
       };
       
-      // Create beautiful Google Maps style marker
+      // Calculate vessel size based on deadweight tonnage
+      const vesselSize = vessel.deadweight 
+        ? Math.min(Math.max(Math.log10(vessel.deadweight) * 2.5, 12), 24)
+        : 16;
+        
+      // Get vessel course for directional marker
+      const course = vessel.course || 0;
+      
+      // Determine vessel status for marker style
+      const isAnchored = vessel.status?.toLowerCase().includes('anchor') || 
+                         vessel.status?.toLowerCase().includes('moored') ||
+                         (typeof vessel.currentSpeed === 'number' && vessel.currentSpeed < 0.5);
+      
+      // Create professional vessel marker with animation and direction
       const customIcon = L.divIcon({
         html: `
           <div class="vessel-marker-container">
             <div class="vessel-marker" style="
-              width: 24px;
-              height: 24px;
+              width: ${vesselSize}px;
+              height: ${vesselSize}px;
               background: ${getVesselColor()};
-              border-radius: 50% 50% 50% 0;
-              transform: rotate(-45deg);
-              box-shadow: 0 1px 4px rgba(0,0,0,0.5);
+              border-radius: ${isAnchored ? '50%' : '50% 50% 50% 0'};
+              transform: ${isAnchored ? 'none' : `rotate(${course - 45}deg)`};
+              box-shadow: 0 2px 5px rgba(0,0,0,0.6);
               position: relative;
-              top: -12px;
-              left: -12px;
+              top: -${vesselSize/2}px;
+              left: -${vesselSize/2}px;
               display: flex;
               align-items: center;
               justify-content: center;
+              border: 2px solid white;
+              z-index: 10;
             ">
               <div style="
-                width: 12px;
-                height: 12px;
+                width: ${vesselSize/2}px;
+                height: ${vesselSize/2}px;
                 background: white;
                 border-radius: 50%;
-                transform: rotate(45deg);
-              "></div>
+                transform: ${isAnchored ? 'none' : `rotate(${45 - course}deg)`};
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: ${vesselSize/3}px;
+                color: ${getVesselColor()};
+                font-weight: bold;
+              ">${isAnchored ? '⚓' : ''}</div>
             </div>
+            
+            ${!isAnchored ? `
+            <div class="vessel-pulse" style="
+              position: absolute;
+              top: -${vesselSize}px;
+              left: -${vesselSize}px;
+              width: ${vesselSize * 2}px;
+              height: ${vesselSize * 2}px;
+              border-radius: 50%;
+              background: ${getVesselColor()};
+              opacity: 0.3;
+              animation: pulse-${vessel.id} 3s infinite;
+              z-index: 1;
+            "></div>
+            <style>
+              @keyframes pulse-${vessel.id} {
+                0% { transform: scale(0.5); opacity: 0.3; }
+                70% { transform: scale(1.2); opacity: 0; }
+                100% { transform: scale(0.5); opacity: 0; }
+              }
+            </style>` : ''}
           </div>
         `,
         className: 'vessel-marker-wrapper',
-        iconSize: [24, 24],
-        iconAnchor: [12, 36]
+        iconSize: [vesselSize, vesselSize],
+        iconAnchor: [vesselSize/2, vesselSize/2]
       });
       
       // Add marker with enhanced popup
