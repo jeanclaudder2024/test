@@ -1518,9 +1518,17 @@ export default function SimpleLeafletMap({
         map.setView([0, 0], 2); // Default to world view on error
       }
     } else if (selectedRegion) {
-      // Convert region to string key since Region is a type, not a string
-      const regionKey = String(selectedRegion).toLowerCase().replace(/\s+/g, '-');
-      const position = regionPositions[regionKey as keyof typeof regionPositions];
+      // Handle region selection by checking if it exists in our defined positions
+      // This avoids type issues with the Region type
+      const regionStr = selectedRegion.toString();
+      // Find the position by comparing keys
+      let position;
+      Object.keys(regionPositions).forEach(key => {
+        if (key === regionStr || key.replace(/-/g, '_') === regionStr) {
+          position = regionPositions[key as keyof typeof regionPositions];
+        }
+      });
+      
       if (position) {
         map.setView([position.lat, position.lng], position.zoom);
       }
