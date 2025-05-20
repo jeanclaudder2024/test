@@ -491,20 +491,27 @@ export default function Vessels() {
         } 
         // Vessel is loading/unloading - near port or refinery and slow/stopped
         else if (selectedStatus === 'loading') {
-          const isNearPortOrRefinery = vessel.destinationPort && 
-            (vessel.distanceToDestination === undefined || 
-             (vessel.distanceToDestination && Number(vessel.distanceToDestination) < 15));
-          return speed < 2 && isNearPortOrRefinery;
+          // Check if vessel is at a destination (port or refinery) and moving slowly
+          const isNearDestination = vessel.destinationPort && 
+            // Using string matching instead of distance calculation
+            (vessel.status === 'loading' || 
+             vessel.status === 'docked' || 
+             speed < 2);
+          return isNearDestination;
         } 
         // Vessel has finished loading and is starting to move
         else if (selectedStatus === 'finished') {
-          const hasRecentlyLoaded = vessel.lastPort || 
-            (vessel.voyageEvents && Array.isArray(vessel.voyageEvents) && 
-             vessel.voyageEvents.some(event => 
-               event?.type?.toLowerCase?.().includes('load')));
+          // Check if the vessel is likely to have finished loading
+          // Based on being near a port in the past and now moving
+          const possiblyLoadedRecently = 
+            (vessel.departurePort !== undefined && vessel.departurePort !== null) || 
+            vessel.status === 'departing' ||
+            (vessel.departureTime && 
+             // If departure time is within last 3 days
+             (new Date().getTime() - new Date(vessel.departureTime).getTime() < 3 * 24 * 60 * 60 * 1000));
           
           // Moving at a low/medium speed after loading
-          return speed >= 2 && speed < 10 && hasRecentlyLoaded;
+          return speed >= 2 && speed < 10 && possiblyLoadedRecently;
         }
         
         return false;
@@ -512,7 +519,7 @@ export default function Vessels() {
       
       return matchesSearch && matchesOilType && matchesTab && matchesStatus;
     });
-  }, [vesselsWithCategories, searchTerm, selectedOilTypes, selectedTab]);
+  }, [vesselsWithCategories, searchTerm, selectedOilTypes, selectedTab, selectedStatus]);
   
   // Get current page vessels for the filtered table view
   const indexOfLastVessel = currentPage * vesselsPerPage;
@@ -996,8 +1003,13 @@ export default function Vessels() {
             </TableHeader>
             <TableBody>
               {currentVessels.map((vessel) => (
-                <TableRow key={vessel.id}>
-                  <TableCell className="font-medium">{vessel.name}</TableCell>
+                <TableRow key={vessel.id} className="hover:bg-muted/30">
+                  <TableCell className="font-medium">
+                    <div className="flex items-center">
+                      <Ship className="h-3.5 w-3.5 mr-2 text-primary opacity-70" />
+                      {vessel.name}
+                    </div>
+                  </TableCell>
                   <TableCell>{vessel.imo}</TableCell>
                   
                   {/* Oil Type with colored badge */}
