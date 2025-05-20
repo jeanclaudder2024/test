@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useDataStream } from '@/hooks/useDataStream';
 import { useVesselWebSocket } from '@/hooks/useVesselWebSocket';
+import { useVesselClient } from '@/hooks/useVesselClient';
 import { Vessel } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -155,22 +156,25 @@ export default function Vessels() {
   // Track which data source is being used
   const [dataSource, setDataSource] = useState<'websocket' | 'myshiptracking' | 'marine-traffic' | 'polling'>('websocket');
   
-  // Use the WebSocket hook with fallback to REST API and pagination support
+  // Use our new robust vessel client with WebSocket and REST API fallback
   const { 
     vessels: realTimeVessels, 
     loading: wsLoading, 
     connected: wsConnected,
     connectionType,
+    connectionStatus,
     page,
     pageSize,
     totalPages,
     totalCount,
     goToPage,
-    changePageSize
-  } = useVesselWebSocket({
+    changePageSize,
+    refreshData
+  } = useVesselClient({
     region: selectedRegion,
     page: 1,
-    pageSize: 500
+    pageSize: 500,
+    vesselType: 'oil'
   });
   
   // Combined vessels from both sources

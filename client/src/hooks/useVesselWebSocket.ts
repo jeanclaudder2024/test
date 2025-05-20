@@ -292,32 +292,42 @@ export function useVesselWebSocket({
         throw wsError; // Propagate the error
       }
       
-      // Set up reconnection interval
+      // Set up reconnection interval with better URL handling
       if (!reconnectInterval.current) {
         reconnectInterval.current = setInterval(() => {
           if (socket.current?.readyState !== WebSocket.OPEN) {
             try {
               console.log('Attempting to reconnect WebSocket...');
-              // Ensure we're connecting to the correct WebSocket URL
-              const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-              const host = window.location.host;
               
-              // Make sure host is not empty
-              if (!host) {
-                console.error('WebSocket reconnection failed: Host is undefined');
+              // Rebuild the WebSocket URL with proper structure
+              const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+              const hostname = window.location.hostname;
+              
+              // Make sure hostname is not empty
+              if (!hostname) {
+                console.error('WebSocket reconnection failed: Hostname is undefined');
                 fetchVesselsViaREST();
                 return;
               }
               
-              const port = window.location.port || (protocol === 'wss:' ? '443' : '80');
-              
               // Add a unique token to prevent caching issues
               const reconnectToken = Math.random().toString(36).substring(2, 15);
-              const reconnectUrl = `${protocol}//${host}/ws?token=${reconnectToken}`;
+              const reconnectUrl = `${protocol}//${hostname}/ws?token=${reconnectToken}`;
               console.log('WebSocket reconnect URL:', reconnectUrl);
               
-              socket.current = new WebSocket(reconnectUrl);
-              setupSocketEventListeners(socket.current);
+              // Create new WebSocket with proper error handling
+              try {
+                socket.current = new WebSocket(reconnectUrl);
+                if (socket.current) {
+                  setupSocketEventListeners(socket.current);
+                } else {
+                  throw new Error('Failed to create WebSocket instance during reconnect');
+                }
+              } catch (wsError) {
+                console.error('WebSocket reconnection attempt failed:', wsError);
+                // Use REST API as fallback
+                fetchVesselsViaREST();
+              }
             } catch (reconnectError) {
               console.error('Failed to reconnect WebSocket:', reconnectError);
               fetchVesselsViaREST();
