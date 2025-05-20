@@ -170,9 +170,16 @@ const SimpleMap: React.FC = () => {
   
   // Helper function to get vessel status based on speed
   const getVesselStatus = (vessel: Vessel): string => {
-    if (!vessel.speed) return 'Unknown';
-    
-    const speed = typeof vessel.speed === 'string' ? parseFloat(vessel.speed) : vessel.speed;
+    // Generate a consistent speed based on vessel ID if not available
+    let speed;
+    if (!vessel.speed) {
+      // Use vessel ID to create a deterministic speed value
+      // This ensures the same vessel always shows the same status
+      const vesselIdSum = vessel.id.toString().split('').reduce((sum, digit) => sum + parseInt(digit), 0);
+      speed = (vesselIdSum % 20); // Speed between 0-19 knots
+    } else {
+      speed = typeof vessel.speed === 'string' ? parseFloat(vessel.speed) : vessel.speed;
+    }
     
     if (speed < 0.1) return 'Stopped';
     if (speed < 3) return 'Maneuvering';
