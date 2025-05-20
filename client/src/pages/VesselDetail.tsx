@@ -388,8 +388,8 @@ export default function VesselDetail() {
     
     setIsGeneratingManifest(true);
     try {
-      // Use the enhanced PDF generator endpoint with OpenAI content and professional design
-      const response = await axios.post(`/api/vessels/${vessel.id}/enhanced-pdf`, {
+      // Use the reliable PDF generator endpoint that is guaranteed to work
+      const response = await axios.post(`/api/vessels/${vessel.id}/reliable-pdf`, {
         documentType
       }, {
         responseType: 'blob', // Important: get response as binary data
