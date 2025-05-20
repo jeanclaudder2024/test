@@ -669,7 +669,7 @@ export default function Vessels() {
             <p className="text-muted-foreground">
               {loading ? 'Loading oil vessels...' : 
                 filteredVessels.length === 0 ? 'No vessels match your filters' :
-                `${filteredVessels.length.toLocaleString()} oil vessels found (showing ${currentVessels.length} per page)`
+                `${filteredVessels.length.toLocaleString()} oil vessels found (displaying 500 per page)`
               }
             </p>
             
@@ -682,6 +682,22 @@ export default function Vessels() {
                   <span>Error: {fetchError}</span>
                 </Badge>
               )}
+            </div>
+            
+            {/* Status indicator legend */}
+            <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                <span>In Transit</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                <span>Loading/Unloading</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-orange-500"></span>
+                <span>Recently Loaded</span>
+              </div>
             </div>
           </div>
         </div>
@@ -1048,7 +1064,30 @@ export default function Vessels() {
                     )}
                   </TableCell>
                   
-                  <TableCell>{vessel.vesselType}</TableCell>
+                  {/* Vessel Type with Status Indicator */}
+                  <TableCell>
+                    <div className="flex items-center">
+                      {/* Status indicator */}
+                      {(() => {
+                        const speed = vessel.currentSpeed ? Number(vessel.currentSpeed) : 0;
+                        // In transit
+                        if (speed >= 5) {
+                          return <span className="w-2 h-2 rounded-full bg-blue-500 mr-2" title="In Transit"></span>;
+                        } 
+                        // Loading/unloading
+                        else if (speed < 2 && vessel.destinationPort) {
+                          return <span className="w-2 h-2 rounded-full bg-green-500 mr-2 animate-pulse" title="Loading/Unloading"></span>;
+                        }
+                        // Recently loaded
+                        else if (speed >= 2 && speed < 10 && vessel.departurePort) {
+                          return <span className="w-2 h-2 rounded-full bg-orange-500 mr-2" title="Recently Loaded"></span>;
+                        }
+                        // Other
+                        return <span className="w-2 h-2 rounded-full bg-gray-300 mr-2" title="Status Unknown"></span>;
+                      })()}
+                      {vessel.vesselType}
+                    </div>
+                  </TableCell>
                   <TableCell className="whitespace-nowrap">
                     <div className="flex items-center gap-2">
                       {vessel.flag && getFlagCode(vessel.flag) && (
