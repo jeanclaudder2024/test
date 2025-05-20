@@ -421,6 +421,45 @@
     @apply bg-[#e8f5e9] dark:bg-[#1c2833];
   }
   
+  /* Water ripple effect for port icons */
+  .water-ripple-effect {
+    position: relative;
+    overflow: visible;
+  }
+  
+  .water-ripple-effect::before,
+  .water-ripple-effect::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 140%;
+    height: 140%;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.4);
+    transform: translate(-50%, -50%) scale(0);
+    animation: water-ripple 3s infinite ease-out;
+    z-index: -1;
+  }
+  
+  .water-ripple-effect::after {
+    animation-delay: 1.5s;
+  }
+  
+  @keyframes water-ripple {
+    0% {
+      transform: translate(-50%, -50%) scale(0);
+      opacity: 0.8;
+    }
+    50% {
+      opacity: 0.3;
+    }
+    100% {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 0;
+    }
+  }
+  
   /* Map dark mode adjustments */
   .dark .leaflet-tile {
     filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7);

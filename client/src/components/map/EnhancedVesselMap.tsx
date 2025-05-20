@@ -278,44 +278,82 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
     });
   };
   
-  // Get refinery icon
+  // Get refinery icon with more detailed visualization
   const getRefineryIcon = (refinery: any) => {
+    // Create an animated refinery icon with name display
+    const capacity = refinery.capacity || 0;
+    const iconSize = Math.min(Math.max(16, capacity / 50), 32); // Size based on capacity
+    
     const html = `
-      <div class="w-6 h-6 flex items-center justify-center bg-blue-600 border-2 border-white rounded-full animate-pulse">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3">
-          <path d="M18 10c0 3.976-7 10-7 10s-7-6.024-7-10a7 7 0 0 1 14 0z" />
-          <circle cx="11" cy="10" r="3" />
-        </svg>
+      <div class="relative">
+        <div class="w-${iconSize} h-${iconSize} flex items-center justify-center bg-blue-600 border-2 border-white rounded-full animate-pulse shadow-md">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-${iconSize/2} h-${iconSize/2}">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+          </svg>
+        </div>
+        <div class="absolute -bottom-6 left-1/2 transform -translate-x-1/2 bg-blue-700 text-white px-2 py-0.5 rounded text-xs whitespace-nowrap font-medium shadow-sm">
+          ${refinery.name.length > 15 ? refinery.name.slice(0, 12) + '...' : refinery.name}
+        </div>
       </div>
     `;
     
     return L.divIcon({
       className: 'refinery-marker',
       html: html,
-      iconSize: [24, 24],
-      iconAnchor: [12, 12],
+      iconSize: [iconSize + 20, iconSize + 30], // Account for the name label
+      iconAnchor: [iconSize / 2 + 10, iconSize / 2 + 15],
     });
   };
   
-  // Get port icon
+  // Get port icon with improved visualization and name
   const getPortIcon = (port: any) => {
+    // Determine icon style based on port type
+    let iconColor = "green-600";
+    let iconSize = 24;
+    let iconSymbol = `
+      <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
+      <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
+      <line x1="6" y1="1" x2="6" y2="4"></line>
+      <line x1="10" y1="1" x2="10" y2="4"></line>
+      <line x1="14" y1="1" x2="14" y2="4"></line>
+    `;
+    
+    // Check port type for specialized icons
+    if (port.portType?.toLowerCase().includes('oil')) {
+      iconColor = "amber-600";
+      iconSymbol = `<path d="M7 16a3 3 0 0 1 0 6 3 3 0 0 0 0 6h10a3 3 0 0 0 0-6 3 3 0 0 1 0-6"/>`;
+      iconSize = 28;
+    } else if (port.portType?.toLowerCase().includes('lng') || port.portType?.toLowerCase().includes('gas')) {
+      iconColor = "purple-600";
+      iconSymbol = `<path d="M10 5.5V2a1 1 0 0 0-1.74-.67L3.51 6.79a1 1 0 0 0 .75 1.7H8L10 5.5zm-4 2v14h16V7.5H6z"/>`;
+      iconSize = 26;
+    } else if (port.portType?.toLowerCase().includes('container')) {
+      iconColor = "blue-500";
+      iconSymbol = `<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/>`;
+    }
+    
+    // Optional water ripple animation for oil/LNG ports
+    const hasWaterEffect = port.portType?.toLowerCase().includes('oil') || port.portType?.toLowerCase().includes('lng');
+    
+    // Create HTML for port icon with name
     const html = `
-      <div class="w-6 h-6 flex items-center justify-center bg-green-600 border-2 border-white rounded-full">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3">
-          <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
-          <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
-          <line x1="6" y1="1" x2="6" y2="4"></line>
-          <line x1="10" y1="1" x2="10" y2="4"></line>
-          <line x1="14" y1="1" x2="14" y2="4"></line>
-        </svg>
+      <div class="relative">
+        <div class="w-${iconSize} h-${iconSize} flex items-center justify-center bg-${iconColor} border-2 border-white rounded-full shadow-md ${hasWaterEffect ? 'water-ripple-effect' : ''}">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-${iconSize/2} h-${iconSize/2}">
+            ${iconSymbol}
+          </svg>
+        </div>
+        <div class="absolute -bottom-6 left-1/2 transform -translate-x-1/2 bg-${iconColor} text-white px-2 py-0.5 rounded text-xs whitespace-nowrap font-medium shadow-sm">
+          ${port.name.length > 15 ? port.name.slice(0, 12) + '...' : port.name}
+        </div>
       </div>
     `;
     
     return L.divIcon({
       className: 'port-marker',
       html: html,
-      iconSize: [24, 24],
-      iconAnchor: [12, 12],
+      iconSize: [iconSize + 20, iconSize + 30], // Account for the name label
+      iconAnchor: [iconSize / 2 + 10, iconSize / 2 + 15],
     });
   };
   
