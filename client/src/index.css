@@ -1,9 +1,9 @@
+/* Import map style first */
+@import './styles/map.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Import map style */
-@import './styles/map.css';
 
 /* Auth page animations */
 @keyframes fade-in {
