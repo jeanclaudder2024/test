@@ -148,16 +148,16 @@ function Router() {
 
 function App() {
   return (
-    <ThemeProvider defaultTheme="system">
-      <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider defaultTheme="system">
         <AuthProvider>
           <LanguageProvider>
             <Router />
             <Toaster />
           </LanguageProvider>
         </AuthProvider>
-      </QueryClientProvider>
-    </ThemeProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }
 
