@@ -24,6 +24,31 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/utils";
+
+// Helper function to parse the vessel metadata field for additional vessel information
+const parseVesselMetadata = (vessel: Vessel) => {
+  if (!vessel.metadata) return null;
+  
+  try {
+    // Parse the metadata JSON string
+    const metadata = typeof vessel.metadata === 'string' 
+      ? JSON.parse(vessel.metadata)
+      : vessel.metadata;
+    
+    return {
+      currentSpeed: metadata.currentSpeed,
+      voyageProgress: metadata.voyageProgress,
+      course: metadata.course,
+      navStatus: metadata.navStatus,
+      draught: metadata.draught,
+      generatedData: metadata.generatedData || false,
+      generatedAt: metadata.generatedAt ? new Date(metadata.generatedAt) : null
+    };
+  } catch (error) {
+    console.error("Error parsing vessel metadata:", error);
+    return null;
+  }
+};
 import { Vessel } from "@/types";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 

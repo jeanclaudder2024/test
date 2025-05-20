@@ -66,11 +66,21 @@ export const generateVesselPositionData = async (req: Request, res: Response) =>
 
       // Update the vessel data in the database to persist these values
       if (vesselId) {
+        // Store the additional data in the metadata JSON field
+        const metadataObj = {
+          currentSpeed: generatedData.speed,
+          voyageProgress: generatedData.voyageProgress,
+          course: generatedData.course,
+          navStatus: generatedData.navStatus,
+          draught: generatedData.draught,
+          generatedData: true,
+          generatedAt: new Date().toISOString()
+        };
+        
         await db.update(vessels)
           .set({
-            currentSpeed: generatedData.speed,
-            voyageProgress: generatedData.voyageProgress,
-            estimatedArrivalTime: new Date(Date.now() + (generatedData.hoursToDestination || 72) * 60 * 60 * 1000).toISOString()
+            metadata: JSON.stringify(metadataObj),
+            eta: new Date(Date.now() + (generatedData.hoursToDestination || 72) * 60 * 60 * 1000)
           })
           .where(eq(vessels.id, vesselId));
       }
@@ -119,11 +129,22 @@ export const generateVesselPositionData = async (req: Request, res: Response) =>
       
       // Update the vessel in the database
       if (vesselId) {
+        // Store the additional data in the metadata JSON field
+        const metadataObj = {
+          currentSpeed: fallbackData.speed,
+          voyageProgress: fallbackData.voyageProgress,
+          course: fallbackData.course,
+          navStatus: fallbackData.navStatus,
+          draught: fallbackData.draught,
+          generatedData: true,
+          fallbackGeneration: true,
+          generatedAt: new Date().toISOString()
+        };
+        
         await db.update(vessels)
           .set({
-            currentSpeed: fallbackData.speed,
-            voyageProgress: fallbackData.voyageProgress,
-            estimatedArrivalTime: new Date(Date.now() + fallbackData.hoursToDestination * 60 * 60 * 1000).toISOString()
+            metadata: JSON.stringify(metadataObj),
+            eta: new Date(Date.now() + fallbackData.hoursToDestination * 60 * 60 * 1000)
           })
           .where(eq(vessels.id, vesselId));
       }

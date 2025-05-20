@@ -70,6 +70,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register routes
   app.use("/api/translate", translationRouter);
   app.use("/api/subscriptions", subscriptionRouter);
+  
+  // Register vessel position data generation endpoint
+  app.post("/api/vessels/:id/generate-position-data", generateVesselPositionData);
 
   // Endpoint to clear all vessel and refinery data from the database
   if (app.get("env") === "development") {
