@@ -8,7 +8,7 @@ import path from "path";
 import OpenAI from "openai";
 
 // Import logo
-const { logoBase64 } = require("../assets/petrodeal-logo");
+import { logoBase64 } from "../assets/petrodeal-logo";
 
 // Create OpenAI client
 const openai = new OpenAI({
