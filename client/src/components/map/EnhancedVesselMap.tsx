@@ -372,44 +372,53 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
     
     try {
       // Check for destination port information
-      if (vessel.destinationPort) {
-        const portsResponse = await axios.get('/api/ports');
-        if (portsResponse.data) {
-          // Find port by name (case-insensitive partial match)
-          const destinationPort = portsResponse.data.find((port: any) => 
-            port.name && vessel.destinationPort && 
-            port.name.toLowerCase().includes(vessel.destinationPort.toLowerCase())
-          );
-          
-          if (destinationPort && destinationPort.lat && destinationPort.lng) {
-            setDestinationPortMarker({
-              ...destinationPort,
-              isDestination: true
-            });
-            console.log("Found destination port:", destinationPort.name);
-          }
-        }
-      }
+      const destinationName = vessel.destinationPort || vessel.destination;
       
-      // Check if vessel has destination that might be a refinery
-      if (vessel.destination) {
-        const refineriesResponse = await axios.get('/api/refineries');
-        if (refineriesResponse.data) {
-          // Find refinery by name or country
-          const possibleRefinery = refineriesResponse.data.find((refinery: any) => 
-            (refinery.name && vessel.destination && 
-             refinery.name.toLowerCase().includes(vessel.destination.toLowerCase())) ||
-            (refinery.country && vessel.destination && 
-             vessel.destination.toLowerCase().includes(refinery.country.toLowerCase()))
-          );
-          
-          if (possibleRefinery && possibleRefinery.lat && possibleRefinery.lng) {
-            setDestinationRefineryMarker({
-              ...possibleRefinery,
-              isDestination: true
-            });
-            console.log("Found destination refinery:", possibleRefinery.name);
+      if (destinationName) {
+        // Try to find matching port
+        try {
+          const portsResponse = await axios.get('/api/ports');
+          if (portsResponse.data && Array.isArray(portsResponse.data)) {
+            // Find port by name (case-insensitive partial match)
+            const destinationPort = portsResponse.data.find((port: any) => 
+              port && port.name && destinationName && 
+              port.name.toLowerCase().includes(destinationName.toLowerCase())
+            );
+            
+            if (destinationPort && destinationPort.lat && destinationPort.lng) {
+              setDestinationPortMarker({
+                ...destinationPort,
+                isDestination: true
+              });
+              console.log("Found destination port:", destinationPort.name);
+            }
           }
+        } catch (portError) {
+          console.error("Error finding destination port:", portError);
+        }
+      
+        // Try to find matching refinery (even if we found a port)
+        try {
+          const refineriesResponse = await axios.get('/api/refineries');
+          if (refineriesResponse.data && Array.isArray(refineriesResponse.data)) {
+            // Find refinery by name or country
+            const possibleRefinery = refineriesResponse.data.find((refinery: any) => 
+              (refinery && refinery.name && destinationName && 
+               refinery.name.toLowerCase().includes(destinationName.toLowerCase())) ||
+              (refinery && refinery.country && destinationName && 
+               destinationName.toLowerCase().includes(refinery.country.toLowerCase()))
+            );
+            
+            if (possibleRefinery && possibleRefinery.lat && possibleRefinery.lng) {
+              setDestinationRefineryMarker({
+                ...possibleRefinery,
+                isDestination: true
+              });
+              console.log("Found destination refinery:", possibleRefinery.name);
+            }
+          }
+        } catch (refineryError) {
+          console.error("Error finding destination refinery:", refineryError);
         }
       }
     } catch (error) {
@@ -1082,6 +1091,47 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
             </Marker>
           ))}
           
+          {/* Destination connections with special styling */}
+          {destinationPortMarker && realTimePosition && (
+            <Polyline
+              key={`destination-port-line`}
+              positions={[
+                [realTimePosition[0], realTimePosition[1]],
+                [
+                  realTimePosition[0] + (parseFloat(destinationPortMarker.lat) - realTimePosition[0]) * 0.5,
+                  realTimePosition[1] + (parseFloat(destinationPortMarker.lng) - realTimePosition[1]) * 0.5 - 0.03
+                ],
+                [parseFloat(destinationPortMarker.lat), parseFloat(destinationPortMarker.lng)]
+              ]}
+              pathOptions={{
+                color: '#dc2626', // Red
+                weight: 4,
+                dashArray: '15, 10',
+                opacity: 0.8
+              }}
+            />
+          )}
+          
+          {destinationRefineryMarker && realTimePosition && (
+            <Polyline
+              key={`destination-refinery-line`}
+              positions={[
+                [realTimePosition[0], realTimePosition[1]],
+                [
+                  realTimePosition[0] + (parseFloat(destinationRefineryMarker.lat) - realTimePosition[0]) * 0.5,
+                  realTimePosition[1] + (parseFloat(destinationRefineryMarker.lng) - realTimePosition[1]) * 0.5 + 0.03
+                ],
+                [parseFloat(destinationRefineryMarker.lat), parseFloat(destinationRefineryMarker.lng)]
+              ]}
+              pathOptions={{
+                color: '#dc2626', // Red
+                weight: 4,
+                dashArray: '15, 10',
+                opacity: 0.8
+              }}
+            />
+          )}
+          
           {/* Enhanced connection lines to nearby entities with distance-based styling */}
           {nearbyRefineries.map((refinery: any) => {
             // Calculate opacity and dash pattern based on distance
@@ -1098,7 +1148,7 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
               <Polyline
                 key={`refinery-line-${refinery.id}`}
                 positions={[
-                  realTimePosition,
+                  [realTimePosition[0], realTimePosition[1]],
                   midPoint,
                   refineryPos
                 ]}
@@ -1127,7 +1177,7 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
               <Polyline
                 key={`port-line-${port.id}`}
                 positions={[
-                  realTimePosition,
+                  [realTimePosition[0], realTimePosition[1]],
                   midPoint,
                   portPos
                 ]}
