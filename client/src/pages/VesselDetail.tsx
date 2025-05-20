@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Vessel } from '@/types';
 import { useToast } from '@/hooks/use-toast';
-import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, Circle } from 'react-leaflet';
 import VoyageDetails from '@/components/vessels/VoyageDetails';
 import axios from 'axios';
 import L from 'leaflet';
@@ -328,6 +328,8 @@ export default function VesselDetail() {
   const [currentLocation, setCurrentLocation] = useState<any>(null);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [isGeneratingManifest, setIsGeneratingManifest] = useState(false);
+  const [refineries, setRefineries] = useState<any[]>([]);
+  const [ports, setPorts] = useState<any[]>([]);
   
   // Function to fetch vessel data directly using REST API
   const fetchVesselData = async () => {
@@ -769,6 +771,7 @@ export default function VesselDetail() {
                               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                             />
+                            {/* Vessel Marker */}
                             <Marker
                               position={[parseFloat(vessel.currentLat as string), parseFloat(vessel.currentLng as string)]}
                               icon={L.divIcon({
@@ -777,8 +780,195 @@ export default function VesselDetail() {
                                 iconSize: [16, 16],
                               })}
                             >
-                              <Popup>Current position of {vessel.name}</Popup>
+                              <Popup>
+                                <div className="text-sm">
+                                  <strong>{vessel.name}</strong>
+                                  <div className="mt-1 font-normal">Current position</div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {vessel.currentLat}, {vessel.currentLng}
+                                  </div>
+                                </div>
+                              </Popup>
                             </Marker>
+                            
+                            {/* Connection to refinery if vessel has a refinery destination */}
+                            {vessel.destinationPort && vessel.destinationPort.startsWith('REF:') && (
+                              <>
+                                {/* Get refinery ID and position from format REF:id:name */}
+                                {(() => {
+                                  try {
+                                    const parts = vessel.destinationPort.split(':');
+                                    const refineryId = parts[1];
+                                    const refineryName = parts[2];
+                                    
+                                    // Find the refinery if it exists
+                                    const refinery = refineries.find(r => r.id.toString() === refineryId);
+                                    if (!refinery || !refinery.lat || !refinery.lng) return null;
+                                    
+                                    // Calculate if vessel is close to refinery (within 10km)
+                                    const vesselLat = parseFloat(vessel.currentLat as string);
+                                    const vesselLng = parseFloat(vessel.currentLng as string);
+                                    const refineryLat = parseFloat(refinery.lat);
+                                    const refineryLng = parseFloat(refinery.lng);
+                                    
+                                    // Simple distance calculation (approximate)
+                                    const distance = Math.sqrt(
+                                      Math.pow(vesselLat - refineryLat, 2) + 
+                                      Math.pow(vesselLng - refineryLng, 2)
+                                    ) * 111; // Convert to km (approximate)
+                                    
+                                    const isLoading = distance < 10; // Within 10km
+                                    
+                                    return (
+                                      <>
+                                        {/* Refinery marker */}
+                                        <Marker
+                                          position={[refineryLat, refineryLng]}
+                                          icon={L.divIcon({
+                                            className: 'refinery-marker',
+                                            html: `<div class="w-6 h-6 flex items-center justify-center bg-blue-600 border-2 border-white rounded-full ${isLoading ? 'animate-pulse' : ''}">
+                                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                                            </div>`,
+                                            iconSize: [24, 24],
+                                          })}
+                                        >
+                                          <Popup>
+                                            <div className="text-sm">
+                                              <strong>{refineryName}</strong>
+                                              <div className="mt-1 font-normal">Refinery</div>
+                                              {isLoading && (
+                                                <div className="mt-1 text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                                                  Vessel currently loading/unloading
+                                                </div>
+                                              )}
+                                            </div>
+                                          </Popup>
+                                        </Marker>
+                                        
+                                        {/* Connection line between vessel and refinery */}
+                                        <Polyline
+                                          positions={[
+                                            [vesselLat, vesselLng],
+                                            [refineryLat, refineryLng]
+                                          ]}
+                                          pathOptions={{ 
+                                            color: isLoading ? '#3b82f6' : '#94a3b8', 
+                                            weight: isLoading ? 3 : 2,
+                                            dashArray: isLoading ? '' : '5, 5',
+                                            opacity: isLoading ? 0.8 : 0.5
+                                          }}
+                                        />
+                                        
+                                        {/* Area indicator if loading */}
+                                        {isLoading && (
+                                          <Circle 
+                                            center={[refineryLat, refineryLng]}
+                                            radius={5000} // 5km radius
+                                            pathOptions={{
+                                              color: '#3b82f6',
+                                              fillColor: '#93c5fd',
+                                              fillOpacity: 0.2,
+                                              weight: 1
+                                            }}
+                                          />
+                                        )}
+                                      </>
+                                    );
+                                  } catch (error) {
+                                    console.error('Error displaying refinery connection:', error);
+                                    return null;
+                                  }
+                                })()}
+                              </>
+                            )}
+                            
+                            {/* Regular port connection (if not a refinery) */}
+                            {vessel.destinationPort && !vessel.destinationPort.startsWith('REF:') && (
+                              <>
+                                {/* Check if we have port coordinates from the storage */}
+                                {(() => {
+                                  try {
+                                    // Find the port in our database
+                                    const portName = vessel.destinationPort;
+                                    const port = ports.find(p => p.name === portName);
+                                    if (!port || !port.lat || !port.lng) return null;
+                                    
+                                    // Calculate if vessel is close to port (within 10km)
+                                    const vesselLat = parseFloat(vessel.currentLat as string);
+                                    const vesselLng = parseFloat(vessel.currentLng as string);
+                                    const portLat = parseFloat(port.lat as string);
+                                    const portLng = parseFloat(port.lng as string);
+                                    
+                                    // Simple distance calculation (approximate)
+                                    const distance = Math.sqrt(
+                                      Math.pow(vesselLat - portLat, 2) + 
+                                      Math.pow(vesselLng - portLng, 2)
+                                    ) * 111; // Convert to km (approximate)
+                                    
+                                    const isLoading = distance < 10; // Within 10km
+                                    
+                                    return (
+                                      <>
+                                        {/* Port marker */}
+                                        <Marker
+                                          position={[portLat, portLng]}
+                                          icon={L.divIcon({
+                                            className: 'port-marker',
+                                            html: `<div class="w-6 h-6 flex items-center justify-center bg-green-600 border-2 border-white rounded-full ${isLoading ? 'animate-pulse' : ''}">
+                                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>
+                                            </div>`,
+                                            iconSize: [24, 24],
+                                          })}
+                                        >
+                                          <Popup>
+                                            <div className="text-sm">
+                                              <strong>{port.name}</strong>
+                                              <div className="mt-1 font-normal">Port in {port.country}</div>
+                                              {isLoading && (
+                                                <div className="mt-1 text-xs bg-green-50 text-green-700 px-2 py-1 rounded">
+                                                  Vessel currently loading/unloading
+                                                </div>
+                                              )}
+                                            </div>
+                                          </Popup>
+                                        </Marker>
+                                        
+                                        {/* Connection line between vessel and port */}
+                                        <Polyline
+                                          positions={[
+                                            [vesselLat, vesselLng],
+                                            [portLat, portLng]
+                                          ]}
+                                          pathOptions={{ 
+                                            color: isLoading ? '#10b981' : '#94a3b8', 
+                                            weight: isLoading ? 3 : 2,
+                                            dashArray: isLoading ? '' : '5, 5',
+                                            opacity: isLoading ? 0.8 : 0.5
+                                          }}
+                                        />
+                                        
+                                        {/* Area indicator if loading */}
+                                        {isLoading && (
+                                          <Circle 
+                                            center={[portLat, portLng]}
+                                            radius={5000} // 5km radius
+                                            pathOptions={{
+                                              color: '#10b981',
+                                              fillColor: '#6ee7b7',
+                                              fillOpacity: 0.2,
+                                              weight: 1
+                                            }}
+                                          />
+                                        )}
+                                      </>
+                                    );
+                                  } catch (error) {
+                                    console.error('Error displaying port connection:', error);
+                                    return null;
+                                  }
+                                })()}
+                              </>
+                            )}
                           </MapContainer>
                           <div className="absolute top-2 right-2 z-[1000] bg-white rounded-md shadow-sm">
                             <Button variant="ghost" size="icon" className="p-1 text-gray-600 hover:bg-gray-100 hover:text-primary h-8 w-8">
