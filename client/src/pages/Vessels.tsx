@@ -1197,8 +1197,32 @@ export default function Vessels() {
                     <span className="hidden sm:inline">Previous</span>
                   </Button>
                   
-                  <div className="flex items-center px-3 py-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md text-sm font-medium">
-                    <span className="text-gray-700 dark:text-gray-300">Page {currentPage} of {filteredTotalPages}</span>
+                  <div className="flex items-center gap-2">
+                    {paginationItems.map((item, index) => {
+                      if (item === '...') {
+                        return (
+                          <span key={`ellipsis-${index}`} className="px-2 text-gray-400">
+                            ...
+                          </span>
+                        );
+                      }
+                      
+                      return (
+                        <Button
+                          key={`page-${item}`}
+                          variant={currentPage === item ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => handleGoToPage(item as number)}
+                          className={`w-8 h-8 p-0 ${
+                            currentPage === item 
+                              ? "bg-primary hover:bg-primary/90" 
+                              : "border-gray-200 dark:border-gray-700"
+                          }`}
+                        >
+                          {item}
+                        </Button>
+                      );
+                    })}
                   </div>
                   
                   <Button 
