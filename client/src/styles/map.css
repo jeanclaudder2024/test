@@ -1,68 +1,287 @@
 /* Custom map icon styles */
 
-/* Vessel icons based on type */
-.vessel-type-crude-oil-tanker svg path,
-.vessel-type-crude svg path {
-  fill: #ef4444 !important; /* red-500 */
-  stroke: #ef4444 !important;
+/* Enhanced Professional Vessel icons with improved styling */
+.vessel-marker {
+  position: relative;
+  transform-origin: center;
+  transition: transform 0.3s;
 }
 
-.vessel-type-product-tanker svg path,
-.vessel-type-products svg path {
-  fill: #3b82f6 !important; /* blue-500 */
-  stroke: #3b82f6 !important;
+.vessel-marker:hover {
+  z-index: 1000 !important;
+  transform: scale(1.2);
 }
 
-.vessel-type-lng-carrier svg path,
-.vessel-type-lng svg path {
-  fill: #10b981 !important; /* emerald-500 */
-  stroke: #10b981 !important;
+.vessel-icon {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px white, 0 0 10px rgba(0, 0, 0, 0.5);
+  position: relative;
+  overflow: visible;
 }
 
-.vessel-type-lpg-carrier svg path,
-.vessel-type-lpg svg path {
-  fill: #f59e0b !important; /* amber-500 */
-  stroke: #f59e0b !important;
+.vessel-icon::after {
+  content: '';
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: white;
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
 }
 
-.vessel-type-chemical-tanker svg path,
-.vessel-type-chemical svg path {
-  fill: #8b5cf6 !important; /* purple-500 */
-  stroke: #8b5cf6 !important;
+.vessel-icon svg {
+  width: 34px; 
+  height: 34px;
+  filter: drop-shadow(0px 2px 2px rgba(0, 0, 0, 0.3));
 }
 
-.vessel-type-default svg path {
-  fill: #003366 !important; /* navy blue */
-  stroke: #003366 !important;
+/* Ship direction indicator */
+.vessel-direction {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 12px solid white;
+  transform: translateX(-50%) translateY(-50%);
+  filter: drop-shadow(0px 1px 1px rgba(0, 0, 0, 0.5));
 }
 
-/* Port icons based on type */
-.port-type-oil-terminal svg path,
-.port-type-oil_terminal svg path {
-  fill: #3b82f6 !important; /* blue-500 */
-  stroke: #3b82f6 !important;
+.vessel-label {
+  position: absolute;
+  bottom: -26px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.75);
+  color: white;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 11px;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  z-index: 5;
 }
 
-.port-type-lng-terminal svg path,
-.port-type-lng_terminal svg path {
-  fill: #10b981 !important; /* emerald-500 */
-  stroke: #10b981 !important;
+.vessel-speed {
+  position: absolute;
+  top: -24px;
+  right: -15px;
+  background-color: rgba(0, 0, 0, 0.75);
+  color: white;
+  padding: 2px 5px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  z-index: 5;
 }
 
-.port-type-commercial svg path {
-  fill: #f59e0b !important; /* amber-500 */
-  stroke: #f59e0b !important;
+/* Vessel type specific styling */
+.vessel-type-crude-oil-tanker .vessel-icon,
+.vessel-type-crude .vessel-icon {
+  background-color: #ef4444; /* red-500 */
+  background-image: linear-gradient(135deg, #ef4444, #b91c1c);
 }
 
-.port-type-default svg path {
-  fill: #0080FF !important; /* blue */
-  stroke: #0080FF !important;
+.vessel-type-product-tanker .vessel-icon,
+.vessel-type-products .vessel-icon {
+  background-color: #3b82f6; /* blue-500 */
+  background-image: linear-gradient(135deg, #3b82f6, #1d4ed8);
 }
 
-/* Refinery icon */
-.custom-refinery-marker svg path {
-  fill: #FF6F00 !important; /* orange */
-  stroke: #FF6F00 !important;
+.vessel-type-lng-carrier .vessel-icon,
+.vessel-type-lng .vessel-icon {
+  background-color: #10b981; /* emerald-500 */
+  background-image: linear-gradient(135deg, #10b981, #047857);
+}
+
+.vessel-type-lpg-carrier .vessel-icon,
+.vessel-type-lpg .vessel-icon {
+  background-color: #f59e0b; /* amber-500 */
+  background-image: linear-gradient(135deg, #f59e0b, #b45309);
+}
+
+.vessel-type-chemical-tanker .vessel-icon,
+.vessel-type-chemical .vessel-icon {
+  background-color: #8b5cf6; /* purple-500 */
+  background-image: linear-gradient(135deg, #8b5cf6, #6d28d9);
+}
+
+.vessel-type-default .vessel-icon {
+  background-color: #003366; /* navy blue */
+  background-image: linear-gradient(135deg, #003366, #001f3f);
+}
+
+/* Enhanced Professional Port icons */
+.port-marker {
+  position: relative;
+  transform-origin: center;
+  transition: transform 0.3s;
+  z-index: 400;
+}
+
+.port-marker:hover {
+  z-index: 1000 !important;
+  transform: scale(1.2);
+}
+
+.port-icon {
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  border: 3px solid white;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  position: relative;
+}
+
+.port-icon svg {
+  width: 30px;
+  height: 30px;
+  filter: drop-shadow(0px 2px 2px rgba(0, 0, 0, 0.2));
+}
+
+.port-icon.destination-pulse {
+  animation: destination-pulse 2s infinite;
+}
+
+.port-label {
+  position: absolute;
+  bottom: -28px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 51, 102, 0.85);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 11px;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  z-index: 5;
+}
+
+.destination-label {
+  position: absolute;
+  top: -28px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(220, 38, 38, 0.9);
+  color: white;
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 11px;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  z-index: 6;
+}
+
+/* Port type styling */
+.port-type-oil-terminal .port-icon,
+.port-type-oil_terminal .port-icon {
+  background-color: #3b82f6; /* blue-500 */
+  background-image: linear-gradient(135deg, #3b82f6, #1d4ed8);
+}
+
+.port-type-lng-terminal .port-icon,
+.port-type-lng_terminal .port-icon {
+  background-color: #10b981; /* emerald-500 */
+  background-image: linear-gradient(135deg, #10b981, #047857);
+}
+
+.port-type-commercial .port-icon {
+  background-color: #f59e0b; /* amber-500 */
+  background-image: linear-gradient(135deg, #f59e0b, #b45309);
+}
+
+.port-type-default .port-icon {
+  background-color: #0080FF; /* blue */
+  background-image: linear-gradient(135deg, #0080FF, #0050A0);
+}
+
+/* Enhanced Professional Refinery icons */
+.refinery-marker {
+  position: relative;
+  transform-origin: center;
+  transition: transform 0.3s;
+  z-index: 400;
+}
+
+.refinery-marker:hover {
+  z-index: 1000 !important;
+  transform: scale(1.2);
+}
+
+.refinery-icon {
+  width: 46px;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 3px solid white;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+  position: relative;
+  background-color: #FF6F00; /* orange */
+  background-image: linear-gradient(135deg, #FF6F00, #D84315);
+}
+
+.refinery-icon svg {
+  width: 34px;
+  height: 34px;
+  filter: drop-shadow(0px 2px 2px rgba(0, 0, 0, 0.2));
+}
+
+.refinery-icon.destination-pulse {
+  animation: destination-pulse 2s infinite;
+}
+
+.refinery-label {
+  position: absolute;
+  bottom: -28px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(255, 111, 0, 0.85);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 11px;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  z-index: 5;
+}
+
+/* Destination pulse animation */
+@keyframes destination-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7), 0 0 0 1px white;
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(220, 38, 38, 0), 0 0 0 1px white;
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0), 0 0 0 1px white;
+  }
 }
 
 /* Custom popup styles */
