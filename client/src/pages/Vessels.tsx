@@ -532,12 +532,43 @@ export default function Vessels() {
   const indexOfLastVessel = currentPage * vesselsPerPage;
   const indexOfFirstVessel = indexOfLastVessel - vesselsPerPage;
   const currentVessels = filteredVessels.slice(indexOfFirstVessel, indexOfLastVessel);
-  const filteredTotalPages = Math.ceil(filteredVessels.length / vesselsPerPage);
+  const filteredTotalPages = Math.max(1, Math.ceil(filteredVessels.length / vesselsPerPage));
+  
+  // Calculate which page numbers to show 
+  const pageRange = 2; // Show this many pages before and after the current page
+  const paginationItems = useMemo(() => {
+    const items: (number | string)[] = [];
+    
+    // Always show first page
+    items.push(1);
+    
+    // Add ellipsis if needed
+    if (currentPage > pageRange + 2) {
+      items.push('...');
+    }
+    
+    // Add pages around current page
+    for (let i = Math.max(2, currentPage - pageRange); i <= Math.min(filteredTotalPages - 1, currentPage + pageRange); i++) {
+      items.push(i);
+    }
+    
+    // Add ellipsis if needed
+    if (currentPage < filteredTotalPages - pageRange - 1) {
+      items.push('...');
+    }
+    
+    // Always show last page
+    if (filteredTotalPages > 1) {
+      items.push(filteredTotalPages);
+    }
+    
+    return items;
+  }, [currentPage, filteredTotalPages, pageRange]);
   
   // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, selectedOilTypes, selectedTab]);
+  }, [searchTerm, selectedOilTypes, selectedTab, selectedStatus]);
   
   // Local pagination handlers for the filtered table results
   const handleGoToPage = (page: number) => {
@@ -552,7 +583,7 @@ export default function Vessels() {
   };
   
   const handleGoToNextPage = () => {
-    if (currentPage < totalPages) {
+    if (currentPage < filteredTotalPages) {
       handleGoToPage(currentPage + 1);
     }
   };
