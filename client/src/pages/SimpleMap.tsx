@@ -107,15 +107,85 @@ const SimpleMap: React.FC = () => {
     fetchData();
   }, []);
 
-  // Filter data based on search term
-  const filteredVessels = vessels.filter(vessel => 
-    vessel.currentLat && 
-    vessel.currentLng && 
-    (searchTerm === '' || 
-     vessel.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-     (vessel.imo && vessel.imo.includes(searchTerm)) ||
-     vessel.vesselType.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  // Helper function to check if coordinate is on water (simple version)
+  const isWaterLocation = (lat: number, lng: number): boolean => {
+    // Known major land masses to exclude (rough coordinates)
+    const continents = [
+      // North America (central)
+      { lat: 40, lng: -100, radius: 30 },
+      // South America (central)
+      { lat: -15, lng: -60, radius: 25 },
+      // Europe (central)
+      { lat: 50, lng: 10, radius: 20 },
+      // Africa (central)
+      { lat: 0, lng: 20, radius: 30 },
+      // Asia (central)
+      { lat: 45, lng: 100, radius: 40 },
+      // Australia (central)
+      { lat: -25, lng: 135, radius: 20 },
+      // Antarctica
+      { lat: -80, lng: 0, radius: 40 },
+    ];
+    
+    // Check if coordinate is near a known continent
+    for (const continent of continents) {
+      const distance = Math.sqrt(
+        Math.pow((lat - continent.lat), 2) + 
+        Math.pow((lng - continent.lng), 2)
+      );
+      if (distance < continent.radius) {
+        return false; // On land
+      }
+    }
+    
+    // Additional check for specific regions:
+    
+    // Exclude Greenland
+    if (lat > 60 && lat < 85 && lng > -60 && lng < -20) {
+      return false;
+    }
+    
+    // Middle East land mass
+    if (lat > 15 && lat < 45 && lng > 35 && lng < 60) {
+      return false;
+    }
+
+    // Southeast Asia
+    if (lat > 0 && lat < 25 && lng > 90 && lng < 130) {
+      return false;
+    }
+    
+    return true; // Assume it's water
+  };
+
+  // Filter data based on search term and water location
+  const filteredVessels = vessels.filter(vessel => {
+    // Basic checks
+    if (!vessel.currentLat || !vessel.currentLng) {
+      return false;
+    }
+    
+    // Convert to numbers
+    const lat = parseFloat(vessel.currentLat);
+    const lng = parseFloat(vessel.currentLng);
+    
+    // Skip invalid coordinates
+    if (isNaN(lat) || isNaN(lng)) {
+      return false;
+    }
+    
+    // Check if vessel is on water
+    if (!isWaterLocation(lat, lng)) {
+      return false;
+    }
+    
+    // Check search term
+    return (searchTerm === '' || 
+      vessel.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (vessel.imo && vessel.imo.includes(searchTerm)) ||
+      vessel.vesselType.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
   
   const filteredPorts = ports.filter(port => 
     searchTerm === '' || 
