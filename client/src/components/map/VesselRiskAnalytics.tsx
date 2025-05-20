@@ -46,6 +46,24 @@ const VesselRiskAnalytics: React.FC<VesselRiskAnalyticsProps> = ({
     };
   }, [map, vessel]);
   
+  // Parse vessel metadata to get course and speed
+  const parseVesselMetadata = (vessel: any) => {
+    let course = 0;
+    let speed = 0;
+    
+    try {
+      if (vessel.metadata && typeof vessel.metadata === 'string') {
+        const metadata = JSON.parse(vessel.metadata);
+        course = metadata?.course || 0;
+        speed = metadata?.currentSpeed || 0;
+      }
+    } catch (e) {
+      console.error("Error parsing vessel metadata:", e);
+    }
+    
+    return { course, speed };
+  };
+
   // Update safety zones when vessel position changes
   useEffect(() => {
     if (!map || !vessel || !vesselGroups || !riskAnalysisEnabled) return;
@@ -61,10 +79,13 @@ const VesselRiskAnalytics: React.FC<VesselRiskAnalyticsProps> = ({
     const newSafetyZones = [];
     
     if (vessel.currentLat && vessel.currentLng) {
-      const vesselPos = [parseFloat(vessel.currentLat), parseFloat(vessel.currentLng)];
+      // Parse the lat/lng values, ensuring they're numbers
+      const lat = typeof vessel.currentLat === 'string' ? parseFloat(vessel.currentLat) : vessel.currentLat;
+      const lng = typeof vessel.currentLng === 'string' ? parseFloat(vessel.currentLng) : vessel.currentLng;
+      const vesselPos: [number, number] = [lat, lng];
       
       // Inner safety zone (immediate danger)
-      const innerZone = L.circle(vesselPos as [number, number], {
+      const innerZone = L.circle(vesselPos, {
         radius: 500, // 500m
         color: '#ff0000',
         fillColor: '#ff0000',
@@ -146,8 +167,22 @@ const VesselRiskAnalytics: React.FC<VesselRiskAnalyticsProps> = ({
       // Skip if too far away (>10km)
       if (distanceKm > 10) continue;
       
-      const nearbyVesselCourse = nearbyVessel.metadata?.course || 0;
-      const nearbyVesselSpeed = nearbyVessel.metadata?.currentSpeed || 12;
+      // Get vessel course and speed from metadata (if available) or use defaults
+      let nearbyVesselCourse = 0;
+      let nearbyVesselSpeed = 12;
+      
+      try {
+        // Try to parse metadata if it exists
+        if (typeof nearbyVessel.metadata === 'string' && nearbyVessel.metadata) {
+          const metadata = JSON.parse(nearbyVessel.metadata);
+          nearbyVesselCourse = metadata?.course || 0;
+          nearbyVesselSpeed = metadata?.currentSpeed || 12;
+        }
+      } catch (e) {
+        // If parsing fails, use defaults
+        nearbyVesselCourse = 0;
+        nearbyVesselSpeed = 12;
+      }
       
       // Calculate CPA (Closest Point of Approach)
       const cpa = calculateCPA(

@@ -60,6 +60,7 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
   const [loading, setLoading] = useState(true);
   const [nearbyRefineries, setNearbyRefineries] = useState<any[]>([]);
   const [nearbyPorts, setNearbyPorts] = useState<any[]>([]);
+  const [nearbyVessels, setNearbyVessels] = useState<any[]>([]);
   const [realTimePosition, setRealTimePosition] = useState<[number, number] | null>(null);
   const [vesselHeading, setVesselHeading] = useState<number>(0);
   const [vesselSpeed, setVesselSpeed] = useState<number>(0);
@@ -363,12 +364,47 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
     }
   }, [vessel, loadRealVesselPosition, loadVesselRoute]);
   
-  // Find nearby locations when position is loaded
+  // Find nearby locations and vessels when position is loaded
   useEffect(() => {
     if (realTimePosition) {
       findNearbyLocations();
+      
+      // Find nearby vessels for collision risk analytics (simplified implementation)
+      const fetchNearbyVessels = async () => {
+        try {
+          // Get vessels within a 20km radius for risk analytics
+          const response = await axios.get('/api/vessels/polling?page=1&pageSize=50');
+          if (response.data && response.data.vessels) {
+            const vessels = response.data.vessels;
+            
+            // Filter vessels that are nearby but not the current vessel
+            const nearby = vessels.filter((otherVessel: any) => {
+              if (!otherVessel.currentLat || !otherVessel.currentLng || otherVessel.id === vessel.id) 
+                return false;
+              
+              const distance = calculateDistance(
+                realTimePosition[0],
+                realTimePosition[1],
+                parseFloat(otherVessel.currentLat),
+                parseFloat(otherVessel.currentLng)
+              );
+              
+              // Store distance for display
+              otherVessel.distanceFromVessel = distance.toFixed(1);
+              
+              return distance <= 20; // Within 20km
+            });
+            
+            setNearbyVessels(nearby);
+          }
+        } catch (error) {
+          console.error("Failed to fetch nearby vessels:", error);
+        }
+      };
+      
+      fetchNearbyVessels();
     }
-  }, [realTimePosition, findNearbyLocations]);
+  }, [realTimePosition, findNearbyLocations, vessel.id]);
   
   // Add route direction arrows when route is loaded
   useEffect(() => {
