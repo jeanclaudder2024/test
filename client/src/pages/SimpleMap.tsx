@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import '../styles/map-status.css';
+import '../styles/vessel-popup.css';
 import tankerIcon from '../assets/tanker-icon.svg';
 import cargoIcon from '../assets/cargo-icon.svg';
 import passengerIcon from '../assets/passenger-icon.svg';
@@ -456,48 +457,13 @@ const SimpleMap: React.FC = () => {
                   className: showVesselStatus ? `vessel-icon status-${getVesselStatus(vessel).toLowerCase()}` : 'vessel-icon'
                 })}
               >
-                <Popup>
-                  <div className="p-2">
-                    <h3 className="font-bold text-base">{vessel.name}</h3>
-                    
-                    {/* Status badges */}
-                    <div className="mt-2 mb-2 flex flex-wrap gap-2">
-                      {showVesselStatus && (
-                        <div 
-                          className="inline-block px-2 py-0.5 rounded-full text-xs text-white"
-                          style={{ backgroundColor: getStatusColor(getVesselStatus(vessel)) }}
-                        >
-                          {getVesselStatus(vessel)}
-                        </div>
-                      )}
-                      <div className="inline-block px-2 py-0.5 rounded-full text-xs bg-blue-100 text-blue-800">
-                        {getVesselRegion(vessel)}
-                      </div>
-                      <div className="inline-block px-2 py-0.5 rounded-full text-xs bg-slate-100 text-slate-800">
-                        {vessel.vesselType}
-                      </div>
-                    </div>
-                    
-                    {/* Details */}
-                    <div className="mt-1">
-                      <p className="text-sm">IMO: {vessel.imo || 'N/A'}</p>
-                      <p className="text-sm">MMSI: {vessel.mmsi || 'N/A'}</p>
-                      <p className="text-sm">Flag: {vessel.flag || 'Unknown'}</p>
-                      {vessel.speed && (
-                        <p className="text-sm">Speed: {typeof vessel.speed === 'string' ? vessel.speed : vessel.speed.toFixed(1)} knots</p>
-                      )}
-                      {vessel.destination && (
-                        <p className="text-sm">Destination: {vessel.destination}</p>
-                      )}
-                    </div>
-                    
-                    <Button
-                      size="sm"
-                      className="mt-2 w-full"
-                      onClick={() => window.open(`/vessels/${vessel.id}`, '_blank')}
-                    >
-                      View Details
-                    </Button>
+                <Popup maxWidth={400} minWidth={350}>
+                  <div className="vessel-popup-container">
+                    <VesselPopup 
+                      vessel={vessel} 
+                      getVesselStatus={getVesselStatus}
+                      getVesselRegion={getVesselRegion}
+                    />
                   </div>
                 </Popup>
               </Marker>
