@@ -421,6 +421,49 @@
     @apply bg-[#e8f5e9] dark:bg-[#1c2833];
   }
   
+  /* Enhanced voyage progress animation */
+  @keyframes voyage-progress-shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+  
+  .voyage-progress-bar {
+    background-image: linear-gradient(
+      to right,
+      hsl(var(--primary)) 0%,
+      hsl(var(--primary)) 40%,
+      hsla(var(--primary), 0.7) 50%,
+      hsl(var(--primary)) 60%,
+      hsl(var(--primary)) 100%
+    );
+    background-size: 200% 100%;
+    animation: voyage-progress-shimmer 3s infinite;
+  }
+  
+  /* Dynamic pulse animation for vessel tracking */
+  .pulse-animation {
+    animation: vessel-pulse 1.5s infinite;
+  }
+  
+  @keyframes vessel-pulse {
+    0% {
+      opacity: 0.6;
+      transform: scale(0.8);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.2);
+    }
+    100% {
+      opacity: 0.6;
+      transform: scale(0.8);
+    }
+  }
+  
   /* Water ripple effect for port icons */
   .water-ripple-effect {
     position: relative;

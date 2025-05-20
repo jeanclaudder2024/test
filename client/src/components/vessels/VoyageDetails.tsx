@@ -175,6 +175,7 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
   // State to store route data
   const [routeData, setRouteData] = useState<any>(null);
   const [isLoadingRoute, setIsLoadingRoute] = useState<boolean>(false);
+  const [simulatedProgress, setSimulatedProgress] = useState<number | null>(null);
   
   // Function to fetch route data
   const fetchRouteData = async () => {
@@ -243,16 +244,61 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
   // Extract enhanced vessel data from metadata if available
   const enhancedVesselData = parseVesselMetadata(vessel);
   
+  // Simulate voyage progress over time
+  useEffect(() => {
+    if (!vessel) return;
+    
+    // Only simulate if we have enhanced vessel data and a departure/destination
+    if (enhancedVesselData && vessel.departurePort && vessel.destinationPort) {
+      // Don't override if already computed
+      if (simulatedProgress !== null) return;
+      
+      const baseProgress = enhancedVesselData?.voyageProgress || 0;
+      
+      // Set the initial simulated progress
+      setSimulatedProgress(baseProgress);
+      
+      // Setup auto progression that simulates vessel movement over time
+      const interval = setInterval(() => {
+        setSimulatedProgress(currentProgress => {
+          if (currentProgress === null) return baseProgress;
+          
+          // Calculate the daily progress increment based on vessel speed
+          const speedFactor = enhancedVesselData?.currentSpeed || 12;
+          // Fast vessels make more progress per day
+          const dailyIncrement = 0.2 + (speedFactor / 100);
+          
+          // Increase progress by small random amount every interval
+          // to simulate vessel movement 
+          let newProgress = currentProgress + (Math.random() * dailyIncrement);
+          
+          // Cap at 100%
+          if (newProgress >= 100) {
+            newProgress = 100;
+            clearInterval(interval);
+          }
+          
+          return newProgress;
+        });
+      }, 5000); // Update every 5 seconds to simulate passage of time
+      
+      return () => clearInterval(interval);
+    }
+  }, [vessel, enhancedVesselData]);
+  
   // Use enhanced data for voyage progress if available
   const voyageProgressData = enhancedVesselData && enhancedVesselData.voyageProgress 
     ? { 
-        percentComplete: enhancedVesselData.voyageProgress,
+        percentComplete: simulatedProgress !== null ? simulatedProgress : enhancedVesselData.voyageProgress,
         currentSpeed: enhancedVesselData.currentSpeed,
         averageSpeed: enhancedVesselData.currentSpeed * 0.9, // Just an estimate
         fromAPI: false,
         estimated: true,
         generatedData: enhancedVesselData.generatedData,
-        navStatus: enhancedVesselData.navStatus 
+        navStatus: enhancedVesselData.navStatus,
+        // Estimate arrival based on percentage
+        estimatedArrival: simulatedProgress === 100 ? 'Arrived at destination' : 
+                         `${Math.ceil((100 - (simulatedProgress || 0)) / 4)} days`
       } 
     : voyageProgress;
     
@@ -260,11 +306,13 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
   const effectiveVoyageProgress = voyageProgressData || 
     (enhancedVesselData && enhancedVesselData.voyageProgress 
       ? {
-          percentComplete: enhancedVesselData.voyageProgress,
+          percentComplete: simulatedProgress !== null ? simulatedProgress : enhancedVesselData.voyageProgress,
           currentSpeed: enhancedVesselData.currentSpeed || 0,
           averageSpeed: enhancedVesselData.currentSpeed ? enhancedVesselData.currentSpeed * 0.9 : 0,
           estimated: true,
-          generatedData: true
+          generatedData: true,
+          estimatedArrival: simulatedProgress === 100 ? 'Arrived at destination' : 
+                           `${Math.ceil((100 - (simulatedProgress || 0)) / 4)} days`
         } 
       : null);
   
@@ -360,10 +408,23 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                         </div>
                       </div>
                       
-                      <Progress 
-                        value={effectiveVoyageProgress?.percentComplete ?? 0} 
-                        className="h-2 mb-3" 
-                      />
+                      <div className="relative">
+                        <Progress 
+                          value={effectiveVoyageProgress?.percentComplete ?? 0} 
+                          className="h-2 mb-3 voyage-progress-bar" 
+                        />
+                        {/* Pulsing indicator for active voyage */}
+                        {effectiveVoyageProgress?.percentComplete && effectiveVoyageProgress.percentComplete < 100 && (
+                          <div 
+                            className="absolute top-0 h-2 rounded pulse-animation" 
+                            style={{ 
+                              left: `${effectiveVoyageProgress.percentComplete - 1}%`, 
+                              width: '6px', 
+                              backgroundColor: 'var(--primary)'
+                            }}
+                          />
+                        )}
+                      </div>
                       
                       <div className="grid grid-cols-2 gap-x-4 gap-y-2 mt-3">
                         <div>
