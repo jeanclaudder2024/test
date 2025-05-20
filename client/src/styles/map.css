@@ -1,346 +1,142 @@
-/* Custom map icon styles */
+/* Custom map styles */
 
-/* Enhanced Professional Vessel icons with improved styling */
-.vessel-marker {
-  position: relative;
-  transform-origin: center;
-  transition: transform 0.3s;
+/* Pulse animation for port icons */
+.pulse-icon {
+  animation: pulse 2s infinite;
+  transform-origin: center center;
 }
 
-.vessel-marker:hover {
-  z-index: 1000 !important;
-  transform: scale(1.2);
-}
-
-.vessel-icon {
-  width: 38px;
-  height: 38px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  box-shadow: 0 0 0 3px white, 0 0 10px rgba(0, 0, 0, 0.5);
-  position: relative;
-  overflow: visible;
-}
-
-.vessel-icon::after {
-  content: '';
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  background: white;
-  border-radius: 50%;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
-}
-
-.vessel-icon svg {
-  width: 34px; 
-  height: 34px;
-  filter: drop-shadow(0px 2px 2px rgba(0, 0, 0, 0.3));
-}
-
-/* Ship direction indicator */
-.vessel-direction {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  width: 0;
-  height: 0;
-  border-left: 6px solid transparent;
-  border-right: 6px solid transparent;
-  border-bottom: 12px solid white;
-  transform: translateX(-50%) translateY(-50%);
-  filter: drop-shadow(0px 1px 1px rgba(0, 0, 0, 0.5));
-}
-
-.vessel-label {
-  position: absolute;
-  bottom: -26px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: rgba(0, 0, 0, 0.75);
-  color: white;
-  padding: 3px 8px;
-  border-radius: 4px;
-  font-weight: 600;
-  font-size: 11px;
-  white-space: nowrap;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  z-index: 5;
-}
-
-.vessel-speed {
-  position: absolute;
-  top: -24px;
-  right: -15px;
-  background-color: rgba(0, 0, 0, 0.75);
-  color: white;
-  padding: 2px 5px;
-  border-radius: 3px;
-  font-size: 10px;
-  font-weight: 600;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  z-index: 5;
-}
-
-/* Vessel type specific styling */
-.vessel-type-crude-oil-tanker .vessel-icon,
-.vessel-type-crude .vessel-icon {
-  background-color: #ef4444; /* red-500 */
-  background-image: linear-gradient(135deg, #ef4444, #b91c1c);
-}
-
-.vessel-type-product-tanker .vessel-icon,
-.vessel-type-products .vessel-icon {
-  background-color: #3b82f6; /* blue-500 */
-  background-image: linear-gradient(135deg, #3b82f6, #1d4ed8);
-}
-
-.vessel-type-lng-carrier .vessel-icon,
-.vessel-type-lng .vessel-icon {
-  background-color: #10b981; /* emerald-500 */
-  background-image: linear-gradient(135deg, #10b981, #047857);
-}
-
-.vessel-type-lpg-carrier .vessel-icon,
-.vessel-type-lpg .vessel-icon {
-  background-color: #f59e0b; /* amber-500 */
-  background-image: linear-gradient(135deg, #f59e0b, #b45309);
-}
-
-.vessel-type-chemical-tanker .vessel-icon,
-.vessel-type-chemical .vessel-icon {
-  background-color: #8b5cf6; /* purple-500 */
-  background-image: linear-gradient(135deg, #8b5cf6, #6d28d9);
-}
-
-.vessel-type-default .vessel-icon {
-  background-color: #003366; /* navy blue */
-  background-image: linear-gradient(135deg, #003366, #001f3f);
-}
-
-/* Enhanced Professional Port icons */
-.port-marker {
-  position: relative;
-  transform-origin: center;
-  transition: transform 0.3s;
-  z-index: 400;
-}
-
-.port-marker:hover {
-  z-index: 1000 !important;
-  transform: scale(1.2);
-}
-
-.port-icon {
-  width: 42px;
-  height: 42px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 5px;
-  border: 3px solid white;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-  position: relative;
-}
-
-.port-icon svg {
-  width: 30px;
-  height: 30px;
-  filter: drop-shadow(0px 2px 2px rgba(0, 0, 0, 0.2));
-}
-
-.port-icon.destination-pulse {
-  animation: destination-pulse 2s infinite;
-}
-
-.port-label {
-  position: absolute;
-  bottom: -28px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: rgba(0, 51, 102, 0.85);
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-weight: 600;
-  font-size: 11px;
-  white-space: nowrap;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  z-index: 5;
-}
-
-.destination-label {
-  position: absolute;
-  top: -28px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: rgba(220, 38, 38, 0.9);
-  color: white;
-  padding: 3px 6px;
-  border-radius: 4px;
-  font-weight: 700;
-  font-size: 11px;
-  white-space: nowrap;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  z-index: 6;
-}
-
-/* Port type styling */
-.port-type-oil-terminal .port-icon,
-.port-type-oil_terminal .port-icon {
-  background-color: #3b82f6; /* blue-500 */
-  background-image: linear-gradient(135deg, #3b82f6, #1d4ed8);
-}
-
-.port-type-lng-terminal .port-icon,
-.port-type-lng_terminal .port-icon {
-  background-color: #10b981; /* emerald-500 */
-  background-image: linear-gradient(135deg, #10b981, #047857);
-}
-
-.port-type-commercial .port-icon {
-  background-color: #f59e0b; /* amber-500 */
-  background-image: linear-gradient(135deg, #f59e0b, #b45309);
-}
-
-.port-type-default .port-icon {
-  background-color: #0080FF; /* blue */
-  background-image: linear-gradient(135deg, #0080FF, #0050A0);
-}
-
-/* Enhanced Professional Refinery icons */
-.refinery-marker {
-  position: relative;
-  transform-origin: center;
-  transition: transform 0.3s;
-  z-index: 400;
-}
-
-.refinery-marker:hover {
-  z-index: 1000 !important;
-  transform: scale(1.2);
-}
-
-.refinery-icon {
-  width: 46px;
-  height: 46px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-  border: 3px solid white;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
-  position: relative;
-  background-color: #FF6F00; /* orange */
-  background-image: linear-gradient(135deg, #FF6F00, #D84315);
-}
-
-.refinery-icon svg {
-  width: 34px;
-  height: 34px;
-  filter: drop-shadow(0px 2px 2px rgba(0, 0, 0, 0.2));
-}
-
-.refinery-icon.destination-pulse {
-  animation: destination-pulse 2s infinite;
-}
-
-.refinery-label {
-  position: absolute;
-  bottom: -28px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: rgba(255, 111, 0, 0.85);
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-weight: 600;
-  font-size: 11px;
-  white-space: nowrap;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  z-index: 5;
-}
-
-/* Destination pulse animation */
-@keyframes destination-pulse {
+@keyframes pulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7), 0 0 0 1px white;
+    transform: scale(1);
+    opacity: 1;
   }
-  70% {
-    box-shadow: 0 0 0 10px rgba(220, 38, 38, 0), 0 0 0 1px white;
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0), 0 0 0 1px white;
+    transform: scale(1);
+    opacity: 1;
   }
 }
 
-/* Custom popup styles */
+/* Custom marker cluster styling */
+.marker-cluster-small,
+.marker-cluster-medium,
+.marker-cluster-large {
+  background-color: rgba(255, 255, 255, 0.7);
+  border: 2px solid #3b82f6;
+}
+
+.marker-cluster-small div,
+.marker-cluster-medium div,
+.marker-cluster-large div {
+  background-color: rgba(59, 130, 246, 0.7);
+  color: white;
+  font-weight: bold;
+}
+
+/* Custom popup styling */
 .leaflet-popup-content-wrapper {
-  border-radius: 0.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
 }
 
 .leaflet-popup-content {
-  margin: 0.75rem 1rem;
-  min-width: 200px;
+  margin: 10px 12px;
 }
 
-.leaflet-container {
-  font-family: inherit;
+.leaflet-popup-tip {
+  background-color: white;
 }
 
-/* Cluster styles */
-.vessel-cluster {
-  background-color: rgba(0, 51, 102, 0.7);
-  color: white;
-  border-radius: 50%;
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+/* Vessel icon hover effect */
+.leaflet-marker-icon:hover {
+  filter: brightness(1.2);
+  transform: scale(1.1);
+  transition: all 0.2s ease-in-out;
 }
 
-.refinery-cluster {
-  background-color: rgba(255, 111, 0, 0.7);
-  color: white;
-  border-radius: 50%;
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.port-cluster {
-  background-color: rgba(0, 128, 255, 0.7);
-  color: white;
-  border-radius: 50%;
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-/* Connection lines */
-.connection-line {
+/* Route line styling */
+.vessel-route {
   stroke-dasharray: 5, 5;
-  animation: dash 15s linear infinite;
+  animation: dash 20s linear infinite;
 }
 
 @keyframes dash {
   to {
     stroke-dashoffset: -1000;
   }
+}
+
+/* Custom control positioning */
+.leaflet-control-zoom,
+.leaflet-control-layers {
+  border: none !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.leaflet-control-zoom a,
+.leaflet-control-layers a {
+  border-radius: 4px !important;
+}
+
+/* Full page map styles */
+.map-fullpage {
+  height: calc(100vh - 64px);
+  width: 100%;
+  z-index: 10;
+}
+
+.map-overlay {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1000;
+  background: white;
+  padding: 10px;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Special marker styling for destination ports */
+.destination-marker {
+  filter: hue-rotate(320deg) brightness(1.2);
+  animation: pulse 1.5s infinite;
+}
+
+/* Distance indicator styling */
+.distance-ring {
+  fill: none;
+  stroke: rgba(59, 130, 246, 0.2);
+  stroke-width: 1;
+}
+
+.distance-label {
+  font-size: 10px;
+  font-weight: bold;
+  fill: #3b82f6;
+}
+
+/* Vessel path styling */
+.vessel-path {
+  stroke: rgba(59, 130, 246, 0.7);
+  stroke-width: 2;
+  fill: none;
+}
+
+/* Hide attribution when in fullscreen mode */
+.fullscreen-active .leaflet-control-attribution {
+  display: none;
+}
+
+/* Custom tooltip */
+.map-tooltip {
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 3px;
+  font-size: 12px;
+  pointer-events: none;
 }

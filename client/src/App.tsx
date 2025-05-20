@@ -30,6 +30,7 @@ import TrafficInsights from "@/pages/TrafficInsights";
 import VesselTrackingMap from "@/pages/VesselTrackingMap";
 import MaritimeTracking from "@/pages/MaritimeTracking";
 import VesselLookup from "@/pages/VesselLookup";
+import FullPageMap from "@/pages/FullPageMap";
 import { useEffect } from "react";
 import { apiRequest, queryClient } from "./lib/queryClient";
 import { Layout } from "@/components/ui/layout";
@@ -130,6 +131,7 @@ function Router() {
             <Route path="/vessel-tracking-map" component={VesselTrackingMap} />
             <Route path="/maritime-tracking" component={MaritimeTracking} />
             <Route path="/vessel-lookup" component={VesselLookup} />
+            <Route path="/full-map" component={FullPageMap} />
             <Route path="/settings" component={Settings} />
             <Route path="/subscribe" component={Subscribe} />
             <Route path="/pricing" component={Pricing} />
