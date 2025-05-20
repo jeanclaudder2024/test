@@ -240,6 +240,34 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
     }
   }, [vessel?.id]);
 
+  // Extract enhanced vessel data from metadata if available
+  const enhancedVesselData = parseVesselMetadata(vessel);
+  
+  // Use enhanced data for voyage progress if available
+  const voyageProgressData = enhancedVesselData && enhancedVesselData.voyageProgress 
+    ? { 
+        percentComplete: enhancedVesselData.voyageProgress,
+        currentSpeed: enhancedVesselData.currentSpeed,
+        averageSpeed: enhancedVesselData.currentSpeed * 0.9, // Just an estimate
+        fromAPI: false,
+        estimated: true,
+        generatedData: enhancedVesselData.generatedData,
+        navStatus: enhancedVesselData.navStatus 
+      } 
+    : voyageProgress;
+    
+  // If no voyage progress provided and metadata exists, create a basic object
+  const effectiveVoyageProgress = voyageProgressData || 
+    (enhancedVesselData && enhancedVesselData.voyageProgress 
+      ? {
+          percentComplete: enhancedVesselData.voyageProgress,
+          currentSpeed: enhancedVesselData.currentSpeed || 0,
+          averageSpeed: enhancedVesselData.currentSpeed ? enhancedVesselData.currentSpeed * 0.9 : 0,
+          estimated: true,
+          generatedData: true
+        } 
+      : null);
+  
   return (
     <Card className="mb-6">
       <CardHeader className="pb-3">
@@ -247,6 +275,11 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
           <CardTitle className="text-lg flex items-center">
             <Route className="h-5 w-5 mr-2 text-primary" />
             Voyage Details
+            {enhancedVesselData?.generatedData && (
+              <Badge variant="outline" className="ml-2 text-xs bg-blue-50 border-blue-200 text-blue-700">
+                AI Enhanced
+              </Badge>
+            )}
           </CardTitle>
           <div className="flex space-x-2">
             <Button 
@@ -313,14 +346,14 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                       <Ship className="h-4 w-4 mr-2 animate-spin text-primary" />
                       <span className="text-sm">Fetching voyage progress...</span>
                     </div>
-                  ) : voyageProgress ? (
+                  ) : effectiveVoyageProgress ? (
                     <>
                       <div className="flex justify-between items-center text-xs text-gray-500 mb-1">
                         <div className="flex flex-col items-center">
                           <MapPin className="h-3 w-3 text-primary mb-1" />
                           <span>{vessel.departurePort?.split(',')[0]}</span>
                         </div>
-                        <span className="text-primary font-medium">{voyageProgress.percentComplete}% Complete</span>
+                        <span className="text-primary font-medium">{effectiveVoyageProgress.percentComplete}% Complete</span>
                         <div className="flex flex-col items-center">
                           <MapPin className="h-3 w-3 text-primary mb-1" />
                           <span>{vessel.destinationPort?.split(',')[0]}</span>
@@ -328,7 +361,7 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                       </div>
                       
                       <Progress 
-                        value={voyageProgress?.percentComplete ?? 0} 
+                        value={effectiveVoyageProgress?.percentComplete ?? 0} 
                         className="h-2 mb-3" 
                       />
                       
@@ -336,42 +369,50 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                         <div>
                           <p className="text-xs text-gray-500">Distance traveled</p>
                           <p className="text-sm font-medium">
-                            {(voyageProgress?.distanceTraveled !== undefined && 
-                              voyageProgress.distanceTraveled !== null) ? 
-                              `${(typeof voyageProgress.distanceTraveled === 'number' ? 
-                                voyageProgress.distanceTraveled : 
-                                parseFloat(String(voyageProgress.distanceTraveled))).toLocaleString()} nautical miles` : 
+                            {(effectiveVoyageProgress?.distanceTraveled !== undefined && 
+                              effectiveVoyageProgress.distanceTraveled !== null) ? 
+                              `${(typeof effectiveVoyageProgress.distanceTraveled === 'number' ? 
+                                effectiveVoyageProgress.distanceTraveled : 
+                                parseFloat(String(effectiveVoyageProgress.distanceTraveled))).toLocaleString()} nautical miles` : 
+                              // Generate an estimated distance based on voyage progress
+                              enhancedVesselData?.voyageProgress ? 
+                              `${Math.floor(enhancedVesselData.voyageProgress * 40).toLocaleString()} nautical miles` :
                               'N/A'}
                           </p>
                         </div>
                         <div>
                           <p className="text-xs text-gray-500">Remaining</p>
                           <p className="text-sm font-medium">
-                            {(voyageProgress?.distanceRemaining !== undefined && 
-                              voyageProgress.distanceRemaining !== null) ? 
-                              `${(typeof voyageProgress.distanceRemaining === 'number' ? 
-                                voyageProgress.distanceRemaining : 
-                                parseFloat(String(voyageProgress.distanceRemaining))).toLocaleString()} nautical miles` : 
+                            {(effectiveVoyageProgress?.distanceRemaining !== undefined && 
+                              effectiveVoyageProgress.distanceRemaining !== null) ? 
+                              `${(typeof effectiveVoyageProgress.distanceRemaining === 'number' ? 
+                                effectiveVoyageProgress.distanceRemaining : 
+                                parseFloat(String(effectiveVoyageProgress.distanceRemaining))).toLocaleString()} nautical miles` : 
+                              // Generate an estimated distance remaining based on voyage progress
+                              enhancedVesselData?.voyageProgress ? 
+                              `${Math.floor((100 - enhancedVesselData.voyageProgress) * 40).toLocaleString()} nautical miles` :
                               'N/A'}
                           </p>
                         </div>
                         <div>
                           <p className="text-xs text-gray-500">Current speed</p>
                           <p className="text-sm font-medium">
-                            {(voyageProgress?.currentSpeed !== undefined && 
-                              voyageProgress.currentSpeed !== null && 
-                              typeof voyageProgress.currentSpeed === 'number') ? 
-                              `${voyageProgress.currentSpeed} knots` : 
+                            {(effectiveVoyageProgress?.currentSpeed !== undefined && 
+                              effectiveVoyageProgress.currentSpeed !== null) ? 
+                              `${effectiveVoyageProgress.currentSpeed.toFixed(1)} knots` : 
+                              enhancedVesselData?.currentSpeed ?
+                              `${enhancedVesselData.currentSpeed.toFixed(1)} knots` :
                               'N/A'}
                           </p>
                         </div>
                         <div>
                           <p className="text-xs text-gray-500">Average speed</p>
                           <p className="text-sm font-medium">
-                            {(voyageProgress?.averageSpeed !== undefined && 
-                              voyageProgress.averageSpeed !== null && 
-                              typeof voyageProgress.averageSpeed === 'number') ? 
-                              `${voyageProgress.averageSpeed} knots` : 
+                            {(effectiveVoyageProgress?.averageSpeed !== undefined && 
+                              effectiveVoyageProgress.averageSpeed !== null) ? 
+                              `${effectiveVoyageProgress.averageSpeed.toFixed(1)} knots` : 
+                              enhancedVesselData?.currentSpeed ?
+                              `${(enhancedVesselData.currentSpeed * 0.9).toFixed(1)} knots` :
                               'N/A'}
                           </p>
                         </div>
