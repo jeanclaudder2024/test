@@ -26,6 +26,37 @@ const VesselPopup: React.FC<VesselPopupProps> = ({
 }) => {
   const [enhancedData, setEnhancedData] = useState<VesselEnhancedData | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // Calculate voyage progress as a percentage
+  const calculateVoyageProgress = (): number => {
+    try {
+      // If we don't have both departure and arrival times, return a default value
+      if (!enhancedData?.estDepartureDate || !enhancedData?.estArrivalDate) {
+        return vessel.currentSpeed > 0 ? 35 : 10; // Default values based on whether vessel is moving
+      }
+      
+      const now = new Date();
+      const departure = new Date(enhancedData.estDepartureDate);
+      const arrival = new Date(enhancedData.estArrivalDate);
+      
+      // If dates are invalid, return a reasonable default
+      if (isNaN(departure.getTime()) || isNaN(arrival.getTime())) {
+        return vessel.currentSpeed > 0 ? 35 : 10;
+      }
+      
+      // Calculate progress percentage
+      const totalDuration = arrival.getTime() - departure.getTime();
+      const elapsedDuration = now.getTime() - departure.getTime();
+      
+      if (totalDuration <= 0) return 0;
+      
+      const progress = Math.max(0, Math.min(100, (elapsedDuration / totalDuration) * 100));
+      return progress;
+    } catch (error) {
+      console.error("Error calculating voyage progress:", error);
+      return 25; // Fallback default
+    }
+  };
 
   // Fetch enhanced data when vessel details are displayed
   useEffect(() => {
@@ -132,7 +163,20 @@ const VesselPopup: React.FC<VesselPopupProps> = ({
                 <span className="text-sm font-medium">Departure:</span>
                 <span className="text-sm">{vessel.departurePort || 'Unknown'} • {enhancedData?.estDepartureDate || 'Unknown date'}</span>
               </div>
-              <Separator className="my-1" />
+              
+              {/* Voyage progress bar */}
+              <div className="mt-2 mb-2">
+                <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-blue-500 rounded-full transition-all"
+                    style={{ width: `${calculateVoyageProgress()}%` }}
+                  ></div>
+                </div>
+                <div className="flex justify-between mt-1 text-xs text-gray-500">
+                  <span>{vessel.departurePort || 'Origin'}</span>
+                  <span>{vessel.destinationPort || 'Destination'}</span>
+                </div>
+              </div>
               
               <div className="flex flex-col gap-1">
                 <span className="text-sm font-medium">Destination:</span>
@@ -179,8 +223,17 @@ const VesselPopup: React.FC<VesselPopupProps> = ({
         </Tabs>
       </CardContent>
       
-      <CardFooter className="pt-2 pb-3 px-4 text-xs text-gray-500">
-        <div className="w-full flex justify-between items-center">
+      <CardFooter className="border-t p-2 flex flex-col gap-3">
+        <a 
+          href={`/vessels/${vessel.id}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md text-center font-medium text-sm flex items-center justify-center gap-1 transition-colors"
+        >
+          <Ship size={16} /> View Detailed Information
+        </a>
+        
+        <div className="w-full flex justify-between items-center text-xs text-gray-500">
           <span>MMSI: {vessel.mmsi || 'N/A'}</span>
           <span>Last updated: {vessel.lastUpdated ? new Date(vessel.lastUpdated).toLocaleString() : 'Unknown'}</span>
         </div>
