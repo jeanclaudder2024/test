@@ -998,7 +998,7 @@ export default function Vessels() {
                 <span className="font-medium">Vessel Database</span>
               </div>
               <span className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded-full">
-                {loading ? 'Loading...' : `Showing ${(currentPage - 1) * resultsPerPage + 1}-${Math.min((currentPage) * resultsPerPage, filteredVessels.length)} of ${filteredVessels.length.toLocaleString()}`}
+                {loading ? 'Loading...' : `Showing ${(currentPage - 1) * vesselsPerPage + 1}-${Math.min((currentPage) * vesselsPerPage, filteredVessels.length)} of ${filteredVessels.length.toLocaleString()}`}
               </span>
             </div>
           </div>
@@ -1135,37 +1135,61 @@ export default function Vessels() {
             </TableBody>
           </Table>
           
-          {/* Pagination */}
+          {/* Professional Pagination */}
           {totalPages > 1 && (
-            <div className="py-4 border-t bg-card">
-              <div className="flex justify-between items-center px-4">
-                <div className="text-sm text-muted-foreground">
-                  Showing {Math.min(indexOfFirstVessel + 1, filteredVessels.length)} to {Math.min(indexOfLastVessel, filteredVessels.length)} of {filteredVessels.length} vessels
+            <div className="py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60">
+              <div className="flex flex-col sm:flex-row justify-between items-center px-5 gap-4">
+                <div className="text-sm text-gray-500 dark:text-gray-400">
+                  Displaying <span className="font-medium text-gray-800 dark:text-gray-200">{Math.min(indexOfFirstVessel + 1, filteredVessels.length)}</span> to <span className="font-medium text-gray-800 dark:text-gray-200">{Math.min(indexOfLastVessel, filteredVessels.length)}</span> of <span className="font-medium text-gray-800 dark:text-gray-200">{filteredVessels.length.toLocaleString()}</span> vessels
                 </div>
                 
-                <div className="flex items-center justify-center space-x-2">
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleGoToPage(1)}
+                    disabled={currentPage === 1}
+                    className="hidden sm:flex items-center border-gray-200 dark:border-gray-700 h-8 px-2 text-xs"
+                  >
+                    <ChevronLeft className="h-3.5 w-3.5 mr-1" />
+                    First
+                  </Button>
+                  
                   <Button 
                     variant="outline"
                     size="sm"
                     onClick={handleGoToPreviousPage}
                     disabled={currentPage === 1}
+                    className="border-gray-200 dark:border-gray-700 h-8"
                   >
                     <ChevronLeft className="h-4 w-4 mr-1" />
-                    Previous
+                    <span className="hidden sm:inline">Previous</span>
                   </Button>
                   
-                  <span className="text-sm">
-                    Page {currentPage} of {filteredTotalPages}
-                  </span>
+                  <div className="flex items-center px-3 py-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md text-sm font-medium">
+                    <span className="text-gray-700 dark:text-gray-300">Page {currentPage} of {filteredTotalPages}</span>
+                  </div>
                   
                   <Button 
                     variant="outline"
                     size="sm"
                     onClick={handleGoToNextPage}
                     disabled={currentPage === filteredTotalPages}
+                    className="border-gray-200 dark:border-gray-700 h-8"
                   >
-                    Next
+                    <span className="hidden sm:inline">Next</span>
                     <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleGoToPage(filteredTotalPages)}
+                    disabled={currentPage === filteredTotalPages}
+                    className="hidden sm:flex items-center border-gray-200 dark:border-gray-700 h-8 px-2 text-xs"
+                  >
+                    Last
+                    <ChevronRight className="h-3.5 w-3.5 ml-1" />
                   </Button>
                 </div>
               </div>
