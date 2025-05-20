@@ -132,47 +132,89 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
     }
   }, [vessel]);
   
-  // Generate realistic vessel data if API fails using rule-based approach
+  // Generate realistic vessel data if API fails using server-side API
   const generateVesselData = async () => {
     if (!vessel || isGeneratingData) return;
     
     try {
       setIsGeneratingData(true);
       
-      // Use rule-based approach to generate realistic data
-      // Determine vessel type for relevant speed ranges
-      const isOilTanker = vessel.vesselType?.toLowerCase().includes('tanker') || 
-                          vessel.cargoType?.toLowerCase().includes('oil') ||
-                          vessel.cargoType?.toLowerCase().includes('crude');
+      // Call server endpoint which uses OpenAI to generate realistic vessel data
+      const response = await axios.post(`/api/vessels/${vessel.id}/generate-position-data`, {
+        vesselName: vessel.name,
+        vesselType: vessel.vesselType || 'oil tanker',
+        cargoType: vessel.cargoType || 'crude oil',
+        currentLat: vessel.currentLat,
+        currentLng: vessel.currentLng,
+        destination: vessel.destinationPort || null,
+        previousPort: vessel.previousPort || null
+      });
       
-      const isLNG = vessel.cargoType?.toLowerCase().includes('lng') || 
-                   vessel.cargoType?.toLowerCase().includes('gas');
-      
-      // Generate realistic speed based on vessel type
-      // Oil tankers: 10-15 knots, LNG carriers: 15-20 knots, other vessels: 12-18 knots
-      let speed = 0;
-      if (isOilTanker) {
-        speed = 10 + (Math.random() * 5);
-      } else if (isLNG) {
-        speed = 15 + (Math.random() * 5);
+      if (response.data && response.data.success) {
+        const generatedData = response.data.data;
+        
+        // Update vessel data with generated values
+        setVesselHeading(parseFloat(generatedData.course || 0));
+        setVesselSpeed(parseFloat(generatedData.speed || 12.5));
+        
+        // Update voyage progress if available
+        if (generatedData.voyageProgress) {
+          // This would be updated in the parent component
+          vessel.voyageProgress = generatedData.voyageProgress;
+        }
+        
+        toast({
+          title: "Enhanced tracking data generated",
+          description: "Using AI-powered vessel simulation for realistic visualization",
+          duration: 3000
+        });
       } else {
-        speed = 12 + (Math.random() * 6);
+        // If server fails, use simple rule-based approach
+        const isOilTanker = vessel.vesselType?.toLowerCase().includes('tanker') || 
+                           vessel.cargoType?.toLowerCase().includes('oil') ||
+                           vessel.cargoType?.toLowerCase().includes('crude');
+        
+        const isLNG = vessel.cargoType?.toLowerCase().includes('lng') || 
+                     vessel.cargoType?.toLowerCase().includes('gas');
+        
+        // Generate realistic speed based on vessel type
+        let speed = 0;
+        if (isOilTanker) {
+          speed = 10 + (Math.random() * 5);
+        } else if (isLNG) {
+          speed = 15 + (Math.random() * 5);
+        } else {
+          speed = 12 + (Math.random() * 6);
+        }
+        
+        // Generate realistic heading (0-359 degrees)
+        const heading = Math.floor(Math.random() * 360);
+        
+        // Update vessel data with generated values
+        setVesselHeading(heading);
+        setVesselSpeed(parseFloat(speed.toFixed(1)));
+        
+        // Generate voyage progress (25-95%)
+        vessel.voyageProgress = Math.floor(25 + (Math.random() * 70));
+        
+        toast({
+          title: "Simulated vessel tracking data",
+          description: "Using vessel simulation for visualization",
+          duration: 3000
+        });
       }
+    } catch (error) {
+      console.error("Failed to generate vessel data:", error);
       
-      // Generate realistic heading (0-359 degrees)
-      const heading = Math.floor(Math.random() * 360);
+      // Fallback to basic simulation if API call fails
+      const speed = 10 + (Math.random() * 8); // 10-18 knots
+      const heading = Math.floor(Math.random() * 360); // Random direction
       
-      // Update vessel data with generated values
       setVesselHeading(heading);
       setVesselSpeed(parseFloat(speed.toFixed(1)));
       
-      toast({
-        title: "Enhanced vessel data generated",
-        description: "Using realistic vessel tracking simulation for better visualization",
-        duration: 3000
-      });
-    } catch (error) {
-      console.error("Failed to generate vessel data:", error);
+      // Generate voyage progress (25-95%)
+      vessel.voyageProgress = Math.floor(25 + (Math.random() * 70));
     } finally {
       setIsGeneratingData(false);
     }

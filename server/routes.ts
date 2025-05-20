@@ -48,6 +48,7 @@ import { apiTesterRouter } from "./routes/apiTester";
 import { brokerRouter } from "./routes/brokerRoutes";
 import { tradingRouter } from "./routes/tradingRoutes";
 import { vesselDistributionRouter } from "./routes/vesselDistributionRoutes";
+import { generateVesselPositionData } from "./routes/vessel-data-generation";
 import { refineryPortRouter } from "./routes/refineryPortRoutes";
 import { documentRouter } from "./routes/document-routes";
 import { aiRouter } from "./routes/aiRoutes";
