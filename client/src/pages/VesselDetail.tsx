@@ -67,8 +67,6 @@ const InfoItem = ({ label, value }: { label: React.ReactNode; value: React.React
   </div>
 );
 
-// Removed ProgressTimeline component as requested
-
 // Form component for updating vessel location
 const LocationUpdateForm = ({ 
   vesselId, 
@@ -100,9 +98,11 @@ const LocationUpdateForm = ({
         if (response.ok) {
           const data = await response.json();
           setRefineries(data);
+        } else {
+          console.error('Failed to load refineries');
         }
       } catch (error) {
-        console.error('Failed to fetch refineries:', error);
+        console.error('Error fetching refineries', error);
       } finally {
         setIsLoadingRefineries(false);
       }
@@ -110,204 +110,176 @@ const LocationUpdateForm = ({
     
     fetchRefineries();
   }, []);
-  
+
   const updateLocationMutation = useMutation({
-    mutationFn: async (data: { 
-      lat: string, 
-      lng: string, 
-      eventDescription?: string,
-      destinationRefineryId?: string,
-      destinationPort?: string
-    }) => {
-      const response = await fetch(`/api/vessels/${vesselId}/update-location`, {
+    mutationFn: async (data: any) => {
+      return await apiRequest(`/api/vessels/${vesselId}/update-location`, { 
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
+        body: JSON.stringify(data)
       });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to update location");
-      }
-      return await response.json();
     },
-    onSuccess: (data) => {
-      let destinationMsg = "";
-      if (data.destination && data.destination !== "At sea") {
-        destinationMsg = ` heading to ${data.destination}`;
-      }
-      
+    onSuccess: () => {
       toast({
-        title: "Location updated",
-        description: `Vessel location updated to ${lat}, ${lng} in the ${data.region} region${destinationMsg}.`,
+        title: 'Location updated',
+        description: 'Vessel location has been updated successfully',
+        duration: 3000,
       });
       onSuccess();
     },
-    onError: (error: Error) => {
+    onError: (error: any) => {
       toast({
-        title: "Failed to update location",
-        description: error.message,
-        variant: "destructive",
+        title: 'Failed to update location',
+        description: error.message || 'An error occurred while updating vessel location',
+        variant: 'destructive',
+        duration: 5000,
       });
     }
   });
-  
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    const updateData: any = { lat, lng, eventDescription };
+    const data: any = {
+      currentLat: lat,
+      currentLng: lng,
+      eventDescription
+    };
     
-    // Add destination information based on selection
     if (destinationType === 'refinery' && destinationRefineryId) {
-      updateData.destinationRefineryId = destinationRefineryId;
+      const selectedRefinery = refineries.find(r => r.id.toString() === destinationRefineryId);
+      if (selectedRefinery) {
+        data.destinationPort = `REF:${selectedRefinery.id}:${selectedRefinery.name}`;
+      }
     } else if (destinationType === 'port' && destinationPort) {
-      updateData.destinationPort = destinationPort;
+      data.destinationPort = destinationPort;
+    } else {
+      data.destinationPort = null; // Clear destination
     }
     
-    updateLocationMutation.mutate(updateData);
+    updateLocationMutation.mutate(data);
   };
-  
+
   return (
-    <div className="rounded-md border p-4 mt-2 bg-muted/20">
-      <h4 className="text-sm font-medium mb-3 flex items-center">
-        <MapPin className="h-4 w-4 mr-2 text-primary" />
-        تحديث الموقع والوجهة - Update Location & Destination
-      </h4>
-      
-      <form onSubmit={handleSubmit} className="space-y-3">
-        <div className="grid grid-cols-2 gap-2">
-          <div className="space-y-1">
-            <Label htmlFor="latitude">Latitude - خط العرض</Label>
-            <Input
+    <div className="space-y-4">
+      <form onSubmit={handleSubmit}>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="latitude">Latitude</Label>
+            <Input 
               id="latitude"
-              placeholder="e.g. 25.2048"
               value={lat}
               onChange={(e) => setLat(e.target.value)}
+              placeholder="e.g. 25.1972"
+              type="number"
+              step="0.0001"
               required
             />
           </div>
-          <div className="space-y-1">
-            <Label htmlFor="longitude">Longitude - خط الطول</Label>
-            <Input
+          
+          <div className="space-y-2">
+            <Label htmlFor="longitude">Longitude</Label>
+            <Input 
               id="longitude"
-              placeholder="e.g. 55.2708"
               value={lng}
               onChange={(e) => setLng(e.target.value)}
+              placeholder="e.g. 55.2744"
+              type="number"
+              step="0.0001"
               required
             />
           </div>
         </div>
         
-        {/* Destination Section */}
-        <div className="space-y-2 pt-2">
-          <Label>Destination Type - نوع الوجهة</Label>
-          <div className="flex space-x-2">
+        <div className="mt-4 space-y-2">
+          <Label htmlFor="eventDesc">Event Description (Optional)</Label>
+          <Input 
+            id="eventDesc"
+            value={eventDescription}
+            onChange={(e) => setEventDescription(e.target.value)}
+            placeholder="e.g. Vessel diverted due to weather"
+          />
+        </div>
+        
+        <div className="mt-4 space-y-2">
+          <Label>Destination</Label>
+          <div className="grid grid-cols-3 gap-2">
             <Button 
-              type="button" 
-              size="sm"
+              type="button"
               variant={destinationType === 'none' ? 'default' : 'outline'}
               onClick={() => setDestinationType('none')}
+              className="justify-start"
             >
               None
             </Button>
             <Button 
-              type="button" 
-              size="sm"
+              type="button"
               variant={destinationType === 'refinery' ? 'default' : 'outline'}
               onClick={() => setDestinationType('refinery')}
+              className="justify-start"
             >
-              Refinery - مصفاة
+              <Factory className="h-4 w-4 mr-2" />
+              Refinery
             </Button>
             <Button 
-              type="button" 
-              size="sm"
+              type="button"
               variant={destinationType === 'port' ? 'default' : 'outline'}
               onClick={() => setDestinationType('port')}
+              className="justify-start"
             >
-              Port - ميناء
+              <Anchor className="h-4 w-4 mr-2" />
+              Port
             </Button>
           </div>
-          
-          {destinationType === 'refinery' && (
-            <div className="space-y-1 pt-2">
-              <Label htmlFor="destinationRefinery">
-                Destination Refinery - مصفاة الوجهة
-              </Label>
-              <select
-                id="destinationRefinery"
-                className="w-full p-2 rounded-md border"
-                value={destinationRefineryId}
-                onChange={(e) => setDestinationRefineryId(e.target.value)}
-                required={destinationType === 'refinery'}
-              >
-                <option value="">Select a refinery...</option>
-                {isLoadingRefineries ? (
-                  <option disabled>Loading refineries...</option>
-                ) : (
-                  refineries.map(refinery => (
-                    <option key={refinery.id} value={refinery.id.toString()}>
-                      {refinery.name} ({refinery.country})
-                    </option>
-                  ))
-                )}
-              </select>
-            </div>
-          )}
-          
-          {destinationType === 'port' && (
-            <div className="space-y-1 pt-2">
-              <Label htmlFor="destinationPort">
-                Destination Port - ميناء الوجهة
-              </Label>
-              <Input
-                id="destinationPort"
-                placeholder="e.g. Rotterdam Port"
-                value={destinationPort}
-                onChange={(e) => setDestinationPort(e.target.value)}
-                required={destinationType === 'port'}
-              />
-            </div>
-          )}
         </div>
         
-        <div className="space-y-1 pt-2">
-          <Label htmlFor="event-description">
-            Event Description (optional) - وصف الحدث
-          </Label>
-          <Input
-            id="event-description"
-            placeholder="e.g. Updated position via satellite tracking"
-            value={eventDescription}
-            onChange={(e) => setEventDescription(e.target.value)}
-          />
-        </div>
+        {destinationType === 'refinery' && (
+          <div className="mt-4 space-y-2">
+            <Label htmlFor="refinery">Select Refinery</Label>
+            <select 
+              id="refinery"
+              value={destinationRefineryId}
+              onChange={(e) => setDestinationRefineryId(e.target.value)}
+              className="w-full rounded-md border border-gray-300 px-3 py-2"
+              required={destinationType === 'refinery'}
+            >
+              <option value="">Select a refinery...</option>
+              {refineries.map((refinery) => (
+                <option key={refinery.id} value={refinery.id}>
+                  {refinery.name} ({refinery.country})
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
         
-        <div className="flex space-x-2 justify-end pt-3">
-          <Button 
-            type="button" 
-            variant="outline" 
-            size="sm"
-            onClick={() => onSuccess()}
-            disabled={updateLocationMutation.isPending}
-          >
-            Cancel - إلغاء
-          </Button>
+        {destinationType === 'port' && (
+          <div className="mt-4 space-y-2">
+            <Label htmlFor="port">Port Name</Label>
+            <Input 
+              id="port"
+              value={destinationPort}
+              onChange={(e) => setDestinationPort(e.target.value)}
+              placeholder="e.g. Port of Rotterdam"
+              required={destinationType === 'port'}
+            />
+          </div>
+        )}
+        
+        <div className="mt-6">
           <Button 
             type="submit" 
-            size="sm"
+            className="w-full"
             disabled={updateLocationMutation.isPending}
           >
             {updateLocationMutation.isPending ? (
               <>
-                <RotateCw className="mr-2 h-4 w-4 animate-spin" />
+                <div className="mr-2 h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-background"></div>
                 Updating...
               </>
             ) : (
               <>
                 <Check className="mr-2 h-4 w-4" />
-                Update - تحديث
+                Update Location
               </>
             )}
           </Button>
@@ -363,169 +335,119 @@ export default function VesselDetail() {
     
     fetchPorts();
   }, []);
+  
+  useEffect(() => {
+    const fetchVessel = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(`/api/vessels/${vesselId}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch vessel');
+        }
+        const data = await response.json();
+        setVessel(data);
+      } catch (error) {
+        console.error('Error fetching vessel:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load vessel data',
+          variant: 'destructive',
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // Function to fetch vessel data directly using REST API
-  const fetchVesselData = async () => {
-    if (!vesselId) return;
-    
-    setLoading(true);
-    try {
-      const response = await axios.get(`/api/vessels/${vesselId}`);
-      console.log("Vessel API response:", response.data);
-      
-      if (response.data) {
-        setVessel(response.data);
-        console.log("Setting vessel data:", response.data);
-      } else {
-        console.warn("Vessel API returned unexpected format:", response.data);
-        toast({
-          title: "Unexpected data format",
-          description: "The server returned vessel data in an unexpected format.",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching vessel data:', error);
-      toast({
-        title: "Failed to fetch vessel data",
-        description: "We couldn't retrieve the vessel information.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+    if (vesselId) {
+      fetchVessel();
     }
+  }, [vesselId, toast]);
+
+  const handleLocationUpdateSuccess = () => {
+    // Refetch vessel
+    const fetchVessel = async () => {
+      try {
+        const response = await fetch(`/api/vessels/${vesselId}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch vessel');
+        }
+        const data = await response.json();
+        setVessel(data);
+      } catch (error) {
+        console.error('Error refetching vessel:', error);
+      }
+    };
+    
+    fetchVessel();
+    setIsUpdatingLocation(false);
   };
   
-  // Function to fetch voyage progress data
-  const fetchVoyageProgress = async () => {
-    if (!vesselId || !vessel?.destinationPort) return;
-    
-    setIsLoadingVoyage(true);
-    try {
-      const response = await axios.get(`/api/vessels/${vesselId}/voyage-progress`);
-      console.log("Voyage progress API response:", response.data);
-      
-      // The server always includes voyage data in a voyageProgress object
-      if (response.data && response.data.voyageProgress) {
-        setVoyageProgress(response.data.voyageProgress);
-        console.log("Setting voyage progress to:", response.data.voyageProgress);
-      } else {
-        console.warn("Voyage progress API returned unexpected format:", response.data);
-        toast({
-          title: "Unexpected data format",
-          description: "The server returned voyage data in an unexpected format.",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching voyage progress:', error);
-      toast({
-        title: "Failed to fetch voyage data",
-        description: "We couldn't retrieve the latest journey information.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoadingVoyage(false);
-    }
-  };
-  
-  // Function to fetch current location data
-  const fetchCurrentLocation = async () => {
-    if (!vesselId) return;
-    
-    setIsLoadingLocation(true);
-    try {
-      const response = await axios.get(`/api/vessels/${vesselId}/location`);
-      console.log("Location API response:", response.data);
-      
-      // The server always includes location data in a currentLocation object
-      if (response.data && response.data.currentLocation) {
-        setCurrentLocation(response.data.currentLocation);
-        console.log("Setting current location to:", response.data.currentLocation);
-      } else {
-        console.warn("Location API returned unexpected format:", response.data);
-        toast({
-          title: "Unexpected data format",
-          description: "The server returned location data in an unexpected format.",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching current location:', error);
-      toast({
-        title: "Failed to fetch location data",
-        description: "We couldn't retrieve the latest vessel location.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoadingLocation(false);
-    }
-  };
-  
-  // Function to generate cargo manifest
-  const generateCargoManifest = async (manifestType = "standard") => {
-    if (!vesselId) return;
+  // Generate a vessel document or manifest
+  const generateVesselDocument = async (documentType: string) => {
+    if (!vessel) return;
     
     setIsGeneratingManifest(true);
     try {
-      // Create a link element to trigger the download
-      const downloadLink = document.createElement('a');
-      downloadLink.href = `/api/vessels/${vesselId}/cargo-manifest?type=${manifestType}`;
-      downloadLink.target = '_blank';
-      downloadLink.download = `cargo_manifest_${vessel?.name || 'vessel'}.pdf`;
-      document.body.appendChild(downloadLink);
-      downloadLink.click();
-      document.body.removeChild(downloadLink);
+      // Request document generation from API
+      const response = await axios.post(`/api/vessels/${vessel.id}/documents/generate`, {
+        documentType,
+        vesselId: vessel.id,
+        vesselName: vessel.name,
+        cargo: vessel.cargoType,
+        quantity: vessel.cargoCapacity,
+        origin: vessel.previousPort || "Unknown",
+        destination: vessel.destinationPort || "Unknown"
+      }, {
+        responseType: 'blob', // Important: get response as binary data
+      });
+      
+      // Create a download link and click it
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${vessel.name}_${documentType.toLowerCase().replace(/\s/g, '_')}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
       
       toast({
-        title: "Cargo Manifest Generated",
-        description: "Downloading cargo manifest for " + (vessel?.name || 'vessel'),
-        variant: "default",
+        title: 'Document Generated',
+        description: `The ${documentType} for ${vessel.name} has been downloaded`,
+        duration: 3000,
       });
     } catch (error) {
-      console.error('Error generating cargo manifest:', error);
+      console.error('Error generating document:', error);
       toast({
-        title: "Failed to generate manifest",
-        description: "There was an error generating the cargo manifest.",
-        variant: "destructive",
+        title: 'Document Generation Failed',
+        description: 'An error occurred while generating the document',
+        variant: 'destructive',
+        duration: 5000,
       });
     } finally {
       setIsGeneratingManifest(false);
     }
   };
-  
-  // Function to generate nut-specific cargo manifest
-  const generateNutManifest = () => {
-    generateCargoManifest("nut");
-  };
-  
-  // Fetch vessel data on component mount
-  useEffect(() => {
-    if (vesselId) {
-      fetchVesselData();
-    }
-  }, [vesselId]);
-  
-  // Load voyage data and location when vessel is available
-  useEffect(() => {
-    if (vessel && vessel.id) {
-      fetchVoyageProgress();
-      fetchCurrentLocation();
-    }
-  }, [vessel?.id]);
-  
-  // Redirect to vessels page if vessel not found and not loading
-  if (!loading && !vessel) {
+
+  if (loading) {
     return (
-      <div className="container mx-auto p-4 text-center">
-        <div className="py-12">
-          <Ship className="h-12 w-12 mx-auto text-muted-foreground" />
-          <h3 className="mt-4 text-lg font-medium">Vessel not found</h3>
-          <p className="text-muted-foreground mb-8">
-            The vessel with ID {vesselId} does not exist or was deleted.
-          </p>
+      <div className="container mx-auto p-4">
+        <div className="flex justify-center items-center h-screen">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!vessel) {
+    return (
+      <div className="container mx-auto p-4">
+        <div className="bg-destructive/15 p-4 rounded-md">
+          <h1 className="text-xl font-semibold text-destructive">Vessel not found</h1>
+          <p className="mt-2">The vessel you're looking for does not exist or has been removed.</p>
+        </div>
+        <div className="mt-4">
           <Link href="/vessels">
-            <Button>
+            <Button variant="outline" className="flex items-center">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Vessels
             </Button>
@@ -566,878 +488,555 @@ export default function VesselDetail() {
                     {getOilCategory(vessel.cargoType)}
                   </Badge>
                 </div>
-                <div className="flex flex-wrap items-center gap-3 mt-2">
-                  <div className="flex items-center bg-blue-800/80 rounded-full px-3 py-1 text-sm">
-                    <FileText className="h-4 w-4 mr-2" />
-                    IMO: {vessel.imo}
-                  </div>
-                  <div className="flex items-center bg-blue-800/80 rounded-full px-3 py-1 text-sm">
-                    <Compass className="h-4 w-4 mr-2" />
-                    MMSI: {vessel.mmsi}
-                  </div>
-                  <div className="flex items-center bg-blue-800/80 rounded-full px-3 py-1 text-sm">
-                    <Flag className="h-4 w-4 mr-2" />
-                    {vessel.flag}
-                  </div>
-                </div>
+                <p className="text-blue-100">
+                  {vessel.vesselType || 'Oil Tanker'} • IMO: {vessel.imo || 'N/A'} • MMSI: {vessel.mmsi || 'N/A'}
+                </p>
               </div>
               
-              <div className="flex gap-3 mt-4 md:mt-0">
+              <div className="flex space-x-2 mt-4 md:mt-0">
                 <Button 
                   variant="outline" 
-                  className="bg-white/10 backdrop-blur-sm text-white border-white/20 hover:bg-white/20"
+                  className="bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white"
+                  onClick={() => setIsUpdatingLocation(!isUpdatingLocation)}
                 >
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit Vessel
+                  <MapPin className="mr-2 h-4 w-4" />
+                  {isUpdatingLocation ? 'Cancel' : 'Update Location'}
                 </Button>
                 <Button 
-                  onClick={() => generateCargoManifest()}
+                  variant="outline" 
+                  className="bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white"
+                  onClick={() => generateVesselDocument('Cargo Manifest')}
                   disabled={isGeneratingManifest}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
                 >
-                  <FileText className="h-4 w-4 mr-2" />
-                  {isGeneratingManifest ? 'Generating...' : 'Cargo Manifest'}
+                  {isGeneratingManifest ? (
+                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-white"></div>
+                  ) : (
+                    <FileText className="mr-2 h-4 w-4" />
+                  )}
+                  Generate Manifest
                 </Button>
-                {vessel && vessel.cargoType && vessel.cargoType.toLowerCase().includes('nut') && (
-                  <Button 
-                    variant="outline" 
-                    onClick={generateNutManifest}
-                    disabled={isGeneratingManifest}
-                    className="bg-amber-600 text-white border-amber-600/50 hover:bg-amber-700"
-                  >
-                    <FileCheck className="h-4 w-4 mr-2" />
-                    {isGeneratingManifest ? 'Generating...' : 'Nut Cargo Manifest'}
-                  </Button>
-                )}
               </div>
             </div>
             
-            {/* Live status indicator */}
-            {vessel.status && (
-              <div className="mt-4 flex items-center">
-                <div className="flex items-center mr-4">
-                  <span className="relative flex h-3 w-3 mr-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-                  </span>
-                  <span className="text-white text-sm">Live Tracking</span>
-                </div>
-                <div className="bg-blue-800/50 backdrop-blur-sm rounded-full px-3 py-1 text-sm text-white">
-                  Status: {vessel.status || 'At Sea'}
-                </div>
+            {isUpdatingLocation && (
+              <div className="mt-6 p-4 bg-white/10 rounded-md">
+                <h3 className="text-white text-lg font-medium mb-4">Update Vessel Location</h3>
+                <LocationUpdateForm 
+                  vesselId={vessel.id}
+                  initialLat={vessel.currentLat}
+                  initialLng={vessel.currentLng}
+                  onSuccess={handleLocationUpdateSuccess}
+                />
               </div>
             )}
           </div>
           
-          <Tabs defaultValue="details" className="mt-6">
-            <TabsList className="mb-4 bg-slate-100 p-1 rounded-lg">
-              <TabsTrigger value="details" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                <Info className="h-4 w-4 mr-2" />
-                Details
-              </TabsTrigger>
-              <TabsTrigger value="journey" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                <Map className="h-4 w-4 mr-2" />
-                Journey
-              </TabsTrigger>
-              <TabsTrigger value="documents" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                <Calendar className="h-4 w-4 mr-2" />
-                Documents
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="details">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="md:col-span-2 overflow-hidden border-0 shadow-md">
-                  <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-slate-50 border-b">
-                    <CardTitle className="flex items-center">
-                      <Ship className="h-5 w-5 mr-2 text-blue-600" />
-                      Vessel Information
-                    </CardTitle>
-                    <CardDescription>
-                      Technical details and specifications
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <h3 className="text-sm font-medium mb-3 flex items-center">
-                          <Info className="h-4 w-4 mr-2 text-primary" />
-                          Vessel Identity
-                        </h3>
-                        <InfoItem 
-                          label={<span className="flex items-center"><Ship className="h-4 w-4 mr-1" /> Name</span>} 
-                          value={vessel.name} 
-                        />
-                        <InfoItem 
-                          label={<span className="flex items-center"><FileText className="h-4 w-4 mr-1" /> IMO Number</span>} 
-                          value={vessel.imo} 
-                        />
-                        <InfoItem 
-                          label={<span className="flex items-center"><Gauge className="h-4 w-4 mr-1" /> MMSI</span>} 
-                          value={vessel.mmsi} 
-                        />
-                        <InfoItem 
-                          label={<span className="flex items-center"><Package className="h-4 w-4 mr-1" /> Vessel Type</span>} 
-                          value={vessel.vesselType} 
-                        />
-                        <InfoItem 
-                          label={<span className="flex items-center"><Flag className="h-4 w-4 mr-1" /> Flag</span>} 
-                          value={vessel.flag} 
-                        />
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-medium mb-3 flex items-center">
-                          <BarChart className="h-4 w-4 mr-2 text-primary" />
-                          Technical Specifications
-                        </h3>
-                        <InfoItem 
-                          label={<span className="flex items-center"><Calendar className="h-4 w-4 mr-1" /> Year Built</span>} 
-                          value={vessel.built || 'N/A'} 
-                        />
-                        <InfoItem 
-                          label={<span className="flex items-center"><Package className="h-4 w-4 mr-1" /> Deadweight</span>} 
-                          value={vessel.deadweight ? `${vessel.deadweight.toLocaleString()} tons` : 'N/A'} 
-                        />
-                        <InfoItem 
-                          label={<span className="flex items-center"><Droplet className="h-4 w-4 mr-1" /> Cargo Capacity</span>} 
-                          value={vessel.cargoCapacity ? `${vessel.cargoCapacity.toLocaleString()} barrels` : 'N/A'} 
-                        />
-                        <InfoItem 
-                          label={<span className="flex items-center"><Droplet className="h-4 w-4 mr-1" /> Cargo Type</span>} 
-                          value={vessel.cargoType || 'N/A'} 
-                        />
-                        <InfoItem 
-                          label={<span className="flex items-center"><Globe className="h-4 w-4 mr-1" /> Current Region</span>} 
-                          value={vessel.currentRegion || 'N/A'} 
-                        />
-                      </div>
-                    </div>
-
-                    <Separator className="my-6" />
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <h3 className="text-sm font-medium mb-3 flex items-center">
-                          <Users className="h-4 w-4 mr-2 text-primary" />
-                          Ownership & Class
-                        </h3>
-                        <InfoItem 
-                          label="Owner"
-                          value="Global Tanker Corp." 
-                        />
-                        <InfoItem 
-                          label="Operator"
-                          value="Oceanic Shipping Ltd." 
-                        />
-                        <InfoItem 
-                          label="Class Society"
-                          value="American Bureau of Shipping (ABS)" 
-                        />
-                        <InfoItem 
-                          label="P&I Club"
-                          value="North of England P&I" 
-                        />
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-medium mb-3 flex items-center">
-                          <Gauge className="h-4 w-4 mr-2 text-primary" />
-                          Dimensions & Equipment
-                        </h3>
-                        <InfoItem 
-                          label="Length Overall"
-                          value="333.0 m" 
-                        />
-                        <InfoItem 
-                          label="Breadth"
-                          value="60.0 m" 
-                        />
-                        <InfoItem 
-                          label="Summer Draft"
-                          value="22.5 m" 
-                        />
-                        <InfoItem 
-                          label="Main Engine"
-                          value="MAN B&W 7G80ME-C9.5" 
-                        />
-                      </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <p className="text-xs text-muted-foreground">
-                      <AlertCircle className="h-3 w-3 inline mr-1" />
-                      Last verified: April 10, 2023
-                    </p>
-                  </CardFooter>
-                </Card>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <div className="lg:col-span-2">
+              {/* Main content area */}
+              <Tabs defaultValue="details" className="mb-6">
+                <TabsList className="mb-4">
+                  <TabsTrigger value="details" className="flex items-center">
+                    <Info className="h-4 w-4 mr-2" />
+                    Vessel Details
+                  </TabsTrigger>
+                  <TabsTrigger value="voyage" className="flex items-center">
+                    <Compass className="h-4 w-4 mr-2" />
+                    Voyage
+                  </TabsTrigger>
+                  <TabsTrigger value="documents" className="flex items-center">
+                    <FileText className="h-4 w-4 mr-2" />
+                    Documents
+                  </TabsTrigger>
+                </TabsList>
                 
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="flex items-center">
-                      <Navigation className="h-5 w-5 mr-2 text-primary" />
-                      Current Location
-                    </CardTitle>
-                    <CardDescription>
-                      Last reported coordinates - الإحداثيات الحالية
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {vessel.currentLat && vessel.currentLng ? (
-                      <>
-                        <div className="aspect-square bg-muted rounded-md overflow-hidden mb-4 relative">
-                          <MapContainer
-                            center={[parseFloat(vessel.currentLat as string), parseFloat(vessel.currentLng as string)]}
-                            zoom={6}
-                            zoomControl={false}
-                            className="h-full w-full"
-                            whenReady={() => {
-                              setTimeout(() => {
-                                // Fix map size when tab changes
-                                const mapElement = document.querySelector('.leaflet-container');
-                                if (mapElement) {
-                                  const map = (mapElement as any)._leaflet_map;
-                                  if (map) map.invalidateSize();
-                                }
-                              }, 0);
-                            }}
-                          >
-                            <TileLayer
-                              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                            />
-                            {/* Vessel Marker */}
-                            <Marker
-                              position={[parseFloat(vessel.currentLat as string), parseFloat(vessel.currentLng as string)]}
-                              icon={L.divIcon({
-                                className: 'vessel-position-marker',
-                                html: `<div class="w-4 h-4 rounded-full bg-orange-500 border-2 border-white pulse-animation"></div>`,
-                                iconSize: [16, 16],
-                              })}
-                            >
-                              <Popup>
-                                <div className="text-sm">
-                                  <strong>{vessel.name}</strong>
-                                  <div className="mt-1 font-normal">Current position</div>
-                                  <div className="text-xs text-muted-foreground">
-                                    {vessel.currentLat}, {vessel.currentLng}
-                                  </div>
-                                </div>
-                              </Popup>
-                            </Marker>
-                            
-                            {/* Connection to refinery if vessel has a refinery destination */}
-                            {vessel.destinationPort && vessel.destinationPort.startsWith('REF:') && (
-                              <>
-                                {/* Get refinery ID and position from format REF:id:name */}
-                                {(() => {
-                                  try {
-                                    if (!refineries || refineries.length === 0) return null;
-                                    
-                                    const parts = vessel.destinationPort.split(':');
-                                    const refineryId = parts[1];
-                                    const refineryName = parts[2];
-                                    
-                                    // Find the refinery if it exists
-                                    const refinery = refineries.find((r: any) => r.id.toString() === refineryId);
-                                    if (!refinery || !refinery.lat || !refinery.lng) return null;
-                                    
-                                    // Calculate if vessel is close to refinery (within 10km)
-                                    const vesselLat = parseFloat(vessel.currentLat as string);
-                                    const vesselLng = parseFloat(vessel.currentLng as string);
-                                    const refineryLat = parseFloat(refinery.lat);
-                                    const refineryLng = parseFloat(refinery.lng);
-                                    
-                                    // Simple distance calculation (approximate)
-                                    const distance = Math.sqrt(
-                                      Math.pow(vesselLat - refineryLat, 2) + 
-                                      Math.pow(vesselLng - refineryLng, 2)
-                                    ) * 111; // Convert to km (approximate)
-                                    
-                                    const isLoading = distance < 10; // Within 10km
-                                    
-                                    return (
-                                      <>
-                                        {/* Refinery marker */}
-                                        <Marker
-                                          position={[refineryLat, refineryLng]}
-                                          icon={L.divIcon({
-                                            className: 'refinery-marker',
-                                            html: `<div class="w-6 h-6 flex items-center justify-center bg-blue-600 border-2 border-white rounded-full ${isLoading ? 'animate-pulse' : ''}">
-                                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-                                            </div>`,
-                                            iconSize: [24, 24],
-                                          })}
-                                        >
-                                          <Popup>
-                                            <div className="text-sm">
-                                              <strong>{refineryName}</strong>
-                                              <div className="mt-1 font-normal">Refinery</div>
-                                              {isLoading && (
-                                                <div className="mt-1 text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                                                  Vessel currently loading/unloading
-                                                </div>
-                                              )}
-                                            </div>
-                                          </Popup>
-                                        </Marker>
-                                        
-                                        {/* Connection line between vessel and refinery */}
-                                        <Polyline
-                                          positions={[
-                                            [vesselLat, vesselLng],
-                                            [refineryLat, refineryLng]
-                                          ]}
-                                          pathOptions={{ 
-                                            color: isLoading ? '#3b82f6' : '#94a3b8', 
-                                            weight: isLoading ? 3 : 2,
-                                            dashArray: isLoading ? '' : '5, 5',
-                                            opacity: isLoading ? 0.8 : 0.5
-                                          }}
-                                        />
-                                        
-                                        {/* Area indicator if loading */}
-                                        {isLoading && (
-                                          <Circle 
-                                            center={[refineryLat, refineryLng]}
-                                            radius={5000} // 5km radius
-                                            pathOptions={{
-                                              color: '#3b82f6',
-                                              fillColor: '#93c5fd',
-                                              fillOpacity: 0.2,
-                                              weight: 1
-                                            }}
-                                          />
-                                        )}
-                                      </>
-                                    );
-                                  } catch (error) {
-                                    console.error('Error displaying refinery connection:', error);
-                                    return null;
-                                  }
-                                })()}
-                              </>
-                            )}
-                            
-                            {/* Regular port connection (if not a refinery) */}
-                            {vessel.destinationPort && !vessel.destinationPort.startsWith('REF:') && (
-                              <>
-                                {/* Check if we have port coordinates from the storage */}
-                                {(() => {
-                                  try {
-                                    if (!ports || ports.length === 0) return null;
-                                    
-                                    // Find the port in our database
-                                    const portName = vessel.destinationPort;
-                                    const port = ports.find((p: any) => p.name === portName);
-                                    if (!port || !port.lat || !port.lng) return null;
-                                    
-                                    // Calculate if vessel is close to port (within 10km)
-                                    const vesselLat = parseFloat(vessel.currentLat as string);
-                                    const vesselLng = parseFloat(vessel.currentLng as string);
-                                    const portLat = parseFloat(port.lat as string);
-                                    const portLng = parseFloat(port.lng as string);
-                                    
-                                    // Simple distance calculation (approximate)
-                                    const distance = Math.sqrt(
-                                      Math.pow(vesselLat - portLat, 2) + 
-                                      Math.pow(vesselLng - portLng, 2)
-                                    ) * 111; // Convert to km (approximate)
-                                    
-                                    const isLoading = distance < 10; // Within 10km
-                                    
-                                    return (
-                                      <>
-                                        {/* Port marker */}
-                                        <Marker
-                                          position={[portLat, portLng]}
-                                          icon={L.divIcon({
-                                            className: 'port-marker',
-                                            html: `<div class="w-6 h-6 flex items-center justify-center bg-green-600 border-2 border-white rounded-full ${isLoading ? 'animate-pulse' : ''}">
-                                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>
-                                            </div>`,
-                                            iconSize: [24, 24],
-                                          })}
-                                        >
-                                          <Popup>
-                                            <div className="text-sm">
-                                              <strong>{port.name}</strong>
-                                              <div className="mt-1 font-normal">Port in {port.country}</div>
-                                              {isLoading && (
-                                                <div className="mt-1 text-xs bg-green-50 text-green-700 px-2 py-1 rounded">
-                                                  Vessel currently loading/unloading
-                                                </div>
-                                              )}
-                                            </div>
-                                          </Popup>
-                                        </Marker>
-                                        
-                                        {/* Connection line between vessel and port */}
-                                        <Polyline
-                                          positions={[
-                                            [vesselLat, vesselLng],
-                                            [portLat, portLng]
-                                          ]}
-                                          pathOptions={{ 
-                                            color: isLoading ? '#10b981' : '#94a3b8', 
-                                            weight: isLoading ? 3 : 2,
-                                            dashArray: isLoading ? '' : '5, 5',
-                                            opacity: isLoading ? 0.8 : 0.5
-                                          }}
-                                        />
-                                        
-                                        {/* Area indicator if loading */}
-                                        {isLoading && (
-                                          <Circle 
-                                            center={[portLat, portLng]}
-                                            radius={5000} // 5km radius
-                                            pathOptions={{
-                                              color: '#10b981',
-                                              fillColor: '#6ee7b7',
-                                              fillOpacity: 0.2,
-                                              weight: 1
-                                            }}
-                                          />
-                                        )}
-                                      </>
-                                    );
-                                  } catch (error) {
-                                    console.error('Error displaying port connection:', error);
-                                    return null;
-                                  }
-                                })()}
-                              </>
-                            )}
-                          </MapContainer>
-                          <div className="absolute top-2 right-2 z-[1000] bg-white rounded-md shadow-sm">
-                            <Button variant="ghost" size="icon" className="p-1 text-gray-600 hover:bg-gray-100 hover:text-primary h-8 w-8">
-                              <ZoomIn className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="p-1 text-gray-600 hover:bg-gray-100 hover:text-primary h-8 w-8 border-t border-gray-100">
-                              <ZoomOut className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <InfoItem 
-                            label={<span className="flex items-center"><Compass className="h-4 w-4 mr-1" /> Latitude</span>} 
-                            value={vessel.currentLat} 
-                          />
-                          <InfoItem 
-                            label={<span className="flex items-center"><Compass className="h-4 w-4 mr-1" /> Longitude</span>} 
-                            value={vessel.currentLng} 
-                          />
-                          <InfoItem 
-                            label={<span className="flex items-center"><Clock className="h-4 w-4 mr-1" /> Last Updated</span>} 
-                            value={"2 hours ago"} 
-                          />
-                          <InfoItem 
-                            label={<span className="flex items-center"><Gauge className="h-4 w-4 mr-1" /> Speed</span>} 
-                            value={"12.5 knots"} 
-                          />
-                          <InfoItem 
-                            label={<span className="flex items-center"><Compass className="h-4 w-4 mr-1" /> Heading</span>} 
-                            value={"135° SE"} 
-                          />
-                        </div>
-                        
-                        <div className="mt-4">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="w-full mb-3"
-                            onClick={() => setIsUpdatingLocation(prev => !prev)}
-                          >
-                            <MapPin className="h-4 w-4 mr-2" />
-                            {isUpdatingLocation ? 'Cancel Update' : 'Update Location'}
-                          </Button>
-                          
-                          {isUpdatingLocation && (
-                            <LocationUpdateForm 
-                              vesselId={vessel.id} 
-                              initialLat={vessel.currentLat}
-                              initialLng={vessel.currentLng}
-                              onSuccess={() => {
-                                setIsUpdatingLocation(false);
-                                queryClient.invalidateQueries({ queryKey: ['/api/vessels'] });
-                              }}
-                            />
-                          )}
-                        </div>
-                        
-                        <div className="mt-4 bg-muted/30 rounded-md p-3">
-                          <h4 className="text-sm font-medium mb-2">Nearby Vessels</h4>
-                          <div className="space-y-2 text-sm">
-                            <div className="flex justify-between items-center">
-                              <span>Celestial Voyager</span>
-                              <Badge variant="outline">22.4 nm</Badge>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <span>Northern Star</span>
-                              <Badge variant="outline">35.1 nm</Badge>
-                            </div>
-                          </div>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="text-center py-8 text-muted-foreground">
-                        No location data available
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
-              
-              <Card className="mt-6">
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center">
-                    <Truck className="h-5 w-5 mr-2 text-primary" />
-                    Current Voyage
-                  </CardTitle>
-                  <CardDescription>
-                    Details of ongoing journey
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="bg-muted/30 p-4 rounded-md">
-                      <h3 className="font-medium mb-3 flex items-center">
-                        <Navigation className="h-4 w-4 mr-2 text-primary" />
-                        Departure
-                      </h3>
-                      <InfoItem 
-                        label={<span className="flex items-center"><Anchor className="h-4 w-4 mr-1" /> Port</span>} 
-                        value={vessel.departurePort || 'N/A'} 
-                      />
-                      <InfoItem 
-                        label={<span className="flex items-center"><Calendar className="h-4 w-4 mr-1" /> Date</span>} 
-                        value={vessel.departureDate ? formatDate(vessel.departureDate) : 'N/A'} 
-                      />
-                      <InfoItem 
-                        label={<span className="flex items-center"><Clock className="h-4 w-4 mr-1" /> Terminal</span>} 
-                        value="North Terminal, Berth 12" 
-                      />
-                      <InfoItem 
-                        label={<span className="flex items-center"><Droplet className="h-4 w-4 mr-1" /> Loading Qty</span>} 
-                        value={vessel.cargoCapacity ? `${(vessel.cargoCapacity * 0.95).toLocaleString()} barrels` : 'N/A'} 
-                      />
-                    </div>
-                    
-                    <div className="bg-muted/30 p-4 rounded-md">
-                      <h3 className="font-medium mb-3 flex items-center">
-                        <Anchor className="h-4 w-4 mr-2 text-primary" />
-                        Destination
-                      </h3>
-                      {/* Format destination display based on destinationPort format */}
-                      {(() => {
-                        // Helper function to format destination
-                        const formatDestination = () => {
-                          if (!vessel.destinationPort) return 'N/A';
-                          
-                          if (vessel.destinationPort.startsWith('REF:')) {
-                            // Extract refinery name from the format REF:id:name
-                            const parts = vessel.destinationPort.split(':');
-                            if (parts.length > 2) {
-                              const refineryId = parts[1];
-                              const refineryName = parts[2];
-                              return (
-                                <div className="flex items-center">
-                                  <Link 
-                                    href={`/refineries/${refineryId}`} 
-                                    className="text-primary hover:underline flex items-center"
-                                  >
-                                    {refineryName}
-                                    <ExternalLink className="h-3 w-3 ml-1" />
-                                  </Link>
-                                  <Badge variant="outline" className="ml-2 text-xs">
-                                    Refinery
-                                  </Badge>
-                                </div>
-                              );
-                            }
-                          }
-                          // Regular port name
-                          return vessel.destinationPort;
-                        };
-                        
-                        // Determine what label to use
-                        const destinationLabel = vessel.destinationPort?.startsWith('REF:') ? (
-                          <span className="flex items-center">
-                            <Factory className="h-4 w-4 mr-1" /> Facility
-                          </span>
-                        ) : (
-                          <span className="flex items-center">
-                            <Anchor className="h-4 w-4 mr-1" /> Port
-                          </span>
-                        );
-                        
-                        return (
-                          <InfoItem 
-                            label={destinationLabel} 
-                            value={formatDestination()} 
-                          />
-                        );
-                      })()}
-                      <InfoItem 
-                        label={<span className="flex items-center"><Calendar className="h-4 w-4 mr-1" /> ETA</span>} 
-                        value={vessel.eta ? formatDate(vessel.eta) : 'N/A'} 
-                      />
-                      <InfoItem 
-                        label={<span className="flex items-center"><Clock className="h-4 w-4 mr-1" /> Terminal</span>} 
-                        value="South Basin Terminal" 
-                      />
-                      <InfoItem 
-                        label={<span className="flex items-center"><History className="h-4 w-4 mr-1" /> Status</span>} 
-                        value={<Badge className="ml-1" variant="outline">In Transit</Badge>} 
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="mt-6">
-                    <h3 className="font-medium mb-3">Journey Progress</h3>
-                    <div className="relative pt-1">
-                      <div className="flex mb-2 items-center justify-between">
-                        <div>
-                          <span className="text-xs font-semibold inline-block text-primary">
-                            {"64% Complete"}
-                          </span>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-xs font-semibold text-muted-foreground">
-                            9 days remaining
-                          </span>
-                        </div>
-                      </div>
-                      <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-primary/20">
-                        <div style={{ width: "64%" }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-primary"></div>
-                      </div>
-                      <div className="flex justify-between text-xs text-muted-foreground">
-                        <div>{vessel.departurePort}</div>
-                        <div>Current Position</div>
-                        <div>
-                          {vessel.destinationPort?.startsWith('REF:') 
-                            ? vessel.destinationPort.split(':')[2] + ' (Refinery)' 
-                            : vessel.destinationPort}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <Button variant="outline" size="sm" className="ml-auto">
-                    <ArrowRight className="h-4 w-4 mr-2" />
-                    View Detailed Tracking
-                  </Button>
-                </CardFooter>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="journey">
-              {/* Add the VoyageDetails component at the top of the journey tab */}
-              <VoyageDetails 
-                vessel={vessel as any}
-                voyageProgress={voyageProgress}
-                isLoadingVoyage={isLoadingVoyage}
-                onRefreshVoyage={fetchVoyageProgress}
-                currentLocation={currentLocation}
-                isLoadingLocation={isLoadingLocation}
-                onRefreshLocation={fetchCurrentLocation}
-              />
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Cargo Information Card */}
-                <Card>
-                  <div className="relative">
-                    {/* Background image based on cargo type */}
-                    <div 
-                      className="absolute inset-0 bg-cover bg-center opacity-15 rounded-t-lg h-32"
-                      style={{ 
-                        backgroundImage: `url(${
-                          getOilCategory(vessel.cargoType) === 'Crude' ? "https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?w=600&auto=format" : 
-                          getOilCategory(vessel.cargoType) === 'Jet Fuel' ? "https://images.unsplash.com/photo-1526841535633-ef3be0b23ad9?w=600&auto=format" : 
-                          getOilCategory(vessel.cargoType) === 'Diesel' ? "https://images.unsplash.com/photo-1527671507471-3c83585da23f?w=600&auto=format" : 
-                          getOilCategory(vessel.cargoType) === 'Fuel Oil' ? "https://images.unsplash.com/photo-1495321308589-43affb814eee?w=600&auto=format" : 
-                          getOilCategory(vessel.cargoType) === 'Gas' ? "https://images.unsplash.com/photo-1622058275800-82c2226305f0?w=600&auto=format" :
-                          getOilCategory(vessel.cargoType) === 'Gasoline' ? "https://images.unsplash.com/photo-1581525231557-d932c9a51c92?w=600&auto=format" :
-                          "https://images.unsplash.com/photo-1580810746032-cede1e872c66?w=600&auto=format"
-                        })`
-                      }}
-                    />
-                    <CardHeader className="pb-2 relative z-10">
+                <TabsContent value="details">
+                  <Card>
+                    <CardHeader className="pb-3">
                       <CardTitle className="flex items-center">
-                        <Droplet className="h-5 w-5 mr-2 text-primary" />
-                        Cargo Information
+                        <Ship className="h-5 w-5 mr-2 text-primary" />
+                        Vessel Specifications
                       </CardTitle>
                       <CardDescription>
-                        Current cargo details and status - تفاصيل وحالة الحمولة
+                        Technical details and specifications - التفاصيل والمواصفات التقنية
                       </CardDescription>
                     </CardHeader>
-                  </div>
-                  <CardContent className="pt-2">
-                    <div className="space-y-4">
-                      {/* Oil Type Badge */}
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Oil Product Type:</span>
-                        <Badge 
-                          variant="outline"
-                          className={`
-                            ${getOilCategory(vessel.cargoType) === 'Crude' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                              getOilCategory(vessel.cargoType) === 'Jet Fuel' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                              getOilCategory(vessel.cargoType) === 'Diesel' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
-                              getOilCategory(vessel.cargoType) === 'Fuel Oil' ? 'bg-orange-50 text-orange-700 border-orange-200' :
-                              getOilCategory(vessel.cargoType) === 'Gas' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                              getOilCategory(vessel.cargoType) === 'Gasoline' ? 'bg-red-50 text-red-700 border-red-200' :
-                              'bg-gray-50 text-gray-700 border-gray-200'
-                            }
-                          `}
-                        >
-                          <div className="flex items-center gap-1">
-                            <Droplet className={`h-3 w-3 
-                              ${getOilCategory(vessel.cargoType) === 'Crude' ? 'text-amber-500' :
-                                getOilCategory(vessel.cargoType) === 'Jet Fuel' ? 'text-blue-500' :
-                                getOilCategory(vessel.cargoType) === 'Diesel' ? 'text-indigo-500' :
-                                getOilCategory(vessel.cargoType) === 'Fuel Oil' ? 'text-orange-500' :
-                                getOilCategory(vessel.cargoType) === 'Gas' ? 'text-emerald-500' :
-                                getOilCategory(vessel.cargoType) === 'Gasoline' ? 'text-red-500' :
-                                'text-gray-500'
-                              }
-                            `} />
-                            {getOilCategory(vessel.cargoType)}
-                          </div>
-                        </Badge>
-                      </div>
-                      
-                      {/* Cargo Details */}
-                      <div className="bg-muted/30 p-3 rounded-lg">
-                        <div className="flex justify-between mb-1">
-                          <span className="text-sm flex items-center">
-                            <Tag className="h-4 w-4 mr-1 text-primary" />
-                            Cargo Type
-                          </span>
-                          <span className="text-sm font-medium">
-                            {vessel.cargoType || 'Not specified'}
-                          </span>
-                        </div>
-                      </div>
-                      
-                      {/* Cargo Volume with Visuals */}
-                      <div className="space-y-3">
-                        <div className="text-sm font-medium">Cargo Volume</div>
-                        
-                        {/* Show default cargo capacity */}
-                        <div className="space-y-1">
-                          <div className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">Total Capacity:</span>
-                            <span>{vessel.cargoCapacity ? `${vessel.cargoCapacity.toLocaleString()} barrels` : 'Unknown'}</span>
-                          </div>
-                          {vessel.cargoCapacity ? (
-                            <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
-                              <div className="h-full rounded-full bg-primary" style={{ width: '100%' }} />
-                            </div>
-                          ) : null}
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <h3 className="text-sm font-medium mb-3 flex items-center">
+                            <Info className="h-4 w-4 mr-2 text-primary" />
+                            General Information
+                          </h3>
+                          <InfoItem 
+                            label={<span className="flex items-center"><Ship className="h-4 w-4 mr-1" /> Vessel Type</span>}
+                            value={vessel.vesselType || 'Oil Tanker'} 
+                          />
+                          <InfoItem 
+                            label={<span className="flex items-center"><Info className="h-4 w-4 mr-1" /> IMO Number</span>}
+                            value={vessel.imo || 'N/A'} 
+                          />
+                          <InfoItem 
+                            label={<span className="flex items-center"><Info className="h-4 w-4 mr-1" /> MMSI</span>}
+                            value={vessel.mmsi || 'N/A'} 
+                          />
+                          <InfoItem 
+                            label={<span className="flex items-center"><Flag className="h-4 w-4 mr-1" /> Flag</span>}
+                            value={vessel.flag || 'N/A'} 
+                          />
                         </div>
                         
-                        {/* Show estimated current cargo (95% of capacity) */}
-                        <div className="space-y-1">
-                          <div className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">Current Cargo:</span>
-                            <span>{vessel.cargoCapacity ? `${Math.round(vessel.cargoCapacity * 0.95).toLocaleString()} barrels` : 'Unknown'}</span>
-                          </div>
-                          {vessel.cargoCapacity ? (
-                            <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
-                              <div className="h-full rounded-full bg-blue-500" style={{ width: '95%' }} />
-                            </div>
-                          ) : null}
-                        </div>
-                        
-                        {/* Show weight equivalent */}
-                        <div className="space-y-1">
-                          <div className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">Weight Equivalent:</span>
-                            <span>{vessel.cargoCapacity ? `${Math.round(vessel.cargoCapacity * 0.136).toLocaleString()} metric tons` : 'Unknown'}</span>
-                          </div>
-                        </div>
-                        
-                        {/* Add Arabic label */}
-                        <div className="mt-2 text-xs text-center text-muted-foreground">
-                          حجم الحمولة وسعة الشحن
+                        <div>
+                          <h3 className="text-sm font-medium mb-3 flex items-center">
+                            <Droplet className="h-4 w-4 mr-2 text-primary" />
+                            Cargo & Position
+                          </h3>
+                          <InfoItem 
+                            label={<span className="flex items-center"><Droplet className="h-4 w-4 mr-1" /> Cargo Capacity</span>} 
+                            value={vessel.cargoCapacity ? `${vessel.cargoCapacity.toLocaleString()} barrels` : 'N/A'} 
+                          />
+                          <InfoItem 
+                            label={<span className="flex items-center"><Droplet className="h-4 w-4 mr-1" /> Cargo Type</span>} 
+                            value={vessel.cargoType || 'N/A'} 
+                          />
+                          <InfoItem 
+                            label={<span className="flex items-center"><Globe className="h-4 w-4 mr-1" /> Current Region</span>} 
+                            value={vessel.currentRegion || 'N/A'} 
+                          />
                         </div>
                       </div>
-                      
-                      {/* Additional Cargo Details */}
-                      <div className="bg-muted/30 p-3 rounded-lg">
-                        <h4 className="text-sm font-medium mb-2">Cargo Status</h4>
-                        <div className="flex justify-between mb-2">
-                          <span className="text-sm flex items-center">
-                            <Fuel className="h-4 w-4 mr-1 text-green-500" />
-                            Loading Status
-                          </span>
-                          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                            Fully Loaded
-                          </Badge>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm flex items-center">
-                            <Activity className="h-4 w-4 mr-1 text-blue-500" />
-                            Cargo Density
-                          </span>
-                          <span className="text-sm font-medium">
-                            {getOilCategory(vessel.cargoType) === 'Crude' ? '0.85 g/ml' :
-                             getOilCategory(vessel.cargoType) === 'Jet Fuel' ? '0.81 g/ml' :
-                             getOilCategory(vessel.cargoType) === 'Diesel' ? '0.83 g/ml' :
-                             getOilCategory(vessel.cargoType) === 'Fuel Oil' ? '0.92 g/ml' :
-                             getOilCategory(vessel.cargoType) === 'Gas' ? '0.75 g/ml' :
-                             getOilCategory(vessel.cargoType) === 'Gasoline' ? '0.72 g/ml' :
-                             '0.85 g/ml'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button variant="outline" className="w-full">
-                      <FileText className="h-4 w-4 mr-2" />
-                      Generate Cargo Manifest
-                    </Button>
-                  </CardFooter>
-                </Card>
-                
 
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="documents">
-              <Card>
-                <CardHeader>
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <CardTitle>Vessel Documents</CardTitle>
+                      <Separator className="my-6" />
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <h3 className="text-sm font-medium mb-3 flex items-center">
+                            <Users className="h-4 w-4 mr-2 text-primary" />
+                            Ownership & Class
+                          </h3>
+                          <InfoItem 
+                            label="Owner"
+                            value="Global Tanker Corp." 
+                          />
+                          <InfoItem 
+                            label="Operator"
+                            value="Oceanic Shipping Ltd." 
+                          />
+                          <InfoItem 
+                            label="Class Society"
+                            value="American Bureau of Shipping (ABS)" 
+                          />
+                          <InfoItem 
+                            label="P&I Club"
+                            value="North of England P&I" 
+                          />
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-medium mb-3 flex items-center">
+                            <Gauge className="h-4 w-4 mr-2 text-primary" />
+                            Dimensions & Equipment
+                          </h3>
+                          <InfoItem 
+                            label="Length Overall"
+                            value="333.0 m" 
+                          />
+                          <InfoItem 
+                            label="Breadth"
+                            value="60.0 m" 
+                          />
+                          <InfoItem 
+                            label="Summer Draft"
+                            value="22.5 m" 
+                          />
+                          <InfoItem 
+                            label="Main Engine"
+                            value="MAN B&W 7G80ME-C9.5" 
+                          />
+                        </div>
+                      </div>
+                    </CardContent>
+                    <CardFooter>
+                      <p className="text-xs text-muted-foreground">
+                        <AlertCircle className="h-3 w-3 inline mr-1" />
+                        Last verified: April 10, 2023
+                      </p>
+                    </CardFooter>
+                  </Card>
+                  
+                  <Card className="mt-6">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center">
+                        <Navigation className="h-5 w-5 mr-2 text-primary" />
+                        Enhanced Live Tracking
+                      </CardTitle>
                       <CardDescription>
-                        Certificates, bills of lading, and other documents
+                        Real-time position with nearby ports and refineries (20km radius)
                       </CardDescription>
-                    </div>
-                    <Button>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Document
-                    </Button>
-                  </div>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      {vessel.currentLat && vessel.currentLng ? (
+                        <div className="relative">
+                          <EnhancedVesselMap 
+                            vessel={vessel}
+                            initialLat={vessel.currentLat}
+                            initialLng={vessel.currentLng}
+                          />
+                        </div>
+                      ) : (
+                        <div className="h-64 bg-gray-100 dark:bg-gray-800 rounded-md flex items-center justify-center">
+                          <div className="text-center text-muted-foreground">
+                            <MapPin className="h-10 w-10 mx-auto mb-2 text-muted-foreground/50" />
+                            <p>No position data available</p>
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+                
+                <TabsContent value="voyage">
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center">
+                        <Compass className="h-5 w-5 mr-2 text-primary" />
+                        Current Voyage
+                      </CardTitle>
+                      <CardDescription>
+                        Tracking information and progress - معلومات التتبع والتقدم
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <VoyageDetails 
+                        vessel={vessel} 
+                        voyageProgress={{ 
+                          percentComplete: vessel.voyageProgress || 45,
+                          distanceTraveled: 1825,
+                          distanceRemaining: 2231,
+                          currentSpeed: vessel.currentSpeed || 12.5,
+                          averageSpeed: 13.2,
+                          estimatedArrival: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+                        }}
+                        isLoadingVoyage={false}
+                        onRefreshVoyage={() => {}}
+                        currentLocation={{
+                          lat: vessel.currentLat,
+                          lng: vessel.currentLng
+                        }}
+                        isLoadingLocation={false}
+                        onRefreshLocation={() => {}}
+                      />
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+                
+                <TabsContent value="documents">
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center">
+                        <FileText className="h-5 w-5 mr-2 text-primary" />
+                        Vessel Documents
+                      </CardTitle>
+                      <CardDescription>
+                        Official documentation for this vessel - الوثائق الرسمية لهذه السفينة
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <Card>
+                          <CardContent className="p-4">
+                            <div className="flex items-start">
+                              <div className="bg-primary/10 p-2 rounded-md mr-3">
+                                <FileCheck className="h-6 w-6 text-primary" />
+                              </div>
+                              <div>
+                                <h3 className="font-medium">Cargo Manifest</h3>
+                                <p className="text-xs text-muted-foreground mt-1">Detailed inventory of cargo</p>
+                              </div>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full mt-3"
+                              onClick={() => generateVesselDocument('Cargo Manifest')}
+                              disabled={isGeneratingManifest}
+                            >
+                              <Download className="h-4 w-4 mr-2" />
+                              {isGeneratingManifest ? 'Generating...' : 'Generate & Download'}
+                            </Button>
+                          </CardContent>
+                        </Card>
+                        
+                        <Card>
+                          <CardContent className="p-4">
+                            <div className="flex items-start">
+                              <div className="bg-primary/10 p-2 rounded-md mr-3">
+                                <FileCheck className="h-6 w-6 text-primary" />
+                              </div>
+                              <div>
+                                <h3 className="font-medium">Bill of Lading</h3>
+                                <p className="text-xs text-muted-foreground mt-1">Receipt of freight services</p>
+                              </div>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full mt-3"
+                              onClick={() => generateVesselDocument('Bill of Lading')}
+                              disabled={isGeneratingManifest}
+                            >
+                              <Download className="h-4 w-4 mr-2" />
+                              {isGeneratingManifest ? 'Generating...' : 'Generate & Download'}
+                            </Button>
+                          </CardContent>
+                        </Card>
+                        
+                        <Card>
+                          <CardContent className="p-4">
+                            <div className="flex items-start">
+                              <div className="bg-primary/10 p-2 rounded-md mr-3">
+                                <FileCheck className="h-6 w-6 text-primary" />
+                              </div>
+                              <div>
+                                <h3 className="font-medium">Certificate of Origin</h3>
+                                <p className="text-xs text-muted-foreground mt-1">Proof of cargo origin</p>
+                              </div>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full mt-3"
+                              onClick={() => generateVesselDocument('Certificate of Origin')}
+                              disabled={isGeneratingManifest}
+                            >
+                              <Download className="h-4 w-4 mr-2" />
+                              {isGeneratingManifest ? 'Generating...' : 'Generate & Download'}
+                            </Button>
+                          </CardContent>
+                        </Card>
+                      </div>
+                      
+                      <Separator className="my-6" />
+                      
+                      <div>
+                        <h3 className="text-sm font-medium mb-4 flex items-center">
+                          <History className="h-4 w-4 mr-2 text-primary" />
+                          Document History
+                        </h3>
+                        
+                        <div className="text-sm">
+                          <div className="flex items-center justify-between py-3 border-b border-gray-100 dark:border-gray-800">
+                            <div className="flex items-center">
+                              <FileText className="h-4 w-4 mr-3 text-muted-foreground" />
+                              <span>Bill of Lading #OT-87654</span>
+                            </div>
+                            <div className="flex items-center">
+                              <span className="text-xs text-muted-foreground mr-3">Generated on Apr 15, 2023</span>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <Download className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center justify-between py-3 border-b border-gray-100 dark:border-gray-800">
+                            <div className="flex items-center">
+                              <FileText className="h-4 w-4 mr-3 text-muted-foreground" />
+                              <span>Cargo Manifest #CM-12345</span>
+                            </div>
+                            <div className="flex items-center">
+                              <span className="text-xs text-muted-foreground mr-3">Generated on Apr 10, 2023</span>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <Download className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center justify-between py-3">
+                            <div className="flex items-center">
+                              <FileText className="h-4 w-4 mr-3 text-muted-foreground" />
+                              <span>Certificate of Origin #CO-54321</span>
+                            </div>
+                            <div className="flex items-center">
+                              <span className="text-xs text-muted-foreground mr-3">Generated on Apr 10, 2023</span>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <Download className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
+            </div>
+            
+            {/* Right sidebar with related information */}
+            <div className="space-y-6">
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg flex items-center">
+                    <Activity className="h-5 w-5 mr-2 text-primary" />
+                    Status
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-8 text-muted-foreground">
-                    No documents available for preview
-                  </div>
-                  <div className="flex justify-center mt-4">
-                    <Button variant="outline" asChild>
-                      <Link href={`/vessels/${vesselId}/documents`}>
-                        <FileText className="h-4 w-4 mr-2" />
-                        View All Documents
-                      </Link>
-                    </Button>
+                  <div className="flex flex-col space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Activity</span>
+                      <Badge variant={Number(vessel.currentSpeed) > 3 ? "default" : "outline"} className={Number(vessel.currentSpeed) > 3 ? "bg-green-500" : ""}>
+                        {Number(vessel.currentSpeed) > 3 ? "In Transit" : "Stationary"}
+                      </Badge>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Current Speed</span>
+                      <span className="font-medium">{vessel.currentSpeed || 0} knots</span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Last Updated</span>
+                      <span className="font-medium">
+                        {vessel.lastUpdated ? formatDate(new Date(vessel.lastUpdated)) : 'N/A'}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Voyage Progress</span>
+                      <span className="font-medium">{voyageProgress?.percent || 0}%</span>
+                    </div>
+                    
+                    <div className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-800">
+                      <div className="mb-1 flex justify-between text-xs">
+                        <span>Transit Progress</span>
+                        <span>{vessel.voyageProgress || 0}%</span>
+                      </div>
+                      <Progress value={vessel.voyageProgress || 0} className="h-2" />
+                    </div>
                   </div>
                 </CardContent>
               </Card>
-            </TabsContent>
-          </Tabs>
+              
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg flex items-center">
+                    <Calendar className="h-5 w-5 mr-2 text-primary" />
+                    Voyage Info
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-col space-y-4">
+                    {vessel.departurePort && (
+                      <div>
+                        <div className="text-sm text-muted-foreground mb-1">Departed From</div>
+                        <div className="flex items-start">
+                          <MapPin className="h-4 w-4 text-red-500 mr-2 mt-0.5" />
+                          <div>
+                            <div className="font-medium">{vessel.departurePort}</div>
+                            {vessel.lastPortDepatureTime && (
+                              <div className="text-xs text-muted-foreground mt-0.5">
+                                {formatDate(new Date(vessel.lastPortDepatureTime))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {vessel.destinationPort && (
+                      <div>
+                        <div className="text-sm text-muted-foreground mb-1">Destination</div>
+                        <div className="flex items-start">
+                          <MapPin className="h-4 w-4 text-green-500 mr-2 mt-0.5" />
+                          <div>
+                            <div className="font-medium">
+                              {vessel.destinationPort.startsWith('REF:') 
+                                ? vessel.destinationPort.split(':')[2]
+                                : vessel.destinationPort}
+                            </div>
+                            {vessel.estimatedArrivalTime && (
+                              <div className="text-xs text-muted-foreground mt-0.5">
+                                ETA: {formatDate(new Date(vessel.estimatedArrivalTime))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div>
+                      <div className="text-sm text-muted-foreground mb-1">Distance & Time</div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="bg-gray-50 dark:bg-gray-800 p-2 rounded">
+                          <div className="text-xs text-muted-foreground">Total Distance</div>
+                          <div className="font-medium">3,500 nm</div>
+                        </div>
+                        <div className="bg-gray-50 dark:bg-gray-800 p-2 rounded">
+                          <div className="text-xs text-muted-foreground">Time Remaining</div>
+                          <div className="font-medium">3 days 14 hrs</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg flex items-center">
+                    <BarChart className="h-5 w-5 mr-2 text-primary" />
+                    Cargo Info
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-col space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Cargo Type</span>
+                      <span className="font-medium">
+                        {vessel.cargoType || 'N/A'}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Quantity</span>
+                      <span className="font-medium">
+                        {vessel.cargoCapacity 
+                          ? `${vessel.cargoCapacity.toLocaleString()} barrels` 
+                          : 'N/A'}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Value (est.)</span>
+                      <span className="font-medium">
+                        {vessel.cargoType && vessel.cargoType.toLowerCase().includes('crude') 
+                          ? '$45M - $60M USD'
+                          : vessel.cargoType && vessel.cargoType.toLowerCase().includes('gas')
+                          ? '$30M - $40M USD'
+                          : '$25M - $35M USD'}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Loading Status</span>
+                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                        Fully Loaded
+                      </Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </>
-      ) : null}
+      ) : (
+        <div className="flex justify-center items-center h-64">
+          <div className="text-center">
+            <AlertCircle className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+            <h3 className="text-lg font-medium">Vessel Not Found</h3>
+            <p className="text-muted-foreground mt-2">The vessel you're looking for doesn't exist.</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

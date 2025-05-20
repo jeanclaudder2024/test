@@ -16,10 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import OpenAI from "openai";
-
-// Initialize OpenAI with API key from environment
-const openai = new OpenAI({ apiKey: '' }); // We'll use this if we need to generate data
+// We'll use API endpoints instead of direct OpenAI integration in the browser
 
 // Haversine distance calculation between two coordinates (in km)
 const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
@@ -135,53 +132,45 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
     }
   }, [vessel]);
   
-  // Generate realistic vessel data if API fails
+  // Generate realistic vessel data if API fails using rule-based approach
   const generateVesselData = async () => {
     if (!vessel || isGeneratingData) return;
     
     try {
       setIsGeneratingData(true);
       
-      // Use OpenAI to generate realistic vessel data
-      const prompt = `Generate realistic maritime vessel tracking data for ${vessel.name} (MMSI: ${vessel.mmsi || 'unknown'}) 
-      which is a ${vessel.vesselType || 'oil tanker'} carrying ${vessel.cargoType || 'crude oil'}.
+      // Use rule-based approach to generate realistic data
+      // Determine vessel type for relevant speed ranges
+      const isOilTanker = vessel.vesselType?.toLowerCase().includes('tanker') || 
+                          vessel.cargoType?.toLowerCase().includes('oil') ||
+                          vessel.cargoType?.toLowerCase().includes('crude');
       
-      The vessel is currently located at coordinates ${vessel.currentLat}, ${vessel.currentLng}.
+      const isLNG = vessel.cargoType?.toLowerCase().includes('lng') || 
+                   vessel.cargoType?.toLowerCase().includes('gas');
       
-      Provide the following data:
-      1. Current speed in knots
-      2. Current heading in degrees
-      3. Navigation status (e.g. "underway", "at anchor", "moored")
-      4. Current draught in meters
-      5. ETA to destination (if applicable)
-      
-      Format as JSON with these fields: speed, course, navStatus, draught, eta`;
-      
-      const openAiResponse = await openai.chat.completions.create({
-        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-        messages: [
-          { 
-            role: "system", 
-            content: "You are a marine navigation expert that provides realistic vessel tracking data in JSON format."
-          },
-          { role: "user", content: prompt }
-        ],
-        response_format: { type: "json_object" }
-      });
-      
-      if (openAiResponse.choices && openAiResponse.choices[0].message.content) {
-        const generatedData = JSON.parse(openAiResponse.choices[0].message.content);
-        
-        // Update vessel data with generated values
-        setVesselHeading(parseFloat(generatedData.course || 0));
-        setVesselSpeed(parseFloat(generatedData.speed || 0));
-        
-        toast({
-          title: "Enhanced vessel data generated",
-          description: "Using AI-generated realistic vessel data for better visualization",
-          duration: 3000
-        });
+      // Generate realistic speed based on vessel type
+      // Oil tankers: 10-15 knots, LNG carriers: 15-20 knots, other vessels: 12-18 knots
+      let speed = 0;
+      if (isOilTanker) {
+        speed = 10 + (Math.random() * 5);
+      } else if (isLNG) {
+        speed = 15 + (Math.random() * 5);
+      } else {
+        speed = 12 + (Math.random() * 6);
       }
+      
+      // Generate realistic heading (0-359 degrees)
+      const heading = Math.floor(Math.random() * 360);
+      
+      // Update vessel data with generated values
+      setVesselHeading(heading);
+      setVesselSpeed(parseFloat(speed.toFixed(1)));
+      
+      toast({
+        title: "Enhanced vessel data generated",
+        description: "Using realistic vessel tracking simulation for better visualization",
+        duration: 3000
+      });
     } catch (error) {
       console.error("Failed to generate vessel data:", error);
     } finally {
