@@ -13,7 +13,7 @@ import MapEnhancements from "./MapEnhancements";
 import VesselRiskAnalytics from "./VesselRiskAnalytics";
 import L from "leaflet";
 import axios from "axios";
-import { Ship, Anchor, Navigation, Factory, Droplet, AlertCircle, MapPin, ExternalLink, ZoomIn, ZoomOut, RotateCw } from "lucide-react";
+import { Ship, Anchor, Navigation, Factory, Droplet, AlertCircle, MapPin, ExternalLink, ZoomIn, ZoomOut, RotateCw, Maximize, Minimize } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -66,6 +66,7 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
   const [vesselSpeed, setVesselSpeed] = useState<number>(0);
   const [mapCenter, setMapCenter] = useState<[number, number]>([0, 0]);
   const [zoomLevel, setZoomLevel] = useState<number>(6);
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [showProximityRadius, setShowProximityRadius] = useState<boolean>(true);
   const [isGeneratingData, setIsGeneratingData] = useState<boolean>(false);
   const [vesselRoute, setVesselRoute] = useState<any>(null);
@@ -753,7 +754,19 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
         </div>
       )}
       
-      <div className="relative h-[400px]">
+      <div className={`relative ${isFullscreen ? 'fixed inset-0 z-50 h-screen' : 'h-[600px]'}`}>
+        {isFullscreen && (
+          <div className="absolute top-2 right-2 z-[1001] bg-white dark:bg-gray-800 rounded-md shadow-md p-1">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => setIsFullscreen(false)}
+              className="h-8 w-8"
+            >
+              <Minimize className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
         <MapContainer
           center={mapCenter}
           zoom={zoomLevel}
@@ -1205,6 +1218,16 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
             onClick={loadRealVesselPosition}
           >
             <RotateCw className="h-3.5 w-3.5" />
+          </Button>
+          
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8 px-2 text-xs"
+            onClick={() => setIsFullscreen(true)}
+          >
+            <Maximize className="h-3.5 w-3.5" />
+            <span className="ml-1">Fullscreen</span>
           </Button>
         </div>
       </div>
