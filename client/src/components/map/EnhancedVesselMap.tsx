@@ -248,7 +248,7 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
           // Store the distance for display
           refinery.distanceFromVessel = distance.toFixed(1);
           
-          return distance <= 20; // Within 20km
+          return distance <= 200; // Within 200km
         });
         
         setNearbyRefineries(nearby);
@@ -271,7 +271,7 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
           // Store the distance for display
           port.distanceFromVessel = distance.toFixed(1);
           
-          return distance <= 20; // Within 20km
+          return distance <= 200; // Within 200km
         });
         
         setNearbyPorts(nearby);
@@ -392,7 +392,7 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
               // Store distance for display
               otherVessel.distanceFromVessel = distance.toFixed(1);
               
-              return distance <= 20; // Within 20km
+              return distance <= 200; // Within 200km
             });
             
             setNearbyVessels(nearby);
@@ -474,30 +474,59 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
     });
   };
   
-  // Get refinery icon with more detailed visualization
+  // Get enhanced refinery icon with more detailed visualization
   const getRefineryIcon = (refinery: any) => {
-    // Create an animated refinery icon with name display
+    // Create a sophisticated refinery icon with name and distance display
     const capacity = refinery.capacity || 0;
-    const iconSize = Math.min(Math.max(16, capacity / 50), 32); // Size based on capacity
+    const iconSize = Math.min(Math.max(22, capacity / 40), 38); // Larger size based on capacity
     
     const html = `
-      <div class="relative">
-        <div class="w-${iconSize} h-${iconSize} flex items-center justify-center bg-blue-600 border-2 border-white rounded-full animate-pulse shadow-md">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-${iconSize/2} h-${iconSize/2}">
-            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+      <div style="position: relative;">
+        <div style="width: ${iconSize}px; height: ${iconSize}px; background-color: #e74c3c; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 10px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; animation: pulse-refinery 1.5s infinite;">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: ${iconSize/1.8}px; height: ${iconSize/1.8}px;">
+            <path d="M3 22V12C3 11.4696 3.21071 10.9609 3.58579 10.5858C3.96086 10.2107 4.46957 10 5 10H19C19.5304 10 20.0391 10.2107 20.4142 10.5858C20.7893 10.9609 21 11.4696 21 12V22"/>
+            <path d="M5 10V6C5 5.46957 5.21071 4.96086 5.58579 4.58579C5.96086 4.21071 6.46957 4 7 4H17C17.5304 4 18.0391 4.21071 18.4142 4.58579C18.7893 4.96086 19 5.46957 19 6V10"/>
           </svg>
         </div>
-        <div class="absolute -bottom-6 left-1/2 transform -translate-x-1/2 bg-blue-700 text-white px-2 py-0.5 rounded text-xs whitespace-nowrap font-medium shadow-sm">
-          ${refinery.name.length > 15 ? refinery.name.slice(0, 12) + '...' : refinery.name}
+        <div style="position: absolute; bottom: -24px; left: 50%; transform: translateX(-50%); background-color: rgba(231, 76, 60, 0.9); color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; white-space: nowrap; font-size: 11px; max-width: 150px; overflow: hidden; text-overflow: ellipsis; text-align: center; z-index: 1000;">
+          ${refinery.name || 'Refinery'}
+        </div>
+        <div style="position: absolute; top: -15px; right: -25px; background-color: rgba(0, 0, 0, 0.7); color: white; padding: 1px 4px; border-radius: 3px; font-size: 10px; white-space: nowrap; z-index: 1000;">
+          ${refinery.distanceFromVessel}km
         </div>
       </div>
     `;
     
+    // Add CSS for pulsing animation
+    if (!document.getElementById('refinery-animation')) {
+      const style = document.createElement('style');
+      style.id = 'refinery-animation';
+      style.textContent = `
+        @keyframes pulse-refinery {
+          0% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7);
+          }
+          
+          70% {
+            transform: scale(1);
+            box-shadow: 0 0 0 6px rgba(231, 76, 60, 0);
+          }
+          
+          100% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(231, 76, 60, 0);
+          }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+    
     return L.divIcon({
-      className: 'refinery-marker',
+      className: 'enhanced-refinery-marker',
       html: html,
-      iconSize: [iconSize + 20, iconSize + 30], // Account for the name label
-      iconAnchor: [iconSize / 2 + 10, iconSize / 2 + 15],
+      iconSize: [iconSize + 30, iconSize + 30], // Larger size to account for labels
+      iconAnchor: [iconSize / 2 + 15, iconSize / 2 + 15],
     });
   };
   
