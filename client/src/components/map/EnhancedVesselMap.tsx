@@ -251,6 +251,11 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
           return distance <= 200; // Within 200km
         });
         
+        // Sort refineries by distance (closest first)
+        nearby.sort((a: any, b: any) => 
+          parseFloat(a.distanceFromVessel) - parseFloat(b.distanceFromVessel)
+        );
+        
         setNearbyRefineries(nearby);
       }
       
@@ -273,6 +278,11 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
           
           return distance <= 200; // Within 200km
         });
+        
+        // Sort ports by distance (closest first)
+        nearby.sort((a: any, b: any) => 
+          parseFloat(a.distanceFromVessel) - parseFloat(b.distanceFromVessel)
+        );
         
         setNearbyPorts(nearby);
       }
@@ -919,38 +929,64 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
             </Marker>
           ))}
           
-          {/* Connection lines to nearby entities */}
-          {nearbyRefineries.map((refinery: any) => (
-            <Polyline
-              key={`refinery-line-${refinery.id}`}
-              positions={[
-                realTimePosition,
-                [parseFloat(refinery.lat), parseFloat(refinery.lng)]
-              ]}
-              pathOptions={{
-                color: '#3b82f6',
-                weight: 2,
-                dashArray: '5, 5',
-                opacity: 0.6
-              }}
-            />
-          ))}
+          {/* Enhanced connection lines to nearby entities with distance-based styling */}
+          {nearbyRefineries.map((refinery: any) => {
+            // Calculate opacity and dash pattern based on distance
+            const distance = parseFloat(refinery.distanceFromVessel);
+            const opacity = Math.max(0.3, 1 - (distance / 250));
+            // Create curved lines for better visualization
+            const refineryPos = [parseFloat(refinery.lat), parseFloat(refinery.lng)];
+            const midPoint = [
+              realTimePosition[0] + (refineryPos[0] - realTimePosition[0]) * 0.5, 
+              realTimePosition[1] + (refineryPos[1] - realTimePosition[1]) * 0.5 + 0.02
+            ];
+            
+            return (
+              <Polyline
+                key={`refinery-line-${refinery.id}`}
+                positions={[
+                  realTimePosition,
+                  midPoint,
+                  refineryPos
+                ]}
+                pathOptions={{
+                  color: '#3b82f6',
+                  weight: distance < 50 ? 3 : 2,
+                  dashArray: distance < 50 ? '8, 8' : '5, 5',
+                  opacity: opacity
+                }}
+              />
+            );
+          })}
           
-          {nearbyPorts.map((port: any) => (
-            <Polyline
-              key={`port-line-${port.id}`}
-              positions={[
-                realTimePosition,
-                [parseFloat(port.lat), parseFloat(port.lng)]
-              ]}
-              pathOptions={{
-                color: '#10b981',
-                weight: 2,
-                dashArray: '5, 5',
-                opacity: 0.6
-              }}
-            />
-          ))}
+          {nearbyPorts.map((port: any) => {
+            // Calculate opacity and dash pattern based on distance
+            const distance = parseFloat(port.distanceFromVessel);
+            const opacity = Math.max(0.3, 1 - (distance / 250));
+            // Create curved lines for better visualization
+            const portPos = [parseFloat(port.lat), parseFloat(port.lng)];
+            const midPoint = [
+              realTimePosition[0] + (portPos[0] - realTimePosition[0]) * 0.5, 
+              realTimePosition[1] + (portPos[1] - realTimePosition[1]) * 0.5 - 0.02
+            ];
+            
+            return (
+              <Polyline
+                key={`port-line-${port.id}`}
+                positions={[
+                  realTimePosition,
+                  midPoint,
+                  portPos
+                ]}
+                pathOptions={{
+                  color: '#10b981',
+                  weight: distance < 50 ? 3 : 2,
+                  dashArray: distance < 50 ? '8, 8' : '5, 5',
+                  opacity: opacity
+                }}
+              />
+            );
+          })}
         </MapContainer>
         
         {/* Map Controls */}
