@@ -145,35 +145,26 @@ export function useVesselWebSocket({
       reconnectInterval.current = null;
     }
     
-    // Skip WebSocket creation and use REST API directly
-    console.log('Skipping WebSocket connection and using REST API directly');
-    fetchVesselsViaREST();
-    return;
+    // Create WebSocket connection - use proper URL construction
+    console.log('Attempting to create WebSocket connection with proper URL construction');
     
-    /* Disabled WebSocket code due to connection issues
-    // Create WebSocket connection
+    // Get the current hostname and construct a proper WebSocket URL
+    const hostname = window.location.hostname;
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.host;
-    const port = window.location.port || (protocol === 'wss:' ? '443' : '80');
     
-    // Make sure host is defined before creating the URL
-    if (!host) {
-      console.warn('WebSocket connection failed: Host is undefined, will use fallback');
-      // Use fallback immediately
-      fetchVesselsViaREST();
-      return;
-    }
-    
-    // Always use the current domain and explicit port for WebSocket connections
-    const wsUrl = `${protocol}//${host}/ws`;
+    // Use the full hostname without port for Replit deployments
+    const wsUrl = `${protocol}//${hostname}/ws`;
     
     // Add a unique token to prevent caching issues
     const uniqueToken = Math.random().toString(36).substring(2, 15);
     const finalWsUrl = `${wsUrl}?token=${uniqueToken}`;
-    */
     
-    // Disabled WebSocket connection
-    // console.log('Attempting to connect WebSocket to URL:', finalWsUrl);
+    console.log('Constructed WebSocket URL:', finalWsUrl);
+    
+    // Set a flag to try REST API if WebSocket fails
+    let useRestFallback = false;
+    
+    console.log('Attempting to connect WebSocket to URL:', finalWsUrl);
     
     const setupSocketEventListeners = (ws: WebSocket) => {
       // Connection opened
@@ -278,19 +269,25 @@ export function useVesselWebSocket({
     
     // Connect to WebSocket with additional error handling
     try {
-      // Check host availability
-      if (!host) {
-        console.error('WebSocket connection failed: Host is undefined');
-        throw new Error('Host is undefined');
+      // Check hostname availability
+      if (!hostname) {
+        console.error('WebSocket connection failed: Hostname is undefined');
+        useRestFallback = true;
+        throw new Error('Hostname is undefined');
       }
       
       // Create WebSocket connection with error handling
       try {
         socket.current = new WebSocket(finalWsUrl);
-        setupSocketEventListeners(socket.current);
+        if (socket.current) {
+          setupSocketEventListeners(socket.current);
+        } else {
+          throw new Error('Failed to create WebSocket instance');
+        }
       } catch (wsError) {
         console.error('Initial WebSocket connection failed:', wsError);
         // Fallback to REST immediately
+        useRestFallback = true;
         fetchVesselsViaREST();
         throw wsError; // Propagate the error
       }
