@@ -9,6 +9,8 @@ import {
   ZoomControl,
   useMap
 } from "react-leaflet";
+import MapEnhancements from "./MapEnhancements";
+import VesselRiskAnalytics from "./VesselRiskAnalytics";
 import L from "leaflet";
 import axios from "axios";
 import { Ship, Anchor, Navigation, Factory, Droplet, AlertCircle, MapPin, ExternalLink, ZoomIn, ZoomOut, RotateCw } from "lucide-react";
@@ -603,6 +605,25 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
           
           <ZoomControl position="topright" />
           <MapRecenter coordinates={mapCenter} />
+          
+          {/* Enhanced map features - weather, sea state, shipping lanes */}
+          <MapEnhancements 
+            enableWeather={true}
+            enableSeaState={true} 
+            enableMapStyles={true}
+            enableShippingLanes={true}
+            weatherType="none"
+          />
+          
+          {/* Advanced vessel risk analytics and collision prediction */}
+          <VesselRiskAnalytics 
+            vessel={vessel}
+            nearbyVessels={nearbyVessels || []}
+            riskAnalysisEnabled={true}
+            safetyZonesEnabled={true}
+            collisionPredictionEnabled={true}
+            enableRealTimeAlerts={true}
+          />
           
           {/* Maritime route - water-based vessel path */}
           {vesselRoute && vesselRoute.waypoints && vesselRoute.waypoints.length > 1 && (
