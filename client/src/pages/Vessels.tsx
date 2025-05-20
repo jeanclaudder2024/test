@@ -480,8 +480,37 @@ export default function Vessels() {
       const matchesTab = 
         selectedTab === "all" || 
         (selectedTab === vessel.oilCategory.toLowerCase());
+        
+      // Status filter - NEW
+      const matchesStatus = selectedStatus === 'all' || (() => {
+        const speed = vessel.currentSpeed ? Number(vessel.currentSpeed) : 0;
+        
+        // Vessel in transit - moving between locations at normal speed
+        if (selectedStatus === 'transit') {
+          return speed >= 5;
+        } 
+        // Vessel is loading/unloading - near port or refinery and slow/stopped
+        else if (selectedStatus === 'loading') {
+          const isNearPortOrRefinery = vessel.destinationPort && 
+            (vessel.distanceToDestination === undefined || 
+             (vessel.distanceToDestination && Number(vessel.distanceToDestination) < 15));
+          return speed < 2 && isNearPortOrRefinery;
+        } 
+        // Vessel has finished loading and is starting to move
+        else if (selectedStatus === 'finished') {
+          const hasRecentlyLoaded = vessel.lastPort || 
+            (vessel.voyageEvents && Array.isArray(vessel.voyageEvents) && 
+             vessel.voyageEvents.some(event => 
+               event?.type?.toLowerCase?.().includes('load')));
+          
+          // Moving at a low/medium speed after loading
+          return speed >= 2 && speed < 10 && hasRecentlyLoaded;
+        }
+        
+        return false;
+      })();
       
-      return matchesSearch && matchesOilType && matchesTab;
+      return matchesSearch && matchesOilType && matchesTab && matchesStatus;
     });
   }, [vesselsWithCategories, searchTerm, selectedOilTypes, selectedTab]);
   
@@ -661,6 +690,56 @@ export default function Vessels() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
+          
+          {/* Vessel Status Filter - NEW */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="flex items-center gap-2">
+                <Anchor className="h-4 w-4" />
+                <span>Status</span>
+                {selectedStatus !== 'all' && (
+                  <Badge variant="secondary" className="ml-1">
+                    {selectedStatus === 'transit' ? 'In Transit' :
+                     selectedStatus === 'loading' ? 'Loading' :
+                     selectedStatus === 'finished' ? 'Finished' : selectedStatus}
+                  </Badge>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56">
+              <DropdownMenuLabel>
+                <div className="flex items-center">
+                  <Ship className="h-4 w-4 mr-2 text-muted-foreground" />
+                  Filter by Vessel Status
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuCheckboxItem
+                checked={selectedStatus === 'all'}
+                onCheckedChange={() => setSelectedStatus('all')}
+              >
+                All Vessels
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={selectedStatus === 'transit'}
+                onCheckedChange={() => setSelectedStatus('transit')}
+              >
+                In Transit
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={selectedStatus === 'loading'}
+                onCheckedChange={() => setSelectedStatus('loading')}
+              >
+                Loading/Unloading
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={selectedStatus === 'finished'}
+                onCheckedChange={() => setSelectedStatus('finished')}
+              >
+                Finished Loading
+              </DropdownMenuCheckboxItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           
           {/* Region Filter */}
           <DropdownMenu>
