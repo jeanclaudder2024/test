@@ -67,6 +67,8 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
   const [mapCenter, setMapCenter] = useState<[number, number]>([0, 0]);
   const [zoomLevel, setZoomLevel] = useState<number>(6);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  const [showPorts, setShowPorts] = useState<boolean>(true);
+  const [showRefineries, setShowRefineries] = useState<boolean>(true);
   const [showProximityRadius, setShowProximityRadius] = useState<boolean>(true);
   const [isGeneratingData, setIsGeneratingData] = useState<boolean>(false);
   const [vesselRoute, setVesselRoute] = useState<any>(null);
@@ -1048,7 +1050,7 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
           )}
           
           {/* Display nearby ports */}
-          {nearbyPorts.map((port: any) => (
+          {showPorts && nearbyPorts.map((port: any) => (
             <Marker
               key={`port-${port.id}`}
               position={[parseFloat(port.lat), parseFloat(port.lng)]}
