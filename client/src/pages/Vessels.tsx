@@ -186,9 +186,10 @@ export default function Vessels() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOilTypes, setSelectedOilTypes] = useState<string[]>([]);
   const [selectedTab, setSelectedTab] = useState<string>("all");
+  const [selectedStatus, setSelectedStatus] = useState<string>("all"); // New state for vessel status
   const [isUpdatingDestinations, setIsUpdatingDestinations] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [vesselsPerPage] = useState(50); // Show 50 vessels per page
+  const [vesselsPerPage] = useState(500); // Show 500 vessels per page as requested
   const { toast } = useToast();
   
   // Maximum number of oil vessels to show (as requested by user)
