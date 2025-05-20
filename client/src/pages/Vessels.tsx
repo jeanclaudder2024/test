@@ -594,175 +594,179 @@ export default function Vessels() {
   };
 
   return (
-    <div className="container mx-auto p-4">
-      {/* Premium header with statistics */}
-      <div className="bg-gradient-to-r from-[#003366] to-[#00264d] rounded-lg shadow-lg p-6 mb-8">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
-          <div>
-            <h1 className="text-3xl font-bold flex items-center text-white">
-              <Ship className="h-8 w-8 mr-3 text-[#FF6F00]" />
-              Maritime Oil Vessel Tracker
-            </h1>
-            <p className="text-gray-300 mt-2 max-w-2xl">
-              Track global oil shipping vessels in real-time. Monitor crude oil tankers, LNG carriers, 
-              and product vessels with accurate position data and voyage details.
-            </p>
-          </div>
-          
-          {/* Connection status indicator */}
-          <div className="mt-4 md:mt-0 bg-opacity-20 bg-white p-2 rounded-md flex items-center">
-            {wsConnected ? (
-              <Badge className="bg-green-600 text-white border-0 flex items-center gap-2 px-3 py-1">
-                <Wifi className="h-3.5 w-3.5" />
-                <span>Live Data</span>
-              </Badge>
-            ) : (
-              <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 flex items-center gap-2 px-3 py-1">
-                <WifiOff className="h-3.5 w-3.5" />
-                <span>Using Cached Data</span>
-              </Badge>
-            )}
+    <div className="container mx-auto px-4 py-6">
+      {/* Professional header with navigation and statistics */}
+      <div className="bg-white rounded-xl shadow-lg dark:bg-gray-800 mb-8">
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center">
+            <div>
+              <h1 className="text-3xl font-bold flex items-center text-gray-900 dark:text-white">
+                <Ship className="h-7 w-7 mr-3 text-primary" />
+                Global Maritime Intelligence
+              </h1>
+              <p className="text-gray-600 dark:text-gray-300 mt-2 max-w-2xl text-sm">
+                Professional vessel tracking and maritime intelligence platform for global oil transportation monitoring
+              </p>
+            </div>
+            
+            {/* Connection status indicator */}
+            <div className="mt-4 lg:mt-0 flex items-center gap-3">
+              <div className="flex items-center px-3 py-1.5 rounded-full bg-gray-100 dark:bg-gray-700 text-sm">
+                <span className="text-gray-500 dark:text-gray-400 mr-2">Connection:</span>
+                {wsConnected ? (
+                  <span className="flex items-center text-green-600 dark:text-green-400 font-medium">
+                    <Wifi className="h-3.5 w-3.5 mr-1.5" />
+                    Real-time
+                  </span>
+                ) : (
+                  <span className="flex items-center text-amber-600 dark:text-amber-400 font-medium">
+                    <WifiOff className="h-3.5 w-3.5 mr-1.5" />
+                    Rest API
+                  </span>
+                )}
+              </div>
+              
+              <div className="flex items-center px-3 py-1.5 rounded-full bg-gray-100 dark:bg-gray-700 text-sm">
+                <span className="text-gray-500 dark:text-gray-400 mr-2">Data:</span>
+                <span className="text-blue-600 dark:text-blue-400 font-medium">
+                  {dataSource === 'websocket' ? 'Live' : dataSource === 'myshiptracking' ? 'MyShipTracking' : 'API'}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
         
-        {/* Stats cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-          <div className="bg-white bg-opacity-10 p-4 rounded-md backdrop-blur-sm">
-            <h3 className="text-gray-200 font-medium text-sm">Total Vessels</h3>
-            <p className="text-white text-xl font-bold mt-1">
+        {/* Key Statistics Bar */}
+        <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-gray-200 dark:divide-gray-700">
+          <div className="p-4 text-center">
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Vessels</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
               {loading ? '—' : totalCount?.toLocaleString() || vessels.length.toLocaleString()}
             </p>
           </div>
-          <div className="bg-white bg-opacity-10 p-4 rounded-md backdrop-blur-sm">
-            <h3 className="text-gray-200 font-medium text-sm">Oil Tankers</h3>
-            <p className="text-white text-xl font-bold mt-1">
+          <div className="p-4 text-center">
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Oil Tankers</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
               {loading ? '—' : 
                 vessels.filter(v => v.vesselType?.toLowerCase().includes('oil') || 
                   v.vesselType?.toLowerCase().includes('tanker')).length.toLocaleString()}
             </p>
           </div>
-          <div className="bg-white bg-opacity-10 p-4 rounded-md backdrop-blur-sm">
-            <h3 className="text-gray-200 font-medium text-sm">LNG Carriers</h3>
-            <p className="text-white text-xl font-bold mt-1">
+          <div className="p-4 text-center">
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Active Vessels</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
               {loading ? '—' : 
-                vessels.filter(v => v.vesselType?.toLowerCase().includes('lng')).length.toLocaleString()}
+                vessels.filter(v => Number(v.currentSpeed) > 2).length.toLocaleString()}
             </p>
           </div>
-          <div className="bg-white bg-opacity-10 p-4 rounded-md backdrop-blur-sm">
-            <h3 className="text-gray-200 font-medium text-sm">Data Source</h3>
-            <p className="text-white font-medium text-md mt-1 flex items-center">
-              {loading ? '—' : dataSource === 'websocket' ? 
-                <span className="flex items-center"><Wifi className="h-3.5 w-3.5 mr-1.5 text-green-400" /> Real-time WebSocket</span> : 
-                dataSource}
+          <div className="p-4 text-center">
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Loading/Unloading</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+              {loading ? '—' : 
+                vessels.filter(v => 
+                  v.currentSpeed && 
+                  Number(v.currentSpeed) < 2 && 
+                  v.destinationPort).length.toLocaleString()}
             </p>
           </div>
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-        <div>
-          <h2 className="text-2xl font-bold flex items-center">
-            <Droplet className="h-6 w-6 mr-2 text-primary" />
-            Oil Vessels Database
-          </h2>
-          <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
-            <p className="text-muted-foreground">
-              {loading ? 'Loading oil vessels...' : 
-                filteredVessels.length === 0 ? 'No vessels match your filters' :
-                `${filteredVessels.length.toLocaleString()} oil vessels found (displaying 500 per page)`
-              }
-            </p>
-            
-            {/* Only show error indicators if needed */}
-            <div className="flex items-center flex-wrap gap-1">
+      {/* Professional Filter & Control Panel */}
+      <div className="bg-white rounded-xl shadow-lg dark:bg-gray-800 mb-6">
+        <div className="p-5 border-b border-gray-200 dark:border-gray-700 flex flex-col md:flex-row justify-between items-start md:items-center">
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
+              <Droplet className="h-5 w-5 mr-2 text-primary" />
+              Vessel Database Management
+            </h2>
+            <div className="mt-1.5">
+              <p className="text-gray-600 dark:text-gray-300 text-sm">
+                {loading ? 'Retrieving vessel data...' : 
+                  filteredVessels.length === 0 ? 'No vessels match your filter criteria' :
+                  `${filteredVessels.length.toLocaleString()} vessels found • Showing 500 per page`
+                }
+              </p>
+              
               {/* Error indicator */}
               {fetchError && (
-                <Badge variant="destructive" className="ml-2 flex items-center gap-1">
-                  <AlertCircle className="h-3 w-3" />
-                  <span>Error: {fetchError}</span>
-                </Badge>
+                <div className="mt-1.5 bg-red-50 text-red-700 px-3 py-1 rounded-md text-sm flex items-center">
+                  <AlertCircle className="h-3.5 w-3.5 mr-1.5" />
+                  <span>{fetchError}</span>
+                </div>
               )}
             </div>
-            
-            {/* Status indicator legend */}
-            <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-              <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                <span>In Transit</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                <span>Loading/Unloading</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-orange-500"></span>
-                <span>Recently Loaded</span>
-              </div>
+          </div>
+          
+          {/* Status Legend */}
+          <div className="hidden md:flex items-center gap-5 px-4 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg text-xs">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+              <span className="text-gray-700 dark:text-gray-300">In Transit</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span>
+              <span className="text-gray-700 dark:text-gray-300">Loading/Unloading</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-orange-500"></span>
+              <span className="text-gray-700 dark:text-gray-300">Recently Loaded</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-gray-300"></span>
+              <span className="text-gray-700 dark:text-gray-300">Stationary</span>
             </div>
           </div>
         </div>
         
-        <div className="flex flex-wrap gap-4 mt-4 md:mt-0">
+        {/* Advanced Filters Section */}
+        <div className="p-5 grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               type="search"
-              placeholder="Search vessels by name, IMO, flag..."
-              className="pl-8 w-full md:w-[340px] border-primary/20 focus:border-primary"
+              placeholder="Search by name, IMO, flag..."
+              className="pl-9 w-full bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 py-2"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           
-          {/* Vessel Status Filter - NEW */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
-                <Anchor className="h-4 w-4" />
-                <span>Status</span>
-                {selectedStatus !== 'all' && (
-                  <Badge variant="secondary" className="ml-1">
-                    {selectedStatus === 'transit' ? 'In Transit' :
-                     selectedStatus === 'loading' ? 'Loading' :
-                     selectedStatus === 'finished' ? 'Finished' : selectedStatus}
-                  </Badge>
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56">
-              <DropdownMenuLabel>
-                <div className="flex items-center">
-                  <Ship className="h-4 w-4 mr-2 text-muted-foreground" />
-                  Filter by Vessel Status
+          {/* Status Filter - Professional Dropdown */}
+          <div>
+            <Select 
+              value={selectedStatus}
+              onValueChange={(value) => setSelectedStatus(value)}
+            >
+              <SelectTrigger className="bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 py-2">
+                <div className="flex items-center gap-2">
+                  <Anchor className="h-4 w-4 text-gray-500" />
+                  <SelectValue placeholder="Vessel Status" />
                 </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuCheckboxItem
-                checked={selectedStatus === 'all'}
-                onCheckedChange={() => setSelectedStatus('all')}
-              >
-                All Vessels
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={selectedStatus === 'transit'}
-                onCheckedChange={() => setSelectedStatus('transit')}
-              >
-                In Transit
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={selectedStatus === 'loading'}
-                onCheckedChange={() => setSelectedStatus('loading')}
-              >
-                Loading/Unloading
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={selectedStatus === 'finished'}
-                onCheckedChange={() => setSelectedStatus('finished')}
-              >
-                Finished Loading
-              </DropdownMenuCheckboxItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="transit">
+                  <div className="flex items-center">
+                    <span className="w-2 h-2 rounded-full bg-blue-500 mr-2"></span>
+                    In Transit
+                  </div>
+                </SelectItem>
+                <SelectItem value="loading">
+                  <div className="flex items-center">
+                    <span className="w-2 h-2 rounded-full bg-green-500 mr-2"></span>
+                    Loading/Unloading
+                  </div>
+                </SelectItem>
+                <SelectItem value="finished">
+                  <div className="flex items-center">
+                    <span className="w-2 h-2 rounded-full bg-orange-500 mr-2"></span>
+                    Recently Loaded
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           
           {/* Region Filter */}
           <DropdownMenu>
