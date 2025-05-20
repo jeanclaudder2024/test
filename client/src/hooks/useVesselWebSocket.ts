@@ -145,6 +145,12 @@ export function useVesselWebSocket({
       reconnectInterval.current = null;
     }
     
+    // Skip WebSocket creation and use REST API directly
+    console.log('Skipping WebSocket connection and using REST API directly');
+    fetchVesselsViaREST();
+    return;
+    
+    /* Disabled WebSocket code due to connection issues
     // Create WebSocket connection
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = window.location.host;
@@ -164,8 +170,10 @@ export function useVesselWebSocket({
     // Add a unique token to prevent caching issues
     const uniqueToken = Math.random().toString(36).substring(2, 15);
     const finalWsUrl = `${wsUrl}?token=${uniqueToken}`;
+    */
     
-    console.log('Attempting to connect WebSocket to URL:', finalWsUrl);
+    // Disabled WebSocket connection
+    // console.log('Attempting to connect WebSocket to URL:', finalWsUrl);
     
     const setupSocketEventListeners = (ws: WebSocket) => {
       // Connection opened
