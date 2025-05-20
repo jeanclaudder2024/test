@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Vessel } from '@shared/schema';
+import { Vessel } from '@/types';
 import { vesselClient, ConnectionStatus, VesselTrackingConfig } from '@/api/vesselWebSocketClient';
 
 interface UseVesselClientProps {

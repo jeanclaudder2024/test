@@ -4,7 +4,7 @@
  * This module provides a reliable WebSocket client for vessel tracking
  * with automatic fallback to REST API when WebSocket connection fails.
  */
-import { Vessel } from '@shared/schema';
+import { Vessel } from '@/types';
 
 // Configuration interface
 export interface VesselTrackingConfig {

@@ -727,7 +727,11 @@ export default function Vessels() {
           </Button>
           
           <Button 
-            onClick={fetchVesselsFromAPI}
+            onClick={() => {
+              refreshData();
+              // Also try API as a fallback
+              fetchVesselsFromAPI();
+            }}
             className="bg-red-50 text-red-600 border-red-200 hover:bg-red-100"
           >
             <Fuel className="h-4 w-4 mr-2" />
