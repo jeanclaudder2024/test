@@ -888,6 +888,74 @@ export default function VesselDetail() {
                       </Badge>
                     </div>
                     
+                    {/* Journey Progress Section */}
+                    {vessel.departurePort && vessel.destinationPort && (
+                      <>
+                        <div className="flex items-center justify-between mt-1">
+                          <span className="text-sm text-muted-foreground">Voyage Progress</span>
+                          <div className="text-sm font-medium">
+                            {(() => {
+                              // Extract enhanced vessel data from metadata if available
+                              try {
+                                const metadata = vessel.metadata ? JSON.parse(vessel.metadata) : null;
+                                const voyageProgress = metadata?.voyageProgress || 0;
+                                return (
+                                  <span className="flex items-center">
+                                    {Math.round(voyageProgress)}%
+                                    {metadata?.generatedData && 
+                                      <Badge variant="outline" className="ml-2 text-xs bg-blue-50 border-blue-200 text-blue-700">AI Enhanced</Badge>
+                                    }
+                                  </span>
+                                );
+                              } catch (error) {
+                                console.error("Error parsing vessel metadata:", error);
+                                return "N/A";
+                              }
+                            })()}
+                          </div>
+                        </div>
+                        
+                        <div className="mt-1 mb-2 relative">
+                          <Progress 
+                            value={(() => {
+                              // Extract voyage progress from metadata
+                              try {
+                                const metadata = vessel.metadata ? JSON.parse(vessel.metadata) : null;
+                                return metadata?.voyageProgress || 0;
+                              } catch (error) {
+                                return 0;
+                              }
+                            })()} 
+                            className="h-2 voyage-progress-bar" 
+                          />
+                          {/* Pulsing indicator for active voyage */}
+                          {(() => {
+                            try {
+                              const metadata = vessel.metadata ? JSON.parse(vessel.metadata) : null;
+                              const progress = metadata?.voyageProgress || 0;
+                              return progress > 0 && progress < 100 ? (
+                                <div 
+                                  className="absolute top-0 h-2 rounded pulse-animation" 
+                                  style={{ 
+                                    left: `${progress - 1}%`, 
+                                    width: '6px', 
+                                    backgroundColor: 'var(--primary)'
+                                  }}
+                                />
+                              ) : null;
+                            } catch (error) {
+                              return null;
+                            }
+                          })()}
+                        </div>
+                        
+                        <div className="flex text-xs justify-between px-1 mb-3">
+                          <span className="text-muted-foreground">{vessel.departurePort.split(',')[0]}</span>
+                          <span className="text-muted-foreground">{vessel.destinationPort.split(',')[0]}</span>
+                        </div>
+                      </>
+                    )}
+                    
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">Current Speed</span>
                       <span className="font-medium">{vessel.currentSpeed || 0} knots</span>
