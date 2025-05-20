@@ -78,10 +78,11 @@ export async function generateCargoManifest(req: Request, res: Response) {
     // Set response headers for PDF download
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', 
-      `attachment; filename="Cargo_Manifest_${vessel.name}_${new Date().toISOString().slice(0,10)}.pdf"`);
+      `inline; filename="Cargo_Manifest_${vessel.name}_${new Date().toISOString().slice(0,10)}.pdf"`);
+    res.setHeader('Content-Length', pdfBuffer.length);
     
     // Send PDF as response
-    return res.send(pdfBuffer);
+    return res.end(pdfBuffer);
     
   } catch (error) {
     console.error('Error generating cargo manifest:', error);
