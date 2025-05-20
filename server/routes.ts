@@ -63,6 +63,7 @@ import { seedBrokers } from "./services/seedService";
 
 // Import route handlers
 import { directPdfRouter } from './routes/direct-pdf';
+import { enhancedPdfRouter } from './routes/enhanced-pdf';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication
@@ -2566,8 +2567,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // API routes for vessel distribution data
   app.use("/api/distribution", vesselDistributionRouter);
   
-  // Register the direct PDF document handler
+  // Register PDF document handlers
   app.use(directPdfRouter);
+  app.use(enhancedPdfRouter);
   
   // API routes for trading data
   app.use("/api/trading", tradingRouter);
