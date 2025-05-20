@@ -33,7 +33,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from 'wouter';
 import { formatDate } from '@/lib/utils';
-import { Ship, Search, Plus, Filter, Droplet, Fuel, Layers, Tag, Anchor, AlertCircle, Wifi, WifiOff } from 'lucide-react';
+import { Ship, Search, Plus, Filter, Droplet, Fuel, Layers, Tag, Anchor, AlertCircle, Wifi, WifiOff, ChevronLeft, ChevronRight } from 'lucide-react';
 import { OIL_PRODUCT_TYPES, REGIONS } from '@shared/constants';
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -962,76 +962,31 @@ export default function Vessels() {
                   Showing {Math.min(indexOfFirstVessel + 1, filteredVessels.length)} to {Math.min(indexOfLastVessel, filteredVessels.length)} of {filteredVessels.length} vessels
                 </div>
                 
-                <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious 
-                        onClick={handleGoToPreviousPage} 
-                        className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                      />
-                    </PaginationItem>
-                    
-                    {/* Show first page */}
-                    {currentPage > 3 && (
-                      <PaginationItem>
-                        <PaginationLink onClick={() => handleGoToPage(1)}>1</PaginationLink>
-                      </PaginationItem>
-                    )}
-                    
-                    {/* Show ellipsis if needed */}
-                    {currentPage > 4 && (
-                      <PaginationItem>
-                        <PaginationEllipsis />
-                      </PaginationItem>
-                    )}
-                    
-                    {/* Show previous page if not first page */}
-                    {currentPage > 1 && (
-                      <PaginationItem>
-                        <PaginationLink onClick={() => handleGoToPage(currentPage - 1)}>
-                          {currentPage - 1}
-                        </PaginationLink>
-                      </PaginationItem>
-                    )}
-                    
-                    {/* Current page */}
-                    <PaginationItem>
-                      <PaginationLink isActive>{currentPage}</PaginationLink>
-                    </PaginationItem>
-                    
-                    {/* Show next page if not last page */}
-                    {currentPage < filteredTotalPages && (
-                      <PaginationItem>
-                        <PaginationLink onClick={() => handleGoToPage(currentPage + 1)}>
-                          {currentPage + 1}
-                        </PaginationLink>
-                      </PaginationItem>
-                    )}
-                    
-                    {/* Show ellipsis if needed */}
-                    {currentPage < filteredTotalPages - 3 && (
-                      <PaginationItem>
-                        <PaginationEllipsis />
-                      </PaginationItem>
-                    )}
-                    
-                    {/* Show last page */}
-                    {currentPage < filteredTotalPages - 2 && (
-                      <PaginationItem>
-                        <PaginationLink onClick={() => handleGoToPage(filteredTotalPages)}>
-                          {filteredTotalPages}
-                        </PaginationLink>
-                      </PaginationItem>
-                    )}
-                    
-                    <PaginationItem>
-                      <PaginationNext 
-                        onClick={handleGoToNextPage} 
-                        className={currentPage === filteredTotalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
+                <div className="flex items-center justify-center space-x-2">
+                  <Button 
+                    variant="outline"
+                    size="sm"
+                    onClick={handleGoToPreviousPage}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-1" />
+                    Previous
+                  </Button>
+                  
+                  <span className="text-sm">
+                    Page {currentPage} of {filteredTotalPages}
+                  </span>
+                  
+                  <Button 
+                    variant="outline"
+                    size="sm"
+                    onClick={handleGoToNextPage}
+                    disabled={currentPage === filteredTotalPages}
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </div>
               </div>
             </div>
           )}
