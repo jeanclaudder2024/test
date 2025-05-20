@@ -643,24 +643,25 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
       portType = 'commercial';
     }
     
-    // Port icon SVG based on type
+    // Port icon SVG using anchor symbol as requested
     let portSymbol = `
-      <path d="M20 5H4V19H20V5Z" />
-      <path d="M4 10H20" />
-      <path d="M4 14H20" />
-      <path d="M9 5V19" />
-      <path d="M14 5V19" />
+      <path d="M12 2a2 2 0 0 0-2 2c0 1.1.9 2 2 2s2-.9 2-2a2 2 0 0 0-2-2z"/>
+      <path d="M12 8a1 1 0 0 0-1 1v7.92l-1.8-1.6a1 1 0 0 0-1.4 1.4l4 3.5a1 1 0 0 0 1.4 0l4-3.5a1 1 0 0 0-1.4-1.4L12 16.92V9a1 1 0 0 0-1-1zM4.16 10a.5.5 0 0 0-.09.992l.09.008H7L3 18h18l-4-8h2.83a.5.5 0 0 0 .09-.992L19.84 10H4.16z"/>
     `;
     
     if (portType === 'oil_terminal') {
       portSymbol = `
-        <path d="M8 2H6a2 2 0 00-2 2v2c0 1.1.9 2 2 2h2a2 2 0 002-2V4a2 2 0 00-2-2z"/>
-        <path d="M18 2h-2a2 2 0 00-2 2v2c0 1.1.9 2 2 2h2a2 2 0 002-2V4a2 2 0 00-2-2z"/>
-        <path d="M13 10h-2a2 2 0 00-2 2v8c0 1.1.9 2 2 2h2a2 2 0 002-2v-8a2 2 0 00-2-2z"/>
+        <path d="M12 2a2 2 0 0 0-2 2c0 1.1.9 2 2 2s2-.9 2-2a2 2 0 0 0-2-2z"/>
+        <path d="M12 8a1 1 0 0 0-1 1v7.92l-1.8-1.6a1 1 0 0 0-1.4 1.4l4 3.5a1 1 0 0 0 1.4 0l4-3.5a1 1 0 0 0-1.4-1.4L12 16.92V9a1 1 0 0 0-1-1z"/>
+        <path d="M4.16 10a.5.5 0 0 0-.09.992l.09.008H7L5 16h14l-2-6h2.83a.5.5 0 0 0 .09-.992L19.84 10H4.16z"/>
+        <circle cx="16" cy="7" r="3" fill="currentColor" />
       `;
     } else if (portType === 'lng_terminal') {
       portSymbol = `
-        <path d="M10 5.5V2a1 1 0 0 0-1.74-.67L3.51 6.79a1 1 0 0 0 .75 1.7H8L10 5.5zm-4 2v14h16V7.5H6z"/>
+        <path d="M12 2a2 2 0 0 0-2 2c0 1.1.9 2 2 2s2-.9 2-2a2 2 0 0 0-2-2z"/>
+        <path d="M12 8a1 1 0 0 0-1 1v7.92l-1.8-1.6a1 1 0 0 0-1.4 1.4l4 3.5a1 1 0 0 0 1.4 0l4-3.5a1 1 0 0 0-1.4-1.4L12 16.92V9a1 1 0 0 0-1-1z"/>
+        <path d="M4.16 10a.5.5 0 0 0-.09.992l.09.008H7L5 16h14l-2-6h2.83a.5.5 0 0 0 .09-.992L19.84 10H4.16z"/>
+        <path d="M5 3L7 8M19 3L17 8" stroke-width="1.5" />
       `;
     }
     
