@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import '../styles/map-status.css';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, Search } from 'lucide-react';
@@ -428,11 +429,40 @@ const SimpleMap: React.FC = () => {
                 })}
               >
                 <Popup>
-                  <div className="p-1">
+                  <div className="p-2">
                     <h3 className="font-bold text-base">{vessel.name}</h3>
-                    <p className="text-sm">Type: {vessel.vesselType}</p>
-                    <p className="text-sm">IMO: {vessel.imo}</p>
-                    <p className="text-sm">Flag: {vessel.flag}</p>
+                    
+                    {/* Status badges */}
+                    <div className="mt-2 mb-2 flex flex-wrap gap-2">
+                      {showVesselStatus && (
+                        <div 
+                          className="inline-block px-2 py-0.5 rounded-full text-xs text-white"
+                          style={{ backgroundColor: getStatusColor(getVesselStatus(vessel)) }}
+                        >
+                          {getVesselStatus(vessel)}
+                        </div>
+                      )}
+                      <div className="inline-block px-2 py-0.5 rounded-full text-xs bg-blue-100 text-blue-800">
+                        {getVesselRegion(vessel)}
+                      </div>
+                      <div className="inline-block px-2 py-0.5 rounded-full text-xs bg-slate-100 text-slate-800">
+                        {vessel.vesselType}
+                      </div>
+                    </div>
+                    
+                    {/* Details */}
+                    <div className="mt-1">
+                      <p className="text-sm">IMO: {vessel.imo || 'N/A'}</p>
+                      <p className="text-sm">MMSI: {vessel.mmsi || 'N/A'}</p>
+                      <p className="text-sm">Flag: {vessel.flag || 'Unknown'}</p>
+                      {vessel.speed && (
+                        <p className="text-sm">Speed: {typeof vessel.speed === 'string' ? vessel.speed : vessel.speed.toFixed(1)} knots</p>
+                      )}
+                      {vessel.destination && (
+                        <p className="text-sm">Destination: {vessel.destination}</p>
+                      )}
+                    </div>
+                    
                     <Button
                       size="sm"
                       className="mt-2 w-full"

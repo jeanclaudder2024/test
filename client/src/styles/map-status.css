@@ -1,0 +1,24 @@
+/* Vessel status colors for map icons */
+.vessel-icon.status-stopped {
+  filter: drop-shadow(0 0 5px #ef4444);
+}
+
+.vessel-icon.status-maneuvering {
+  filter: drop-shadow(0 0 5px #f97316);
+}
+
+.vessel-icon.status-slow {
+  filter: drop-shadow(0 0 5px #3b82f6);
+}
+
+.vessel-icon.status-medium {
+  filter: drop-shadow(0 0 5px #10b981);
+}
+
+.vessel-icon.status-fast {
+  filter: drop-shadow(0 0 5px #8b5cf6);
+}
+
+.vessel-icon.status-unknown {
+  filter: drop-shadow(0 0 5px #6b7280);
+}
