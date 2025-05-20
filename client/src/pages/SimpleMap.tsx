@@ -3,6 +3,10 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import '../styles/map-status.css';
+import tankerIcon from '../assets/tanker-icon.svg';
+import cargoIcon from '../assets/cargo-icon.svg';
+import passengerIcon from '../assets/passenger-icon.svg';
+import vesselIcon from '../assets/vessel-icon.svg';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, Search } from 'lucide-react';
@@ -197,6 +201,21 @@ const SimpleMap: React.FC = () => {
       case 'Medium': return '#10b981'; // Green
       case 'Fast': return '#8b5cf6'; // Purple
       default: return '#6b7280'; // Gray
+    }
+  };
+  
+  // Get appropriate vessel icon based on vessel type
+  const getVesselIconUrl = (vessel: Vessel): string => {
+    const type = vessel.vesselType?.toLowerCase() || '';
+    
+    if (type.includes('tanker') || type.includes('oil') || type.includes('lng')) {
+      return tankerIcon;
+    } else if (type.includes('cargo') || type.includes('container') || type.includes('bulk')) {
+      return cargoIcon;
+    } else if (type.includes('passenger') || type.includes('cruise') || type.includes('ferry')) {
+      return passengerIcon;
+    } else {
+      return vesselIcon;
     }
   };
   
@@ -428,10 +447,10 @@ const SimpleMap: React.FC = () => {
                 key={`vessel-${vessel.id}`}
                 position={[parseFloat(vessel.currentLat || "0"), parseFloat(vessel.currentLng || "0")]}
                 icon={new L.Icon({
-                  iconUrl: 'https://cdn-icons-png.flaticon.com/512/3155/3155845.png',
-                  iconSize: [32, 32],
-                  iconAnchor: [16, 16],
-                  popupAnchor: [0, -16],
+                  iconUrl: getVesselIconUrl(vessel),
+                  iconSize: [36, 36],
+                  iconAnchor: [18, 18],
+                  popupAnchor: [0, -18],
                   className: showVesselStatus ? `vessel-icon status-${getVesselStatus(vessel).toLowerCase()}` : 'vessel-icon'
                 })}
               >
