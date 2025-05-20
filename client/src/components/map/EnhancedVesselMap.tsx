@@ -1006,6 +1006,18 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
                     <div className="text-gray-500">Distance:</div>
                     <div className="font-medium">{refinery.distanceFromVessel} km</div>
                   </div>
+                  
+                  <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                    <Button 
+                      size="sm"
+                      variant="outline"
+                      className="w-full h-7 text-xs"
+                      onClick={() => window.open(`/refineries/${refinery.id}`, '_blank')}
+                    >
+                      <ExternalLink className="h-3 w-3 mr-1" />
+                      View Refinery Details
+                    </Button>
+                  </div>
                 </div>
               </Popup>
             </Marker>
@@ -1078,6 +1090,18 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
                     
                     <div className="text-gray-500">Distance:</div>
                     <div className="font-medium">{port.distanceFromVessel} km</div>
+                  </div>
+                  
+                  <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                    <Button 
+                      size="sm"
+                      variant="outline"
+                      className="w-full h-7 text-xs"
+                      onClick={() => window.open(`/ports/${port.id}`, '_blank')}
+                    >
+                      <ExternalLink className="h-3 w-3 mr-1" />
+                      View Port Details
+                    </Button>
                   </div>
                 </div>
               </Popup>
@@ -1231,6 +1255,28 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
           >
             <Maximize className="h-3.5 w-3.5" />
             <span className="ml-1">Fullscreen</span>
+          </Button>
+          
+          <Separator className="my-1" />
+          
+          <Button
+            size="sm"
+            variant={showPorts ? "default" : "outline"}
+            className="h-8 px-2 text-xs"
+            onClick={() => setShowPorts(!showPorts)}
+          >
+            <Anchor className="h-3.5 w-3.5 mr-1" />
+            {showPorts ? 'Hide Ports' : 'Show Ports'}
+          </Button>
+          
+          <Button
+            size="sm"
+            variant={showRefineries ? "default" : "outline"}
+            className="h-8 px-2 text-xs"
+            onClick={() => setShowRefineries(!showRefineries)}
+          >
+            <Factory className="h-3.5 w-3.5 mr-1" />
+            {showRefineries ? 'Hide Refineries' : 'Show Refineries'}
           </Button>
         </div>
       </div>
