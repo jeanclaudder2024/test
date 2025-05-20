@@ -67,6 +67,7 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
   const [isGeneratingData, setIsGeneratingData] = useState<boolean>(false);
   const [vesselRoute, setVesselRoute] = useState<any>(null);
   const [isLoadingRoute, setIsLoadingRoute] = useState<boolean>(false);
+  const [routeGenerationError, setRouteGenerationError] = useState<string | null>(null);
   const mapRef = useRef<any>(null);
   
   // Load actual vessel position from API
@@ -279,7 +280,16 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
   
   // Load maritime route data for vessel
   const loadVesselRoute = useCallback(async () => {
-    if (!vessel || !vessel.id || !vessel.destinationPort) return;
+    if (!vessel || !vessel.id) return;
+    
+    // Reset previous errors
+    setRouteGenerationError(null);
+    
+    // Check if vessel has destination port
+    if (!vessel.destinationPort) {
+      setRouteGenerationError("No destination port set for vessel");
+      return;
+    }
     
     setIsLoadingRoute(true);
     try {
@@ -291,28 +301,55 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
         
         toast({
           title: "Loaded maritime route",
-          description: "Showing vessel's water-based navigation path",
+          description: "Showing vessel's water-based navigation path that avoids land",
           duration: 3000
         });
       }
     } catch (error) {
       console.error("Failed to load vessel route:", error);
       
-      // Check if there's a route in vessel metadata
+      let errorMessage = "Failed to generate maritime route";
+      
+      // Extract error message if available
+      if (error.response && error.response.data && error.response.data.message) {
+        errorMessage = error.response.data.message;
+      }
+      
+      setRouteGenerationError(errorMessage);
+      
+      // Check if there's a route in vessel metadata as fallback
       try {
         if (vessel.metadata) {
           const metadata = JSON.parse(vessel.metadata);
           if (metadata.route && metadata.route.waypoints) {
             setVesselRoute(metadata.route);
+            
+            toast({
+              title: "Using cached route",
+              description: "Displaying previously calculated maritime path",
+              duration: 3000
+            });
+            
+            // Clear error if we found a cached route
+            setRouteGenerationError(null);
           }
         }
       } catch (metadataError) {
         console.error("Error parsing vessel metadata for route:", metadataError);
       }
+      
+      if (routeGenerationError) {
+        toast({
+          title: "Route generation issue",
+          description: errorMessage,
+          variant: "destructive",
+          duration: 5000
+        });
+      }
     } finally {
       setIsLoadingRoute(false);
     }
-  }, [vessel, toast]);
+  }, [vessel, toast, routeGenerationError]);
 
   // Load data when component mounts or vessel changes
   useEffect(() => {
@@ -330,6 +367,43 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
       findNearbyLocations();
     }
   }, [realTimePosition, findNearbyLocations]);
+  
+  // Add route direction arrows when route is loaded
+  useEffect(() => {
+    if (vesselRoute && vesselRoute.waypoints && vesselRoute.waypoints.length > 1) {
+      // This effect adds the direction path decorations for the route
+      // It's run after the route is rendered on the map
+      
+      try {
+        const mapElement = document.querySelector('.leaflet-container');
+        if (mapElement) {
+          const map = (mapElement as any)._leaflet_map;
+          if (map) {
+            // Force map to redraw and update the route path with directional markers
+            map.invalidateSize();
+            
+            // Add CSS to create animated path effect
+            const style = document.createElement('style');
+            style.innerHTML = `
+              .vessel-route-path {
+                stroke-dasharray: 8, 4;
+                stroke-dashoffset: 0;
+                animation: dash 30s linear infinite;
+              }
+              @keyframes dash {
+                to {
+                  stroke-dashoffset: -100;
+                }
+              }
+            `;
+            document.head.appendChild(style);
+          }
+        }
+      } catch (error) {
+        console.error("Error adding route direction indicators:", error);
+      }
+    }
+  }, [vesselRoute]);
   
   // Get vessel icon based on vessel type and heading
   const getVesselIcon = () => {
@@ -463,6 +537,48 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
   
   return (
     <div className="bg-white dark:bg-gray-900 rounded-md overflow-hidden">
+      {/* Loading state or error message */}
+      {(isLoadingRoute || routeGenerationError) && (
+        <div className="absolute top-2 right-2 z-50 max-w-[200px]">
+          {isLoadingRoute && (
+            <div className="bg-blue-100 border border-blue-300 text-blue-800 px-2 py-1 rounded text-xs flex items-center">
+              <div className="animate-spin rounded-full h-3 w-3 border-t-2 border-blue-600 mr-2"></div>
+              Calculating maritime route...
+            </div>
+          )}
+          
+          {routeGenerationError && !isLoadingRoute && (
+            <div className="bg-amber-100 border border-amber-300 text-amber-800 px-2 py-1 rounded text-xs">
+              {routeGenerationError}
+            </div>
+          )}
+        </div>
+      )}
+      
+      {/* Route info panel - only shown when route exists */}
+      {vesselRoute && vesselRoute.waypoints && vesselRoute.waypoints.length > 1 && (
+        <div className="absolute bottom-2 left-2 z-50 max-w-[200px] bg-white/90 dark:bg-gray-800/90 rounded border border-gray-200 dark:border-gray-700 p-2 text-xs">
+          <div className="font-medium text-gray-900 dark:text-gray-100 flex items-center">
+            <Navigation className="h-3 w-3 mr-1 text-blue-600" />
+            Maritime Route
+          </div>
+          <div className="mt-1 text-gray-600 dark:text-gray-300 text-[10px] space-y-0.5">
+            <div className="flex justify-between">
+              <span>Distance:</span>
+              <span className="font-medium">{vesselRoute.distance ? Math.round(vesselRoute.distance) : '?'} km</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Waypoints:</span>
+              <span className="font-medium">{vesselRoute.waypoints.length}</span>
+            </div>
+            <div className="mt-1 flex items-center text-blue-600 dark:text-blue-400">
+              <Droplet className="h-3 w-3 mr-1" />
+              <span>Following water-based path</span>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div className="relative h-[400px]">
         <MapContainer
           center={mapCenter}
@@ -487,6 +603,72 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
           
           <ZoomControl position="topright" />
           <MapRecenter coordinates={mapCenter} />
+          
+          {/* Maritime route - water-based vessel path */}
+          {vesselRoute && vesselRoute.waypoints && vesselRoute.waypoints.length > 1 && (
+            <Polyline
+              positions={vesselRoute.waypoints}
+              pathOptions={{
+                color: '#0284c7',
+                weight: 3,
+                opacity: 0.8,
+                dashArray: '8, 4',
+                lineCap: 'round',
+                lineJoin: 'round',
+                className: 'vessel-route-path animate-pulse'
+              }}
+            >
+              <Popup>
+                <div className="p-1">
+                  <h3 className="text-sm font-semibold">Maritime Route</h3>
+                  <p className="text-xs text-gray-600">
+                    {vesselRoute.distance ? `Distance: ${Math.round(vesselRoute.distance)} km` : 'Marine navigation path'}
+                  </p>
+                  <p className="text-xs text-blue-600">
+                    Following international shipping lanes
+                  </p>
+                </div>
+              </Popup>
+            </Polyline>
+          )}
+          
+          {/* Route waypoint markers */}
+          {vesselRoute && vesselRoute.waypoints && vesselRoute.waypoints.length > 1 && (
+            vesselRoute.waypoints.map((point, index) => {
+              // Only show start, end, and major waypoints to avoid cluttering
+              if (index === 0 || index === vesselRoute.waypoints.length - 1 || index % 3 === 0) {
+                return (
+                  <Circle
+                    key={`waypoint-${index}`}
+                    center={point}
+                    radius={300} // 300m radius for waypoint markers
+                    pathOptions={{
+                      color: index === 0 ? '#10b981' : 
+                             index === vesselRoute.waypoints.length - 1 ? '#ef4444' : 
+                             '#6366f1',
+                      fillColor: index === 0 ? '#10b981' : 
+                                index === vesselRoute.waypoints.length - 1 ? '#ef4444' : 
+                                '#6366f1',
+                      fillOpacity: 0.6,
+                      weight: 1
+                    }}
+                  >
+                    <Popup>
+                      <div className="p-1">
+                        <h3 className="text-sm font-semibold">
+                          {index === 0 ? 'Departure Point' : 
+                           index === vesselRoute.waypoints.length - 1 ? 'Destination' : 
+                           `Waypoint ${index}`}
+                        </h3>
+                        <p className="text-xs">Lat: {point[0].toFixed(4)}, Lng: {point[1].toFixed(4)}</p>
+                      </div>
+                    </Popup>
+                  </Circle>
+                );
+              }
+              return null;
+            })
+          )}
           
           {/* Vessel Marker with heading */}
           <Marker position={realTimePosition} icon={getVesselIcon()}>
