@@ -627,9 +627,9 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
   
   // Get port icon with improved visualization and name
   const getPortIcon = (port: any) => {
-    // Determine icon style based on port type
+    // Determine icon style based on port type or if it's a destination
     let iconColor = "green-600";
-    let iconSize = 24;
+    let iconSize = port.isDestination ? 30 : 24; // Larger icon for destination
     let iconSymbol = `
       <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
       <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
@@ -642,25 +642,45 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
     if (port.portType?.toLowerCase().includes('oil')) {
       iconColor = "amber-600";
       iconSymbol = `<path d="M7 16a3 3 0 0 1 0 6 3 3 0 0 0 0 6h10a3 3 0 0 0 0-6 3 3 0 0 1 0-6"/>`;
-      iconSize = 28;
+      iconSize = port.isDestination ? 32 : 28;
     } else if (port.portType?.toLowerCase().includes('lng') || port.portType?.toLowerCase().includes('gas')) {
       iconColor = "purple-600";
       iconSymbol = `<path d="M10 5.5V2a1 1 0 0 0-1.74-.67L3.51 6.79a1 1 0 0 0 .75 1.7H8L10 5.5zm-4 2v14h16V7.5H6z"/>`;
-      iconSize = 26;
+      iconSize = port.isDestination ? 30 : 26;
     } else if (port.portType?.toLowerCase().includes('container')) {
       iconColor = "blue-500";
       iconSymbol = `<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/>`;
     }
     
+    // For destination port, override color to red
+    if (port.isDestination) {
+      iconColor = "red-600"; // Set destination ports to red
+    }
+    
     // Optional water ripple animation for oil/LNG ports
     const hasWaterEffect = port.portType?.toLowerCase().includes('oil') || port.portType?.toLowerCase().includes('lng');
     
-    // Add distance indicator for the expanded 200km radius display
+    // Special pulsing effect for destination port
+    const animationStyle = port.isDestination 
+      ? "animation: destination-pulse 2s infinite;" 
+      : "animation: pulse-port 2s infinite;";
+    
+    // Border style based on destination status
+    const borderStyle = port.isDestination 
+      ? "border-3 border-red-600" 
+      : "border-2 border-white";
+    
+    // Special destination label
+    const destinationLabel = port.isDestination ? 
+      `<div class="absolute -top-7 left-1/2 transform -translate-x-1/2 bg-red-600 text-white px-2 py-0.5 rounded text-xs font-bold whitespace-nowrap shadow-sm z-30">
+        VOYAGE DESTINATION
+      </div>` : '';
     
     // Create HTML for port icon with name
     const html = `
       <div class="relative">
-        <div class="w-${iconSize} h-${iconSize} flex items-center justify-center bg-${iconColor} border-2 border-white rounded-full shadow-md ${hasWaterEffect ? 'water-ripple-effect' : ''}" style="animation: pulse-port 2s infinite;">
+        ${destinationLabel}
+        <div class="w-${iconSize} h-${iconSize} flex items-center justify-center bg-${iconColor} ${borderStyle} rounded-full shadow-md ${hasWaterEffect ? 'water-ripple-effect' : ''}" style="${animationStyle}">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-${iconSize/2} h-${iconSize/2}">
             ${iconSymbol}
           </svg>
@@ -668,9 +688,10 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
         <div class="absolute -bottom-6 left-1/2 transform -translate-x-1/2 bg-${iconColor} text-white px-2 py-0.5 rounded text-xs whitespace-nowrap font-medium shadow-sm">
           ${port.name.length > 15 ? port.name.slice(0, 12) + '...' : port.name}
         </div>
-        <div class="absolute -top-4 -right-4 bg-black bg-opacity-70 text-white px-1 py-0.5 rounded text-[9px] whitespace-nowrap shadow-sm z-20">
-          ${port.distanceFromVessel}km
-        </div>
+        ${port.distanceFromVessel ? 
+          `<div class="absolute -top-4 -right-4 bg-black bg-opacity-70 text-white px-1 py-0.5 rounded text-[9px] whitespace-nowrap shadow-sm z-20">
+            ${port.distanceFromVessel}km
+          </div>` : ''}
       </div>
     `;
     
@@ -916,6 +937,43 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
             />
           )}
           
+          {/* Destination Refinery (if exists) */}
+          {destinationRefineryMarker && (
+            <Marker
+              key={`destination-refinery-${destinationRefineryMarker.id}`}
+              position={[parseFloat(destinationRefineryMarker.lat), parseFloat(destinationRefineryMarker.lng)]}
+              icon={getRefineryIcon({...destinationRefineryMarker, isDestination: true})}
+              zIndexOffset={1000} // Make sure destination is on top
+            >
+              <Popup>
+                <div className="text-sm space-y-2 max-w-[250px]">
+                  <div className="font-semibold text-base flex items-center">
+                    <Factory className="h-4 w-4 mr-1.5 text-red-600" />
+                    {destinationRefineryMarker.name}
+                  </div>
+                  
+                  <div className="text-xs">
+                    <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                      Destination Refinery
+                    </Badge>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
+                    <div className="text-gray-500">Country:</div>
+                    <div>{destinationRefineryMarker.country || 'N/A'}</div>
+                    
+                    <div className="text-gray-500">Capacity:</div>
+                    <div>{destinationRefineryMarker.capacity ? `${destinationRefineryMarker.capacity} kb/d` : 'N/A'}</div>
+                    
+                    <div className="text-red-600 font-medium col-span-2 mt-1">
+                      Final destination for this voyage
+                    </div>
+                  </div>
+                </div>
+              </Popup>
+            </Marker>
+          )}
+          
           {/* Nearby Refineries */}
           {nearbyRefineries.map((refinery: any) => (
             <Marker
@@ -952,6 +1010,44 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
           ))}
           
           {/* Nearby Ports */}
+          {/* Display destination port with special styling if it exists */}
+          {destinationPortMarker && (
+            <Marker
+              key={`destination-port-${destinationPortMarker.id}`}
+              position={[parseFloat(destinationPortMarker.lat), parseFloat(destinationPortMarker.lng)]}
+              icon={getPortIcon({...destinationPortMarker, isDestination: true})}
+              zIndexOffset={1000} // Make sure destination is on top
+            >
+              <Popup>
+                <div className="text-sm space-y-2 max-w-[250px]">
+                  <div className="font-semibold text-base flex items-center">
+                    <Anchor className="h-4 w-4 mr-1.5 text-red-600" />
+                    {destinationPortMarker.name}
+                  </div>
+                  
+                  <div className="text-xs">
+                    <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                      Destination Port
+                    </Badge>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
+                    <div className="text-gray-500">Country:</div>
+                    <div>{destinationPortMarker.country || 'N/A'}</div>
+                    
+                    <div className="text-gray-500">Type:</div>
+                    <div>{destinationPortMarker.portType || 'N/A'}</div>
+                    
+                    <div className="text-red-600 font-medium col-span-2 mt-1">
+                      Final destination for this voyage
+                    </div>
+                  </div>
+                </div>
+              </Popup>
+            </Marker>
+          )}
+          
+          {/* Display nearby ports */}
           {nearbyPorts.map((port: any) => (
             <Marker
               key={`port-${port.id}`}
