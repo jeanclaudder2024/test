@@ -65,6 +65,7 @@ import { seedBrokers } from "./services/seedService";
 import { directPdfRouter } from './routes/direct-pdf';
 import { enhancedPdfRouter } from './routes/enhanced-pdf';
 import { reliablePdfRouter } from './routes/reliable-pdf';
+import { maritimeRoutesRouter } from './routes/maritime-routes';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication
@@ -2572,6 +2573,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use(directPdfRouter);
   app.use(enhancedPdfRouter);
   app.use(reliablePdfRouter);
+  
+  // Register maritime routes API
+  app.use(maritimeRoutesRouter);
   
   // API routes for trading data
   app.use("/api/trading", tradingRouter);

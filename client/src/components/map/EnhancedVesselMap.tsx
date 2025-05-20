@@ -65,6 +65,8 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
   const [zoomLevel, setZoomLevel] = useState<number>(6);
   const [showProximityRadius, setShowProximityRadius] = useState<boolean>(true);
   const [isGeneratingData, setIsGeneratingData] = useState<boolean>(false);
+  const [vesselRoute, setVesselRoute] = useState<any>(null);
+  const [isLoadingRoute, setIsLoadingRoute] = useState<boolean>(false);
   const mapRef = useRef<any>(null);
   
   // Load actual vessel position from API
@@ -275,12 +277,52 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
     }
   }, [realTimePosition]);
   
+  // Load maritime route data for vessel
+  const loadVesselRoute = useCallback(async () => {
+    if (!vessel || !vessel.id || !vessel.destinationPort) return;
+    
+    setIsLoadingRoute(true);
+    try {
+      // Fetch water-based route from API
+      const response = await axios.get(`/api/vessels/${vessel.id}/route`);
+      
+      if (response.data && response.data.success && response.data.route) {
+        setVesselRoute(response.data.route);
+        
+        toast({
+          title: "Loaded maritime route",
+          description: "Showing vessel's water-based navigation path",
+          duration: 3000
+        });
+      }
+    } catch (error) {
+      console.error("Failed to load vessel route:", error);
+      
+      // Check if there's a route in vessel metadata
+      try {
+        if (vessel.metadata) {
+          const metadata = JSON.parse(vessel.metadata);
+          if (metadata.route && metadata.route.waypoints) {
+            setVesselRoute(metadata.route);
+          }
+        }
+      } catch (metadataError) {
+        console.error("Error parsing vessel metadata for route:", metadataError);
+      }
+    } finally {
+      setIsLoadingRoute(false);
+    }
+  }, [vessel, toast]);
+
   // Load data when component mounts or vessel changes
   useEffect(() => {
     if (vessel) {
       loadRealVesselPosition();
+      if (vessel.destinationPort) {
+        loadVesselRoute();
+      }
     }
-  }, [vessel, loadRealVesselPosition]);
+  }, [vessel, loadRealVesselPosition, loadVesselRoute]);
   
   // Find nearby locations when position is loaded
   useEffect(() => {
