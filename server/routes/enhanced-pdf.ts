@@ -364,37 +364,104 @@ enhancedPdfRouter.post('/api/vessels/:id/enhanced-pdf', async (req: Request, res
 // Generate enhanced document content using OpenAI
 async function generateEnhancedContent(vessel: any, documentType: string) {
   try {
-    // Prepare the prompt based on document type
-    let promptContent = `Generate professional and detailed content for a ${documentType} for vessel ${vessel.name} with IMO ${vessel.imo}. `;
+    // Prepare the prompt based on document type with more detailed vessel information
+    let promptContent = `Generate a highly professional, detailed and comprehensive ${documentType} for vessel ${vessel.name} (IMO: ${vessel.imo}). Use formal maritime language and industry standard formats. Include all relevant sections that would be found in an official ${documentType}. 
+
+Vessel Details:
+- Name: ${vessel.name}
+- IMO Number: ${vessel.imo}
+- MMSI: ${vessel.mmsi}
+- Flag: ${vessel.flag}
+- Vessel Type: ${vessel.vesselType}
+- Built: ${vessel.built || 'N/A'}
+- Deadweight: ${vessel.deadweight || 'N/A'} tonnes
+- Current Location: Lat ${vessel.currentLat || 'N/A'}, Lng ${vessel.currentLng || 'N/A'}
+`;
     
-    // Add document-specific prompt content
+    // Add document-specific prompt content with more details
     if (documentType === 'Cargo Manifest') {
-      promptContent += `The vessel is carrying ${vessel.cargoType || 'cargo'} with a capacity of ${vessel.cargoCapacity ? vessel.cargoCapacity.toLocaleString() + ' MT' : 'unspecified amount'}. `;
-      promptContent += `The vessel is traveling from ${vessel.departurePort || 'origin port'} to ${vessel.destinationPort || 'destination port'}. `;
+      promptContent += `
+Cargo Information:
+- Type: ${vessel.cargoType || 'Crude Oil/Petroleum Products'}
+- Quantity: ${vessel.cargoCapacity ? vessel.cargoCapacity.toLocaleString() + ' MT' : 'As per official measurement'}
+- Loading Port: ${vessel.departurePort || 'As per shipping documents'}
+- Discharge Port: ${vessel.destinationPort || 'As per shipping documents'}
+- Shipper: ${vessel.sellerName || 'As per contract'}
+- Consignee: ${vessel.buyerName || 'As per contract'}
+- Voyage Number: V${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}
+
+Include detailed sections for:
+1. Cargo specifications with UN numbers and hazard classifications
+2. Stowage details
+3. Special handling requirements
+4. Safety precautions
+5. Certification statements
+`;
     } 
     else if (documentType === 'Bill of Lading') {
-      promptContent += `The shipper is ${vessel.sellerName || 'unspecified'} and the consignee is ${vessel.buyerName || 'unspecified'}. `;
-      promptContent += `The cargo is ${vessel.cargoType || 'unspecified'} with quantity ${vessel.cargoCapacity ? vessel.cargoCapacity.toLocaleString() + ' MT' : 'unspecified'}. `;
+      promptContent += `
+Shipment Details:
+- Shipper: ${vessel.sellerName || 'As per contract'}
+- Consignee: ${vessel.buyerName || 'As per contract'}
+- Notify Party: Same as consignee unless otherwise specified
+- Cargo: ${vessel.cargoType || 'Crude Oil/Petroleum Products'}
+- Quantity: ${vessel.cargoCapacity ? vessel.cargoCapacity.toLocaleString() + ' MT' : 'As per official measurement'}
+- Port of Loading: ${vessel.departurePort || 'As per shipping documents'}
+- Port of Discharge: ${vessel.destinationPort || 'As per shipping documents'}
+- Date of Loading: ${new Date(Date.now() - 7*24*60*60*1000).toISOString().split('T')[0]}
+- Bill of Lading Number: BL${new Date().getFullYear()}${Math.floor(10000 + Math.random() * 90000)}
+
+Include all standard Bill of Lading clauses, including:
+1. Carrier's responsibility
+2. Law and jurisdiction
+3. General average
+4. Freight and charges
+5. Lien clauses
+6. Claims and limitations
+`;
     }
     else if (documentType === 'Certificate of Origin') {
-      promptContent += `The goods are ${vessel.cargoType || 'unspecified'} originating from ${vessel.departurePort ? vessel.departurePort.split(',')[0] : 'unspecified country'}. `;
-      promptContent += `The exporter is ${vessel.sellerName || 'unspecified'} and the importer is ${vessel.buyerName || 'unspecified'}. `;
+      promptContent += `
+Goods Information:
+- Description: ${vessel.cargoType || 'Crude Oil/Petroleum Products'}
+- Quantity: ${vessel.cargoCapacity ? vessel.cargoCapacity.toLocaleString() + ' MT' : 'As per official measurement'}
+- Country of Origin: ${vessel.departurePort ? vessel.departurePort.split(',')[0] : 'As per shipping documents'}
+- Exporter: ${vessel.sellerName || 'As per contract'}
+- Importer: ${vessel.buyerName || 'As per contract'}
+- Certificate Number: CO${new Date().getFullYear()}${Math.floor(10000 + Math.random() * 90000)}
+- Date of Issue: ${new Date().toISOString().split('T')[0]}
+
+Include all standard Certificate of Origin elements:
+1. Declaration of origin
+2. Certification by authorized body
+3. Product classification
+4. Manufacturing process details (where applicable)
+5. Compliance statements
+`;
     }
     
-    // Request the format as JSON and specify the structure
-    promptContent += `Return a JSON object with the following structure:
+    // Request the format as JSON and specify the structure with more detailed sections
+    promptContent += `
+
+Return a JSON object with the following structure:
+{
+  "title": "Professional maritime title for the document",
+  "documentNumber": "A realistic document number with proper format",
+  "introduction": "A comprehensive and detailed introduction paragraph that establishes the document's purpose and legal standing",
+  "sections": [
     {
-      "title": "Professional title for the document",
-      "introduction": "A professional introduction paragraph",
-      "sections": [
-        {
-          "heading": "Section heading",
-          "content": "Detailed section content with professional maritime terminology"
-        },
-        // Additional sections as needed
-      ],
-      "conclusion": "A formal conclusion paragraph"
-    }`;
+      "heading": "Detailed section heading",
+      "content": "Extensive and specific content with proper maritime terminology, specific measurements, precise locations, and exact dates where applicable"
+    },
+    {
+      "heading": "Additional section heading",
+      "content": "More detailed content relevant to this specific document type"
+    }
+    // Include at least 5-7 detailed sections appropriate for this document type
+  ],
+  "legalStatements": "Formal legal statements and declarations that would appear on an official document",
+  "conclusion": "A formal conclusion with verification statements and legal standing"
+}`;
 
     // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
     const response = await openai.chat.completions.create({
@@ -402,7 +469,7 @@ async function generateEnhancedContent(vessel: any, documentType: string) {
       messages: [
         {
           role: "system",
-          content: "You are a professional maritime document specialist. Generate detailed, accurate and formal maritime shipping documents."
+          content: "You are a professional maritime document specialist with expertise in international shipping documentation. Generate detailed, accurate, formal, and legally-compliant maritime shipping documents following industry standards. Include proper terminology, classification codes, and legally required statements."
         },
         {
           role: "user",
