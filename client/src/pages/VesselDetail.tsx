@@ -388,21 +388,15 @@ export default function VesselDetail() {
     
     setIsGeneratingManifest(true);
     try {
-      // Request document generation from API
-      const response = await axios.post(`/api/vessels/${vessel.id}/documents/generate`, {
-        documentType,
-        vesselId: vessel.id,
-        vesselName: vessel.name,
-        cargo: vessel.cargoType,
-        quantity: vessel.cargoCapacity,
-        origin: vessel.previousPort || "Unknown",
-        destination: vessel.destinationPort || "Unknown"
+      // Use the direct PDF generator endpoint that works reliably
+      const response = await axios.post(`/api/vessels/${vessel.id}/direct-pdf`, {
+        documentType
       }, {
         responseType: 'blob', // Important: get response as binary data
       });
       
       // Create a download link and click it
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', `${vessel.name}_${documentType.toLowerCase().replace(/\s/g, '_')}.pdf`);

@@ -61,8 +61,8 @@ import vesselDashboardRouter from "./routes/vessel-dashboard";
 import { cargoManifestRouter } from "./routes/cargo-manifest-router";
 import { seedBrokers } from "./services/seedService";
 
-// Import the simple document router
-import { simpleDocumentRouter } from './routes/simple-document-generator';
+// Import route handlers
+import { directPdfRouter } from './routes/direct-pdf';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication
@@ -2565,6 +2565,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // API routes for vessel distribution data
   app.use("/api/distribution", vesselDistributionRouter);
+  
+  // Register the direct PDF document handler
+  app.use(directPdfRouter);
   
   // API routes for trading data
   app.use("/api/trading", tradingRouter);
