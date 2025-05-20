@@ -530,6 +530,34 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
     });
   };
   
+  // Port animations CSS for pulsing effect
+  useEffect(() => {
+    // Add port animation CSS once
+    if (!document.getElementById('port-pulse-animation')) {
+      const style = document.createElement('style');
+      style.id = 'port-pulse-animation';
+      style.textContent = `
+        @keyframes pulse-port {
+          0% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(33, 150, 243, 0.7);
+          }
+          
+          70% {
+            transform: scale(1);
+            box-shadow: 0 0 0 5px rgba(33, 150, 243, 0);
+          }
+          
+          100% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(33, 150, 243, 0);
+          }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+  }, []);
+  
   // Get port icon with improved visualization and name
   const getPortIcon = (port: any) => {
     // Determine icon style based on port type
@@ -560,16 +588,21 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
     // Optional water ripple animation for oil/LNG ports
     const hasWaterEffect = port.portType?.toLowerCase().includes('oil') || port.portType?.toLowerCase().includes('lng');
     
+    // Add distance indicator for the expanded 200km radius display
+    
     // Create HTML for port icon with name
     const html = `
       <div class="relative">
-        <div class="w-${iconSize} h-${iconSize} flex items-center justify-center bg-${iconColor} border-2 border-white rounded-full shadow-md ${hasWaterEffect ? 'water-ripple-effect' : ''}">
+        <div class="w-${iconSize} h-${iconSize} flex items-center justify-center bg-${iconColor} border-2 border-white rounded-full shadow-md ${hasWaterEffect ? 'water-ripple-effect' : ''}" style="animation: pulse-port 2s infinite;">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-${iconSize/2} h-${iconSize/2}">
             ${iconSymbol}
           </svg>
         </div>
         <div class="absolute -bottom-6 left-1/2 transform -translate-x-1/2 bg-${iconColor} text-white px-2 py-0.5 rounded text-xs whitespace-nowrap font-medium shadow-sm">
           ${port.name.length > 15 ? port.name.slice(0, 12) + '...' : port.name}
+        </div>
+        <div class="absolute -top-4 -right-4 bg-black bg-opacity-70 text-white px-1 py-0.5 rounded text-[9px] whitespace-nowrap shadow-sm z-20">
+          ${port.distanceFromVessel}km
         </div>
       </div>
     `;
