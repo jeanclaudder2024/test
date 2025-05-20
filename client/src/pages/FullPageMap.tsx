@@ -384,12 +384,7 @@ const FullPageMap: React.FC = () => {
               style={{ height: '100%', width: '100%' }}
               zoomControl={false}
             >
-              {selectedItem && selectedItem.currentLat && selectedItem.currentLng && (
-                <CenterMapOnItem 
-                  lat={parseFloat(selectedItem.currentLat)} 
-                  lng={parseFloat(selectedItem.currentLng)} 
-                />
-              )}
+              {/* Map will auto-center */}
               
               {/* Base map layers */}
               <TileLayer

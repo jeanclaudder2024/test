@@ -1,0 +1,25 @@
+chunk-SKRUXVEK.js?v=03ef40b2:14032 The above error occurred in the <FullPageMap> component:
+
+    at FullPageMap (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/src/pages/FullPageMap.tsx?t=1747783073953:61:33)
+    at Route (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.…/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=03ef40b2:323:16)
+    at Switch (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.…/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=03ef40b2:379:17)
+    at div
+    at MotionComponent (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.…nner/workspace/node_modules/.vite/deps/framer-motion.js?v=03ef40b2:6536:40)
+    at PresenceChild (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.…nner/workspace/node_modules/.vite/deps/framer-motion.js?v=03ef40b2:7742:24)
+    at AnimatePresence (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.…nner/workspace/node_modules/.vite/deps/framer-motion.js?v=03ef40b2:7800:26)
+    at div
+    at main
+    at div
+    at div
+    at Layout (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/src/components/ui/layout.tsx?t=1747782975922:63:26)
+    at Router (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/src/App.tsx?t=1747783108245&v=5pFlqZOOwZaCHv58Gc_zU:94:22)
+    at LanguageProvider (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/src/hooks/use-language.tsx:268:36)
+    at AuthProvider (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/src/hooks/use-auth.tsx:27:32)
+    at ThemeProvider (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/src/hooks/use-theme.tsx:25:3)
+    at QueryClientProvider (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.…rkspace/node_modules/.vite/deps/@tanstack_react-query.js?v=03ef40b2:2805:3)
+    at App
+    at QueryClientProvider (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.…rkspace/node_modules/.vite/deps/@tanstack_react-query.js?v=03ef40b2:2805:3)
+    at ThemeProvider (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/src/hooks/use-theme.tsx?v=5pFlqZOOwZaCHv58Gc_zU:25:3)
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
