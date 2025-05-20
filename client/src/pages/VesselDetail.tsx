@@ -3,6 +3,7 @@ import { Vessel } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, Circle } from 'react-leaflet';
 import VoyageDetails from '@/components/vessels/VoyageDetails';
+import EnhancedVesselMap from '@/components/map/EnhancedVesselMap';
 import axios from 'axios';
 import L from 'leaflet';
 import {
