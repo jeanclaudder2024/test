@@ -61,6 +61,9 @@ import vesselDashboardRouter from "./routes/vessel-dashboard";
 import { cargoManifestRouter } from "./routes/cargo-manifest-router";
 import { seedBrokers } from "./services/seedService";
 
+// Import the simple document router
+import { simpleDocumentRouter } from './routes/simple-document-generator';
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication
   setupAuth(app);
