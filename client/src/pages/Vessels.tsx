@@ -186,20 +186,49 @@ export default function Vessels() {
   const [vesselsPerPage] = useState(50); // Show 50 vessels per page
   const { toast } = useToast();
   
+  // Maximum number of oil vessels to show (as requested by user)
+  const MAX_OIL_VESSELS = 1550;
+
+  // Filter function to get only oil vessels with real locations
+  const filterOilVesselsWithRealLocations = (vessels: any[]) => {
+    return vessels.filter(vessel => {
+      // Check if vessel has valid location data
+      const hasRealLocation = vessel.currentLat && vessel.currentLng && 
+                            !isNaN(Number(vessel.currentLat)) && 
+                            !isNaN(Number(vessel.currentLng));
+                          
+      // Check if it's an oil vessel
+      const isOilVessel = 
+        vessel.vesselType?.toLowerCase().includes('tanker') ||
+        vessel.vesselType?.toLowerCase().includes('oil') ||
+        vessel.cargoType?.toLowerCase().includes('oil') ||
+        vessel.cargoType?.toLowerCase().includes('crude') ||
+        vessel.cargoType?.toLowerCase().includes('fuel') ||
+        vessel.cargoType?.toLowerCase().includes('diesel') ||
+        vessel.cargoType?.toLowerCase().includes('gas') ||
+        vessel.cargoType?.toLowerCase().includes('petrol');
+        
+      return isOilVessel && hasRealLocation;
+    }).slice(0, MAX_OIL_VESSELS); // Limit to requested max
+  };
+
   // Fetch vessels directly from the API endpoint 
   const fetchVesselsFromAPI = async () => {
     try {
       setApiLoading(true);
       setFetchError(null);
       
-      // First try MyShipTracking API
+      // First try MyShipTracking API - prioritize real API data
       try {
         console.log('Fetching vessels from MyShipTracking API...');
         const response = await axios.get('/api/vessels/myshiptracking');
         
         if (response.data && response.data.length > 0) {
           console.log('Fetched vessels from MyShipTracking API:', response.data.length);
-          setApiVessels(response.data);
+          // Filter to only show oil vessels with real locations
+          const filteredVessels = filterOilVesselsWithRealLocations(response.data);
+          console.log('Filtered to', filteredVessels.length, 'oil vessels with real locations');
+          setApiVessels(filteredVessels);
           setFetchError(null);
           setDataSource('myshiptracking');
           setApiLoading(false);
@@ -218,7 +247,10 @@ export default function Vessels() {
         
         if (marineResponse.data && marineResponse.data.length > 0) {
           console.log('Fetched vessels from Marine Traffic API:', marineResponse.data.length);
-          setApiVessels(marineResponse.data);
+          // Filter to only show oil vessels with real locations
+          const filteredVessels = filterOilVesselsWithRealLocations(marineResponse.data);
+          console.log('Filtered to', filteredVessels.length, 'oil vessels with real locations');
+          setApiVessels(filteredVessels);
           setFetchError(null);
           setDataSource('marine-traffic');
           setApiLoading(false);
@@ -234,12 +266,19 @@ export default function Vessels() {
       try {
         console.log('Trying fallback REST polling endpoint...');
         const fallbackResponse = await axios.get('/api/vessels/polling', {
-          params: { region: selectedRegion }
+          params: { 
+            region: selectedRegion,
+            limit: MAX_OIL_VESSELS * 2, // Request more to ensure we get enough after filtering
+            vesselType: 'oil'
+          }
         });
         
         if (fallbackResponse.data && fallbackResponse.data.vessels) {
           console.log('Fetched vessels from fallback endpoint:', fallbackResponse.data.vessels.length);
-          setApiVessels(fallbackResponse.data.vessels);
+          // Filter to only show oil vessels with real locations
+          const filteredVessels = filterOilVesselsWithRealLocations(fallbackResponse.data.vessels);
+          console.log('Filtered to', filteredVessels.length, 'oil vessels with real locations');
+          setApiVessels(filteredVessels);
           setFetchError(null);
           setDataSource('polling');
         } else {
@@ -655,9 +694,12 @@ export default function Vessels() {
             {isUpdatingDestinations ? 'Updating...' : 'Ensure All Destinations'}
           </Button>
           
-          <Button onClick={fetchVesselsFromAPI}>
-            <Plus className="h-4 w-4 mr-2" />
-            Refresh Vessels
+          <Button 
+            onClick={fetchVesselsFromAPI}
+            className="bg-red-50 text-red-600 border-red-200 hover:bg-red-100"
+          >
+            <Fuel className="h-4 w-4 mr-2" />
+            Load Oil Vessels ({MAX_OIL_VESSELS} max)
           </Button>
         </div>
       </div>
