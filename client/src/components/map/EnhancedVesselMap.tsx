@@ -71,6 +71,8 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
   const [vesselRoute, setVesselRoute] = useState<any>(null);
   const [isLoadingRoute, setIsLoadingRoute] = useState<boolean>(false);
   const [routeGenerationError, setRouteGenerationError] = useState<string | null>(null);
+  const [destinationPortMarker, setDestinationPortMarker] = useState<any>(null);
+  const [destinationRefineryMarker, setDestinationRefineryMarker] = useState<any>(null);
   const mapRef = useRef<any>(null);
   
   // Load actual vessel position from API
@@ -364,15 +366,70 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
     }
   }, [vessel, toast, routeGenerationError]);
 
+  // Function to find destination port or refinery
+  const findDestinationLocation = useCallback(async () => {
+    if (!vessel) return;
+    
+    try {
+      // Check for destination port information
+      if (vessel.destinationPort) {
+        const portsResponse = await axios.get('/api/ports');
+        if (portsResponse.data) {
+          // Find port by name (case-insensitive partial match)
+          const destinationPort = portsResponse.data.find((port: any) => 
+            port.name && vessel.destinationPort && 
+            port.name.toLowerCase().includes(vessel.destinationPort.toLowerCase())
+          );
+          
+          if (destinationPort && destinationPort.lat && destinationPort.lng) {
+            setDestinationPortMarker({
+              ...destinationPort,
+              isDestination: true
+            });
+            console.log("Found destination port:", destinationPort.name);
+          }
+        }
+      }
+      
+      // Check if vessel has destination that might be a refinery
+      if (vessel.destination) {
+        const refineriesResponse = await axios.get('/api/refineries');
+        if (refineriesResponse.data) {
+          // Find refinery by name or country
+          const possibleRefinery = refineriesResponse.data.find((refinery: any) => 
+            (refinery.name && vessel.destination && 
+             refinery.name.toLowerCase().includes(vessel.destination.toLowerCase())) ||
+            (refinery.country && vessel.destination && 
+             vessel.destination.toLowerCase().includes(refinery.country.toLowerCase()))
+          );
+          
+          if (possibleRefinery && possibleRefinery.lat && possibleRefinery.lng) {
+            setDestinationRefineryMarker({
+              ...possibleRefinery,
+              isDestination: true
+            });
+            console.log("Found destination refinery:", possibleRefinery.name);
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Failed to find destination location:", error);
+    }
+  }, [vessel]);
+
   // Load data when component mounts or vessel changes
   useEffect(() => {
     if (vessel) {
       loadRealVesselPosition();
+      
+      // Find destination port/refinery
+      findDestinationLocation();
+      
       if (vessel.destinationPort) {
         loadVesselRoute();
       }
     }
-  }, [vessel, loadRealVesselPosition, loadVesselRoute]);
+  }, [vessel, loadRealVesselPosition, loadVesselRoute, findDestinationLocation]);
   
   // Find nearby locations and vessels when position is loaded
   useEffect(() => {
