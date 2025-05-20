@@ -209,7 +209,19 @@ export default function Vessels() {
         vessel.cargoType?.toLowerCase().includes('petrol');
         
       return isOilVessel && hasRealLocation;
-    }).slice(0, MAX_OIL_VESSELS); // Limit to requested max
+    })
+    .map(vessel => ({
+      // Add missing required Vessel properties to ensure type compatibility
+      ...vessel,
+      currentSpeed: vessel.currentSpeed || 0,
+      departureTime: vessel.departureTime || null,
+      status: vessel.status || 'active',
+      course: vessel.course || 0,
+      cargoAmount: vessel.cargoAmount || null,
+      progress: vessel.progress || 0,
+      isOilVessel: true
+    }))
+    .slice(0, MAX_OIL_VESSELS); // Limit to requested max
   };
 
   // Fetch vessels directly from the API endpoint 
@@ -309,25 +321,41 @@ export default function Vessels() {
   // Combine vessels from real-time WebSocket and API
   useEffect(() => {
     // Determine which source to use
-    let combinedVessels: Vessel[] = [];
+    let sourceVessels: any[] = [];
     
     if (wsConnected && realTimeVessels.length > 0) {
       // WebSocket is connected and has data - prefer this
-      combinedVessels = realTimeVessels;
+      sourceVessels = realTimeVessels;
       console.log('Using WebSocket vessels:', realTimeVessels.length);
       setDataSource('websocket');
     } else if (apiVessels.length > 0) {
       // Fall back to API data if WebSocket isn't connected
-      combinedVessels = apiVessels;
+      sourceVessels = apiVessels;
       console.log('Using API vessels:', apiVessels.length);
       
       // The data source is set in fetchVesselsFromAPI function when the data is fetched
       // We're not changing it here to preserve which API was actually successful
     }
     
-    setVessels(combinedVessels);
+    // Make sure we have all required fields for the Vessel type
+    const processedVessels = sourceVessels.map(vessel => ({
+      ...vessel,
+      currentSpeed: vessel.currentSpeed || 0,
+      departureTime: vessel.departureTime || null,
+      status: vessel.status || 'active',
+      course: vessel.course || 0,
+      cargoAmount: vessel.cargoAmount || null,
+      progress: vessel.progress || 0,
+      isOilVessel: true
+    })) as Vessel[];
+    
+    // Ensure we only show up to MAX_OIL_VESSELS
+    const limitedVessels = processedVessels.slice(0, MAX_OIL_VESSELS);
+    console.log(`Showing ${limitedVessels.length} oil vessels (limited from ${processedVessels.length})`);
+    
+    setVessels(limitedVessels);
     setLoading(wsLoading && apiLoading);
-  }, [realTimeVessels, apiVessels, wsConnected, wsLoading, apiLoading]);
+  }, [realTimeVessels, apiVessels, wsConnected, wsLoading, apiLoading, MAX_OIL_VESSELS]);
   
   // Helper function to determine oil category
   const getOilCategory = (cargoType: string | null | undefined): string => {
@@ -732,76 +760,31 @@ export default function Vessels() {
             Currently viewing page {page} of {totalPages}.
           </p>
           
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  onClick={() => goToPage(page > 1 ? page - 1 : 1)}
-                  className={page === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                />
-              </PaginationItem>
-              
-              {/* First page */}
-              {page > 2 && (
-                <PaginationItem>
-                  <PaginationLink onClick={() => goToPage(1)}>1</PaginationLink>
-                </PaginationItem>
-              )}
-              
-              {/* Ellipsis for skipped pages */}
-              {page > 3 && (
-                <PaginationItem>
-                  <PaginationEllipsis />
-                </PaginationItem>
-              )}
-              
-              {/* Previous page */}
-              {page > 1 && (
-                <PaginationItem>
-                  <PaginationLink onClick={() => goToPage(page - 1)}>
-                    {page - 1}
-                  </PaginationLink>
-                </PaginationItem>
-              )}
-              
-              {/* Current page */}
-              <PaginationItem>
-                <PaginationLink isActive>{page}</PaginationLink>
-              </PaginationItem>
-              
-              {/* Next page */}
-              {page < totalPages && (
-                <PaginationItem>
-                  <PaginationLink onClick={() => goToPage(page + 1)}>
-                    {page + 1}
-                  </PaginationLink>
-                </PaginationItem>
-              )}
-              
-              {/* Ellipsis for skipped pages */}
-              {page < totalPages - 2 && (
-                <PaginationItem>
-                  <PaginationEllipsis />
-                </PaginationItem>
-              )}
-              
-              {/* Last page */}
-              {page < totalPages - 1 && (
-                <PaginationItem>
-                  <PaginationLink onClick={() => goToPage(totalPages)}>
-                    {totalPages}
-                  </PaginationLink>
-                </PaginationItem>
-              )}
-              
-              <PaginationItem>
-                <PaginationNext
-                  onClick={() => goToPage(page < totalPages ? page + 1 : totalPages)}
-                  className={page === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
+          <div className="flex items-center justify-center space-x-2">
+            <Button 
+              variant="outline"
+              size="sm"
+              onClick={() => goToPage(page > 1 ? page - 1 : 1)}
+              disabled={page === 1}
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Previous
+            </Button>
+            
+            <span className="text-sm">
+              Page {page} of {totalPages}
+            </span>
+            
+            <Button 
+              variant="outline"
+              size="sm"
+              onClick={() => goToPage(page < totalPages ? page + 1 : totalPages)}
+              disabled={page === totalPages}
+            >
+              Next
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
         </div>
       )}
       
