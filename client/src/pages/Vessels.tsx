@@ -187,10 +187,10 @@ export default function Vessels() {
   const { toast } = useToast();
   
   // Maximum number of oil vessels to show (as requested by user)
-  const MAX_OIL_VESSELS = 1550;
+  const MAX_OIL_VESSELS = 1540;
 
   // Filter function to get only oil vessels with real locations
-  const filterOilVesselsWithRealLocations = (vessels: any[]) => {
+  const filterOilVesselsWithRealLocations = (vessels: any[]): Vessel[] => {
     return vessels.filter(vessel => {
       // Check if vessel has valid location data
       const hasRealLocation = vessel.currentLat && vessel.currentLng && 
@@ -943,9 +943,9 @@ export default function Vessels() {
                   </TableCell>
                   <TableCell>
                     {vessel.departurePort}
-                    {vessel.departureDate && (
+                    {vessel.departureTime && (
                       <div className="text-xs text-muted-foreground">
-                        {formatDate(vessel.departureDate, 'PP')}
+                        {formatDate(vessel.departureTime, 'PP')}
                       </div>
                     )}
                   </TableCell>
