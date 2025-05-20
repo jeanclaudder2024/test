@@ -29,12 +29,19 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from 'wouter';
 import { formatDate } from '@/lib/utils';
-import { Ship, Search, Plus, Filter, Droplet, Fuel, Layers, Tag, Anchor, AlertCircle, Wifi, WifiOff, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Ship, Search, Plus, Filter, Droplet, Fuel, Layers, Tag, Anchor, AlertCircle, Wifi, WifiOff, ChevronLeft, ChevronRight, Globe } from 'lucide-react';
 import { OIL_PRODUCT_TYPES, REGIONS } from '@shared/constants';
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -768,46 +775,26 @@ export default function Vessels() {
             </Select>
           </div>
           
-          {/* Region Filter */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
-                <Filter className="h-4 w-4" />
-                <span>Region</span>
-                {selectedRegion !== 'global' && (
-                  <Badge variant="secondary" className="ml-1">
-                    {selectedRegion}
-                  </Badge>
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56">
-              <DropdownMenuLabel>
-                <div className="flex items-center">
-                  <Tag className="h-4 w-4 mr-2" />
-                  Filter by Region
+          {/* Region Filter - Professional Dropdown */}
+          <div>
+            <Select 
+              value={selectedRegion}
+              onValueChange={(value) => setSelectedRegion(value)}
+            >
+              <SelectTrigger className="bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 py-2">
+                <div className="flex items-center gap-2">
+                  <Globe className="h-4 w-4 text-gray-500" />
+                  <SelectValue placeholder="Select Region" />
                 </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuCheckboxItem
-                key="global"
-                checked={selectedRegion === 'global'}
-                onCheckedChange={() => setSelectedRegion('global')}
-              >
-                Global (All Regions)
-              </DropdownMenuCheckboxItem>
-              
-              {REGIONS.map((region) => (
-                <DropdownMenuCheckboxItem
-                  key={region.id}
-                  checked={selectedRegion === region.id}
-                  onCheckedChange={() => setSelectedRegion(region.id)}
-                >
-                  {region.name}
-                </DropdownMenuCheckboxItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="global">Global (All Regions)</SelectItem>
+                {REGIONS.map((region) => (
+                  <SelectItem key={region.id} value={region.id}>{region.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           
           {/* Oil Type Filter */}
           <DropdownMenu>
@@ -1003,22 +990,36 @@ export default function Vessels() {
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-md border">
+        <div className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-md">
+          <div className="border-b border-gray-200 dark:border-gray-700 p-3 px-5 bg-gray-50 dark:bg-gray-750">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2 text-gray-500 dark:text-gray-400 text-sm">
+                <Ship className="w-4 h-4" />
+                <span className="font-medium">Vessel Database</span>
+              </div>
+              <span className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded-full">
+                {loading ? 'Loading...' : `Showing ${(currentPage - 1) * resultsPerPage + 1}-${Math.min((currentPage) * resultsPerPage, filteredVessels.length)} of ${filteredVessels.length.toLocaleString()}`}
+              </span>
+            </div>
+          </div>
+          
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>IMO</TableHead>
-                <TableHead className="flex items-center gap-1">
-                  <Droplet className="h-4 w-4" />
-                  <span>Oil Type</span>
+              <TableRow className="bg-gray-50/50 dark:bg-gray-800/60 border-b border-gray-200 dark:border-gray-700">
+                <TableHead className="text-xs font-semibold text-gray-600 dark:text-gray-400 py-3">Name</TableHead>
+                <TableHead className="text-xs font-semibold text-gray-600 dark:text-gray-400 py-3">IMO</TableHead>
+                <TableHead className="text-xs font-semibold text-gray-600 dark:text-gray-400 py-3">
+                  <div className="flex items-center gap-1">
+                    <Droplet className="h-3.5 w-3.5" />
+                    <span>Oil Type</span>
+                  </div>
                 </TableHead>
-                <TableHead>Vessel Type</TableHead>
-                <TableHead>Flag</TableHead>
-                <TableHead>Departure</TableHead>
-                <TableHead>Destination</TableHead>
-                <TableHead>Region</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="text-xs font-semibold text-gray-600 dark:text-gray-400 py-3">Vessel Type</TableHead>
+                <TableHead className="text-xs font-semibold text-gray-600 dark:text-gray-400 py-3">Flag</TableHead>
+                <TableHead className="text-xs font-semibold text-gray-600 dark:text-gray-400 py-3">Departure</TableHead>
+                <TableHead className="text-xs font-semibold text-gray-600 dark:text-gray-400 py-3">Destination</TableHead>
+                <TableHead className="text-xs font-semibold text-gray-600 dark:text-gray-400 py-3">Region</TableHead>
+                <TableHead className="text-xs font-semibold text-gray-600 dark:text-gray-400 text-right py-3">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
