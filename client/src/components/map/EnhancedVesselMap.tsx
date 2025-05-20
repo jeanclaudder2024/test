@@ -519,90 +519,84 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
     }
   }, [vesselRoute]);
   
-  // Get vessel icon based on vessel type and heading
+  // Enhanced professional vessel icon with beautiful styling
   const getVesselIcon = () => {
-    // Default style for vessel marker
-    const defaultStyle = `
-      position: absolute;
-      width: 20px;
-      height: 20px;
-      transform: rotate(${vesselHeading}deg);
-      transform-origin: center;
-      transition: transform 0.5s ease-in-out;
+    // Determine vessel type class for styling
+    let vesselTypeClass = 'vessel-type-default';
+    const lowerType = vessel.vesselType?.toLowerCase() || '';
+    
+    if (lowerType.includes('crude')) {
+      vesselTypeClass = 'vessel-type-crude';
+    } else if (lowerType.includes('product')) {
+      vesselTypeClass = 'vessel-type-products';
+    } else if (lowerType.includes('lng')) {
+      vesselTypeClass = 'vessel-type-lng';
+    } else if (lowerType.includes('lpg')) {
+      vesselTypeClass = 'vessel-type-lpg';
+    } else if (lowerType.includes('chemical')) {
+      vesselTypeClass = 'vessel-type-chemical';
+    }
+    
+    // Ship-shaped icon that looks like a tanker from above
+    const shipShape = `
+      <path d="M3,14 L6,7 L18,7 L21,14 L12,18 L3,14 Z" />
     `;
     
-    // Dynamic icon based on vessel type
-    const iconSvg = `
-      <div style="${defaultStyle}">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#ff8c00" stroke="#ffffff" stroke-width="0.5">
-          <path d="M21 12c0-4.418-3.582-8-8-8s-8 3.582-8 8 3.582 8 8 8 8-3.582 8-8zm-8-10v4m0 14v4m10-12h-4m-14 0h-4" />
-          <path d="M18 12l-5-3v6l5-3zm-12 0l5 3v-6l-5 3z" />
-        </svg>
-        ${vesselSpeed > 0 ? `<div class="vessel-wake"></div>` : ''}
+    // Create professional vessel icon with name and speed indicator
+    const iconHtml = `
+      <div class="vessel-marker ${vesselTypeClass}">
+        <div class="vessel-icon" style="transform: rotate(${vesselHeading}deg);">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            ${shipShape}
+          </svg>
+        </div>
+        <div class="vessel-label">${vessel.name}</div>
+        <div class="vessel-speed">${vesselSpeed} kn</div>
       </div>
     `;
     
     return L.divIcon({
-      className: 'custom-vessel-icon',
-      html: iconSvg,
-      iconSize: [20, 20],
-      iconAnchor: [10, 10],
+      className: `custom-vessel-icon`,
+      html: iconHtml,
+      iconSize: [50, 50],
+      iconAnchor: [25, 25],
     });
   };
   
-  // Get enhanced refinery icon with more detailed visualization
+  // Enhanced professional refinery icon with beautiful styling
   const getRefineryIcon = (refinery: any) => {
-    // Create a sophisticated refinery icon with name and distance display
-    const capacity = refinery.capacity || 0;
-    const iconSize = Math.min(Math.max(22, capacity / 40), 38); // Larger size based on capacity
+    // Create a sophisticated refinery icon using our CSS classes
+    const isDestination = refinery.isDestination || false;
     
+    // Refinery icon SVG - an industrial facility shape
+    const refineryShape = `
+      <path d="M3 22V12C3 11.4696 3.21071 10.9609 3.58579 10.5858C3.96086 10.2107 4.46957 10 5 10H19C19.5304 10 20.0391 10.2107 20.4142 10.5858C20.7893 10.9609 21 11.4696 21 12V22"/>
+      <path d="M5 10V6C5 5.46957 5.21071 4.96086 5.58579 4.58579C5.96086 4.21071 6.46957 4 7 4H17C17.5304 4 18.0391 4.21071 18.4142 4.58579C18.7893 4.96086 19 5.46957 19 6V10"/>
+    `;
+    
+    // Create beautiful refinery marker with name and distance display
     const html = `
-      <div style="position: relative;">
-        <div style="width: ${iconSize}px; height: ${iconSize}px; background-color: #e74c3c; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 10px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; animation: pulse-refinery 1.5s infinite;">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: ${iconSize/1.8}px; height: ${iconSize/1.8}px;">
-            <path d="M3 22V12C3 11.4696 3.21071 10.9609 3.58579 10.5858C3.96086 10.2107 4.46957 10 5 10H19C19.5304 10 20.0391 10.2107 20.4142 10.5858C20.7893 10.9609 21 11.4696 21 12V22"/>
-            <path d="M5 10V6C5 5.46957 5.21071 4.96086 5.58579 4.58579C5.96086 4.21071 6.46957 4 7 4H17C17.5304 4 18.0391 4.21071 18.4142 4.58579C18.7893 4.96086 19 5.46957 19 6V10"/>
+      <div class="refinery-marker">
+        <div class="refinery-icon ${isDestination ? 'destination-pulse' : ''}">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            ${refineryShape}
           </svg>
         </div>
-        <div style="position: absolute; bottom: -24px; left: 50%; transform: translateX(-50%); background-color: rgba(231, 76, 60, 0.9); color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; white-space: nowrap; font-size: 11px; max-width: 150px; overflow: hidden; text-overflow: ellipsis; text-align: center; z-index: 1000;">
-          ${refinery.name || 'Refinery'}
-        </div>
-        <div style="position: absolute; top: -15px; right: -25px; background-color: rgba(0, 0, 0, 0.7); color: white; padding: 1px 4px; border-radius: 3px; font-size: 10px; white-space: nowrap; z-index: 1000;">
-          ${refinery.distanceFromVessel}km
-        </div>
+        ${isDestination ? '<div class="destination-label">VOYAGE DESTINATION</div>' : ''}
+        <div class="refinery-label">${refinery.name || 'Refinery'}</div>
+        ${refinery.distanceFromVessel ? 
+          `<div style="position: absolute; top: -15px; right: -25px; background-color: rgba(0, 0, 0, 0.7); color: white; padding: 1px 4px; border-radius: 3px; font-size: 10px; white-space: nowrap; z-index: 1000;">
+            ${refinery.distanceFromVessel}km
+          </div>` : ''
+        }
       </div>
     `;
     
-    // Add CSS for pulsing animation
-    if (!document.getElementById('refinery-animation')) {
-      const style = document.createElement('style');
-      style.id = 'refinery-animation';
-      style.textContent = `
-        @keyframes pulse-refinery {
-          0% {
-            transform: scale(0.95);
-            box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7);
-          }
-          
-          70% {
-            transform: scale(1);
-            box-shadow: 0 0 0 6px rgba(231, 76, 60, 0);
-          }
-          
-          100% {
-            transform: scale(0.95);
-            box-shadow: 0 0 0 0 rgba(231, 76, 60, 0);
-          }
-        }
-      `;
-      document.head.appendChild(style);
-    }
-    
     return L.divIcon({
-      className: 'enhanced-refinery-marker',
+      className: `enhanced-refinery-marker ${isDestination ? 'destination-marker' : ''}`,
       html: html,
-      iconSize: [iconSize + 30, iconSize + 30], // Larger size to account for labels
-      iconAnchor: [iconSize / 2 + 15, iconSize / 2 + 15],
+      iconSize: [60, 60], // Larger size for better visibility
+      iconAnchor: [30, 30],
     });
   };
   
@@ -634,81 +628,64 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
     }
   }, []);
   
-  // Get port icon with improved visualization and name
+  // Enhanced professional port icon with beautiful styling
   const getPortIcon = (port: any) => {
-    // Determine icon style based on port type or if it's a destination
-    let iconColor = "green-600";
-    let iconSize = port.isDestination ? 30 : 24; // Larger icon for destination
-    let iconSymbol = `
-      <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
-      <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
-      <line x1="6" y1="1" x2="6" y2="4"></line>
-      <line x1="10" y1="1" x2="10" y2="4"></line>
-      <line x1="14" y1="1" x2="14" y2="4"></line>
+    // Determine port type for specialized styling
+    const isDestination = port.isDestination || false;
+    let portType = 'default';
+    
+    if (port.portType?.toLowerCase().includes('oil')) {
+      portType = 'oil_terminal';
+    } else if (port.portType?.toLowerCase().includes('lng') || port.portType?.toLowerCase().includes('gas')) {
+      portType = 'lng_terminal';
+    } else if (port.portType?.toLowerCase().includes('container')) {
+      portType = 'commercial';
+    }
+    
+    // Port icon SVG based on type
+    let portSymbol = `
+      <path d="M20 5H4V19H20V5Z" />
+      <path d="M4 10H20" />
+      <path d="M4 14H20" />
+      <path d="M9 5V19" />
+      <path d="M14 5V19" />
     `;
     
-    // Check port type for specialized icons
-    if (port.portType?.toLowerCase().includes('oil')) {
-      iconColor = "amber-600";
-      iconSymbol = `<path d="M7 16a3 3 0 0 1 0 6 3 3 0 0 0 0 6h10a3 3 0 0 0 0-6 3 3 0 0 1 0-6"/>`;
-      iconSize = port.isDestination ? 32 : 28;
-    } else if (port.portType?.toLowerCase().includes('lng') || port.portType?.toLowerCase().includes('gas')) {
-      iconColor = "purple-600";
-      iconSymbol = `<path d="M10 5.5V2a1 1 0 0 0-1.74-.67L3.51 6.79a1 1 0 0 0 .75 1.7H8L10 5.5zm-4 2v14h16V7.5H6z"/>`;
-      iconSize = port.isDestination ? 30 : 26;
-    } else if (port.portType?.toLowerCase().includes('container')) {
-      iconColor = "blue-500";
-      iconSymbol = `<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/>`;
+    if (portType === 'oil_terminal') {
+      portSymbol = `
+        <path d="M8 2H6a2 2 0 00-2 2v2c0 1.1.9 2 2 2h2a2 2 0 002-2V4a2 2 0 00-2-2z"/>
+        <path d="M18 2h-2a2 2 0 00-2 2v2c0 1.1.9 2 2 2h2a2 2 0 002-2V4a2 2 0 00-2-2z"/>
+        <path d="M13 10h-2a2 2 0 00-2 2v8c0 1.1.9 2 2 2h2a2 2 0 002-2v-8a2 2 0 00-2-2z"/>
+      `;
+    } else if (portType === 'lng_terminal') {
+      portSymbol = `
+        <path d="M10 5.5V2a1 1 0 0 0-1.74-.67L3.51 6.79a1 1 0 0 0 .75 1.7H8L10 5.5zm-4 2v14h16V7.5H6z"/>
+      `;
     }
     
-    // For destination port, override color to red
-    if (port.isDestination) {
-      iconColor = "red-600"; // Set destination ports to red
-    }
-    
-    // Optional water ripple animation for oil/LNG ports
-    const hasWaterEffect = port.portType?.toLowerCase().includes('oil') || port.portType?.toLowerCase().includes('lng');
-    
-    // Special pulsing effect for destination port
-    const animationStyle = port.isDestination 
-      ? "animation: destination-pulse 2s infinite;" 
-      : "animation: pulse-port 2s infinite;";
-    
-    // Border style based on destination status
-    const borderStyle = port.isDestination 
-      ? "border-3 border-red-600" 
-      : "border-2 border-white";
-    
-    // Special destination label
-    const destinationLabel = port.isDestination ? 
-      `<div class="absolute -top-7 left-1/2 transform -translate-x-1/2 bg-red-600 text-white px-2 py-0.5 rounded text-xs font-bold whitespace-nowrap shadow-sm z-30">
-        VOYAGE DESTINATION
-      </div>` : '';
-    
-    // Create HTML for port icon with name
+    // Create beautiful port marker with our CSS styling
     const html = `
-      <div class="relative">
-        ${destinationLabel}
-        <div class="w-${iconSize} h-${iconSize} flex items-center justify-center bg-${iconColor} ${borderStyle} rounded-full shadow-md ${hasWaterEffect ? 'water-ripple-effect' : ''}" style="${animationStyle}">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-${iconSize/2} h-${iconSize/2}">
-            ${iconSymbol}
+      <div class="port-marker port-type-${portType}">
+        <div class="port-icon ${isDestination ? 'destination-pulse' : ''}">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            ${portSymbol}
           </svg>
         </div>
-        <div class="absolute -bottom-6 left-1/2 transform -translate-x-1/2 bg-${iconColor} text-white px-2 py-0.5 rounded text-xs whitespace-nowrap font-medium shadow-sm">
-          ${port.name.length > 15 ? port.name.slice(0, 12) + '...' : port.name}
-        </div>
+        ${isDestination ? '<div class="destination-label">VOYAGE DESTINATION</div>' : ''}
+        <div class="port-label">${port.name.length > 15 ? port.name.slice(0, 12) + '...' : port.name}</div>
         ${port.distanceFromVessel ? 
-          `<div class="absolute -top-4 -right-4 bg-black bg-opacity-70 text-white px-1 py-0.5 rounded text-[9px] whitespace-nowrap shadow-sm z-20">
+          `<div style="position: absolute; top: -15px; right: -25px; background-color: rgba(0, 0, 0, 0.7); color: white; padding: 1px 4px; border-radius: 3px; font-size: 10px; white-space: nowrap; z-index: 1000;">
             ${port.distanceFromVessel}km
-          </div>` : ''}
+          </div>` : ''
+        }
       </div>
     `;
     
     return L.divIcon({
-      className: 'port-marker',
+      className: `enhanced-port-marker ${isDestination ? 'destination-marker' : ''}`,
       html: html,
-      iconSize: [iconSize + 20, iconSize + 30], // Account for the name label
-      iconAnchor: [iconSize / 2 + 10, iconSize / 2 + 15],
+      iconSize: [60, 60], // Larger size for better visibility
+      iconAnchor: [30, 30],
     });
   };
   
