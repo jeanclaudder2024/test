@@ -231,7 +231,7 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
     if (!realTimePosition) return;
     
     try {
-      // Find nearby refineries (within 20km)
+      // Find nearby refineries (within 200km)
       const refineriesResponse = await axios.get('/api/refineries');
       if (refineriesResponse.data) {
         const allRefineries = refineriesResponse.data;
@@ -254,7 +254,7 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
         setNearbyRefineries(nearby);
       }
       
-      // Find nearby ports (within 20km)
+      // Find nearby ports (within 200km)
       const portsResponse = await axios.get('/api/ports');
       if (portsResponse.data) {
         const allPorts = portsResponse.data;
@@ -1045,7 +1045,7 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
         {(nearbyRefineries.length > 0 || nearbyPorts.length > 0) && (
           <>
             <Separator className="my-3" />
-            <div className="text-xs font-medium mb-2">Nearby Locations (20km radius)</div>
+            <div className="text-xs font-medium mb-2">Nearby Locations (200km radius)</div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {nearbyRefineries.length > 0 && (
