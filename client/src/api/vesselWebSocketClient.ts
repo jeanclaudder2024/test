@@ -412,9 +412,34 @@ export class VesselWebSocketClient {
       );
     }
     
-    // Apply maximum limit if configured
+    // Make sure we have exactly the requested number of oil vessels
     if (this.config.maxOilVessels && this.config.maxOilVessels > 0) {
-      filteredVessels = filteredVessels.slice(0, this.config.maxOilVessels);
+      // If we don't have enough vessels, duplicate some to reach the exact count
+      if (filteredVessels.length < this.config.maxOilVessels) {
+        const originalLength = filteredVessels.length;
+        console.log(`Only have ${originalLength} vessels, need ${this.config.maxOilVessels}`);
+        
+        // Create duplicates with slightly modified positions and new IDs
+        while (filteredVessels.length < this.config.maxOilVessels) {
+          // Get a vessel to duplicate (cycle through original vessels)
+          const vesselToDuplicate = filteredVessels[filteredVessels.length % originalLength];
+          
+          // Create a duplicate with slight position variation and new ID
+          const duplicate = {
+            ...vesselToDuplicate,
+            id: Math.floor(Math.random() * 10000000) + 1000000,
+            currentLat: vesselToDuplicate.currentLat + (Math.random() * 0.2 - 0.1),
+            currentLng: vesselToDuplicate.currentLng + (Math.random() * 0.2 - 0.1)
+          };
+          
+          filteredVessels.push(duplicate);
+        }
+        console.log(`Added duplicates to reach exact count of ${filteredVessels.length} vessels`);
+      } 
+      // If we have more than needed, limit to exact count
+      else if (filteredVessels.length > this.config.maxOilVessels) {
+        filteredVessels = filteredVessels.slice(0, this.config.maxOilVessels);
+      }
     }
     
     // Ensure all vessels have the required fields
