@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, useMap, Marker, Popup, LayerGroup } from 'react-leaflet';
-import L from 'leaflet';
+import L, { LatLngExpression } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import 'leaflet.markercluster/dist/MarkerCluster.css';
-import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -295,7 +293,8 @@ const FullPageMap: React.FC = () => {
   const CenterMapOnItem = ({ lat, lng }: { lat: number, lng: number }) => {
     const map = useMap();
     useEffect(() => {
-      map.setView([lat, lng], 8);
+      const position: LatLngExpression = [lat, lng];
+      map.setView(position, 8);
     }, [lat, lng, map]);
     return null;
   };
@@ -413,7 +412,7 @@ const FullPageMap: React.FC = () => {
                     return (
                       <Marker
                         key={vessel.id}
-                        position={[parseFloat(vessel.currentLat), parseFloat(vessel.currentLng)]}
+                        position={[parseFloat(vessel.currentLat), parseFloat(vessel.currentLng)] as LatLngExpression}
                         icon={getVesselIcon(vessel)}
                         eventHandlers={{
                           click: () => handleItemClick(vessel, 'vessel')
@@ -447,7 +446,7 @@ const FullPageMap: React.FC = () => {
                   {filteredRefineries.map((refinery) => (
                     <Marker
                       key={refinery.id}
-                      position={[parseFloat(refinery.lat), parseFloat(refinery.lng)]}
+                      position={[parseFloat(refinery.lat), parseFloat(refinery.lng)] as LatLngExpression}
                       icon={getRefineryIcon(refinery)}
                       eventHandlers={{
                         click: () => handleItemClick(refinery, 'refinery')
@@ -478,7 +477,7 @@ const FullPageMap: React.FC = () => {
                   {filteredPorts.map((port) => (
                     <Marker
                       key={port.id}
-                      position={[parseFloat(port.lat), parseFloat(port.lng)]}
+                      position={[parseFloat(port.lat), parseFloat(port.lng)] as LatLngExpression}
                       icon={getPortIcon(port)}
                       eventHandlers={{
                         click: () => handleItemClick(port, 'port')
