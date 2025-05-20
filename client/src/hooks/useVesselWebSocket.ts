@@ -148,6 +148,7 @@ export function useVesselWebSocket({
     // Create WebSocket connection
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = window.location.host;
+    const port = window.location.port || (protocol === 'wss:' ? '443' : '80');
     
     // Make sure host is defined before creating the URL
     if (!host) {
@@ -157,7 +158,7 @@ export function useVesselWebSocket({
       return;
     }
     
-    // Always use the current domain for WebSocket connections
+    // Always use the current domain and explicit port for WebSocket connections
     const wsUrl = `${protocol}//${host}/ws`;
     
     // Add a unique token to prevent caching issues
@@ -302,6 +303,8 @@ export function useVesselWebSocket({
                 fetchVesselsViaREST();
                 return;
               }
+              
+              const port = window.location.port || (protocol === 'wss:' ? '443' : '80');
               
               // Add a unique token to prevent caching issues
               const reconnectToken = Math.random().toString(36).substring(2, 15);
