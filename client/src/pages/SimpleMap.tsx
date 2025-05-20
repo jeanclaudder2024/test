@@ -19,6 +19,9 @@ interface Vessel {
   imo: string;
   mmsi: string;
   flag: string;
+  speed?: number | string;
+  destination?: string;
+  metadata?: any;
 }
 
 interface Port {
@@ -75,6 +78,9 @@ const SimpleMap: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedRegion, setSelectedRegion] = useState('all');
+  const [selectedVesselType, setSelectedVesselType] = useState('all');
+  const [showVesselStatus, setShowVesselStatus] = useState(true);
 
   // Fetch data on component mount
   useEffect(() => {
@@ -158,7 +164,65 @@ const SimpleMap: React.FC = () => {
     return true; // Assume it's water
   };
 
-  // Filter data based on search term and water location
+  // Get unique vessel types for filter dropdown
+  const vesselTypes = ['all', ...new Set(vessels.map(vessel => vessel.vesselType))];
+  
+  // Helper function to get vessel status based on speed
+  const getVesselStatus = (vessel: Vessel): string => {
+    if (!vessel.speed) return 'Unknown';
+    
+    const speed = typeof vessel.speed === 'string' ? parseFloat(vessel.speed) : vessel.speed;
+    
+    if (speed < 0.1) return 'Stopped';
+    if (speed < 3) return 'Maneuvering';
+    if (speed < 10) return 'Slow';
+    if (speed < 15) return 'Medium';
+    return 'Fast';
+  };
+  
+  // Get status color based on vessel status
+  const getStatusColor = (status: string): string => {
+    switch (status) {
+      case 'Stopped': return '#ef4444'; // Red
+      case 'Maneuvering': return '#f97316'; // Orange 
+      case 'Slow': return '#3b82f6'; // Blue
+      case 'Medium': return '#10b981'; // Green
+      case 'Fast': return '#8b5cf6'; // Purple
+      default: return '#6b7280'; // Gray
+    }
+  };
+  
+  // Determine vessel region based on coordinates or destination
+  const getVesselRegion = (vessel: Vessel): string => {
+    // If vessel has destination that includes region information, use that
+    if (vessel.destination) {
+      const destination = vessel.destination.toLowerCase();
+      if (destination.includes('europe')) return 'Europe';
+      if (destination.includes('asia') || destination.includes('pacific')) return 'Asia-Pacific';
+      if (destination.includes('north america') || destination.includes('usa') || destination.includes('canada')) return 'North America';
+      if (destination.includes('latin') || destination.includes('south america')) return 'Latin America';
+      if (destination.includes('middle east') || destination.includes('persian')) return 'Middle East';
+      if (destination.includes('africa')) return 'Africa';
+    }
+    
+    // Fallback: determine region from coordinates
+    if (vessel.currentLat && vessel.currentLng) {
+      const lat = parseFloat(vessel.currentLat);
+      const lng = parseFloat(vessel.currentLng);
+      
+      // Very rough region determination based on coordinates
+      if (lat > 30 && lat < 75 && lng > -10 && lng < 40) return 'Europe';
+      if (lat > 0 && lat < 60 && lng > 60 && lng < 180) return 'Asia-Pacific';
+      if (lat > 25 && lat < 75 && lng > -170 && lng < -50) return 'North America';
+      if (lat > -60 && lat < 25 && lng > -120 && lng < -30) return 'Latin America';
+      if (lat > 10 && lat < 40 && lng > 30 && lng < 65) return 'Middle East';
+      if (lat > -40 && lat < 35 && lng > -20 && lng < 55) return 'Africa';
+    }
+    
+    return 'Unknown';
+  };
+
+  // Filter data based on all criteria
   const filteredVessels = vessels.filter(vessel => {
     // Basic checks
     if (!vessel.currentLat || !vessel.currentLng) {
@@ -180,11 +244,20 @@ const SimpleMap: React.FC = () => {
     }
     
     // Check search term
-    return (searchTerm === '' || 
+    const matchesSearch = (searchTerm === '' || 
       vessel.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (vessel.imo && vessel.imo.includes(searchTerm)) ||
       vessel.vesselType.toLowerCase().includes(searchTerm.toLowerCase())
     );
+    
+    // Check vessel type filter
+    const matchesType = selectedVesselType === 'all' || vessel.vesselType === selectedVesselType;
+    
+    // Check region filter
+    const vesselRegion = getVesselRegion(vessel);
+    const matchesRegion = selectedRegion === 'all' || vesselRegion === selectedRegion;
+    
+    return matchesSearch && matchesType && matchesRegion;
   });
   
   const filteredPorts = ports.filter(port => 
@@ -226,6 +299,84 @@ const SimpleMap: React.FC = () => {
             </Badge>
           </div>
         </div>
+        
+        {/* Filters row */}
+        <div className="flex flex-wrap gap-4 items-center">
+          {/* Region filter */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">Region:</span>
+            <select 
+              className="px-2 py-1 rounded border text-sm" 
+              value={selectedRegion} 
+              onChange={(e) => setSelectedRegion(e.target.value)}
+            >
+              <option value="all">All Regions</option>
+              <option value="Europe">Europe</option>
+              <option value="Asia-Pacific">Asia-Pacific</option>
+              <option value="North America">North America</option>
+              <option value="Latin America">Latin America</option>
+              <option value="Middle East">Middle East</option>
+              <option value="Africa">Africa</option>
+            </select>
+          </div>
+          
+          {/* Vessel type filter */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">Vessel Type:</span>
+            <select 
+              className="px-2 py-1 rounded border text-sm" 
+              value={selectedVesselType} 
+              onChange={(e) => setSelectedVesselType(e.target.value)}
+            >
+              <option value="all">All Types</option>
+              {vesselTypes.filter(type => type !== 'all').map(type => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
+          </div>
+          
+          {/* Show status toggle */}
+          <div className="flex items-center gap-2 ml-auto">
+            <span className="text-sm font-medium">Show Status:</span>
+            <input 
+              type="checkbox" 
+              checked={showVesselStatus} 
+              onChange={(e) => setShowVesselStatus(e.target.checked)}
+              className="rounded border-gray-300 text-primary focus:ring-primary"
+            />
+          </div>
+        </div>
+        
+        {/* Status legend */}
+        {showVesselStatus && (
+          <div className="mt-4 flex flex-wrap gap-4 items-center text-sm">
+            <span className="font-medium">Status:</span>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded-full bg-red-500"></div>
+              <span>Stopped</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded-full bg-orange-500"></div>
+              <span>Maneuvering</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+              <span>Slow</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded-full bg-green-500"></div>
+              <span>Medium</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded-full bg-purple-500"></div>
+              <span>Fast</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded-full bg-gray-500"></div>
+              <span>Unknown</span>
+            </div>
+          </div>
+        )}
       </div>
       
       <div className="flex-1 relative">
@@ -268,7 +419,13 @@ const SimpleMap: React.FC = () => {
               <Marker
                 key={`vessel-${vessel.id}`}
                 position={[parseFloat(vessel.currentLat || "0"), parseFloat(vessel.currentLng || "0")]}
-                icon={createVesselIcon()}
+                icon={new L.Icon({
+                  iconUrl: 'https://cdn-icons-png.flaticon.com/512/3155/3155845.png',
+                  iconSize: [32, 32],
+                  iconAnchor: [16, 16],
+                  popupAnchor: [0, -16],
+                  className: showVesselStatus ? `vessel-icon status-${getVesselStatus(vessel).toLowerCase()}` : 'vessel-icon'
+                })}
               >
                 <Popup>
                   <div className="p-1">
