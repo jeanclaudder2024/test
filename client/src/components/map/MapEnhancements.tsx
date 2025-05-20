@@ -363,7 +363,7 @@ const MapEnhancements: React.FC<{
     // Add lanes to the map with animated dashed lines
     majorShippingLanes.forEach((lane) => {
       // Create a curved path between points to simulate realistic shipping routes
-      const curvedPath = generateCurvedPath(lane.from, lane.to);
+      const curvedPath = generateCurvedPath([lane.from[0], lane.from[1]], [lane.to[0], lane.to[1]]);
       
       // Create polyline with dash animation
       const polyline = L.polyline(curvedPath, {

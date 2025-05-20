@@ -30,7 +30,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import '../styles/map.css';
+import 'leaflet/dist/leaflet.css';
 
 // Define types for the data we'll be displaying
 interface Vessel {
