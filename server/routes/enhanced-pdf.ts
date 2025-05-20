@@ -78,12 +78,12 @@ enhancedPdfRouter.post('/api/vessels/:id/enhanced-pdf', async (req: Request, res
         right: 60
       },
       info: {
-        Title: `${documentType} - ${vessel.name}`,
-        Author: 'PetroDealHub Maritime System',
-        Creator: 'PetroDealHub Maritime System',
-        Producer: 'PetroDealHub',
-        Subject: `${documentType}`,
-        Keywords: `${vessel.name}, ${vessel.imo}, ${vessel.vesselType}, petroleum, shipping`,
+        Title: `${documentType} - ${vessel.name} - ${new Date().toISOString().split('T')[0]}`,
+        Author: 'PetroDealHub Maritime Documentation System',
+        Creator: 'PetroDealHub International Maritime Services',
+        Producer: 'PetroDealHub Marine Documentation Division',
+        Subject: `Official ${documentType} for Vessel ${vessel.name} (IMO: ${vessel.imo})`,
+        Keywords: `${vessel.name}, ${vessel.imo}, ${vessel.vesselType}, petroleum, shipping, maritime, official, cargo, document, certificate, international`,
         CreationDate: new Date()
       },
       autoFirstPage: true,
@@ -111,45 +111,99 @@ enhancedPdfRouter.post('/api/vessels/:id/enhanced-pdf', async (req: Request, res
     // Add logo at the top
     doc.image(logoBase64, 60, 60, { width: 120 });
     
-    // Add document header with professional design
-    doc.fontSize(22)
-      .fillColor('#F97316')
-      .text(enhancedContent.title.toUpperCase(), 60, 150, { align: 'center' })
+    // Add document header with highly professional maritime design
+    doc.fontSize(24)
+      .fillColor('#00457c') // Maritime blue color
+      .text(enhancedContent.title.toUpperCase(), 60, 130, { align: 'center' })
+      .moveDown(0.2);
+    
+    // Add document number with appropriate styling
+    doc.fontSize(12)
+      .fillColor('#00457c')
+      .text(`Document No: ${enhancedContent.documentNumber || 'N/A'}`, 60, 170, { align: 'center' })
       .moveDown(0.5);
     
-    // Add ship icon and vessel name
-    doc.circle(300, 210, 3).fillAndStroke('#F97316');
-    doc.fontSize(16)
-      .fillColor('#333333')
-      .text(`VESSEL: ${vessel.name}`, 60, 200, { align: 'center' })
-      .moveDown();
+    // Add vessel details box with border
+    const vesselBoxTop = 190;
+    doc.rect(160, vesselBoxTop, 280, 70)
+      .fillAndStroke('#f5f9ff', '#00457c'); // Light blue background with blue border
       
-    // Add decorative line
-    doc.moveTo(60, 230)
-      .lineTo(535, 230)
-      .strokeColor('#F97316')
-      .lineWidth(1)
+    // Add vessel name in bold
+    doc.fontSize(14)
+      .fillColor('#00457c')
+      .text(`VESSEL: ${vessel.name}`, 170, vesselBoxTop + 10, { align: 'center', width: 260 });
+    
+    // Add vessel details in a clean format
+    doc.fontSize(10)
+      .fillColor('#333333')
+      .text(`IMO: ${vessel.imo} | Flag: ${vessel.flag} | Type: ${vessel.vesselType}`, 170, vesselBoxTop + 30, 
+        { align: 'center', width: 260 })
+      .text(`Built: ${vessel.built || 'N/A'} | DWT: ${vessel.deadweight ? vessel.deadweight.toLocaleString() + ' MT' : 'N/A'}`, 
+        170, vesselBoxTop + 45, { align: 'center', width: 260 });
+    
+    // Add decorative double line with maritime styling
+    doc.moveTo(60, 280)
+      .lineTo(535, 280)
+      .strokeColor('#00457c')
+      .lineWidth(2)
       .stroke();
     
-    // Add introduction
-    doc.moveDown()
-      .fontSize(12)
+    doc.moveTo(60, 284)
+      .lineTo(535, 284)
+      .strokeColor('#00457c')
+      .lineWidth(0.5)
+      .stroke();
+    
+    // Add formal document reference
+    doc.moveDown(1.5)
+      .fontSize(9)
+      .fillColor('#666666')
+      .text(`REF: PD/${new Date().getFullYear()}/V${vessel.id}/${documentType.substring(0,3).toUpperCase()}/${Math.floor(1000 + Math.random() * 9000)}`, 
+        { align: 'right' })
+      .moveDown(0.5);
+    
+    // Add introduction with professional styling
+    doc.moveDown(0.5)
+      .fontSize(11)
       .fillColor('#333333')
       .text(enhancedContent.introduction, { align: 'justify' })
       .moveDown(1);
     
-    // Add sections
-    enhancedContent.sections.forEach(section => {
+    // Add sections with improved professional maritime formatting
+    enhancedContent.sections.forEach((section, index) => {
+      // Section header with maritime styling
       doc.moveDown(0.5)
-        .fontSize(14)
-        .fillColor('#F97316')
-        .text(section.heading)
-        .moveDown(0.5);
+        .fontSize(13)
+        .fillColor('#00457c') // Maritime blue
+        .text(section.heading.toUpperCase(), { align: 'left' })
+        .moveDown(0.2);
         
-      doc.fontSize(12)
+      // Add subtle section number indicator
+      doc.circle(doc.x - 10, doc.y - 15, 3)
+        .fillAndStroke('#00457c');
+        
+      // Add subtle separator line
+      const sectionLineY = doc.y - 5;
+      doc.moveTo(60, sectionLineY)
+        .lineTo(200, sectionLineY)
+        .strokeColor('#00457c')
+        .lineWidth(0.5)
+        .stroke()
+        .moveDown(0.2);
+        
+      // Section content with professional typography
+      doc.fontSize(10.5)
         .fillColor('#333333')
-        .text(section.content, { align: 'justify' })
+        .text(section.content, { align: 'justify', lineGap: 2 })
         .moveDown(1);
+        
+      // Add alternating section background for better readability (for even sections)
+      if (index % 2 === 1 && index < enhancedContent.sections.length - 1) {
+        const bgStartY = doc.y - 5;
+        const bgHeight = 1.5; // A thin separator
+        doc.rect(60, bgStartY, 475, bgHeight)
+          .fill('#f0f5fb');
+      }
     });
     
     // Add the document-specific content
@@ -310,44 +364,142 @@ enhancedPdfRouter.post('/api/vessels/:id/enhanced-pdf', async (req: Request, res
         .text(`Country of Origin: ${vessel.departurePort ? vessel.departurePort.split(',')[0] : 'Not specified'}`, 100, doc.y, { align: 'left' });
     }
     
-    // Add conclusion text
-    doc.moveDown(2)
-      .fontSize(12)
+    // Add legal statements section
+    if (enhancedContent.legalStatements) {
+      doc.moveDown(1)
+        .fontSize(9)
+        .fillColor('#444444')
+        .text(enhancedContent.legalStatements, { align: 'justify' })
+        .moveDown(1);
+        
+      // Add decorative separator before conclusion
+      doc.moveTo(160, doc.y)
+        .lineTo(435, doc.y)
+        .strokeColor('#00457c')
+        .lineWidth(0.5)
+        .stroke()
+        .moveDown(1);
+    }
+      
+    // Add conclusion text with professional styling
+    doc.moveDown(1)
+      .fontSize(11)
       .fillColor('#333333')
       .text(enhancedContent.conclusion, { align: 'justify' })
       .moveDown(2);
     
-    // Add signature line
-    doc.moveTo(100, doc.y)
-      .lineTo(250, doc.y)
-      .strokeColor('#333333')
-      .lineWidth(1)
+    // Add professional maritime signature block with seal and official formatting
+    const signatureY = doc.y;
+    
+    // Add signature box with professional maritime styling
+    doc.rect(60, signatureY, 230, 80)
+      .lineWidth(0.5)
+      .strokeColor('#00457c')
+      .fillColor('#f8fafd')
+      .fillAndStroke();
+
+    // Add official signature line
+    doc.moveTo(80, signatureY + 50)
+      .lineTo(270, signatureY + 50)
+      .lineWidth(0.5)
+      .strokeColor('#00457c')
       .stroke();
       
-    doc.moveDown(0.5)
-      .fontSize(10)
+    // Add signature labels
+    doc.fontSize(10)
+      .fillColor('#00457c')
+      .text('AUTHORIZED REPRESENTATIVE', 80, signatureY + 10, { width: 190 })
+      .fontSize(8)
+      .fillColor('#444444')
+      .text('Signature & Official Seal', 80, signatureY + 55, { width: 190 });
+      
+    // Add date block with professional design
+    doc.rect(310, signatureY, 230, 80)
+      .strokeColor('#00457c')
+      .fillColor('#f8fafd')
+      .fillAndStroke();
+      
+    // Add date line
+    doc.moveTo(330, signatureY + 50)
+      .lineTo(520, signatureY + 50)
+      .strokeColor('#00457c')
+      .lineWidth(0.5)
+      .stroke();
+      
+    // Add date info
+    const today = new Date().toISOString().split('T')[0];
+    doc.fontSize(10)
+      .fillColor('#00457c')
+      .text('OFFICIAL CERTIFICATION DATE', 330, signatureY + 10, { width: 190 })
+      .fontSize(9)
       .fillColor('#333333')
-      .text('Authorized Signature', 100, doc.y);
+      .text(today, 330, signatureY + 35, { width: 190 })
+      .fontSize(8)
+      .fillColor('#444444')
+      .text('Document Validity Starts From This Date', 330, signatureY + 55, { width: 190 });
     
-    // Add date on the right side
-    doc.moveDown(0.5)
-      .fontSize(10)
-      .fillColor('#333333')
-      .text(`Date: ${new Date().toLocaleDateString()}`, 350, doc.y - 20);
+    // Add digital stamp/seal image (circular stamp effect)
+    const stampCenterX = 210;
+    const stampCenterY = signatureY + 35;
+    const stampRadius = 25;
     
-    // Add footer
+    // Create circular stamp effect
+    doc.save()
+      .circle(stampCenterX, stampCenterY, stampRadius)
+      .lineWidth(1)
+      .strokeColor('#00457c')
+      .stroke()
+      .restore();
+      
+    // Inner stamp circle
+    doc.save()
+      .circle(stampCenterX, stampCenterY, stampRadius - 3)
+      .lineWidth(0.5)
+      .strokeColor('#00457c')
+      .stroke()
+      .restore();
+      
+    // Stamp text
+    doc.save()
+      .translate(stampCenterX, stampCenterY)
+      .rotate(-30)
+      .fontSize(7)
+      .fillColor('#00457c')
+      .text('PETRODEAL MARITIME', -stampRadius + 5, -4, { align: 'center', width: (stampRadius - 5) * 2 })
+      .rotate(60)
+      .text('OFFICIAL DOCUMENT', -stampRadius + 5, -4, { align: 'center', width: (stampRadius - 5) * 2 })
+      .restore();
+    
+    // Add professional footer with legal info
     const footerTop = 750;
-    doc.moveTo(60, footerTop)
-      .lineTo(535, footerTop)
-      .strokeColor('#F97316')
-      .lineWidth(1)
+    
+    // Add double-line footer separator
+    doc.moveTo(60, footerTop - 10)
+      .lineTo(535, footerTop - 10)
+      .strokeColor('#00457c')
+      .lineWidth(1.5)
       .stroke();
       
-    doc.fontSize(8)
-      .fillColor('#666666')
-      .text('PetroDealHub Maritime System - Confidential Document', 60, footerTop + 10, { align: 'center' })
-      .text(`Generated: ${new Date().toLocaleString()}`, 60, footerTop + 20, { align: 'center' })
-      .text(`Page 1`, 60, footerTop + 30, { align: 'center' });
+    doc.moveTo(60, footerTop - 6)
+      .lineTo(535, footerTop - 6)
+      .strokeColor('#00457c')
+      .lineWidth(0.5)
+      .stroke();
+      
+    // Footer content with professional formatting and detailed information
+    doc.fontSize(7)
+      .fillColor('#333333')
+      .text(`DOCUMENT ID: PDH-${new Date().getFullYear()}-${vessel.id}-${Math.floor(10000 + Math.random() * 90000)}`, 
+        60, footerTop + 5, { align: 'left', width: 250 })
+      .text(`Generated: ${new Date().toLocaleString()}`, 
+        60, footerTop + 15, { align: 'left', width: 250 });
+        
+    doc.fontSize(7)
+      .fillColor('#333333')
+      .text(`PetroDealHub Maritime Documentation System - Official Maritime Document`, 
+        310, footerTop + 5, { align: 'right', width: 225 })
+      .text(`Page 1 of 1 - Secure Document - Verify at validate.petrodealhub.com`, 
+        310, footerTop + 15, { align: 'right', width: 225 });
     
     // Finalize the PDF file
     doc.end();
