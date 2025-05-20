@@ -331,6 +331,38 @@ export default function VesselDetail() {
   const [refineries, setRefineries] = useState<any[]>([]);
   const [ports, setPorts] = useState<any[]>([]);
   
+  // Fetch refineries data for map connections
+  useEffect(() => {
+    const fetchRefineries = async () => {
+      try {
+        const response = await axios.get('/api/refineries');
+        if (response.status === 200) {
+          setRefineries(response.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch refineries for map:', error);
+      }
+    };
+    
+    fetchRefineries();
+  }, []);
+  
+  // Fetch ports data for map connections
+  useEffect(() => {
+    const fetchPorts = async () => {
+      try {
+        const response = await axios.get('/api/ports');
+        if (response.status === 200) {
+          setPorts(response.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch ports for map:', error);
+      }
+    };
+    
+    fetchPorts();
+  }, []);
+
   // Function to fetch vessel data directly using REST API
   const fetchVesselData = async () => {
     if (!vesselId) return;
@@ -797,12 +829,14 @@ export default function VesselDetail() {
                                 {/* Get refinery ID and position from format REF:id:name */}
                                 {(() => {
                                   try {
+                                    if (!refineries || refineries.length === 0) return null;
+                                    
                                     const parts = vessel.destinationPort.split(':');
                                     const refineryId = parts[1];
                                     const refineryName = parts[2];
                                     
                                     // Find the refinery if it exists
-                                    const refinery = refineries.find(r => r.id.toString() === refineryId);
+                                    const refinery = refineries.find((r: any) => r.id.toString() === refineryId);
                                     if (!refinery || !refinery.lat || !refinery.lng) return null;
                                     
                                     // Calculate if vessel is close to refinery (within 10km)
@@ -888,9 +922,11 @@ export default function VesselDetail() {
                                 {/* Check if we have port coordinates from the storage */}
                                 {(() => {
                                   try {
+                                    if (!ports || ports.length === 0) return null;
+                                    
                                     // Find the port in our database
                                     const portName = vessel.destinationPort;
-                                    const port = ports.find(p => p.name === portName);
+                                    const port = ports.find((p: any) => p.name === portName);
                                     if (!port || !port.lat || !port.lng) return null;
                                     
                                     // Calculate if vessel is close to port (within 10km)
