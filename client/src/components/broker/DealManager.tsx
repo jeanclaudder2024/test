@@ -1,7 +1,44 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { queryClient, apiRequest } from '@/lib/queryClient';
-import { Deal, Company } from '@/types';
+import { queryClient } from '@/lib/queryClient';
+
+// Using local types instead of imports from a separate file
+type Deal = {
+  id: number;
+  brokerId: number;
+  brokerName: string;
+  sellerId: number;
+  sellerName: string;
+  buyerId: number;
+  buyerName: string;
+  vesselId?: number;
+  vesselName?: string;
+  cargoType: string;
+  volume: number;
+  volumeUnit: string;
+  price: number;
+  currency: string;
+  status: 'draft' | 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  departurePortId?: number;
+  departurePortName?: string;
+  destinationPortId?: number;
+  destinationPortName?: string;
+  estimatedDeparture?: string;
+  estimatedArrival?: string;
+  createdAt: string;
+  lastUpdated?: string;
+  commissionRate?: number;
+  commissionAmount?: number;
+  documents?: any[];
+};
+
+type Company = {
+  id: number;
+  name: string;
+  country?: string;
+  specialization?: string;
+  fleetSize?: number;
+};
 import { useToast } from '@/hooks/use-toast';
 import {
   Card,
@@ -105,10 +142,19 @@ export function DealManager({ brokerId }: DealManagerProps) {
   // Mutation for creating a new deal
   const createDealMutation = useMutation({
     mutationFn: async (dealData: Partial<Deal>) => {
-      return await apiRequest('/api/broker-deals', {
+      const response = await fetch('/api/broker-deals', {
         method: 'POST',
-        data: dealData,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(dealData),
       });
+      
+      if (!response.ok) {
+        throw new Error('Failed to create deal');
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
       toast({

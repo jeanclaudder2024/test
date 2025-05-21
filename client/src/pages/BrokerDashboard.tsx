@@ -1,6 +1,66 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Broker, Company, Deal, BrokerCompanyConnection } from '@/types';
+
+// Using local types since the imports aren't working correctly
+type Broker = {
+  id: number;
+  name: string;
+  company: string;
+  email: string;
+  phone?: string;
+  country?: string;
+  active: boolean;
+  eliteMember?: boolean;
+  eliteMemberSince?: string;
+  eliteMemberExpires?: string;
+  membershipId?: string;
+  shippingAddress?: string;
+  subscriptionPlan?: string;
+  lastLogin?: string;
+  specialization?: string[];
+  activeDeals?: number;
+  totalDealsValue?: number;
+  performanceRating?: number;
+};
+
+type Company = {
+  id: number;
+  name: string;
+  country?: string;
+  region?: string;
+  headquarters?: string;
+  specialization?: string;
+  fleetSize?: number;
+  logo?: string;
+  foundedYear?: number;
+};
+
+type Deal = {
+  id: number;
+  brokerId: number;
+  brokerName: string;
+  sellerId: number;
+  sellerName: string;
+  buyerId: number;
+  buyerName: string;
+  vesselName?: string;
+  cargoType: string;
+  volume: number;
+  volumeUnit: string;
+  price: number;
+  currency: string;
+  status: string;
+  createdAt: string;
+  commissionRate?: number;
+};
+
+type BrokerCompanyConnection = {
+  id: number;
+  brokerId: number;
+  companyId: number;
+  connectionType: string;
+  status: string;
+};
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -369,7 +429,7 @@ export default function BrokerDashboard() {
                               <Avatar className="h-10 w-10 rounded-md">
                                 <AvatarImage src={company.logo} alt={company.name} />
                                 <AvatarFallback className="rounded-md">
-                                  {company.name.split(' ').map(w => w[0]).join('').slice(0, 2)}
+                                  {company.name.split(' ').map((w: string) => w[0]).join('').slice(0, 2)}
                                 </AvatarFallback>
                               </Avatar>
                             ) : (

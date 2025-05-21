@@ -1,7 +1,35 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { queryClient, apiRequest } from '@/lib/queryClient';
-import { Company, BrokerCompanyConnection } from '@/types';
+import { queryClient } from '@/lib/queryClient';
+
+// Using local types instead of imports since the types are already defined in types/index.ts
+type Company = {
+  id: number;
+  name: string;
+  country?: string;
+  region?: string;
+  headquarters?: string;
+  foundedYear?: number;
+  ceo?: string;
+  fleetSize?: number;
+  specialization?: string;
+  website?: string;
+  logo?: string;
+  description?: string;
+};
+
+type BrokerCompanyConnection = {
+  id: number;
+  brokerId: number;
+  companyId: number;
+  connectionType: 'buyer' | 'seller' | 'both';
+  status: 'pending' | 'active' | 'inactive' | 'rejected';
+  connectionDate?: string;
+  lastActivityDate?: string;
+  dealsCount?: number;
+  totalVolume?: number;
+  notes?: string;
+};
 import { useToast } from '@/hooks/use-toast';
 import {
   Card,
@@ -93,10 +121,20 @@ export function CompanyConnections({ brokerId }: CompanyConnectionsProps) {
       connectionType: 'buyer' | 'seller' | 'both';
       notes?: string;
     }) => {
-      return await apiRequest('/api/broker-connections', {
+      // Simple fetch implementation instead of using apiRequest
+      const response = await fetch('/api/broker-connections', {
         method: 'POST',
-        data,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
       });
+      
+      if (!response.ok) {
+        throw new Error('Failed to establish connection');
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
       toast({

@@ -1,6 +1,39 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Company, Vessel } from '@/types';
+
+// Using local types instead of importing from a separate file
+type Company = {
+  id: number;
+  name: string;
+  country?: string;
+  region?: string;
+  headquarters?: string;
+  foundedYear?: number;
+  ceo?: string;
+  fleetSize?: number;
+  specialization?: string;
+  website?: string;
+  logo?: string;
+  description?: string;
+  revenue?: number;
+  employees?: number;
+  publiclyTraded?: boolean;
+  stockSymbol?: string;
+  status?: string;
+  lastUpdated?: string;
+};
+
+type Vessel = {
+  id: number;
+  name: string;
+  mmsi?: number;
+  imo?: number;
+  type?: string;
+  flag?: string;
+  status?: string;
+  lat?: number;
+  lng?: number;
+};
 import {
   Card,
   CardContent,
