@@ -591,8 +591,8 @@ const SimpleMap: React.FC = () => {
               />
             )}
             
-            {/* Vessels */}
-            {filteredVessels.map((vessel) => (
+            {/* Vessels - only show if toggle is enabled */}
+            {showVessels && filteredVessels.map((vessel) => (
               <Marker
                 key={`vessel-${vessel.id}`}
                 position={[parseFloat(vessel.currentLat || "0"), parseFloat(vessel.currentLng || "0")]}
@@ -616,8 +616,8 @@ const SimpleMap: React.FC = () => {
               </Marker>
             ))}
             
-            {/* Ports */}
-            {filteredPorts.map((port) => (
+            {/* Ports - only show if toggle is enabled */}
+            {showPorts && filteredPorts.map((port) => (
               <Marker
                 key={`port-${port.id}`}
                 position={[parseFloat(port.lat), parseFloat(port.lng)]}
@@ -701,8 +701,8 @@ const SimpleMap: React.FC = () => {
               </Marker>
             ))}
             
-            {/* Refineries */}
-            {filteredRefineries.map((refinery) => (
+            {/* Refineries - only show if toggle is enabled */}
+            {showRefineries && filteredRefineries.map((refinery) => (
               <Marker
                 key={`refinery-${refinery.id}`}
                 position={[parseFloat(refinery.lat), parseFloat(refinery.lng)]}
