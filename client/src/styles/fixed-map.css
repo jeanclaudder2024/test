@@ -1,0 +1,21 @@
+/* Fixed map styles to ensure vessel markers display correctly */
+
+/* Ensure vessel icons appear correctly */
+.vessel-icon {
+  z-index: 9999 !important;
+}
+
+/* Make vessel icons more visible */
+.vessel-marker {
+  display: block !important;
+  z-index: 9999 !important;
+}
+
+/* Fix z-index issues on map layers */
+.leaflet-marker-pane {
+  z-index: 600 !important;
+}
+
+.leaflet-popup-pane {
+  z-index: 700 !important;
+}

@@ -4,7 +4,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import '../styles/map-status.css';
 import '../styles/vessel-popup.css';
-import '../components/map/mapStyles.css';
+import '../styles/fixed-map.css';
 import tankerIcon from '../assets/tanker-icon.svg';
 import cargoIcon from '../assets/cargo-icon.svg';
 import passengerIcon from '../assets/passenger-icon.svg';
@@ -550,19 +550,21 @@ const SimpleMap: React.FC = () => {
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
             
-            {/* Vessels */}
-            {filteredVessels.map((vessel) => (
-              <Marker
-                key={`vessel-${vessel.id}`}
-                position={[parseFloat(vessel.currentLat || "0"), parseFloat(vessel.currentLng || "0")]}
-                zIndexOffset={1000}
-                icon={new L.Icon({
-                  iconUrl: getVesselIconUrl(vessel),
-                  iconSize: [30, 30],
-                  iconAnchor: [15, 15],
-                  popupAnchor: [0, -15],
-                  className: `vessel-icon status-${getVesselStatus(vessel).toLowerCase()}`
-                })}
+            {/* Vessels Layer */}
+            <LayersControl.Overlay checked name="Vessels">
+              <FeatureGroup>
+                {filteredVessels.map((vessel) => (
+                  <Marker
+                    key={`vessel-${vessel.id}`}
+                    position={[parseFloat(vessel.currentLat || "0"), parseFloat(vessel.currentLng || "0")]}
+                    zIndexOffset={10000}
+                    icon={new L.Icon({
+                      iconUrl: getVesselIconUrl(vessel),
+                      iconSize: [36, 36],
+                      iconAnchor: [18, 18],
+                      popupAnchor: [0, -18],
+                      className: `vessel-icon status-${getVesselStatus(vessel).toLowerCase()}`
+                    })}
               >
                 <Popup maxWidth={400} minWidth={350}>
                   <div className="vessel-popup-container">
@@ -573,8 +575,10 @@ const SimpleMap: React.FC = () => {
                     />
                   </div>
                 </Popup>
-              </Marker>
-            ))}
+                  </Marker>
+                ))}
+              </FeatureGroup>
+            </LayersControl.Overlay>
             
             {/* Ports */}
             {filteredPorts.map((port) => (
