@@ -92,6 +92,12 @@ const SimpleMap: React.FC = () => {
   const [showVesselStatus, setShowVesselStatus] = useState(true);
   const [showPortProximityControls, setShowPortProximityControls] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showLegend, setShowLegend] = useState(false);
+  const [mapMode, setMapMode] = useState('standard');
+  const [showVessels, setShowVessels] = useState(true);
+  const [showPorts, setShowPorts] = useState(true);
+  const [showRefineries, setShowRefineries] = useState(true);
+  const [trafficDensity, setTrafficDensity] = useState(false);
 
   // Function to fetch data
   const fetchData = async () => {
