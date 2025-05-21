@@ -86,16 +86,19 @@ const VesselPopup: React.FC<VesselPopupProps> = ({
   const status = getVesselStatus(vessel);
   
   return (
-    <Card className="w-[350px] border-none shadow-lg">
-      <CardHeader className="bg-primary text-primary-foreground pb-2">
+    <Card className="w-[350px] border-none shadow-xl rounded-xl overflow-hidden">
+      <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white pb-3 pt-4">
         <div className="flex justify-between items-start">
           <div>
-            <CardTitle className="text-lg font-bold">{vessel.name}</CardTitle>
-            <CardDescription className="text-primary-foreground/80">
+            <CardTitle className="text-xl font-bold tracking-tight">{vessel.name}</CardTitle>
+            <CardDescription className="text-white/90 mt-1 font-medium">
               {vessel.vesselType || 'Unknown Type'} • IMO: {vessel.imo || 'N/A'}
             </CardDescription>
           </div>
-          <Badge variant="outline" className={`${statusClass} text-white px-2 py-1`}>
+          <Badge 
+            variant="outline" 
+            className={`${statusClass} text-white px-3 py-1 font-medium rounded-full backdrop-blur-sm bg-opacity-60 border-none shadow-sm`}
+          >
             {status}
           </Badge>
         </div>
@@ -103,10 +106,25 @@ const VesselPopup: React.FC<VesselPopupProps> = ({
       
       <CardContent className="p-0">
         <Tabs defaultValue="details">
-          <TabsList className="w-full">
-            <TabsTrigger value="details" className="flex-1">Details</TabsTrigger>
-            <TabsTrigger value="voyage" className="flex-1">Voyage</TabsTrigger>
-            <TabsTrigger value="cargo" className="flex-1">Cargo</TabsTrigger>
+          <TabsList className="w-full grid grid-cols-3 bg-gray-50 p-1 rounded-none">
+            <TabsTrigger value="details" className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">
+              <span className="flex items-center gap-1.5">
+                <Ship size={14} />
+                <span>Details</span>
+              </span>
+            </TabsTrigger>
+            <TabsTrigger value="voyage" className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">
+              <span className="flex items-center gap-1.5">
+                <Navigation size={14} />
+                <span>Voyage</span>
+              </span>
+            </TabsTrigger>
+            <TabsTrigger value="cargo" className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">
+              <span className="flex items-center gap-1.5">
+                <Truck size={14} />
+                <span>Cargo</span>
+              </span>
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="details" className="p-4 pt-2">
@@ -165,14 +183,24 @@ const VesselPopup: React.FC<VesselPopupProps> = ({
               </div>
               
               {/* Voyage progress bar */}
-              <div className="mt-2 mb-2">
-                <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-blue-500 rounded-full transition-all"
-                    style={{ width: `${calculateVoyageProgress()}%` }}
-                  ></div>
+              <div className="mt-3 mb-3">
+                <div className="relative">
+                  <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden shadow-inner">
+                    <div 
+                      className="h-full bg-gradient-to-r from-blue-400 to-blue-600 rounded-full transition-all"
+                      style={{ width: `${calculateVoyageProgress()}%` }}
+                    ></div>
+                  </div>
+                  
+                  {/* Origin and destination markers */}
+                  <div className="absolute -top-1 left-0 w-5 h-5 rounded-full bg-blue-600 border-2 border-white shadow-md flex items-center justify-center">
+                    <Anchor size={10} className="text-white" />
+                  </div>
+                  <div className="absolute -top-1 right-0 w-5 h-5 rounded-full bg-indigo-600 border-2 border-white shadow-md flex items-center justify-center">
+                    <Navigation size={10} className="text-white" />
+                  </div>
                 </div>
-                <div className="flex justify-between mt-1 text-xs text-gray-500">
+                <div className="flex justify-between mt-2 text-xs text-gray-600 font-medium">
                   <span>{vessel.departurePort || 'Origin'}</span>
                   <span>{vessel.destinationPort || 'Destination'}</span>
                 </div>
@@ -223,19 +251,25 @@ const VesselPopup: React.FC<VesselPopupProps> = ({
         </Tabs>
       </CardContent>
       
-      <CardFooter className="border-t p-2 flex flex-col gap-3">
+      <CardFooter className="border-t p-3 flex flex-col gap-3 bg-gradient-to-b from-white to-gray-50">
         <a 
           href={`/vessels/${vessel.id}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md text-center font-medium text-sm flex items-center justify-center gap-1 transition-colors"
+          className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-2.5 px-4 rounded-lg text-center font-medium text-sm flex items-center justify-center gap-2 transition-all shadow-sm hover:shadow"
         >
           <Ship size={16} /> View Detailed Information
         </a>
         
-        <div className="w-full flex justify-between items-center text-xs text-gray-500">
-          <span>MMSI: {vessel.mmsi || 'N/A'}</span>
-          <span>Last updated: {vessel.lastUpdated ? new Date(vessel.lastUpdated).toLocaleString() : 'Unknown'}</span>
+        <div className="w-full flex justify-between items-center text-xs text-gray-500 px-1">
+          <div className="flex items-center gap-1">
+            <span className="font-medium">MMSI:</span>
+            <span>{vessel.mmsi || 'N/A'}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Calendar size={12} className="text-gray-400" />
+            <span>{vessel.lastUpdated ? new Date(vessel.lastUpdated).toLocaleString() : 'Unknown'}</span>
+          </div>
         </div>
       </CardFooter>
     </Card>
