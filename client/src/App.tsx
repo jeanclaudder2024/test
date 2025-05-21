@@ -13,6 +13,7 @@ import PortDetail from "@/pages/PortDetail";
 import PortImport from "@/pages/PortImport";
 import PortVesselProximity from "@/pages/PortVesselProximity";
 import Brokers from "@/pages/Brokers";
+import BrokerDashboard from "@/pages/BrokerDashboard";
 import Documents from "@/pages/Documents";
 import AIAssistantPage from "@/pages/AIAssistant";
 import Settings from "@/pages/Settings";
@@ -122,6 +123,7 @@ function Router() {
             <Route path="/ports/proximity" component={PortVesselProximity} />
             <Route path="/ports/:id" component={PortDetail} />
             <Route path="/brokers" component={Brokers} />
+            <Route path="/broker-dashboard" component={BrokerDashboard} />
             <Route path="/companies" component={Companies} />
             <Route path="/documents" component={Documents} />
             <Route path="/ai-assistant" component={AIAssistantPage} />

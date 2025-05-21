@@ -17,7 +17,8 @@ import {
   Radio,
   Database,
   Anchor,
-  Globe
+  Globe,
+  Briefcase
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -94,6 +95,12 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
       title: t("nav.brokers"),
       path: "/brokers",
       icon: <Users className="h-5 w-5 mr-3" />,
+    },
+    {
+      title: "Broker Dashboard",
+      path: "/broker-dashboard",
+      icon: <Briefcase className="h-5 w-5 mr-3" />,
+      badge: "NEW",
     },
     {
       title: "Shipping Companies",

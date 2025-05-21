@@ -29,7 +29,8 @@ import {
   ShieldCheck,
   Bell,
   ArrowUpRight,
-  ArrowDownRight
+  ArrowDownRight,
+  ArrowRight
 } from 'lucide-react';
 import {
   Avatar,
