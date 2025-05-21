@@ -391,6 +391,28 @@ export default function SimpleBrokerDashboard() {
     const company = companies.find(c => c.id === companyId);
     if (company) {
       alert(`Starting new deal proposal with ${company.name}\nYou'll be redirected to the deal creation form.`);
+      
+      // In a real app, this would navigate to a deal creation form
+      // For now, we'll create a new pending deal to demonstrate functionality
+      const newDeal: Deal = {
+        id: deals.length + 1,
+        seller: company.name,
+        buyer: "Your Client",
+        product: company.products[0],
+        quantity: "100,000 bbl",
+        value: "$12.5M",
+        commission: "$125K",
+        status: 'proposed',
+        date: new Date().toISOString().split('T')[0]
+      };
+      
+      setDeals([newDeal, ...deals]);
+      
+      // Add to activity log
+      setActivities([
+        { type: 'deal', deal: `${company.name} → New Client`, value: '$12.5M', time: 'Just now' },
+        ...activities
+      ]);
     }
   };
   
