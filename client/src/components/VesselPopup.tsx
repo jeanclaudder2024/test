@@ -256,7 +256,7 @@ const VesselPopup: React.FC<VesselPopupProps> = ({
           href={`/vessels/${vessel.id}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-2.5 px-4 rounded-lg text-center font-medium text-sm flex items-center justify-center gap-2 transition-all shadow-sm hover:shadow"
+          className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white py-2.5 px-4 rounded-lg text-center font-medium text-sm flex items-center justify-center gap-2 transition-all shadow-sm hover:shadow"
         >
           <Ship size={16} /> View Detailed Information
         </a>
