@@ -436,7 +436,10 @@ const SimpleMap: React.FC = () => {
           <MapContainer
             center={[20, 0]}
             zoom={3}
-            style={{ height: '100%', width: '100%' }}
+            minZoom={2}
+            maxBounds={[[-90, -180], [90, 180]]}
+            maxBoundsViscosity={1.0}
+            style={{ height: '100%', width: '100%', background: '#a4cae1' }}
             zoomControl={true}
           >
             <TileLayer
