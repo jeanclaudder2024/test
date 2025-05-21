@@ -20,6 +20,29 @@ import {
 
 export default function SimpleBrokerDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
+  const [connectionStatus, setConnectionStatus] = useState({
+    'Saudi Aramco': 'connected',
+    'Shell Trading': 'connected',
+    'ADNOC Distribution': 'pending',
+    'BP Trading': 'connected',
+    'Kuwait Petroleum': 'connected',
+    'Total Energies': 'none'
+  });
+  
+  // Function to handle viewing company details
+  const handleViewDetails = (companyName: string) => {
+    alert(`Opening detailed profile for ${companyName}`);
+    // In a real app, this would navigate to a company profile page
+  };
+  
+  // Function to handle connecting with a company
+  const handleConnect = (companyName: string) => {
+    alert(`Initiating connection with ${companyName}`);
+    setConnectionStatus(prev => ({
+      ...prev,
+      [companyName]: 'pending'
+    }));
+  };
   
   return (
     <div className="container mx-auto py-6">
@@ -243,7 +266,11 @@ export default function SimpleBrokerDashboard() {
                         </div>
                       </div>
                       
-                      <Button className="w-full mt-4" variant="outline">
+                      <Button 
+                        className="w-full mt-4" 
+                        variant="outline"
+                        onClick={() => handleViewDetails('Saudi Aramco')}
+                      >
                         <ArrowRight className="mr-2 h-4 w-4" />
                         View Details
                       </Button>
@@ -384,13 +411,21 @@ export default function SimpleBrokerDashboard() {
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-muted-foreground">Status</span>
-                          <Badge variant="outline">Not Connected</Badge>
+                          <Badge variant={connectionStatus['Total Energies'] === 'none' ? 'outline' : 'default'}>
+                            {connectionStatus['Total Energies'] === 'none' ? 'Not Connected' : 
+                             connectionStatus['Total Energies'] === 'pending' ? 'Pending' : 'Connected'}
+                          </Badge>
                         </div>
                       </div>
                       
-                      <Button className="w-full mt-4">
+                      <Button 
+                        className="w-full mt-4"
+                        onClick={() => handleConnect('Total Energies')}
+                        disabled={connectionStatus['Total Energies'] === 'pending'}
+                      >
                         <ArrowRight className="mr-2 h-4 w-4" />
-                        Connect Now
+                        {connectionStatus['Total Energies'] === 'none' ? 'Connect Now' : 
+                         connectionStatus['Total Energies'] === 'pending' ? 'Connection Pending' : 'Manage Connection'}
                       </Button>
                     </CardContent>
                   </Card>
