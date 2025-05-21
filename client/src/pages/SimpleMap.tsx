@@ -748,13 +748,144 @@ const SimpleMap: React.FC = () => {
                 </Popup>
               </Marker>
             ))}
-            {/* Map Controls */}
-            <div className="absolute bottom-4 right-4 z-10 space-y-4">
+            {/* Enhanced Map Controls */}
+            <div className="absolute bottom-4 right-4 z-10 space-y-2">
+              {/* Map Layers Control */}
+              <Card className="w-10 h-10 flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors shadow-md">
+                <button
+                  className="p-2 relative"
+                  onClick={() => setShowMapLayers(!showMapLayers)}
+                  title="Map Layers"
+                >
+                  <Layers className="w-5 h-5" />
+                  {showMapLayers && (
+                    <div className="absolute bottom-12 right-0 bg-white p-3 rounded-lg shadow-lg w-64">
+                      <h3 className="text-sm font-bold mb-2 flex items-center"><Map className="w-4 h-4 mr-1" /> Map Style</h3>
+                      <Select
+                        value={mapStyle}
+                        onValueChange={(value) => setMapStyle(value)}
+                      >
+                        <SelectTrigger className="mb-2">
+                          <SelectValue placeholder="Select map style" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="standard">Standard</SelectItem>
+                          <SelectItem value="satellite">Satellite</SelectItem>
+                          <SelectItem value="dark">Dark Mode</SelectItem>
+                          <SelectItem value="terrain">Terrain</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      
+                      <h3 className="text-sm font-bold mt-3 mb-2 flex items-center"><Layers className="w-4 h-4 mr-1" /> Display Layers</h3>
+                      <div className="space-y-2">
+                        <div className="flex items-center">
+                          <input 
+                            type="checkbox" 
+                            id="showVessels" 
+                            checked={showVessels} 
+                            onChange={() => setShowVessels(!showVessels)} 
+                            className="mr-2"
+                          />
+                          <label htmlFor="showVessels" className="text-sm">Vessels</label>
+                        </div>
+                        <div className="flex items-center">
+                          <input 
+                            type="checkbox" 
+                            id="showPorts" 
+                            checked={showPorts} 
+                            onChange={() => setShowPorts(!showPorts)} 
+                            className="mr-2"
+                          />
+                          <label htmlFor="showPorts" className="text-sm">Ports</label>
+                        </div>
+                        <div className="flex items-center">
+                          <input 
+                            type="checkbox" 
+                            id="showRefineries" 
+                            checked={showRefineries} 
+                            onChange={() => setShowRefineries(!showRefineries)} 
+                            className="mr-2"
+                          />
+                          <label htmlFor="showRefineries" className="text-sm">Refineries</label>
+                        </div>
+                        <div className="flex items-center">
+                          <input 
+                            type="checkbox" 
+                            id="showVesselStatus" 
+                            checked={showVesselStatus} 
+                            onChange={() => setShowVesselStatus(!showVesselStatus)} 
+                            className="mr-2"
+                          />
+                          <label htmlFor="showVesselStatus" className="text-sm">Vessel Status</label>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </button>
+              </Card>
+
+              {/* Location Finder Button */}
+              <Card className="w-10 h-10 flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors shadow-md">
+                <button
+                  className="p-2 relative"
+                  onClick={() => setShowLocationFinder(!showLocationFinder)}
+                  title="Find Location"
+                >
+                  <Target className="w-5 h-5" />
+                  {showLocationFinder && (
+                    <div className="absolute bottom-12 right-0 bg-white p-3 rounded-lg shadow-lg w-64">
+                      <h3 className="text-sm font-bold mb-2 flex items-center"><Target className="w-4 h-4 mr-1" /> Find Location</h3>
+                      <div className="space-y-2">
+                        <Input 
+                          placeholder="Search for a port or refinery..."
+                          value={locationSearch}
+                          onChange={(e) => setLocationSearch(e.target.value)}
+                        />
+                        <Button 
+                          size="sm" 
+                          className="w-full" 
+                          onClick={handleLocationSearch}
+                        >
+                          Find
+                        </Button>
+                        
+                        {locationResults.length > 0 && (
+                          <div className="mt-2 max-h-40 overflow-y-auto">
+                            <p className="text-xs text-gray-500 mb-1">Search Results:</p>
+                            {locationResults.map((item, index) => (
+                              <div 
+                                key={index} 
+                                className="text-sm p-1 hover:bg-gray-100 cursor-pointer rounded"
+                                onClick={() => handleFlyToLocation(item)}
+                              >
+                                {item.name} ({item.type})
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </button>
+              </Card>
+
+              {/* Full Screen Button */}
+              <Card className="w-10 h-10 flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors shadow-md">
+                <button
+                  className="p-2"
+                  onClick={toggleFullScreen}
+                  title={isFullScreen ? "Exit Full Screen" : "Full Screen"}
+                >
+                  {isFullScreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
+                </button>
+              </Card>
+              
               {/* Settings button */}
-              <Card className="w-10 h-10 flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors">
+              <Card className="w-10 h-10 flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors shadow-md">
                 <button
                   className="p-2"
                   onClick={() => setShowSettings(!showSettings)}
+                  title="Settings"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
@@ -764,18 +895,19 @@ const SimpleMap: React.FC = () => {
               </Card>
               
               {/* Refresh button */}
-              <Card className="w-10 h-10 flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors">
+              <Card className="w-10 h-10 flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors shadow-md">
                 <button
                   className="p-2"
                   onClick={handleRefresh}
                   disabled={loading}
+                  title="Refresh Data"
                 >
                   <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin text-gray-400' : ''}`} />
                 </button>
               </Card>
               
               {/* Port Proximity button */}
-              <Card className="w-10 h-10 flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors">
+              <Card className="w-10 h-10 flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors shadow-md">
                 <button
                   className="p-2"
                   onClick={() => setShowPortProximityControls(!showPortProximityControls)}
