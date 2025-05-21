@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import React, { useState, useEffect, useRef } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, ZoomControl, useMap, LayersControl, FeatureGroup, Circle, Tooltip } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import '../styles/map-status.css';
@@ -13,10 +13,11 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import VesselPopup from '../components/VesselPopup';
 import PortProximityControls from '../components/map/PortProximityControls';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Search, Anchor } from 'lucide-react';
+import { RefreshCw, Search, Anchor, Layers, Navigation, Map, Target, AlertCircle, BarChart2, Info, List, Maximize, Minimize } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 // Define interfaces for data types
 interface Vessel {
@@ -87,6 +88,21 @@ const SimpleMap: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Map display controls
+  const [showVessels, setShowVessels] = useState(true);
+  const [showPorts, setShowPorts] = useState(true);
+  const [showRefineries, setShowRefineries] = useState(true);
+  const [showRoutes, setShowRoutes] = useState(false);
+  const [mapStyle, setMapStyle] = useState('standard');
+  
+  // UI control states
+  const [showMapLayers, setShowMapLayers] = useState(false);
+  const [showAnalytics, setShowAnalytics] = useState(false);
+  const [showLocationFinder, setShowLocationFinder] = useState(false);
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const [locationSearch, setLocationSearch] = useState('');
+  const [locationResults, setLocationResults] = useState<any[]>([]);
   const [selectedRegion, setSelectedRegion] = useState('all');
   const [selectedVesselType, setSelectedVesselType] = useState('all');
   const [showVesselStatus, setShowVesselStatus] = useState(true);
@@ -129,6 +145,83 @@ const SimpleMap: React.FC = () => {
   useEffect(() => {
     fetchData();
   }, []);
+  
+  // Map reference for controlling the map
+  const mapRef = useRef<any>(null);
+  
+  // Handle fullscreen toggle
+  const toggleFullScreen = () => {
+    const mapElement = document.getElementById('maritime-map-container');
+    
+    if (!isFullScreen) {
+      if (mapElement?.requestFullscreen) {
+        mapElement.requestFullscreen()
+          .then(() => setIsFullScreen(true))
+          .catch(err => console.error("Fullscreen error:", err));
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen()
+          .then(() => setIsFullScreen(false))
+          .catch(err => console.error("Exit fullscreen error:", err));
+      }
+    }
+  };
+  
+  // Handle location search
+  const handleLocationSearch = () => {
+    if (!locationSearch.trim()) return;
+    
+    // Search in ports and refineries
+    const portResults = ports.filter(port => 
+      port.name.toLowerCase().includes(locationSearch.toLowerCase()) ||
+      port.country.toLowerCase().includes(locationSearch.toLowerCase())
+    ).map(port => ({
+      id: port.id,
+      name: port.name,
+      country: port.country,
+      lat: parseFloat(port.lat),
+      lng: parseFloat(port.lng),
+      type: 'port'
+    }));
+    
+    const refineryResults = refineries.filter(refinery => 
+      refinery.name.toLowerCase().includes(locationSearch.toLowerCase()) ||
+      refinery.country.toLowerCase().includes(locationSearch.toLowerCase())
+    ).map(refinery => ({
+      id: refinery.id,
+      name: refinery.name,
+      country: refinery.country,
+      lat: parseFloat(refinery.lat),
+      lng: parseFloat(refinery.lng),
+      type: 'refinery'
+    }));
+    
+    setLocationResults([...portResults, ...refineryResults]);
+  };
+  
+  // Handle flying to a location
+  const handleFlyToLocation = (location: any) => {
+    if (mapRef.current) {
+      // Access the Leaflet map instance and fly to location
+      const leafletMap = mapRef.current;
+      leafletMap.flyTo([location.lat, location.lng], 10, {
+        animate: true,
+        duration: 1.5
+      });
+      
+      setShowLocationFinder(false);
+      setLocationResults([]);
+      setLocationSearch('');
+    }
+  };
+  
+  // Map component to handle map reference
+  const MapController = () => {
+    const map = useMap();
+    mapRef.current = map;
+    return null;
+  };
 
   // Helper function to check if coordinate is on water (simple version)
   const isWaterLocation = (lat: number, lng: number): boolean => {
