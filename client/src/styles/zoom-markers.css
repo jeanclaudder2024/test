@@ -5,8 +5,9 @@
   opacity: 1 !important;
   visibility: visible !important;
   display: block !important;
-  z-index: 1000 !important;
+  z-index: 10000 !important;
   transition: transform 0.2s ease-out;
+  pointer-events: auto !important;
 }
 
 /* Vessel markers at different zoom levels */
@@ -45,16 +46,29 @@
 
 /* Fix for vessel markers to appear above other elements */
 .vessel-marker {
-  z-index: 5000 !important;
+  z-index: 999999 !important;
 }
 
 /* Fix marker stacking order to match intended layer hierarchy */
 .leaflet-marker-pane {
-  z-index: 600 !important;
+  z-index: 999000 !important;
 }
 
 .leaflet-popup-pane {
-  z-index: 610 !important;
+  z-index: 999950 !important;
+}
+
+/* Override Leaflet's z-index layering system to ensure markers always show on top */
+.leaflet-pane {
+  z-index: 400 !important;
+}
+
+.leaflet-overlay-pane {
+  z-index: 900 !important;
+}
+
+.leaflet-map-pane {
+  z-index: 200 !important;
 }
 
 /* Special styles to force visibility */
