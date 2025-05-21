@@ -82,7 +82,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/vessels/:id/generate-position-data", generateVesselPositionData);
   
   // Register port proximity router - adds vessels near ports and refineries
-  app.use("/api/maritime", portProximityRouter);
+  app.use("/api/port-proximity", portProximityRouter);
 
   // Endpoint to clear all vessel and refinery data from the database
   if (app.get("env") === "development") {

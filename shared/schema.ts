@@ -55,6 +55,8 @@ export const vessels = pgTable("vessels", {
   cargoType: text("cargo_type"),
   cargoCapacity: integer("cargo_capacity"),
   currentRegion: text("current_region"),
+  status: text("status").default("underway"), // idle, underway, at port, near refinery, etc.
+  speed: text("speed"), // in knots
   buyerName: text("buyer_name").default("NA"),
   sellerName: text("seller_name"),
   metadata: text("metadata"), // JSON string with additional vessel information (heading, speed, course, etc.)
