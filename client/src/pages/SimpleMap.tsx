@@ -1,9 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import React, { useState, useEffect, useRef } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, ZoomControl, useMap, LayersControl, FeatureGroup, Circle, Tooltip } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import '../styles/map-status.css';
 import '../styles/vessel-popup.css';
+import '../styles/fixed-map.css';
+import '../styles/zoom-markers.css';
+import VesselMarkers from '../components/map/VesselMarkers';
+import PortMarkers from '../components/map/PortMarkers';
+import RefineryMarkers from '../components/map/RefineryMarkers';
 import tankerIcon from '../assets/tanker-icon.svg';
 import cargoIcon from '../assets/cargo-icon.svg';
 import passengerIcon from '../assets/passenger-icon.svg';
@@ -12,12 +17,12 @@ import { getEnhancedVesselData } from '../services/vesselDataEnhancer';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import VesselPopup from '../components/VesselPopup';
 import PortProximityControls from '../components/map/PortProximityControls';
-import MapControlPanel from '../components/map/MapControlPanel';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Search, Anchor } from 'lucide-react';
+import { RefreshCw, Search, Anchor, Layers, Navigation, Map, Target, AlertCircle, BarChart2, Info, List, Maximize, Minimize } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 // Define interfaces for data types
 interface Vessel {
@@ -88,17 +93,26 @@ const SimpleMap: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Map display controls
+  const [showVessels, setShowVessels] = useState(true);
+  const [showPorts, setShowPorts] = useState(true);
+  const [showRefineries, setShowRefineries] = useState(true);
+  const [showRoutes, setShowRoutes] = useState(false);
+  const [mapStyle, setMapStyle] = useState('standard');
+  
+  // UI control states
+  const [showMapLayers, setShowMapLayers] = useState(false);
+  const [showAnalytics, setShowAnalytics] = useState(false);
+  const [showLocationFinder, setShowLocationFinder] = useState(false);
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const [locationSearch, setLocationSearch] = useState('');
+  const [locationResults, setLocationResults] = useState<any[]>([]);
   const [selectedRegion, setSelectedRegion] = useState('all');
   const [selectedVesselType, setSelectedVesselType] = useState('all');
   const [showVesselStatus, setShowVesselStatus] = useState(true);
   const [showPortProximityControls, setShowPortProximityControls] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [showLegend, setShowLegend] = useState(false);
-  const [mapMode, setMapMode] = useState('standard');
-  const [showVessels, setShowVessels] = useState(true);
-  const [showPorts, setShowPorts] = useState(true);
-  const [showRefineries, setShowRefineries] = useState(true);
-  const [trafficDensity, setTrafficDensity] = useState(false);
 
   // Function to fetch data
   const fetchData = async () => {
@@ -136,6 +150,83 @@ const SimpleMap: React.FC = () => {
   useEffect(() => {
     fetchData();
   }, []);
+  
+  // Map reference for controlling the map
+  const mapRef = useRef<any>(null);
+  
+  // Handle fullscreen toggle
+  const toggleFullScreen = () => {
+    const mapElement = document.getElementById('maritime-map-container');
+    
+    if (!isFullScreen) {
+      if (mapElement?.requestFullscreen) {
+        mapElement.requestFullscreen()
+          .then(() => setIsFullScreen(true))
+          .catch(err => console.error("Fullscreen error:", err));
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen()
+          .then(() => setIsFullScreen(false))
+          .catch(err => console.error("Exit fullscreen error:", err));
+      }
+    }
+  };
+  
+  // Handle location search
+  const handleLocationSearch = () => {
+    if (!locationSearch.trim()) return;
+    
+    // Search in ports and refineries
+    const portResults = ports.filter(port => 
+      port.name.toLowerCase().includes(locationSearch.toLowerCase()) ||
+      port.country.toLowerCase().includes(locationSearch.toLowerCase())
+    ).map(port => ({
+      id: port.id,
+      name: port.name,
+      country: port.country,
+      lat: parseFloat(port.lat),
+      lng: parseFloat(port.lng),
+      type: 'port'
+    }));
+    
+    const refineryResults = refineries.filter(refinery => 
+      refinery.name.toLowerCase().includes(locationSearch.toLowerCase()) ||
+      refinery.country.toLowerCase().includes(locationSearch.toLowerCase())
+    ).map(refinery => ({
+      id: refinery.id,
+      name: refinery.name,
+      country: refinery.country,
+      lat: parseFloat(refinery.lat),
+      lng: parseFloat(refinery.lng),
+      type: 'refinery'
+    }));
+    
+    setLocationResults([...portResults, ...refineryResults]);
+  };
+  
+  // Handle flying to a location
+  const handleFlyToLocation = (location: any) => {
+    if (mapRef.current) {
+      // Access the Leaflet map instance and fly to location
+      const leafletMap = mapRef.current;
+      leafletMap.flyTo([location.lat, location.lng], 10, {
+        animate: true,
+        duration: 1.5
+      });
+      
+      setShowLocationFinder(false);
+      setLocationResults([]);
+      setLocationSearch('');
+    }
+  };
+  
+  // Map component to handle map reference
+  const MapController = () => {
+    const map = useMap();
+    mapRef.current = map;
+    return null;
+  };
 
   // Helper function to check if coordinate is on water (simple version)
   const isWaterLocation = (lat: number, lng: number): boolean => {
@@ -320,218 +411,106 @@ const SimpleMap: React.FC = () => {
 
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col">
-      <div className="bg-white border-b shadow-sm">
-        {/* Main Header */}
-        <div className="px-5 py-3 flex justify-between items-center border-b border-gray-100">
-          <div className="flex items-center">
-            <svg className="h-7 w-7 text-blue-600 mr-3" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M3.5 12.5C7 8.5 10 8.5 11.5,8.5C13 8.5 16 8.5 20 12.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M8 14.5L12 12L16 14.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2"/>
-              <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2"/>
-            </svg>
-            <div>
-              <h1 className="text-xl font-bold text-gray-800">Maritime Intelligence Platform</h1>
-              <p className="text-xs text-gray-500">Real-time vessel tracking & maritime analysis</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            <div className="relative w-72">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+      <div className="p-4 bg-card border-b">
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-2xl font-bold">Maritime Map</h1>
+          <div className="flex items-center gap-2">
+            <div className="relative w-64">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 type="text"
-                placeholder="Search vessels, ports, refineries..."
-                className="pl-10 pr-4 py-2 h-9 text-sm rounded-md border-gray-300"
+                placeholder="Search vessels, ports..."
+                className="pl-8"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            
-            <div className="flex items-center bg-blue-50 px-3 py-1 rounded-md border border-blue-100">
-              <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200 mr-1">
-                {filteredVessels.length}
-              </Badge>
-              <span className="text-xs text-blue-700 mr-3">Vessels</span>
-              
-              <Badge variant="outline" className="bg-gray-100 text-gray-700 hover:bg-gray-200 border-transparent mr-1">
-                {filteredPorts.length}
-              </Badge>
-              <span className="text-xs text-gray-700 mr-3">Ports</span>
-              
-              <Badge variant="destructive" className="bg-red-100 text-red-700 hover:bg-red-200 border-transparent mr-1">
-                {filteredRefineries.length}
-              </Badge>
-              <span className="text-xs text-gray-700">Refineries</span>
-            </div>
+            <Badge className="ml-2">
+              {filteredVessels.length} Vessels
+            </Badge>
+            <Badge variant="outline" className="ml-2">
+              {filteredPorts.length} Ports
+            </Badge>
+            <Badge variant="destructive" className="ml-2">
+              {filteredRefineries.length} Refineries
+            </Badge>
           </div>
         </div>
         
-        {/* Filters row with advanced options */}
-        <div className="p-3 bg-gray-50 flex flex-wrap items-center justify-between gap-3 border-b border-gray-200">
-          <div className="flex items-center gap-3 flex-wrap">
-            {/* Region filter */}
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-gray-500">Region:</span>
-              <select 
-                className="text-sm border-gray-200 rounded-md py-1 pl-2 pr-7 bg-white" 
-                value={selectedRegion} 
-                onChange={(e) => setSelectedRegion(e.target.value)}
-              >
-                <option value="all">All Regions</option>
-                <option value="Europe">Europe</option>
-                <option value="Asia-Pacific">Asia-Pacific</option>
-                <option value="North America">North America</option>
-                <option value="Latin America">Latin America</option>
-                <option value="Middle East">Middle East</option>
-                <option value="Africa">Africa</option>
-              </select>
-            </div>
-            
-            {/* Vessel type filter */}
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-gray-500">Vessel Type:</span>
-              <select 
-                className="text-sm border-gray-200 rounded-md py-1 pl-2 pr-7 bg-white" 
-                value={selectedVesselType} 
-                onChange={(e) => setSelectedVesselType(e.target.value)}
-              >
-                <option value="all">All Types</option>
-                {vesselTypes.filter(type => type !== 'all').map(type => (
-                  <option key={type} value={type}>{type}</option>
-                ))}
-              </select>
-            </div>
-            
-            {/* Map view selector */}
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-gray-500">View:</span>
-              <div className="flex rounded-md overflow-hidden border border-gray-200">
-                <button 
-                  className={`px-2 py-1 text-xs ${mapMode === 'standard' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'}`}
-                  onClick={() => setMapMode('standard')}
-                >
-                  Standard
-                </button>
-                <button 
-                  className={`px-2 py-1 text-xs ${mapMode === 'satellite' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'}`}
-                  onClick={() => setMapMode('satellite')}
-                >
-                  Satellite
-                </button>
-                <button 
-                  className={`px-2 py-1 text-xs ${mapMode === 'dark' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'}`}
-                  onClick={() => setMapMode('dark')}
-                >
-                  Dark
-                </button>
-              </div>
-            </div>
-            
-            {/* Display control */}
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-gray-500">Display:</span>
-              <div className="flex rounded-md overflow-hidden border border-gray-200">
-                <button 
-                  className={`px-2 py-1 text-xs ${showVessels ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'}`}
-                  onClick={() => setShowVessels(!showVessels)}
-                >
-                  Vessels
-                </button>
-                <button 
-                  className={`px-2 py-1 text-xs ${showPorts ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'}`}
-                  onClick={() => setShowPorts(!showPorts)}
-                >
-                  Ports
-                </button>
-                <button 
-                  className={`px-2 py-1 text-xs ${showRefineries ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'}`}
-                  onClick={() => setShowRefineries(!showRefineries)}
-                >
-                  Refineries
-                </button>
-              </div>
-            </div>
+        {/* Filters row */}
+        <div className="flex flex-wrap gap-4 items-center">
+          {/* Region filter */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">Region:</span>
+            <select 
+              className="px-2 py-1 rounded border text-sm" 
+              value={selectedRegion} 
+              onChange={(e) => setSelectedRegion(e.target.value)}
+            >
+              <option value="all">All Regions</option>
+              <option value="Europe">Europe</option>
+              <option value="Asia-Pacific">Asia-Pacific</option>
+              <option value="North America">North America</option>
+              <option value="Latin America">Latin America</option>
+              <option value="Middle East">Middle East</option>
+              <option value="Africa">Africa</option>
+            </select>
           </div>
           
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <input 
-                type="checkbox" 
-                id="traffic-density"
-                checked={trafficDensity}
-                onChange={() => setTrafficDensity(!trafficDensity)}
-                className="rounded text-blue-600 focus:ring-blue-500 h-3 w-3"
-              />
-              <label htmlFor="traffic-density" className="text-xs text-gray-700">Traffic Density</label>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <input 
-                type="checkbox" 
-                id="show-status"
-                checked={showVesselStatus}
-                onChange={(e) => setShowVesselStatus(e.target.checked)}
-                className="rounded text-blue-600 focus:ring-blue-500 h-3 w-3"
-              />
-              <label htmlFor="show-status" className="text-xs text-gray-700">Vessel Status</label>
-            </div>
-            
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => setShowLegend(!showLegend)}
-              className="text-xs text-gray-600 hover:text-blue-600 px-2 py-1 h-7"
+          {/* Vessel type filter */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">Vessel Type:</span>
+            <select 
+              className="px-2 py-1 rounded border text-sm" 
+              value={selectedVesselType} 
+              onChange={(e) => setSelectedVesselType(e.target.value)}
             >
-              {showLegend ? 'Hide Legend' : 'Show Legend'}
-            </Button>
+              <option value="all">All Types</option>
+              {vesselTypes.filter(type => type !== 'all').map(type => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
+          </div>
+          
+          {/* Show status toggle */}
+          <div className="flex items-center gap-2 ml-auto">
+            <span className="text-sm font-medium">Show Status:</span>
+            <input 
+              type="checkbox" 
+              checked={showVesselStatus} 
+              onChange={(e) => setShowVesselStatus(e.target.checked)}
+              className="rounded border-gray-300 text-primary focus:ring-primary"
+            />
           </div>
         </div>
         
-        {/* Expandable Legend */}
-        {showLegend && (
-          <div className="bg-white border-b border-gray-200 p-2 px-4 grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <div className="font-medium text-xs mb-2 text-gray-700">Vessel Types</div>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="flex items-center">
-                  <img src={tankerIcon} alt="Tanker" className="w-6 h-6 mr-2" />
-                  <span className="text-gray-700 text-xs">Tanker</span>
-                </div>
-                <div className="flex items-center">
-                  <img src={cargoIcon} alt="Cargo" className="w-6 h-6 mr-2" />
-                  <span className="text-gray-700 text-xs">Cargo</span>
-                </div>
-                <div className="flex items-center">
-                  <img src={passengerIcon} alt="Passenger" className="w-6 h-6 mr-2" />
-                  <span className="text-gray-700 text-xs">Passenger</span>
-                </div>
-                <div className="flex items-center">
-                  <img src={vesselIcon} alt="Other" className="w-6 h-6 mr-2" />
-                  <span className="text-gray-700 text-xs">Other</span>
-                </div>
-              </div>
+        {/* Status legend */}
+        {showVesselStatus && (
+          <div className="mt-4 flex flex-wrap gap-4 items-center text-sm">
+            <span className="font-medium">Status:</span>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded-full bg-red-500"></div>
+              <span>Stopped</span>
             </div>
-            <div>
-              <div className="font-medium text-xs mb-2 text-gray-700">Vessel Status</div>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                  <span className="text-xs text-gray-700">Stopped</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 rounded-full bg-orange-500"></div>
-                  <span className="text-xs text-gray-700">Maneuvering</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                  <span className="text-xs text-gray-700">Active</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 rounded-full bg-gray-500"></div>
-                  <span className="text-xs text-gray-700">Unknown</span>
-                </div>
-              </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded-full bg-orange-500"></div>
+              <span>Maneuvering</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+              <span>Slow</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded-full bg-green-500"></div>
+              <span>Medium</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded-full bg-purple-500"></div>
+              <span>Fast</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded-full bg-gray-500"></div>
+              <span>Unknown</span>
             </div>
           </div>
         )}
@@ -570,55 +549,25 @@ const SimpleMap: React.FC = () => {
             style={{ height: '100%', width: '100%', background: '#a4cae1' }}
             zoomControl={true}
           >
-            {/* Map Tile Layer based on selected mode */}
-            {mapMode === 'standard' && (
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
-            )}
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
             
-            {mapMode === 'satellite' && (
-              <TileLayer
-                attribution='&copy; <a href="https://www.esri.com">Esri</a>'
-                url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-              />
-            )}
+            {/* Vessels Layer */}
+            <LayersControl.Overlay checked name="Vessels">
+              <FeatureGroup>
+                <VesselMarkers 
+                  vessels={filteredVessels}
+                  getVesselIconUrl={getVesselIconUrl} 
+                  getVesselStatus={getVesselStatus}
+                  getVesselRegion={getVesselRegion}
+                />
+              </FeatureGroup>
+            </LayersControl.Overlay>
             
-            {mapMode === 'dark' && (
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
-                url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-              />
-            )}
-            
-            {/* Vessels - only show if toggle is enabled */}
-            {showVessels && filteredVessels.map((vessel) => (
-              <Marker
-                key={`vessel-${vessel.id}`}
-                position={[parseFloat(vessel.currentLat || "0"), parseFloat(vessel.currentLng || "0")]}
-                icon={new L.Icon({
-                  iconUrl: getVesselIconUrl(vessel),
-                  iconSize: [36, 36],
-                  iconAnchor: [18, 18],
-                  popupAnchor: [0, -18],
-                  className: showVesselStatus ? `vessel-icon status-${getVesselStatus(vessel).toLowerCase()}` : 'vessel-icon'
-                })}
-              >
-                <Popup maxWidth={400} minWidth={350}>
-                  <div className="vessel-popup-container">
-                    <VesselPopup 
-                      vessel={vessel} 
-                      getVesselStatus={getVesselStatus}
-                      getVesselRegion={getVesselRegion}
-                    />
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
-            
-            {/* Ports - only show if toggle is enabled */}
-            {showPorts && filteredPorts.map((port) => (
+            {/* Ports */}
+            {filteredPorts.map((port) => (
               <Marker
                 key={`port-${port.id}`}
                 position={[parseFloat(port.lat), parseFloat(port.lng)]}
@@ -702,8 +651,8 @@ const SimpleMap: React.FC = () => {
               </Marker>
             ))}
             
-            {/* Refineries - only show if toggle is enabled */}
-            {showRefineries && filteredRefineries.map((refinery) => (
+            {/* Refineries */}
+            {filteredRefineries.map((refinery) => (
               <Marker
                 key={`refinery-${refinery.id}`}
                 position={[parseFloat(refinery.lat), parseFloat(refinery.lng)]}
@@ -791,42 +740,172 @@ const SimpleMap: React.FC = () => {
                 </Popup>
               </Marker>
             ))}
-            {/* Advanced Map Control Panel */}
-            <MapControlPanel 
-              showVessels={showVessels}
-              setShowVessels={setShowVessels}
-              showPorts={showPorts}
-              setShowPorts={setShowPorts}
-              showRefineries={showRefineries}
-              setShowRefineries={setShowRefineries}
-              mapMode={mapMode}
-              setMapMode={setMapMode}
-              selectedRegion={selectedRegion}
-              setSelectedRegion={setSelectedRegion}
-              selectedVesselType={selectedVesselType}
-              setSelectedVesselType={setSelectedVesselType}
-              showVesselStatus={showVesselStatus}
-              setShowVesselStatus={setShowVesselStatus}
-              trafficDensity={trafficDensity}
-              setTrafficDensity={setTrafficDensity}
-              showLegend={showLegend}
-              setShowLegend={setShowLegend}
-              vesselTypes={vesselTypes}
-              showPortProximityControls={showPortProximityControls}
-              setShowPortProximityControls={setShowPortProximityControls}
-              handleRefresh={handleRefresh}
-            />
-            
-            {/* Small controls for mobile/quick access */}
-            <div className="absolute bottom-4 right-4 z-10 space-y-4">
-              <Card className="w-10 h-10 flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors">
+            {/* Enhanced Map Controls */}
+            <div className="fixed bottom-10 right-6 z-50 space-y-3">
+              {/* Map Layers Control */}
+              <Card className="w-14 h-14 flex items-center justify-center cursor-pointer hover:bg-blue-50 transition-colors shadow-xl bg-white border-2 border-blue-200 rounded-xl">
                 <button
-                  className="p-2"
+                  className="p-3 relative"
+                  onClick={() => setShowMapLayers(!showMapLayers)}
+                  title="Map Layers"
+                >
+                  <Layers className="w-7 h-7 text-blue-500" />
+                  {showMapLayers && (
+                    <div className="absolute bottom-12 right-0 bg-white p-3 rounded-lg shadow-lg w-64">
+                      <h3 className="text-sm font-bold mb-2 flex items-center"><Map className="w-4 h-4 mr-1" /> Map Style</h3>
+                      <Select
+                        value={mapStyle}
+                        onValueChange={(value) => setMapStyle(value)}
+                      >
+                        <SelectTrigger className="mb-2">
+                          <SelectValue placeholder="Select map style" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="standard">Standard</SelectItem>
+                          <SelectItem value="satellite">Satellite</SelectItem>
+                          <SelectItem value="dark">Dark Mode</SelectItem>
+                          <SelectItem value="terrain">Terrain</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      
+                      <h3 className="text-sm font-bold mt-3 mb-2 flex items-center"><Layers className="w-4 h-4 mr-1" /> Display Layers</h3>
+                      <div className="space-y-2">
+                        <div className="flex items-center">
+                          <input 
+                            type="checkbox" 
+                            id="showVessels" 
+                            checked={showVessels} 
+                            onChange={() => setShowVessels(!showVessels)} 
+                            className="mr-2"
+                          />
+                          <label htmlFor="showVessels" className="text-sm">Vessels</label>
+                        </div>
+                        <div className="flex items-center">
+                          <input 
+                            type="checkbox" 
+                            id="showPorts" 
+                            checked={showPorts} 
+                            onChange={() => setShowPorts(!showPorts)} 
+                            className="mr-2"
+                          />
+                          <label htmlFor="showPorts" className="text-sm">Ports</label>
+                        </div>
+                        <div className="flex items-center">
+                          <input 
+                            type="checkbox" 
+                            id="showRefineries" 
+                            checked={showRefineries} 
+                            onChange={() => setShowRefineries(!showRefineries)} 
+                            className="mr-2"
+                          />
+                          <label htmlFor="showRefineries" className="text-sm">Refineries</label>
+                        </div>
+                        <div className="flex items-center">
+                          <input 
+                            type="checkbox" 
+                            id="showVesselStatus" 
+                            checked={showVesselStatus} 
+                            onChange={() => setShowVesselStatus(!showVesselStatus)} 
+                            className="mr-2"
+                          />
+                          <label htmlFor="showVesselStatus" className="text-sm">Vessel Status</label>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </button>
+              </Card>
+
+              {/* Location Finder Button */}
+              <Card className="w-14 h-14 flex items-center justify-center cursor-pointer hover:bg-green-50 transition-colors shadow-xl bg-white border-2 border-green-200 rounded-xl">
+                <button
+                  className="p-3 relative"
+                  onClick={() => setShowLocationFinder(!showLocationFinder)}
+                  title="Find Location"
+                >
+                  <Target className="w-7 h-7 text-green-500" />
+                  {showLocationFinder && (
+                    <div className="absolute bottom-12 right-0 bg-white p-3 rounded-lg shadow-lg w-64">
+                      <h3 className="text-sm font-bold mb-2 flex items-center"><Target className="w-4 h-4 mr-1" /> Find Location</h3>
+                      <div className="space-y-2">
+                        <Input 
+                          placeholder="Search for a port or refinery..."
+                          value={locationSearch}
+                          onChange={(e) => setLocationSearch(e.target.value)}
+                        />
+                        <Button 
+                          size="sm" 
+                          className="w-full" 
+                          onClick={handleLocationSearch}
+                        >
+                          Find
+                        </Button>
+                        
+                        {locationResults.length > 0 && (
+                          <div className="mt-2 max-h-40 overflow-y-auto">
+                            <p className="text-xs text-gray-500 mb-1">Search Results:</p>
+                            {locationResults.map((item, index) => (
+                              <div 
+                                key={index} 
+                                className="text-sm p-1 hover:bg-gray-100 cursor-pointer rounded"
+                                onClick={() => handleFlyToLocation(item)}
+                              >
+                                {item.name} ({item.type})
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </button>
+              </Card>
+
+              {/* Full Screen Button */}
+              <Card className="w-14 h-14 flex items-center justify-center cursor-pointer hover:bg-purple-50 transition-colors shadow-xl bg-white border-2 border-purple-200 rounded-xl">
+                <button
+                  className="p-3"
+                  onClick={toggleFullScreen}
+                  title={isFullScreen ? "Exit Full Screen" : "Full Screen"}
+                >
+                  {isFullScreen ? <Minimize className="w-7 h-7 text-purple-500" /> : <Maximize className="w-7 h-7 text-purple-500" />}
+                </button>
+              </Card>
+              
+              {/* Settings button */}
+              <Card className="w-14 h-14 flex items-center justify-center cursor-pointer hover:bg-orange-50 transition-colors shadow-xl bg-white border-2 border-orange-200 rounded-xl">
+                <button
+                  className="p-3"
+                  onClick={() => setShowSettings(!showSettings)}
+                  title="Settings"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="#ec4899" className="w-7 h-7">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </button>
+              </Card>
+              
+              {/* Refresh button */}
+              <Card className="w-14 h-14 flex items-center justify-center cursor-pointer hover:bg-indigo-50 transition-colors shadow-xl bg-white border-2 border-indigo-200 rounded-xl">
+                <button
+                  className="p-3"
                   onClick={handleRefresh}
                   disabled={loading}
-                  title="Refresh map data"
+                  title="Refresh Data"
                 >
-                  <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin text-gray-400' : ''}`} />
+                  <RefreshCw className={`w-7 h-7 ${loading ? 'animate-spin text-gray-400' : 'text-indigo-500'}`} />
+                </button>
+              </Card>
+              
+              {/* Port Proximity button */}
+              <Card className="w-14 h-14 flex items-center justify-center cursor-pointer hover:bg-cyan-50 transition-colors shadow-xl bg-white border-2 border-cyan-200 rounded-xl">
+                <button
+                  className="p-3"
+                  onClick={() => setShowPortProximityControls(!showPortProximityControls)}
+                  title="Enhance vessel distribution near ports and refineries"
+                >
+                  <Anchor className="w-7 h-7 text-cyan-600" />
                 </button>
               </Card>
             </div>

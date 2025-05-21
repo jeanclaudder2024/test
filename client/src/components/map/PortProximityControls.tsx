@@ -47,133 +47,82 @@ const PortProximityControls = () => {
   };
 
   return (
-    <div className="w-full">
-      <div className="flex items-center justify-between mb-3">
-        <div>
-          <h3 className="text-sm font-medium text-gray-800 flex items-center mb-1">
-            <Anchor className="w-4 h-4 mr-1.5 text-blue-600" />
-            Vessel Distribution Enhancement
-          </h3>
-          <p className="text-xs text-gray-500">
-            Configure realistic vessel positioning around maritime facilities
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-blue-700">{vesselDensity} vessels per facility</span>
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-blue-50 rounded-lg p-3 border border-blue-100">
-          <h4 className="text-xs font-medium text-gray-700 mb-2">Density Configuration</h4>
-          
-          <div className="space-y-3">
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-xs text-gray-600">Port Proximity</span>
-                <span className="text-xs font-medium bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
-                  {vesselDensity}
-                </span>
-              </div>
-              <Slider
-                defaultValue={[10]}
-                min={1}
-                max={25}
-                step={1}
-                value={[vesselDensity]}
-                onValueChange={(value) => setVesselDensity(value[0])}
-                className="mt-1"
-              />
-            </div>
-            
-            <div className="flex items-center gap-2 text-xs text-gray-600">
-              <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-              <span>Higher values create busier ports</span>
-            </div>
-            <div className="flex items-center gap-2 text-xs text-gray-600">
-              <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-              <span>Spread is calculated based on facility importance</span>
-            </div>
+    <Card className="w-80 shadow-lg border-blue-200 bg-white">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg flex items-center">
+          <Anchor className="w-5 h-5 mr-2 text-blue-600" />
+          Port Proximity Controls
+        </CardTitle>
+        <CardDescription>
+          Enhance vessel distribution around ports and refineries
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <span className="text-sm font-medium">Vessel Density</span>
+            <span className="text-sm text-gray-500">{vesselDensity} vessels per facility</span>
           </div>
+          <Slider
+            defaultValue={[10]}
+            min={1}
+            max={25}
+            step={1}
+            value={[vesselDensity]}
+            onValueChange={(value) => setVesselDensity(value[0])}
+            className="my-2"
+          />
         </div>
         
-        <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
-          <h4 className="text-xs font-medium text-gray-700 mb-2">Distribution Options</h4>
-          
-          <div className="space-y-2 mb-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <div className="w-3 h-3 rounded-full bg-blue-600"></div>
-                <span className="text-xs text-gray-700">Major Ports</span>
-              </div>
-              <span className="text-xs font-medium text-gray-600">{vesselDensity + 5} vessels</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <div className="w-3 h-3 rounded-full bg-red-600"></div>
-                <span className="text-xs text-gray-700">Refineries</span>
-              </div>
-              <span className="text-xs font-medium text-gray-600">{vesselDensity} vessels</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <div className="w-3 h-3 rounded-full bg-amber-600"></div>
-                <span className="text-xs text-gray-700">Secondary Ports</span>
-              </div>
-              <span className="text-xs font-medium text-gray-600">{Math.max(1, vesselDensity - 5)} vessels</span>
-            </div>
-          </div>
-          
-          <div className="flex justify-between gap-2">
-            <Button 
-              variant="outline" 
-              className="flex-1 border-gray-300 text-gray-600 h-8"
-              size="sm"
-              onClick={() => setVesselDensity(10)}
-            >
-              Reset
-            </Button>
-            <Button 
-              className="flex-1 bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 h-8"
-              size="sm"
-              onClick={enhanceVesselDistribution}
-              disabled={loading}
-            >
-              {loading ? (
-                <span className="flex items-center">
-                  <RefreshCw className="w-3.5 h-3.5 mr-1.5 animate-spin" />
-                  Processing...
-                </span>
-              ) : (
-                <span className="flex items-center">
-                  <Ship className="w-3.5 h-3.5 mr-1.5" />
-                  Apply Distribution
-                </span>
-              )}
-            </Button>
-          </div>
+        <div className="flex justify-between">
+          <Button 
+            variant="outline" 
+            className="flex-1 mr-2"
+            size="sm"
+            onClick={() => setVesselDensity(10)}
+          >
+            Reset
+          </Button>
+          <Button 
+            className="flex-1 bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800"
+            size="sm"
+            onClick={enhanceVesselDistribution}
+            disabled={loading}
+          >
+            {loading ? (
+              <span className="flex items-center">
+                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                Processing...
+              </span>
+            ) : (
+              <span className="flex items-center">
+                <Ship className="w-4 h-4 mr-2" />
+                Apply
+              </span>
+            )}
+          </Button>
         </div>
-      </div>
         
-      {success && (
-        <Alert className="bg-green-50 border-green-200 text-green-800 mt-3">
-          <CheckCircle className="h-4 w-4 text-green-600" />
-          <AlertTitle className="text-sm font-medium">Success!</AlertTitle>
-          <AlertDescription className="text-xs">
-            Vessels have been repositioned for a more realistic map view. Refresh to see the updated distribution.
-          </AlertDescription>
-        </Alert>
-      )}
-      
-      {errorMessage && (
-        <Alert variant="destructive" className="mt-3">
-          <AlertTitle className="text-sm font-medium">Distribution Error</AlertTitle>
-          <AlertDescription className="text-xs">
-            {errorMessage}
-          </AlertDescription>
-        </Alert>
-      )}
-    </div>
+        {success && (
+          <Alert className="bg-green-50 border-green-200 text-green-800">
+            <CheckCircle className="h-4 w-4 text-green-600" />
+            <AlertTitle>Success!</AlertTitle>
+            <AlertDescription>
+              Vessels have been repositioned for a more realistic map.
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {errorMessage && (
+          <Alert variant="destructive">
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>
+              {errorMessage}
+            </AlertDescription>
+          </Alert>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 
