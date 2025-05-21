@@ -6,6 +6,8 @@ import '../styles/map-status.css';
 import '../styles/vessel-popup.css';
 import '../styles/fixed-map.css';
 import VesselMarkers from '../components/map/VesselMarkers';
+import PortMarkers from '../components/map/PortMarkers';
+import RefineryMarkers from '../components/map/RefineryMarkers';
 import tankerIcon from '../assets/tanker-icon.svg';
 import cargoIcon from '../assets/cargo-icon.svg';
 import passengerIcon from '../assets/passenger-icon.svg';

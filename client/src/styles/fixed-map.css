@@ -1,14 +1,18 @@
-/* Fixed map styles to ensure vessel markers display correctly */
+/* Fixed map styles to ensure all markers display correctly at all zoom levels */
 
 /* Ensure vessel icons appear correctly */
 .vessel-icon {
   z-index: 9999 !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
+  display: block !important;
 }
 
 /* Make vessel icons more visible */
 .vessel-marker {
   display: block !important;
   z-index: 9999 !important;
+  opacity: 1 !important;
 }
 
 /* Fix z-index issues on map layers */
@@ -18,4 +22,52 @@
 
 .leaflet-popup-pane {
   z-index: 700 !important;
+}
+
+/* Make port and refinery icons visible at all zoom levels */
+.port-icon,
+.refinery-icon {
+  z-index: 8000 !important;
+  display: block !important;
+  visibility: visible !important;
+}
+
+.always-visible-marker {
+  pointer-events: auto !important;
+  visibility: visible !important;
+}
+
+/* Animation to redraw markers after zoom */
+.marker-refresh {
+  animation: bounce 0.3s ease-out;
+}
+
+@keyframes bounce {
+  0% { transform: scale(0.8); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+/* Marker sizes for different zoom levels */
+.leaflet-container.zoom-1 .vessel-icon,
+.leaflet-container.zoom-2 .vessel-icon,
+.leaflet-container.zoom-3 .vessel-icon {
+  transform: scale(1.5) !important;
+}
+
+.leaflet-container.zoom-4 .vessel-icon,
+.leaflet-container.zoom-5 .vessel-icon {
+  transform: scale(1.3) !important;
+}
+
+.leaflet-container.zoom-6 .vessel-icon,
+.leaflet-container.zoom-7 .vessel-icon {
+  transform: scale(1.2) !important;
+}
+
+/* Override any hidden styles that might be applied */
+.leaflet-marker-icon {
+  opacity: 1 !important;
+  display: block !important;
+  visibility: visible !important;
 }
