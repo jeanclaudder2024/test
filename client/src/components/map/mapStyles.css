@@ -1,0 +1,62 @@
+/* Map component custom styles */
+
+/* Fix for leaflet markers and z-index order */
+.leaflet-marker-pane {
+  z-index: 600 !important;
+}
+
+.leaflet-popup-pane {
+  z-index: 700 !important;
+}
+
+/* Ensure vessel icons appear correctly */
+.vessel-icon {
+  filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.5));
+  transition: all 0.2s ease;
+  z-index: 500 !important;
+}
+
+.vessel-icon:hover {
+  transform: scale(1.2);
+  filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.7));
+  z-index: 1000 !important;
+}
+
+.vessel-icon.status-active {
+  filter: drop-shadow(0 0 3px rgba(0, 180, 0, 0.8));
+}
+
+.vessel-icon.status-inactive {
+  filter: drop-shadow(0 0 3px rgba(180, 0, 0, 0.8));
+}
+
+.vessel-icon.status-loading {
+  filter: drop-shadow(0 0 3px rgba(255, 180, 0, 0.8));
+}
+
+/* Fix for map UI elements to appear on top */
+.map-controls {
+  z-index: 1000 !important;
+}
+
+/* Ensure proper layer ordering */
+.leaflet-map-pane {
+  z-index: 100;
+}
+
+.leaflet-tile-pane {
+  z-index: 200;
+}
+
+/* Override any conflicting styles */
+.leaflet-overlay-pane {
+  z-index: 400;
+}
+
+.leaflet-shadow-pane {
+  z-index: 500;
+}
+
+.leaflet-control {
+  z-index: 800 !important;
+}

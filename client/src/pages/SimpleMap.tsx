@@ -556,10 +556,10 @@ const SimpleMap: React.FC = () => {
                 position={[parseFloat(vessel.currentLat || "0"), parseFloat(vessel.currentLng || "0")]}
                 icon={new L.Icon({
                   iconUrl: getVesselIconUrl(vessel),
-                  iconSize: [36, 36],
-                  iconAnchor: [18, 18],
-                  popupAnchor: [0, -18],
-                  className: showVesselStatus ? `vessel-icon status-${getVesselStatus(vessel).toLowerCase()}` : 'vessel-icon'
+                  iconSize: [28, 28],
+                  iconAnchor: [14, 14],
+                  popupAnchor: [0, -14],
+                  className: `vessel-icon status-${getVesselStatus(vessel).toLowerCase()} z-20`
                 })}
               >
                 <Popup maxWidth={400} minWidth={350}>
