@@ -18,30 +18,44 @@ import {
   ArrowRight
 } from 'lucide-react';
 
+// Company type definition
+type Company = {
+  id: number;
+  name: string;
+  country: string;
+  products: string;
+  fleetSize: number;
+  status: 'connected' | 'pending' | 'none';
+};
+
 export default function SimpleBrokerDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
-  const [connectionStatus, setConnectionStatus] = useState({
-    'Saudi Aramco': 'connected',
-    'Shell Trading': 'connected',
-    'ADNOC Distribution': 'pending',
-    'BP Trading': 'connected',
-    'Kuwait Petroleum': 'connected',
-    'Total Energies': 'none'
-  });
+  const [companies, setCompanies] = useState<Company[]>([
+    { id: 1, name: 'Saudi Aramco', country: 'Saudi Arabia', products: 'Crude Oil, LNG', fleetSize: 42, status: 'connected' },
+    { id: 2, name: 'Shell Trading', country: 'Netherlands', products: 'Mixed Products', fleetSize: 67, status: 'connected' },
+    { id: 3, name: 'ADNOC Distribution', country: 'UAE', products: 'Refined Products', fleetSize: 29, status: 'pending' },
+    { id: 4, name: 'BP Trading', country: 'United Kingdom', products: 'Crude, Refined', fleetSize: 51, status: 'connected' },
+    { id: 5, name: 'Kuwait Petroleum', country: 'Kuwait', products: 'Crude Oil, LNG', fleetSize: 33, status: 'connected' },
+    { id: 6, name: 'Total Energies', country: 'France', products: 'All Products', fleetSize: 59, status: 'none' },
+  ]);
   
   // Function to handle viewing company details
-  const handleViewDetails = (companyName: string) => {
-    alert(`Opening detailed profile for ${companyName}`);
+  const handleViewDetails = (companyId: number) => {
+    alert(`Opening detailed profile for ${companies.find(c => c.id === companyId)?.name}`);
     // In a real app, this would navigate to a company profile page
   };
   
   // Function to handle connecting with a company
-  const handleConnect = (companyName: string) => {
-    alert(`Initiating connection with ${companyName}`);
-    setConnectionStatus(prev => ({
-      ...prev,
-      [companyName]: 'pending'
-    }));
+  const handleConnect = (companyId: number) => {
+    const company = companies.find(c => c.id === companyId);
+    if (company) {
+      alert(`Initiating connection with ${company.name}`);
+      
+      // Update the company status
+      setCompanies(companies.map(c => 
+        c.id === companyId ? { ...c, status: 'pending' } : c
+      ));
+    }
   };
   
   return (
@@ -88,8 +102,12 @@ export default function SimpleBrokerDashboard() {
                 <Users className="h-5 w-5 text-primary" />
               </div>
             </div>
-            <p className="text-3xl font-bold mt-2">24</p>
-            <p className="text-sm text-muted-foreground mt-1">+3 since last month</p>
+            <p className="text-3xl font-bold mt-2">
+              {companies.filter(c => c.status === 'connected').length}
+            </p>
+            <p className="text-sm text-muted-foreground mt-1">
+              +{companies.filter(c => c.status === 'pending').length} pending
+            </p>
           </div>
           
           <div className="bg-card p-6 rounded-lg shadow-sm border">
@@ -132,50 +150,35 @@ export default function SimpleBrokerDashboard() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      {/* Company connections */}
-                      <div className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center">
-                            <Building className="h-5 w-5 text-primary" />
+                      {/* Company connections - Active only */}
+                      {companies
+                        .filter(company => company.status !== 'none')
+                        .map(company => (
+                          <div key={company.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center">
+                                <Building className="h-5 w-5 text-primary" />
+                              </div>
+                              <div>
+                                <p className="font-medium">{company.name}</p>
+                                <p className="text-sm text-muted-foreground">{company.country} • {company.products}</p>
+                              </div>
+                            </div>
+                            <Badge className={company.status === 'connected' ? "bg-green-500" : "bg-yellow-500"}>
+                              {company.status === 'connected' ? 'Active' : 'Pending'}
+                            </Badge>
                           </div>
-                          <div>
-                            <p className="font-medium">Saudi Aramco</p>
-                            <p className="text-sm text-muted-foreground">Saudi Arabia • Crude Oil</p>
-                          </div>
-                        </div>
-                        <Badge className="bg-green-500">Active</Badge>
-                      </div>
-                      
-                      <div className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center">
-                            <Building className="h-5 w-5 text-primary" />
-                          </div>
-                          <div>
-                            <p className="font-medium">Shell Trading</p>
-                            <p className="text-sm text-muted-foreground">Netherlands • Mixed Products</p>
-                          </div>
-                        </div>
-                        <Badge className="bg-green-500">Active</Badge>
-                      </div>
-                      
-                      <div className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center">
-                            <Building className="h-5 w-5 text-primary" />
-                          </div>
-                          <div>
-                            <p className="font-medium">ADNOC Distribution</p>
-                            <p className="text-sm text-muted-foreground">UAE • Refined Products</p>
-                          </div>
-                        </div>
-                        <Badge variant="outline">Pending</Badge>
-                      </div>
+                        ))
+                      }
                     </div>
                     
-                    <Button className="w-full mt-4" variant="outline">
+                    <Button 
+                      className="w-full mt-4" 
+                      variant="outline"
+                      onClick={() => setActiveTab('companies')}
+                    >
                       <ArrowUpRight className="mr-2 h-4 w-4" />
-                      View All Connections
+                      View All Companies
                     </Button>
                   </CardContent>
                 </Card>
@@ -224,7 +227,11 @@ export default function SimpleBrokerDashboard() {
                       </div>
                     </div>
                     
-                    <Button className="w-full mt-4" variant="outline">
+                    <Button 
+                      className="w-full mt-4" 
+                      variant="outline"
+                      onClick={() => alert("Opening deal management interface")}
+                    >
                       <ArrowUpRight className="mr-2 h-4 w-4" />
                       Manage All Deals
                     </Button>
@@ -244,191 +251,64 @@ export default function SimpleBrokerDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {/* Company 1 */}
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg">Saudi Aramco</CardTitle>
-                      <CardDescription>Saudi Arabia</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-muted-foreground">Fleet Size</span>
-                          <span className="font-medium">42 vessels</span>
+                  {companies.map(company => (
+                    <Card key={company.id}>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-lg">{company.name}</CardTitle>
+                        <CardDescription>{company.country}</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-muted-foreground">Fleet Size</span>
+                            <span className="font-medium">{company.fleetSize} vessels</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-muted-foreground">Products</span>
+                            <span className="font-medium">{company.products}</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-muted-foreground">Status</span>
+                            <Badge className={
+                              company.status === 'connected' ? "bg-green-500" : 
+                              company.status === 'pending' ? "bg-yellow-500" : "bg-gray-200 text-gray-700"
+                            }>
+                              {company.status === 'connected' ? 'Connected' : 
+                              company.status === 'pending' ? 'Pending' : 'Not Connected'}
+                            </Badge>
+                          </div>
                         </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-muted-foreground">Products</span>
-                          <span className="font-medium">Crude Oil, LNG</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-muted-foreground">Status</span>
-                          <Badge className="bg-green-500">Connected</Badge>
-                        </div>
-                      </div>
-                      
-                      <Button 
-                        className="w-full mt-4" 
-                        variant="outline"
-                        onClick={() => handleViewDetails('Saudi Aramco')}
-                      >
-                        <ArrowRight className="mr-2 h-4 w-4" />
-                        View Details
-                      </Button>
-                    </CardContent>
-                  </Card>
-                  
-                  {/* Company 2 */}
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg">Shell Trading</CardTitle>
-                      <CardDescription>Netherlands</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-muted-foreground">Fleet Size</span>
-                          <span className="font-medium">67 vessels</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-muted-foreground">Products</span>
-                          <span className="font-medium">Mixed Products</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-muted-foreground">Status</span>
-                          <Badge className="bg-green-500">Connected</Badge>
-                        </div>
-                      </div>
-                      
-                      <Button className="w-full mt-4" variant="outline">
-                        <ArrowRight className="mr-2 h-4 w-4" />
-                        View Details
-                      </Button>
-                    </CardContent>
-                  </Card>
-                  
-                  {/* Company 3 */}
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg">ADNOC Distribution</CardTitle>
-                      <CardDescription>UAE</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-muted-foreground">Fleet Size</span>
-                          <span className="font-medium">29 vessels</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-muted-foreground">Products</span>
-                          <span className="font-medium">Refined Products</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-muted-foreground">Status</span>
-                          <Badge variant="outline">Pending</Badge>
-                        </div>
-                      </div>
-                      
-                      <Button className="w-full mt-4" variant="outline">
-                        <ArrowRight className="mr-2 h-4 w-4" />
-                        View Details
-                      </Button>
-                    </CardContent>
-                  </Card>
-                  
-                  {/* Company 4 */}
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg">BP Trading</CardTitle>
-                      <CardDescription>United Kingdom</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-muted-foreground">Fleet Size</span>
-                          <span className="font-medium">51 vessels</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-muted-foreground">Products</span>
-                          <span className="font-medium">Crude, Refined</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-muted-foreground">Status</span>
-                          <Badge className="bg-green-500">Connected</Badge>
-                        </div>
-                      </div>
-                      
-                      <Button className="w-full mt-4" variant="outline">
-                        <ArrowRight className="mr-2 h-4 w-4" />
-                        View Details
-                      </Button>
-                    </CardContent>
-                  </Card>
-                  
-                  {/* Company 5 */}
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg">Kuwait Petroleum</CardTitle>
-                      <CardDescription>Kuwait</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-muted-foreground">Fleet Size</span>
-                          <span className="font-medium">33 vessels</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-muted-foreground">Products</span>
-                          <span className="font-medium">Crude Oil, LNG</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-muted-foreground">Status</span>
-                          <Badge className="bg-green-500">Connected</Badge>
-                        </div>
-                      </div>
-                      
-                      <Button className="w-full mt-4" variant="outline">
-                        <ArrowRight className="mr-2 h-4 w-4" />
-                        View Details
-                      </Button>
-                    </CardContent>
-                  </Card>
-                  
-                  {/* Company 6 */}
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg">Total Energies</CardTitle>
-                      <CardDescription>France</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-muted-foreground">Fleet Size</span>
-                          <span className="font-medium">59 vessels</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-muted-foreground">Products</span>
-                          <span className="font-medium">All Products</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-muted-foreground">Status</span>
-                          <Badge variant={connectionStatus['Total Energies'] === 'none' ? 'outline' : 'default'}>
-                            {connectionStatus['Total Energies'] === 'none' ? 'Not Connected' : 
-                             connectionStatus['Total Energies'] === 'pending' ? 'Pending' : 'Connected'}
-                          </Badge>
-                        </div>
-                      </div>
-                      
-                      <Button 
-                        className="w-full mt-4"
-                        onClick={() => handleConnect('Total Energies')}
-                        disabled={connectionStatus['Total Energies'] === 'pending'}
-                      >
-                        <ArrowRight className="mr-2 h-4 w-4" />
-                        {connectionStatus['Total Energies'] === 'none' ? 'Connect Now' : 
-                         connectionStatus['Total Energies'] === 'pending' ? 'Connection Pending' : 'Manage Connection'}
-                      </Button>
-                    </CardContent>
-                  </Card>
+                        
+                        {company.status === 'connected' ? (
+                          <Button 
+                            className="w-full mt-4" 
+                            variant="outline"
+                            onClick={() => handleViewDetails(company.id)}
+                          >
+                            <ArrowRight className="mr-2 h-4 w-4" />
+                            View Details
+                          </Button>
+                        ) : company.status === 'pending' ? (
+                          <Button 
+                            className="w-full mt-4" 
+                            variant="outline"
+                            disabled={true}
+                          >
+                            <ArrowRight className="mr-2 h-4 w-4" />
+                            Connection Pending
+                          </Button>
+                        ) : (
+                          <Button 
+                            className="w-full mt-4"
+                            onClick={() => handleConnect(company.id)}
+                          >
+                            <ArrowRight className="mr-2 h-4 w-4" />
+                            Connect Now
+                          </Button>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
               </CardContent>
             </Card>
