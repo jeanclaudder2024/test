@@ -91,35 +91,42 @@ const SimpleMap: React.FC = () => {
   const [selectedVesselType, setSelectedVesselType] = useState('all');
   const [showVesselStatus, setShowVesselStatus] = useState(true);
   const [showPortProximityControls, setShowPortProximityControls] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
+  // Function to fetch data
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      // Fetch vessels
+      const vesselsRes = await fetch('/api/vessels/polling');
+      const vesselsData = await vesselsRes.json();
+      
+      // Fetch ports
+      const portsRes = await fetch('/api/ports');
+      const portsData = await portsRes.json();
+      
+      // Fetch refineries
+      const refineriesRes = await fetch('/api/refineries');
+      const refineriesData = await refineriesRes.json();
+      
+      setVessels(vesselsData.vessels || []);
+      setPorts(portsData || []);
+      setRefineries(refineriesData || []);
+      setLoading(false);
+    } catch (err: any) {
+      console.error('Error fetching data:', err);
+      setError('Failed to load map data. Please try again.');
+      setLoading(false);
+    }
+  };
+  
+  // Handle refresh button click
+  const handleRefresh = () => {
+    fetchData();
+  };
+  
   // Fetch data on component mount
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        // Fetch vessels
-        const vesselsRes = await fetch('/api/vessels/polling');
-        const vesselsData = await vesselsRes.json();
-        
-        // Fetch ports
-        const portsRes = await fetch('/api/ports');
-        const portsData = await portsRes.json();
-        
-        // Fetch refineries
-        const refineriesRes = await fetch('/api/refineries');
-        const refineriesData = await refineriesRes.json();
-        
-        setVessels(vesselsData.vessels || []);
-        setPorts(portsData || []);
-        setRefineries(refineriesData || []);
-        setLoading(false);
-      } catch (err: any) {
-        console.error('Error fetching data:', err);
-        setError('Failed to load map data. Please try again.');
-        setLoading(false);
-      }
-    };
-    
     fetchData();
   }, []);
 

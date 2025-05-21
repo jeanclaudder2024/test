@@ -1,14 +1,14 @@
+import { Router, Request, Response } from 'express';
+import { db } from '../db';
+import { vessels, ports, refineries } from '../../shared/schema';
+import { and, or, sql } from 'drizzle-orm';
+
+const router = Router();
+
 /**
  * Port Proximity Routes
  * API routes to manage vessel positions near ports and refineries
  */
-
-import { Router, Request, Response } from 'express';
-import { db } from '../db';
-import { vessels, ports, refineries } from '../../shared/schema';
-import { eq, and, or, like, sql } from 'drizzle-orm';
-
-const router = Router();
 
 /**
  * Redistribute vessels near important maritime facilities
@@ -16,167 +16,143 @@ const router = Router();
  */
 router.post('/enhance-vessel-distribution', async (req: Request, res: Response) => {
   try {
-    // Get all active ports
+    // Get all active ports (with null check to avoid errors)
     const allPorts = await db.query.ports.findMany({
+      where: and(
+        sql`${ports.lat} IS NOT NULL`,
+        sql`${ports.lng} IS NOT NULL`
+      ),
       limit: 20,
       orderBy: (ports, { desc }) => [desc(ports.region)]
     });
     
     // Get all refineries
     const allRefineries = await db.query.refineries.findMany({
+      where: and(
+        sql`${refineries.lat} IS NOT NULL`,
+        sql`${refineries.lng} IS NOT NULL`
+      ),
       limit: 15
     });
     
-    const updatedVessels = {
-      ports: 0,
-      refineries: 0,
-      totalVessels: 0
-    };
+    // Get vessels that can be repositioned (only idle or randomly moving vessels)
+    const repositionableVessels = await db.query.vessels.findMany({
+      where: and(
+        sql`${vessels.currentLat} IS NOT NULL`,
+        sql`${vessels.currentLng} IS NOT NULL`,
+        or(
+          sql`${vessels.status} = 'idle'`,
+          sql`${vessels.status} IS NULL`,
+          sql`${vessels.status} = 'underway'`
+        )
+      ),
+      limit: 500
+    });
     
-    // Process ports - add vessels near each port
+    // Number of vessels to position near each facility
+    const vesselDensity = req.body.vesselDensity || 10;
+    
+    // Updated vessel count and facility count
+    let updatedVesselCount = 0;
+    
+    // For each port, position some vessels nearby
     for (const port of allPorts) {
+      // Skip ports with invalid coordinates
       if (!port.lat || !port.lng) continue;
       
-      // Determine how many vessels to place near this port (3-8 vessels per port)
-      const vesselCount = 3 + Math.floor(Math.random() * 6);
-      
-      // Find vessels that can be placed near this port
-      // Prioritize oil tankers and cargo vessels for realism
-      const availableVessels = await db.query.vessels.findMany({
-        where: or(
-          eq(vessels.vesselType, "Oil Tanker"),
-          eq(vessels.vesselType, "Crude Oil Tanker"),
-          eq(vessels.vesselType, "Product Tanker"),
-          eq(vessels.vesselType, "Cargo Ship")
-        ),
-        limit: 100
-      });
-      
-      // Shuffle vessels and take the needed number
-      const selectedVessels = availableVessels
-        .sort(() => 0.5 - Math.random())
-        .slice(0, vesselCount);
-      
-      // Position vessels around the port
       const portLat = parseFloat(port.lat);
       const portLng = parseFloat(port.lng);
       
-      for (const vessel of selectedVessels) {
-        // Generate a random position within ~20-50km of the port
-        // Using a circular distribution for realism
-        const angle = Math.random() * Math.PI * 2; // Random angle
-        const distance = 0.1 + Math.random() * 0.3; // ~10-40km
+      // Position up to vesselDensity vessels near this port
+      for (let i = 0; i < Math.min(vesselDensity, Math.floor(repositionableVessels.length / (allPorts.length + allRefineries.length))); i++) {
+        const vesselIndex = Math.floor(Math.random() * repositionableVessels.length);
+        const vessel = repositionableVessels[vesselIndex];
         
-        const newLat = portLat + Math.sin(angle) * distance;
-        const newLng = portLng + Math.cos(angle) * distance;
+        if (!vessel) continue;
         
-        // Skip obviously invalid positions (e.g., on land)
-        // This is a simplified check - a real system would use more sophisticated
-        // checks, like coastline data
-        if (newLat < -85 || newLat > 85 || newLng < -180 || newLng > 180) {
-          continue;
-        }
+        // Remove the vessel from available pool
+        repositionableVessels.splice(vesselIndex, 1);
         
-        // Update vessel position and add realistic maritime metadata
+        // Generate a random position within 0.05-0.3 degrees of the port
+        // This creates a more natural distribution of vessels
+        const distanceFactor = 0.05 + Math.random() * 0.25;
+        const angle = Math.random() * Math.PI * 2; // Random angle in radians
+        
+        const newLat = portLat + distanceFactor * Math.sin(angle);
+        const newLng = portLng + distanceFactor * Math.cos(angle);
+        
+        // Generate a random speed between 0 and 5 knots (slow speeds near ports)
+        const newSpeed = Math.floor(Math.random() * 5);
+        
+        // Update vessel position
         await db.update(vessels)
           .set({
-            currentLat: String(newLat.toFixed(6)),
-            currentLng: String(newLng.toFixed(6)),
-            // Link to port for navigation data
-            departurePort: Math.random() > 0.5 ? port.name : vessel.departurePort,
-            destinationPort: Math.random() > 0.5 ? port.name : vessel.destinationPort,
-            // Store metadata as JSON string with vessel details
-            metadata: JSON.stringify({
-              speed: Math.round(2 + Math.random() * 6), // Slower speeds near ports (2-8 knots)
-              heading: Math.round(angle * (180 / Math.PI)),
-              timestamp: new Date().toISOString(),
-              proximity: "near_port",
-              portName: port.name,
-              status: "approaching"
-            })
+            currentLat: newLat.toString(),
+            currentLng: newLng.toString(),
+            speed: newSpeed.toString(),
+            status: 'at port',
+            destination: port.name
           })
-          .where(eq(vessels.id, vessel.id));
-        
-        updatedVessels.totalVessels++;
+          .where(sql`${vessels.id} = ${vessel.id}`);
+          
+        updatedVesselCount++;
       }
-      
-      updatedVessels.ports++;
     }
     
-    // Process refineries - add vessels near each refinery
+    // For each refinery, position some vessels nearby
     for (const refinery of allRefineries) {
+      // Skip refineries with invalid coordinates
       if (!refinery.lat || !refinery.lng) continue;
       
-      // Determine how many vessels to place near this refinery (2-5 vessels per refinery)
-      const vesselCount = 2 + Math.floor(Math.random() * 4);
-      
-      // Find vessels that can be placed near this refinery
-      // For refineries, prioritize oil tankers for realism
-      const availableVessels = await db.query.vessels.findMany({
-        where: or(
-          eq(vessels.vesselType, "Oil Tanker"),
-          eq(vessels.vesselType, "Crude Oil Tanker"),
-          eq(vessels.vesselType, "Product Tanker")
-        ),
-        limit: 50
-      });
-      
-      // Shuffle vessels and take the needed number
-      const selectedVessels = availableVessels
-        .sort(() => 0.5 - Math.random())
-        .slice(0, vesselCount);
-      
-      // Position vessels around the refinery
       const refineryLat = parseFloat(refinery.lat);
       const refineryLng = parseFloat(refinery.lng);
       
-      for (const vessel of selectedVessels) {
-        // Generate a random position within ~10-30km of the refinery
-        const angle = Math.random() * Math.PI * 2; // Random angle
-        const distance = 0.1 + Math.random() * 0.2; // ~10-30km
+      // Position up to vesselDensity vessels near this refinery
+      for (let i = 0; i < Math.min(vesselDensity, Math.floor(repositionableVessels.length / (allRefineries.length + 1))); i++) {
+        const vesselIndex = Math.floor(Math.random() * repositionableVessels.length);
+        const vessel = repositionableVessels[vesselIndex];
         
-        const newLat = refineryLat + Math.sin(angle) * distance;
-        const newLng = refineryLng + Math.cos(angle) * distance;
+        if (!vessel) continue;
         
-        // Skip obviously invalid positions
-        if (newLat < -85 || newLat > 85 || newLng < -180 || newLng > 180) {
-          continue;
-        }
+        // Remove the vessel from available pool
+        repositionableVessels.splice(vesselIndex, 1);
         
-        // Update vessel position and add realistic maritime metadata for refineries
+        // Generate a random position within 0.05-0.3 degrees of the refinery
+        const distanceFactor = 0.05 + Math.random() * 0.25;
+        const angle = Math.random() * Math.PI * 2; // Random angle in radians
+        
+        const newLat = refineryLat + distanceFactor * Math.sin(angle);
+        const newLng = refineryLng + distanceFactor * Math.cos(angle);
+        
+        // Generate a random speed between 0 and 7 knots (slightly faster than near ports)
+        const newSpeed = Math.floor(Math.random() * 7);
+        
+        // Update vessel position
         await db.update(vessels)
           .set({
-            currentLat: String(newLat.toFixed(6)),
-            currentLng: String(newLng.toFixed(6)),
-            // Store metadata as JSON string with vessel details
-            metadata: JSON.stringify({
-              speed: Math.round(1 + Math.random() * 5), // Even slower speeds near refineries (1-6 knots)
-              heading: Math.round(angle * (180 / Math.PI)),
-              timestamp: new Date().toISOString(),
-              proximity: "near_refinery",
-              refineryName: refinery.name,
-              status: "standing_by"
-            })
+            currentLat: newLat.toString(),
+            currentLng: newLng.toString(),
+            speed: newSpeed.toString(),
+            status: 'near refinery',
+            destination: refinery.name
           })
-          .where(eq(vessels.id, vessel.id));
-        
-        updatedVessels.totalVessels++;
+          .where(sql`${vessels.id} = ${vessel.id}`);
+          
+        updatedVesselCount++;
       }
-      
-      updatedVessels.refineries++;
     }
     
-    res.json({
+    return res.json({
       success: true,
-      message: "Vessel distribution enhanced",
-      stats: updatedVessels
+      message: 'Vessel distribution enhanced',
+      updatedVessels: updatedVesselCount,
+      facilitiesWithVessels: allPorts.length + allRefineries.length
     });
-    
   } catch (error) {
-    console.error("Error enhancing vessel distribution:", error);
-    res.status(500).json({
+    console.error('Error enhancing vessel distribution:', error);
+    return res.status(500).json({
       success: false,
-      message: "Failed to enhance vessel distribution",
+      message: 'Failed to enhance vessel distribution',
       error: String(error)
     });
   }

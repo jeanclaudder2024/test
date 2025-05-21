@@ -1,98 +1,126 @@
 import React, { useState } from 'react';
-import axios from 'axios';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Loader2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Anchor, Ship, RefreshCw, CheckCircle } from 'lucide-react';
+import { Slider } from '@/components/ui/slider';
 
 const PortProximityControls = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [lastRun, setLastRun] = useState<Date | null>(null);
-  const [stats, setStats] = useState<{
-    ports: number;
-    refineries: number;
-    totalVessels: number;
-  } | null>(null);
-  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [vesselDensity, setVesselDensity] = useState(10);
 
   const enhanceVesselDistribution = async () => {
+    setLoading(true);
+    setSuccess(false);
+    setErrorMessage(null);
+    
     try {
-      setIsLoading(true);
-      
-      // Call the port proximity API to enhance vessel distribution
-      const response = await axios.post('/api/maritime/enhance-vessel-distribution');
-      
-      if (response.data.success) {
-        setStats(response.data.stats);
-        setLastRun(new Date());
-        
-        toast({
-          title: "Vessel distribution enhanced",
-          description: `Placed vessels near ${response.data.stats.ports} ports and ${response.data.stats.refineries} refineries`,
-          variant: "default",
-        });
-      }
-    } catch (error) {
-      console.error("Failed to enhance vessel distribution:", error);
-      toast({
-        title: "Enhancement failed",
-        description: "Could not enhance vessel distribution. Please try again.",
-        variant: "destructive",
+      const response = await fetch('/api/port-proximity/enhance-vessel-distribution', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          vesselDensity,
+          enhanceAll: true 
+        }),
       });
+      
+      if (!response.ok) {
+        throw new Error('Failed to enhance vessel distribution');
+      }
+      
+      const data = await response.json();
+      console.log('Enhanced vessel distribution:', data);
+      setSuccess(true);
+      
+      // Reset success message after 3 seconds
+      setTimeout(() => setSuccess(false), 3000);
+    } catch (error) {
+      console.error('Error enhancing vessel distribution:', error);
+      setErrorMessage('Failed to enhance vessel distribution. Please try again.');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return (
-    <Card className="w-full max-w-md bg-white bg-opacity-90 backdrop-blur-md shadow-lg border-0">
+    <Card className="w-80 shadow-lg border-blue-200 bg-white">
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-medium">Vessel Distribution Controls</CardTitle>
+        <CardTitle className="text-lg flex items-center">
+          <Anchor className="w-5 h-5 mr-2 text-blue-600" />
+          Port Proximity Controls
+        </CardTitle>
         <CardDescription>
-          Enhance realism by placing vessels near ports and refineries
+          Enhance vessel distribution around ports and refineries
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <span className="text-sm font-medium">Vessel Density</span>
+            <span className="text-sm text-gray-500">{vesselDensity} vessels per facility</span>
+          </div>
+          <Slider
+            defaultValue={[10]}
+            min={1}
+            max={25}
+            step={1}
+            value={[vesselDensity]}
+            onValueChange={(value) => setVesselDensity(value[0])}
+            className="my-2"
+          />
+        </div>
+        
+        <div className="flex justify-between">
           <Button 
-            onClick={enhanceVesselDistribution} 
-            disabled={isLoading}
-            className="w-full bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900"
+            variant="outline" 
+            className="flex-1 mr-2"
+            size="sm"
+            onClick={() => setVesselDensity(10)}
           >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
-                Enhancing vessel distribution...
-              </>
+            Reset
+          </Button>
+          <Button 
+            className="flex-1 bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800"
+            size="sm"
+            onClick={enhanceVesselDistribution}
+            disabled={loading}
+          >
+            {loading ? (
+              <span className="flex items-center">
+                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                Processing...
+              </span>
             ) : (
-              "Enhance Vessel Distribution"
+              <span className="flex items-center">
+                <Ship className="w-4 h-4 mr-2" />
+                Apply
+              </span>
             )}
           </Button>
-          
-          {stats && (
-            <div className="pt-2 text-sm">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-gray-600">Vessels distributed:</span>
-                <Badge variant="outline" className="bg-blue-50">{stats.totalVessels}</Badge>
-              </div>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-gray-600">Ports enhanced:</span>
-                <Badge variant="outline" className="bg-green-50">{stats.ports}</Badge>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Refineries enhanced:</span>
-                <Badge variant="outline" className="bg-amber-50">{stats.refineries}</Badge>
-              </div>
-            </div>
-          )}
-          
-          {lastRun && (
-            <div className="text-xs text-gray-500 mt-2 text-right">
-              Last enhanced: {lastRun.toLocaleString()}
-            </div>
-          )}
         </div>
+        
+        {success && (
+          <Alert className="bg-green-50 border-green-200 text-green-800">
+            <CheckCircle className="h-4 w-4 text-green-600" />
+            <AlertTitle>Success!</AlertTitle>
+            <AlertDescription>
+              Vessels have been repositioned for a more realistic map.
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {errorMessage && (
+          <Alert variant="destructive">
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>
+              {errorMessage}
+            </AlertDescription>
+          </Alert>
+        )}
       </CardContent>
     </Card>
   );
