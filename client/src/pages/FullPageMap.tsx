@@ -1,24 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, useMap, Marker, Popup, LayerGroup, ZoomControl, AttributionControl } from 'react-leaflet';
+import { MapContainer, TileLayer, useMap, Marker, Popup, LayerGroup } from 'react-leaflet';
 import L, { LatLngExpression } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import MarkerClusterGroup from 'react-leaflet-cluster';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { 
   Anchor, ArrowDown, ArrowUp, Droplets, Factory, 
   Filter, Locate, MapPin, Maximize, Minimize, Navigation, 
-  Search, Ship, Waves, Wind, MapIcon, RefreshCw, 
-  Layers, Info, Settings, ChevronLeft, ChevronRight, ChevronUp,
-  Ruler, Compass, Download, Share, AlertCircle, Eye,
-  Ban, Printer, Truck, Route, Wrench, Focus, BarChart4,
-  History, Calendar, Clock, PieChart, PanelTopOpen, Map,
-  Cloud, X, ArrowRight
+  Search, Ship, Waves, Wind, MapIcon, RefreshCw 
 } from 'lucide-react';
 import { 
   Select,
@@ -36,7 +30,6 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { ScrollArea } from "@/components/ui/scroll-area";
 import 'leaflet/dist/leaflet.css';
 
 // Define types for the data we'll be displaying
@@ -100,19 +93,6 @@ const FullPageMap: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [selectedItemType, setSelectedItemType] = useState<string | null>(null);
-  
-  // Advanced map control options
-  const [mapStyle, setMapStyle] = useState<string>("standard");
-  const [showControlPanel, setShowControlPanel] = useState<boolean>(true);
-  const [controlPanelTab, setControlPanelTab] = useState<string>("insights");
-  const [toolbarExpanded, setToolbarExpanded] = useState<boolean>(true);
-  const [showMeasurementTools, setShowMeasurementTools] = useState<boolean>(false);
-  const [showWeatherLayer, setShowWeatherLayer] = useState<boolean>(false);
-  const [showTrafficDensity, setShowTrafficDensity] = useState<boolean>(false);
-  const [showRiskAreas, setShowRiskAreas] = useState<boolean>(false);
-  const [vesselTrackingMode, setVesselTrackingMode] = useState<string>("standard");
-  const [filterPanelOpen, setFilterPanelOpen] = useState<boolean>(false);
-  const [showLegend, setShowLegend] = useState<boolean>(true);
   
   // Refs
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -373,455 +353,6 @@ const FullPageMap: React.FC = () => {
       </div>
       
       <div className="flex-grow relative">
-        {/* Advanced Global Map Controls - Fixed position toolbar */}
-        <div className="absolute top-2 right-2 flex flex-col gap-2 z-20">
-          <TooltipProvider>
-            <div className="flex flex-col gap-1.5 bg-background/90 backdrop-blur-sm p-1.5 rounded-lg shadow-lg">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setShowControlPanel(!showControlPanel)}>
-                    <PanelTopOpen className="h-5 w-5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="left">
-                  {showControlPanel ? 'Hide' : 'Show'} Control Panel
-                </TooltipContent>
-              </Tooltip>
-              
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setShowWeatherLayer(!showWeatherLayer)}>
-                    <Cloud className={showWeatherLayer ? "h-5 w-5 text-blue-500" : "h-5 w-5"} />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="left">
-                  {showWeatherLayer ? 'Hide' : 'Show'} Weather
-                </TooltipContent>
-              </Tooltip>
-              
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setShowMeasurementTools(!showMeasurementTools)}>
-                    <Ruler className={showMeasurementTools ? "h-5 w-5 text-green-500" : "h-5 w-5"} />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="left">
-                  {showMeasurementTools ? 'Hide' : 'Show'} Measurement Tools
-                </TooltipContent>
-              </Tooltip>
-              
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setShowRiskAreas(!showRiskAreas)}>
-                    <AlertCircle className={showRiskAreas ? "h-5 w-5 text-red-500" : "h-5 w-5"} />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="left">
-                  {showRiskAreas ? 'Hide' : 'Show'} Risk Areas
-                </TooltipContent>
-              </Tooltip>
-              
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setShowTrafficDensity(!showTrafficDensity)}>
-                    <BarChart4 className={showTrafficDensity ? "h-5 w-5 text-purple-500" : "h-5 w-5"} />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="left">
-                  {showTrafficDensity ? 'Hide' : 'Show'} Traffic Density
-                </TooltipContent>
-              </Tooltip>
-              
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setFilterPanelOpen(!filterPanelOpen)}>
-                    <Filter className={filterPanelOpen ? "h-5 w-5 text-amber-500" : "h-5 w-5"} />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="left">
-                  Advanced Filters
-                </TooltipContent>
-              </Tooltip>
-            </div>
-          </TooltipProvider>
-        </div>
-        
-        {/* Map Style Selection Dropdown - Bottom right */}
-        <div className="absolute bottom-10 right-2 z-20">
-          <Select value={mapStyle} onValueChange={setMapStyle}>
-            <SelectTrigger className="w-[160px] bg-background/90 backdrop-blur-sm">
-              <SelectValue placeholder="Map Style" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="standard">Standard</SelectItem>
-              <SelectItem value="satellite">Satellite</SelectItem>
-              <SelectItem value="dark">Dark Mode</SelectItem>
-              <SelectItem value="nautical">Nautical</SelectItem>
-              <SelectItem value="terrain">Terrain</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Top Panel - Maritime Intelligence Insights */}
-        {showControlPanel && (
-          <div className="absolute top-0 left-0 right-0 h-auto bg-background/90 backdrop-blur-sm py-2 px-4 z-20 border-b shadow-md">
-            <div className="flex justify-between items-center">
-              <Tabs value={controlPanelTab} onValueChange={setControlPanelTab} className="w-full">
-                <TabsList className="grid grid-cols-5 w-full">
-                  <TabsTrigger value="insights" className="text-xs flex items-center gap-1">
-                    <Info className="h-4 w-4" /> Insights
-                  </TabsTrigger>
-                  <TabsTrigger value="tracking" className="text-xs flex items-center gap-1">
-                    <Ship className="h-4 w-4" /> Tracking
-                  </TabsTrigger>
-                  <TabsTrigger value="analytics" className="text-xs flex items-center gap-1">
-                    <PieChart className="h-4 w-4" /> Analytics
-                  </TabsTrigger>
-                  <TabsTrigger value="routes" className="text-xs flex items-center gap-1">
-                    <Route className="h-4 w-4" /> Routes
-                  </TabsTrigger>
-                  <TabsTrigger value="settings" className="text-xs flex items-center gap-1">
-                    <Settings className="h-4 w-4" /> Settings
-                  </TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="insights" className="pt-2">
-                  <div className="grid grid-cols-4 gap-4">
-                    <Card className="col-span-1">
-                      <CardHeader className="py-2 px-3">
-                        <CardTitle className="text-sm">Vessel Overview</CardTitle>
-                      </CardHeader>
-                      <CardContent className="py-2 px-3">
-                        <div className="text-2xl font-bold">{vessels.length}</div>
-                        <div className="text-xs text-muted-foreground">Active Vessels</div>
-                        <div className="mt-2 flex justify-between text-xs text-muted-foreground">
-                          <span>Tankers: {vessels.filter(v => v.vesselType?.toLowerCase().includes('tanker')).length}</span>
-                          <span>Cargo: {vessels.filter(v => v.vesselType?.toLowerCase().includes('cargo')).length}</span>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    
-                    <Card className="col-span-1">
-                      <CardHeader className="py-2 px-3">
-                        <CardTitle className="text-sm">Port Activity</CardTitle>
-                      </CardHeader>
-                      <CardContent className="py-2 px-3">
-                        <div className="text-2xl font-bold">{ports.length}</div>
-                        <div className="text-xs text-muted-foreground">Monitored Ports</div>
-                        <div className="mt-2 text-xs text-muted-foreground">
-                          {selectedRegion !== "all" ? `${selectedRegion}: ${ports.filter(p => p.region === selectedRegion).length} ports` : "Viewing all regions"}
-                        </div>
-                      </CardContent>
-                    </Card>
-                    
-                    <Card className="col-span-1">
-                      <CardHeader className="py-2 px-3">
-                        <CardTitle className="text-sm">Refinery Status</CardTitle>
-                      </CardHeader>
-                      <CardContent className="py-2 px-3">
-                        <div className="text-2xl font-bold">{refineries.length}</div>
-                        <div className="text-xs text-muted-foreground">Active Refineries</div>
-                        <div className="mt-2 text-xs text-muted-foreground">
-                          Total Capacity: {refineries.reduce((sum, r) => sum + (r.capacity || 0), 0).toLocaleString()} bbl/day
-                        </div>
-                      </CardContent>
-                    </Card>
-                    
-                    <Card className="col-span-1">
-                      <CardHeader className="py-2 px-3">
-                        <CardTitle className="text-sm">Quick Actions</CardTitle>
-                      </CardHeader>
-                      <CardContent className="py-2 px-3 flex flex-wrap gap-2">
-                        <Button variant="outline" size="sm" className="text-xs h-7">
-                          <History className="h-3 w-3 mr-1" /> History
-                        </Button>
-                        <Button variant="outline" size="sm" className="text-xs h-7">
-                          <Printer className="h-3 w-3 mr-1" /> Report
-                        </Button>
-                        <Button variant="outline" size="sm" className="text-xs h-7">
-                          <Share className="h-3 w-3 mr-1" /> Share
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="tracking">
-                  <div className="pt-2">
-                    <Card>
-                      <CardHeader className="py-2 px-4">
-                        <CardTitle className="text-sm">Vessel Tracking Configuration</CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-4 grid grid-cols-3 gap-4">
-                        <div>
-                          <Label className="text-xs mb-1 block" htmlFor="tracking-mode">Tracking Mode</Label>
-                          <Select value={vesselTrackingMode} onValueChange={setVesselTrackingMode}>
-                            <SelectTrigger id="tracking-mode">
-                              <SelectValue placeholder="Select mode" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="standard">Standard</SelectItem>
-                              <SelectItem value="detailed">Detailed</SelectItem>
-                              <SelectItem value="predictive">Predictive</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        
-                        <div>
-                          <Label className="text-xs mb-1 block">Update Frequency</Label>
-                          <Slider 
-                            defaultValue={[30]} 
-                            max={60} 
-                            min={5} 
-                            step={5}
-                            className="mt-2" 
-                          />
-                          <div className="flex justify-between text-xs mt-1">
-                            <span>5s</span>
-                            <span>60s</span>
-                          </div>
-                        </div>
-                        
-                        <div className="flex flex-col justify-center">
-                          <div className="flex items-center space-x-2 mb-2">
-                            <Switch id="vessel-alerts" />
-                            <Label htmlFor="vessel-alerts" className="text-xs">Alert Notifications</Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <Switch id="vessel-history" defaultChecked />
-                            <Label htmlFor="vessel-history" className="text-xs">Track Vessel History</Label>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="analytics">
-                  <div className="pt-2 grid grid-cols-3 gap-4">
-                    <Card className="col-span-2">
-                      <CardHeader className="py-2 px-3">
-                        <CardTitle className="text-sm">Maritime Traffic Analysis</CardTitle>
-                      </CardHeader>
-                      <CardContent className="py-2 px-3">
-                        <div className="h-[100px] flex items-center justify-center border border-dashed rounded-md">
-                          <p className="text-xs text-muted-foreground">Interactive Traffic Analysis Chart</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    
-                    <Card className="col-span-1">
-                      <CardHeader className="py-2 px-3">
-                        <CardTitle className="text-sm">Global Hotspots</CardTitle>
-                      </CardHeader>
-                      <CardContent className="py-2 px-3 text-xs">
-                        <div className="space-y-2">
-                          <div className="flex justify-between items-center">
-                            <span>Strait of Hormuz</span>
-                            <Badge variant="outline" className="text-red-500">High Traffic</Badge>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span>Suez Canal</span>
-                            <Badge variant="outline" className="text-amber-500">Moderate</Badge>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span>Singapore Strait</span>
-                            <Badge variant="outline" className="text-red-500">High Traffic</Badge>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="routes">
-                  <div className="pt-2">
-                    <Card>
-                      <CardContent className="p-3">
-                        <div className="flex items-center space-x-2">
-                          <Input placeholder="Origin port" className="text-sm" />
-                          <ArrowRight className="h-4 w-4 flex-shrink-0" />
-                          <Input placeholder="Destination port" className="text-sm" />
-                          <Button size="sm">Calculate Route</Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="settings">
-                  <div className="pt-2">
-                    <Card>
-                      <CardContent className="p-3 grid grid-cols-3 gap-x-8 gap-y-2">
-                        <div className="flex items-center justify-between">
-                          <Label htmlFor="show-vessels" className="text-xs">Show Vessels</Label>
-                          <Switch id="show-vessels" checked={showVessels} onCheckedChange={setShowVessels} />
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <Label htmlFor="show-ports" className="text-xs">Show Ports</Label>
-                          <Switch id="show-ports" checked={showPorts} onCheckedChange={setShowPorts} />
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <Label htmlFor="show-refineries" className="text-xs">Show Refineries</Label>
-                          <Switch id="show-refineries" checked={showRefineries} onCheckedChange={setShowRefineries} />
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <Label htmlFor="cluster-vessels" className="text-xs">Cluster Vessels</Label>
-                          <Switch id="cluster-vessels" defaultChecked />
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <Label htmlFor="show-labels" className="text-xs">Show Labels</Label>
-                          <Switch id="show-labels" />
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <Label htmlFor="show-legend" className="text-xs">Map Legend</Label>
-                          <Switch id="show-legend" checked={showLegend} onCheckedChange={setShowLegend} />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </TabsContent>
-              </Tabs>
-              
-              <Button
-                variant="ghost"
-                size="sm"
-                className="ml-2 flex-shrink-0"
-                onClick={() => setShowControlPanel(false)}
-              >
-                <ChevronUp className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        )}
-        
-        {/* Advanced Filters Panel */}
-        {filterPanelOpen && (
-          <div className="absolute right-14 top-2 w-[300px] bg-background/90 backdrop-blur-sm rounded-lg shadow-lg z-20 p-3">
-            <div className="flex justify-between items-center mb-2">
-              <h4 className="text-sm font-medium flex items-center gap-1">
-                <Filter className="h-4 w-4" /> Advanced Filters
-              </h4>
-              <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setFilterPanelOpen(false)}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-            
-            <div className="space-y-3">
-              <div>
-                <Label className="text-xs">Vessel Type</Label>
-                <Select value={vesselTypeFilter} onValueChange={setVesselTypeFilter}>
-                  <SelectTrigger className="h-8 mt-1 text-xs">
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Types</SelectItem>
-                    <SelectItem value="Oil Tanker">Oil Tankers</SelectItem>
-                    <SelectItem value="Chemical Tanker">Chemical Tankers</SelectItem>
-                    <SelectItem value="LNG Carrier">LNG Carriers</SelectItem>
-                    <SelectItem value="Cargo">Cargo Vessels</SelectItem>
-                    <SelectItem value="Container">Container Ships</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <Label className="text-xs">Port Type</Label>
-                <Select value={portTypeFilter} onValueChange={setPortTypeFilter}>
-                  <SelectTrigger className="h-8 mt-1 text-xs">
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Types</SelectItem>
-                    <SelectItem value="oil">Oil Terminals</SelectItem>
-                    <SelectItem value="lng">LNG Terminals</SelectItem>
-                    <SelectItem value="container">Container Ports</SelectItem>
-                    <SelectItem value="cruise">Cruise Terminals</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <Label className="text-xs">Vessel Activity</Label>
-                <Select defaultValue="all">
-                  <SelectTrigger className="h-8 mt-1 text-xs">
-                    <SelectValue placeholder="Select activity" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Activities</SelectItem>
-                    <SelectItem value="underway">Underway</SelectItem>
-                    <SelectItem value="anchored">Anchored</SelectItem>
-                    <SelectItem value="moored">Moored</SelectItem>
-                    <SelectItem value="loading">Loading/Unloading</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <Label className="text-xs">Vessel Flag</Label>
-                <Select defaultValue="all">
-                  <SelectTrigger className="h-8 mt-1 text-xs">
-                    <SelectValue placeholder="Select flag" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Flags</SelectItem>
-                    <SelectItem value="US">United States</SelectItem>
-                    <SelectItem value="PA">Panama</SelectItem>
-                    <SelectItem value="LR">Liberia</SelectItem>
-                    <SelectItem value="MH">Marshall Islands</SelectItem>
-                    <SelectItem value="SG">Singapore</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <Label className="text-xs mb-1 block">Speed Range (knots)</Label>
-                <Slider 
-                  defaultValue={[0, 30]} 
-                  max={30} 
-                  min={0} 
-                  step={1}
-                  className="mt-2" 
-                />
-                <div className="flex justify-between text-xs mt-1">
-                  <span>0 kn</span>
-                  <span>30 kn</span>
-                </div>
-              </div>
-              
-              <div className="pt-2 flex justify-end space-x-2">
-                <Button variant="outline" size="sm" className="text-xs h-7">Reset</Button>
-                <Button size="sm" className="text-xs h-7">Apply Filters</Button>
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {/* Map Legend - Bottom left */}
-        {showLegend && (
-          <div className="absolute bottom-10 left-2 bg-background/90 backdrop-blur-sm p-2 rounded-lg shadow-md z-20">
-            <div className="text-xs font-medium mb-1.5">Map Legend</div>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-              <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full bg-orange-500 mr-1.5"></div>
-                <span>Oil Tanker</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full bg-blue-500 mr-1.5"></div>
-                <span>Port</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full bg-green-500 mr-1.5"></div>
-                <span>Cargo Ship</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full bg-red-500 mr-1.5"></div>
-                <span>Refinery</span>
-              </div>
-            </div>
-          </div>
-        )}
-        
         {loading ? (
           <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-50">
             <div className="text-center">
@@ -855,50 +386,18 @@ const FullPageMap: React.FC = () => {
             >
               {/* Map will auto-center */}
               
-              {/* Base map layers - Dynamic based on selected style */}
-              {mapStyle === 'standard' && (
-                <TileLayer
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                />
-              )}
+              {/* Base map layers */}
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
               
-              {mapStyle === 'dark' && (
-                <TileLayer
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-                  url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-                />
-              )}
-              
-              {mapStyle === 'satellite' && (
-                <TileLayer
-                  attribution='&copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
-                  url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-                />
-              )}
-              
-              {mapStyle === 'nautical' && (
-                <TileLayer
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                />
-              )}
-              
-              {mapStyle === 'terrain' && (
-                <TileLayer
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-                  url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-                />
-              )}
-              
-              {/* Ocean tile layer - Show on nautical style or standard */}
-              {(mapStyle === 'nautical' || mapStyle === 'standard') && (
-                <TileLayer
-                  attribution='&copy; <a href="https://openseamap.org">OpenSeaMap</a> contributors'
-                  url="https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png"
-                  zIndex={10}
-                />
-              )}
+              {/* Ocean tile layer */}
+              <TileLayer
+                attribution='&copy; <a href="https://openseamap.org">OpenSeaMap</a> contributors'
+                url="https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png"
+                zIndex={10}
+              />
               
               {/* Vessels Layer */}
               {showVessels && (
