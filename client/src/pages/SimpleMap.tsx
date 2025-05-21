@@ -555,12 +555,13 @@ const SimpleMap: React.FC = () => {
               <Marker
                 key={`vessel-${vessel.id}`}
                 position={[parseFloat(vessel.currentLat || "0"), parseFloat(vessel.currentLng || "0")]}
+                zIndexOffset={1000}
                 icon={new L.Icon({
                   iconUrl: getVesselIconUrl(vessel),
-                  iconSize: [28, 28],
-                  iconAnchor: [14, 14],
-                  popupAnchor: [0, -14],
-                  className: `vessel-icon status-${getVesselStatus(vessel).toLowerCase()} z-20`
+                  iconSize: [30, 30],
+                  iconAnchor: [15, 15],
+                  popupAnchor: [0, -15],
+                  className: `vessel-icon status-${getVesselStatus(vessel).toLowerCase()}`
                 })}
               >
                 <Popup maxWidth={400} minWidth={350}>
