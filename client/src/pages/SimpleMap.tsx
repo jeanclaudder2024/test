@@ -5,6 +5,7 @@ import 'leaflet/dist/leaflet.css';
 import '../styles/map-status.css';
 import '../styles/vessel-popup.css';
 import '../styles/fixed-map.css';
+import VesselMarkers from '../components/map/VesselMarkers';
 import tankerIcon from '../assets/tanker-icon.svg';
 import cargoIcon from '../assets/cargo-icon.svg';
 import passengerIcon from '../assets/passenger-icon.svg';
@@ -553,30 +554,12 @@ const SimpleMap: React.FC = () => {
             {/* Vessels Layer */}
             <LayersControl.Overlay checked name="Vessels">
               <FeatureGroup>
-                {filteredVessels.map((vessel) => (
-                  <Marker
-                    key={`vessel-${vessel.id}`}
-                    position={[parseFloat(vessel.currentLat || "0"), parseFloat(vessel.currentLng || "0")]}
-                    zIndexOffset={10000}
-                    icon={new L.Icon({
-                      iconUrl: getVesselIconUrl(vessel),
-                      iconSize: [36, 36],
-                      iconAnchor: [18, 18],
-                      popupAnchor: [0, -18],
-                      className: `vessel-icon status-${getVesselStatus(vessel).toLowerCase()}`
-                    })}
-              >
-                <Popup maxWidth={400} minWidth={350}>
-                  <div className="vessel-popup-container">
-                    <VesselPopup 
-                      vessel={vessel} 
-                      getVesselStatus={getVesselStatus}
-                      getVesselRegion={getVesselRegion}
-                    />
-                  </div>
-                </Popup>
-                  </Marker>
-                ))}
+                <VesselMarkers 
+                  vessels={filteredVessels}
+                  getVesselIconUrl={getVesselIconUrl} 
+                  getVesselStatus={getVesselStatus}
+                  getVesselRegion={getVesselRegion}
+                />
               </FeatureGroup>
             </LayersControl.Overlay>
             
