@@ -1,34 +1,31 @@
 import { Router, Request, Response } from 'express';
 import { storage } from '../storage';
-import { insertCompanySchema } from '@shared/schema';
+import { oilCompanies } from './companyData';
 import { z } from 'zod';
+import { fromZodError } from 'zod-validation-error';
 
 export const companyRouter = Router();
 
 // Get all companies
 companyRouter.get('/', async (req: Request, res: Response) => {
   try {
-    const companies = await storage.getCompanies();
-    res.json(companies);
+    // For the demo, return the preloaded oil company data
+    res.json(oilCompanies);
   } catch (error) {
     console.error('Error getting companies:', error);
     res.status(500).json({ message: 'Error fetching companies' });
   }
 });
 
-// Get companies by region
-companyRouter.get('/region/:region', async (req: Request, res: Response) => {
+// Get recommended companies
+companyRouter.get('/recommended', async (req: Request, res: Response) => {
   try {
-    const region = req.params.region;
-    if (!region) {
-      return res.status(400).json({ message: 'Region is required' });
-    }
-    
-    const companies = await storage.getCompaniesByRegion(region);
-    res.json(companies);
+    // For the demo, return the top 5 oil companies as recommended
+    // In a real app, this would use the broker's preferences or machine learning
+    res.json(oilCompanies.slice(0, 5));
   } catch (error) {
-    console.error('Error getting companies by region:', error);
-    res.status(500).json({ message: 'Error fetching companies by region' });
+    console.error('Error getting recommended companies:', error);
+    res.status(500).json({ message: 'Error fetching recommended companies' });
   }
 });
 
@@ -40,7 +37,7 @@ companyRouter.get('/:id', async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Invalid company ID' });
     }
     
-    const company = await storage.getCompanyById(id);
+    const company = oilCompanies.find(company => company.id === id);
     if (!company) {
       return res.status(404).json({ message: 'Company not found' });
     }
@@ -52,93 +49,68 @@ companyRouter.get('/:id', async (req: Request, res: Response) => {
   }
 });
 
-// Create a new company
-companyRouter.post('/', async (req: Request, res: Response) => {
+// Get company by region
+companyRouter.get('/region/:region', async (req: Request, res: Response) => {
   try {
-    // Validate the request body
-    const result = insertCompanySchema.safeParse(req.body);
-    if (!result.success) {
-      return res.status(400).json({ message: 'Invalid company data', errors: result.error.format() });
+    const region = req.params.region;
+    if (!region) {
+      return res.status(400).json({ message: 'Region is required' });
     }
     
-    const company = await storage.createCompany(result.data);
-    res.status(201).json(company);
+    const filteredCompanies = oilCompanies.filter(
+      company => company.region && company.region.toLowerCase() === region.toLowerCase()
+    );
+    
+    res.json(filteredCompanies);
   } catch (error) {
-    console.error('Error creating company:', error);
-    res.status(500).json({ message: 'Error creating company' });
+    console.error('Error getting companies by region:', error);
+    res.status(500).json({ message: 'Error fetching companies by region' });
   }
 });
 
-// Import multiple companies at once
-companyRouter.post('/import', async (req: Request, res: Response) => {
-  try {
-    // Define validation schema for the request
-    const importSchema = z.object({
-      companies: z.array(insertCompanySchema)
-    });
-    
-    // Validate the request body
-    const result = importSchema.safeParse(req.body);
-    if (!result.success) {
-      return res.status(400).json({ message: 'Invalid import data', errors: result.error.format() });
-    }
-    
-    // Import the companies
-    const companies = await storage.createCompaniesBulk(result.data.companies);
-    
-    res.status(201).json({ 
-      message: 'Companies imported successfully',
-      count: companies.length,
-      companies 
-    });
-  } catch (error) {
-    console.error('Error importing companies:', error);
-    res.status(500).json({ message: 'Error importing companies' });
-  }
-});
-
-// Update a company
-companyRouter.patch('/:id', async (req: Request, res: Response) => {
+// Get vessels for a company
+companyRouter.get('/:id/vessels', async (req: Request, res: Response) => {
   try {
     const id = parseInt(req.params.id);
     if (isNaN(id)) {
       return res.status(400).json({ message: 'Invalid company ID' });
     }
     
-    // Validate the request body
-    const result = insertCompanySchema.partial().safeParse(req.body);
-    if (!result.success) {
-      return res.status(400).json({ message: 'Invalid company data', errors: result.error.format() });
-    }
-    
-    const company = await storage.updateCompany(id, result.data);
+    const company = oilCompanies.find(company => company.id === id);
     if (!company) {
       return res.status(404).json({ message: 'Company not found' });
     }
     
-    res.json(company);
-  } catch (error) {
-    console.error('Error updating company:', error);
-    res.status(500).json({ message: 'Error updating company' });
-  }
-});
-
-// Delete a company
-companyRouter.delete('/:id', async (req: Request, res: Response) => {
-  try {
-    const id = parseInt(req.params.id);
-    if (isNaN(id)) {
-      return res.status(400).json({ message: 'Invalid company ID' });
+    // Generate some sample vessels for the company based on their fleet size
+    const fleetSize = company.fleetSize || 10;
+    const vessels = [];
+    
+    for (let i = 1; i <= Math.min(fleetSize, 15); i++) {
+      const vesselTypes = ['Oil Tanker', 'LNG Carrier', 'Chemical Tanker', 'Product Carrier', 'VLCC'];
+      const vesselType = vesselTypes[Math.floor(Math.random() * vesselTypes.length)];
+      
+      const flags = [company.country, 'Panama', 'Liberia', 'Marshall Islands', 'Singapore'];
+      const flag = flags[Math.floor(Math.random() * flags.length)];
+      
+      const statuses = ['active', 'in port', 'maintenance', 'loading', 'unloading'];
+      const status = statuses[Math.floor(Math.random() * statuses.length)];
+      
+      vessels.push({
+        id: id * 1000 + i,
+        name: `${company.name.split(' ')[0]} ${['Voyager', 'Explorer', 'Pioneer', 'Champion', 'Navigator', 'Fortune'][Math.floor(Math.random() * 6)]} ${i}`,
+        mmsi: Math.floor(Math.random() * 900000000) + 100000000,
+        imo: Math.floor(Math.random() * 9000000) + 1000000,
+        type: vesselType,
+        flag: flag,
+        status: status,
+        lat: (Math.random() * 140) - 70,
+        lng: (Math.random() * 340) - 170,
+      });
     }
     
-    const success = await storage.deleteCompany(id);
-    if (!success) {
-      return res.status(404).json({ message: 'Company not found' });
-    }
-    
-    res.status(204).end();
+    res.json(vessels);
   } catch (error) {
-    console.error('Error deleting company:', error);
-    res.status(500).json({ message: 'Error deleting company' });
+    console.error('Error getting company vessels:', error);
+    res.status(500).json({ message: 'Error fetching company vessels' });
   }
 });
