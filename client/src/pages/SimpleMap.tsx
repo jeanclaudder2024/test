@@ -1,14 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, ZoomControl, useMap, LayersControl, FeatureGroup, Circle, Tooltip } from 'react-leaflet';
+import React, { useState, useEffect } from 'react';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import '../styles/map-status.css';
 import '../styles/vessel-popup.css';
-import '../styles/fixed-map.css';
-import '../styles/zoom-markers.css';
-import VesselMarkers from '../components/map/VesselMarkers';
-import PortMarkers from '../components/map/PortMarkers';
-import RefineryMarkers from '../components/map/RefineryMarkers';
 import tankerIcon from '../assets/tanker-icon.svg';
 import cargoIcon from '../assets/cargo-icon.svg';
 import passengerIcon from '../assets/passenger-icon.svg';
@@ -18,11 +13,10 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import VesselPopup from '../components/VesselPopup';
 import PortProximityControls from '../components/map/PortProximityControls';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Search, Anchor, Layers, Navigation, Map, Target, AlertCircle, BarChart2, Info, List, Maximize, Minimize } from 'lucide-react';
+import { RefreshCw, Search, Anchor } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 // Define interfaces for data types
 interface Vessel {
@@ -93,21 +87,6 @@ const SimpleMap: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  
-  // Map display controls
-  const [showVessels, setShowVessels] = useState(true);
-  const [showPorts, setShowPorts] = useState(true);
-  const [showRefineries, setShowRefineries] = useState(true);
-  const [showRoutes, setShowRoutes] = useState(false);
-  const [mapStyle, setMapStyle] = useState('standard');
-  
-  // UI control states
-  const [showMapLayers, setShowMapLayers] = useState(false);
-  const [showAnalytics, setShowAnalytics] = useState(false);
-  const [showLocationFinder, setShowLocationFinder] = useState(false);
-  const [isFullScreen, setIsFullScreen] = useState(false);
-  const [locationSearch, setLocationSearch] = useState('');
-  const [locationResults, setLocationResults] = useState<any[]>([]);
   const [selectedRegion, setSelectedRegion] = useState('all');
   const [selectedVesselType, setSelectedVesselType] = useState('all');
   const [showVesselStatus, setShowVesselStatus] = useState(true);
@@ -150,83 +129,6 @@ const SimpleMap: React.FC = () => {
   useEffect(() => {
     fetchData();
   }, []);
-  
-  // Map reference for controlling the map
-  const mapRef = useRef<any>(null);
-  
-  // Handle fullscreen toggle
-  const toggleFullScreen = () => {
-    const mapElement = document.getElementById('maritime-map-container');
-    
-    if (!isFullScreen) {
-      if (mapElement?.requestFullscreen) {
-        mapElement.requestFullscreen()
-          .then(() => setIsFullScreen(true))
-          .catch(err => console.error("Fullscreen error:", err));
-      }
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen()
-          .then(() => setIsFullScreen(false))
-          .catch(err => console.error("Exit fullscreen error:", err));
-      }
-    }
-  };
-  
-  // Handle location search
-  const handleLocationSearch = () => {
-    if (!locationSearch.trim()) return;
-    
-    // Search in ports and refineries
-    const portResults = ports.filter(port => 
-      port.name.toLowerCase().includes(locationSearch.toLowerCase()) ||
-      port.country.toLowerCase().includes(locationSearch.toLowerCase())
-    ).map(port => ({
-      id: port.id,
-      name: port.name,
-      country: port.country,
-      lat: parseFloat(port.lat),
-      lng: parseFloat(port.lng),
-      type: 'port'
-    }));
-    
-    const refineryResults = refineries.filter(refinery => 
-      refinery.name.toLowerCase().includes(locationSearch.toLowerCase()) ||
-      refinery.country.toLowerCase().includes(locationSearch.toLowerCase())
-    ).map(refinery => ({
-      id: refinery.id,
-      name: refinery.name,
-      country: refinery.country,
-      lat: parseFloat(refinery.lat),
-      lng: parseFloat(refinery.lng),
-      type: 'refinery'
-    }));
-    
-    setLocationResults([...portResults, ...refineryResults]);
-  };
-  
-  // Handle flying to a location
-  const handleFlyToLocation = (location: any) => {
-    if (mapRef.current) {
-      // Access the Leaflet map instance and fly to location
-      const leafletMap = mapRef.current;
-      leafletMap.flyTo([location.lat, location.lng], 10, {
-        animate: true,
-        duration: 1.5
-      });
-      
-      setShowLocationFinder(false);
-      setLocationResults([]);
-      setLocationSearch('');
-    }
-  };
-  
-  // Map component to handle map reference
-  const MapController = () => {
-    const map = useMap();
-    mapRef.current = map;
-    return null;
-  };
 
   // Helper function to check if coordinate is on water (simple version)
   const isWaterLocation = (lat: number, lng: number): boolean => {
@@ -554,17 +456,30 @@ const SimpleMap: React.FC = () => {
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
             
-            {/* Vessels Layer */}
-            <LayersControl.Overlay checked name="Vessels">
-              <FeatureGroup>
-                <VesselMarkers 
-                  vessels={filteredVessels}
-                  getVesselIconUrl={getVesselIconUrl} 
-                  getVesselStatus={getVesselStatus}
-                  getVesselRegion={getVesselRegion}
-                />
-              </FeatureGroup>
-            </LayersControl.Overlay>
+            {/* Vessels */}
+            {filteredVessels.map((vessel) => (
+              <Marker
+                key={`vessel-${vessel.id}`}
+                position={[parseFloat(vessel.currentLat || "0"), parseFloat(vessel.currentLng || "0")]}
+                icon={new L.Icon({
+                  iconUrl: getVesselIconUrl(vessel),
+                  iconSize: [36, 36],
+                  iconAnchor: [18, 18],
+                  popupAnchor: [0, -18],
+                  className: showVesselStatus ? `vessel-icon status-${getVesselStatus(vessel).toLowerCase()}` : 'vessel-icon'
+                })}
+              >
+                <Popup maxWidth={400} minWidth={350}>
+                  <div className="vessel-popup-container">
+                    <VesselPopup 
+                      vessel={vessel} 
+                      getVesselStatus={getVesselStatus}
+                      getVesselRegion={getVesselRegion}
+                    />
+                  </div>
+                </Popup>
+              </Marker>
+            ))}
             
             {/* Ports */}
             {filteredPorts.map((port) => (
@@ -740,146 +655,15 @@ const SimpleMap: React.FC = () => {
                 </Popup>
               </Marker>
             ))}
-            {/* Enhanced Map Controls */}
-            <div className="fixed bottom-10 right-6 z-50 space-y-3">
-              {/* Map Layers Control */}
-              <Card className="w-14 h-14 flex items-center justify-center cursor-pointer hover:bg-blue-50 transition-colors shadow-xl bg-white border-2 border-blue-200 rounded-xl">
-                <button
-                  className="p-3 relative"
-                  onClick={() => setShowMapLayers(!showMapLayers)}
-                  title="Map Layers"
-                >
-                  <Layers className="w-7 h-7 text-blue-500" />
-                  {showMapLayers && (
-                    <div className="absolute bottom-12 right-0 bg-white p-3 rounded-lg shadow-lg w-64">
-                      <h3 className="text-sm font-bold mb-2 flex items-center"><Map className="w-4 h-4 mr-1" /> Map Style</h3>
-                      <Select
-                        value={mapStyle}
-                        onValueChange={(value) => setMapStyle(value)}
-                      >
-                        <SelectTrigger className="mb-2">
-                          <SelectValue placeholder="Select map style" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="standard">Standard</SelectItem>
-                          <SelectItem value="satellite">Satellite</SelectItem>
-                          <SelectItem value="dark">Dark Mode</SelectItem>
-                          <SelectItem value="terrain">Terrain</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      
-                      <h3 className="text-sm font-bold mt-3 mb-2 flex items-center"><Layers className="w-4 h-4 mr-1" /> Display Layers</h3>
-                      <div className="space-y-2">
-                        <div className="flex items-center">
-                          <input 
-                            type="checkbox" 
-                            id="showVessels" 
-                            checked={showVessels} 
-                            onChange={() => setShowVessels(!showVessels)} 
-                            className="mr-2"
-                          />
-                          <label htmlFor="showVessels" className="text-sm">Vessels</label>
-                        </div>
-                        <div className="flex items-center">
-                          <input 
-                            type="checkbox" 
-                            id="showPorts" 
-                            checked={showPorts} 
-                            onChange={() => setShowPorts(!showPorts)} 
-                            className="mr-2"
-                          />
-                          <label htmlFor="showPorts" className="text-sm">Ports</label>
-                        </div>
-                        <div className="flex items-center">
-                          <input 
-                            type="checkbox" 
-                            id="showRefineries" 
-                            checked={showRefineries} 
-                            onChange={() => setShowRefineries(!showRefineries)} 
-                            className="mr-2"
-                          />
-                          <label htmlFor="showRefineries" className="text-sm">Refineries</label>
-                        </div>
-                        <div className="flex items-center">
-                          <input 
-                            type="checkbox" 
-                            id="showVesselStatus" 
-                            checked={showVesselStatus} 
-                            onChange={() => setShowVesselStatus(!showVesselStatus)} 
-                            className="mr-2"
-                          />
-                          <label htmlFor="showVesselStatus" className="text-sm">Vessel Status</label>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </button>
-              </Card>
-
-              {/* Location Finder Button */}
-              <Card className="w-14 h-14 flex items-center justify-center cursor-pointer hover:bg-green-50 transition-colors shadow-xl bg-white border-2 border-green-200 rounded-xl">
-                <button
-                  className="p-3 relative"
-                  onClick={() => setShowLocationFinder(!showLocationFinder)}
-                  title="Find Location"
-                >
-                  <Target className="w-7 h-7 text-green-500" />
-                  {showLocationFinder && (
-                    <div className="absolute bottom-12 right-0 bg-white p-3 rounded-lg shadow-lg w-64">
-                      <h3 className="text-sm font-bold mb-2 flex items-center"><Target className="w-4 h-4 mr-1" /> Find Location</h3>
-                      <div className="space-y-2">
-                        <Input 
-                          placeholder="Search for a port or refinery..."
-                          value={locationSearch}
-                          onChange={(e) => setLocationSearch(e.target.value)}
-                        />
-                        <Button 
-                          size="sm" 
-                          className="w-full" 
-                          onClick={handleLocationSearch}
-                        >
-                          Find
-                        </Button>
-                        
-                        {locationResults.length > 0 && (
-                          <div className="mt-2 max-h-40 overflow-y-auto">
-                            <p className="text-xs text-gray-500 mb-1">Search Results:</p>
-                            {locationResults.map((item, index) => (
-                              <div 
-                                key={index} 
-                                className="text-sm p-1 hover:bg-gray-100 cursor-pointer rounded"
-                                onClick={() => handleFlyToLocation(item)}
-                              >
-                                {item.name} ({item.type})
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </button>
-              </Card>
-
-              {/* Full Screen Button */}
-              <Card className="w-14 h-14 flex items-center justify-center cursor-pointer hover:bg-purple-50 transition-colors shadow-xl bg-white border-2 border-purple-200 rounded-xl">
-                <button
-                  className="p-3"
-                  onClick={toggleFullScreen}
-                  title={isFullScreen ? "Exit Full Screen" : "Full Screen"}
-                >
-                  {isFullScreen ? <Minimize className="w-7 h-7 text-purple-500" /> : <Maximize className="w-7 h-7 text-purple-500" />}
-                </button>
-              </Card>
-              
+            {/* Map Controls */}
+            <div className="absolute bottom-4 right-4 z-10 space-y-4">
               {/* Settings button */}
-              <Card className="w-14 h-14 flex items-center justify-center cursor-pointer hover:bg-orange-50 transition-colors shadow-xl bg-white border-2 border-orange-200 rounded-xl">
+              <Card className="w-10 h-10 flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors">
                 <button
-                  className="p-3"
+                  className="p-2"
                   onClick={() => setShowSettings(!showSettings)}
-                  title="Settings"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="#ec4899" className="w-7 h-7">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
@@ -887,25 +671,24 @@ const SimpleMap: React.FC = () => {
               </Card>
               
               {/* Refresh button */}
-              <Card className="w-14 h-14 flex items-center justify-center cursor-pointer hover:bg-indigo-50 transition-colors shadow-xl bg-white border-2 border-indigo-200 rounded-xl">
+              <Card className="w-10 h-10 flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors">
                 <button
-                  className="p-3"
+                  className="p-2"
                   onClick={handleRefresh}
                   disabled={loading}
-                  title="Refresh Data"
                 >
-                  <RefreshCw className={`w-7 h-7 ${loading ? 'animate-spin text-gray-400' : 'text-indigo-500'}`} />
+                  <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin text-gray-400' : ''}`} />
                 </button>
               </Card>
               
               {/* Port Proximity button */}
-              <Card className="w-14 h-14 flex items-center justify-center cursor-pointer hover:bg-cyan-50 transition-colors shadow-xl bg-white border-2 border-cyan-200 rounded-xl">
+              <Card className="w-10 h-10 flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors">
                 <button
-                  className="p-3"
+                  className="p-2"
                   onClick={() => setShowPortProximityControls(!showPortProximityControls)}
                   title="Enhance vessel distribution near ports and refineries"
                 >
-                  <Anchor className="w-7 h-7 text-cyan-600" />
+                  <Anchor className="w-5 h-5 text-blue-600" />
                 </button>
               </Card>
             </div>
