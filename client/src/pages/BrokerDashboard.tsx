@@ -1,7 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { CompanyConnections } from '@/components/broker/CompanyConnections';
+import { CompanyProfile } from '@/components/broker/CompanyProfile';
+import { DealManager } from '@/components/broker/DealManager';
 
-// Using local types since the imports aren't working correctly
+// Using local types
 type Broker = {
   id: number;
   name: string;
@@ -23,558 +26,173 @@ type Broker = {
   performanceRating?: number;
 };
 
-type Company = {
-  id: number;
-  name: string;
-  country?: string;
-  region?: string;
-  headquarters?: string;
-  specialization?: string;
-  fleetSize?: number;
-  logo?: string;
-  foundedYear?: number;
-};
-
-type Deal = {
-  id: number;
-  brokerId: number;
-  brokerName: string;
-  sellerId: number;
-  sellerName: string;
-  buyerId: number;
-  buyerName: string;
-  vesselName?: string;
-  cargoType: string;
-  volume: number;
-  volumeUnit: string;
-  price: number;
-  currency: string;
-  status: string;
-  createdAt: string;
-  commissionRate?: number;
-};
-
-type BrokerCompanyConnection = {
-  id: number;
-  brokerId: number;
-  companyId: number;
-  connectionType: string;
-  status: string;
-};
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import {
-  Users,
-  Building,
-  Ship,
-  Handshake,
-  Globe,
-  BarChart3,
-  DollarSign,
-  Briefcase,
-  Calendar,
-  Star,
-  Shield,
-  ShieldCheck,
-  Bell,
-  ArrowUpRight,
-  ArrowDownRight,
-  ArrowRight
-} from 'lucide-react';
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar";
-import { CompanyProfile } from '@/components/broker/CompanyProfile';
-import { CompanyConnections } from '@/components/broker/CompanyConnections';
-import { DealManager } from '@/components/broker/DealManager';
-
 export default function BrokerDashboard() {
-  // State
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState('overview');
   const [selectedCompanyId, setSelectedCompanyId] = useState<number | null>(null);
-  const [showCompanyProfileDialog, setShowCompanyProfileDialog] = useState(false);
+  const [showCompanyProfile, setShowCompanyProfile] = useState(false);
 
-  // Get broker's data (in a real app, this would be the logged-in broker)
+  // Fetch broker data (using a default broker ID for demo)
   const { data: broker, isLoading: isLoadingBroker } = useQuery<Broker>({
-    queryKey: ['/api/broker/profile'],
+    queryKey: ['/api/brokers/1'],
   });
 
-  // Get key statistics
-  const { data: stats = { activeConnections: 0, pendingDeals: 0, completedDeals: 0, totalRevenue: 0 }, isLoading: isLoadingStats } = useQuery<{
-    activeConnections: number;
-    pendingDeals: number;
-    completedDeals: number;
-    totalRevenue: number;
-  }>({
-    queryKey: ['/api/broker/stats'],
-  });
-
-  // Get recommended companies
-  const { data: recommendedCompanies = [], isLoading: isLoadingCompanies } = useQuery<Company[]>({
-    queryKey: ['/api/companies/recommended'],
-  });
-
-  // Get recent deals
-  const { data: recentDeals = [], isLoading: isLoadingDeals } = useQuery<Deal[]>({
-    queryKey: ['/api/broker-deals/recent'],
-  });
-
-  // Get activity feed
-  const [activityFeed, setActivityFeed] = useState<{
-    type: string;
-    title: string;
-    description: string;
-    time: string;
-    icon: React.ReactNode;
-  }[]>([]);
-
-  // Simulate activity feed data
-  useEffect(() => {
-    if (recentDeals.length > 0) {
-      const newFeed = [
-        ...recentDeals.slice(0, 3).map(deal => ({
-          type: 'deal',
-          title: `New deal created`,
-          description: `${deal.cargoType} shipment between ${deal.sellerName} and ${deal.buyerName}`,
-          time: new Date(deal.createdAt).toLocaleDateString(),
-          icon: <Handshake className="h-5 w-5 text-primary" />
-        })),
-        {
-          type: 'connection',
-          title: 'New company connection',
-          description: 'Saudi Aramco has accepted your connection request',
-          time: '2 days ago',
-          icon: <Building className="h-5 w-5 text-blue-500" />
-        },
-        {
-          type: 'market',
-          title: 'Market update',
-          description: 'Crude oil prices increased by 2.3% today',
-          time: '3 days ago',
-          icon: <BarChart3 className="h-5 w-5 text-amber-500" />
-        },
-        {
-          type: 'system',
-          title: 'Elite membership activated',
-          description: 'Your elite broker membership is now active',
-          time: '1 week ago',
-          icon: <Star className="h-5 w-5 text-yellow-500" />
-        }
-      ];
-      setActivityFeed(newFeed);
-    }
-  }, [recentDeals]);
-
-  // Format currency
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
-
-  // View company profile
-  const handleViewCompanyProfile = (companyId: number) => {
+  // Handle viewing company profile
+  const handleViewCompany = (companyId: number) => {
     setSelectedCompanyId(companyId);
-    setShowCompanyProfileDialog(true);
+    setShowCompanyProfile(true);
   };
 
-  // Broker ID to use for connections and deals
-  const brokerId = broker?.id || 1; // Fallback for demo
+  // Handle closing company profile
+  const handleCloseCompanyProfile = () => {
+    setShowCompanyProfile(false);
+  };
+
+  // Loading state
+  if (isLoadingBroker) {
+    return (
+      <div className="container mx-auto py-12 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // Default brokerId for demo purposes if no broker is loaded
+  const brokerId = broker?.id || 1;
 
   return (
     <div className="container mx-auto py-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center">
-            <Briefcase className="h-8 w-8 mr-3 text-primary" />
-            Broker Dashboard
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Manage your oil shipping deals, company connections, and monitor performance
-          </p>
+      <div className="flex flex-col space-y-6">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold">Broker Dashboard</h1>
+            <p className="text-muted-foreground mt-1">
+              Connect oil shipping companies, manage deals, and track your performance
+            </p>
+          </div>
         </div>
-        
-        <div className="flex items-center gap-3">
-          <Badge className="bg-primary px-3 py-1 flex items-center">
-            <Shield className="h-3.5 w-3.5 mr-1" />
-            Elite Broker
-          </Badge>
-          <Button size="sm">
-            <Bell className="h-4 w-4 mr-2" />
-            Notifications
-          </Button>
+
+        {/* Broker metrics */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-card p-6 rounded-lg shadow-sm border">
+            <div className="flex items-center justify-between">
+              <h3 className="font-medium text-muted-foreground">Active Connections</h3>
+              <div className="p-2 bg-primary/10 rounded-full">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+            </div>
+            <p className="text-3xl font-bold mt-2">24</p>
+            <p className="text-sm text-muted-foreground mt-1">+3 since last month</p>
+          </div>
+          
+          <div className="bg-card p-6 rounded-lg shadow-sm border">
+            <div className="flex items-center justify-between">
+              <h3 className="font-medium text-muted-foreground">Active Deals</h3>
+              <div className="p-2 bg-primary/10 rounded-full">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+            </div>
+            <p className="text-3xl font-bold mt-2">7</p>
+            <p className="text-sm text-muted-foreground mt-1">+2 in progress</p>
+          </div>
+          
+          <div className="bg-card p-6 rounded-lg shadow-sm border">
+            <div className="flex items-center justify-between">
+              <h3 className="font-medium text-muted-foreground">Commission (Month)</h3>
+              <div className="p-2 bg-primary/10 rounded-full">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
+            <p className="text-3xl font-bold mt-2">$143,250</p>
+            <p className="text-sm text-muted-foreground mt-1">+12% from last month</p>
+          </div>
+        </div>
+
+        {/* Main sections */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Company connections list */}
+          <div className="lg:col-span-2">
+            <div className="bg-card rounded-lg shadow-sm border">
+              <div className="p-6">
+                <h2 className="text-xl font-semibold mb-4">Company Connections</h2>
+                <CompanyConnections brokerId={brokerId} />
+              </div>
+            </div>
+          </div>
+
+          {/* Deal stats */}
+          <div className="lg:col-span-1">
+            <div className="bg-card rounded-lg shadow-sm border h-full">
+              <div className="p-6">
+                <h2 className="text-xl font-semibold mb-4">Recent Deals</h2>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
+                    <div>
+                      <p className="font-medium">Saudi Aramco &rarr; Shell Trading</p>
+                      <p className="text-sm text-muted-foreground">Crude Oil - 500,000 bbl</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-medium">$38.5M</p>
+                      <p className="text-sm text-green-600">$385K comm.</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
+                    <div>
+                      <p className="font-medium">ADNOC &rarr; BP Trading</p>
+                      <p className="text-sm text-muted-foreground">Jet Fuel - 250,000 bbl</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-medium">$24.2M</p>
+                      <p className="text-sm text-green-600">$242K comm.</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
+                    <div>
+                      <p className="font-medium">Kuwait Petro. &rarr; Total</p>
+                      <p className="text-sm text-muted-foreground">LNG - 150,000 cu.m</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-medium">$18.7M</p>
+                      <p className="text-sm text-green-600">$187K comm.</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-6">
+                  <button className="w-full bg-primary/10 text-primary font-medium py-2 rounded-md hover:bg-primary/20 transition-colors">
+                    Manage All Deals
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Deal management */}
+          <div className="lg:col-span-3">
+            <div className="bg-card rounded-lg shadow-sm border">
+              <div className="p-6">
+                <h2 className="text-xl font-semibold mb-4">Deal Management</h2>
+                <DealManager brokerId={brokerId} />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Tabs Navigation */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid grid-cols-4 w-full max-w-4xl mb-6">
-          <TabsTrigger value="overview">
-            <BarChart3 className="h-4 w-4 mr-2" />
-            Overview
-          </TabsTrigger>
-          <TabsTrigger value="connections">
-            <Building className="h-4 w-4 mr-2" />
-            Companies
-          </TabsTrigger>
-          <TabsTrigger value="deals">
-            <Handshake className="h-4 w-4 mr-2" />
-            Deals
-          </TabsTrigger>
-          <TabsTrigger value="analytics">
-            <Globe className="h-4 w-4 mr-2" />
-            Analytics
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Overview Tab Content */}
-        <TabsContent value="overview" className="space-y-6">
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Active Connections</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <div className="text-2xl font-bold">{stats.activeConnections}</div>
-                  <Building className="h-5 w-5 text-blue-500" />
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Companies you're connected with
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Pending Deals</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <div className="text-2xl font-bold">{stats.pendingDeals}</div>
-                  <Handshake className="h-5 w-5 text-amber-500" />
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Deals awaiting confirmation
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Completed Deals</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <div className="text-2xl font-bold">{stats.completedDeals}</div>
-                  <ShieldCheck className="h-5 w-5 text-green-500" />
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Successfully completed shipments
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Total Revenue</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <div className="text-2xl font-bold">{formatCurrency(stats.totalRevenue)}</div>
-                  <DollarSign className="h-5 w-5 text-primary" />
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Your commission earnings
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Recent Deals & Activity Feed */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Recent Deals (takes 2/3 of space) */}
-            <div className="md:col-span-2">
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg">Recent Deals</CardTitle>
-                  <CardDescription>Your latest oil shipping transactions</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {isLoadingDeals ? (
-                    <div className="flex justify-center items-center h-48">
-                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
-                    </div>
-                  ) : recentDeals.length === 0 ? (
-                    <div className="text-center py-8">
-                      <Handshake className="h-12 w-12 mx-auto text-muted-foreground" />
-                      <h3 className="mt-4 text-lg font-medium">No recent deals</h3>
-                      <p className="text-muted-foreground max-w-md mx-auto mt-2">
-                        Start creating new oil shipment deals to see them here.
-                      </p>
-                      <Button className="mt-4" size="sm" onClick={() => setActiveTab("deals")}>
-                        Create Your First Deal
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {recentDeals.slice(0, 4).map(deal => (
-                        <div key={deal.id} className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0">
-                          <div className="flex items-center gap-2">
-                            <div className="flex flex-col items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary font-medium">
-                              <Ship className="h-5 w-5" />
-                            </div>
-                            <div>
-                              <div className="font-medium">{deal.cargoType}</div>
-                              <div className="text-sm text-muted-foreground flex items-center gap-2">
-                                <span>{deal.sellerName}</span>
-                                <ArrowRight className="h-3 w-3" />
-                                <span>{deal.buyerName}</span>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="font-medium text-primary">
-                              {formatCurrency(deal.price * deal.volume * (deal.commissionRate || 0.01))}
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              {new Date(deal.createdAt).toLocaleDateString()}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-                <CardFooter className="pt-0">
-                  <Button variant="ghost" className="w-full" onClick={() => setActiveTab("deals")}>
-                    View All Deals
-                  </Button>
-                </CardFooter>
-              </Card>
-            </div>
-            
-            {/* Activity Feed */}
-            <div>
-              <Card className="h-full">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg">Activity Feed</CardTitle>
-                  <CardDescription>Recent activities and updates</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {activityFeed.map((activity, index) => (
-                      <div key={index} className="flex gap-3">
-                        <div className="mt-0.5">
-                          {activity.icon}
-                        </div>
-                        <div>
-                          <div className="font-medium">{activity.title}</div>
-                          <div className="text-sm text-muted-foreground">
-                            {activity.description}
-                          </div>
-                          <div className="text-xs text-muted-foreground mt-1">
-                            {activity.time}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-
-          {/* Recommended Companies */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">Recommended Oil Companies</CardTitle>
-              <CardDescription>Connect with these companies to expand your network</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {isLoadingCompanies ? (
-                <div className="flex justify-center items-center h-32">
-                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
-                </div>
-              ) : recommendedCompanies.length === 0 ? (
-                <div className="text-center py-6">
-                  <Building className="h-10 w-10 mx-auto text-muted-foreground" />
-                  <h3 className="mt-3 text-base font-medium">No recommendations available</h3>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {recommendedCompanies.slice(0, 3).map(company => (
-                    <Card key={company.id} className="overflow-hidden border">
-                      <CardHeader className="pb-2">
-                        <div className="flex justify-between items-start">
-                          <div className="flex items-center gap-3">
-                            {company.logo ? (
-                              <Avatar className="h-10 w-10 rounded-md">
-                                <AvatarImage src={company.logo} alt={company.name} />
-                                <AvatarFallback className="rounded-md">
-                                  {company.name.split(' ').map((w: string) => w[0]).join('').slice(0, 2)}
-                                </AvatarFallback>
-                              </Avatar>
-                            ) : (
-                              <div className="h-10 w-10 rounded-md bg-primary/10 flex items-center justify-center">
-                                <Building className="h-5 w-5 text-primary" />
-                              </div>
-                            )}
-                            <div>
-                              <CardTitle className="text-base">{company.name}</CardTitle>
-                              {company.country && (
-                                <CardDescription className="flex items-center text-xs">
-                                  <Globe className="h-3 w-3 mr-1" /> 
-                                  {company.country}
-                                </CardDescription>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="pb-3">
-                        <div className="space-y-2 text-sm">
-                          {company.specialization && (
-                            <div className="flex items-center text-muted-foreground">
-                              <Ship className="h-3.5 w-3.5 mr-1.5" />
-                              {company.specialization}
-                            </div>
-                          )}
-                          {company.fleetSize && (
-                            <div className="flex items-center text-muted-foreground">
-                              <Users className="h-3.5 w-3.5 mr-1.5" />
-                              {company.fleetSize} vessels
-                            </div>
-                          )}
-                        </div>
-                      </CardContent>
-                      <CardFooter className="pt-0 flex gap-2">
-                        <Button variant="outline" size="sm" className="flex-1" 
-                          onClick={() => handleViewCompanyProfile(company.id)}>
-                          Details
-                        </Button>
-                        <Button size="sm" className="flex-1" onClick={() => setActiveTab("connections")}>
-                          Connect
-                        </Button>
-                      </CardFooter>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-            <CardFooter className="pt-0">
-              <Button variant="ghost" className="w-full" onClick={() => setActiveTab("connections")}>
-                View All Companies
-              </Button>
-            </CardFooter>
-          </Card>
-
-          {/* Performance Metrics */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">Performance Metrics</CardTitle>
-              <CardDescription>Your broker performance stats</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                <div className="space-y-1">
-                  <div className="text-sm text-muted-foreground">Success Rate</div>
-                  <div className="text-2xl font-bold">93%</div>
-                  <div className="flex items-center text-xs text-green-600">
-                    <ArrowUpRight className="h-3 w-3 mr-1" />
-                    <span>+2.5% from last month</span>
-                  </div>
-                </div>
-                
-                <div className="space-y-1">
-                  <div className="text-sm text-muted-foreground">Deals Closed</div>
-                  <div className="text-2xl font-bold">42</div>
-                  <div className="flex items-center text-xs text-green-600">
-                    <ArrowUpRight className="h-3 w-3 mr-1" />
-                    <span>+8 from last month</span>
-                  </div>
-                </div>
-                
-                <div className="space-y-1">
-                  <div className="text-sm text-muted-foreground">Response Time</div>
-                  <div className="text-2xl font-bold">1.4h</div>
-                  <div className="flex items-center text-xs text-red-600">
-                    <ArrowDownRight className="h-3 w-3 mr-1" />
-                    <span>+0.2h from last month</span>
-                  </div>
-                </div>
-                
-                <div className="space-y-1">
-                  <div className="text-sm text-muted-foreground">Client Satisfaction</div>
-                  <div className="text-2xl font-bold">4.8<span className="text-lg">/5</span></div>
-                  <div className="flex items-center text-xs text-green-600">
-                    <ArrowUpRight className="h-3 w-3 mr-1" />
-                    <span>+0.2 from last month</span>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Companies/Connections Tab Content */}
-        <TabsContent value="connections">
-          <CompanyConnections brokerId={brokerId} />
-        </TabsContent>
-
-        {/* Deals Tab Content */}
-        <TabsContent value="deals">
-          <DealManager brokerId={brokerId} />
-        </TabsContent>
-
-        {/* Analytics Tab Content */}
-        <TabsContent value="analytics" className="space-y-6">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">Performance Analytics</CardTitle>
-              <CardDescription>Coming Soon</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-20">
-                <BarChart3 className="h-16 w-16 mx-auto text-muted-foreground" />
-                <h3 className="mt-6 text-xl font-medium">Analytics Dashboard Coming Soon</h3>
-                <p className="text-muted-foreground max-w-lg mx-auto mt-3">
-                  Advanced analytics and reporting features for oil shipping brokers will be available in the next update.
-                  Track your deal performance, market trends, and business growth metrics all in one place.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      {/* Company Profile Dialog */}
-      {selectedCompanyId && (
-        <Dialog open={showCompanyProfileDialog} onOpenChange={setShowCompanyProfileDialog}>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-            <CompanyProfile 
-              companyId={selectedCompanyId} 
-              onClose={() => setShowCompanyProfileDialog(false)}
-            />
-          </DialogContent>
-        </Dialog>
+      {/* Company profile modal */}
+      {showCompanyProfile && selectedCompanyId && (
+        <CompanyProfile 
+          companyId={selectedCompanyId} 
+          onClose={handleCloseCompanyProfile} 
+        />
       )}
     </div>
   );
