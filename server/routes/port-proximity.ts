@@ -77,16 +77,23 @@ router.post('/enhance-vessel-distribution', async (req: Request, res: Response) 
           continue;
         }
         
-        // Update vessel position
+        // Update vessel position and add realistic maritime metadata
         await db.update(vessels)
           .set({
             currentLat: String(newLat.toFixed(6)),
             currentLng: String(newLng.toFixed(6)),
-            // Set a reasonable speed for vessels near ports (slower)
-            currentSpeed: 2 + Math.random() * 6,
             // Link to port for navigation data
             departurePort: Math.random() > 0.5 ? port.name : vessel.departurePort,
             destinationPort: Math.random() > 0.5 ? port.name : vessel.destinationPort,
+            // Store metadata as JSON string with vessel details
+            metadata: JSON.stringify({
+              speed: Math.round(2 + Math.random() * 6), // Slower speeds near ports (2-8 knots)
+              heading: Math.round(angle * (180 / Math.PI)),
+              timestamp: new Date().toISOString(),
+              proximity: "near_port",
+              portName: port.name,
+              status: "approaching"
+            })
           })
           .where(eq(vessels.id, vessel.id));
         
@@ -136,13 +143,20 @@ router.post('/enhance-vessel-distribution', async (req: Request, res: Response) 
           continue;
         }
         
-        // Update vessel position
+        // Update vessel position and add realistic maritime metadata for refineries
         await db.update(vessels)
           .set({
             currentLat: String(newLat.toFixed(6)),
             currentLng: String(newLng.toFixed(6)),
-            // Set a reasonable speed for vessels near refineries
-            currentSpeed: 1 + Math.random() * 5,
+            // Store metadata as JSON string with vessel details
+            metadata: JSON.stringify({
+              speed: Math.round(1 + Math.random() * 5), // Even slower speeds near refineries (1-6 knots)
+              heading: Math.round(angle * (180 / Math.PI)),
+              timestamp: new Date().toISOString(),
+              proximity: "near_refinery",
+              refineryName: refinery.name,
+              status: "standing_by"
+            })
           })
           .where(eq(vessels.id, vessel.id));
         

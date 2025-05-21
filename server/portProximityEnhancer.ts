@@ -151,11 +151,18 @@ export async function generateVesselsNearFacility(params: NearbyVesselParams): P
         .set({
           currentLat: String(newLat.toFixed(6)),
           currentLng: String(newLng.toFixed(6)),
-          // Set reasonable speed based on proximity to facility
-          currentSpeed: distance < 0.2 ? (2 + Math.random() * 5) : (7 + Math.random() * 10),
           // Associate with facility
           departurePort: facilityType === 'port' ? facilityName : vessel.departurePort,
           destinationPort: facilityType === 'port' ? facilityName : vessel.destinationPort,
+          // Store metadata as JSON string
+          metadata: JSON.stringify({
+            speed: Math.round(distance < 0.2 ? (2 + Math.random() * 5) : (7 + Math.random() * 10)),
+            heading: Math.round(angle * (180 / Math.PI)),
+            timestamp: new Date().toISOString(),
+            proximity: facilityType === 'port' ? 'near_port' : 'near_refinery',
+            facilityName: facilityName,
+            status: distance < 0.15 ? 'docked' : 'approaching'
+          })
         })
         .where(eq(vessels.id, vessel.id));
       
