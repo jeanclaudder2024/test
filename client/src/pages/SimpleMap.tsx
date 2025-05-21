@@ -366,80 +366,171 @@ const SimpleMap: React.FC = () => {
           </div>
         </div>
         
-        {/* Filters row */}
-        <div className="flex flex-wrap gap-4 items-center">
-          {/* Region filter */}
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">Region:</span>
-            <select 
-              className="px-2 py-1 rounded border text-sm" 
-              value={selectedRegion} 
-              onChange={(e) => setSelectedRegion(e.target.value)}
-            >
-              <option value="all">All Regions</option>
-              <option value="Europe">Europe</option>
-              <option value="Asia-Pacific">Asia-Pacific</option>
-              <option value="North America">North America</option>
-              <option value="Latin America">Latin America</option>
-              <option value="Middle East">Middle East</option>
-              <option value="Africa">Africa</option>
-            </select>
+        {/* Filters row with advanced options */}
+        <div className="p-3 bg-gray-50 flex flex-wrap items-center justify-between gap-3 border-b border-gray-200">
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* Region filter */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium text-gray-500">Region:</span>
+              <select 
+                className="text-sm border-gray-200 rounded-md py-1 pl-2 pr-7 bg-white" 
+                value={selectedRegion} 
+                onChange={(e) => setSelectedRegion(e.target.value)}
+              >
+                <option value="all">All Regions</option>
+                <option value="Europe">Europe</option>
+                <option value="Asia-Pacific">Asia-Pacific</option>
+                <option value="North America">North America</option>
+                <option value="Latin America">Latin America</option>
+                <option value="Middle East">Middle East</option>
+                <option value="Africa">Africa</option>
+              </select>
+            </div>
+            
+            {/* Vessel type filter */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium text-gray-500">Vessel Type:</span>
+              <select 
+                className="text-sm border-gray-200 rounded-md py-1 pl-2 pr-7 bg-white" 
+                value={selectedVesselType} 
+                onChange={(e) => setSelectedVesselType(e.target.value)}
+              >
+                <option value="all">All Types</option>
+                {vesselTypes.filter(type => type !== 'all').map(type => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </select>
+            </div>
+            
+            {/* Map view selector */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium text-gray-500">View:</span>
+              <div className="flex rounded-md overflow-hidden border border-gray-200">
+                <button 
+                  className={`px-2 py-1 text-xs ${mapMode === 'standard' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'}`}
+                  onClick={() => setMapMode('standard')}
+                >
+                  Standard
+                </button>
+                <button 
+                  className={`px-2 py-1 text-xs ${mapMode === 'satellite' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'}`}
+                  onClick={() => setMapMode('satellite')}
+                >
+                  Satellite
+                </button>
+                <button 
+                  className={`px-2 py-1 text-xs ${mapMode === 'dark' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'}`}
+                  onClick={() => setMapMode('dark')}
+                >
+                  Dark
+                </button>
+              </div>
+            </div>
+            
+            {/* Display control */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium text-gray-500">Display:</span>
+              <div className="flex rounded-md overflow-hidden border border-gray-200">
+                <button 
+                  className={`px-2 py-1 text-xs ${showVessels ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'}`}
+                  onClick={() => setShowVessels(!showVessels)}
+                >
+                  Vessels
+                </button>
+                <button 
+                  className={`px-2 py-1 text-xs ${showPorts ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'}`}
+                  onClick={() => setShowPorts(!showPorts)}
+                >
+                  Ports
+                </button>
+                <button 
+                  className={`px-2 py-1 text-xs ${showRefineries ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'}`}
+                  onClick={() => setShowRefineries(!showRefineries)}
+                >
+                  Refineries
+                </button>
+              </div>
+            </div>
           </div>
           
-          {/* Vessel type filter */}
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">Vessel Type:</span>
-            <select 
-              className="px-2 py-1 rounded border text-sm" 
-              value={selectedVesselType} 
-              onChange={(e) => setSelectedVesselType(e.target.value)}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <input 
+                type="checkbox" 
+                id="traffic-density"
+                checked={trafficDensity}
+                onChange={() => setTrafficDensity(!trafficDensity)}
+                className="rounded text-blue-600 focus:ring-blue-500 h-3 w-3"
+              />
+              <label htmlFor="traffic-density" className="text-xs text-gray-700">Traffic Density</label>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <input 
+                type="checkbox" 
+                id="show-status"
+                checked={showVesselStatus}
+                onChange={(e) => setShowVesselStatus(e.target.checked)}
+                className="rounded text-blue-600 focus:ring-blue-500 h-3 w-3"
+              />
+              <label htmlFor="show-status" className="text-xs text-gray-700">Vessel Status</label>
+            </div>
+            
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setShowLegend(!showLegend)}
+              className="text-xs text-gray-600 hover:text-blue-600 px-2 py-1 h-7"
             >
-              <option value="all">All Types</option>
-              {vesselTypes.filter(type => type !== 'all').map(type => (
-                <option key={type} value={type}>{type}</option>
-              ))}
-            </select>
-          </div>
-          
-          {/* Show status toggle */}
-          <div className="flex items-center gap-2 ml-auto">
-            <span className="text-sm font-medium">Show Status:</span>
-            <input 
-              type="checkbox" 
-              checked={showVesselStatus} 
-              onChange={(e) => setShowVesselStatus(e.target.checked)}
-              className="rounded border-gray-300 text-primary focus:ring-primary"
-            />
+              {showLegend ? 'Hide Legend' : 'Show Legend'}
+            </Button>
           </div>
         </div>
         
-        {/* Status legend */}
-        {showVesselStatus && (
-          <div className="mt-4 flex flex-wrap gap-4 items-center text-sm">
-            <span className="font-medium">Status:</span>
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 rounded-full bg-red-500"></div>
-              <span>Stopped</span>
+        {/* Expandable Legend */}
+        {showLegend && (
+          <div className="bg-white border-b border-gray-200 p-2 px-4 grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <div className="font-medium text-xs mb-2 text-gray-700">Vessel Types</div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="flex items-center">
+                  <img src={tankerIcon} alt="Tanker" className="w-6 h-6 mr-2" />
+                  <span className="text-gray-700 text-xs">Tanker</span>
+                </div>
+                <div className="flex items-center">
+                  <img src={cargoIcon} alt="Cargo" className="w-6 h-6 mr-2" />
+                  <span className="text-gray-700 text-xs">Cargo</span>
+                </div>
+                <div className="flex items-center">
+                  <img src={passengerIcon} alt="Passenger" className="w-6 h-6 mr-2" />
+                  <span className="text-gray-700 text-xs">Passenger</span>
+                </div>
+                <div className="flex items-center">
+                  <img src={vesselIcon} alt="Other" className="w-6 h-6 mr-2" />
+                  <span className="text-gray-700 text-xs">Other</span>
+                </div>
+              </div>
             </div>
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 rounded-full bg-orange-500"></div>
-              <span>Maneuvering</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-              <span>Slow</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 rounded-full bg-green-500"></div>
-              <span>Medium</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 rounded-full bg-purple-500"></div>
-              <span>Fast</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 rounded-full bg-gray-500"></div>
-              <span>Unknown</span>
+            <div>
+              <div className="font-medium text-xs mb-2 text-gray-700">Vessel Status</div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                  <span className="text-xs text-gray-700">Stopped</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 rounded-full bg-orange-500"></div>
+                  <span className="text-xs text-gray-700">Maneuvering</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                  <span className="text-xs text-gray-700">Active</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 rounded-full bg-gray-500"></div>
+                  <span className="text-xs text-gray-700">Unknown</span>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -478,10 +569,27 @@ const SimpleMap: React.FC = () => {
             style={{ height: '100%', width: '100%', background: '#a4cae1' }}
             zoomControl={true}
           >
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
+            {/* Map Tile Layer based on selected mode */}
+            {mapMode === 'standard' && (
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+            )}
+            
+            {mapMode === 'satellite' && (
+              <TileLayer
+                attribution='&copy; <a href="https://www.esri.com">Esri</a>'
+                url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+              />
+            )}
+            
+            {mapMode === 'dark' && (
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+              />
+            )}
             
             {/* Vessels */}
             {filteredVessels.map((vessel) => (
