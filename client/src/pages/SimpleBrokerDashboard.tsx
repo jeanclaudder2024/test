@@ -8,16 +8,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { 
   Building, 
   Users, 
   BarChart3, 
-  Ship, 
   FileText, 
   ArrowUpRight,
-  CheckCircle2,
+  ArrowRight
 } from 'lucide-react';
 
 export default function SimpleBrokerDashboard() {
@@ -96,9 +94,9 @@ export default function SimpleBrokerDashboard() {
           </div>
         </div>
 
-        {/* Content Tabs */}
-        <Tabs value={activeTab} className="space-y-4">
-          <TabsContent value="overview" className="space-y-4">
+        {/* Content Sections */}
+        {activeTab === 'overview' ? (
+          <div className="space-y-4">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Company connections list */}
               <div className="lg:col-span-2">
@@ -211,9 +209,9 @@ export default function SimpleBrokerDashboard() {
                 </Card>
               </div>
             </div>
-          </TabsContent>
-          
-          <TabsContent value="companies" className="space-y-4">
+          </div>
+        ) : (
+          <div className="space-y-4">
             <Card>
               <CardHeader>
                 <CardTitle>Oil Shipping Companies</CardTitle>
@@ -246,6 +244,7 @@ export default function SimpleBrokerDashboard() {
                       </div>
                       
                       <Button className="w-full mt-4" variant="outline">
+                        <ArrowRight className="mr-2 h-4 w-4" />
                         View Details
                       </Button>
                     </CardContent>
@@ -274,6 +273,7 @@ export default function SimpleBrokerDashboard() {
                       </div>
                       
                       <Button className="w-full mt-4" variant="outline">
+                        <ArrowRight className="mr-2 h-4 w-4" />
                         View Details
                       </Button>
                     </CardContent>
@@ -302,6 +302,7 @@ export default function SimpleBrokerDashboard() {
                       </div>
                       
                       <Button className="w-full mt-4" variant="outline">
+                        <ArrowRight className="mr-2 h-4 w-4" />
                         View Details
                       </Button>
                     </CardContent>
@@ -330,6 +331,7 @@ export default function SimpleBrokerDashboard() {
                       </div>
                       
                       <Button className="w-full mt-4" variant="outline">
+                        <ArrowRight className="mr-2 h-4 w-4" />
                         View Details
                       </Button>
                     </CardContent>
@@ -358,6 +360,7 @@ export default function SimpleBrokerDashboard() {
                       </div>
                       
                       <Button className="w-full mt-4" variant="outline">
+                        <ArrowRight className="mr-2 h-4 w-4" />
                         View Details
                       </Button>
                     </CardContent>
@@ -386,6 +389,7 @@ export default function SimpleBrokerDashboard() {
                       </div>
                       
                       <Button className="w-full mt-4">
+                        <ArrowRight className="mr-2 h-4 w-4" />
                         Connect Now
                       </Button>
                     </CardContent>
@@ -393,8 +397,8 @@ export default function SimpleBrokerDashboard() {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
-        </Tabs>
+          </div>
+        )}
       </div>
     </div>
   );
