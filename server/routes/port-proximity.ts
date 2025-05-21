@@ -91,7 +91,7 @@ router.post('/enhance-vessel-distribution', async (req: Request, res: Response) 
             currentLng: newLng.toString(),
             speed: newSpeed.toString(),
             status: 'at port',
-            destination: port.name
+            destinationPort: port.name
           })
           .where(sql`${vessels.id} = ${vessel.id}`);
           
@@ -134,7 +134,7 @@ router.post('/enhance-vessel-distribution', async (req: Request, res: Response) 
             currentLng: newLng.toString(),
             speed: newSpeed.toString(),
             status: 'near refinery',
-            destination: refinery.name
+            destinationPort: refinery.name
           })
           .where(sql`${vessels.id} = ${vessel.id}`);
           
