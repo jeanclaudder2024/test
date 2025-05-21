@@ -488,18 +488,79 @@ const SimpleMap: React.FC = () => {
                 position={[parseFloat(port.lat), parseFloat(port.lng)]}
                 icon={createPortIcon()}
               >
-                <Popup>
-                  <div className="p-1">
-                    <h3 className="font-bold text-base">{port.name}</h3>
-                    <p className="text-sm">Country: {port.country}</p>
-                    <p className="text-sm">Type: {port.portType}</p>
-                    <Button
-                      size="sm"
-                      className="mt-2 w-full"
-                      onClick={() => window.open(`/ports/${port.id}`, '_blank')}
-                    >
-                      View Port Details
-                    </Button>
+                <Popup maxWidth={350} minWidth={300}>
+                  <div className="port-popup-container">
+                    <div className="popup-header" style={{ 
+                      background: 'linear-gradient(135deg, #1e3a8a, #3b82f6)',
+                      padding: '12px 16px',
+                      borderRadius: '6px 6px 0 0',
+                      marginBottom: '12px',
+                      marginLeft: '-10px',
+                      marginRight: '-10px',
+                      marginTop: '-10px',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}>
+                      <div>
+                        <h3 className="font-bold text-lg text-white m-0">{port.name}</h3>
+                        <p className="text-blue-100 text-sm m-0">{port.country}</p>
+                      </div>
+                      <div className="rounded-full bg-white p-2 shadow-md">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1e3a8a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                        </svg>
+                      </div>
+                    </div>
+                    
+                    <div className="popup-content px-2 py-1">
+                      <div className="grid grid-cols-2 gap-3 mb-3">
+                        <div className="bg-blue-50 p-2 rounded">
+                          <p className="text-xs text-blue-500 font-medium m-0">Port Type</p>
+                          <p className="text-sm font-semibold m-0">{port.portType || 'Commercial'}</p>
+                        </div>
+                        <div className="bg-blue-50 p-2 rounded">
+                          <p className="text-xs text-blue-500 font-medium m-0">Country</p>
+                          <p className="text-sm font-semibold m-0">{port.country}</p>
+                        </div>
+                      </div>
+                      
+                      <h4 className="text-sm font-medium text-gray-700 mb-2">Port Information</h4>
+                      <div className="space-y-1.5 mb-3">
+                        <div className="flex items-center text-sm">
+                          <svg className="w-4 h-4 mr-2 text-blue-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect>
+                            <path d="M17 2l-5 5-5-5"></path>
+                          </svg>
+                          <span className="text-gray-600">Facility Type: {port.facilityType || 'Cargo Terminal'}</span>
+                        </div>
+                        <div className="flex items-center text-sm">
+                          <svg className="w-4 h-4 mr-2 text-blue-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                          </svg>
+                          <span className="text-gray-600">Operating Hours: 24/7</span>
+                        </div>
+                        <div className="flex items-center text-sm">
+                          <svg className="w-4 h-4 mr-2 text-blue-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                          </svg>
+                          <span className="text-gray-600">Current Status: Active</span>
+                        </div>
+                      </div>
+                      
+                      <Button
+                        className="w-full bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900"
+                        onClick={() => window.open(`/ports/${port.id}`, '_blank')}
+                      >
+                        <svg className="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                          <polyline points="15 3 21 3 21 9"></polyline>
+                          <line x1="10" y1="14" x2="21" y2="3"></line>
+                        </svg>
+                        View Port Details
+                      </Button>
+                    </div>
                   </div>
                 </Popup>
               </Marker>
@@ -512,18 +573,84 @@ const SimpleMap: React.FC = () => {
                 position={[parseFloat(refinery.lat), parseFloat(refinery.lng)]}
                 icon={createRefineryIcon()}
               >
-                <Popup>
-                  <div className="p-1">
-                    <h3 className="font-bold text-base">{refinery.name}</h3>
-                    <p className="text-sm">Country: {refinery.country}</p>
-                    <p className="text-sm">Capacity: {refinery.capacity.toLocaleString()} bpd</p>
-                    <Button
-                      size="sm"
-                      className="mt-2 w-full"
-                      onClick={() => window.open(`/refineries/${refinery.id}`, '_blank')}
-                    >
-                      View Refinery Details
-                    </Button>
+                <Popup maxWidth={350} minWidth={300}>
+                  <div className="refinery-popup-container">
+                    <div className="popup-header" style={{ 
+                      background: 'linear-gradient(135deg, #7f1d1d, #ef4444)',
+                      padding: '12px 16px',
+                      borderRadius: '6px 6px 0 0',
+                      marginBottom: '12px',
+                      marginLeft: '-10px',
+                      marginRight: '-10px',
+                      marginTop: '-10px',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}>
+                      <div>
+                        <h3 className="font-bold text-lg text-white m-0">{refinery.name}</h3>
+                        <p className="text-red-100 text-sm m-0">{refinery.country}</p>
+                      </div>
+                      <div className="rounded-full bg-white p-2 shadow-md">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7f1d1d" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M20.5 21.5l-5-5"></path>
+                          <path d="M18.5 12.5v4h4"></path>
+                          <path d="M4.5 21.5l5-5"></path>
+                          <path d="M6.5 12.5v4h-4"></path>
+                          <path d="M12.5 2.5v10l2 2"></path>
+                          <path d="M12.5 2.5v10l-2 2"></path>
+                          <path d="M4.5 10.5h16"></path>
+                        </svg>
+                      </div>
+                    </div>
+                    
+                    <div className="popup-content px-2 py-1">
+                      <div className="grid grid-cols-2 gap-3 mb-3">
+                        <div className="bg-red-50 p-2 rounded">
+                          <p className="text-xs text-red-500 font-medium m-0">Capacity</p>
+                          <p className="text-sm font-semibold m-0">{refinery.capacity?.toLocaleString() || 'N/A'} bpd</p>
+                        </div>
+                        <div className="bg-red-50 p-2 rounded">
+                          <p className="text-xs text-red-500 font-medium m-0">Region</p>
+                          <p className="text-sm font-semibold m-0">{refinery.region || 'International'}</p>
+                        </div>
+                      </div>
+                      
+                      <h4 className="text-sm font-medium text-gray-700 mb-2">Refinery Information</h4>
+                      <div className="space-y-1.5 mb-3">
+                        <div className="flex items-center text-sm">
+                          <svg className="w-4 h-4 mr-2 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                          </svg>
+                          <span className="text-gray-600">Operator: {refinery.operator || 'National Oil Company'}</span>
+                        </div>
+                        <div className="flex items-center text-sm">
+                          <svg className="w-4 h-4 mr-2 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                          </svg>
+                          <span className="text-gray-600">Complexity: {refinery.complexity || 'Medium'}</span>
+                        </div>
+                        <div className="flex items-center text-sm">
+                          <svg className="w-4 h-4 mr-2 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                          </svg>
+                          <span className="text-gray-600">Status: {refinery.status || 'Active'}</span>
+                        </div>
+                      </div>
+                      
+                      <Button
+                        className="w-full bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900"
+                        onClick={() => window.open(`/refineries/${refinery.id}`, '_blank')}
+                      >
+                        <svg className="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                          <polyline points="15 3 21 3 21 9"></polyline>
+                          <line x1="10" y1="14" x2="21" y2="3"></line>
+                        </svg>
+                        View Refinery Details
+                      </Button>
+                    </div>
                   </div>
                 </Popup>
               </Marker>
