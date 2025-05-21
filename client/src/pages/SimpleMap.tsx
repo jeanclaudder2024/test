@@ -319,29 +319,50 @@ const SimpleMap: React.FC = () => {
 
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col">
-      <div className="p-4 bg-card border-b">
-        <div className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-bold">Maritime Map</h1>
-          <div className="flex items-center gap-2">
-            <div className="relative w-64">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+      <div className="bg-white border-b shadow-sm">
+        {/* Main Header */}
+        <div className="px-5 py-3 flex justify-between items-center border-b border-gray-100">
+          <div className="flex items-center">
+            <svg className="h-7 w-7 text-blue-600 mr-3" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3.5 12.5C7 8.5 10 8.5 11.5,8.5C13 8.5 16 8.5 20 12.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M8 14.5L12 12L16 14.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2"/>
+              <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2"/>
+            </svg>
+            <div>
+              <h1 className="text-xl font-bold text-gray-800">Maritime Intelligence Platform</h1>
+              <p className="text-xs text-gray-500">Real-time vessel tracking & maritime analysis</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <div className="relative w-72">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
                 type="text"
-                placeholder="Search vessels, ports..."
-                className="pl-8"
+                placeholder="Search vessels, ports, refineries..."
+                className="pl-10 pr-4 py-2 h-9 text-sm rounded-md border-gray-300"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <Badge className="ml-2">
-              {filteredVessels.length} Vessels
-            </Badge>
-            <Badge variant="outline" className="ml-2">
-              {filteredPorts.length} Ports
-            </Badge>
-            <Badge variant="destructive" className="ml-2">
-              {filteredRefineries.length} Refineries
-            </Badge>
+            
+            <div className="flex items-center bg-blue-50 px-3 py-1 rounded-md border border-blue-100">
+              <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200 mr-1">
+                {filteredVessels.length}
+              </Badge>
+              <span className="text-xs text-blue-700 mr-3">Vessels</span>
+              
+              <Badge variant="outline" className="bg-gray-100 text-gray-700 hover:bg-gray-200 border-transparent mr-1">
+                {filteredPorts.length}
+              </Badge>
+              <span className="text-xs text-gray-700 mr-3">Ports</span>
+              
+              <Badge variant="destructive" className="bg-red-100 text-red-700 hover:bg-red-200 border-transparent mr-1">
+                {filteredRefineries.length}
+              </Badge>
+              <span className="text-xs text-gray-700">Refineries</span>
+            </div>
           </div>
         </div>
         
