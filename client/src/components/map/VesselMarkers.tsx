@@ -8,22 +8,32 @@ interface VesselMarkersProps {
   getVesselIconUrl: (vessel: any) => string;
   getVesselStatus: (vessel: any) => string;
   getVesselRegion: (vessel: any) => string;
+  currentZoom?: number; // Optional zoom level parameter
 }
 
 const VesselMarkers: React.FC<VesselMarkersProps> = ({
   vessels,
   getVesselIconUrl,
   getVesselStatus,
-  getVesselRegion
+  getVesselRegion,
+  currentZoom = 5
 }) => {
   // This creates a new icon instance for each vessel instead of sharing
   const createVesselIcon = (vessel: any) => {
+    // Adjust icon size based on zoom level
+    const zoomFactor = currentZoom < 4 ? 1.5 : // Larger at very zoomed out levels
+                      currentZoom < 6 ? 1.2 : // Slightly larger at somewhat zoomed out
+                      1.0; // Normal size at normal zoom levels
+    
+    const iconSize = Math.round(42 * zoomFactor);
+    const iconAnchor = Math.round(iconSize / 2);
+    
     return L.icon({
       iconUrl: getVesselIconUrl(vessel),
-      iconSize: [42, 42], // Slightly larger
-      iconAnchor: [21, 21],
-      popupAnchor: [0, -21],
-      className: `vessel-icon vessel-marker status-${getVesselStatus(vessel).toLowerCase()}`
+      iconSize: [iconSize, iconSize],
+      iconAnchor: [iconAnchor, iconAnchor],
+      popupAnchor: [0, -iconAnchor],
+      className: `vessel-icon vessel-marker status-${getVesselStatus(vessel).toLowerCase()} zoom-${currentZoom}`
     });
   };
   

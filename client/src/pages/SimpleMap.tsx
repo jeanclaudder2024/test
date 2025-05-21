@@ -5,6 +5,7 @@ import 'leaflet/dist/leaflet.css';
 import '../styles/map-status.css';
 import '../styles/vessel-popup.css';
 import '../styles/fixed-map.css';
+import '../styles/zoom-markers.css';
 import VesselMarkers from '../components/map/VesselMarkers';
 import PortMarkers from '../components/map/PortMarkers';
 import RefineryMarkers from '../components/map/RefineryMarkers';
