@@ -870,13 +870,22 @@ export default function Brokers() {
                 <CardHeader className="pb-2">
                   <CardTitle className="text-lg flex items-center">
                     <Building className="h-5 w-5 mr-2 text-primary" />
-                    Direct Company Communication
+                    Oil Company Connections
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-gray-600 mb-4">
-                    Send offers directly to oil companies through secure channels.
+                    Connect with major oil companies and manage deals through our powerful broker dashboard.
                   </p>
+                  <div className="space-y-4">
+                    <Button 
+                      className="w-full"
+                      onClick={() => window.location.href = '/broker-dashboard'}
+                    >
+                      <ArrowUpRight className="mr-2 h-4 w-4" />
+                      Access Broker Dashboard
+                    </Button>
+                  
                   <div className="space-y-2">
                     <div className="flex items-center justify-between p-2 bg-gray-50 rounded-md hover:bg-gray-100">
                       <div className="flex items-center">
