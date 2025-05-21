@@ -386,21 +386,21 @@ export default function SimpleBrokerDashboard() {
     }
   };
   
-  // Function to handle starting a new deal - directs the broker to the company's contact page
+  // Function to handle starting a new deal - directs the broker to the company's website
   const handleNewDeal = (companyId: number) => {
     const company = companies.find(c => c.id === companyId);
     if (company) {
-      // Create a contact URL from the company website
-      const contactUrl = company.website ? 
-        `https://www.${company.website}${company.website.endsWith('/') ? '' : '/'}contact` : 
+      // Create a website URL - go to the main website, not assuming a contact page exists
+      const websiteUrl = company.website ? 
+        `https://www.${company.website}` : 
         `#`;
         
       // Alert before redirecting
-      if (confirm(`You will be redirected to ${company.name}'s contact page (${contactUrl}) to initiate a new deal. Proceed?`)) {
-        // In a real app, this would open the company's contact page in a new tab
-        window.open(contactUrl, '_blank');
+      if (confirm(`You will be redirected to ${company.name}'s website (${websiteUrl}) to initiate a new deal. Proceed?`)) {
+        // Open the company's website in a new tab
+        window.open(websiteUrl, '_blank');
         
-        // Create new deal and add to activity log
+        // Create new deal in our system
         const newDeal: Deal = {
           id: deals.length + 1,
           seller: company.name,
