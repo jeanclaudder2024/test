@@ -386,33 +386,41 @@ export default function SimpleBrokerDashboard() {
     }
   };
   
-  // Function to handle starting a new deal
+  // Function to handle starting a new deal - directs the broker to the company's contact page
   const handleNewDeal = (companyId: number) => {
     const company = companies.find(c => c.id === companyId);
     if (company) {
-      alert(`Starting new deal proposal with ${company.name}\nYou'll be redirected to the deal creation form.`);
-      
-      // In a real app, this would navigate to a deal creation form
-      // For now, we'll create a new pending deal to demonstrate functionality
-      const newDeal: Deal = {
-        id: deals.length + 1,
-        seller: company.name,
-        buyer: "Your Client",
-        product: company.products[0],
-        quantity: "100,000 bbl",
-        value: "$12.5M",
-        commission: "$125K",
-        status: 'proposed',
-        date: new Date().toISOString().split('T')[0]
-      };
-      
-      setDeals([newDeal, ...deals]);
-      
-      // Add to activity log
-      setActivities([
-        { type: 'deal', deal: `${company.name} → New Client`, value: '$12.5M', time: 'Just now' },
-        ...activities
-      ]);
+      // Create a contact URL from the company website
+      const contactUrl = company.website ? 
+        `https://www.${company.website}${company.website.endsWith('/') ? '' : '/'}contact` : 
+        `#`;
+        
+      // Alert before redirecting
+      if (confirm(`You will be redirected to ${company.name}'s contact page (${contactUrl}) to initiate a new deal. Proceed?`)) {
+        // In a real app, this would open the company's contact page in a new tab
+        window.open(contactUrl, '_blank');
+        
+        // Create new deal and add to activity log
+        const newDeal: Deal = {
+          id: deals.length + 1,
+          seller: company.name,
+          buyer: "New Client",
+          product: company.products[0],
+          quantity: "100,000 bbl",
+          value: "$12.5M",
+          commission: "$125K",
+          status: 'proposed',
+          date: new Date().toISOString().split('T')[0]
+        };
+        
+        setDeals([newDeal, ...deals]);
+        
+        // Add to activity log
+        setActivities([
+          { type: 'deal', deal: `${company.name} → New Client`, value: '$12.5M', time: 'Just now' },
+          ...activities
+        ]);
+      }
     }
   };
   
