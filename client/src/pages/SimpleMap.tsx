@@ -907,13 +907,13 @@ const SimpleMap: React.FC = () => {
               </Card>
               
               {/* Port Proximity button */}
-              <Card className="w-10 h-10 flex items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors shadow-md">
+              <Card className="w-14 h-14 flex items-center justify-center cursor-pointer hover:bg-cyan-50 transition-colors shadow-xl bg-white border-2 border-cyan-200 rounded-xl">
                 <button
-                  className="p-2"
+                  className="p-3"
                   onClick={() => setShowPortProximityControls(!showPortProximityControls)}
                   title="Enhance vessel distribution near ports and refineries"
                 >
-                  <Anchor className="w-5 h-5 text-blue-600" />
+                  <Anchor className="w-7 h-7 text-cyan-600" />
                 </button>
               </Card>
             </div>
