@@ -287,10 +287,10 @@ export default function ProfessionalMaritimeMap({
     }
     
     return L.icon({
-      iconUrl: '/assets/vessel-icon.svg',
-      iconSize: [42, 42],
-      iconAnchor: [21, 21],
-      popupAnchor: [0, -21],
+      iconUrl: '/assets/vessel-professional.svg',
+      iconSize: [32, 32],
+      iconAnchor: [16, 16],
+      popupAnchor: [0, -16],
       className: statusClass,  // Will add appropriate animation/style based on status
       // Add shadowUrl to improve icon rendering with proper z-index handling
       shadowUrl: '',
@@ -299,11 +299,23 @@ export default function ProfessionalMaritimeMap({
     });
   };
 
+  // Define a default vessel icon as a fallback
+  const vesselIcon = L.icon({
+    iconUrl: '/assets/vessel-professional.svg',
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+    popupAnchor: [0, -16],
+    className: 'vessel-icon-pulse',
+    shadowUrl: '',
+    shadowSize: [0, 0],
+    shadowAnchor: [0, 0]
+  });
+
   const portIcon = L.icon({
-    iconUrl: '/assets/port-icon.svg',
-    iconSize: [38, 38], 
-    iconAnchor: [19, 19],
-    popupAnchor: [0, -19],
+    iconUrl: '/assets/port-professional.svg',
+    iconSize: [32, 32], 
+    iconAnchor: [16, 16],
+    popupAnchor: [0, -16],
     className: 'port-icon-highlight',  // Will add highlight effect
     // Add shadowUrl to improve icon rendering with proper z-index handling
     shadowUrl: '',
@@ -312,10 +324,10 @@ export default function ProfessionalMaritimeMap({
   });
 
   const refineryIcon = L.icon({
-    iconUrl: '/assets/refinery-icon.svg',
-    iconSize: [40, 40],
-    iconAnchor: [20, 20],
-    popupAnchor: [0, -20],
+    iconUrl: '/assets/refinery-professional.svg',
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+    popupAnchor: [0, -16],
     className: 'refinery-icon-highlight',  // Will add highlight effect
     // Add shadowUrl to improve icon rendering with proper z-index handling
     shadowUrl: '',
@@ -460,35 +472,35 @@ export default function ProfessionalMaritimeMap({
         .vessel-icon-pulse {
           animation: pulse 2s infinite;
           transform-origin: center center;
-          filter: drop-shadow(0 0 2px rgba(33, 150, 243, 0.8));
-          z-index: 1000 !important;
+          filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.9));
+          z-index: 1100 !important;
         }
         
         .vessel-icon-sailing {
           animation: sailing 3s infinite;
           transform-origin: center center;
-          filter: drop-shadow(0 0 3px rgba(0, 128, 255, 0.9));
-          z-index: 1000 !important;
+          filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.9));
+          z-index: 1100 !important;
         }
         
         .vessel-icon-anchored {
           animation: pulse 4s infinite;
           transform-origin: center center;
-          filter: drop-shadow(0 0 3px rgba(255, 166, 0, 0.8));
-          z-index: 1000 !important;
+          filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.9));
+          z-index: 1100 !important;
         }
         
         .vessel-icon-docked {
           transform-origin: center center;
-          filter: drop-shadow(0 0 3px rgba(0, 153, 102, 0.8));
-          z-index: 1000 !important;
+          filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.9));
+          z-index: 1100 !important;
         }
         
         .vessel-icon-stopped {
           animation: pulse 6s infinite;
           transform-origin: center center;
-          filter: drop-shadow(0 0 3px rgba(204, 0, 0, 0.7));
-          z-index: 1000 !important;
+          filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.9));
+          z-index: 1100 !important;
         }
         
         @keyframes pulse {
