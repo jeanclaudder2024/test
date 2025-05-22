@@ -470,23 +470,24 @@ export default function Vessels() {
       
       if (!isOilVessel) return false;
       
-      // Search term filter
-      const matchesSearch = 
-        vessel.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        vessel.imo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        vessel.flag.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      // Search term filter with null checks to prevent errors
+      const matchesSearch = searchTerm.length === 0 || (
+        (vessel.name && vessel.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (vessel.imo && vessel.imo.toString().toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (vessel.flag && vessel.flag.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (vessel.currentRegion && vessel.currentRegion.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (vessel.cargoType && vessel.cargoType.toLowerCase().includes(searchTerm.toLowerCase()));
+        (vessel.cargoType && vessel.cargoType.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
       
-      // Oil type filter
+      // Oil type filter with null check
       const matchesOilType = 
         selectedOilTypes.length === 0 || 
-        selectedOilTypes.includes(vessel.oilCategory);
+        (vessel.oilCategory && selectedOilTypes.includes(vessel.oilCategory));
       
-      // Tab filter
+      // Tab filter with null check
       const matchesTab = 
         selectedTab === "all" || 
-        (selectedTab === vessel.oilCategory.toLowerCase());
+        (vessel.oilCategory && selectedTab === vessel.oilCategory.toLowerCase());
         
       // Status filter - NEW
       const matchesStatus = selectedStatus === 'all' || (() => {
