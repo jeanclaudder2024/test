@@ -238,18 +238,47 @@ export default function ProfessionalMaritimeMap({
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  // Enhanced professional icons with modern styling
-  const vesselIcon = L.icon({
-    iconUrl: '/assets/vessel-icon.svg',
-    iconSize: [42, 42],
-    iconAnchor: [21, 21],
-    popupAnchor: [0, -21],
-    className: 'vessel-icon-pulse',  // Will add pulse animation
-    // Add shadowUrl to improve icon rendering with proper z-index handling
-    shadowUrl: '',
-    shadowSize: [0, 0],
-    shadowAnchor: [0, 0]
-  });
+  // Create a function to get vessel status icon based on status
+  const getVesselIcon = (status?: string) => {
+    // Status-specific class names for visual indication
+    let statusClass = 'vessel-icon-pulse';
+    
+    // Customize the vessel icon display based on status
+    switch(status?.toLowerCase()) {
+      case 'sailing':
+      case 'underway':
+      case 'en route':
+        statusClass = 'vessel-icon-sailing';
+        break;
+      case 'anchored':
+      case 'at anchor': 
+        statusClass = 'vessel-icon-anchored';
+        break;
+      case 'docked':
+      case 'moored':
+      case 'berthed':
+        statusClass = 'vessel-icon-docked';
+        break;
+      case 'stopped':
+      case 'not moving':
+        statusClass = 'vessel-icon-stopped';
+        break;
+      default:
+        statusClass = 'vessel-icon-pulse';
+    }
+    
+    return L.icon({
+      iconUrl: '/assets/vessel-icon.svg',
+      iconSize: [42, 42],
+      iconAnchor: [21, 21],
+      popupAnchor: [0, -21],
+      className: statusClass,  // Will add appropriate animation/style based on status
+      // Add shadowUrl to improve icon rendering with proper z-index handling
+      shadowUrl: '',
+      shadowSize: [0, 0],
+      shadowAnchor: [0, 0]
+    });
+  };
 
   const portIcon = L.icon({
     iconUrl: '/assets/port-icon.svg',
@@ -408,7 +437,7 @@ export default function ProfessionalMaritimeMap({
           font-weight: 500;
         }
         
-        /* Vessel icon animations with enforced visibility */
+        /* Vessel status icons with visual indicators */
         .vessel-icon-pulse {
           animation: pulse 2s infinite;
           transform-origin: center center;
@@ -416,10 +445,45 @@ export default function ProfessionalMaritimeMap({
           z-index: 1000 !important;
         }
         
+        .vessel-icon-sailing {
+          animation: sailing 3s infinite;
+          transform-origin: center center;
+          filter: drop-shadow(0 0 3px rgba(0, 128, 255, 0.9));
+          z-index: 1000 !important;
+        }
+        
+        .vessel-icon-anchored {
+          animation: pulse 4s infinite;
+          transform-origin: center center;
+          filter: drop-shadow(0 0 3px rgba(255, 166, 0, 0.8));
+          z-index: 1000 !important;
+        }
+        
+        .vessel-icon-docked {
+          transform-origin: center center;
+          filter: drop-shadow(0 0 3px rgba(0, 153, 102, 0.8));
+          z-index: 1000 !important;
+        }
+        
+        .vessel-icon-stopped {
+          animation: pulse 6s infinite;
+          transform-origin: center center;
+          filter: drop-shadow(0 0 3px rgba(204, 0, 0, 0.7));
+          z-index: 1000 !important;
+        }
+        
         @keyframes pulse {
           0% { transform: scale(1); }
           50% { transform: scale(1.05); }
           100% { transform: scale(1); }
+        }
+        
+        @keyframes sailing {
+          0% { transform: scale(1) rotate(0deg); }
+          25% { transform: scale(1.03) rotate(1deg); }
+          50% { transform: scale(1.05) rotate(0deg); }
+          75% { transform: scale(1.03) rotate(-1deg); }
+          100% { transform: scale(1) rotate(0deg); }
         }
         
         /* Port and refinery icons with enhanced visibility */
