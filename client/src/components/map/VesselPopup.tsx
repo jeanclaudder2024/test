@@ -7,7 +7,7 @@ interface VesselPopupProps {
 }
 
 // Helper function to determine vessel status class
-const getVesselStatusClass = (status?: string) => {
+const getVesselStatusClass = (status?: string | null) => {
   if (!status) return 'vessel-status-unknown';
   
   const statusLower = status.toLowerCase();
@@ -39,7 +39,7 @@ const VesselPopup: React.FC<VesselPopupProps> = ({ vessel, showStatus = true }) 
         {showStatus && (
           <div className="mb-1">
             <span className="font-medium">Status: </span>
-            <span className={`vessel-status-badge ${getVesselStatusClass(vessel.status)}`}>
+            <span className={`vessel-status-badge ${getVesselStatusClass(vessel.status || undefined)}`}>
               {vessel.status || 'Unknown'}
             </span>
           </div>
