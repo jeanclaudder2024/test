@@ -111,12 +111,12 @@ function Router() {
           transition={{ duration: 0.3 }}
         >
           <Switch>
-            <Route path="/dashboard" component={Dashboard} />
+            {/* Dashboard page removed as requested */}
             <Route path="/vessels" component={Vessels} />
             <Route path="/vessels/:id/documents" component={VesselDocuments} />
             <Route path="/vessels/:id" component={VesselDetail} />
-            <Route path="/vessel-dashboard" component={VesselDashboard} />
-            {/* Map pages removed as requested */}
+            {/* Vessel dashboard page removed as requested */}
+            {/* Maritime tracking and vessel lookup pages removed as requested */}
             <Route path="/refineries" component={Refineries} />
             <Route path="/refineries/:id" component={RefineryDetail} />
             <Route path="/ports" component={Ports} />
