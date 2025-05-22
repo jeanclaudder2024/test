@@ -84,6 +84,10 @@ export default function SimpleBrokerDashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [regionFilter, setRegionFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [timeRange, setTimeRange] = useState('month');
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
+  const [showDealModal, setShowDealModal] = useState(false);
+  const [isDetailsPanelOpen, setIsDetailsPanelOpen] = useState(false);
   const [companies, setCompanies] = useState<Company[]>([
     { 
       id: 1, 
@@ -751,7 +755,16 @@ export default function SimpleBrokerDashboard() {
   const connectionMetrics = {
     connected: companies.filter(c => c.status === 'connected').length,
     pending: companies.filter(c => c.status === 'pending').length,
-    potential: companies.filter(c => c.status === 'none').length
+    potential: companies.filter(c => c.status === 'none').length,
+    premium: companies.filter(c => c.premium).length,
+    byRegion: {
+      'Middle East': companies.filter(c => c.region === 'Middle East').length,
+      'North America': companies.filter(c => c.region === 'North America').length,
+      'Europe': companies.filter(c => c.region === 'Europe').length,
+      'Asia Pacific': companies.filter(c => c.region === 'Asia Pacific').length,
+      'South America': companies.filter(c => c.region === 'South America').length,
+    },
+    fleetCapacity: companies.reduce((total, company) => total + company.fleetSize, 0)
   };
   
   const dealMetrics = {
@@ -759,7 +772,20 @@ export default function SimpleBrokerDashboard() {
     inProgress: deals.filter(d => d.status === 'in-progress').length,
     proposed: deals.filter(d => d.status === 'proposed').length,
     totalValue: deals.reduce((sum, deal) => sum + parseFloat(deal.value.replace('$', '').replace('M', '')), 0),
-    totalCommission: deals.reduce((sum, deal) => sum + parseFloat(deal.commission.replace('$', '').replace('K', '')), 0) / 1000
+    totalCommission: deals.reduce((sum, deal) => sum + parseFloat(deal.commission.replace('$', '').replace('K', '')), 0) / 1000,
+    valueByProduct: {
+      'Crude Oil': deals.filter(d => d.product.includes('Crude'))
+        .reduce((sum, deal) => sum + parseFloat(deal.value.replace('$', '').replace('M', '')), 0),
+      'LNG': deals.filter(d => d.product.includes('LNG'))
+        .reduce((sum, deal) => sum + parseFloat(deal.value.replace('$', '').replace('M', '')), 0),
+      'Refined': deals.filter(d => d.product.includes('Refined'))
+        .reduce((sum, deal) => sum + parseFloat(deal.value.replace('$', '').replace('M', '')), 0)
+    },
+    monthlyGrowth: 12.4, // This would be calculated from actual data in a real app
+    commissionGrowth: 8.5,
+    averageDealSize: deals.length > 0 
+      ? deals.reduce((sum, deal) => sum + parseFloat(deal.value.replace('$', '').replace('M', '')), 0) / deals.length 
+      : 0
   };
   
   // Company regions for filter
