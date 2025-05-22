@@ -56,12 +56,12 @@ export class VesselWebSocketClient {
     this.config = {
       region: 'global',
       page: 1,
-      pageSize: 3000,
+      pageSize: 500,
       vesselType: 'oil',
-      loadAllVessels: true,
+      loadAllVessels: false,
       trackPortProximity: false,
       proximityRadius: 50,
-      maxOilVessels: 3000,
+      maxOilVessels: 1540,
       ...config
     };
   }

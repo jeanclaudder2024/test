@@ -1167,15 +1167,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`Fetched ${vessels.length} vessels globally`);
       }
       
-      // Always return all vessels to ensure full vessel count is displayed
-      const showAllVessels = req.query.all === 'true' || true; // Default to showing all vessels
+      // Get pagination parameters from query or use defaults
+      const page = parseInt(req.query.page as string) || 1;
+      const pageSize = parseInt(req.query.pageSize as string) || 500;
       
-      // Set parameters to include all vessels
-      const page = 1;
-      const pageSize = showAllVessels ? vessels.length : 3000;
-      
-      // Apply pagination only if not showing all
-      const paginatedVessels = vessels; // Return all vessels
+      // Apply pagination
+      const startIndex = (page - 1) * pageSize;
+      const endIndex = startIndex + pageSize;
+      const paginatedVessels = vessels.slice(startIndex, endIndex);
       
       // Return with timestamp and metadata for pagination
       res.json({
@@ -3255,10 +3254,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       if (ws.readyState !== WebSocket.OPEN) return;
       
-      // Always send all vessels by default
-      const sendAllVessels = ws.sendAllVessels !== false; // Default to true
-      const page = 1; // Always start from page 1
-      const pageSize = 3000; // Set large enough pageSize to include all vessels
+      // Check if we should send all vessels at once (no pagination)
+      const sendAllVessels = ws.sendAllVessels === true;
+      const page = ws.page || 1;
+      const pageSize = sendAllVessels ? 10000 : (ws.pageSize || 500); // Large pageSize effectively removes pagination
       const trackPortProximity = ws.trackPortProximity === true;
       const proximityRadius = ws.proximityRadius || 10; // Default to 10km
       

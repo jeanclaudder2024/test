@@ -12,9 +12,9 @@ interface UseVesselWebSocketProps {
 
 export function useVesselWebSocket({
   region = 'global',
-  loadAllVessels = true,
+  loadAllVessels = false,
   page = 1,
-  pageSize = 3000,
+  pageSize = 100,
   trackPortProximity = false,
   proximityRadius = 50
 }: UseVesselWebSocketProps = {}) {
@@ -178,13 +178,11 @@ export function useVesselWebSocket({
           const configMessage = JSON.stringify({
             type: 'config',
             region,
-            loadAllVessels: true,
-            page: 1,
-            pageSize: 3000,
+            loadAllVessels,
+            page,
+            pageSize,
             trackPortProximity,
-            proximityRadius,
-            maxOilVessels: 3000,
-            vesselType: 'oil'
+            proximityRadius
           });
           
           ws.send(configMessage);
