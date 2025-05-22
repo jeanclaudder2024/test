@@ -47,7 +47,7 @@ const VesselPopup: React.FC<VesselPopupProps> = ({ vessel, showStatus = true }) 
         <div><span className="font-medium">Type:</span> {vessel.vesselType || 'N/A'}</div>
         <div><span className="font-medium">Flag:</span> {vessel.flag || 'N/A'}</div>
         <div>
-          <span className="font-medium">Coordinates:</span> {formatCoordinate(vessel.currentLat || null)}, {formatCoordinate(vessel.currentLng || null)}
+          <span className="font-medium">Coordinates:</span> {formatCoordinate(vessel.currentLat as string | number | undefined)}, {formatCoordinate(vessel.currentLng as string | number | undefined)}
         </div>
         {vessel.cargoType && <div><span className="font-medium">Cargo:</span> {vessel.cargoType}</div>}
         {vessel.destinationPort && <div><span className="font-medium">Destination:</span> {vessel.destinationPort}</div>}

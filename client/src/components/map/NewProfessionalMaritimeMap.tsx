@@ -554,15 +554,15 @@ export default function ProfessionalMaritimeMap({
         
         /* Port and refinery icons with enhanced visibility */
         .port-icon-highlight, .refinery-icon-highlight {
-          filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.7));
+          filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.9));
           transition: all 0.3s ease;
-          z-index: 1000 !important; /* Higher than 999 to appear above map layers */
+          z-index: 1050 !important; /* Higher than 999 to appear above map layers */
         }
         
         .port-icon-highlight:hover, .refinery-icon-highlight:hover {
-          filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.9));
-          transform: scale(1.1);
-          z-index: 1001 !important; /* Higher than 999 to appear above map layers */
+          filter: drop-shadow(0 0 6px rgba(255, 255, 255, 1));
+          transform: scale(1.08);
+          z-index: 1101 !important; /* Higher z-index to ensure visibility */
         }
       `;
       document.head.appendChild(styleEl);
