@@ -65,8 +65,24 @@ interface ProfessionalMaritimeMapProps {
 // Utility functions for consistent coordinate handling
 const parseCoordinate = (coord: string | number | null | undefined): number | null => {
   if (coord === null || coord === undefined) return null;
-  const parsed = typeof coord === 'string' ? parseFloat(coord) : coord;
-  return isNaN(parsed) ? null : parsed;
+  
+  // Handle numeric values first
+  if (typeof coord === 'number') {
+    return isNaN(coord) ? null : coord;
+  }
+  
+  // Handle string values
+  if (typeof coord === 'string') {
+    // Check if string is empty
+    if (coord.trim() === '') return null;
+    
+    // Try to parse as float
+    const parsed = parseFloat(coord);
+    return isNaN(parsed) ? null : parsed;
+  }
+  
+  // Fallback
+  return null;
 };
 
 const formatCoordinate = (coord: string | number | null | undefined): string => {
@@ -433,7 +449,11 @@ export default function ProfessionalMaritimeMap({
               const lat = parseCoordinate(refinery.lat);
               const lng = parseCoordinate(refinery.lng);
               
-              if (!lat || !lng) return null;
+              // More thorough check for valid coordinates
+              if (lat === null || lng === null || isNaN(lat) || isNaN(lng)) {
+                console.warn(`Invalid coordinates for refinery ${refinery.name}:`, { lat: refinery.lat, lng: refinery.lng });
+                return null;
+              }
               
               return (
                 <Marker
