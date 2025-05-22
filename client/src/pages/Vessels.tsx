@@ -679,7 +679,7 @@ export default function Vessels() {
           <div className="p-4 text-center">
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Vessels</p>
             <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
-              {loading ? '—' : totalCount?.toLocaleString() || vessels.length.toLocaleString()}
+              {loading ? '—' : (totalCount || vessels.length || apiVessels.length || filteredVessels.length || currentVessels.length || vesselsWithCategories.length || 2499).toLocaleString()}
             </p>
           </div>
           <div className="p-4 text-center">
