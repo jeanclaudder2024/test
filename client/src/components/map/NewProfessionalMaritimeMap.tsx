@@ -18,6 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import VesselPopup from './VesselPopup';
+import MapEventHandler from './MapEventHandler';
 
 // Port connections type
 interface PortConnection {
@@ -287,7 +288,7 @@ export default function ProfessionalMaritimeMap({
     }
     
     return L.icon({
-      iconUrl: '/assets/vessel-professional.svg',
+      iconUrl: '/assets/vessel-modern.svg',
       iconSize: [32, 32],
       iconAnchor: [16, 16],
       popupAnchor: [0, -16],
