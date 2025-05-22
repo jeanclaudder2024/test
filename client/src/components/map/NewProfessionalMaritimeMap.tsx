@@ -220,7 +220,11 @@ export default function ProfessionalMaritimeMap({
     iconSize: [36, 36],
     iconAnchor: [18, 18],
     popupAnchor: [0, -18],
-    className: 'vessel-icon-pulse'  // Will add pulse animation
+    className: 'vessel-icon-pulse',  // Will add pulse animation
+    // Add shadowUrl to improve icon rendering with proper z-index handling
+    shadowUrl: '',
+    shadowSize: [0, 0],
+    shadowAnchor: [0, 0]
   });
 
   const portIcon = L.icon({
@@ -228,7 +232,11 @@ export default function ProfessionalMaritimeMap({
     iconSize: [32, 32], 
     iconAnchor: [16, 16],
     popupAnchor: [0, -16],
-    className: 'port-icon-highlight'  // Will add highlight effect
+    className: 'port-icon-highlight',  // Will add highlight effect
+    // Add shadowUrl to improve icon rendering with proper z-index handling
+    shadowUrl: '',
+    shadowSize: [0, 0],
+    shadowAnchor: [0, 0]
   });
 
   const refineryIcon = L.icon({
@@ -236,7 +244,11 @@ export default function ProfessionalMaritimeMap({
     iconSize: [34, 34],
     iconAnchor: [17, 17],
     popupAnchor: [0, -17],
-    className: 'refinery-icon-highlight'  // Will add highlight effect
+    className: 'refinery-icon-highlight',  // Will add highlight effect
+    // Add shadowUrl to improve icon rendering with proper z-index handling
+    shadowUrl: '',
+    shadowSize: [0, 0],
+    shadowAnchor: [0, 0]
   });
   
   // Create styles for icon animations once component loads
@@ -351,8 +363,8 @@ export default function ProfessionalMaritimeMap({
           useCluster ? (
             <MarkerClusterGroup 
               chunkedLoading
-              zIndexOffset={1000} // Ensure vessel clusters appear above base map
               showCoverageOnHover={false} // Prevent hover effects that might cause flickering
+              // MarkerClusterGroup doesn't support zIndexOffset directly
             >
               {filteredVessels.map((vessel: VesselType) => {
                 const lat = parseCoordinate(vessel.currentLat);
