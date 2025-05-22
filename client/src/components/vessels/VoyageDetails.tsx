@@ -434,10 +434,10 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                               effectiveVoyageProgress.distanceTraveled !== null) ? 
                               `${(typeof effectiveVoyageProgress.distanceTraveled === 'number' ? 
                                 effectiveVoyageProgress.distanceTraveled : 
-                                parseFloat(String(effectiveVoyageProgress.distanceTraveled))).toLocaleString()} nautical miles` : 
+                                parseFloat(String(effectiveVoyageProgress.distanceTraveled || 0))).toLocaleString()} nautical miles` : 
                               // Generate an estimated distance based on voyage progress
                               enhancedVesselData?.voyageProgress ? 
-                              `${Math.floor(enhancedVesselData.voyageProgress * 40).toLocaleString()} nautical miles` :
+                              `${Math.floor((enhancedVesselData.voyageProgress || 0) * 40).toLocaleString()} nautical miles` :
                               'N/A'}
                           </p>
                         </div>
@@ -448,10 +448,10 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                               effectiveVoyageProgress.distanceRemaining !== null) ? 
                               `${(typeof effectiveVoyageProgress.distanceRemaining === 'number' ? 
                                 effectiveVoyageProgress.distanceRemaining : 
-                                parseFloat(String(effectiveVoyageProgress.distanceRemaining))).toLocaleString()} nautical miles` : 
+                                parseFloat(String(effectiveVoyageProgress.distanceRemaining || 0))).toLocaleString()} nautical miles` : 
                               // Generate an estimated distance remaining based on voyage progress
                               enhancedVesselData?.voyageProgress ? 
-                              `${Math.floor((100 - enhancedVesselData.voyageProgress) * 40).toLocaleString()} nautical miles` :
+                              `${Math.floor((100 - (enhancedVesselData.voyageProgress || 0)) * 40).toLocaleString()} nautical miles` :
                               'N/A'}
                           </p>
                         </div>
@@ -862,8 +862,8 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                     <p className="text-sm font-medium">
                       {(voyageProgress?.distanceTraveled !== undefined && voyageProgress?.distanceRemaining !== undefined)
                         ? `${(
-                            (typeof voyageProgress.distanceTraveled === 'number' ? voyageProgress.distanceTraveled : parseFloat(String(voyageProgress.distanceTraveled))) + 
-                            (typeof voyageProgress.distanceRemaining === 'number' ? voyageProgress.distanceRemaining : parseFloat(String(voyageProgress.distanceRemaining)))
+                            (typeof voyageProgress.distanceTraveled === 'number' ? voyageProgress.distanceTraveled : parseFloat(String(voyageProgress.distanceTraveled || 0))) + 
+                            (typeof voyageProgress.distanceRemaining === 'number' ? voyageProgress.distanceRemaining : parseFloat(String(voyageProgress.distanceRemaining || 0)))
                           ).toLocaleString()} nautical miles`
                         : "N/A"}
                     </p>
