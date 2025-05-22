@@ -289,7 +289,7 @@ export default function ProfessionalMaritimeMap({
     }
     
     return L.icon({
-      iconUrl: '/assets/vessel-modern.svg',
+      iconUrl: '/assets/vessel-beautiful.svg',
       iconSize: [32, 32],
       iconAnchor: [16, 16],
       popupAnchor: [0, -16],
@@ -303,7 +303,7 @@ export default function ProfessionalMaritimeMap({
 
   // Define a default vessel icon as a fallback
   const vesselIcon = L.icon({
-    iconUrl: '/assets/vessel-modern.svg',
+    iconUrl: '/assets/vessel-beautiful.svg',
     iconSize: [32, 32],
     iconAnchor: [16, 16],
     popupAnchor: [0, -16],
