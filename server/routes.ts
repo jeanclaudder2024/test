@@ -3254,10 +3254,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       if (ws.readyState !== WebSocket.OPEN) return;
       
-      // Check if we should send all vessels at once (no pagination)
-      const sendAllVessels = ws.sendAllVessels === true;
-      const page = ws.page || 1;
-      const pageSize = sendAllVessels ? 10000 : (ws.pageSize || 500); // Large pageSize effectively removes pagination
+      // Always send all vessels by default
+      const sendAllVessels = ws.sendAllVessels !== false; // Default to true
+      const page = 1; // Always start from page 1
+      const pageSize = 3000; // Set large enough pageSize to include all vessels
       const trackPortProximity = ws.trackPortProximity === true;
       const proximityRadius = ws.proximityRadius || 10; // Default to 10km
       
