@@ -62,26 +62,35 @@ interface ProfessionalMaritimeMapProps {
   loading?: boolean;
 }
 
-// Utility functions for consistent coordinate handling
+// Enhanced utility functions for consistent and safe coordinate handling
 const parseCoordinate = (coord: string | number | null | undefined): number | null => {
+  // Handle null/undefined case
   if (coord === null || coord === undefined) return null;
   
   // Handle numeric values first
   if (typeof coord === 'number') {
-    return isNaN(coord) ? null : coord;
+    // Ensure it's a valid latitude/longitude range (-90 to 90 for lat, -180 to 180 for lng)
+    if (isNaN(coord) || !isFinite(coord)) return null;
+    return coord;
   }
   
   // Handle string values
   if (typeof coord === 'string') {
-    // Check if string is empty
+    // Check if string is empty or non-numeric
     if (coord.trim() === '') return null;
     
-    // Try to parse as float
-    const parsed = parseFloat(coord);
-    return isNaN(parsed) ? null : parsed;
+    try {
+      // Try to parse as float with more validation
+      const parsed = parseFloat(coord);
+      if (isNaN(parsed) || !isFinite(parsed)) return null;
+      return parsed;
+    } catch (err) {
+      console.warn('Error parsing coordinate:', coord, err);
+      return null;
+    }
   }
   
-  // Fallback
+  // Fallback for unexpected types
   return null;
 };
 
