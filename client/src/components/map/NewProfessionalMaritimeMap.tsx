@@ -165,6 +165,30 @@ export default function ProfessionalMaritimeMap({
       name: 'Satellite Imagery',
       attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
       maxZoom: 19
+    },
+    darkMode: {
+      url: 'https://cartodb-basemaps-{s}.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png',
+      name: 'Premium Dark',
+      attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      maxZoom: 19
+    },
+    lightMode: {
+      url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+      name: 'Premium Light',
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      maxZoom: 19
+    },
+    nautical: {
+      url: 'https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png',
+      name: 'Maritime',
+      attribution: 'Map data: &copy; <a href="http://www.openseamap.org">OpenSeaMap</a> contributors',
+      maxZoom: 18
+    },
+    terrain: {
+      url: 'https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}{r}.png',
+      name: 'Terrain',
+      attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 18
     }
   });
 
@@ -204,7 +228,7 @@ export default function ProfessionalMaritimeMap({
   }, [toast]);
 
   // State management
-  const [mapStyle, setMapStyle] = useState<string>(themeMode === 'dark' ? 'dark' : 'satellite');
+  const [mapStyle, setMapStyle] = useState<string>(themeMode === 'dark' ? 'darkMode' : 'lightMode');
   const [showVessels, setShowVessels] = useState<boolean>(true);
   const [showPorts, setShowPorts] = useState<boolean>(true);
   const [showRefineries, setShowRefineries] = useState<boolean>(true);
@@ -283,6 +307,32 @@ export default function ProfessionalMaritimeMap({
       // Create a style element for our custom icon effects
       const styleEl = document.createElement('style');
       styleEl.innerHTML = `
+        /* Enhanced professional map styling with better visibility */
+        .leaflet-container {
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+          border-radius: 8px;
+          overflow: hidden;
+        }
+        
+        /* Improved control styling */
+        .leaflet-control-zoom {
+          border-radius: 8px !important;
+          overflow: hidden;
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
+        }
+        
+        .leaflet-control-zoom a {
+          background-color: #fff !important;
+          color: #333 !important;
+          transition: all 0.2s ease;
+        }
+        
+        .leaflet-control-zoom a:hover {
+          background-color: #f0f0f0 !important;
+          color: #000 !important;
+        }
+        
         /* Fix for Leaflet marker visibility at all zoom levels */
         .leaflet-pane {
           z-index: 400 !important;
@@ -306,6 +356,17 @@ export default function ProfessionalMaritimeMap({
         
         .leaflet-popup-pane {
           z-index: 1200 !important;
+        }
+        
+        /* Enhanced popups */
+        .leaflet-popup-content-wrapper {
+          border-radius: 8px;
+          box-shadow: 0 3px 14px rgba(0, 0, 0, 0.2);
+        }
+        
+        .leaflet-popup-content {
+          margin: 12px 16px;
+          line-height: 1.5;
         }
         
         /* Vessel icon animations with enforced visibility */

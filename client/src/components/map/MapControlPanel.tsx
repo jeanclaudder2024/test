@@ -12,6 +12,7 @@ interface MapControlPanelProps {
   setShowRefineries: (show: boolean) => void;
   mapMode: string;
   setMapMode: (mode: string) => void;
+  mapStyles?: Record<string, any>;
   selectedRegion: string;
   setSelectedRegion: (region: string) => void;
   selectedVesselType: string;
@@ -37,6 +38,7 @@ const MapControlPanel: React.FC<MapControlPanelProps> = ({
   setShowRefineries,
   mapMode,
   setMapMode,
+  mapStyles,
   selectedRegion,
   setSelectedRegion,
   selectedVesselType,
