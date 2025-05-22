@@ -235,6 +235,7 @@ export default function ProfessionalMaritimeMap({
   const [showRefineries, setShowRefineries] = useState<boolean>(true);
   const [showConnections, setShowConnections] = useState<boolean>(false);
   const [useCluster, setUseCluster] = useState<boolean>(true);
+  const [showVesselStatus, setShowVesselStatus] = useState<boolean>(true);
   const [selectedRegion, setSelectedRegion] = useState<string>('global');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
