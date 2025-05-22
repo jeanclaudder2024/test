@@ -168,7 +168,7 @@ export class OpenAIService {
   }
 
   /**
-   * Generate shipping documents for a vessel
+   * Generate shipping documents for a vessel with enhanced detail
    */
   async generateShippingDocument(vessel: Vessel, documentType: string): Promise<{title: string, content: string}> {
     try {
@@ -179,19 +179,19 @@ export class OpenAIService {
       // Select the appropriate prompt based on document type
       switch (documentType.toLowerCase()) {
         case "bill of lading":
-          prompt = this.getBillOfLadingPrompt(vessel);
+          prompt = await this.getBillOfLadingPrompt(vessel);
           break;
         case "certificate of origin":
-          prompt = this.getCertificateOfOriginPrompt(vessel);
+          prompt = await this.getCertificateOfOriginPrompt(vessel);
           break;
         case "inspection report":
-          prompt = this.getInspectionReportPrompt(vessel);
+          prompt = await this.getInspectionReportPrompt(vessel);
           break;
         case "customs declaration":
-          prompt = this.getCustomsDeclarationPrompt(vessel);
+          prompt = await this.getCustomsDeclarationPrompt(vessel);
           break;
         default:
-          prompt = this.getGenericDocumentPrompt(vessel, documentType);
+          prompt = await this.getGenericDocumentPrompt(vessel, documentType);
       }
       
       try {
@@ -308,9 +308,34 @@ This document was generated automatically without AI assistance.
     }
   }
 
-  private getBillOfLadingPrompt(vessel: Vessel): string {
+  private async getBillOfLadingPrompt(vessel: Vessel): Promise<string> {
+    // Get additional vessel details
+    const departurePort = vessel.departurePort ? 
+      await storage.getPortById(Number(vessel.departurePort)) : null;
+    
+    const destinationPort = vessel.destinationPort ? 
+      await storage.getPortById(Number(vessel.destinationPort)) : null;
+    
+    // Get cargo details
+    let cargoType = "Crude Oil";
+    let cargoQuantity = "80,000";
+    let cargoUnit = "barrels";
+    
+    if (vessel.metadata) {
+      try {
+        const metadata = JSON.parse(vessel.metadata);
+        if (metadata.cargo) {
+          cargoType = metadata.cargo.type || cargoType;
+          cargoQuantity = metadata.cargo.quantity?.toString() || cargoQuantity;
+          cargoUnit = metadata.cargo.unit || cargoUnit;
+        }
+      } catch (e) {
+        console.log("Could not parse vessel metadata");
+      }
+    }
+    
     return `
-    You are a shipping documentation expert. Create a Bill of Lading for the following vessel:
+    You are a shipping documentation expert. Create a detailed and realistic Bill of Lading for the following vessel and cargo:
     
     Vessel Details:
     - Name: ${vessel.name}
@@ -318,26 +343,68 @@ This document was generated automatically without AI assistance.
     - MMSI: ${vessel.mmsi}
     - Type: ${vessel.vesselType}
     - Flag: ${vessel.flag || 'Unknown'}
+    - Built: ${vessel.built || 'Unknown'}
+    - Deadweight: ${vessel.deadweight?.toLocaleString() || 'Unknown'} tons
+    - Length: ${vessel.length?.toLocaleString() || 'Unknown'} m
+    - Width: ${vessel.width?.toLocaleString() || 'Unknown'} m
+    
+    Voyage Information:
+    - Departure Port: ${departurePort ? departurePort.name + ', ' + departurePort.country : 'Unknown'}
+    - Destination Port: ${destinationPort ? destinationPort.name + ', ' + destinationPort.country : 'Unknown'}
+    - Cargo Type: ${cargoType}
+    - Cargo Quantity: ${cargoQuantity} ${cargoUnit}
+    - Current Status: ${vessel.status || 'In Transit'}
+    - Current Position: ${vessel.currentLat ? `Lat ${vessel.currentLat}, Lng ${vessel.currentLng}` : 'Unknown'}
+    - Current Region: ${vessel.currentRegion || 'Unknown'}
     
     Include these sections:
-    1. Shipper/Exporter
-    2. Consignee
-    3. Vessel and Voyage Information
-    4. Port of Loading
-    5. Port of Discharge
-    6. Description of Goods
-    7. Container Numbers
-    8. Weight and Measurements
-    9. Freight and Charges
-    10. Signatures
+    1. Shipper/Exporter (create a realistic company name and details)
+    2. Consignee (create a realistic recipient company)
+    3. Vessel and Voyage Information (use the details provided)
+    4. Port of Loading (use the departure port details provided)
+    5. Port of Discharge (use the destination port details provided)
+    6. Description of Goods (provide detailed description of the cargo)
+    7. Container/Tank Numbers (create realistic identifiers)
+    8. Weight and Measurements (be specific with proper maritime units)
+    9. Freight and Charges (include realistic shipping costs and payment terms)
+    10. Signatures and Date (include current date in proper format)
     
-    Format as a formal document with appropriate headers and layouts.
+    Format as a formal, realistic maritime document with appropriate headers, layouts, and legal terminology.
+    Add realistic reference numbers, dates, and include all required regulatory information for international oil shipping.
     `;
   }
 
-  private getCertificateOfOriginPrompt(vessel: Vessel): string {
+  private async getCertificateOfOriginPrompt(vessel: Vessel): Promise<string> {
+    // Get additional vessel details
+    const departurePort = vessel.departurePort ? 
+      await storage.getPortById(Number(vessel.departurePort)) : null;
+    
+    const destinationPort = vessel.destinationPort ? 
+      await storage.getPortById(Number(vessel.destinationPort)) : null;
+      
+    // Try to get origin country from departure port or vessel flag
+    const originCountry = departurePort?.country || vessel.flag || "Unknown";
+    
+    // Get cargo details
+    let cargoType = "Crude Oil";
+    let cargoQuantity = "80,000";
+    let cargoUnit = "barrels";
+    
+    if (vessel.metadata) {
+      try {
+        const metadata = JSON.parse(vessel.metadata);
+        if (metadata.cargo) {
+          cargoType = metadata.cargo.type || cargoType;
+          cargoQuantity = metadata.cargo.quantity?.toString() || cargoQuantity;
+          cargoUnit = metadata.cargo.unit || cargoUnit;
+        }
+      } catch (e) {
+        console.log("Could not parse vessel metadata");
+      }
+    }
+    
     return `
-    You are a shipping documentation expert. Create a Certificate of Origin for cargo carried by the following vessel:
+    You are a shipping documentation expert. Create a detailed and realistic Certificate of Origin for cargo carried by the following vessel:
     
     Vessel Details:
     - Name: ${vessel.name}
@@ -345,24 +412,202 @@ This document was generated automatically without AI assistance.
     - MMSI: ${vessel.mmsi}
     - Type: ${vessel.vesselType}
     - Flag: ${vessel.flag || 'Unknown'}
+    - Built: ${vessel.built || 'Unknown'}
+    - Deadweight: ${vessel.deadweight?.toLocaleString() || 'Unknown'} tons
+    
+    Voyage and Cargo Information:
+    - Departure Port: ${departurePort ? departurePort.name + ', ' + departurePort.country : 'Unknown'}
+    - Destination Port: ${destinationPort ? destinationPort.name + ', ' + destinationPort.country : 'Unknown'}
+    - Cargo Type: ${cargoType}
+    - Cargo Quantity: ${cargoQuantity} ${cargoUnit}
+    - Country of Origin: ${originCountry}
+    - Current Status: ${vessel.status || 'In Transit'}
     
     Include these sections:
-    1. Exporter (Seller)
-    2. Consignee
-    3. Country of Origin
-    4. Transport Details
-    5. Description of Goods
-    6. HS Tariff Classification
-    7. Certifying Statements
-    8. Authorized Signature and Date
+    1. Exporter (Seller) - Create a realistic company from the origin country
+    2. Consignee - Create a realistic recipient company in the destination country
+    3. Country of Origin - Use ${originCountry} as the country of origin
+    4. Transport Details - Include vessel specifics and route details
+    5. Description of Goods - Provide detailed description of the petroleum products
+    6. HS Tariff Classification - Use correct HS codes for petroleum products
+    7. Certifying Statements - Include proper legal declarations
+    8. Authorized Signature and Date - Include proper signature block with current date
     
     Format as a formal certificate with appropriate headers, official language, and layout.
+    Add realistic reference numbers, dates, and include all required regulatory information for international oil shipping.
     `;
   }
 
-  private getInspectionReportPrompt(vessel: Vessel): string {
+  private async getInspectionReportPrompt(vessel: Vessel): Promise<string> {
+    // Get current port based on vessel position
+    let currentPort = null;
+    if (vessel.currentLat && vessel.currentLng) {
+      const nearbyPorts = await storage.getPortsNearCoordinates(
+        parseFloat(vessel.currentLat), 
+        parseFloat(vessel.currentLng), 
+        50 // 50km radius
+      );
+      if (nearbyPorts && nearbyPorts.length > 0) {
+        currentPort = nearbyPorts[0]; // use closest port
+      }
+    }
+    
+    // Get vessel age
+    const currentYear = new Date().getFullYear();
+    const vesselAge = vessel.built ? currentYear - vessel.built : null;
+    
     return `
-    You are a maritime safety inspector. Create a detailed vessel inspection report for:
+    You are a maritime safety inspector from a recognized international classification society. Create a detailed, professional vessel inspection report for:
+    
+    Vessel Details:
+    - Name: ${vessel.name}
+    - IMO Number: ${vessel.imo}
+    - MMSI: ${vessel.mmsi}
+    - Type: ${vessel.vesselType}
+    - Flag: ${vessel.flag || 'Unknown'}
+    - Built: ${vessel.built || 'Unknown'} (Age: ${vesselAge ? vesselAge + ' years' : 'Unknown'})
+    - Deadweight: ${vessel.deadweight?.toLocaleString() || 'Unknown'} tons
+    - Current Location: ${currentPort ? currentPort.name + ', ' + currentPort.country : vessel.currentRegion || 'Unknown'}
+    - Last Port: ${vessel.lastPort || 'Unknown'}
+    - Safety Record: ${vessel.safetyRating || 'Standard'} 
+    
+    Include these sections:
+    1. Inspection Information (Use today's date, ${currentPort ? currentPort.name : 'current port'} as location, create a realistic inspector name and certification)
+    2. Vessel Particulars (Expand on the vessel details provided above)
+    3. Safety Equipment Assessment (Include detailed inspection of lifeboats, fire equipment, emergency systems, etc.)
+    4. Structural Condition (Include hull integrity, ballast tanks, cargo holds inspection)
+    5. Machinery and Propulsion (Include main engine, auxiliary systems, generators inspection)
+    6. Navigation Equipment (Include radar, ECDIS, communications equipment inspection)
+    7. Pollution Prevention (Include MARPOL compliance, bilge water treatment, emissions controls)
+    8. Crew Certification and Manning (Include officer certifications, crew complement assessment)
+    9. Deficiencies (Create 2-3 realistic minor deficiencies that should be addressed)
+    10. Conclusions and Recommendations (Rate overall vessel condition and provide specific recommendations)
+    
+    Format as a detailed technical report with appropriate headers, sections, and maritime terminology.
+    Include reference to relevant IMO regulations, classification society rules, and industry standards.
+    Add realistic inspection reference numbers, dates, and professional signature blocks.
+    
+    The report should be very detailed and realistic, focusing especially on safety aspects relevant to oil transport.
+    `;
+  }
+
+  private async getCustomsDeclarationPrompt(vessel: Vessel): Promise<string> {
+    // Get additional vessel details
+    const departurePort = vessel.departurePort ? 
+      await storage.getPortById(Number(vessel.departurePort)) : null;
+    
+    const destinationPort = vessel.destinationPort ? 
+      await storage.getPortById(Number(vessel.destinationPort)) : null;
+    
+    // Get cargo details
+    let cargoType = "Crude Oil";
+    let cargoQuantity = "80,000";
+    let cargoUnit = "barrels";
+    let cargoValue = "5,600,000";
+    let cargoCurrency = "USD";
+    
+    if (vessel.metadata) {
+      try {
+        const metadata = JSON.parse(vessel.metadata);
+        if (metadata.cargo) {
+          cargoType = metadata.cargo.type || cargoType;
+          cargoQuantity = metadata.cargo.quantity?.toString() || cargoQuantity;
+          cargoUnit = metadata.cargo.unit || cargoUnit;
+          
+          // Generate realistic cargo value if not available
+          if (metadata.cargo.value) {
+            cargoValue = metadata.cargo.value.toString();
+            cargoCurrency = metadata.cargo.currency || "USD";
+          }
+        }
+      } catch (e) {
+        console.log("Could not parse vessel metadata");
+      }
+    }
+    
+    // Try to get origin country from departure port or vessel flag
+    const originCountry = departurePort?.country || vessel.flag || "Unknown";
+    const destinationCountry = destinationPort?.country || "Unknown";
+    
+    // Calculate estimated arrival date
+    let arrivalDate = "Unknown";
+    if (vessel.eta) {
+      arrivalDate = vessel.eta;
+    } else {
+      // Generate a reasonable future date if no ETA
+      const date = new Date();
+      date.setDate(date.getDate() + Math.floor(Math.random() * 14) + 1); // 1-14 days in future
+      arrivalDate = date.toISOString().split('T')[0];
+    }
+    
+    return `
+    You are a customs documentation specialist. Create a detailed and realistic customs declaration for petroleum cargo carried by:
+    
+    Vessel Details:
+    - Name: ${vessel.name}
+    - IMO Number: ${vessel.imo}
+    - MMSI: ${vessel.mmsi}
+    - Type: ${vessel.vesselType}
+    - Flag: ${vessel.flag || 'Unknown'}
+    - Gross Tonnage: ${vessel.grossTonnage?.toLocaleString() || 'Unknown'} tons
+    - Net Tonnage: ${vessel.netTonnage?.toLocaleString() || 'Unknown'} tons
+    
+    Voyage and Cargo Information:
+    - Departure Port: ${departurePort ? departurePort.name + ', ' + departurePort.country : 'Unknown'}
+    - Destination Port: ${destinationPort ? destinationPort.name + ', ' + destinationPort.country : 'Unknown'}
+    - Country of Origin: ${originCountry}
+    - Destination Country: ${destinationCountry}
+    - Estimated Arrival Date: ${arrivalDate}
+    - Cargo Type: ${cargoType}
+    - Cargo Quantity: ${cargoQuantity} ${cargoUnit}
+    - Declared Value: ${cargoValue} ${cargoCurrency}
+    
+    Include these sections:
+    1. Declarant Information (Create realistic shipper details)
+    2. Vessel and Voyage Details (Use all the vessel information provided)
+    3. Port of Entry (Use destination port details)
+    4. Date of Arrival (Use the estimated arrival date)
+    5. Cargo Manifest Summary (Detailed petroleum product description)
+    6. Goods Classification (Use correct HS codes for petroleum products)
+    7. Value of Goods (Include declared value and calculation of dutiable value)
+    8. Country of Origin (Use the origin country information)
+    9. Duties and Taxes (Calculate realistic customs duties and taxes for oil products)
+    10. Declaration Statement (Include proper legal declarations and compliance statements)
+    
+    Format as an official customs document with appropriate headers, legal terminology, and layouts.
+    Add realistic reference numbers, dates, and include all required regulatory information for international oil shipping.
+    `;
+  }
+
+  private async getGenericDocumentPrompt(vessel: Vessel, documentType: string): Promise<string> {
+    // Get additional vessel details
+    const departurePort = vessel.departurePort ? 
+      await storage.getPortById(Number(vessel.departurePort)) : null;
+    
+    const destinationPort = vessel.destinationPort ? 
+      await storage.getPortById(Number(vessel.destinationPort)) : null;
+    
+    // Get cargo details
+    let cargoType = "Crude Oil";
+    let cargoQuantity = "80,000";
+    let cargoUnit = "barrels";
+    
+    if (vessel.metadata) {
+      try {
+        const metadata = JSON.parse(vessel.metadata);
+        if (metadata.cargo) {
+          cargoType = metadata.cargo.type || cargoType;
+          cargoQuantity = metadata.cargo.quantity?.toString() || cargoQuantity;
+          cargoUnit = metadata.cargo.unit || cargoUnit;
+        }
+      } catch (e) {
+        console.log("Could not parse vessel metadata");
+      }
+    }
+    
+    return `
+    You are a maritime documentation specialist with extensive experience in the oil shipping industry. 
+    Create a detailed and professional ${documentType} document for:
     
     Vessel Details:
     - Name: ${vessel.name}
@@ -373,66 +618,28 @@ This document was generated automatically without AI assistance.
     - Built: ${vessel.built || 'Unknown'}
     - Deadweight: ${vessel.deadweight?.toLocaleString() || 'Unknown'} tons
     
-    Include these sections:
-    1. Inspection Information (date, location, inspector)
-    2. Vessel Particulars
-    3. Safety Equipment Assessment
-    4. Structural Condition
-    5. Machinery and Propulsion
-    6. Navigation Equipment
-    7. Pollution Prevention
-    8. Crew Certification and Manning
-    9. Deficiencies (if any)
-    10. Conclusions and Recommendations
+    Voyage and Cargo Information:
+    - Departure Port: ${departurePort ? departurePort.name + ', ' + departurePort.country : 'Unknown'}
+    - Destination Port: ${destinationPort ? destinationPort.name + ', ' + destinationPort.country : 'Unknown'}
+    - Cargo Type: ${cargoType}
+    - Cargo Quantity: ${cargoQuantity} ${cargoUnit}
+    - Current Status: ${vessel.status || 'In Transit'}
+    - Current Region: ${vessel.currentRegion || 'Unknown'}
     
-    Format as a detailed technical report with appropriate headers and sections.
-    `;
-  }
-
-  private getCustomsDeclarationPrompt(vessel: Vessel): string {
-    return `
-    You are a customs documentation specialist. Create a customs declaration for cargo carried by:
+    Create a detailed and professionally formatted ${documentType} with all necessary sections, details, and language
+    appropriate for this type of maritime document. The document should be comprehensive and include all information
+    that would typically be found in a ${documentType} used in the petroleum shipping industry.
     
-    Vessel Details:
-    - Name: ${vessel.name}
-    - IMO Number: ${vessel.imo}
-    - MMSI: ${vessel.mmsi}
-    - Type: ${vessel.vesselType}
-    - Flag: ${vessel.flag || 'Unknown'}
+    Include appropriate:
+    - Document reference numbers and dates
+    - Party information (shipper, receiver, authorities, etc.)
+    - Detailed cargo information specific to oil transport
+    - Relevant regulatory references (IMO, SOLAS, MARPOL, etc.)
+    - Certification statements and declarations
+    - Signature blocks with proper titles and dates
     
-    Include these sections:
-    1. Declarant Information
-    2. Vessel and Voyage Details
-    3. Port of Entry
-    4. Date of Arrival
-    5. Cargo Manifest Summary
-    6. Goods Classification (HS Codes)
-    7. Value of Goods
-    8. Country of Origin
-    9. Duties and Taxes
-    10. Declaration Statement
-    
-    Format as an official customs document with appropriate headers and layouts.
-    `;
-  }
-
-  private getGenericDocumentPrompt(vessel: Vessel, documentType: string): string {
-    return `
-    You are a maritime documentation specialist. Create a ${documentType} document for:
-    
-    Vessel Details:
-    - Name: ${vessel.name}
-    - IMO Number: ${vessel.imo}
-    - MMSI: ${vessel.mmsi}
-    - Type: ${vessel.vesselType}
-    - Flag: ${vessel.flag || 'Unknown'}
-    - Built: ${vessel.built || 'Unknown'}
-    - Deadweight: ${vessel.deadweight?.toLocaleString() || 'Unknown'} tons
-    
-    Create a professionally formatted ${documentType} with all necessary sections, details, and language
-    appropriate for this type of maritime document. Include relevant dates, locations, and regulatory references.
-    
-    Format as a formal document with appropriate structure and official language.
+    Format as a formal document with appropriate structure, professional maritime terminology, and official language.
+    Make the document detailed, comprehensive, and realistic - as if it were being used in actual oil shipping operations.
     `;
   }
   
