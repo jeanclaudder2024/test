@@ -1167,14 +1167,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`Fetched ${vessels.length} vessels globally`);
       }
       
-      // Get pagination parameters from query or use defaults
-      const page = parseInt(req.query.page as string) || 1;
-      const pageSize = parseInt(req.query.pageSize as string) || 500;
+      // Always return all vessels to ensure full vessel count is displayed
+      const showAllVessels = req.query.all === 'true' || true; // Default to showing all vessels
       
-      // Apply pagination
-      const startIndex = (page - 1) * pageSize;
-      const endIndex = startIndex + pageSize;
-      const paginatedVessels = vessels.slice(startIndex, endIndex);
+      // Set parameters to include all vessels
+      const page = 1;
+      const pageSize = showAllVessels ? vessels.length : 3000;
+      
+      // Apply pagination only if not showing all
+      const paginatedVessels = vessels; // Return all vessels
       
       // Return with timestamp and metadata for pagination
       res.json({
