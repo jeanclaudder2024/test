@@ -17,6 +17,7 @@ import { Loader2, Map, Ship, Database, Search, Factory, ArrowDown, FileDown, Fil
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import MarkerClusterGroup from 'react-leaflet-cluster';
+import VesselPopup from './VesselPopup';
 
 // Port connections type
 interface PortConnection {
