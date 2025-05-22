@@ -53,8 +53,8 @@ const MapControlPanel: React.FC<MapControlPanelProps> = ({
   handleRefresh
 }) => {
   return (
-    <Card className="absolute top-3 right-3 z-10 bg-white rounded-md shadow-lg border border-gray-100 overflow-hidden w-72">
-      {/* Map Layers & View Controls */}
+    <Card className="absolute top-3 right-3 z-[1500] bg-white rounded-md shadow-lg border border-gray-100 overflow-hidden w-72">
+      {/* Map Layers & View Controls - Using higher z-index to stay on top of map */}
       <div className="p-3 pb-2 border-b border-gray-100">
         <h3 className="text-sm font-semibold mb-2 text-gray-700 flex items-center">
           <svg className="w-4 h-4 mr-1 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
