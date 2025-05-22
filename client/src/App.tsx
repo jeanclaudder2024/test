@@ -2,7 +2,7 @@ import { Switch, Route, useLocation } from "wouter";
 import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 // Dashboard page removed as requested
-import Vessels from "@/pages/Vessels";
+import Vessels from "@/pages/VesselsSimple";
 import VesselDetail from "@/pages/VesselDetail";
 import VesselDocuments from "@/pages/VesselDocuments";
 // Vessel dashboard page removed as requested

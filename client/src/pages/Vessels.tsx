@@ -1165,149 +1165,47 @@ export default function Vessels() {
             </TableBody>
           </Table>
           
-          {/* All Vessels Display */}
-            <div className="py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60">
-              <div className="flex justify-center items-center px-5">
-                <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center">
-                  <Ship className="h-4 w-4 mr-2 text-primary" />
-                  Displaying all <span className="font-medium text-gray-800 dark:text-gray-200 mx-1">{filteredVessels.length.toLocaleString()}</span> vessels
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleGoToPage(1)}
-                    disabled={currentPage === 1}
-                    className="hidden sm:flex items-center border-gray-200 dark:border-gray-700 h-8 px-2 text-xs"
-                  >
-                    <ChevronLeft className="h-3.5 w-3.5 mr-1" />
-                    First
-                  </Button>
-                  
-                  <Button 
-                    variant="outline"
-                    size="sm"
-                    onClick={handleGoToPreviousPage}
-                    disabled={currentPage === 1}
-                    className="border-gray-200 dark:border-gray-700 h-8"
-                  >
-                    <ChevronLeft className="h-4 w-4 mr-1" />
-                    <span className="hidden sm:inline">Previous</span>
-                  </Button>
-                  
-                  <div className="flex items-center gap-2">
-                    {paginationItems.map((item, index) => {
-                      if (item === '...') {
-                        return (
-                          <span key={`ellipsis-${index}`} className="px-2 text-gray-400">
-                            ...
-                          </span>
-                        );
-                      }
-                      
-                      return (
-                        <Button
-                          key={`page-${item}`}
-                          variant={currentPage === item ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => handleGoToPage(item as number)}
-                          className={`w-8 h-8 p-0 ${
-                            currentPage === item 
-                              ? "bg-primary hover:bg-primary/90" 
-                              : "border-gray-200 dark:border-gray-700"
-                          }`}
-                        >
-                          {item}
-                        </Button>
-                      );
-                    })}
-                  </div>
-                  
-                  <Button 
-                    variant="outline"
-                    size="sm"
-                    onClick={handleGoToNextPage}
-                    disabled={currentPage === filteredTotalPages}
-                    className="border-gray-200 dark:border-gray-700 h-8"
-                  >
-                    <span className="hidden sm:inline">Next</span>
-                    <ChevronRight className="h-4 w-4 ml-1" />
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleGoToPage(filteredTotalPages)}
-                    disabled={currentPage === filteredTotalPages}
-                    className="hidden sm:flex items-center border-gray-200 dark:border-gray-700 h-8 px-2 text-xs"
-                  >
-                    Last
-                    <ChevronRight className="h-3.5 w-3.5 ml-1" />
-                  </Button>
-                </div>
+          {/* All Vessels Display - Simple Footer */}
+          <div className="py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60">
+            <div className="flex justify-between items-center px-5">
+              <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center">
+                <Ship className="h-4 w-4 mr-2 text-primary" />
+                Displaying all <span className="font-medium text-gray-800 dark:text-gray-200 mx-1">{filteredVessels.length.toLocaleString()}</span> vessels
               </div>
               
-              {/* Table Summary Footer with Additional Navigation Controls */}
-              <div className="mt-4 px-5 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <div className="flex flex-wrap items-center justify-between gap-4">
-                  {/* Summary Statistics */}
-                  <div className="flex flex-wrap gap-5">
-                    <div className="flex items-center">
-                      <div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
-                      <span className="text-sm text-gray-600 dark:text-gray-300">
-                        <span className="font-medium">{vessels.filter(v => Number(v.currentSpeed) > 2).length}</span> In Transit
-                      </span>
-                    </div>
-                    <div className="flex items-center">
-                      <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse mr-2"></div>
-                      <span className="text-sm text-gray-600 dark:text-gray-300">
-                        <span className="font-medium">{vessels.filter(v => v.destinationPort && Number(v.currentSpeed) < 2).length}</span> Loading
-                      </span>
-                    </div>
-                    <div className="flex items-center">
-                      <div className="w-3 h-3 rounded-full bg-orange-500 mr-2"></div>
-                      <span className="text-sm text-gray-600 dark:text-gray-300">
-                        <span className="font-medium">{vessels.filter(v => v.previousPort && v.lastPortDepatureTime && new Date(v.lastPortDepatureTime).getTime() > Date.now() - (24 * 60 * 60 * 1000)).length}</span> Recently Loaded
-                      </span>
-                    </div>
-                  </div>
-                  
-                  {/* Quick Page Jump */}
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-500 dark:text-gray-400">Jump to page:</span>
-                    <div className="flex items-center">
-                      <Input
-                        type="number"
-                        min={1}
-                        max={filteredTotalPages}
-                        value={currentPage}
-                        onChange={(e) => {
-                          const page = parseInt(e.target.value);
-                          if (page >= 1 && page <= filteredTotalPages) {
-                            handleGoToPage(page);
-                          }
-                        }}
-                        className="w-16 h-8 text-center border-gray-200 dark:border-gray-700"
-                      />
-                      <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">of {filteredTotalPages}</span>
-                    </div>
-                    
-                    <div className="ml-4 flex items-center">
-                      <span className="text-sm text-gray-500 dark:text-gray-400 mr-2">Show:</span>
-                      <Button
-                        variant="outline"
-                        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                        className="text-xs h-8 border-gray-200 dark:border-gray-700"
-                      >
-                        500 vessels
-                      </Button>
-                    </div>
-                  </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                className="text-xs h-8 border-gray-200 dark:border-gray-700"
+              >
+                Back to top
+              </Button>
+            </div>
+            
+            <div className="mt-4 px-5 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex flex-wrap gap-5 justify-center">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
+                  <span className="text-sm text-gray-600 dark:text-gray-300">
+                    <span className="font-medium">{vessels.filter(v => Number(v.currentSpeed) > 2).length}</span> In Transit
+                  </span>
+                </div>
+                <div className="flex items-center">
+                  <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse mr-2"></div>
+                  <span className="text-sm text-gray-600 dark:text-gray-300">
+                    <span className="font-medium">{vessels.filter(v => v.destinationPort && Number(v.currentSpeed) < 2).length}</span> Loading
+                  </span>
+                </div>
+                <div className="flex items-center">
+                  <div className="w-3 h-3 rounded-full bg-orange-500 mr-2"></div>
+                  <span className="text-sm text-gray-600 dark:text-gray-300">
+                    <span className="font-medium">{vessels.filter(v => v.previousPort && v.lastPortDepatureTime && new Date(v.lastPortDepatureTime).getTime() > Date.now() - (24 * 60 * 60 * 1000)).length}</span> Recently Loaded
+                  </span>
                 </div>
               </div>
             </div>
-          )}
+          </div>
         </div>
       )}
     </div>
