@@ -238,12 +238,12 @@ export default function ProfessionalMaritimeMap({
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  // Custom icons with professional styling
+  // Enhanced professional icons with modern styling
   const vesselIcon = L.icon({
     iconUrl: '/assets/vessel-icon.svg',
-    iconSize: [36, 36],
-    iconAnchor: [18, 18],
-    popupAnchor: [0, -18],
+    iconSize: [42, 42],
+    iconAnchor: [21, 21],
+    popupAnchor: [0, -21],
     className: 'vessel-icon-pulse',  // Will add pulse animation
     // Add shadowUrl to improve icon rendering with proper z-index handling
     shadowUrl: '',
@@ -253,9 +253,9 @@ export default function ProfessionalMaritimeMap({
 
   const portIcon = L.icon({
     iconUrl: '/assets/port-icon.svg',
-    iconSize: [32, 32], 
-    iconAnchor: [16, 16],
-    popupAnchor: [0, -16],
+    iconSize: [38, 38], 
+    iconAnchor: [19, 19],
+    popupAnchor: [0, -19],
     className: 'port-icon-highlight',  // Will add highlight effect
     // Add shadowUrl to improve icon rendering with proper z-index handling
     shadowUrl: '',
@@ -265,9 +265,9 @@ export default function ProfessionalMaritimeMap({
 
   const refineryIcon = L.icon({
     iconUrl: '/assets/refinery-icon.svg',
-    iconSize: [34, 34],
-    iconAnchor: [17, 17],
-    popupAnchor: [0, -17],
+    iconSize: [40, 40],
+    iconAnchor: [20, 20],
+    popupAnchor: [0, -20],
     className: 'refinery-icon-highlight',  // Will add highlight effect
     // Add shadowUrl to improve icon rendering with proper z-index handling
     shadowUrl: '',
@@ -358,15 +358,54 @@ export default function ProfessionalMaritimeMap({
           z-index: 1200 !important;
         }
         
-        /* Enhanced popups */
+        /* Enhanced professional popups */
         .leaflet-popup-content-wrapper {
-          border-radius: 8px;
-          box-shadow: 0 3px 14px rgba(0, 0, 0, 0.2);
+          border-radius: 12px;
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(4px);
+          background-color: rgba(255, 255, 255, 0.95);
         }
         
         .leaflet-popup-content {
-          margin: 12px 16px;
-          line-height: 1.5;
+          margin: 14px 18px;
+          line-height: 1.6;
+          font-size: 14px;
+        }
+        
+        .leaflet-popup-tip {
+          background-color: rgba(255, 255, 255, 0.95);
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* Enhanced map controls */
+        .map-style-control {
+          background: rgba(255, 255, 255, 0.9);
+          border-radius: 8px;
+          box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+          padding: 8px;
+          backdrop-filter: blur(4px);
+          border: 1px solid rgba(200, 200, 200, 0.3);
+        }
+        
+        .map-style-option {
+          cursor: pointer;
+          padding: 6px 10px;
+          margin-bottom: 4px;
+          border-radius: 4px;
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+        }
+        
+        .map-style-option:hover {
+          background-color: rgba(240, 240, 240, 0.9);
+        }
+        
+        .map-style-option.active {
+          background-color: #f0f9ff;
+          color: #0369a1;
+          font-weight: 500;
         }
         
         /* Vessel icon animations with enforced visibility */
@@ -476,6 +515,31 @@ export default function ProfessionalMaritimeMap({
         
         {/* Event handler to fix markers disappearing on zoom */}
         <MapEventHandler />
+        
+        {/* Map Style Selector Control */}
+        <MapControl position="topleft">
+          <div className="map-style-control">
+            <div className="text-xs font-semibold mb-2 text-gray-700">Map Style</div>
+            {Object.entries(mapStyles).map(([key, style]) => (
+              <div 
+                key={key}
+                className={`map-style-option text-xs ${mapStyle === key ? 'active' : ''}`}
+                onClick={() => setMapStyle(key)}
+              >
+                <div className="w-3 h-3 rounded-full mr-2" 
+                  style={{ 
+                    backgroundColor: key === 'darkMode' ? '#242424' : 
+                                    key === 'lightMode' ? '#f5f5f5' : 
+                                    key === 'satellite' ? '#1f4172' : 
+                                    key === 'terrain' ? '#70a288' :
+                                    key === 'nautical' ? '#2d6a9f' : '#666'
+                  }}
+                />
+                {style.name}
+              </div>
+            ))}
+          </div>
+        </MapControl>
         
         <ZoomControl position="bottomright" />
         
