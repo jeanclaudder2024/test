@@ -196,7 +196,7 @@ export default function Vessels() {
   const [selectedStatus, setSelectedStatus] = useState<string>("all"); // New state for vessel status
   const [isUpdatingDestinations, setIsUpdatingDestinations] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [vesselsPerPage] = useState(500); // Show 500 vessels per page as requested
+  const [vesselsPerPage] = useState(3000); // Show all vessels without pagination
   const { toast } = useToast();
   
   // Maximum number of oil vessels to show (as requested by user)
@@ -529,11 +529,9 @@ export default function Vessels() {
     });
   }, [vesselsWithCategories, searchTerm, selectedOilTypes, selectedTab, selectedStatus]);
   
-  // Get current page vessels for the filtered table view
-  const indexOfLastVessel = currentPage * vesselsPerPage;
-  const indexOfFirstVessel = indexOfLastVessel - vesselsPerPage;
-  const currentVessels = filteredVessels.slice(indexOfFirstVessel, indexOfLastVessel);
-  const filteredTotalPages = Math.max(1, Math.ceil(filteredVessels.length / vesselsPerPage));
+  // Show all vessels at once instead of using pagination
+  const currentVessels = filteredVessels; // Use all filtered vessels
+  const filteredTotalPages = 1; // Just one page since we're showing all vessels
   
   // Calculate which page numbers to show 
   const pageRange = 2; // Show this many pages before and after the current page
@@ -1167,12 +1165,12 @@ export default function Vessels() {
             </TableBody>
           </Table>
           
-          {/* Professional Pagination */}
-          {totalPages > 1 && (
+          {/* All Vessels Display */}
             <div className="py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60">
-              <div className="flex flex-col sm:flex-row justify-between items-center px-5 gap-4">
-                <div className="text-sm text-gray-500 dark:text-gray-400">
-                  Displaying <span className="font-medium text-gray-800 dark:text-gray-200">{Math.min(indexOfFirstVessel + 1, filteredVessels.length)}</span> to <span className="font-medium text-gray-800 dark:text-gray-200">{Math.min(indexOfLastVessel, filteredVessels.length)}</span> of <span className="font-medium text-gray-800 dark:text-gray-200">{filteredVessels.length.toLocaleString()}</span> vessels
+              <div className="flex justify-center items-center px-5">
+                <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center">
+                  <Ship className="h-4 w-4 mr-2 text-primary" />
+                  Displaying all <span className="font-medium text-gray-800 dark:text-gray-200 mx-1">{filteredVessels.length.toLocaleString()}</span> vessels
                 </div>
                 
                 <div className="flex items-center gap-2">
