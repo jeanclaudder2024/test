@@ -59,18 +59,7 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
       path: "/vessels",
       icon: <Ship className="h-5 w-5 mr-3" />,
     },
-    {
-      title: "Maritime Tracking",
-      path: "/maritime-tracking",
-      icon: <Map className="h-5 w-5 mr-3" />,
-      badge: "NEW",
-    },
-    {
-      title: "Vessel Lookup",
-      path: "/vessel-lookup",
-      icon: <Ship className="h-5 w-5 mr-3" />,
-      badge: "NEW",
-    },
+    // Maritime Tracking and Vessel Lookup items removed as requested
     {
       title: t("nav.refineries"),
       path: "/refineries",
