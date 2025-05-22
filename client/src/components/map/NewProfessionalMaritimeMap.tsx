@@ -341,14 +341,19 @@ export default function ProfessionalMaritimeMap({
           url={mapStyles[mapStyle]?.url || mapStyles.satellite.url}
           attribution={mapStyles[mapStyle]?.attribution || mapStyles.satellite.attribution}
           maxZoom={mapStyles[mapStyle]?.maxZoom || 19}
+          zIndex={10} // Ensure base tile layer has a lower z-index
         />
         
         <ZoomControl position="bottomright" />
         
-        {/* Vessels Layer */}
+        {/* Vessels Layer - Higher z-index to ensure visibility */}
         {showVessels && (
           useCluster ? (
-            <MarkerClusterGroup chunkedLoading>
+            <MarkerClusterGroup 
+              chunkedLoading
+              zIndexOffset={1000} // Ensure vessel clusters appear above base map
+              showCoverageOnHover={false} // Prevent hover effects that might cause flickering
+            >
               {filteredVessels.map((vessel: VesselType) => {
                 const lat = parseCoordinate(vessel.currentLat);
                 const lng = parseCoordinate(vessel.currentLng);
