@@ -885,17 +885,7 @@ export default function Vessels() {
             {isUpdatingDestinations ? 'Updating...' : 'Ensure All Destinations'}
           </Button>
           
-          <Button 
-            onClick={() => {
-              refreshData();
-              // Also try API as a fallback
-              fetchVesselsFromAPI();
-            }}
-            className="bg-red-50 text-red-600 border-red-200 hover:bg-red-100"
-          >
-            <Fuel className="h-4 w-4 mr-2" />
-            Load Oil Vessels ({MAX_OIL_VESSELS} max)
-          </Button>
+
         </div>
       </div>
       
