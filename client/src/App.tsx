@@ -1,11 +1,11 @@
 import { Switch, Route, useLocation } from "wouter";
 import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
-import Dashboard from "@/pages/Dashboard";
+// Dashboard page removed as requested
 import Vessels from "@/pages/Vessels";
 import VesselDetail from "@/pages/VesselDetail";
 import VesselDocuments from "@/pages/VesselDocuments";
-import VesselDashboard from "@/pages/VesselDashboard";
+// Vessel dashboard page removed as requested
 import Refineries from "@/pages/Refineries";
 import RefineryDetail from "@/pages/RefineryDetail";
 import Ports from "@/pages/Ports";
@@ -29,10 +29,7 @@ import Companies from "@/pages/Companies";
 import ApiTest from "@/pages/ApiTest";
 import TranslationPage from "@/pages/TranslationPage";
 import TrafficInsights from "@/pages/TrafficInsights";
-import VesselTrackingMap from "@/pages/VesselTrackingMap";
-import MaritimeTracking from "@/pages/MaritimeTracking";
-import VesselLookup from "@/pages/VesselLookup";
-import SimpleMap from "@/pages/SimpleMap";
+// Maritime tracking and vessel lookup pages removed as requested
 import { useEffect } from "react";
 import { apiRequest, queryClient } from "./lib/queryClient";
 import { Layout } from "@/components/ui/layout";
@@ -57,9 +54,9 @@ function LandingPageRedirect() {
     );
   }
 
-  // If user is logged in, redirect to dashboard
+  // If user is logged in, redirect to broker dashboard
   if (user) {
-    return <Redirect to="/dashboard" />;
+    return <Redirect to="/broker-dashboard" />;
   }
 
   // Otherwise show landing page
@@ -131,10 +128,7 @@ function Router() {
             <Route path="/trading" component={TradingDashboard} />
             <Route path="/translation" component={TranslationPage} />
             <Route path="/traffic-insights" component={TrafficInsights} />
-            <Route path="/vessel-tracking-map" component={VesselTrackingMap} />
-            <Route path="/maritime-tracking" component={MaritimeTracking} />
-            <Route path="/vessel-lookup" component={VesselLookup} />
-            <Route path="/full-map" component={SimpleMap} />
+            {/* Maritime tracking and vessel lookup pages removed as requested */}
             <Route path="/settings" component={Settings} />
             <Route path="/subscribe" component={Subscribe} />
             <Route path="/pricing" component={Pricing} />
