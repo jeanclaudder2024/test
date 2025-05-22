@@ -238,6 +238,23 @@ export default function ProfessionalMaritimeMap({
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
+  // Get vessel status display format
+  const getVesselStatusClass = (status?: string) => {
+    if (!status) return 'vessel-status-unknown';
+    
+    const statusLower = status.toLowerCase();
+    if (statusLower.includes('sail') || statusLower.includes('underway') || statusLower.includes('en route')) {
+      return 'vessel-status-sailing';
+    } else if (statusLower.includes('anchor')) {
+      return 'vessel-status-anchored';
+    } else if (statusLower.includes('dock') || statusLower.includes('moor') || statusLower.includes('berth')) {
+      return 'vessel-status-docked';
+    } else if (statusLower.includes('stop') || statusLower.includes('not moving')) {
+      return 'vessel-status-stopped';
+    }
+    return 'vessel-status-unknown';
+  };
+  
   // Create a function to get vessel status icon based on status
   const getVesselIcon = (status?: string) => {
     // Status-specific class names for visual indication
@@ -484,6 +501,41 @@ export default function ProfessionalMaritimeMap({
           50% { transform: scale(1.05) rotate(0deg); }
           75% { transform: scale(1.03) rotate(-1deg); }
           100% { transform: scale(1) rotate(0deg); }
+        }
+        
+        /* Status badge styles for vessel popups */
+        .vessel-status-badge {
+          display: inline-block;
+          padding: 2px 6px;
+          border-radius: 12px;
+          font-size: 10px;
+          font-weight: 500;
+          margin-left: 4px;
+        }
+        
+        .vessel-status-sailing {
+          background-color: #dbeafe;
+          color: #1e40af;
+        }
+        
+        .vessel-status-anchored {
+          background-color: #fef3c7;
+          color: #92400e;
+        }
+        
+        .vessel-status-docked {
+          background-color: #d1fae5;
+          color: #065f46;
+        }
+        
+        .vessel-status-stopped {
+          background-color: #fee2e2;
+          color: #b91c1c;
+        }
+        
+        .vessel-status-unknown {
+          background-color: #f3f4f6;
+          color: #374151;
         }
         
         /* Port and refinery icons with enhanced visibility */
