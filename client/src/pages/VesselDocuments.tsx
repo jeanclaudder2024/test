@@ -125,75 +125,91 @@ export default function VesselDocuments() {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [documentFilter, setDocumentFilter] = useState<string>("all");
   
-  // Enhanced document types with icon and description
+  // Available document types for generation
   const documentTypes = [
-    {
-      type: "Bill of Lading",
+    "Bill of Lading",
+    "Certificate of Origin",
+    "Inspection Report",
+    "Customs Declaration", 
+    "Letter of Protest",
+    "Sea Waybill",
+    "Cargo Manifest",
+    "Maritime Labour Certificate",
+    "Charter Party Agreement",
+    "Safety Management Certificate",
+    "Oil Record Book",
+    "Ullage Report",
+    "Voyage Instructions"
+  ];
+  
+  // Document type information mapped by type
+  const documentInfo: {[key: string]: {icon: React.ReactNode, description: string, category: string}} = {
+    "Bill of Lading": {
       icon: <FileCheck className="h-4 w-4 mr-2" />,
       description: "Legal receipt for cargo shipment and title document",
       category: "shipping"
     },
-    {
-      type: "Certificate of Origin",
+    "Certificate of Origin": {
       icon: <Flag className="h-4 w-4 mr-2" />,
       description: "Certifies goods' country of origin",
       category: "compliance"
     },
-    {
-      type: "Inspection Report",
+    "Inspection Report": {
       icon: <FileCog className="h-4 w-4 mr-2" />,
       description: "Detailed vessel condition assessment",
       category: "technical"
     },
-    {
-      type: "Customs Declaration",
+    "Customs Declaration": {
       icon: <FileText className="h-4 w-4 mr-2" />,
       description: "Required for international cargo shipments",
       category: "compliance"
     },
-    {
-      type: "Letter of Protest",
+    "Letter of Protest": {
       icon: <AlertTriangle className="h-4 w-4 mr-2" />,
       description: "Formal objection against conditions or operations",
       category: "legal"
     },
-    {
-      type: "Sea Waybill",
+    "Sea Waybill": {
       icon: <FileOutput className="h-4 w-4 mr-2" />,
       description: "Non-negotiable transport document",
       category: "shipping"
     },
-    {
-      type: "Cargo Manifest",
+    "Cargo Manifest": {
       icon: <FileSpreadsheet className="h-4 w-4 mr-2" />,
       description: "Comprehensive cargo inventory",
       category: "shipping"
     },
-    {
-      type: "Maritime Labour Certificate",
+    "Maritime Labour Certificate": {
       icon: <Ship className="h-4 w-4 mr-2" />,
       description: "Crew working conditions compliance",
       category: "compliance"
     },
-    {
-      type: "Charter Party Agreement",
+    "Charter Party Agreement": {
       icon: <FileCheck className="h-4 w-4 mr-2" />,
       description: "Vessel lease contract",
       category: "legal"
     },
-    {
-      type: "Safety Management Certificate",
+    "Safety Management Certificate": {
       icon: <Shield className="h-4 w-4 mr-2" />,
       description: "International Safety Management compliance",
       category: "technical"
     },
-    {
-      type: "Oil Record Book",
+    "Oil Record Book": {
       icon: <BookOpen className="h-4 w-4 mr-2" />,
       description: "Record of oil cargo operations",
       category: "operational"
+    },
+    "Ullage Report": {
+      icon: <BarChart4 className="h-4 w-4 mr-2" />,
+      description: "Detailed measurements of cargo tank contents",
+      category: "technical"
+    },
+    "Voyage Instructions": {
+      icon: <FileText className="h-4 w-4 mr-2" />,
+      description: "Detailed routing and operational instructions",
+      category: "operational"
     }
-  ];
+  };
   
   // Extract vessel ID from URL
   const vesselId = parseInt(location.split("/")[2]);
@@ -215,15 +231,29 @@ export default function VesselDocuments() {
     mutationFn: async (documentType: string) => {
       setIsGenerating(true);
       console.log("Generating document:", documentType, "for vessel ID:", vesselId);
+      
+      // Build enhanced request payload with all options
+      const payload = {
+        vesselId,
+        documentType,
+        options: {
+          title: customTitle || undefined,
+          status: documentStatus,
+          exportFormat: exportFormat,
+          includeVesselDetails,
+          includeCargoInfo,
+          includeCompanyDetails
+        }
+      };
+      
+      console.log("Document generation payload:", payload);
+      
       const response = await fetch("/api/generate-document", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({
-          vesselId,
-          documentType
-        })
+        body: JSON.stringify(payload)
       });
       
       if (!response.ok) {
@@ -426,10 +456,10 @@ export default function VesselDocuments() {
                           Select the type of document to generate
                         </div>
                         {documentTypes.map((docType) => (
-                          <SelectItem key={docType.type} value={docType.type}>
+                          <SelectItem key={docType} value={docType}>
                             <div className="flex items-center">
-                              {docType.icon}
-                              <span>{docType.type}</span>
+                              {documentInfo[docType]?.icon}
+                              <span>{docType}</span>
                             </div>
                           </SelectItem>
                         ))}
@@ -438,7 +468,7 @@ export default function VesselDocuments() {
                     
                     {selectedDocType && (
                       <div className="mt-2 text-xs text-muted-foreground">
-                        {documentTypes.find(dt => dt.type === selectedDocType)?.description}
+                        {documentInfo[selectedDocType]?.description}
                       </div>
                     )}
                   </div>
