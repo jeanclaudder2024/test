@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import VesselPopup from './VesselPopup';
 import MapEventHandler from './MapEventHandler';
+import MapControlEnhancer from './MapControlEnhancer';
 
 // Port connections type
 interface PortConnection {
@@ -302,7 +303,7 @@ export default function ProfessionalMaritimeMap({
 
   // Define a default vessel icon as a fallback
   const vesselIcon = L.icon({
-    iconUrl: '/assets/vessel-professional.svg',
+    iconUrl: '/assets/vessel-modern.svg',
     iconSize: [32, 32],
     iconAnchor: [16, 16],
     popupAnchor: [0, -16],
@@ -313,7 +314,7 @@ export default function ProfessionalMaritimeMap({
   });
 
   const portIcon = L.icon({
-    iconUrl: '/assets/port-professional.svg',
+    iconUrl: '/assets/port-modern.svg',
     iconSize: [32, 32], 
     iconAnchor: [16, 16],
     popupAnchor: [0, -16],
@@ -325,7 +326,7 @@ export default function ProfessionalMaritimeMap({
   });
 
   const refineryIcon = L.icon({
-    iconUrl: '/assets/refinery-professional.svg',
+    iconUrl: '/assets/refinery-modern.svg',
     iconSize: [32, 32],
     iconAnchor: [16, 16],
     popupAnchor: [0, -16],
@@ -644,8 +645,9 @@ export default function ProfessionalMaritimeMap({
           zIndex={10} // Ensure base tile layer has a lower z-index
         />
         
-        {/* Event handler to fix markers disappearing on zoom */}
+        {/* Event handlers to fix markers disappearing on zoom */}
         <MapEventHandler />
+        <MapControlEnhancer />
         
         {/* Map Style Selector Control */}
         <MapControl position="topleft">
