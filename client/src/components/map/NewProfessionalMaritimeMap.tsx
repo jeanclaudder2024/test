@@ -284,23 +284,36 @@ export default function ProfessionalMaritimeMap({
       const styleEl = document.createElement('style');
       styleEl.innerHTML = `
         /* Fix for Leaflet marker visibility at all zoom levels */
+        .leaflet-pane {
+          z-index: 400 !important;
+        }
+        
+        .leaflet-tile-pane {
+          z-index: 200 !important;
+        }
+        
+        .leaflet-overlay-pane {
+          z-index: 400 !important;
+        }
+        
         .leaflet-marker-pane {
-          z-index: 610 !important;
+          z-index: 1000 !important; /* Higher than 999 to appear above map layers */
         }
         
         .leaflet-marker-icon {
-          z-index: 650 !important;
+          z-index: 1000 !important; /* Higher than 999 to appear above map layers */
         }
         
         .leaflet-popup-pane {
-          z-index: 700 !important;
+          z-index: 1200 !important;
         }
         
-        /* Vessel icon animations */
+        /* Vessel icon animations with enforced visibility */
         .vessel-icon-pulse {
           animation: pulse 2s infinite;
           transform-origin: center center;
           filter: drop-shadow(0 0 2px rgba(33, 150, 243, 0.8));
+          z-index: 1000 !important;
         }
         
         @keyframes pulse {
@@ -313,11 +326,13 @@ export default function ProfessionalMaritimeMap({
         .port-icon-highlight, .refinery-icon-highlight {
           filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.7));
           transition: all 0.3s ease;
+          z-index: 1000 !important; /* Higher than 999 to appear above map layers */
         }
         
         .port-icon-highlight:hover, .refinery-icon-highlight:hover {
           filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.9));
           transform: scale(1.1);
+          z-index: 1001 !important; /* Higher than 999 to appear above map layers */
         }
       `;
       document.head.appendChild(styleEl);
