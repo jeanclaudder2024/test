@@ -251,12 +251,52 @@ export default function ProfessionalMaritimeMap({
     shadowAnchor: [0, 0]
   });
   
+  // Force map refresh when zooming or moving to fix markers disappearing
+  const MapEventHandler = () => {
+    const map = useMap();
+    
+    useEffect(() => {
+      if (!map) return;
+      
+      const handleZoomEnd = () => {
+        // Force refresh of markers by triggering a resize event
+        setTimeout(() => {
+          map.invalidateSize();
+        }, 100);
+      };
+      
+      map.on('zoomend', handleZoomEnd);
+      map.on('moveend', handleZoomEnd);
+      
+      return () => {
+        map.off('zoomend', handleZoomEnd);
+        map.off('moveend', handleZoomEnd);
+      };
+    }, [map]);
+    
+    return null;
+  };
+  
   // Create styles for icon animations once component loads
   useEffect(() => {
     if (typeof document !== 'undefined') {
       // Create a style element for our custom icon effects
       const styleEl = document.createElement('style');
       styleEl.innerHTML = `
+        /* Fix for Leaflet marker visibility at all zoom levels */
+        .leaflet-marker-pane {
+          z-index: 610 !important;
+        }
+        
+        .leaflet-marker-icon {
+          z-index: 650 !important;
+        }
+        
+        .leaflet-popup-pane {
+          z-index: 700 !important;
+        }
+        
+        /* Vessel icon animations */
         .vessel-icon-pulse {
           animation: pulse 2s infinite;
           transform-origin: center center;
@@ -269,6 +309,7 @@ export default function ProfessionalMaritimeMap({
           100% { transform: scale(1); }
         }
         
+        /* Port and refinery icons with enhanced visibility */
         .port-icon-highlight, .refinery-icon-highlight {
           filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.7));
           transition: all 0.3s ease;
@@ -345,6 +386,7 @@ export default function ProfessionalMaritimeMap({
         zoom={defaultZoom} 
         className="h-full w-full" 
         attributionControl={false}
+        preferCanvas={false} // Use DOM rendering for better z-index control
         ref={(map) => {
           if (map) mapRef.current = map;
         }}
@@ -355,6 +397,9 @@ export default function ProfessionalMaritimeMap({
           maxZoom={mapStyles[mapStyle]?.maxZoom || 19}
           zIndex={10} // Ensure base tile layer has a lower z-index
         />
+        
+        {/* Event handler to fix markers disappearing on zoom */}
+        <MapEventHandler />
         
         <ZoomControl position="bottomright" />
         
