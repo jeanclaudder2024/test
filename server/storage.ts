@@ -733,6 +733,72 @@ export class DatabaseStorage implements IStorage {
     await db.delete(companies).where(eq(companies.id, id));
     return true;
   }
+  
+  /**
+   * Get ports near specified coordinates within a radius (in km)
+   * @param lat - Latitude
+   * @param lng - Longitude
+   * @param radius - Radius in kilometers
+   * @returns Array of ports within the radius
+   */
+  async getPortsNearCoordinates(lat: number, lng: number, radius: number): Promise<Port[] | null> {
+    try {
+      // Simple implementation - in real application, would use geospatial queries
+      // Here we'll just get all ports and filter by calculated distance
+      const allPorts = await this.getPorts();
+      
+      const nearbyPorts = allPorts.filter(port => {
+        if (!port.latitude || !port.longitude) return false;
+        
+        // Calculate distance using Haversine formula
+        const R = 6371; // Earth radius in km
+        const dLat = this.deg2rad(parseFloat(port.latitude) - lat);
+        const dLon = this.deg2rad(parseFloat(port.longitude) - lng);
+        const a = 
+          Math.sin(dLat/2) * Math.sin(dLat/2) +
+          Math.cos(this.deg2rad(lat)) * Math.cos(this.deg2rad(parseFloat(port.latitude))) * 
+          Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        const distance = R * c; // Distance in km
+        
+        return distance <= radius;
+      });
+      
+      // Sort by distance (closest first)
+      nearbyPorts.sort((a, b) => {
+        const distA = this.calculateDistance(lat, lng, parseFloat(a.latitude || "0"), parseFloat(a.longitude || "0"));
+        const distB = this.calculateDistance(lat, lng, parseFloat(b.latitude || "0"), parseFloat(b.longitude || "0"));
+        return distA - distB;
+      });
+      
+      return nearbyPorts;
+    } catch (error) {
+      console.error("Error finding ports near coordinates:", error);
+      return null;
+    }
+  }
+  
+  /**
+   * Helper: Convert degrees to radians
+   */
+  private deg2rad(deg: number): number {
+    return deg * (Math.PI/180);
+  }
+  
+  /**
+   * Helper: Calculate distance between coordinates
+   */
+  private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+    const R = 6371; // Earth radius in km
+    const dLat = this.deg2rad(lat2 - lat1);
+    const dLon = this.deg2rad(lon2 - lon1);
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(this.deg2rad(lat1)) * Math.cos(this.deg2rad(lat2)) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c; // Distance in km
+  }
 }
 
 // Use database storage
