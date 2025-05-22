@@ -640,10 +640,10 @@ export default function Vessels() {
             <div>
               <h1 className="text-3xl font-bold flex items-center text-gray-900 dark:text-white">
                 <Ship className="h-7 w-7 mr-3 text-primary" />
-                Global Maritime Intelligence
+                Vessel Management
               </h1>
               <p className="text-gray-600 dark:text-gray-300 mt-2 max-w-2xl text-sm">
-                Professional vessel tracking and maritime intelligence platform for global oil transportation monitoring
+                Professional vessel tracking and fleet monitoring platform for oil shipping operations
               </p>
             </div>
             
@@ -1054,8 +1054,8 @@ export default function Vessels() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {currentVessels.map((vessel) => (
-                <TableRow key={vessel.id} className="hover:bg-muted/30">
+              {currentVessels.map((vessel, index) => (
+                <TableRow key={`${vessel.id}-${index}`} className="hover:bg-muted/30">
                   <TableCell className="font-medium">
                     <div className="flex items-center">
                       <Ship className="h-3.5 w-3.5 mr-2 text-primary opacity-70" />
