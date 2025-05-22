@@ -29,7 +29,36 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { ChevronLeft, FileText, Download, Clock, AlertTriangle, CheckCircle, PlusCircle, Loader2, RefreshCw, Plus } from "lucide-react";
+import { 
+  ChevronLeft, 
+  FileText, 
+  Download, 
+  Clock, 
+  AlertTriangle, 
+  CheckCircle, 
+  PlusCircle, 
+  Loader2, 
+  RefreshCw, 
+  Plus,
+  FileCog,
+  Ship,
+  Anchor,
+  Flag,
+  Calendar,
+  BarChart4,
+  Printer,
+  FileOutput,
+  FileCheck,
+  FileSpreadsheet,
+  Shield,
+  BookOpen,
+  Filter,
+  FileJson,
+  Eye,
+  EyeOff,
+  Tags,
+  Settings
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -46,6 +75,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger 
+} from "@/components/ui/tooltip";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
 // No need for MainLayout import as it's already provided by App.tsx
 
 // Define Document type interface
@@ -75,18 +114,85 @@ export default function VesselDocuments() {
   const [openGenerateDialog, setOpenGenerateDialog] = useState(false);
   const [selectedDocType, setSelectedDocType] = useState<string>("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
+  const [documentStatus, setDocumentStatus] = useState<string>("active");
+  const [customTitle, setCustomTitle] = useState<string>("");
+  const [exportFormat, setExportFormat] = useState<string>("pdf");
+  const [includeVesselDetails, setIncludeVesselDetails] = useState<boolean>(true);
+  const [includeCargoInfo, setIncludeCargoInfo] = useState<boolean>(true);
+  const [includeCompanyDetails, setIncludeCompanyDetails] = useState<boolean>(true);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [documentFilter, setDocumentFilter] = useState<string>("all");
   
-  // Available document types for generation
+  // Enhanced document types with icon and description
   const documentTypes = [
-    "Bill of Lading",
-    "Certificate of Origin",
-    "Inspection Report",
-    "Customs Declaration", 
-    "Letter of Protest",
-    "Sea Waybill",
-    "Cargo Manifest",
-    "Maritime Labour Certificate",
-    "Charter Party Agreement"
+    {
+      type: "Bill of Lading",
+      icon: <FileCheck className="h-4 w-4 mr-2" />,
+      description: "Legal receipt for cargo shipment and title document",
+      category: "shipping"
+    },
+    {
+      type: "Certificate of Origin",
+      icon: <Flag className="h-4 w-4 mr-2" />,
+      description: "Certifies goods' country of origin",
+      category: "compliance"
+    },
+    {
+      type: "Inspection Report",
+      icon: <FileCog className="h-4 w-4 mr-2" />,
+      description: "Detailed vessel condition assessment",
+      category: "technical"
+    },
+    {
+      type: "Customs Declaration",
+      icon: <FileText className="h-4 w-4 mr-2" />,
+      description: "Required for international cargo shipments",
+      category: "compliance"
+    },
+    {
+      type: "Letter of Protest",
+      icon: <AlertTriangle className="h-4 w-4 mr-2" />,
+      description: "Formal objection against conditions or operations",
+      category: "legal"
+    },
+    {
+      type: "Sea Waybill",
+      icon: <FileOutput className="h-4 w-4 mr-2" />,
+      description: "Non-negotiable transport document",
+      category: "shipping"
+    },
+    {
+      type: "Cargo Manifest",
+      icon: <FileSpreadsheet className="h-4 w-4 mr-2" />,
+      description: "Comprehensive cargo inventory",
+      category: "shipping"
+    },
+    {
+      type: "Maritime Labour Certificate",
+      icon: <Ship className="h-4 w-4 mr-2" />,
+      description: "Crew working conditions compliance",
+      category: "compliance"
+    },
+    {
+      type: "Charter Party Agreement",
+      icon: <FileCheck className="h-4 w-4 mr-2" />,
+      description: "Vessel lease contract",
+      category: "legal"
+    },
+    {
+      type: "Safety Management Certificate",
+      icon: <Shield className="h-4 w-4 mr-2" />,
+      description: "International Safety Management compliance",
+      category: "technical"
+    },
+    {
+      type: "Oil Record Book",
+      icon: <BookOpen className="h-4 w-4 mr-2" />,
+      description: "Record of oil cargo operations",
+      category: "operational"
+    }
   ];
   
   // Extract vessel ID from URL
@@ -288,56 +394,202 @@ export default function VesselDocuments() {
               Generate Document
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
+          <DialogContent className="sm:max-w-[600px]">
             <DialogHeader>
-              <DialogTitle>Generate New Document</DialogTitle>
+              <DialogTitle>Generate Advanced Document</DialogTitle>
               <DialogDescription>
-                Create a new vessel document using AI. Select the document type you need.
+                Create professional maritime documents with AI-powered content generation.
               </DialogDescription>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <label htmlFor="docType" className="text-right text-sm font-medium col-span-1">
-                  Document Type
-                </label>
-                <Select
-                  value={selectedDocType}
-                  onValueChange={setSelectedDocType}
-                >
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="Select document type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {documentTypes.map((type) => (
-                      <SelectItem key={type} value={type}>
-                        {type}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            
+            <Tabs defaultValue="basic" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="basic">Basic Options</TabsTrigger>
+                <TabsTrigger value="advanced">Advanced Options</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="basic" className="space-y-4 py-4">
+                <div className="grid gap-6">
+                  <div>
+                    <Label htmlFor="docType" className="text-sm font-medium mb-2 block">
+                      Document Type
+                    </Label>
+                    <Select
+                      value={selectedDocType}
+                      onValueChange={setSelectedDocType}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select document type" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-[300px]">
+                        <div className="py-2 px-2 text-xs text-muted-foreground border-b">
+                          Select the type of document to generate
+                        </div>
+                        {documentTypes.map((docType) => (
+                          <SelectItem key={docType.type} value={docType.type}>
+                            <div className="flex items-center">
+                              {docType.icon}
+                              <span>{docType.type}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    
+                    {selectedDocType && (
+                      <div className="mt-2 text-xs text-muted-foreground">
+                        {documentTypes.find(dt => dt.type === selectedDocType)?.description}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="customTitle" className="text-sm font-medium mb-2 block">
+                      Document Title (Optional)
+                    </Label>
+                    <Input
+                      id="customTitle"
+                      value={customTitle}
+                      onChange={(e) => setCustomTitle(e.target.value)}
+                      placeholder="Leave empty for auto-generated title"
+                      className="w-full"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="documentStatus" className="text-sm font-medium mb-2 block">
+                      Document Status
+                    </Label>
+                    <Select
+                      value={documentStatus}
+                      onValueChange={setDocumentStatus}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="draft">Draft</SelectItem>
+                        <SelectItem value="expired">Expired</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="advanced" className="space-y-4 py-4">
+                <div className="grid gap-6">
+                  <div>
+                    <h3 className="text-sm font-medium mb-2">Data Inclusion Options</h3>
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="includeVesselDetails" 
+                          checked={includeVesselDetails} 
+                          onCheckedChange={(checked) => setIncludeVesselDetails(checked as boolean)}
+                        />
+                        <Label htmlFor="includeVesselDetails" className="text-sm">
+                          Include Detailed Vessel Specifications
+                        </Label>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="includeCargoInfo" 
+                          checked={includeCargoInfo} 
+                          onCheckedChange={(checked) => setIncludeCargoInfo(checked as boolean)}
+                        />
+                        <Label htmlFor="includeCargoInfo" className="text-sm">
+                          Include Cargo Information
+                        </Label>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="includeCompanyDetails" 
+                          checked={includeCompanyDetails} 
+                          onCheckedChange={(checked) => setIncludeCompanyDetails(checked as boolean)}
+                        />
+                        <Label htmlFor="includeCompanyDetails" className="text-sm">
+                          Include Company Details
+                        </Label>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="exportFormat" className="text-sm font-medium mb-2 block">
+                      Export Format
+                    </Label>
+                    <Select
+                      value={exportFormat}
+                      onValueChange={setExportFormat}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select export format" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pdf">
+                          <div className="flex items-center">
+                            <FileText className="h-4 w-4 mr-2" />
+                            <span>PDF Document</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="docx">
+                          <div className="flex items-center">
+                            <FileText className="h-4 w-4 mr-2" />
+                            <span>Word Document</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="json">
+                          <div className="flex items-center">
+                            <FileJson className="h-4 w-4 mr-2" />
+                            <span>JSON Data</span>
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
+            
+            <div className="pt-2">
+              {selectedDocType && (
+                <div className="bg-muted p-3 rounded-md text-sm mb-4">
+                  <div className="font-medium text-primary mb-1">Document Preview</div>
+                  <p className="text-muted-foreground text-xs">
+                    Generating a {selectedDocType} for {vessel?.name || 'vessel'}.
+                    {customTitle ? ` Title: "${customTitle}"` : ''} Status will be set to {documentStatus}.
+                  </p>
+                </div>
+              )}
             </div>
-            <DialogFooter>
+            
+            <DialogFooter className="gap-2 flex flex-col sm:flex-row">
               <Button
                 variant="outline"
                 onClick={() => setOpenGenerateDialog(false)}
                 disabled={isGenerating}
+                className="sm:order-1"
               >
                 Cancel
               </Button>
               <Button
                 onClick={() => generateDocumentMutation.mutate(selectedDocType)}
                 disabled={!selectedDocType || isGenerating}
+                className="sm:order-2"
               >
                 {isGenerating ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Generating...
+                    Generating Document...
                   </>
                 ) : (
                   <>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Generate
+                    <FileOutput className="mr-2 h-4 w-4" />
+                    Generate Document
                   </>
                 )}
               </Button>
