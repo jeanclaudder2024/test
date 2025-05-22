@@ -723,7 +723,7 @@ export default function Vessels() {
               <p className="text-gray-600 dark:text-gray-300 text-sm">
                 {loading ? 'Retrieving vessel data...' : 
                   filteredVessels.length === 0 ? 'No vessels match your filter criteria' :
-                  `${filteredVessels.length.toLocaleString()} vessels found • Showing 500 per page`
+                  `${filteredVessels.length.toLocaleString()} vessels found • Showing all vessels`
                 }
               </p>
               
