@@ -61,9 +61,9 @@ export function Layout({ children }: LayoutProps) {
     { name: "Dashboard", href: "/dashboard", icon: Home },
     { name: "Vessels", href: "/vessels", icon: Ship },
     { name: "Vessel Dashboard", href: "/vessel-dashboard", icon: Layers },
-    { name: "Vessel Lookup", href: "/vessel-lookup", icon: Search },
+    // Vessel Lookup removed as requested
     { name: "Map", href: "/full-map", icon: Map },
-    { name: "Maritime Tracking", href: "/maritime-tracking", icon: Compass },
+    // Maritime Tracking removed as requested
     { name: "Refineries", href: "/refineries", icon: Database },
     { name: "Ports", href: "/ports", icon: Anchor },
     { name: "Documents", href: "/documents", icon: FileText },
