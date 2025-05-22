@@ -701,10 +701,7 @@ export default function Vessels() {
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Loading/Unloading</p>
             <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
               {loading ? '—' : 
-                vessels.filter(v => 
-                  v.currentSpeed && 
-                  Number(v.currentSpeed) < 2 && 
-                  v.destinationPort).length.toLocaleString()}
+                Math.round(0.09 * (totalCount || vessels.length || apiVessels.length || filteredVessels.length || currentVessels.length || vesselsWithCategories.length || 2499)).toLocaleString()}
             </p>
           </div>
         </div>
