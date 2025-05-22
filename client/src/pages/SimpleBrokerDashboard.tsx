@@ -794,16 +794,30 @@ export default function SimpleBrokerDashboard() {
   return (
     <div className="container mx-auto py-6">
       <div className="flex flex-col space-y-6">
-        {/* Header */}
+        {/* Enhanced Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-3xl font-bold flex items-center">
               <Briefcase className="h-8 w-8 mr-2 text-primary" />
-              PetroDeal Broker Dashboard
+              Maritime Oil Broker Command Center
             </h1>
             <p className="text-muted-foreground mt-1">
-              Connect oil shipping companies with clients and manage profitable deals
+              Comprehensive analytics and management hub for oil shipping brokerage operations
             </p>
+            <div className="flex flex-wrap gap-4 mt-3">
+              <Badge variant="outline" className="px-3 py-1 bg-primary/5 text-primary border-primary/20">
+                <Ship className="h-3.5 w-3.5 mr-1.5" />
+                {connectionMetrics.fleetCapacity} Vessels Accessible
+              </Badge>
+              <Badge variant="outline" className="px-3 py-1 bg-green-500/5 text-green-600 border-green-500/20">
+                <Check className="h-3.5 w-3.5 mr-1.5" />
+                {dealMetrics.completed} Completed Deals
+              </Badge>
+              <Badge variant="outline" className="px-3 py-1 bg-blue-500/5 text-blue-600 border-blue-500/20">
+                <DollarSign className="h-3.5 w-3.5 mr-1.5" />
+                ${dealMetrics.totalValue.toFixed(1)}M Deal Value
+              </Badge>
+            </div>
           </div>
           
           <Tabs defaultValue="overview" className="w-full md:w-auto">
@@ -836,83 +850,161 @@ export default function SimpleBrokerDashboard() {
           </Tabs>
         </div>
 
-        {/* Broker metrics for Overview tab */}
+        {/* Enhanced Broker metrics for Overview tab */}
         {activeTab === 'overview' && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="bg-gradient-to-br from-primary/10 to-primary/5">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Connected Companies</p>
-                    <p className="text-3xl font-bold mt-1">{connectionMetrics.connected}</p>
+            <Card className="bg-gradient-to-br from-primary/10 to-primary/5 hover:shadow-md transition-all duration-200 hover:-translate-y-1 cursor-pointer" onClick={() => setActiveTab('companies')}>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium flex items-center justify-between">
+                  <span className="flex items-center">
+                    <Users className="h-4 w-4 mr-2 text-primary" />
+                    Global Network
+                  </span>
+                  <Button variant="ghost" size="icon" className="h-6 w-6">
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="flex flex-col gap-1">
+                  <p className="text-3xl font-bold">{connectionMetrics.connected}</p>
+                  <p className="text-xs text-muted-foreground">Connected Companies</p>
+                  
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    <div className="bg-primary/5 rounded-md p-2 flex flex-col">
+                      <span className="text-lg font-semibold">{connectionMetrics.premium}</span>
+                      <span className="text-xs text-muted-foreground">Premium</span>
+                    </div>
+                    <div className="bg-yellow-500/5 rounded-md p-2 flex flex-col">
+                      <span className="text-lg font-semibold text-yellow-600">{connectionMetrics.pending}</span>
+                      <span className="text-xs text-muted-foreground">Pending</span>
+                    </div>
                   </div>
-                  <div className="p-3 bg-primary/20 rounded-full">
-                    <Users className="h-6 w-6 text-primary" />
+                  
+                  <div className="flex items-center justify-between mt-3 text-xs">
+                    <span className="text-muted-foreground">Potential connections:</span>
+                    <span className="font-medium">{connectionMetrics.potential}</span>
                   </div>
-                </div>
-                <div className="flex items-center mt-4 text-sm">
-                  <ArrowUpRight className="h-4 w-4 mr-1 text-green-600" />
-                  <span className="text-green-600 font-medium">{connectionMetrics.pending}</span>
-                  <span className="text-muted-foreground ml-1">pending connections</span>
                 </div>
               </CardContent>
             </Card>
             
-            <Card className="bg-gradient-to-br from-green-500/10 to-green-500/5">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Completed Deals</p>
-                    <p className="text-3xl font-bold mt-1">{dealMetrics.completed}</p>
+            <Card className="bg-gradient-to-br from-green-500/10 to-green-500/5 hover:shadow-md transition-all duration-200 hover:-translate-y-1 cursor-pointer" onClick={() => setActiveTab('deals')}>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium flex items-center justify-between">
+                  <span className="flex items-center">
+                    <Handshake className="h-4 w-4 mr-2 text-green-600" />
+                    Deal Performance
+                  </span>
+                  <Button variant="ghost" size="icon" className="h-6 w-6">
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="flex flex-col gap-1">
+                  <p className="text-3xl font-bold">{dealMetrics.completed}</p>
+                  <p className="text-xs text-muted-foreground">Closed Deals</p>
+                  
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    <div className="bg-yellow-500/5 rounded-md p-2 flex flex-col">
+                      <span className="text-lg font-semibold text-yellow-600">{dealMetrics.inProgress}</span>
+                      <span className="text-xs text-muted-foreground">In Progress</span>
+                    </div>
+                    <div className="bg-blue-500/5 rounded-md p-2 flex flex-col">
+                      <span className="text-lg font-semibold text-blue-600">{dealMetrics.proposed}</span>
+                      <span className="text-xs text-muted-foreground">Proposed</span>
+                    </div>
                   </div>
-                  <div className="p-3 bg-green-500/20 rounded-full">
-                    <Check className="h-6 w-6 text-green-600" />
+                  
+                  <div className="flex items-center justify-between mt-3 text-xs">
+                    <span className="text-muted-foreground">Avg. deal size:</span>
+                    <span className="font-medium">${dealMetrics.averageDealSize.toFixed(1)}M</span>
                   </div>
-                </div>
-                <div className="flex items-center mt-4 text-sm">
-                  <Clock className="h-4 w-4 mr-1 text-yellow-600" />
-                  <span className="text-yellow-600 font-medium">{dealMetrics.inProgress}</span>
-                  <span className="text-muted-foreground ml-1">deals in progress</span>
                 </div>
               </CardContent>
             </Card>
             
-            <Card className="bg-gradient-to-br from-blue-500/10 to-blue-500/5">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Deal Value (Month)</p>
-                    <p className="text-3xl font-bold mt-1">${dealMetrics.totalValue.toFixed(1)}M</p>
+            <Card className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 hover:shadow-md transition-all duration-200 hover:-translate-y-1 cursor-pointer" onClick={() => alert('Opening deal value analytics')}>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium flex items-center justify-between">
+                  <span className="flex items-center">
+                    <BarChart3 className="h-4 w-4 mr-2 text-blue-600" />
+                    Revenue Analytics
+                  </span>
+                  <Button variant="ghost" size="icon" className="h-6 w-6">
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="flex flex-col gap-1">
+                  <p className="text-3xl font-bold">${dealMetrics.totalValue.toFixed(1)}M</p>
+                  <p className="text-xs text-muted-foreground">Total Deal Value</p>
+                  
+                  <div className="mt-3 space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">Crude Oil:</span>
+                      <span className="font-medium">${dealMetrics.valueByProduct['Crude Oil'].toFixed(1)}M</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">LNG:</span>
+                      <span className="font-medium">${dealMetrics.valueByProduct['LNG'].toFixed(1)}M</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">Refined Products:</span>
+                      <span className="font-medium">${dealMetrics.valueByProduct['Refined'].toFixed(1)}M</span>
+                    </div>
                   </div>
-                  <div className="p-3 bg-blue-500/20 rounded-full">
-                    <DollarSign className="h-6 w-6 text-blue-600" />
+                  
+                  <div className="flex items-center mt-3 text-xs">
+                    <ArrowUpRight className="h-3 w-3 mr-1 text-green-600" />
+                    <span className="text-green-600 font-medium">{dealMetrics.monthlyGrowth}%</span>
+                    <span className="text-muted-foreground ml-1">vs. previous {timeRange}</span>
                   </div>
-                </div>
-                <div className="flex items-center mt-4 text-sm">
-                  <ArrowUpRight className="h-4 w-4 mr-1 text-green-600" />
-                  <span className="text-green-600 font-medium">12%</span>
-                  <span className="text-muted-foreground ml-1">from last month</span>
                 </div>
               </CardContent>
             </Card>
             
-            <Card className="bg-gradient-to-br from-purple-500/10 to-purple-500/5">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Commission (Month)</p>
-                    <p className="text-3xl font-bold mt-1">${dealMetrics.totalCommission.toFixed(1)}M</p>
+            <Card className="bg-gradient-to-br from-purple-500/10 to-purple-500/5 hover:shadow-md transition-all duration-200 hover:-translate-y-1 cursor-pointer" onClick={() => alert('Opening commission analytics')}>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium flex items-center justify-between">
+                  <span className="flex items-center">
+                    <DollarSign className="h-4 w-4 mr-2 text-purple-600" />
+                    Commission Income
+                  </span>
+                  <Button variant="ghost" size="icon" className="h-6 w-6">
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="flex flex-col gap-1">
+                  <p className="text-3xl font-bold">${dealMetrics.totalCommission.toFixed(1)}M</p>
+                  <p className="text-xs text-muted-foreground">Total Commission</p>
+                  
+                  <div className="relative w-full h-7 mt-4 bg-muted/30 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-gradient-to-r from-purple-500 to-purple-700 rounded-full"
+                      style={{ width: `${(dealMetrics.totalCommission / dealMetrics.totalValue) * 100}%` }}
+                    ></div>
+                    <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xs font-medium">
+                      {((dealMetrics.totalCommission / dealMetrics.totalValue) * 100).toFixed(1)}% of Deal Value
+                    </span>
                   </div>
-                  <div className="p-3 bg-purple-500/20 rounded-full">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                  
+                  <div className="flex items-center justify-between mt-3 text-xs">
+                    <span className="text-muted-foreground">Commission per deal:</span>
+                    <span className="font-medium">
+                      ${(dealMetrics.totalCommission * 1000 / Math.max(1, dealMetrics.completed)).toFixed(1)}K
+                    </span>
                   </div>
-                </div>
-                <div className="flex items-center mt-4 text-sm">
-                  <ArrowUpRight className="h-4 w-4 mr-1 text-green-600" />
-                  <span className="text-green-600 font-medium">8.5%</span>
-                  <span className="text-muted-foreground ml-1">from last month</span>
+                  
+                  <div className="flex items-center mt-3 text-xs">
+                    <ArrowUpRight className="h-3 w-3 mr-1 text-green-600" />
+                    <span className="text-green-600 font-medium">{dealMetrics.commissionGrowth}%</span>
+                    <span className="text-muted-foreground ml-1">vs. previous {timeRange}</span>
+                  </div>
                 </div>
               </CardContent>
             </Card>
