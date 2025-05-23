@@ -445,6 +445,89 @@ export default function OilVesselMap() {
     });
   };
 
+  // Check if coordinates are likely to be in water
+  const isLikelyInWater = (lat: number, lng: number): boolean => {
+    // Define general land boundaries by region (simplified)
+    const landRegions = [
+      // Europe major land mass
+      { minLat: 36, maxLat: 71, minLng: -10, maxLng: 40, name: 'Europe' },
+      // Africa major land mass
+      { minLat: -35, maxLat: 37, minLng: -17, maxLng: 51, name: 'Africa' },
+      // Asia major land mass
+      { minLat: 0, maxLat: 80, minLng: 40, maxLng: 180, name: 'Asia' },
+      // North America major land mass
+      { minLat: 15, maxLat: 85, minLng: -170, maxLng: -50, name: 'North America' },
+      // South America major land mass
+      { minLat: -56, maxLat: 15, minLng: -81, maxLng: -35, name: 'South America' },
+      // Australia major land mass
+      { minLat: -43, maxLat: -10, minLng: 112, maxLng: 155, name: 'Australia' },
+    ];
+    
+    // Special coastal regions where vessels often are
+    const coastalRegions = [
+      // Persian Gulf
+      { minLat: 24, maxLat: 30, minLng: 48, maxLng: 57, name: 'Persian Gulf' },
+      // Mediterranean
+      { minLat: 30, maxLat: 45, minLng: -5, maxLng: 37, name: 'Mediterranean' },
+      // US Gulf Coast
+      { minLat: 24, maxLat: 31, minLng: -98, maxLng: -80, name: 'US Gulf Coast' },
+      // Singapore/Malaysia
+      { minLat: -3, maxLat: 7, minLng: 95, maxLng: 108, name: 'Singapore Area' },
+      // English Channel
+      { minLat: 48, maxLat: 53, minLng: -5, maxLng: 9, name: 'English Channel' },
+    ];
+    
+    // Check if coordinates fall within land regions and not in coastal regions
+    for (const region of landRegions) {
+      if (
+        lat >= region.minLat && lat <= region.maxLat &&
+        lng >= region.minLng && lng <= region.maxLng
+      ) {
+        // It's in a land region, but check if it's in a coastal exception area
+        const inCoastalRegion = coastalRegions.some(coastal => 
+          lat >= coastal.minLat && lat <= coastal.maxLat &&
+          lng >= coastal.minLng && lng <= coastal.maxLng
+        );
+        
+        if (inCoastalRegion) {
+          // It's in a coastal region, allow it
+          return true;
+        }
+        
+        // We're in the middle of a continent, check for some common shipping lanes
+        // Major rivers, lakes, and inland waterways
+        const inlandWaterways = [
+          // Mississippi River (approximate)
+          { minLat: 29, maxLat: 45, minLng: -91, maxLng: -89, name: 'Mississippi River' },
+          // Rhine River (approximate)
+          { minLat: 47, maxLat: 52, minLng: 6, maxLng: 9, name: 'Rhine River' },
+          // Yangtze River (approximate)
+          { minLat: 29, maxLat: 32, minLng: 115, maxLng: 122, name: 'Yangtze River' },
+          // Caspian Sea
+          { minLat: 36, maxLat: 47, minLng: 46, maxLng: 55, name: 'Caspian Sea' },
+          // Great Lakes
+          { minLat: 41, maxLat: 49, minLng: -92, maxLng: -76, name: 'Great Lakes' },
+        ];
+        
+        const inWaterway = inlandWaterways.some(waterway => 
+          lat >= waterway.minLat && lat <= waterway.maxLat &&
+          lng >= waterway.minLng && lng <= waterway.maxLng
+        );
+        
+        if (inWaterway) {
+          return true;
+        }
+        
+        // It's likely on land
+        console.log(`Vessel at ${lat.toFixed(4)}, ${lng.toFixed(4)} appears to be on land in ${region.name}`);
+        return false;
+      }
+    }
+    
+    // Not in any defined land region, likely in open water
+    return true;
+  };
+
   // Update markers when filtered data changes
   useEffect(() => {
     if (!mapInstanceRef.current || !layerGroupRef.current) return;
@@ -459,7 +542,7 @@ export default function OilVesselMap() {
         const lat = typeof vessel.currentLat === 'string' ? parseFloat(vessel.currentLat) : vessel.currentLat;
         const lng = typeof vessel.currentLng === 'string' ? parseFloat(vessel.currentLng) : vessel.currentLng;
         
-        if (!isNaN(lat) && !isNaN(lng)) {
+        if (!isNaN(lat) && !isNaN(lng) && isLikelyInWater(lat, lng)) {
           // Create marker
           const marker = L.marker([lat, lng], {
             icon: createVesselIcon(vessel),
