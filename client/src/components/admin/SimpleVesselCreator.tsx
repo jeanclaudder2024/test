@@ -32,29 +32,29 @@ export function SimpleVesselCreator({ open, onOpenChange }: SimpleVesselCreatorP
     name: "",
     mmsi: "123456789",
     imo: "1234567",
-    vesselType: "OIL_TANKER",
+    vessel_type: "OIL_TANKER",
     flag: "US",
-    length: "100",
-    width: "20",
+    current_lat: "0",
+    current_lng: "0",
+    destination_port: "Sample Port",
+    eta: new Date().toISOString(),
+    cargo_type: "Crude Oil",
+    cargo_capacity: "100000",
     status: "AT_SEA",
-    currentLat: "0",
-    currentLng: "0",
-    destination: "Sample Port",
-    eta: new Date().toISOString().split('T')[0],
-    cargo: "Crude Oil",
-    cargoCapacity: "100000"
+    speed: "0",
+    current_region: "Middle East"
   });
 
   // Add vessel mutation
   const { mutate: addVessel, isPending: isSubmitting } = useMutation({
     mutationFn: async (vesselData: any) => {
       try {
-        // Format data to match API expectations
+        // The data is already in the correct format for the API
         const formattedData = {
           ...vesselData,
-          // Convert coordinates to strings since they need to be passed to the API
-          currentLat: String(vesselData.currentLat),
-          currentLng: String(vesselData.currentLng)
+          // Ensure numeric fields are properly formatted
+          cargo_capacity: parseInt(vesselData.cargo_capacity),
+          speed: parseInt(vesselData.speed) || 0
         };
         
         console.log("Sending vessel data:", formattedData);
@@ -92,17 +92,17 @@ export function SimpleVesselCreator({ open, onOpenChange }: SimpleVesselCreatorP
         name: "",
         mmsi: "123456789",
         imo: "1234567",
-        vesselType: "OIL_TANKER",
+        vessel_type: "OIL_TANKER",
         flag: "US",
-        length: "100",
-        width: "20",
+        current_lat: "0",
+        current_lng: "0",
+        destination_port: "Sample Port",
+        eta: new Date().toISOString(),
+        cargo_type: "Crude Oil",
+        cargo_capacity: "100000",
         status: "AT_SEA",
-        currentLat: "0",
-        currentLng: "0",
-        destination: "Sample Port",
-        eta: new Date().toISOString().split('T')[0],
-        cargo: "Crude Oil",
-        cargoCapacity: "100000"
+        speed: "0",
+        current_region: "Middle East"
       });
       
       // Close dialog after showing success message
@@ -206,8 +206,8 @@ export function SimpleVesselCreator({ open, onOpenChange }: SimpleVesselCreatorP
                 <label className="text-sm font-medium">Vessel Type</label>
                 <select 
                   className="w-full p-2 border rounded-md"
-                  value={vessel.vesselType}
-                  onChange={(e) => handleInputChange("vesselType", e.target.value)}
+                  value={vessel.vessel_type}
+                  onChange={(e) => handleInputChange("vessel_type", e.target.value)}
                 >
                   <option value="OIL_TANKER">Oil Tanker</option>
                   <option value="CRUDE_OIL_TANKER">Crude Oil Tanker</option>
@@ -250,13 +250,13 @@ export function SimpleVesselCreator({ open, onOpenChange }: SimpleVesselCreatorP
               </div>
               
               <div className="space-y-2">
-                <label className="text-sm font-medium">Destination</label>
+                <label className="text-sm font-medium">Destination Port</label>
                 <input 
                   type="text"
                   className="w-full p-2 border rounded-md"
                   placeholder="Destination port"
-                  value={vessel.destination}
-                  onChange={(e) => handleInputChange("destination", e.target.value)}
+                  value={vessel.destination_port}
+                  onChange={(e) => handleInputChange("destination_port", e.target.value)}
                 />
               </div>
             </div>
@@ -272,16 +272,16 @@ export function SimpleVesselCreator({ open, onOpenChange }: SimpleVesselCreatorP
             <EnhancedMapSelector 
               onSelectPosition={(lat, lng) => {
                 // Store coordinates as strings for the API
-                handleInputChange("currentLat", lat.toString());
-                handleInputChange("currentLng", lng.toString());
+                handleInputChange("current_lat", lat.toString());
+                handleInputChange("current_lng", lng.toString());
               }}
-              initialLat={vessel.currentLat !== "0" ? parseFloat(vessel.currentLat) : undefined}
-              initialLng={vessel.currentLng !== "0" ? parseFloat(vessel.currentLng) : undefined}
+              initialLat={vessel.current_lat !== "0" ? parseFloat(vessel.current_lat) : undefined}
+              initialLng={vessel.current_lng !== "0" ? parseFloat(vessel.current_lng) : undefined}
             />
             
-            {vessel.currentLat !== "0" && vessel.currentLng !== "0" && (
+            {vessel.current_lat !== "0" && vessel.current_lng !== "0" && (
               <div className="text-sm text-center">
-                Selected position: {parseFloat(vessel.currentLat).toFixed(4)}, {parseFloat(vessel.currentLng).toFixed(4)}
+                Selected position: {parseFloat(vessel.current_lat).toFixed(4)}, {parseFloat(vessel.current_lng).toFixed(4)}
               </div>
             )}
           </div>
