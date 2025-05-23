@@ -8,7 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2, Ship } from "lucide-react";
+import { Loader2, Ship, AlertCircle } from "lucide-react";
 import { EnhancedMapSelector } from "./EnhancedMapSelector";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -65,7 +65,7 @@ export function SimpleVesselCreator({ open, onOpenChange }: SimpleVesselCreatorP
       queryClient.invalidateQueries({ queryKey: ["/api/vessels"] });
       setSuccessMessage("Vessel added successfully!");
       
-      // Reset form after successful submission
+      // Reset form
       setVessel({
         name: "",
         mmsi: "",
@@ -83,11 +83,15 @@ export function SimpleVesselCreator({ open, onOpenChange }: SimpleVesselCreatorP
         cargoCapacity: "100000"
       });
       
-      // Close dialog after 1.5 seconds
+      // Close dialog after showing success message
       setTimeout(() => {
         setSuccessMessage("");
         onOpenChange(false);
-      }, 1500);
+      }, 2000);
+    },
+    onError: (error: any) => {
+      console.error("Failed to add vessel:", error);
+      setSuccessMessage("Error: " + (error.message || "Failed to add vessel. Please check your data."));
     },
   });
 
@@ -112,15 +116,22 @@ export function SimpleVesselCreator({ open, onOpenChange }: SimpleVesselCreatorP
           </DialogDescription>
         </DialogHeader>
 
-        {successMessage ? (
-          <Alert className="bg-green-50 text-green-800 border-green-200 mb-4">
-            <CheckCircle className="h-4 w-4 text-green-500" />
-            <AlertTitle className="text-green-800 text-sm">Success</AlertTitle>
-            <AlertDescription className="text-green-700 text-xs">
+        {successMessage && (
+          <Alert className={successMessage.includes("Error") 
+            ? "bg-red-50 text-red-800 border-red-200 mb-4" 
+            : "bg-green-50 text-green-800 border-green-200 mb-4"}>
+            {successMessage.includes("Error") 
+              ? <AlertCircle className="h-4 w-4 text-red-500" />
+              : <CheckCircle className="h-4 w-4 text-green-500" />
+            }
+            <AlertTitle className={successMessage.includes("Error") ? "text-red-800 text-sm" : "text-green-800 text-sm"}>
+              {successMessage.includes("Error") ? "Error" : "Success"}
+            </AlertTitle>
+            <AlertDescription className={successMessage.includes("Error") ? "text-red-700 text-xs" : "text-green-700 text-xs"}>
               {successMessage}
             </AlertDescription>
           </Alert>
-        ) : null}
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
           {/* Form Fields */}
