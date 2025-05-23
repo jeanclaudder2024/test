@@ -50,7 +50,24 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 export function DataManagement() {
   const [activeTab, setActiveTab] = useState("vessels");
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [showAddVesselDialog, setShowAddVesselDialog] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
+  const [newVessel, setNewVessel] = useState({
+    name: "",
+    mmsi: "",
+    imo: "",
+    vesselType: "OIL_TANKER",
+    flag: "US",
+    length: "",
+    width: "",
+    status: "AT_SEA",
+    currentLat: "",
+    currentLng: "",
+    destination: "",
+    eta: "",
+    cargo: "",
+    cargoCapacity: ""
+  });
   const [dataStatus, setDataStatus] = useState({
     vessels: { lastSync: "2023-05-22T14:30:00Z", status: "completed", count: 2499 },
     ports: { lastSync: "2023-05-21T10:15:00Z", status: "completed", count: 223 },
@@ -173,6 +190,62 @@ export function DataManagement() {
     if (!dateString) return "Never";
     const date = new Date(dateString);
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+  };
+  
+  const handleAddVessel = () => {
+    // Here you would make an API call to create the vessel in a real app
+    console.log("Creating new vessel:", newVessel);
+    
+    // For demonstration purposes, we'll simulate a successful response
+    const now = new Date().toISOString();
+    
+    // Add a log entry for the vessel creation
+    const newLog = { 
+      id: actionLog.length + 1, 
+      type: 'create', 
+      entity: 'vessels', 
+      status: "completed", 
+      startTime: now, 
+      endTime: now,
+      details: `Added new vessel: ${newVessel.name}`
+    };
+    
+    setActionLog([newLog, ...actionLog]);
+    
+    // Update vessel count 
+    setDataStatus({
+      ...dataStatus,
+      vessels: {
+        ...dataStatus.vessels,
+        count: dataStatus.vessels.count + 1
+      }
+    });
+    
+    // Close dialog and reset form
+    setShowAddVesselDialog(false);
+    setNewVessel({
+      name: "",
+      mmsi: "",
+      imo: "",
+      vesselType: "OIL_TANKER",
+      flag: "US",
+      length: "",
+      width: "",
+      status: "AT_SEA",
+      currentLat: "",
+      currentLng: "",
+      destination: "",
+      eta: "",
+      cargo: "",
+      cargoCapacity: ""
+    });
+  };
+  
+  const handleVesselInputChange = (field, value) => {
+    setNewVessel({
+      ...newVessel,
+      [field]: value
+    });
   };
 
   const getStatusIcon = (status) => {
@@ -326,6 +399,15 @@ export function DataManagement() {
                     </AlertDescription>
                   </Alert>
                 )}
+                
+                {card.type === "vessels" && (
+                  <div className="mb-4">
+                    <Button onClick={() => setShowAddVesselDialog(true)} className="gap-2">
+                      <Ship className="h-4 w-4" />
+                      Add New Vessel
+                    </Button>
+                  </div>
+                )}
 
                 <div className="border rounded-md">
                   <Table>
@@ -460,6 +542,209 @@ export function DataManagement() {
               Confirm
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Add Vessel Dialog */}
+      <Dialog open={showAddVesselDialog} onOpenChange={setShowAddVesselDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Add New Vessel</DialogTitle>
+            <DialogDescription>
+              Create a new vessel in the system. All vessels require basic information.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Basic Information */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Vessel Name</label>
+                <input 
+                  type="text"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  placeholder="Enter vessel name"
+                  value={newVessel.name}
+                  onChange={(e) => handleVesselInputChange('name', e.target.value)}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">MMSI Number</label>
+                <input 
+                  type="text"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  placeholder="Enter 9-digit MMSI number"
+                  value={newVessel.mmsi}
+                  onChange={(e) => handleVesselInputChange('mmsi', e.target.value)}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">IMO Number</label>
+                <input 
+                  type="text"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  placeholder="Enter 7-digit IMO number"
+                  value={newVessel.imo}
+                  onChange={(e) => handleVesselInputChange('imo', e.target.value)}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Vessel Type</label>
+                <select 
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  value={newVessel.vesselType}
+                  onChange={(e) => handleVesselInputChange('vesselType', e.target.value)}
+                >
+                  <option value="OIL_TANKER">Oil Tanker</option>
+                  <option value="CRUDE_OIL_TANKER">Crude Oil Tanker</option>
+                  <option value="CHEMICAL_TANKER">Chemical Tanker</option>
+                  <option value="LNG_TANKER">LNG Tanker</option>
+                  <option value="LPG_TANKER">LPG Tanker</option>
+                  <option value="PRODUCT_TANKER">Product Tanker</option>
+                  <option value="VLCC">VLCC</option>
+                  <option value="ULCC">ULCC</option>
+                </select>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Flag</label>
+                <input 
+                  type="text"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  placeholder="Enter country code (e.g. US, GB)"
+                  value={newVessel.flag}
+                  onChange={(e) => handleVesselInputChange('flag', e.target.value)}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Status</label>
+                <select 
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  value={newVessel.status}
+                  onChange={(e) => handleVesselInputChange('status', e.target.value)}
+                >
+                  <option value="AT_SEA">At Sea</option>
+                  <option value="IN_PORT">In Port</option>
+                  <option value="ANCHORED">Anchored</option>
+                  <option value="MOORED">Moored</option>
+                  <option value="UNDERWAY">Underway</option>
+                  <option value="STOPPED">Stopped</option>
+                </select>
+              </div>
+              
+              {/* Physical Characteristics */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Length (meters)</label>
+                <input 
+                  type="number"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  placeholder="Enter vessel length"
+                  value={newVessel.length}
+                  onChange={(e) => handleVesselInputChange('length', e.target.value)}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Width (meters)</label>
+                <input 
+                  type="number"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  placeholder="Enter vessel width"
+                  value={newVessel.width}
+                  onChange={(e) => handleVesselInputChange('width', e.target.value)}
+                />
+              </div>
+            </div>
+            
+            <div className="pt-4 border-t">
+              <h3 className="text-sm font-medium mb-2">Location Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Current Latitude</label>
+                  <input 
+                    type="text"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    placeholder="Enter current latitude"
+                    value={newVessel.currentLat}
+                    onChange={(e) => handleVesselInputChange('currentLat', e.target.value)}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Current Longitude</label>
+                  <input 
+                    type="text"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    placeholder="Enter current longitude"
+                    value={newVessel.currentLng}
+                    onChange={(e) => handleVesselInputChange('currentLng', e.target.value)}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Destination</label>
+                  <input 
+                    type="text"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    placeholder="Enter destination port"
+                    value={newVessel.destination}
+                    onChange={(e) => handleVesselInputChange('destination', e.target.value)}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">ETA</label>
+                  <input 
+                    type="datetime-local"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    value={newVessel.eta}
+                    onChange={(e) => handleVesselInputChange('eta', e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div className="pt-4 border-t">
+              <h3 className="text-sm font-medium mb-2">Cargo Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Cargo Type</label>
+                  <input 
+                    type="text"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    placeholder="Enter cargo type"
+                    value={newVessel.cargo}
+                    onChange={(e) => handleVesselInputChange('cargo', e.target.value)}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Cargo Capacity (MT)</label>
+                  <input 
+                    type="number"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    placeholder="Enter cargo capacity"
+                    value={newVessel.cargoCapacity}
+                    onChange={(e) => handleVesselInputChange('cargoCapacity', e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAddVesselDialog(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" onClick={handleAddVessel}>
+              <Ship className="h-4 w-4 mr-2" />
+              Add Vessel
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
