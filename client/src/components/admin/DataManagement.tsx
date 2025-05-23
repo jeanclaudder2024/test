@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -73,6 +74,12 @@ export function DataManagement() {
     ports: { lastSync: "2023-05-21T10:15:00Z", status: "completed", count: 223 },
     refineries: { lastSync: "2023-05-20T08:45:00Z", status: "completed", count: 105 },
     documents: { lastSync: "2023-05-19T16:20:00Z", status: "completed", count: 87 }
+  });
+  
+  // Fetch real vessels from the database
+  const { data: vessels, isLoading: loadingVessels, refetch: refetchVessels } = useQuery({
+    queryKey: ['/api/vessels/admin'],
+    queryFn: () => fetch('/api/vessels/polling?limit=50').then(res => res.json()),
   });
 
   const [actionLog, setActionLog] = useState([
@@ -192,53 +199,108 @@ export function DataManagement() {
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
   };
   
-  const handleAddVessel = () => {
-    // Here you would make an API call to create the vessel in a real app
-    console.log("Creating new vessel:", newVessel);
-    
-    // For demonstration purposes, we'll simulate a successful response
-    const now = new Date().toISOString();
-    
-    // Add a log entry for the vessel creation
-    const newLog = { 
-      id: actionLog.length + 1, 
-      type: 'create', 
-      entity: 'vessels', 
-      status: "completed", 
-      startTime: now, 
-      endTime: now,
-      details: `Added new vessel: ${newVessel.name}`
-    };
-    
-    setActionLog([newLog, ...actionLog]);
-    
-    // Update vessel count 
-    setDataStatus({
-      ...dataStatus,
-      vessels: {
-        ...dataStatus.vessels,
-        count: dataStatus.vessels.count + 1
+  const [addingVessel, setAddingVessel] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  
+  const handleAddVessel = async () => {
+    try {
+      setAddingVessel(true);
+      
+      // Create a vessel object with the form data
+      const vesselData = {
+        ...newVessel,
+        mmsi: newVessel.mmsi ? parseInt(newVessel.mmsi) : null,
+        imo: newVessel.imo ? parseInt(newVessel.imo) : null,
+        length: newVessel.length ? parseFloat(newVessel.length) : null,
+        width: newVessel.width ? parseFloat(newVessel.width) : null,
+        currentLat: newVessel.currentLat ? parseFloat(newVessel.currentLat) : null,
+        currentLng: newVessel.currentLng ? parseFloat(newVessel.currentLng) : null,
+        cargoCapacity: newVessel.cargoCapacity ? parseInt(newVessel.cargoCapacity) : null
+      };
+      
+      // Make an API call to create the vessel
+      const response = await fetch('/api/vessels', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(vesselData),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to create vessel');
       }
-    });
-    
-    // Close dialog and reset form
-    setShowAddVesselDialog(false);
-    setNewVessel({
-      name: "",
-      mmsi: "",
-      imo: "",
-      vesselType: "OIL_TANKER",
-      flag: "US",
-      length: "",
-      width: "",
-      status: "AT_SEA",
-      currentLat: "",
-      currentLng: "",
-      destination: "",
-      eta: "",
-      cargo: "",
-      cargoCapacity: ""
-    });
+      
+      // Get the created vessel from the response
+      const createdVessel = await response.json();
+      
+      // Set success message
+      setSuccessMessage(`Vessel "${newVessel.name}" added successfully!`);
+      setTimeout(() => setSuccessMessage(""), 3000);
+      
+      // Add a log entry for the vessel creation
+      const now = new Date().toISOString();
+      const newLog = { 
+        id: actionLog.length + 1, 
+        type: 'create', 
+        entity: 'vessels', 
+        status: "completed", 
+        startTime: now, 
+        endTime: now,
+        details: `Added new vessel: ${newVessel.name}`
+      };
+      
+      setActionLog([newLog, ...actionLog]);
+      
+      // Update vessel count
+      setDataStatus({
+        ...dataStatus,
+        vessels: {
+          ...dataStatus.vessels,
+          count: dataStatus.vessels.count + 1,
+          lastSync: now
+        }
+      });
+      
+      // Refresh the vessels list
+      refetchVessels();
+      
+      // Close dialog and reset form
+      setShowAddVesselDialog(false);
+      setNewVessel({
+        name: "",
+        mmsi: "",
+        imo: "",
+        vesselType: "OIL_TANKER",
+        flag: "US",
+        length: "",
+        width: "",
+        status: "AT_SEA",
+        currentLat: "",
+        currentLng: "",
+        destination: "",
+        eta: "",
+        cargo: "",
+        cargoCapacity: ""
+      });
+    } catch (error) {
+      console.error('Error adding vessel:', error);
+      // Display error in the log
+      const now = new Date().toISOString();
+      const errorLog = { 
+        id: actionLog.length + 1, 
+        type: 'error', 
+        entity: 'vessels', 
+        status: "failed", 
+        startTime: now, 
+        endTime: now,
+        details: `Failed to add vessel: ${newVessel.name}. Error: ${error.message}`
+      };
+      
+      setActionLog([errorLog, ...actionLog]);
+    } finally {
+      setAddingVessel(false);
+    }
   };
   
   const handleVesselInputChange = (field, value) => {
@@ -402,10 +464,22 @@ export function DataManagement() {
                 
                 {card.type === "vessels" && (
                   <div className="mb-4">
-                    <Button onClick={() => setShowAddVesselDialog(true)} className="gap-2">
-                      <Ship className="h-4 w-4" />
-                      Add New Vessel
-                    </Button>
+                    <div className="flex items-center justify-between">
+                      <Button onClick={() => setShowAddVesselDialog(true)} className="gap-2">
+                        <Ship className="h-4 w-4" />
+                        Add New Vessel
+                      </Button>
+                      
+                      {successMessage && (
+                        <Alert className="ml-4 bg-green-50 text-green-800 border-green-200">
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                          <AlertTitle className="text-green-800 text-sm">Success</AlertTitle>
+                          <AlertDescription className="text-green-700 text-xs">
+                            {successMessage}
+                          </AlertDescription>
+                        </Alert>
+                      )}
+                    </div>
                   </div>
                 )}
 
@@ -415,19 +489,80 @@ export function DataManagement() {
                       <TableRow>
                         <TableHead>ID</TableHead>
                         <TableHead>Name</TableHead>
+                        <TableHead>MMSI</TableHead>
                         <TableHead>Type</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead>Last Updated</TableHead>
+                        <TableHead>Flag</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                          This is a placeholder for {card.title.toLowerCase()} data table.
-                          In a real application, this would list actual {card.title.toLowerCase()} records.
-                        </TableCell>
-                      </TableRow>
+                      {card.type === "vessels" ? (
+                        loadingVessels ? (
+                          <TableRow>
+                            <TableCell colSpan={7} className="text-center py-8">
+                              <div className="flex justify-center items-center">
+                                <RotateCw className="h-6 w-6 animate-spin text-primary mr-2" />
+                                <span>Loading vessels...</span>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ) : vessels?.vessels && vessels.vessels.length > 0 ? (
+                          vessels.vessels.map((vessel) => (
+                            <TableRow key={vessel.id}>
+                              <TableCell>{vessel.id}</TableCell>
+                              <TableCell className="font-medium">{vessel.name}</TableCell>
+                              <TableCell>{vessel.mmsi || "N/A"}</TableCell>
+                              <TableCell>
+                                <Badge variant="outline" className="text-blue-500 bg-blue-50">
+                                  {vessel.vesselType?.replace(/_/g, ' ') || "Unknown"}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <Badge 
+                                  className={
+                                    vessel.status === "AT_SEA" ? "bg-green-100 text-green-800" :
+                                    vessel.status === "IN_PORT" ? "bg-blue-100 text-blue-800" :
+                                    vessel.status === "ANCHORED" ? "bg-yellow-100 text-yellow-800" :
+                                    vessel.status === "MOORED" ? "bg-purple-100 text-purple-800" :
+                                    "bg-gray-100 text-gray-800"
+                                  }
+                                >
+                                  {vessel.status?.replace(/_/g, ' ') || "Unknown"}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>{vessel.flag}</TableCell>
+                              <TableCell className="text-right">
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="sm">
+                                      <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem>View Details</DropdownMenuItem>
+                                    <DropdownMenuItem>Edit Vessel</DropdownMenuItem>
+                                    <DropdownMenuItem className="text-red-600">Delete</DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        ) : (
+                          <TableRow>
+                            <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                              No vessels found. Add some vessels to see them here.
+                            </TableCell>
+                          </TableRow>
+                        )
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                            This is a placeholder for {card.title.toLowerCase()} data table.
+                            In a real application, this would list actual {card.title.toLowerCase()} records.
+                          </TableCell>
+                        </TableRow>
+                      )}
                     </TableBody>
                   </Table>
                 </div>
@@ -737,12 +872,21 @@ export function DataManagement() {
           </div>
           
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAddVesselDialog(false)}>
+            <Button variant="outline" onClick={() => setShowAddVesselDialog(false)} disabled={addingVessel}>
               Cancel
             </Button>
-            <Button type="submit" onClick={handleAddVessel}>
-              <Ship className="h-4 w-4 mr-2" />
-              Add Vessel
+            <Button type="submit" onClick={handleAddVessel} disabled={addingVessel}>
+              {addingVessel ? (
+                <>
+                  <RotateCw className="h-4 w-4 mr-2 animate-spin" />
+                  Adding...
+                </>
+              ) : (
+                <>
+                  <Ship className="h-4 w-4 mr-2" />
+                  Add Vessel
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
