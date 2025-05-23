@@ -3151,10 +3151,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Send initial data
     sendVesselData(ws);
 
-    // Set up interval to send updates every 10 seconds
+    // Set up interval to send updates every 15 minutes
     const updateInterval = setInterval(() => {
       sendVesselData(ws);
-    }, 10000);
+    }, 15 * 60 * 1000);
 
     // Handle client messages
     ws.on('message', (message: Buffer) => {

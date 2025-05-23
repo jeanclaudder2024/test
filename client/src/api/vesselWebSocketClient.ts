@@ -299,7 +299,7 @@ export class VesselWebSocketClient {
     if (!this.restPollingInterval) {
       this.restPollingInterval = window.setInterval(() => {
         this.fetchVesselsViaREST();
-      }, 10000); // Poll every 10 seconds
+      }, 15 * 60 * 1000); // Poll every 15 minutes
     }
   }
   
