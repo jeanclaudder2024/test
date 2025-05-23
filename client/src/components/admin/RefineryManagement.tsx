@@ -90,7 +90,17 @@ export function RefineryManagement() {
     type: "Crude Oil",
     products: "",
     lat: "",
-    lng: ""
+    lng: "",
+    city: "",
+    email: "",
+    phone: "",
+    website: "",
+    address: "",
+    technical_specs: "",
+    photo: "",
+    year_built: undefined,
+    complexity: undefined,
+    utilization: undefined
   });
   const [isRefineryMapOpen, setIsRefineryMapOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
