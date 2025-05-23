@@ -970,21 +970,33 @@ export default function OilVesselMap() {
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Moving Vessels:</span>
                     <span className="font-medium">
-                      {filteredVessels.filter(v => 
-                        v.status === 'At Sea' || 
-                        v.status === 'Underway' || 
-                        (v.speed !== undefined && v.speed > 2)
-                      ).length}
+                      {filteredVessels.filter(v => {
+                        // Check vessel status with the same logic as our improved filter
+                        if (v.status) {
+                          const statusLower = v.status.toLowerCase();
+                          // Match any at sea or underway status variations
+                          if (['at sea', 'underway', 'sailing', 'en route', 'steaming', 'in transit'].some(s => 
+                              statusLower.includes(s))) {
+                            return true;
+                          }
+                        }
+                        // Also include vessels with speed > 2 knots regardless of status
+                        return (v.speed !== undefined && parseFloat(String(v.speed)) > 2);
+                      }).length}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">In Port:</span>
                     <span className="font-medium">
-                      {filteredVessels.filter(v => 
-                        v.status === 'In Port' || 
-                        v.status === 'Moored' || 
-                        v.status === 'Anchored'
-                      ).length}
+                      {filteredVessels.filter(v => {
+                        if (v.status) {
+                          const statusLower = v.status.toLowerCase();
+                          // Match any port-related status variations
+                          return ['in port', 'moored', 'at berth', 'docked', 'berthed', 'anchored', 'at anchor'].some(s => 
+                            statusLower.includes(s));
+                        }
+                        return false;
+                      }).length}
                     </span>
                   </div>
                 </CardContent>
