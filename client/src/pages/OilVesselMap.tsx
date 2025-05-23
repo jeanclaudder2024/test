@@ -71,6 +71,21 @@ const VESSEL_STATUSES: Record<string, string> = {
   'Unknown': '#6c757d'        // Gray for unknown status
 };
 
+// Map regions with coordinates for focusing
+const MAP_REGIONS: Record<string, { center: [number, number], zoom: number, label: string }> = {
+  'global': { center: [20, 0], zoom: 2, label: 'Global View' },
+  'north-america': { center: [40, -100], zoom: 4, label: 'North America' },
+  'south-america': { center: [-15, -60], zoom: 3, label: 'South America' },
+  'western-europe': { center: [50, 0], zoom: 4, label: 'Western Europe' },
+  'eastern-europe': { center: [50, 25], zoom: 4, label: 'Eastern Europe' },
+  'middle-east': { center: [28, 45], zoom: 4, label: 'Middle East' },
+  'north-africa': { center: [25, 20], zoom: 4, label: 'North Africa' },
+  'southern-africa': { center: [-10, 20], zoom: 3, label: 'Southern Africa' },
+  'asia-pacific': { center: [20, 110], zoom: 3, label: 'Asia Pacific' },
+  'southeast-asia': { center: [10, 115], zoom: 4, label: 'Southeast Asia' },
+  'oceania': { center: [-25, 135], zoom: 4, label: 'Oceania' },
+};
+
 // Interface for vessel data
 interface Vessel {
   id: number;
@@ -129,6 +144,7 @@ export default function OilVesselMap() {
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [showRefineries, setShowRefineries] = useState(true);
   const [showPorts, setShowPorts] = useState(true);
+  const [selectedRegion, setSelectedRegion] = useState<string>('global');
 
   // Filtered vessels based on search and filters
   const filteredVessels = useMemo(() => {
@@ -195,8 +211,7 @@ export default function OilVesselMap() {
         fadeAnimation: true, // Smooth fade on zoom
         markerZoomAnimation: true, // Animate markers when zooming
         inertia: true, // Smooth panning
-        inertiaDeceleration: 3000, // Smoother panning deceleration
-        tap: true // For mobile support
+        inertiaDeceleration: 3000 // Smoother panning deceleration
       });
       
       // Set up high-performance tile layer with optimized loading
@@ -832,6 +847,23 @@ export default function OilVesselMap() {
                   </Select>
                 </div>
                 
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Region</label>
+                  <Select
+                    value={selectedRegion}
+                    onValueChange={(value) => setSelectedRegion(value)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select region" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(MAP_REGIONS).map(([id, region]) => (
+                        <SelectItem key={id} value={id}>{region.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <div className="space-y-2">
                   <label className="text-xs text-muted-foreground">Map Layers</label>
                   <div className="flex items-center justify-between">
