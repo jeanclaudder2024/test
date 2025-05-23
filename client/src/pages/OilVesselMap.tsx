@@ -571,9 +571,9 @@ export default function OilVesselMap() {
             type: 'port' as const
           }));
         } else if (portsResponse && Array.isArray(portsResponse.ports)) {
-          portsData = portsResponse.ports.map(port => ({
+          portsData = portsResponse.ports.map((port: any) => ({
             ...port,
-            type: 'port'
+            type: 'port' as const
           }));
         }
         
@@ -586,9 +586,9 @@ export default function OilVesselMap() {
             type: 'refinery'
           }));
         } else if (refineriesResponse && Array.isArray(refineriesResponse.refineries)) {
-          refineriesData = refineriesResponse.refineries.map(refinery => ({
+          refineriesData = refineriesResponse.refineries.map((refinery: any) => ({
             ...refinery,
-            type: 'refinery'
+            type: 'refinery' as const
           }));
         }
         
@@ -695,14 +695,14 @@ export default function OilVesselMap() {
                 <div className="space-y-1">
                   <label className="text-xs text-muted-foreground">Cargo Type</label>
                   <Select
-                    value={cargoTypeFilter || ''}
-                    onValueChange={(value) => setCargoTypeFilter(value || null)}
+                    value={cargoTypeFilter || 'all'}
+                    onValueChange={(value) => setCargoTypeFilter(value === 'all' ? null : value)}
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="All cargo types" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All cargo types</SelectItem>
+                      <SelectItem value="all">All cargo types</SelectItem>
                       {CARGO_TYPES.map((type) => (
                         <SelectItem key={type} value={type}>{type}</SelectItem>
                       ))}
@@ -713,14 +713,14 @@ export default function OilVesselMap() {
                 <div className="space-y-1">
                   <label className="text-xs text-muted-foreground">Vessel Status</label>
                   <Select
-                    value={statusFilter || ''}
-                    onValueChange={(value) => setStatusFilter(value || null)}
+                    value={statusFilter || 'all'}
+                    onValueChange={(value) => setStatusFilter(value === 'all' ? null : value)}
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="All statuses" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All statuses</SelectItem>
+                      <SelectItem value="all">All statuses</SelectItem>
                       {Object.keys(VESSEL_STATUSES).map((status) => (
                         <SelectItem key={status} value={status}>{status}</SelectItem>
                       ))}
