@@ -29,9 +29,7 @@ import Companies from "@/pages/Companies";
 import ApiTest from "@/pages/ApiTest";
 import TranslationPage from "@/pages/TranslationPage";
 import TrafficInsights from "@/pages/TrafficInsights";
-import FixedFullPageMap from "@/pages/FixedFullPageMap";
-import FullscreenMap from "@/pages/FullscreenMap";
-import MapOnly from "@/pages/MapOnly";
+import BasicMap from "@/pages/BasicMap";
 // Maritime tracking and vessel lookup pages removed as requested
 import { useEffect } from "react";
 import { apiRequest, queryClient } from "./lib/queryClient";
@@ -131,8 +129,7 @@ function Router() {
             <Route path="/trading" component={TradingDashboard} />
             <Route path="/translation" component={TranslationPage} />
             <Route path="/traffic-insights" component={TrafficInsights} />
-            <Route path="/map" component={MapOnly} />
-            <Route path="/map-old" component={FixedFullPageMap} />
+            <Route path="/map" component={BasicMap} />
             {/* Maritime tracking and vessel lookup pages removed as requested */}
             <Route path="/settings" component={Settings} />
             <Route path="/subscribe" component={Subscribe} />
