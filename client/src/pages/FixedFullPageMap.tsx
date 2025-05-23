@@ -157,31 +157,50 @@ export default function FixedFullPageMap() {
     }
   };
   
-  // Filter data based on selected filters
+  // Filter data based on selected filters with safety checks for undefined values
   const filteredVessels = vessels.filter(vessel => {
-    const regionMatch = selectedRegion === "all" || vessel.destination?.includes(selectedRegion);
-    const typeMatch = vesselTypeFilter === "all" || vessel.vesselType === vesselTypeFilter;
+    if (!vessel) return false;
+    
+    const regionMatch = selectedRegion === "all" || 
+                        (vessel.destination ? vessel.destination.includes(selectedRegion) : false);
+    
+    const typeMatch = vesselTypeFilter === "all" || 
+                      (vessel.vesselType ? vessel.vesselType === vesselTypeFilter : false);
+    
     const searchMatch = searchQuery === "" || 
-      vessel.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      vessel.imo.includes(searchQuery) ||
-      vessel.mmsi.includes(searchQuery);
+                        (vessel.name ? vessel.name.toLowerCase().includes(searchQuery.toLowerCase()) : false) ||
+                        (vessel.imo ? vessel.imo.includes(searchQuery) : false) ||
+                        (vessel.mmsi ? vessel.mmsi.includes(searchQuery) : false);
+    
     return regionMatch && typeMatch && searchMatch && vessel.currentLat && vessel.currentLng;
   });
   
   const filteredRefineries = refineries.filter(refinery => {
-    const regionMatch = selectedRegion === "all" || refinery.region === selectedRegion;
+    if (!refinery) return false;
+    
+    const regionMatch = selectedRegion === "all" || 
+                        (refinery.region ? refinery.region === selectedRegion : false);
+    
     const searchMatch = searchQuery === "" || 
-      refinery.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      refinery.country.toLowerCase().includes(searchQuery.toLowerCase());
+                        (refinery.name ? refinery.name.toLowerCase().includes(searchQuery.toLowerCase()) : false) ||
+                        (refinery.country ? refinery.country.toLowerCase().includes(searchQuery.toLowerCase()) : false);
+    
     return regionMatch && searchMatch;
   });
   
   const filteredPorts = ports.filter(port => {
-    const regionMatch = selectedRegion === "all" || port.region === selectedRegion;
-    const typeMatch = portTypeFilter === "all" || port.portType === portTypeFilter;
+    if (!port) return false;
+    
+    const regionMatch = selectedRegion === "all" || 
+                        (port.region ? port.region === selectedRegion : false);
+    
+    const typeMatch = portTypeFilter === "all" || 
+                      (port.portType ? port.portType === portTypeFilter : false);
+    
     const searchMatch = searchQuery === "" || 
-      port.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      port.country.toLowerCase().includes(searchQuery.toLowerCase());
+                        (port.name ? port.name.toLowerCase().includes(searchQuery.toLowerCase()) : false) ||
+                        (port.country ? port.country.toLowerCase().includes(searchQuery.toLowerCase()) : false);
+    
     return regionMatch && typeMatch && searchMatch;
   });
   
