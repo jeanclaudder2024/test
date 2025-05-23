@@ -370,13 +370,21 @@ export default function FullscreenMap() {
           <MapContainer 
             center={mapCenter} 
             zoom={mapZoom} 
-            style={{ height: '100vh', width: '100vw' }} 
+            style={{ 
+              height: '100%', 
+              width: '100%',
+              position: 'absolute',
+              top: 0,
+              left: 0
+            }} 
             zoomControl={true}
             attributionControl={true}
             dragging={true}
             scrollWheelZoom={true}
             doubleClickZoom={true}
             touchZoom={true}
+            worldCopyJump={true}
+            maxBoundsViscosity={1.0}
           >
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
