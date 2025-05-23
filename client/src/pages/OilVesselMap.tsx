@@ -187,9 +187,45 @@ export default function OilVesselMap() {
       }
       
       // Apply status filter
-      if (statusFilter && (!vessel.status || 
-          !vessel.status.toLowerCase().includes(statusFilter.toLowerCase()))) {
-        return false;
+      if (statusFilter) {
+        if (!vessel.status) return false;
+        
+        const vesselStatusLower = vessel.status.toLowerCase();
+        const filterStatusLower = statusFilter.toLowerCase();
+        
+        // Check for multiple variations of status terms
+        if (filterStatusLower === 'at sea' || filterStatusLower === 'underway') {
+          // Match "at sea", "underway", "sailing", "en route", etc.
+          if (!['at sea', 'underway', 'sailing', 'en route', 'steaming', 'in transit'].some(s => 
+              vesselStatusLower.includes(s))) {
+            return false;
+          }
+        } 
+        else if (filterStatusLower === 'in port' || filterStatusLower === 'moored' || filterStatusLower === 'anchored') {
+          // Match port status variations
+          if (!['in port', 'moored', 'at berth', 'docked', 'berthed', 'anchored', 'at anchor'].some(s => 
+              vesselStatusLower.includes(s))) {
+            return false;
+          }
+        }
+        else if (filterStatusLower === 'delayed' || filterStatusLower === 'not moving') {
+          // Match delayed status variations
+          if (!['delayed', 'not moving', 'stopped', 'waiting', 'adrift', 'idle'].some(s => 
+              vesselStatusLower.includes(s))) {
+            return false;
+          }
+        }
+        else if (filterStatusLower === 'unknown') {
+          // Match unknown status
+          if (!['unknown', 'not available', 'n/a', ''].some(s => 
+              vesselStatusLower.includes(s))) {
+            return false;
+          }
+        }
+        else if (!vesselStatusLower.includes(filterStatusLower)) {
+          // Fallback to simple includes check
+          return false;
+        }
       }
       
       return true;
