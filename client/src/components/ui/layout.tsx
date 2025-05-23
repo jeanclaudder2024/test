@@ -1,7 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
-import petrodealhubLogo from "../../assets/petrodealhub-logo.png";
 import { 
   AlertCircle, 
   Bell, 
@@ -10,6 +9,7 @@ import {
   CreditCard,
   Database, 
   FileText, 
+  Globe,
   HelpCircle,
   Home, 
   Layers, 
@@ -196,7 +196,8 @@ export function Layout({ children }: LayoutProps) {
         <SheetContent side="left" className="w-[80%] max-w-sm p-0 bg-sidebar">
           <div className="flex items-center h-16 px-6 border-b border-sidebar-border">
             <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-lg">
-              <img src={petrodealhubLogo} alt="PetroDealHub Logo" className="h-10 w-auto" />
+              <Ship className="h-6 w-6 text-primary mr-1" />
+              <span className="font-medium">PetroDealHub</span>
             </Link>
             <Button 
               variant="ghost" 
@@ -313,7 +314,10 @@ export function Layout({ children }: LayoutProps) {
           <div className="flex items-center w-full gap-4 md:gap-8">
             {/* Company Logo */}
             <div className="hidden md:flex items-center mr-4">
-              <img src={petrodealhubLogo} alt="PetroDealHub Logo" className="h-12 w-auto" />
+              <div className="flex items-center gap-2">
+                <Ship className="h-8 w-8 text-primary" />
+                <span className="font-bold text-xl text-primary">PetroDealHub</span>
+              </div>
             </div>
             
             <div className="relative flex-1 max-w-md">
