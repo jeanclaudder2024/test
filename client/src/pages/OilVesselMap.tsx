@@ -1469,12 +1469,18 @@ export default function OilVesselMap() {
                           <div className="absolute bottom-3 left-0 right-0 flex justify-between px-6">
                             <div className="text-xs text-muted-foreground/70">
                               <i className="fa fa-water mr-1"></i> 
-                              {
-                                selectedVessel.region === 'Middle East' ? 'Calm seas' : 
-                                selectedVessel.region === 'Asia-Pacific' ? 'Moderate waves' :
-                                selectedVessel.region === 'North America' ? 'Choppy waves' :
-                                'Normal conditions'
-                              }
+                              {(() => {
+                                // Determine sea condition based on vessel current position instead of region
+                                const lat = typeof selectedVessel.currentLat === 'string' 
+                                  ? parseFloat(selectedVessel.currentLat) 
+                                  : selectedVessel.currentLat || 0;
+                                  
+                                if (lat > 30) return 'Calm seas';
+                                if (lat > 15) return 'Moderate waves';
+                                if (lat > 0) return 'Choppy conditions';
+                                if (lat > -30) return 'Rough waters';
+                                return 'Stormy seas';
+                              })()}
                             </div>
                             <div className="text-xs text-muted-foreground/70">
                               <i className="fa fa-wind mr-1"></i>

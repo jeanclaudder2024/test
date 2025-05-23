@@ -62,7 +62,7 @@ export function Layout({ children }: LayoutProps) {
     { name: "Vessels", href: "/vessels", icon: Ship },
     { name: "Vessel Dashboard", href: "/vessel-dashboard", icon: Layers },
     // Vessel Lookup removed as requested
-    { name: "Maritime Map", href: "/map", icon: Map },
+    // Maritime Map removed as requested
     { name: "Oil Vessel Map", href: "/oil-vessel-map", icon: Ship },
     // Maritime Tracking removed as requested
     { name: "Refineries", href: "/refineries", icon: Database },
