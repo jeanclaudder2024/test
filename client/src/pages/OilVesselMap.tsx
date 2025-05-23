@@ -1081,335 +1081,130 @@ export default function OilVesselMap() {
             {/* Content area with vessel data */}
             <div className="flex-1 overflow-auto">
               
-              {/* Premium vessel information panel */}
+              {/* Basic details */}
               <div className="px-6 py-4">
                 <h3 className="text-sm uppercase tracking-wider text-muted-foreground font-semibold mb-3 flex items-center">
                   <Info className="h-3.5 w-3.5 mr-1.5" />
-                  Vessel Intelligence
+                  Vessel Information
                 </h3>
                 
-                {/* Main vessel data grid */}
-                <div className="grid grid-cols-1 gap-4">
-                  {/* Vessel header info card with premium styling */}
-                  <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg border border-border/50 p-4 shadow-sm">
-                    <div className="flex items-center">
-                      {/* Vessel icon based on type */}
-                      <div className="w-14 h-14 rounded-full flex items-center justify-center bg-card shadow-sm border border-border/40">
-                        <div className="text-primary text-2xl">
-                          {selectedVessel.vesselType?.includes('VLCC') ? <i className="fa fa-ship"></i> : 
-                           selectedVessel.vesselType?.includes('Tanker') ? <i className="fa fa-oil-can"></i> :
-                           selectedVessel.vesselType?.includes('Container') ? <i className="fa fa-boxes"></i> :
-                           selectedVessel.vesselType?.includes('Bulk') ? <i className="fa fa-boxes-stacked"></i> :
-                           <i className="fa fa-ship"></i>}
-                        </div>
-                      </div>
-                      
-                      {/* Vessel name and status */}
-                      <div className="ml-4 flex-1">
-                        <div className="flex items-center">
-                          <h3 className="text-xl font-semibold">{selectedVessel.name}</h3>
-                          <div className={`ml-2 px-2 py-0.5 text-xs rounded-full font-medium ${
-                            selectedVessel.status === 'At Sea' || selectedVessel.status === 'Underway' 
-                              ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300' 
-                            : selectedVessel.status === 'In Port' || selectedVessel.status === 'Moored' || selectedVessel.status === 'Anchored' 
-                              ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300' 
-                            : selectedVessel.status === 'Delayed' || selectedVessel.status === 'Not Moving' 
-                              ? 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300' 
-                            : 'bg-slate-100 text-slate-800 dark:bg-slate-900/40 dark:text-slate-300'}`}>
-                            {selectedVessel.status || 'Unknown'}
-                          </div>
-                        </div>
-                        <div className="flex items-center mt-1 text-sm">
-                          <span className="text-muted-foreground">
-                            {selectedVessel.vesselType || 'Unknown vessel type'}
-                          </span>
-                          {selectedVessel.flag && (
-                            <span className="ml-2 flex items-center text-muted-foreground">
-                              • {selectedVessel.flag}
-                            </span>
-                          )}
-                        </div>
-                      </div>
+                <div className="bg-card rounded-lg border border-border/50 divide-y divide-border/50">
+                  {selectedVessel.imo && (
+                    <div className="flex items-center px-4 py-2.5">
+                      <span className="text-sm text-muted-foreground w-1/3">IMO Number:</span>
+                      <span className="text-sm font-medium">{selectedVessel.imo}</span>
                     </div>
-                    
-                    {/* Last updated timestamp */}
-                    <div className="mt-2 text-xs text-muted-foreground">
-                      Last updated: {new Date().toLocaleString()}
-                    </div>
-                  </div>
+                  )}
                   
-                  {/* Main data grid - enhanced layout */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Left panel - vessel details and specs */}
-                    <div className="space-y-4">
-                      {/* Key identifiers */}
-                      <div className="bg-card rounded-lg border border-border/50 overflow-hidden shadow-sm">
-                        <div className="p-3 bg-muted/40 border-b border-border/50">
-                          <h4 className="text-xs font-semibold uppercase tracking-wider flex items-center">
-                            <i className="fa fa-id-card text-primary/70 mr-1.5 text-xs"></i>
-                            Vessel Identifiers
-                          </h4>
-                        </div>
-                        <div className="divide-y divide-border/50">
-                          {selectedVessel.imo && (
-                            <div className="flex items-center px-4 py-2.5">
-                              <span className="text-sm text-muted-foreground w-1/3">IMO:</span>
-                              <span className="text-sm font-medium">{selectedVessel.imo}</span>
-                            </div>
-                          )}
-                          
-                          {selectedVessel.mmsi && (
-                            <div className="flex items-center px-4 py-2.5">
-                              <span className="text-sm text-muted-foreground w-1/3">MMSI:</span>
-                              <span className="text-sm font-medium">{selectedVessel.mmsi}</span>
-                            </div>
-                          )}
-                          
-                          {/* Call sign - derived from vessel identity */}
-                          <div className="flex items-center px-4 py-2.5">
-                            <span className="text-sm text-muted-foreground w-1/3">Call Sign:</span>
-                            <span className="text-sm font-medium">
-                              {selectedVessel.name ? selectedVessel.name.substring(0, 2).toUpperCase() + 
-                               (selectedVessel.imo ? selectedVessel.imo.substring(selectedVessel.imo.length - 4) : "0000") 
-                              : "Unknown"}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Position and navigation data */}
-                      <div className="bg-card rounded-lg border border-border/50 overflow-hidden shadow-sm">
-                        <div className="p-3 bg-muted/40 border-b border-border/50">
-                          <h4 className="text-xs font-semibold uppercase tracking-wider flex items-center">
-                            <i className="fa fa-location-dot text-primary/70 mr-1.5 text-xs"></i>
-                            Current Navigation
-                          </h4>
-                        </div>
-                        <div className="divide-y divide-border/50">
-                          {selectedVessel.currentLat && selectedVessel.currentLng && (
-                            <div className="flex items-center px-4 py-2.5">
-                              <span className="text-sm text-muted-foreground w-1/3">Position:</span>
-                              <span className="text-sm font-medium flex items-center">
-                                {typeof selectedVessel.currentLat === 'string' 
-                                  ? parseFloat(selectedVessel.currentLat).toFixed(4) 
-                                  : selectedVessel.currentLat?.toFixed(4)}, 
-                                {typeof selectedVessel.currentLng === 'string' 
-                                  ? parseFloat(selectedVessel.currentLng).toFixed(4) 
-                                  : selectedVessel.currentLng?.toFixed(4)}
-                                <i className="fa fa-map-marker-alt text-primary/70 ml-1.5 text-xs"></i>
-                              </span>
-                            </div>
-                          )}
-                          
-                          {selectedVessel.course !== undefined && (
-                            <div className="flex items-center px-4 py-2.5">
-                              <span className="text-sm text-muted-foreground w-1/3">Heading:</span>
-                              <div className="flex items-center">
-                                <span className="text-sm font-medium">{selectedVessel.course}°</span>
-                                <span className="ml-1.5 w-6 h-6 rounded-full bg-muted/40 flex items-center justify-center">
-                                  <i className="fa fa-arrow-up text-primary/80 text-xs"
-                                    style={{ transform: `rotate(${selectedVessel.course}deg)` }}
-                                  ></i>
-                                </span>
-                                <span className="text-xs ml-2 px-1.5 py-0.5 rounded bg-muted/40">
-                                  {selectedVessel.course >= 337.5 || selectedVessel.course < 22.5 ? 'North' :
-                                   selectedVessel.course >= 22.5 && selectedVessel.course < 67.5 ? 'Northeast' :
-                                   selectedVessel.course >= 67.5 && selectedVessel.course < 112.5 ? 'East' :
-                                   selectedVessel.course >= 112.5 && selectedVessel.course < 157.5 ? 'Southeast' :
-                                   selectedVessel.course >= 157.5 && selectedVessel.course < 202.5 ? 'South' :
-                                   selectedVessel.course >= 202.5 && selectedVessel.course < 247.5 ? 'Southwest' :
-                                   selectedVessel.course >= 247.5 && selectedVessel.course < 292.5 ? 'West' :
-                                   'Northwest'}
-                                </span>
-                              </div>
-                            </div>
-                          )}
-                          
-                          {selectedVessel.speed !== undefined && (
-                            <div className="flex items-center px-4 py-2.5">
-                              <span className="text-sm text-muted-foreground w-1/3">Speed:</span>
-                              <div className="flex items-center">
-                                <span className={`text-sm font-medium ${
-                                  selectedVessel.speed > 14 ? 'text-green-600 dark:text-green-400' : 
-                                  selectedVessel.speed < 3 ? 'text-red-600 dark:text-red-400' : ''
-                                }`}>
-                                  {selectedVessel.speed} knots
-                                </span>
-                                <div className="ml-2 w-16 h-1.5 bg-muted rounded-full overflow-hidden">
-                                  <div className={`h-full rounded-full ${
-                                    selectedVessel.speed > 14 ? 'bg-green-500' : 
-                                    selectedVessel.speed > 7 ? 'bg-primary' : 
-                                    selectedVessel.speed > 3 ? 'bg-amber-500' : 
-                                    'bg-red-500'
-                                  }`} style={{ width: `${Math.min(100, selectedVessel.speed * 5)}%` }}></div>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                          
-                          {selectedVessel.region && (
-                            <div className="flex items-center px-4 py-2.5">
-                              <span className="text-sm text-muted-foreground w-1/3">Region:</span>
-                              <span className="text-sm font-medium">{selectedVessel.region}</span>
-                            </div>
-                          )}
-                        </div>
+                  {selectedVessel.mmsi && (
+                    <div className="flex items-center px-4 py-2.5">
+                      <span className="text-sm text-muted-foreground w-1/3">MMSI:</span>
+                      <span className="text-sm font-medium">{selectedVessel.mmsi}</span>
+                    </div>
+                  )}
+                  
+                  {selectedVessel.currentLat && selectedVessel.currentLng && (
+                    <div className="flex items-center px-4 py-2.5">
+                      <span className="text-sm text-muted-foreground w-1/3">Position:</span>
+                      <span className="text-sm font-medium">
+                        {typeof selectedVessel.currentLat === 'string' 
+                          ? parseFloat(selectedVessel.currentLat).toFixed(4) 
+                          : selectedVessel.currentLat?.toFixed(4)}, 
+                        {typeof selectedVessel.currentLng === 'string' 
+                          ? parseFloat(selectedVessel.currentLng).toFixed(4) 
+                          : selectedVessel.currentLng?.toFixed(4)}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {selectedVessel.course !== undefined && (
+                    <div className="flex items-center px-4 py-2.5">
+                      <span className="text-sm text-muted-foreground w-1/3">Heading:</span>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium flex items-center">
+                          {selectedVessel.course}°
+                          <span style={{
+                            display: 'inline-block',
+                            width: '18px',
+                            height: '18px',
+                            transform: `rotate(${selectedVessel.course}deg)`,
+                            marginLeft: '8px'
+                          }}>
+                            <i className="fa fa-arrow-up text-primary/70 text-xs"></i>
+                          </span>
+                        </span>
+                        <span className="text-xs text-muted-foreground mt-1">
+                          {selectedVessel.course >= 337.5 || selectedVessel.course < 22.5 ? 'North' :
+                          selectedVessel.course >= 22.5 && selectedVessel.course < 67.5 ? 'Northeast' :
+                          selectedVessel.course >= 67.5 && selectedVessel.course < 112.5 ? 'East' :
+                          selectedVessel.course >= 112.5 && selectedVessel.course < 157.5 ? 'Southeast' :
+                          selectedVessel.course >= 157.5 && selectedVessel.course < 202.5 ? 'South' :
+                          selectedVessel.course >= 202.5 && selectedVessel.course < 247.5 ? 'Southwest' :
+                          selectedVessel.course >= 247.5 && selectedVessel.course < 292.5 ? 'West' :
+                          'Northwest'}
+                        </span>
                       </div>
                     </div>
-                    
-                    {/* Right panel - cargo and vessel specifications */}
-                    <div className="space-y-4">
-                      {/* Cargo and commercial information */}
-                      <div className="bg-card rounded-lg border border-border/50 overflow-hidden shadow-sm">
-                        <div className="p-3 bg-muted/40 border-b border-border/50">
-                          <h4 className="text-xs font-semibold uppercase tracking-wider flex items-center">
-                            <i className="fa fa-oil-can text-primary/70 mr-1.5 text-xs"></i>
-                            Cargo Details
-                          </h4>
-                        </div>
-                        <div className="divide-y divide-border/50">
-                          {selectedVessel.cargoType && (
-                            <div className="flex items-center px-4 py-2.5">
-                              <span className="text-sm text-muted-foreground w-1/3">Cargo Type:</span>
-                              <span className="text-sm font-medium">{selectedVessel.cargoType}</span>
-                            </div>
-                          )}
-                          
-                          {selectedVessel.cargoCapacity && (
-                            <div className="flex items-center px-4 py-2.5">
-                              <span className="text-sm text-muted-foreground w-1/3">Capacity:</span>
-                              <span className="text-sm font-medium">{selectedVessel.cargoCapacity}</span>
-                            </div>
-                          )}
-                          
-                          {/* Calculate estimated cargo value based on type and capacity */}
-                          <div className="flex items-center px-4 py-2.5">
-                            <span className="text-sm text-muted-foreground w-1/3">Est. Cargo:</span>
-                            <span className="text-sm font-medium">
-                              {selectedVessel.vesselType?.includes('VLCC') ? '~2 million barrels' : 
-                               selectedVessel.vesselType?.includes('Suezmax') ? '~1 million barrels' :
-                               selectedVessel.vesselType?.includes('Aframax') ? '~700,000 barrels' :
-                               selectedVessel.vesselType?.includes('Panamax') ? '~500,000 barrels' :
-                               selectedVessel.vesselType?.includes('Handysize') ? '~250,000 barrels' :
-                               'Not Available'}
-                            </span>
-                          </div>
-                          
-                          {/* Estimated cargo value */}
-                          <div className="flex items-center px-4 py-2.5">
-                            <span className="text-sm text-muted-foreground w-1/3">Est. Value:</span>
-                            <span className="text-sm font-medium">
-                              {(() => {
-                                // Estimate cargo value based on vessel type and current oil prices
-                                const oilPrice = 80; // Assumed current oil price USD per barrel
-                                
-                                let barrels = 0;
-                                if (selectedVessel.vesselType?.includes('VLCC')) {
-                                  barrels = 2000000;
-                                } else if (selectedVessel.vesselType?.includes('Suezmax')) {
-                                  barrels = 1000000;
-                                } else if (selectedVessel.vesselType?.includes('Aframax')) {
-                                  barrels = 700000;
-                                } else if (selectedVessel.vesselType?.includes('Panamax')) {
-                                  barrels = 500000;
-                                } else if (selectedVessel.vesselType?.includes('Handysize')) {
-                                  barrels = 250000;
-                                }
-                                
-                                if (barrels > 0) {
-                                  const value = barrels * oilPrice;
-                                  return `~$${(value / 1000000).toFixed(1)} million`;
-                                }
-                                
-                                return 'Not available';
-                              })()}
-                            </span>
-                          </div>
-                        </div>
+                  )}
+                  
+                  {selectedVessel.cargoType && (
+                    <div className="flex items-center px-4 py-2.5">
+                      <span className="text-sm text-muted-foreground w-1/3">Cargo:</span>
+                      <span className="text-sm font-medium">{selectedVessel.cargoType}</span>
+                    </div>
+                  )}
+
+                  {/* Vessel Performance Section */}
+                  <div className="flex items-center px-4 py-2.5 bg-primary/5">
+                    <span className="text-sm text-muted-foreground w-1/3">Status:</span>
+                    <span className="text-sm font-medium flex items-center">
+                      <div className={`w-2 h-2 rounded-full mr-1.5 ${
+                        selectedVessel.status === 'At Sea' || selectedVessel.status === 'Underway' 
+                          ? 'bg-green-500' 
+                        : selectedVessel.status === 'In Port' || selectedVessel.status === 'Moored' || selectedVessel.status === 'Anchored' 
+                          ? 'bg-amber-500' 
+                        : selectedVessel.status === 'Delayed' || selectedVessel.status === 'Not Moving' 
+                          ? 'bg-red-500' 
+                        : 'bg-slate-500'}`} />
+                      {selectedVessel.status || 'Unknown'}
+                    </span>
+                  </div>
+
+                  {/* Ship Specifications */}
+                  <div className="px-4 py-3 bg-card/50">
+                    <div className="mb-2">
+                      <h4 className="text-xs uppercase tracking-wider text-muted-foreground/80 font-medium">Ship Specifications</h4>
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                      <div>
+                        <p className="text-xs text-muted-foreground">Vessel Type</p>
+                        <p className="text-sm font-medium">{selectedVessel.vesselType || 'Unknown'}</p>
                       </div>
-                      
-                      {/* Technical specifications */}
-                      <div className="bg-card rounded-lg border border-border/50 overflow-hidden shadow-sm">
-                        <div className="p-3 bg-muted/40 border-b border-border/50">
-                          <h4 className="text-xs font-semibold uppercase tracking-wider flex items-center">
-                            <i className="fa fa-gears text-primary/70 mr-1.5 text-xs"></i>
-                            Technical Specifications
-                          </h4>
-                        </div>
-                        <div className="divide-y divide-border/50">
-                          {/* Deadweight tonnage based on vessel type */}
-                          <div className="flex items-center px-4 py-2.5">
-                            <span className="text-sm text-muted-foreground w-1/3">Deadweight:</span>
-                            <span className="text-sm font-medium">
-                              {selectedVessel.vesselType?.includes('VLCC') ? '270,000-320,000 DWT' : 
-                               selectedVessel.vesselType?.includes('Suezmax') ? '120,000-200,000 DWT' :
-                               selectedVessel.vesselType?.includes('Aframax') ? '80,000-120,000 DWT' :
-                               selectedVessel.vesselType?.includes('Panamax') ? '60,000-80,000 DWT' :
-                               selectedVessel.vesselType?.includes('Handysize') ? '20,000-60,000 DWT' :
-                               'Not Available'}
-                            </span>
-                          </div>
-                          
-                          {/* Estimated dimensions */}
-                          <div className="flex items-center px-4 py-2.5">
-                            <span className="text-sm text-muted-foreground w-1/3">Est. Length:</span>
-                            <span className="text-sm font-medium">
-                              {selectedVessel.vesselType?.includes('VLCC') ? '~330 meters' : 
-                               selectedVessel.vesselType?.includes('Suezmax') ? '~275 meters' :
-                               selectedVessel.vesselType?.includes('Aframax') ? '~245 meters' :
-                               selectedVessel.vesselType?.includes('Panamax') ? '~225 meters' :
-                               selectedVessel.vesselType?.includes('Handysize') ? '~180 meters' :
-                               'Not Available'}
-                            </span>
-                          </div>
-                          
-                          {/* Estimated build year range */}
-                          <div className="flex items-center px-4 py-2.5">
-                            <span className="text-sm text-muted-foreground w-1/3">Est. Age:</span>
-                            <span className="text-sm font-medium">
-                              {(() => {
-                                // Generate a random but realistic vessel age
-                                const vesselId = parseInt(selectedVessel.id?.toString() || '0');
-                                const seedValue = vesselId % 20; // Use vessel ID to create consistent random value
-                                
-                                if (seedValue < 5) return '0-5 years';
-                                if (seedValue < 10) return '5-10 years';
-                                if (seedValue < 15) return '10-15 years';
-                                return '15+ years';
-                              })()}
-                            </span>
-                          </div>
-                          
-                          {/* Fuel consumption estimate */}
-                          <div className="flex items-center px-4 py-2.5">
-                            <span className="text-sm text-muted-foreground w-1/3">Fuel Usage:</span>
-                            <span className="text-sm font-medium">
-                              {(() => {
-                                // Estimate fuel consumption based on vessel type and speed
-                                let baseFuel = 0;
-                                if (selectedVessel.vesselType?.includes('VLCC')) {
-                                  baseFuel = 80; // tons per day at economic speed
-                                } else if (selectedVessel.vesselType?.includes('Suezmax')) {
-                                  baseFuel = 55;
-                                } else if (selectedVessel.vesselType?.includes('Aframax')) {
-                                  baseFuel = 40;
-                                } else if (selectedVessel.vesselType?.includes('Panamax')) {
-                                  baseFuel = 30;
-                                } else {
-                                  baseFuel = 20;
-                                }
-                                
-                                // Speed factor: consumption increases exponentially with speed
-                                const speed = selectedVessel.speed || 12;
-                                const speedFactor = Math.pow(speed / 12, 3);
-                                const estimatedConsumption = speed < 2 ? 
-                                  "Minimal" : `~${Math.round(baseFuel * speedFactor)} tons/day`;
-                                
-                                return estimatedConsumption;
-                              })()}
-                            </span>
-                          </div>
-                        </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Flag</p>
+                        <p className="text-sm font-medium">{selectedVessel.flag || 'Unknown'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Est. Capacity</p>
+                        <p className="text-sm font-medium">
+                          {selectedVessel.vesselType?.includes('VLCC') ? '270,000-320,000 DWT' : 
+                           selectedVessel.vesselType?.includes('Suezmax') ? '120,000-200,000 DWT' :
+                           selectedVessel.vesselType?.includes('Aframax') ? '80,000-120,000 DWT' :
+                           selectedVessel.vesselType?.includes('Panamax') ? '60,000-80,000 DWT' :
+                           selectedVessel.vesselType?.includes('Handysize') ? '20,000-60,000 DWT' :
+                           'Not Available'}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Cargo Capacity</p>
+                        <p className="text-sm font-medium">
+                          {selectedVessel.vesselType?.includes('VLCC') ? '~2 million barrels' : 
+                           selectedVessel.vesselType?.includes('Suezmax') ? '~1 million barrels' :
+                           selectedVessel.vesselType?.includes('Aframax') ? '~700,000 barrels' :
+                           selectedVessel.vesselType?.includes('Panamax') ? '~500,000 barrels' :
+                           selectedVessel.vesselType?.includes('Handysize') ? '~250,000 barrels' :
+                           'Not Available'}
+                        </p>
                       </div>
                     </div>
                   </div>
