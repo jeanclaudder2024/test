@@ -49,12 +49,22 @@ export function SimpleVesselCreator({ open, onOpenChange }: SimpleVesselCreatorP
   const { mutate: addVessel, isPending: isSubmitting } = useMutation({
     mutationFn: async (vesselData: any) => {
       try {
-        // The data is already in the correct format for the API
+        // Map field names to match exact database schema fields
         const formattedData = {
-          ...vesselData,
-          // Ensure numeric fields are properly formatted
+          name: vesselData.name,
+          imo: vesselData.imo,
+          mmsi: vesselData.mmsi,
+          vessel_type: vesselData.vessel_type,
+          flag: vesselData.flag,
+          current_lat: vesselData.current_lat,
+          current_lng: vesselData.current_lng,
+          destination_port: vesselData.destination_port,
+          eta: vesselData.eta,
+          cargo_type: vesselData.cargo_type,
           cargo_capacity: parseInt(vesselData.cargo_capacity),
-          speed: parseInt(vesselData.speed) || 0
+          current_region: vesselData.current_region,
+          status: vesselData.status,
+          speed: vesselData.speed || "0"
         };
         
         console.log("Sending vessel data:", formattedData);
