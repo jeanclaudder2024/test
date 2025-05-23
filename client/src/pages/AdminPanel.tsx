@@ -4,10 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useQuery } from "@tanstack/react-query";
 import { UserManagement } from "@/components/admin/UserManagement";
 import { SystemStats } from "@/components/admin/SystemStats";
-import { DataManagement } from "@/components/admin/DataManagement";
+import { FixedDataManagement } from "@/components/admin/FixedDataManagement";
+import { VesselManagement } from "@/components/admin/VesselManagement";
 import { Settings } from "@/components/admin/AdminSettings";
 import { Button } from "@/components/ui/button";
-import { Shield, Database, Users, Settings as SettingsIcon, ChevronLeft } from "lucide-react";
+import { Shield, Database, Users, Settings as SettingsIcon, ChevronLeft, Ship } from "lucide-react";
 import { useLocation } from "wouter";
 
 export default function AdminPanel() {
@@ -41,7 +42,7 @@ export default function AdminPanel() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid grid-cols-4 w-full max-w-2xl">
+        <TabsList className="grid grid-cols-5 w-full max-w-3xl">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <Shield className="h-4 w-4" />
             <span className="hidden sm:inline">System Overview</span>
@@ -51,6 +52,11 @@ export default function AdminPanel() {
             <Users className="h-4 w-4" />
             <span className="hidden sm:inline">User Management</span>
             <span className="sm:hidden">Users</span>
+          </TabsTrigger>
+          <TabsTrigger value="vessels" className="flex items-center gap-2">
+            <Ship className="h-4 w-4" />
+            <span className="hidden sm:inline">Vessel Management</span>
+            <span className="sm:hidden">Vessels</span>
           </TabsTrigger>
           <TabsTrigger value="data" className="flex items-center gap-2">
             <Database className="h-4 w-4" />
@@ -91,17 +97,31 @@ export default function AdminPanel() {
             </CardContent>
           </Card>
         </TabsContent>
+        
+        <TabsContent value="vessels" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Vessel Management</CardTitle>
+              <CardDescription>
+                Add, edit, and manage vessel data with interactive map positioning
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <VesselManagement />
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="data" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>Data Management</CardTitle>
               <CardDescription>
-                Manage vessels, ports, refineries and system data
+                Manage ports, refineries and system data
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <DataManagement />
+              <FixedDataManagement />
             </CardContent>
           </Card>
         </TabsContent>
