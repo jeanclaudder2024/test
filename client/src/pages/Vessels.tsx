@@ -490,7 +490,8 @@ export default function Vessels() {
         
       // Status filter - NEW
       const matchesStatus = selectedStatus === 'all' || (() => {
-        const speed = vessel.currentSpeed ? Number(vessel.currentSpeed) : 0;
+        const speed = vessel.speed ? Number(vessel.speed) : 0;
+        const vesselStatus = (vessel.status || '').toLowerCase();
         
         // Vessel in transit - moving between locations at normal speed
         if (selectedStatus === 'transit') {
@@ -501,8 +502,8 @@ export default function Vessels() {
           // Check if vessel is at a destination (port or refinery) and moving slowly
           const isNearDestination = vessel.destinationPort && 
             // Using string matching instead of distance calculation
-            (vessel.status === 'loading' || 
-             vessel.status === 'docked' || 
+            (vesselStatus.includes('load') || 
+             vesselStatus.includes('dock') || 
              speed < 2);
           return isNearDestination;
         } 
@@ -512,7 +513,7 @@ export default function Vessels() {
           // Based on being near a port in the past and now moving
           const possiblyLoadedRecently = 
             (vessel.departurePort !== undefined && vessel.departurePort !== null) || 
-            vessel.status === 'departing' ||
+            vesselStatus.includes('depart') ||
             (vessel.departureTime && 
              // If departure time is within last 3 days
              (new Date().getTime() - new Date(vessel.departureTime).getTime() < 3 * 24 * 60 * 60 * 1000));

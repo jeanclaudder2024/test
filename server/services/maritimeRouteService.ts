@@ -757,7 +757,16 @@ export class MaritimeRouteService {
           endLat = parseFloat(port.lat);
           endLng = parseFloat(port.lng);
         } else {
-          throw new Error("Port location not found");
+          // If port not found, use a fallback 200km ahead in the vessel's direction
+          const bearingRad = (vessel.heading || 0) * Math.PI / 180;
+          const distance = 200; // km
+          const R = 6371; // Earth radius in km
+          
+          // Approximate destination coordinates using simple formula
+          endLat = startLat + (distance / R) * Math.cos(bearingRad) * (180 / Math.PI);
+          endLng = startLng + (distance / R) * Math.sin(bearingRad) * (180 / Math.PI) / Math.cos(startLat * Math.PI / 180);
+          
+          console.log(`Port '${portName}' not found, using fallback destination at ${endLat.toFixed(4)},${endLng.toFixed(4)}`);
         }
       }
       

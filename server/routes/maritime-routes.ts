@@ -47,22 +47,64 @@ maritimeRoutesRouter.get('/api/vessels/:id/route', async (req: Request, res: Res
       }
     }
     
-    // Generate a new route
-    const route = await maritimeRouteService.generateAndSaveVesselRoute(vesselId);
-    
-    return res.status(200).json({
-      success: true,
-      route,
-      vessel: {
-        id: vessel.id,
-        name: vessel.name,
-        currentPosition: {
-          lat: vessel.currentLat,
-          lng: vessel.currentLng
-        },
-        destination: vessel.destinationPort
-      }
-    });
+    try {
+      // Generate a new route
+      const route = await maritimeRouteService.generateAndSaveVesselRoute(vesselId);
+      
+      return res.status(200).json({
+        success: true,
+        route,
+        vessel: {
+          id: vessel.id,
+          name: vessel.name,
+          currentPosition: {
+            lat: vessel.currentLat,
+            lng: vessel.currentLng
+          },
+          destination: vessel.destinationPort
+        }
+      });
+    } catch (routeError) {
+      console.error("Could not generate proper route - using fallback:", routeError);
+      
+      // If route generation fails, create a simple fallback route
+      const currentLat = parseFloat(vessel.currentLat || "0");
+      const currentLng = parseFloat(vessel.currentLng || "0");
+      
+      // Simple route with a few points in the vessel's heading direction
+      const heading = vessel.heading ? parseFloat(vessel.heading) : 0;
+      const headingRad = heading * Math.PI / 180;
+      
+      // Create a path that extends in the vessel's direction
+      const fallbackRoute = {
+        waypoints: [
+          { lat: currentLat, lng: currentLng },
+          { 
+            lat: currentLat + (Math.cos(headingRad) * 0.1), 
+            lng: currentLng + (Math.sin(headingRad) * 0.1) 
+          },
+          { 
+            lat: currentLat + (Math.cos(headingRad) * 0.2), 
+            lng: currentLng + (Math.sin(headingRad) * 0.2) 
+          }
+        ]
+      };
+      
+      return res.status(200).json({
+        success: true,
+        route: fallbackRoute,
+        fallback: true,
+        vessel: {
+          id: vessel.id,
+          name: vessel.name,
+          currentPosition: {
+            lat: vessel.currentLat,
+            lng: vessel.currentLng
+          },
+          destination: vessel.destinationPort || 'Unknown'
+        }
+      });
+    }
     
   } catch (error) {
     console.error("Error generating maritime route:", error);
