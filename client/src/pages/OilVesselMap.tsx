@@ -1118,18 +1118,30 @@ export default function OilVesselMap() {
                   {selectedVessel.course !== undefined && (
                     <div className="flex items-center px-4 py-2.5">
                       <span className="text-sm text-muted-foreground w-1/3">Heading:</span>
-                      <span className="text-sm font-medium flex items-center">
-                        {selectedVessel.course}°
-                        <span style={{
-                          display: 'inline-block',
-                          width: '18px',
-                          height: '18px',
-                          transform: `rotate(${selectedVessel.course}deg)`,
-                          marginLeft: '8px'
-                        }}>
-                          <i className="fa fa-arrow-up text-primary/70 text-xs"></i>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium flex items-center">
+                          {selectedVessel.course}°
+                          <span style={{
+                            display: 'inline-block',
+                            width: '18px',
+                            height: '18px',
+                            transform: `rotate(${selectedVessel.course}deg)`,
+                            marginLeft: '8px'
+                          }}>
+                            <i className="fa fa-arrow-up text-primary/70 text-xs"></i>
+                          </span>
                         </span>
-                      </span>
+                        <span className="text-xs text-muted-foreground mt-1">
+                          {selectedVessel.course >= 337.5 || selectedVessel.course < 22.5 ? 'North' :
+                          selectedVessel.course >= 22.5 && selectedVessel.course < 67.5 ? 'Northeast' :
+                          selectedVessel.course >= 67.5 && selectedVessel.course < 112.5 ? 'East' :
+                          selectedVessel.course >= 112.5 && selectedVessel.course < 157.5 ? 'Southeast' :
+                          selectedVessel.course >= 157.5 && selectedVessel.course < 202.5 ? 'South' :
+                          selectedVessel.course >= 202.5 && selectedVessel.course < 247.5 ? 'Southwest' :
+                          selectedVessel.course >= 247.5 && selectedVessel.course < 292.5 ? 'West' :
+                          'Northwest'}
+                        </span>
+                      </div>
                     </div>
                   )}
                   
@@ -1176,6 +1188,83 @@ export default function OilVesselMap() {
                             ETA: {formatDate(selectedVessel.estimatedArrival)}
                           </p>
                         )}
+                      </div>
+                    )}
+                    
+                    {/* Voyage Progress */}
+                    {selectedVessel.departureTime && selectedVessel.estimatedArrival && (
+                      <div className="px-4 pb-4">
+                        <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                          <span>Departure</span>
+                          <span>Arrival</span>
+                        </div>
+                        
+                        {(() => {
+                          // Calculate voyage progress
+                          const departureTime = new Date(selectedVessel.departureTime).getTime();
+                          const arrivalTime = new Date(selectedVessel.estimatedArrival).getTime();
+                          const currentTime = new Date().getTime();
+                          
+                          // Calculate progress percentage
+                          let progressPercent = 0;
+                          if (currentTime >= arrivalTime) {
+                            progressPercent = 100;
+                          } else if (currentTime <= departureTime) {
+                            progressPercent = 0;
+                          } else {
+                            const totalDuration = arrivalTime - departureTime;
+                            const elapsed = currentTime - departureTime;
+                            progressPercent = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
+                          }
+                          
+                          // Calculate remaining time
+                          const remainingMs = arrivalTime - currentTime;
+                          const remainingHours = Math.max(0, Math.floor(remainingMs / (1000 * 60 * 60)));
+                          const remainingDays = Math.floor(remainingHours / 24);
+                          const hoursAfterDays = remainingHours % 24;
+                          
+                          const remainingTimeText = remainingMs <= 0 
+                            ? 'Arrived/Arriving' 
+                            : remainingDays > 0 
+                              ? `${remainingDays}d ${hoursAfterDays}h remaining` 
+                              : `${remainingHours}h remaining`;
+                          
+                          return (
+                            <>
+                              <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                                <div 
+                                  className="h-full bg-primary rounded-full" 
+                                  style={{ width: `${progressPercent}%` }}
+                                ></div>
+                              </div>
+                              <div className="mt-1 text-xs flex justify-center text-muted-foreground">
+                                {remainingTimeText}
+                              </div>
+                            </>
+                          );
+                        })()}
+                      </div>
+                    )}
+                    
+                    {/* Additional voyage info */}
+                    {selectedVessel.speed !== undefined && selectedVessel.speed > 0 && (
+                      <div className="px-4 pb-4 border-t border-border/50 pt-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <Navigation className="h-3.5 w-3.5 mr-1.5 text-primary/70" />
+                            <span className="text-sm">Current Speed</span>
+                          </div>
+                          <span className="text-sm font-medium">{selectedVessel.speed} knots</span>
+                        </div>
+                        
+                        {/* Estimated daily distance */}
+                        <div className="flex items-center justify-between mt-2">
+                          <div className="flex items-center">
+                            <MapPin className="h-3.5 w-3.5 mr-1.5 text-primary/70" />
+                            <span className="text-sm">Est. Daily Distance</span>
+                          </div>
+                          <span className="text-sm font-medium">~{Math.round(selectedVessel.speed * 24)} nm</span>
+                        </div>
                       </div>
                     )}
                   </div>
