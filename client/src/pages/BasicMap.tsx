@@ -1,35 +1,10 @@
 import { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, LayersControl, LayerGroup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import '../styles/full-map.css';
 import '../styles/marker-icons.css';
 import { apiRequest } from '@/lib/queryClient';
-import L from 'leaflet';
-
-// Fix for default markers
-import markerIcon from 'leaflet/dist/images/marker-icon.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
-
-// Create custom icons for refineries and ports
-const refineryIcon = new L.Icon({
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-  className: 'refinery-marker'
-});
-
-const portIcon = new L.Icon({
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-  className: 'port-marker'
-});
+import { refineryIcon, portIcon, oilTerminalIcon, tankFarmIcon } from '@/components/map/CustomMarkerIcons';
 
 // Define types for our data
 interface Refinery {
@@ -101,45 +76,72 @@ export default function BasicMap() {
           bounds={[[-90, -180], [90, 180]]}
         />
 
-        {/* Render refineries */}
-        {refineries.map(refinery => (
-          <Marker
-            key={`refinery-${refinery.id}`}
-            position={[parseFloat(refinery.lat), parseFloat(refinery.lng)]}
-            icon={refineryIcon}
-          >
-            <Popup>
-              <div>
-                <h3>{refinery.name}</h3>
-                <p>Country: {refinery.country}</p>
-                <p>Region: {refinery.region}</p>
-                <p>Capacity: {refinery.capacity} bpd</p>
-                {refinery.description && <p>{refinery.description}</p>}
-                {refinery.operator && <p>Operator: {refinery.operator}</p>}
-              </div>
-            </Popup>
-          </Marker>
-        ))}
-
-        {/* Render ports */}
-        {ports.map(port => (
-          <Marker
-            key={`port-${port.id}`}
-            position={[parseFloat(port.lat), parseFloat(port.lng)]}
-            icon={portIcon}
-          >
-            <Popup>
-              <div>
-                <h3>{port.name}</h3>
-                <p>Country: {port.country}</p>
-                <p>Region: {port.region}</p>
-                <p>Type: {port.type}</p>
-                {port.capacity && <p>Capacity: {port.capacity}</p>}
-                {port.description && <p>{port.description}</p>}
-              </div>
-            </Popup>
-          </Marker>
-        ))}
+        <LayersControl position="topright">
+          {/* Refineries Layer */}
+          <LayersControl.Overlay checked name="Refineries">
+            <LayerGroup>
+              {refineries.map(refinery => (
+                <Marker
+                  key={`refinery-${refinery.id}`}
+                  position={[parseFloat(refinery.lat), parseFloat(refinery.lng)]}
+                  icon={refineryIcon}
+                >
+                  <Popup>
+                    <div className="marker-popup">
+                      <h3>{refinery.name}</h3>
+                      <p><strong>Country:</strong> {refinery.country}</p>
+                      <p><strong>Region:</strong> {refinery.region}</p>
+                      <p><strong>Capacity:</strong> {refinery.capacity.toLocaleString()} bpd</p>
+                      <p><strong>Status:</strong> {refinery.status || "Operational"}</p>
+                      {refinery.operator && <p><strong>Operator:</strong> {refinery.operator}</p>}
+                      {refinery.description && (
+                        <div className="description">
+                          <p><strong>Description:</strong></p>
+                          <p>{refinery.description.substring(0, 150)}...</p>
+                        </div>
+                      )}
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
+            </LayerGroup>
+          </LayersControl.Overlay>
+          
+          {/* Ports Layer */}
+          <LayersControl.Overlay checked name="Ports">
+            <LayerGroup>
+              {ports.map(port => {
+                // Choose icon based on port type
+                const icon = port.type?.includes('oil') ? oilTerminalIcon : portIcon;
+                
+                return (
+                  <Marker
+                    key={`port-${port.id}`}
+                    position={[parseFloat(port.lat), parseFloat(port.lng)]}
+                    icon={icon}
+                  >
+                    <Popup>
+                      <div className="marker-popup">
+                        <h3>{port.name}</h3>
+                        <p><strong>Country:</strong> {port.country}</p>
+                        <p><strong>Region:</strong> {port.region}</p>
+                        <p><strong>Type:</strong> {port.type}</p>
+                        {port.capacity && <p><strong>Capacity:</strong> {port.capacity.toLocaleString()}</p>}
+                        <p><strong>Status:</strong> {port.status || "Active"}</p>
+                        {port.description && (
+                          <div className="description">
+                            <p><strong>Description:</strong></p>
+                            <p>{port.description}</p>
+                          </div>
+                        )}
+                      </div>
+                    </Popup>
+                  </Marker>
+                );
+              })}
+            </LayerGroup>
+          </LayersControl.Overlay>
+        </LayersControl>
       </MapContainer>
     </div>
   );
