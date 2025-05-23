@@ -17,8 +17,8 @@ export function createMarkerIcon(color: string, size: number = 12) {
   });
 }
 
-// Create specific icons
-export const refineryIcon = createMarkerIcon('#e74c3c', 14); // Red
-export const portIcon = createMarkerIcon('#3498db', 14);     // Blue
-export const oilTerminalIcon = createMarkerIcon('#2ecc71', 14); // Green
-export const tankFarmIcon = createMarkerIcon('#f39c12', 14);   // Orange
+// Create specific icons with larger size for better visibility
+export const refineryIcon = createMarkerIcon('#e74c3c', 18); // Red
+export const portIcon = createMarkerIcon('#3498db', 16);     // Blue
+export const oilTerminalIcon = createMarkerIcon('#2ecc71', 16); // Green
+export const tankFarmIcon = createMarkerIcon('#f39c12', 16);   // Orange

@@ -2,11 +2,32 @@
 .custom-marker {
   transition: transform 0.2s ease;
   cursor: pointer;
+  z-index: 900 !important;
 }
 
 .custom-marker:hover {
   transform: scale(1.5);
   z-index: 1000 !important;
+}
+
+/* Pulsating effect for better visibility */
+.custom-marker div {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 /* Style for marker popups */
