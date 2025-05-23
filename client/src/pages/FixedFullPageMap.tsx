@@ -631,14 +631,17 @@ export default function FixedFullPageMap() {
       className: 'refinery-marker',
       html: `
         <div class="relative group">
-          <div class="absolute inset-0 rounded-full opacity-25 blur-[2px] group-hover:opacity-40 transition-opacity bg-red-500"></div>
-          <div class="relative w-6 h-6 bg-white rounded-full border-2 border-red-500 shadow-lg flex items-center justify-center text-red-500 text-xs font-bold">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 22h8"></path><path d="M12 11v11"></path><path d="M20 19V7l-4 4V7l-4 4V7L8 11V7L4 11v8"></path></svg>
+          <div class="absolute inset-0 rounded-full opacity-30 blur-[2px] group-hover:opacity-50 transition-opacity bg-red-500"></div>
+          <div class="relative w-7 h-7 bg-white rounded-full border-2 border-red-500 shadow-lg flex items-center justify-center text-red-500 text-xs font-bold">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 22h8"></path><path d="M12 11v11"></path><path d="M20 19V7l-4 4V7l-4 4V7L8 11V7L4 11v8"></path></svg>
+          </div>
+          <div class="absolute -bottom-5 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-60 text-white text-[8px] px-1 py-0.5 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+            ${refinery.name}
           </div>
         </div>
       `,
-      iconSize: [24, 24],
-      iconAnchor: [12, 12]
+      iconSize: [28, 28],
+      iconAnchor: [14, 14]
     });
   };
   
@@ -654,7 +657,13 @@ export default function FixedFullPageMap() {
   
   // Handle item selection from search or map click
   const handleItemSelect = (item: any, type: 'vessel' | 'port' | 'refinery') => {
-    setSelectedItem(item);
+    // Make sure we preserve the correct type when setting the selected item
+    console.log(`Selected ${type}:`, item);
+    
+    // Always ensure we mark the type explicitly to avoid confusion
+    const itemWithType = { ...item, itemType: type };
+    
+    setSelectedItem(itemWithType);
     setSelectedItemType(type);
     setInfoCardOpen(true);
     
@@ -663,7 +672,16 @@ export default function FixedFullPageMap() {
     const lng = typeof item.lng === 'string' ? parseFloat(item.lng) : item.lng;
     
     setMapCenter([lat, lng]);
-    setMapZoom(type === 'vessel' ? 8 : 7);
+    // Adjust zoom based on item type
+    setMapZoom(type === 'vessel' ? 8 : type === 'refinery' ? 9 : 7);
+    
+    // Show a toast notification
+    toast({
+      title: `${type.charAt(0).toUpperCase() + type.slice(1)} Selected`,
+      description: `Now showing details for ${item.name}`,
+      variant: "default",
+      duration: 2000,
+    });
   };
   
   // Clear selection
@@ -1491,11 +1509,12 @@ export default function FixedFullPageMap() {
                         </div>
                       )}
                       
-                      {/* Refinery specific details */}
+                      {/* Refinery specific details - Enhanced with improved visuals */}
                       {selectedItemType === 'refinery' && (
                         <div className="space-y-4">
                           <div className="flex items-center gap-1">
-                            <Badge variant="outline">{selectedItem.status}</Badge>
+                            <Badge variant="secondary" className="bg-red-100 text-red-800 hover:bg-red-200">Refinery</Badge>
+                            <Badge variant="outline">{selectedItem.status || 'Active'}</Badge>
                           </div>
                           
                           <div className="grid grid-cols-1 gap-y-2 text-sm">
@@ -1509,7 +1528,7 @@ export default function FixedFullPageMap() {
                             </div>
                             {selectedItem.capacity && (
                               <div>
-                                <p className="text-xs text-muted-foreground">Capacity</p>
+                                <p className="text-xs text-muted-foreground">Refining Capacity</p>
                                 <p className="font-medium">{selectedItem.capacity.toLocaleString()} BPD</p>
                               </div>
                             )}
@@ -1534,7 +1553,7 @@ export default function FixedFullPageMap() {
                           
                           <div className="pt-2">
                             <Button size="sm" className="w-full">
-                              <Info className="h-4 w-4 mr-2" />
+                              <Factory className="h-4 w-4 mr-2" />
                               View Full Refinery Details
                             </Button>
                           </div>
