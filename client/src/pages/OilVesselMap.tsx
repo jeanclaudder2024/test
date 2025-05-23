@@ -1220,33 +1220,135 @@ export default function OilVesselMap() {
                   </h3>
                   
                   <div className="bg-card rounded-lg border border-border/50 overflow-hidden">
-                    {selectedVessel.lastPort && (
-                      <div className="p-4 border-b border-border/50">
-                        <div className="flex items-center mb-1">
-                          <div className="h-2 w-2 rounded-full bg-blue-500 mr-2"></div>
-                          <p className="text-sm font-medium">Origin: {selectedVessel.lastPort}</p>
-                        </div>
-                        {selectedVessel.departureTime && (
-                          <p className="text-xs text-muted-foreground ml-4 mt-1">
-                            Departed: {formatDate(selectedVessel.departureTime)}
-                          </p>
+                    {/* Animated Route Information */}
+                    <div className="p-4 border-b border-border/50">
+                      <div className="flex justify-between items-start mb-3">
+                        {/* Origin Port */}
+                        {selectedVessel.lastPort ? (
+                          <div className="text-left flex-1">
+                            <div className="flex items-center">
+                              <div className="h-3 w-3 rounded-full bg-blue-500 mr-2 animate-pulse"></div>
+                              <p className="text-sm font-medium">Origin</p>
+                            </div>
+                            <p className="text-sm font-medium ml-5 mt-1">{selectedVessel.lastPort}</p>
+                            {selectedVessel.departureTime && (
+                              <p className="text-xs text-muted-foreground ml-5">
+                                {formatDate(selectedVessel.departureTime)}
+                              </p>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="text-left flex-1">
+                            <div className="flex items-center">
+                              <div className="h-3 w-3 rounded-full bg-blue-500/50 mr-2"></div>
+                              <p className="text-sm text-muted-foreground">Origin</p>
+                            </div>
+                            <p className="text-sm text-muted-foreground ml-5 mt-1">Unknown</p>
+                          </div>
+                        )}
+                        
+                        {/* Destination Port */}
+                        {selectedVessel.destination ? (
+                          <div className="text-right flex-1">
+                            <div className="flex items-center justify-end">
+                              <p className="text-sm font-medium">Destination</p>
+                              <div className="h-3 w-3 rounded-full bg-green-500 ml-2"></div>
+                            </div>
+                            <p className="text-sm font-medium mr-5 mt-1">{selectedVessel.destination}</p>
+                            {selectedVessel.estimatedArrival && (
+                              <p className="text-xs text-muted-foreground mr-5">
+                                ETA: {formatDate(selectedVessel.estimatedArrival)}
+                              </p>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="text-right flex-1">
+                            <div className="flex items-center justify-end">
+                              <p className="text-sm text-muted-foreground">Destination</p>
+                              <div className="h-3 w-3 rounded-full bg-green-500/50 ml-2"></div>
+                            </div>
+                            <p className="text-sm text-muted-foreground mr-5 mt-1">Unknown</p>
+                          </div>
                         )}
                       </div>
-                    )}
                     
-                    {selectedVessel.destination && (
-                      <div className="p-4">
-                        <div className="flex items-center mb-1">
-                          <div className="h-2 w-2 rounded-full bg-green-500 mr-2"></div>
-                          <p className="text-sm font-medium">Destination: {selectedVessel.destination}</p>
+                      {/* Animated Route Line */}
+                      <div className="relative h-3 flex items-center justify-between px-3 mt-4 mb-1">
+                        {/* Start point */}
+                        <div className="z-10 h-3 w-3 rounded-full bg-blue-500"></div>
+                        
+                        {/* Route line with ship */}
+                        <div className="absolute left-0 right-0 h-0.5 bg-border">
+                          {/* Animated vessel */}
+                          {selectedVessel.departureTime && selectedVessel.estimatedArrival && (
+                            <div 
+                              className="absolute top-1/2 transform -translate-y-1/2"
+                              style={{
+                                left: (() => {
+                                  // Calculate vessel position
+                                  const departureTime = new Date(selectedVessel.departureTime).getTime();
+                                  const arrivalTime = new Date(selectedVessel.estimatedArrival).getTime();
+                                  const currentTime = new Date().getTime();
+                                  
+                                  // Calculate progress percentage
+                                  let progressPercent = 0;
+                                  if (currentTime >= arrivalTime) {
+                                    progressPercent = 100;
+                                  } else if (currentTime <= departureTime) {
+                                    progressPercent = 0;
+                                  } else {
+                                    const totalDuration = arrivalTime - departureTime;
+                                    const elapsed = currentTime - departureTime;
+                                    progressPercent = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
+                                  }
+                                  
+                                  return `${progressPercent}%`;
+                                })()
+                              }}
+                            >
+                              <div
+                                className="text-xs text-primary"
+                                style={{
+                                  transform: `rotate(${selectedVessel.course || 0}deg)`,
+                                  marginTop: '-10px',
+                                  marginLeft: '-8px'
+                                }}
+                              >
+                                <i className="fa fa-ship"></i>
+                              </div>
+                            </div>
+                          )}
                         </div>
-                        {selectedVessel.estimatedArrival && (
-                          <p className="text-xs text-muted-foreground ml-4 mt-1">
-                            ETA: {formatDate(selectedVessel.estimatedArrival)}
-                          </p>
-                        )}
+                        
+                        {/* End point */}
+                        <div className="z-10 h-3 w-3 rounded-full bg-green-500"></div>
                       </div>
-                    )}
+                      
+                      {/* Distance and Duration */}
+                      <div className="flex justify-between mt-4 text-xs text-muted-foreground px-1">
+                        <span>
+                          {(() => {
+                            if (!selectedVessel.lastPort || !selectedVessel.destination) return 'Unknown distance';
+                            // Estimate distance based on vessel type and speed
+                            const speedEstimate = selectedVessel.speed || 12; // knots
+                            const days = selectedVessel.departureTime && selectedVessel.estimatedArrival ? 
+                                     (new Date(selectedVessel.estimatedArrival).getTime() - new Date(selectedVessel.departureTime).getTime()) / (1000 * 60 * 60 * 24) : 
+                                     0;
+                                     
+                            const distance = Math.round(days * speedEstimate * 24);
+                            return `~${distance} nautical miles`;
+                          })()}
+                        </span>
+                        <span>
+                          {selectedVessel.departureTime && selectedVessel.estimatedArrival ? 
+                            (() => {
+                              const days = (new Date(selectedVessel.estimatedArrival).getTime() - new Date(selectedVessel.departureTime).getTime()) / (1000 * 60 * 60 * 24);
+                              return `${Math.round(days)} days journey`;
+                            })() : 
+                            'Duration unknown'}
+                        </span>
+                      </div>
+                    </div>
                     
                     {/* Voyage Progress */}
                     {selectedVessel.departureTime && selectedVessel.estimatedArrival && (
