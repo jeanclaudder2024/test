@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import '../styles/full-map.css';
 import { apiRequest } from '@/lib/queryClient';
@@ -31,16 +32,99 @@ interface Port {
   status?: string;
 }
 
+// Import icon images for Leaflet
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+
+// Fix the default icon issue
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
 export default function BasicMap() {
   const [refineries, setRefineries] = useState<Refinery[]>([]);
   const [ports, setPorts] = useState<Port[]>([]);
+
+  // Create a custom refinery icon
+  const refineryIcon = useMemo(() => {
+    return L.divIcon({
+      html: `
+        <div style="
+          background-color: #c0392b; 
+          width: 22px;
+          height: 22px;
+          border-radius: 50%;
+          border: 2px solid white;
+          box-shadow: 0 0 4px rgba(0,0,0,0.3);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        ">
+          <div style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+          ">
+            🏭
+          </div>
+        </div>
+      `,
+      className: 'refinery-icon',
+      iconSize: [22, 22],
+      iconAnchor: [11, 11]
+    });
+  }, []);
+
+  // Create a custom port icon
+  const portIcon = useMemo(() => {
+    return L.divIcon({
+      html: `
+        <div style="
+          background-color: #2980b9; 
+          width: 22px;
+          height: 22px;
+          border-radius: 50%;
+          border: 2px solid white;
+          box-shadow: 0 0 4px rgba(0,0,0,0.3);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        ">
+          <div style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+          ">
+            ⚓
+          </div>
+        </div>
+      `,
+      className: 'port-icon',
+      iconSize: [22, 22],
+      iconAnchor: [11, 11]
+    });
+  }, []);
 
   useEffect(() => {
     // Fetch refineries
     apiRequest('/api/refineries')
       .then(response => {
         console.log('Refineries response:', response);
-        if (response && response.refineries) {
+        if (response && Array.isArray(response)) {
+          setRefineries(response);
+        } else if (response && response.refineries) {
           setRefineries(response.refineries);
         }
       })
@@ -50,35 +134,17 @@ export default function BasicMap() {
     apiRequest('/api/ports')
       .then(response => {
         console.log('Ports response:', response);
-        if (response && response.ports) {
+        if (response && Array.isArray(response)) {
+          setPorts(response);
+        } else if (response && response.ports) {
           setPorts(response.ports);
         }
       })
       .catch(error => console.error('Error fetching ports:', error));
   }, []);
 
-  // Fix Leaflet's default icon issue
-  useEffect(() => {
-    // Import Leaflet icon images
-    import('leaflet/dist/images/marker-icon.png').then(icon => {
-      import('leaflet/dist/images/marker-shadow.png').then(shadow => {
-        const L = window.L; // Use the global L object
-        if (L && L.Icon && L.Icon.Default) {
-          L.Icon.Default.mergeOptions({
-            iconUrl: icon.default,
-            shadowUrl: shadow.default,
-            iconSize: [25, 41],
-            iconAnchor: [12, 41],
-            popupAnchor: [1, -34],
-            shadowSize: [41, 41]
-          });
-        }
-      });
-    });
-  }, []);
-
   return (
-    <div style={{ width: '100vw', height: '100vh', position: 'absolute', top: 0, left: 0 }}>
+    <div style={{ width: '100%', height: '100vh', position: 'relative' }}>
       <MapContainer
         center={[20, 0]} 
         zoom={2}
@@ -89,28 +155,31 @@ export default function BasicMap() {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         />
         
-        {/* Render refineries */}
+        {/* Render refineries with custom icon */}
         {refineries.map(refinery => (
           <Marker
             key={`refinery-${refinery.id}`}
             position={[parseFloat(refinery.lat), parseFloat(refinery.lng)]}
+            icon={refineryIcon}
           >
             <Popup>
               <div>
                 <h3>{refinery.name}</h3>
                 <p><strong>Country:</strong> {refinery.country}</p>
                 <p><strong>Region:</strong> {refinery.region}</p>
-                <p><strong>Capacity:</strong> {refinery.capacity.toLocaleString()} bpd</p>
+                <p><strong>Capacity:</strong> {refinery.capacity ? `${refinery.capacity.toLocaleString()} bpd` : 'Unknown'}</p>
+                {refinery.status && <p><strong>Status:</strong> {refinery.status}</p>}
               </div>
             </Popup>
           </Marker>
         ))}
 
-        {/* Render ports */}
+        {/* Render ports with custom icon */}
         {ports.map(port => (
           <Marker
             key={`port-${port.id}`}
             position={[parseFloat(port.lat), parseFloat(port.lng)]}
+            icon={portIcon}
           >
             <Popup>
               <div>
@@ -119,6 +188,7 @@ export default function BasicMap() {
                 <p><strong>Region:</strong> {port.region}</p>
                 <p><strong>Type:</strong> {port.type || "Commercial"}</p>
                 {port.capacity && <p><strong>Capacity:</strong> {port.capacity.toLocaleString()}</p>}
+                {port.status && <p><strong>Status:</strong> {port.status}</p>}
               </div>
             </Popup>
           </Marker>
