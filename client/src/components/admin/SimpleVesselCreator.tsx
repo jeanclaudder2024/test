@@ -49,20 +49,21 @@ export function SimpleVesselCreator({ open, onOpenChange }: SimpleVesselCreatorP
   const { mutate: addVessel, isPending: isSubmitting } = useMutation({
     mutationFn: async (vesselData: any) => {
       try {
-        // Map field names to match exact database schema fields
+        // Map field names to match what the API expects
+        // Note: API expects camelCase for properties but snake_case for DB columns
         const formattedData = {
           name: vesselData.name,
           imo: vesselData.imo,
           mmsi: vesselData.mmsi,
-          vessel_type: vesselData.vessel_type,
+          vesselType: vesselData.vessel_type, // API expects camelCase here
           flag: vesselData.flag,
-          current_lat: vesselData.current_lat,
-          current_lng: vesselData.current_lng,
-          destination_port: vesselData.destination_port,
-          eta: vesselData.eta,
-          cargo_type: vesselData.cargo_type,
-          cargo_capacity: parseInt(vesselData.cargo_capacity),
-          current_region: vesselData.current_region,
+          currentLat: vesselData.current_lat, // API expects camelCase here
+          currentLng: vesselData.current_lng, // API expects camelCase here
+          destinationPort: vesselData.destination_port, // API expects camelCase here
+          eta: new Date(vesselData.eta), // API expects a Date object
+          cargoType: vesselData.cargo_type, // API expects camelCase here
+          cargoCapacity: parseInt(vesselData.cargo_capacity),
+          currentRegion: vesselData.current_region, // API expects camelCase here
           status: vesselData.status,
           speed: vesselData.speed || "0"
         };
