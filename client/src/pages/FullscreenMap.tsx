@@ -370,10 +370,13 @@ export default function FullscreenMap() {
           <MapContainer 
             center={mapCenter} 
             zoom={mapZoom} 
-            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, height: '100vh', width: '100vw' }} 
-            zoomControl={false}
-            attributionControl={false}
-            className="absolute inset-0"
+            style={{ height: '100vh', width: '100vw' }} 
+            zoomControl={true}
+            attributionControl={true}
+            dragging={true}
+            scrollWheelZoom={true}
+            doubleClickZoom={true}
+            touchZoom={true}
           >
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
