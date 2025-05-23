@@ -260,6 +260,60 @@ export function SimpleVesselCreator({ open, onOpenChange }: SimpleVesselCreatorP
                 />
               </div>
             </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Cargo Type</label>
+                <input 
+                  type="text"
+                  className="w-full p-2 border rounded-md"
+                  placeholder="E.g., Crude Oil"
+                  value={vessel.cargo_type}
+                  onChange={(e) => handleInputChange("cargo_type", e.target.value)}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Cargo Capacity</label>
+                <input 
+                  type="number"
+                  className="w-full p-2 border rounded-md"
+                  placeholder="Capacity in tons"
+                  value={vessel.cargo_capacity}
+                  onChange={(e) => handleInputChange("cargo_capacity", e.target.value)}
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Region</label>
+                <select
+                  className="w-full p-2 border rounded-md"
+                  value={vessel.current_region}
+                  onChange={(e) => handleInputChange("current_region", e.target.value)}
+                >
+                  <option value="Middle East">Middle East</option>
+                  <option value="North America">North America</option>
+                  <option value="Europe">Europe</option>
+                  <option value="Asia Pacific">Asia Pacific</option>
+                  <option value="Africa">Africa</option>
+                  <option value="South America">South America</option>
+                  <option value="Caribbean">Caribbean</option>
+                </select>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Speed</label>
+                <input 
+                  type="number"
+                  className="w-full p-2 border rounded-md"
+                  placeholder="Speed in knots"
+                  value={vessel.speed}
+                  onChange={(e) => handleInputChange("speed", e.target.value)}
+                />
+              </div>
+            </div>
           </div>
 
           {/* Map Section */}
@@ -293,7 +347,7 @@ export function SimpleVesselCreator({ open, onOpenChange }: SimpleVesselCreatorP
           </Button>
           <Button 
             onClick={handleSubmit}
-            disabled={isSubmitting || !vessel.name || !vessel.currentLat || !vessel.currentLng}
+            disabled={isSubmitting || !vessel.name || !vessel.current_lat || !vessel.current_lng}
           >
             {isSubmitting ? (
               <>
