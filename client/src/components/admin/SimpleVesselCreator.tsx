@@ -60,7 +60,8 @@ export function SimpleVesselCreator({ open, onOpenChange }: SimpleVesselCreatorP
           currentLat: vesselData.current_lat, // API expects camelCase here
           currentLng: vesselData.current_lng, // API expects camelCase here
           destinationPort: vesselData.destination_port, // API expects camelCase here
-          eta: new Date(vesselData.eta), // API expects a Date object
+          // Convert string date to proper date format
+          eta: new Date(vesselData.eta).toISOString(),
           cargoType: vesselData.cargo_type, // API expects camelCase here
           cargoCapacity: parseInt(vesselData.cargo_capacity),
           currentRegion: vesselData.current_region, // API expects camelCase here
