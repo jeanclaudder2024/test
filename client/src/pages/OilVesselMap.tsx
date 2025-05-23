@@ -586,7 +586,7 @@ export default function OilVesselMap() {
             type: 'refinery'
           }));
         } else if (refineriesResponse && Array.isArray(refineriesResponse.refineries)) {
-          refineriesData = refineriesResponse.refineries.map((refinery: any) => ({
+          refineriesData = refineriesResponse.refineries.map((refinery: Record<string, any>) => ({
             ...refinery,
             type: 'refinery' as const
           }));
