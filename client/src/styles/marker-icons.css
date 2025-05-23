@@ -1,10 +1,12 @@
 /* Custom marker styles */
-.refinery-marker {
-  filter: hue-rotate(240deg); /* Blue */
+.custom-marker {
+  transition: transform 0.2s ease;
+  cursor: pointer;
 }
 
-.port-marker {
-  filter: hue-rotate(120deg); /* Green */
+.custom-marker:hover {
+  transform: scale(1.5);
+  z-index: 1000 !important;
 }
 
 /* Style for marker popups */

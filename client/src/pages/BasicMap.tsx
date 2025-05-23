@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, LayersControl, LayerGroup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import '../styles/full-map.css';
 import '../styles/marker-icons.css';
 import { apiRequest } from '@/lib/queryClient';
 import { refineryIcon, portIcon, oilTerminalIcon, tankFarmIcon } from '@/components/map/CustomMarkerIcons';
+import RegionFilter from '@/components/map/RegionFilter';
 
 // Define types for our data
 interface Refinery {
@@ -36,6 +37,28 @@ interface Port {
 export default function BasicMap() {
   const [refineries, setRefineries] = useState<Refinery[]>([]);
   const [ports, setPorts] = useState<Port[]>([]);
+  const [selectedRegion, setSelectedRegion] = useState<string>("all");
+  
+  // Extract unique regions from combined refineries and ports
+  const regions = useMemo(() => {
+    const allRegions = new Set<string>();
+    refineries.forEach(r => allRegions.add(r.region));
+    ports.forEach(p => allRegions.add(p.region));
+    return Array.from(allRegions).sort();
+  }, [refineries, ports]);
+  
+  // Filter facilities by region
+  const filteredRefineries = useMemo(() => {
+    return selectedRegion === "all" 
+      ? refineries 
+      : refineries.filter(r => r.region === selectedRegion);
+  }, [refineries, selectedRegion]);
+  
+  const filteredPorts = useMemo(() => {
+    return selectedRegion === "all" 
+      ? ports 
+      : ports.filter(p => p.region === selectedRegion);
+  }, [ports, selectedRegion]);
 
   useEffect(() => {
     // Fetch refineries
@@ -57,6 +80,20 @@ export default function BasicMap() {
 
   return (
     <div className="map-container">
+      {/* Region Filter Controls */}
+      <div className="map-controls">
+        <h3>Map Controls</h3>
+        <RegionFilter 
+          regions={regions} 
+          selectedRegion={selectedRegion} 
+          onRegionChange={setSelectedRegion} 
+        />
+        <div className="facility-count">
+          Showing {filteredRefineries.length} refineries and {filteredPorts.length} ports
+          {selectedRegion !== "all" && ` in ${selectedRegion}`}
+        </div>
+      </div>
+      
       <MapContainer
         center={[20, 0]} 
         zoom={2}
@@ -80,7 +117,7 @@ export default function BasicMap() {
           {/* Refineries Layer */}
           <LayersControl.Overlay checked name="Refineries">
             <LayerGroup>
-              {refineries.map(refinery => (
+              {filteredRefineries.map(refinery => (
                 <Marker
                   key={`refinery-${refinery.id}`}
                   position={[parseFloat(refinery.lat), parseFloat(refinery.lng)]}
@@ -110,7 +147,7 @@ export default function BasicMap() {
           {/* Ports Layer */}
           <LayersControl.Overlay checked name="Ports">
             <LayerGroup>
-              {ports.map(port => {
+              {filteredPorts.map(port => {
                 // Choose icon based on port type
                 const icon = port.type?.includes('oil') ? oilTerminalIcon : portIcon;
                 
