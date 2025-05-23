@@ -1,0 +1,108 @@
+Build a free, full-page map interface using Leaflet.js that shows ONLY oil vessels, with a modern, professional design and many helpful features for navigation, analysis, and monitoring.
+
+✅ Features Required:
+1. 🌍 Free Full-Screen Map
+Use Leaflet.js (open source).
+
+Use OpenStreetMap or Carto as the base layer.
+
+The map must cover the entire browser window (100vw, 100vh) without white or gray space when zoomed in or out.
+
+2. 🚢 Filter to Show Only Oil Vessels
+Load vessel data (from API or local data).
+
+Filter and show only vessels of these types:
+
+Crude Oil Tanker
+
+Product Tanker
+
+Chemical/Oil Products Tanker
+
+ULCC, VLCC, Aframax, Suezmax, Bitumen Tanker, etc.
+
+Use your provided Excel list (Complete_Oil_Products_FullList.xlsx) to define allowed vessel types.
+
+3. 📍 Professional Vessel Markers
+Replace current icons with modern, professional vessel icons (SVG or PNG).
+
+All icons should be consistent in size and not look cartoonish or unprofessional.
+
+Show:
+
+Direction arrow (pointing to heading)
+
+Color by status: Green (moving), Yellow (waiting), Red (delayed)
+
+4. 🧾 Click on Vessel to Show Info
+On click: Open a side drawer or modal showing:
+
+Vessel name
+
+IMO / MMSI
+
+Cargo type
+
+Current location
+
+Heading
+
+Last port
+
+Destination port
+
+ETA
+
+Speed
+
+5. 🔍 Search & Filter Tools
+Search bar: Find vessel by name, IMO, or MMSI
+
+Dropdown filter:
+
+By cargo type (Diesel, Naphtha, Fuel Oil, etc.)
+
+By status (At Sea, In Port, Delayed)
+
+6. 🛤️ Route Tracing (Optional for Now)
+Show vessel route history as a polyline
+
+Optional: Predicted route with ETA line
+
+7. 🏭 Port & Refinery Markers
+Add fixed markers for major oil ports or refineries.
+
+Show tooltip with port name on hover.
+
+8. 🧠 Responsive and Clean Design
+Mobile-compatible: Map resizes on phones/tablets
+
+Clean, modern UI using Tailwind CSS or Bootstrap
+
+Use icons and hover animations
+
+Dark/light map themes toggle
+
+9. 🔄 Live Updates (Optional)
+Use setInterval() every 30s to update data (or WebSocket if possible)
+
+10. 🧭 Prevent Gray Spaces
+Fix map so zooming out does not show gray/empty space.
+
+Solution: Constrain zoom levels and prevent map dragging outside bounds.
+
+js
+Copy
+Edit
+map.setMaxBounds(bounds);
+map.setMinZoom(zoomLevel);
+💡 Optional Improvements (Phase 2)
+Vessel density heatmap
+
+Clustered markers
+
+Export vessel data to CSV
+
+Notification if vessel is near a port
+
+Historical voyage replay

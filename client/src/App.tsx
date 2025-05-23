@@ -30,6 +30,7 @@ import ApiTest from "@/pages/ApiTest";
 import TranslationPage from "@/pages/TranslationPage";
 import TrafficInsights from "@/pages/TrafficInsights";
 import WorkingMap from "@/pages/WorkingMap";
+import OilVesselMap from "@/pages/OilVesselMap";
 // Maritime tracking and vessel lookup pages removed as requested
 import { useEffect } from "react";
 import { apiRequest, queryClient } from "./lib/queryClient";
@@ -130,6 +131,7 @@ function Router() {
             <Route path="/translation" component={TranslationPage} />
             <Route path="/traffic-insights" component={TrafficInsights} />
             <Route path="/map" component={WorkingMap} />
+            <Route path="/oil-vessel-map" component={OilVesselMap} />
             {/* Maritime tracking and vessel lookup pages removed as requested */}
             <Route path="/settings" component={Settings} />
             <Route path="/subscribe" component={Subscribe} />
