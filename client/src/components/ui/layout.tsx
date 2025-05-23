@@ -205,7 +205,8 @@ export function Layout({ children }: LayoutProps) {
             <img
               src="/assets/petrodealhub-logo.png"
               alt="Logo"
-              className="h-12 w-auto object-contain"
+              style={{ width: '56%', height: '168%' }}
+              className="object-contain"
             />
             <Button
               variant="ghost"
