@@ -25,6 +25,19 @@ import {
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { 
+  faShip, 
+  faOilWell, 
+  faAnchor, 
+  faGasPump, 
+  faLocationDot, 
+  faIndustry, 
+  faWater, 
+  faVial, 
+  faFire, 
+  faArrowUp 
+} from '@fortawesome/free-solid-svg-icons';
 
 // Oil vessel types based on the provided Excel list
 const OIL_VESSEL_TYPES = [
@@ -290,7 +303,7 @@ export default function OilVesselMap() {
     });
   }, [selectedRegion]);
 
-  // Create vessel icon
+  // Create vessel icon with Font Awesome
   const createVesselIcon = (vessel: Vessel) => {
     // Determine color based on status
     let color = VESSEL_STATUSES['Unknown'];
@@ -315,7 +328,17 @@ export default function OilVesselMap() {
       }
     }
     
-    // Create custom icon with improved ship design and animated pulsing effect for moving vessels
+    // Choose appropriate icon based on vessel type
+    let iconName = 'fa-ship';
+    if (vessel.vesselType?.toLowerCase().includes('lng') || vessel.vesselType?.toLowerCase().includes('gas')) {
+      iconName = 'fa-gas-pump';
+    } else if (vessel.vesselType?.toLowerCase().includes('chemical')) {
+      iconName = 'fa-vial';
+    } else if (vessel.vesselType?.toLowerCase().includes('oil') || vessel.vesselType?.toLowerCase().includes('tanker')) {
+      iconName = 'fa-oil-well';
+    }
+    
+    // Create custom icon with Font Awesome and animated pulsing effect for moving vessels
     return L.divIcon({
       className: 'vessel-marker',
       html: `
@@ -327,55 +350,77 @@ export default function OilVesselMap() {
           ${vessel.speed && vessel.speed > 5 ? `
             <div style="
               position: absolute;
-              width: ${size+4}px;
-              height: ${size+4}px;
-              top: -2px;
-              left: -2px;
+              width: ${size+8}px;
+              height: ${size+8}px;
+              top: -4px;
+              left: -4px;
               border-radius: 50%;
               background-color: ${color};
-              opacity: 0.3;
+              opacity: 0.2;
               animation: pulse 2s infinite;
             "></div>
           ` : ''}
           <div style="
             position: absolute;
-            width: ${size-2}px;
-            height: ${size-2}px;
+            width: ${size}px;
+            height: ${size}px;
             border-radius: 3px;
             background-color: ${color};
-            opacity: 0.9;
+            opacity: 0.85;
             border: 2px solid white;
-            box-shadow: 0 0 6px rgba(0,0,0,0.5);
-            transform: rotate(${rotation}deg);
+            box-shadow: 0 0 8px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
           ">
-            <div style="
-              position: absolute;
-              top: 50%;
-              left: 50%;
-              transform: translate(-50%, -50%);
-              width: ${size-8}px;
-              height: ${size-8}px;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-            ">
-              <svg 
-                width="${size-8}" 
-                height="${size-8}" 
-                viewBox="0 0 24 24" 
-                fill="white"
-              >
-                <path d="M2 20h20v2H2v-2zm2-7.6v5.6h3v-5.6c0-.56.87-1.6 2.2-1.6.6 0 1.2.8 1.8.8.6 0 1.2-.8 1.8-.8.22 0 .43.09.63.17l-.02-5.57H7v3l-3 3z" stroke="none" />
-                <path d="M20.97 14l-6-5.93V2h-3v6L6 13.93V14h14.97z" stroke="none" />
-              </svg>
+            <div style="transform: rotate(${rotation}deg); color: white; text-align: center;">
+              <i class="fa ${iconName}" style="font-size: ${size*0.65}px;"></i>
             </div>
           </div>
+          ${vessel.speed && vessel.speed > 0 ? `
+            <div style="
+              position: absolute;
+              bottom: -10px;
+              left: 50%;
+              transform: translateX(-50%);
+              font-size: 10px;
+              white-space: nowrap;
+              background-color: rgba(0,0,0,0.6);
+              color: white;
+              padding: 1px 3px;
+              border-radius: 2px;
+              pointer-events: none;
+            ">${vessel.speed} kn</div>
+          ` : ''}
         </div>
         <style>
           @keyframes pulse {
-            0% { transform: scale(1); opacity: 0.3; }
-            50% { transform: scale(1.2); opacity: 0.2; }
-            100% { transform: scale(1); opacity: 0.3; }
+            0% { transform: scale(1); opacity: 0.2; }
+            50% { transform: scale(1.3); opacity: 0.1; }
+            100% { transform: scale(1); opacity: 0.2; }
+          }
+          @font-face {
+            font-family: 'Font Awesome 5 Free';
+            font-style: normal;
+            font-weight: 900;
+            font-display: block;
+            src: url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/webfonts/fa-solid-900.woff2") format("woff2");
+          }
+          .fa {
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+          }
+          .fa-ship:before {
+            content: "\\f21a";
+          }
+          .fa-oil-well:before {
+            content: "\\e532";
+          }
+          .fa-gas-pump:before {
+            content: "\\f52f";
+          }
+          .fa-vial:before {
+            content: "\\f492";
           }
         </style>
       `,
@@ -450,16 +495,7 @@ export default function OilVesselMap() {
             justify-content: center;
             z-index: 10;
           ">
-            ${facility.type === 'refinery' 
-              ? `<svg width="${size-10}" height="${size-10}" viewBox="0 0 24 24" fill="white">
-                  <path d="M2 22h20v-2H2v2zm2-11h3V7h10v4h3V9l-4-4V3H8v2L4 9v2zm13-1V7h-3v3h3zM9 7v3h3V7H9z" />
-                  <path d="M18 12H6v4h3v3h6v-3h3v-4z" />
-                </svg>`
-              : `<svg width="${size-10}" height="${size-10}" viewBox="0 0 24 24" fill="white">
-                  <path d="M12 2a3 3 0 0 0-3 3c0 1.3.84 2.4 2 2.82V15h2V7.82A3 3 0 0 0 15 5a3 3 0 0 0-3-3zM5.5 16.55A8 8 0 0 0 12 20a8 8 0 0 0 6.5-3.45l.5-.8-1-1.65H6l-1 1.65.5.8z" />
-                  <path d="M5 16v4h14v-4H5z" />
-                </svg>`
-            }
+            <i class="fa ${facility.type === 'refinery' ? 'fa-industry' : 'fa-anchor'}" style="color: white; font-size: ${size*0.55}px;"></i>
           </div>
           
           <!-- Facility name tooltip on hover (appears above the icon) -->
@@ -486,6 +522,33 @@ export default function OilVesselMap() {
         <style>
           .${facility.type}-marker:hover .facility-tooltip {
             opacity: 1;
+          }
+          
+          @font-face {
+            font-family: 'Font Awesome 5 Free';
+            font-style: normal;
+            font-weight: 900;
+            font-display: block;
+            src: url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/webfonts/fa-solid-900.woff2") format("woff2");
+          }
+          
+          .fa {
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+          }
+          
+          .fa-industry:before {
+            content: "\\f275";
+          }
+          
+          .fa-anchor:before {
+            content: "\\f13d";
+          }
+          
+          @keyframes pulse-glow {
+            0% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.1); }
+            100% { opacity: 0.6; transform: scale(1); }
           }
         </style>
       `,
