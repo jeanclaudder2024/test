@@ -60,7 +60,7 @@ export function Layout({ children }: LayoutProps) {
   const navigation = [
     { name: "Dashboard", href: "/dashboard", icon: Home },
     { name: "Vessels", href: "/vessels", icon: Ship },
-    { name: "Vessel Dashboard", href: "/vessel-dashboard", icon: Layers },
+    // Vessel Dashboard removed as requested
     // Vessel Lookup removed as requested
     // Maritime Map removed as requested
     { name: "Oil Vessel Map", href: "/oil-vessel-map", icon: Ship },
