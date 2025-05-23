@@ -255,85 +255,193 @@ export default function OilVesselMap() {
     // Direction arrow rotation based on vessel course
     const rotation = vessel.course !== undefined ? vessel.course : 0;
     
-    // Create custom icon
+    // Determine vessel size for visual scaling (based on capacity or vessel type)
+    let size = 26;
+    if (vessel.vesselType) {
+      if (vessel.vesselType.includes('VLCC') || vessel.vesselType.includes('ULCC')) {
+        size = 32; // Larger for Very Large and Ultra Large Crude Carriers
+      } else if (vessel.vesselType.includes('Aframax') || vessel.vesselType.includes('Suezmax')) {
+        size = 30; // Large for medium-sized tankers
+      }
+    }
+    
+    // Create custom icon with improved ship design and animated pulsing effect for moving vessels
     return L.divIcon({
       className: 'vessel-marker',
       html: `
         <div style="
           position: relative;
-          width: 24px;
-          height: 24px;
+          width: ${size}px;
+          height: ${size}px;
         ">
+          ${vessel.speed && vessel.speed > 5 ? `
+            <div style="
+              position: absolute;
+              width: ${size+4}px;
+              height: ${size+4}px;
+              top: -2px;
+              left: -2px;
+              border-radius: 50%;
+              background-color: ${color};
+              opacity: 0.3;
+              animation: pulse 2s infinite;
+            "></div>
+          ` : ''}
           <div style="
             position: absolute;
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
+            width: ${size-2}px;
+            height: ${size-2}px;
+            border-radius: 3px;
             background-color: ${color};
-            opacity: 0.8;
+            opacity: 0.9;
             border: 2px solid white;
-            box-shadow: 0 0 4px rgba(0,0,0,0.5);
-          "></div>
-          <div style="
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) rotate(${rotation}deg);
-            width: 0;
-            height: 0;
+            box-shadow: 0 0 6px rgba(0,0,0,0.5);
+            transform: rotate(${rotation}deg);
           ">
-            <svg 
-              width="14" 
-              height="14" 
-              viewBox="0 0 24 24" 
-              fill="white" 
-              style="transform: translate(-7px, -7px) rotate(${rotation}deg)"
-            >
-              <path d="M12 2L19 21L12 17L5 21L12 2Z" fill="white" stroke="white" stroke-width="1.5"/>
-            </svg>
+            <div style="
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              width: ${size-8}px;
+              height: ${size-8}px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            ">
+              <svg 
+                width="${size-8}" 
+                height="${size-8}" 
+                viewBox="0 0 24 24" 
+                fill="white"
+              >
+                <path d="M2 20h20v2H2v-2zm2-7.6v5.6h3v-5.6c0-.56.87-1.6 2.2-1.6.6 0 1.2.8 1.8.8.6 0 1.2-.8 1.8-.8.22 0 .43.09.63.17l-.02-5.57H7v3l-3 3z" stroke="none" />
+                <path d="M20.97 14l-6-5.93V2h-3v6L6 13.93V14h14.97z" stroke="none" />
+              </svg>
+            </div>
           </div>
         </div>
+        <style>
+          @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.3; }
+            50% { transform: scale(1.2); opacity: 0.2; }
+            100% { transform: scale(1); opacity: 0.3; }
+          }
+        </style>
       `,
-      iconSize: [24, 24],
-      iconAnchor: [12, 12]
+      iconSize: [size, size],
+      iconAnchor: [size/2, size/2]
     });
   };
 
   // Create port/refinery icons
   const createFacilityIcon = (facility: Facility) => {
-    const color = facility.type === 'refinery' ? '#8b5cf6' : '#3b82f6';
-    const icon = facility.type === 'refinery' ? 'Factory' : 'Anchor';
+    // Base colors for facilities
+    const colors = {
+      refinery: {
+        primary: '#8b5cf6', // Purple
+        secondary: '#7c3aed', // Deeper purple
+        background: '#ede9fe' // Light purple background
+      },
+      port: {
+        primary: '#3b82f6', // Blue
+        secondary: '#2563eb', // Deeper blue
+        background: '#dbeafe' // Light blue background
+      }
+    };
     
+    // Select the color scheme based on facility type
+    const colorScheme = facility.type === 'refinery' ? colors.refinery : colors.port;
+    
+    // Determine the size based on capacity if available (for visual importance)
+    const baseSize = facility.type === 'refinery' ? 28 : 26;
+    let size = baseSize;
+    
+    if (facility.capacity) {
+      // Scale size based on capacity - larger facilities get slightly bigger icons
+      if (facility.capacity > 500000) {
+        size = baseSize + 6;
+      } else if (facility.capacity > 200000) {
+        size = baseSize + 4;
+      } else if (facility.capacity > 100000) {
+        size = baseSize + 2;
+      }
+    }
+    
+    // Create custom icon with more detailed and professional design
     return L.divIcon({
       className: `${facility.type}-marker`,
       html: `
-        <div style="
-          position: relative;
-          width: 24px;
-          height: 24px;
-        ">
+        <div style="position: relative; width: ${size}px; height: ${size}px;">
+          <!-- Background glow effect -->
           <div style="
             position: absolute;
-            width: 22px;
-            height: 22px;
-            border-radius: 4px;
-            background-color: ${color};
-            opacity: 0.8;
+            width: ${size+8}px;
+            height: ${size+8}px;
+            top: -4px;
+            left: -4px;
+            border-radius: ${facility.type === 'refinery' ? '15%' : '50%'};
+            background-color: ${colorScheme.background};
+            opacity: 0.6;
+            box-shadow: 0 0 10px ${colorScheme.primary};
+          "></div>
+          
+          <!-- Main icon container -->
+          <div style="
+            position: absolute;
+            width: ${size}px;
+            height: ${size}px;
+            border-radius: ${facility.type === 'refinery' ? '15%' : '50%'};
+            background: linear-gradient(135deg, ${colorScheme.primary}, ${colorScheme.secondary});
             border: 2px solid white;
-            box-shadow: 0 0 4px rgba(0,0,0,0.5);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
             display: flex;
             align-items: center;
             justify-content: center;
+            z-index: 10;
           ">
-            ${icon === 'Factory' 
-              ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8l-7 5V8l-7 5V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"></path></svg>'
-              : '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="3"></circle><line x1="12" y1="22" x2="12" y2="8"></line><path d="M5 12H2a10 10 0 0 0 20 0h-3"></path></svg>'
+            ${facility.type === 'refinery' 
+              ? `<svg width="${size-10}" height="${size-10}" viewBox="0 0 24 24" fill="white">
+                  <path d="M2 22h20v-2H2v2zm2-11h3V7h10v4h3V9l-4-4V3H8v2L4 9v2zm13-1V7h-3v3h3zM9 7v3h3V7H9z" />
+                  <path d="M18 12H6v4h3v3h6v-3h3v-4z" />
+                </svg>`
+              : `<svg width="${size-10}" height="${size-10}" viewBox="0 0 24 24" fill="white">
+                  <path d="M12 2a3 3 0 0 0-3 3c0 1.3.84 2.4 2 2.82V15h2V7.82A3 3 0 0 0 15 5a3 3 0 0 0-3-3zM5.5 16.55A8 8 0 0 0 12 20a8 8 0 0 0 6.5-3.45l.5-.8-1-1.65H6l-1 1.65.5.8z" />
+                  <path d="M5 16v4h14v-4H5z" />
+                </svg>`
             }
           </div>
+          
+          <!-- Facility name tooltip on hover (appears above the icon) -->
+          <div style="
+            position: absolute;
+            bottom: ${size + 5}px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 3px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+            z-index: 20;
+          " class="facility-tooltip">
+            ${facility.name}
+          </div>
         </div>
+        
+        <style>
+          .${facility.type}-marker:hover .facility-tooltip {
+            opacity: 1;
+          }
+        </style>
       `,
-      iconSize: [24, 24],
-      iconAnchor: [12, 12]
+      iconSize: [size, size],
+      iconAnchor: [size/2, size/2],
+      popupAnchor: [0, -size/2]
     });
   };
 
