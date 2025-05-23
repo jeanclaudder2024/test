@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, LayerGroup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import '../styles/map.css'; // Import our custom map styles
 import { toast } from '@/hooks/use-toast';
 import { Factory, Anchor, Ship, Pin, Navigation, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -356,7 +357,7 @@ export default function FullscreenMap() {
   };
   
   return (
-    <div className="w-full h-screen relative">
+    <div className="w-full h-screen relative overflow-hidden">
       {loading ? (
         <div className="absolute inset-0 flex items-center justify-center bg-background/50 z-50">
           <div className="flex flex-col items-center">
@@ -369,9 +370,10 @@ export default function FullscreenMap() {
           <MapContainer 
             center={mapCenter} 
             zoom={mapZoom} 
-            style={{ height: '100%', width: '100%' }} 
+            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, height: '100vh', width: '100vw' }} 
             zoomControl={false}
             attributionControl={false}
+            className="absolute inset-0"
           >
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
