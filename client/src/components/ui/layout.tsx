@@ -314,7 +314,7 @@ export function Layout({ children }: LayoutProps) {
           <div className="flex items-center w-full gap-4 md:gap-8">
             {/* Company Logo */}
             <div className="hidden md:flex items-center mr-4">
-              <img src="https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/client/src/assets/petrodealhub-logo.png" alt="PetroDealHub Logo" className="h-12 w-auto" />
+              <img src={petrodealhubLogo} alt="PetroDealHub Logo" className="h-12 w-auto" />
             </div>
             
             <div className="relative flex-1 max-w-md">
