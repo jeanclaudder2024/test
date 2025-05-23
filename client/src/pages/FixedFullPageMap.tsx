@@ -1529,7 +1529,8 @@ export default function FixedFullPageMap() {
         )}
       </div>
       
-      <style jsx global>{`
+      <style dangerouslySetInnerHTML={{
+        __html: `
         .leaflet-popup-content-wrapper {
           border-radius: 0.5rem;
           backdrop-filter: blur(8px);
@@ -1548,7 +1549,8 @@ export default function FixedFullPageMap() {
         .custom-popup .leaflet-popup-content {
           margin: 8px;
         }
-      `}</style>
+        `
+      }} />
     </div>
   );
 }
