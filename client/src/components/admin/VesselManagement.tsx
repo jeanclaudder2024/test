@@ -201,12 +201,10 @@ export function VesselManagement() {
         </div>
       </CardContent>
       
-      {/* Using SimpleVesselForm for adding vessels */}
-      <SimpleVesselForm
+      {/* Using our improved vessel creator with enhanced map */}
+      <SimpleVesselCreator
         open={showAddVesselDialog}
         onOpenChange={setShowAddVesselDialog}
-        onAddVessel={handleAddVessel}
-        loading={addingVessel}
       />
     </Card>
   );
