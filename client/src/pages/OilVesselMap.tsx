@@ -303,7 +303,7 @@ export default function OilVesselMap() {
     });
   }, [selectedRegion]);
 
-  // Create vessel icon with Font Awesome
+  // Create vessel icon with Font Awesome (simplified version)
   const createVesselIcon = (vessel: Vessel) => {
     // Determine color based on status
     let color = VESSEL_STATUSES['Unknown'];
@@ -319,12 +319,12 @@ export default function OilVesselMap() {
     const rotation = vessel.course !== undefined ? vessel.course : 0;
     
     // Determine vessel size for visual scaling (based on capacity or vessel type)
-    let size = 26;
+    let size = 24;
     if (vessel.vesselType) {
       if (vessel.vesselType.includes('VLCC') || vessel.vesselType.includes('ULCC')) {
         size = 32; // Larger for Very Large and Ultra Large Crude Carriers
       } else if (vessel.vesselType.includes('Aframax') || vessel.vesselType.includes('Suezmax')) {
-        size = 30; // Large for medium-sized tankers
+        size = 28; // Large for medium-sized tankers
       }
     }
     
@@ -338,7 +338,7 @@ export default function OilVesselMap() {
       iconName = 'fa-oil-well';
     }
     
-    // Create custom icon with Font Awesome and animated pulsing effect for moving vessels
+    // Create simple icon with Font Awesome
     return L.divIcon({
       className: 'vessel-marker',
       html: `
@@ -350,54 +350,36 @@ export default function OilVesselMap() {
           ${vessel.speed && vessel.speed > 5 ? `
             <div style="
               position: absolute;
-              width: ${size+8}px;
-              height: ${size+8}px;
-              top: -4px;
-              left: -4px;
+              width: ${size+4}px;
+              height: ${size+4}px;
+              top: -2px;
+              left: -2px;
               border-radius: 50%;
               background-color: ${color};
-              opacity: 0.2;
+              opacity: 0.15;
               animation: pulse 2s infinite;
             "></div>
           ` : ''}
           <div style="
             position: absolute;
+            transform: rotate(${rotation}deg);
+            color: ${color};
+            text-shadow: 0 0 4px rgba(255,255,255,0.7), 0 0 6px rgba(0,0,0,0.5);
+            font-size: ${size}px;
             width: ${size}px;
             height: ${size}px;
-            border-radius: 3px;
-            background-color: ${color};
-            opacity: 0.85;
-            border: 2px solid white;
-            box-shadow: 0 0 8px rgba(0,0,0,0.5);
             display: flex;
             align-items: center;
             justify-content: center;
           ">
-            <div style="transform: rotate(${rotation}deg); color: white; text-align: center;">
-              <i class="fa ${iconName}" style="font-size: ${size*0.65}px;"></i>
-            </div>
+            <i class="fa ${iconName}"></i>
           </div>
-          ${vessel.speed && vessel.speed > 0 ? `
-            <div style="
-              position: absolute;
-              bottom: -10px;
-              left: 50%;
-              transform: translateX(-50%);
-              font-size: 10px;
-              white-space: nowrap;
-              background-color: rgba(0,0,0,0.6);
-              color: white;
-              padding: 1px 3px;
-              border-radius: 2px;
-              pointer-events: none;
-            ">${vessel.speed} kn</div>
-          ` : ''}
         </div>
         <style>
           @keyframes pulse {
-            0% { transform: scale(1); opacity: 0.2; }
+            0% { transform: scale(1); opacity: 0.15; }
             50% { transform: scale(1.3); opacity: 0.1; }
-            100% { transform: scale(1); opacity: 0.2; }
+            100% { transform: scale(1); opacity: 0.15; }
           }
           @font-face {
             font-family: 'Font Awesome 5 Free';
@@ -429,27 +411,19 @@ export default function OilVesselMap() {
     });
   };
 
-  // Create port/refinery icons
+  // Create port/refinery icons (simplified version)
   const createFacilityIcon = (facility: Facility) => {
     // Base colors for facilities
     const colors = {
-      refinery: {
-        primary: '#8b5cf6', // Purple
-        secondary: '#7c3aed', // Deeper purple
-        background: '#ede9fe' // Light purple background
-      },
-      port: {
-        primary: '#3b82f6', // Blue
-        secondary: '#2563eb', // Deeper blue
-        background: '#dbeafe' // Light blue background
-      }
+      refinery: '#8b5cf6', // Purple
+      port: '#3b82f6'      // Blue
     };
     
-    // Select the color scheme based on facility type
-    const colorScheme = facility.type === 'refinery' ? colors.refinery : colors.port;
+    // Select the color based on facility type
+    const color = facility.type === 'refinery' ? colors.refinery : colors.port;
     
-    // Determine the size based on capacity if available (for visual importance)
-    const baseSize = facility.type === 'refinery' ? 28 : 26;
+    // Determine the size based on capacity if available
+    const baseSize = facility.type === 'refinery' ? 26 : 24;
     let size = baseSize;
     
     if (facility.capacity) {
@@ -463,45 +437,32 @@ export default function OilVesselMap() {
       }
     }
     
-    // Create custom icon with more detailed and professional design
+    // Choose the appropriate Font Awesome icon
+    const iconName = facility.type === 'refinery' ? 'fa-industry' : 'fa-anchor';
+    
+    // Create simple icon with Font Awesome
     return L.divIcon({
       className: `${facility.type}-marker`,
       html: `
         <div style="position: relative; width: ${size}px; height: ${size}px;">
-          <!-- Background glow effect -->
-          <div style="
-            position: absolute;
-            width: ${size+8}px;
-            height: ${size+8}px;
-            top: -4px;
-            left: -4px;
-            border-radius: ${facility.type === 'refinery' ? '15%' : '50%'};
-            background-color: ${colorScheme.background};
-            opacity: 0.6;
-            box-shadow: 0 0 10px ${colorScheme.primary};
-          "></div>
-          
-          <!-- Main icon container -->
           <div style="
             position: absolute;
             width: ${size}px;
             height: ${size}px;
-            border-radius: ${facility.type === 'refinery' ? '15%' : '50%'};
-            background: linear-gradient(135deg, ${colorScheme.primary}, ${colorScheme.secondary});
-            border: 2px solid white;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 10;
+            color: ${color};
+            text-shadow: 0 0 5px rgba(255,255,255,0.8), 0 0 7px rgba(0,0,0,0.4);
+            font-size: ${size}px;
           ">
-            <i class="fa ${facility.type === 'refinery' ? 'fa-industry' : 'fa-anchor'}" style="color: white; font-size: ${size*0.55}px;"></i>
+            <i class="fa ${iconName}"></i>
           </div>
           
-          <!-- Facility name tooltip on hover (appears above the icon) -->
+          <!-- Facility name tooltip on hover -->
           <div style="
             position: absolute;
-            bottom: ${size + 5}px;
+            bottom: ${size + 3}px;
             left: 50%;
             transform: translateX(-50%);
             background-color: rgba(0, 0, 0, 0.7);
@@ -524,31 +485,12 @@ export default function OilVesselMap() {
             opacity: 1;
           }
           
-          @font-face {
-            font-family: 'Font Awesome 5 Free';
-            font-style: normal;
-            font-weight: 900;
-            font-display: block;
-            src: url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/webfonts/fa-solid-900.woff2") format("woff2");
-          }
-          
-          .fa {
-            font-family: 'Font Awesome 5 Free';
-            font-weight: 900;
-          }
-          
           .fa-industry:before {
             content: "\\f275";
           }
           
           .fa-anchor:before {
             content: "\\f13d";
-          }
-          
-          @keyframes pulse-glow {
-            0% { opacity: 0.6; transform: scale(1); }
-            50% { opacity: 0.8; transform: scale(1.1); }
-            100% { opacity: 0.6; transform: scale(1); }
           }
         </style>
       `,
