@@ -1,6 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
+import petrodealhubLogo from "../../assets/petrodealhub-logo.png";
 import { 
   AlertCircle, 
   Bell, 
@@ -311,6 +312,11 @@ export function Layout({ children }: LayoutProps) {
           </Button>
           
           <div className="flex items-center w-full gap-4 md:gap-8">
+            {/* Company Logo */}
+            <div className="hidden md:flex items-center mr-4">
+              <img src="https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/client/src/assets/petrodealhub-logo.png" alt="PetroDealHub Logo" className="h-12 w-auto" />
+            </div>
+            
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
               <Input
