@@ -1016,117 +1016,171 @@ export default function OilVesselMap() {
         </Button>
       </div>
       
-      {/* Vessel info panel */}
+      {/* Vessel info panel - Modern Design */}
       {infoOpen && selectedVessel && (
         <div className="absolute right-0 top-0 h-full z-20 transition-all duration-300 translate-x-0">
-          <div className="w-80 h-full bg-card/90 backdrop-blur-sm border-l border-border p-4 flex flex-col">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">Vessel Details</h2>
+          <div className="w-96 h-full bg-background/95 backdrop-blur-md border-l border-border shadow-lg flex flex-col">
+            <div className="bg-primary/10 px-6 py-4 border-b border-border flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-bold flex items-center">
+                  <i className="fa fa-ship mr-3 text-primary"></i>
+                  {selectedVessel.name}
+                </h2>
+                {selectedVessel.flag && (
+                  <p className="text-sm text-muted-foreground mt-1 flex items-center">
+                    <MapPin className="h-3.5 w-3.5 mr-1.5 opacity-70" />
+                    {selectedVessel.flag}
+                  </p>
+                )}
+              </div>
               <Button
                 variant="ghost"
                 size="icon"
+                className="rounded-full h-8 w-8"
                 onClick={() => setInfoOpen(false)}
               >
                 <X className="h-4 w-4" />
               </Button>
             </div>
             
-            <div className="space-y-4 flex-1 overflow-auto">
-              <div className="flex items-center space-x-2 mb-2">
-                <Badge className={selectedVessel.status === 'At Sea' || selectedVessel.status === 'Underway' ? 'bg-green-500 hover:bg-green-600' : 
-                              selectedVessel.status === 'In Port' || selectedVessel.status === 'Moored' || selectedVessel.status === 'Anchored' ? 'bg-yellow-500 hover:bg-yellow-600' : 
-                              selectedVessel.status === 'Delayed' || selectedVessel.status === 'Not Moving' ? 'bg-red-500 hover:bg-red-600' : 'bg-slate-500 hover:bg-slate-600'}>
-                  {selectedVessel.status || 'Unknown Status'}
+            {/* Status badges */}
+            <div className="px-6 py-4 bg-background/80 border-b border-border/50 flex items-center gap-2 flex-wrap">
+              <Badge className={`text-sm px-3 py-1 ${
+                selectedVessel.status === 'At Sea' || selectedVessel.status === 'Underway' 
+                  ? 'bg-green-500/20 text-green-700 hover:bg-green-500/30 border-green-500/50' 
+                : selectedVessel.status === 'In Port' || selectedVessel.status === 'Moored' || selectedVessel.status === 'Anchored' 
+                  ? 'bg-amber-500/20 text-amber-700 hover:bg-amber-500/30 border-amber-500/50' 
+                : selectedVessel.status === 'Delayed' || selectedVessel.status === 'Not Moving' 
+                  ? 'bg-red-500/20 text-red-700 hover:bg-red-500/30 border-red-500/50' 
+                : 'bg-slate-500/20 text-slate-700 hover:bg-slate-500/30 border-slate-500/50'}`}>
+                <div className={`w-2 h-2 rounded-full mr-1.5 inline-block ${
+                  selectedVessel.status === 'At Sea' || selectedVessel.status === 'Underway' 
+                    ? 'bg-green-500' 
+                  : selectedVessel.status === 'In Port' || selectedVessel.status === 'Moored' || selectedVessel.status === 'Anchored' 
+                    ? 'bg-amber-500' 
+                  : selectedVessel.status === 'Delayed' || selectedVessel.status === 'Not Moving' 
+                    ? 'bg-red-500' 
+                  : 'bg-slate-500'}`} />
+                {selectedVessel.status || 'Unknown Status'}
+              </Badge>
+              
+              <Badge variant="outline" className="bg-background/70 text-sm px-3 py-1">
+                {selectedVessel.vesselType || 'Unknown Type'}
+              </Badge>
+              
+              {selectedVessel.speed !== undefined && selectedVessel.speed > 0 && (
+                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 text-sm px-3 py-1">
+                  <Navigation className="h-3 w-3 mr-1" />
+                  {selectedVessel.speed} knots
                 </Badge>
-                <Badge variant="outline">{selectedVessel.vesselType || 'Unknown Type'}</Badge>
-              </div>
+              )}
+            </div>
+            
+            {/* Content area with vessel data */}
+            <div className="flex-1 overflow-auto">
               
-              <div>
-                <h3 className="text-xl font-bold">{selectedVessel.name}</h3>
-                {selectedVessel.flag && (
-                  <p className="text-sm text-muted-foreground">{selectedVessel.flag}</p>
-                )}
-              </div>
-              
-              <div className="grid grid-cols-2 gap-y-2">
-                {selectedVessel.imo && (
-                  <>
-                    <span className="text-sm text-muted-foreground">IMO:</span>
-                    <span className="text-sm font-medium">{selectedVessel.imo}</span>
-                  </>
-                )}
+              {/* Basic details */}
+              <div className="px-6 py-4">
+                <h3 className="text-sm uppercase tracking-wider text-muted-foreground font-semibold mb-3 flex items-center">
+                  <Info className="h-3.5 w-3.5 mr-1.5" />
+                  Vessel Information
+                </h3>
                 
-                {selectedVessel.mmsi && (
-                  <>
-                    <span className="text-sm text-muted-foreground">MMSI:</span>
-                    <span className="text-sm font-medium">{selectedVessel.mmsi}</span>
-                  </>
-                )}
-                
-                {selectedVessel.currentLat && selectedVessel.currentLng && (
-                  <>
-                    <span className="text-sm text-muted-foreground">Position:</span>
-                    <span className="text-sm font-medium">
-                      {typeof selectedVessel.currentLat === 'string' 
-                        ? parseFloat(selectedVessel.currentLat).toFixed(4) 
-                        : selectedVessel.currentLat?.toFixed(4)}, 
-                      {typeof selectedVessel.currentLng === 'string' 
-                        ? parseFloat(selectedVessel.currentLng).toFixed(4) 
-                        : selectedVessel.currentLng?.toFixed(4)}
-                    </span>
-                  </>
-                )}
-                
-                {selectedVessel.speed !== undefined && (
-                  <>
-                    <span className="text-sm text-muted-foreground">Speed:</span>
-                    <span className="text-sm font-medium">{selectedVessel.speed} knots</span>
-                  </>
-                )}
-                
-                {selectedVessel.course !== undefined && (
-                  <>
-                    <span className="text-sm text-muted-foreground">Heading:</span>
-                    <span className="text-sm font-medium">{selectedVessel.course}°</span>
-                  </>
-                )}
-                
-                {selectedVessel.cargoType && (
-                  <>
-                    <span className="text-sm text-muted-foreground">Cargo:</span>
-                    <span className="text-sm font-medium">{selectedVessel.cargoType}</span>
-                  </>
-                )}
-              </div>
-              
-              <div className="pt-2 border-t border-border">
-                <h4 className="text-sm font-medium mb-2">Voyage Information</h4>
-                <div className="space-y-2">
-                  {selectedVessel.lastPort && (
-                    <div>
-                      <p className="text-sm text-muted-foreground">Last Port:</p>
-                      <p className="text-sm font-medium">{selectedVessel.lastPort}</p>
-                      {selectedVessel.departureTime && (
-                        <p className="text-xs text-muted-foreground">
-                          Departed: {formatDate(selectedVessel.departureTime)}
-                        </p>
-                      )}
+                <div className="bg-card rounded-lg border border-border/50 divide-y divide-border/50">
+                  {selectedVessel.imo && (
+                    <div className="flex items-center px-4 py-2.5">
+                      <span className="text-sm text-muted-foreground w-1/3">IMO Number:</span>
+                      <span className="text-sm font-medium">{selectedVessel.imo}</span>
                     </div>
                   )}
                   
-                  {selectedVessel.destination && (
-                    <div>
-                      <p className="text-sm text-muted-foreground">Destination:</p>
-                      <p className="text-sm font-medium">{selectedVessel.destination}</p>
-                      {selectedVessel.estimatedArrival && (
-                        <p className="text-xs text-muted-foreground">
-                          ETA: {formatDate(selectedVessel.estimatedArrival)}
-                        </p>
-                      )}
+                  {selectedVessel.mmsi && (
+                    <div className="flex items-center px-4 py-2.5">
+                      <span className="text-sm text-muted-foreground w-1/3">MMSI:</span>
+                      <span className="text-sm font-medium">{selectedVessel.mmsi}</span>
+                    </div>
+                  )}
+                  
+                  {selectedVessel.currentLat && selectedVessel.currentLng && (
+                    <div className="flex items-center px-4 py-2.5">
+                      <span className="text-sm text-muted-foreground w-1/3">Position:</span>
+                      <span className="text-sm font-medium">
+                        {typeof selectedVessel.currentLat === 'string' 
+                          ? parseFloat(selectedVessel.currentLat).toFixed(4) 
+                          : selectedVessel.currentLat?.toFixed(4)}, 
+                        {typeof selectedVessel.currentLng === 'string' 
+                          ? parseFloat(selectedVessel.currentLng).toFixed(4) 
+                          : selectedVessel.currentLng?.toFixed(4)}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {selectedVessel.course !== undefined && (
+                    <div className="flex items-center px-4 py-2.5">
+                      <span className="text-sm text-muted-foreground w-1/3">Heading:</span>
+                      <span className="text-sm font-medium flex items-center">
+                        {selectedVessel.course}°
+                        <span style={{
+                          display: 'inline-block',
+                          width: '18px',
+                          height: '18px',
+                          transform: `rotate(${selectedVessel.course}deg)`,
+                          marginLeft: '8px'
+                        }}>
+                          <i className="fa fa-arrow-up text-primary/70 text-xs"></i>
+                        </span>
+                      </span>
+                    </div>
+                  )}
+                  
+                  {selectedVessel.cargoType && (
+                    <div className="flex items-center px-4 py-2.5">
+                      <span className="text-sm text-muted-foreground w-1/3">Cargo:</span>
+                      <span className="text-sm font-medium">{selectedVessel.cargoType}</span>
                     </div>
                   )}
                 </div>
               </div>
+              
+              {/* Voyage details */}
+              {(selectedVessel.lastPort || selectedVessel.destination) && (
+                <div className="px-6 pb-4">
+                  <h3 className="text-sm uppercase tracking-wider text-muted-foreground font-semibold mb-3 flex items-center">
+                    <Navigation className="h-3.5 w-3.5 mr-1.5" />
+                    Voyage Details
+                  </h3>
+                  
+                  <div className="bg-card rounded-lg border border-border/50 overflow-hidden">
+                    {selectedVessel.lastPort && (
+                      <div className="p-4 border-b border-border/50">
+                        <div className="flex items-center mb-1">
+                          <div className="h-2 w-2 rounded-full bg-blue-500 mr-2"></div>
+                          <p className="text-sm font-medium">Origin: {selectedVessel.lastPort}</p>
+                        </div>
+                        {selectedVessel.departureTime && (
+                          <p className="text-xs text-muted-foreground ml-4 mt-1">
+                            Departed: {formatDate(selectedVessel.departureTime)}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                    
+                    {selectedVessel.destination && (
+                      <div className="p-4">
+                        <div className="flex items-center mb-1">
+                          <div className="h-2 w-2 rounded-full bg-green-500 mr-2"></div>
+                          <p className="text-sm font-medium">Destination: {selectedVessel.destination}</p>
+                        </div>
+                        {selectedVessel.estimatedArrival && (
+                          <p className="text-xs text-muted-foreground ml-4 mt-1">
+                            ETA: {formatDate(selectedVessel.estimatedArrival)}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
             
             <div className="pt-3 mt-4 border-t border-border">
