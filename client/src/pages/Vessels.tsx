@@ -1093,7 +1093,7 @@ export default function Vessels() {
                     <div className="flex items-center">
                       {/* Status indicator */}
                       {(() => {
-                        const speed = vessel.currentSpeed ? Number(vessel.currentSpeed) : 0;
+                        const speed = vessel.speed ? Number(vessel.speed) : 0;
                         // In transit
                         if (speed >= 5) {
                           return <span className="w-2 h-2 rounded-full bg-blue-500 mr-2" title="In Transit"></span>;
@@ -1245,13 +1245,13 @@ export default function Vessels() {
                     <div className="flex items-center">
                       <div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
                       <span className="text-sm text-gray-600 dark:text-gray-300">
-                        <span className="font-medium">{vessels.filter(v => Number(v.currentSpeed) > 2).length}</span> In Transit
+                        <span className="font-medium">{vessels.filter(v => Number(v.speed) > 2).length}</span> In Transit
                       </span>
                     </div>
                     <div className="flex items-center">
                       <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse mr-2"></div>
                       <span className="text-sm text-gray-600 dark:text-gray-300">
-                        <span className="font-medium">{vessels.filter(v => v.destinationPort && Number(v.currentSpeed) < 2).length}</span> Loading
+                        <span className="font-medium">{vessels.filter(v => v.destinationPort && Number(v.speed) < 2).length}</span> Loading
                       </span>
                     </div>
                     <div className="flex items-center">
