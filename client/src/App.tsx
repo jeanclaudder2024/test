@@ -129,7 +129,7 @@ function Router() {
             <Route path="/trading" component={TradingDashboard} />
             <Route path="/translation" component={TranslationPage} />
             <Route path="/traffic-insights" component={TrafficInsights} />
-            <Route path="/map" component={FullPageMap} />
+            <Route path="/map" component={FixedFullPageMap} />
             {/* Maritime tracking and vessel lookup pages removed as requested */}
             <Route path="/settings" component={Settings} />
             <Route path="/subscribe" component={Subscribe} />
