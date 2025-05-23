@@ -68,6 +68,7 @@ export function Layout({ children }: LayoutProps) {
     { name: "Companies", href: "/companies", icon: Briefcase },
     { name: "Brokers", href: "/brokers", icon: UserPlus },
     { name: "AI Assistant", href: "/ai-assistant", icon: MessageSquare },
+    { name: "Admin Panel", href: "/admin", icon: AlertCircle },
     { name: "Pricing", href: "/pricing", icon: ShoppingBag },
     { name: "Settings", href: "/settings", icon: Settings },
   ];
