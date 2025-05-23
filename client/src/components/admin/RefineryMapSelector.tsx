@@ -141,7 +141,7 @@ export function RefineryMapSelector({
             center={initialPosition || [25, 0]}
             zoom={initialPosition ? 10 : 2}
             style={{ height: "100%", width: "100%" }}
-            whenCreated={(map) => { mapRef.current = map; }}
+            whenReady={(map) => { mapRef.current = map.target; }}
           >
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
