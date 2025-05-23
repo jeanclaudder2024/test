@@ -29,7 +29,7 @@ import Companies from "@/pages/Companies";
 import ApiTest from "@/pages/ApiTest";
 import TranslationPage from "@/pages/TranslationPage";
 import TrafficInsights from "@/pages/TrafficInsights";
-import FullPageMap from "@/pages/FullPageMap";
+import FixedFullPageMap from "@/pages/FixedFullPageMap";
 // Maritime tracking and vessel lookup pages removed as requested
 import { useEffect } from "react";
 import { apiRequest, queryClient } from "./lib/queryClient";
