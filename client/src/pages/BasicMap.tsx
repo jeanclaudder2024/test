@@ -32,21 +32,6 @@ interface Port {
   status?: string;
 }
 
-// Import icon images for Leaflet
-import markerIcon from 'leaflet/dist/images/marker-icon.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
-
-// Fix the default icon issue
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41]
-});
-
 export default function BasicMap() {
   const [refineries, setRefineries] = useState<Refinery[]>([]);
   const [ports, setPorts] = useState<Port[]>([]);
