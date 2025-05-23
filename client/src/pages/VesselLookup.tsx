@@ -88,12 +88,7 @@ export default function VesselLookup() {
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="flex justify-between">
-              <Button variant="outline" asChild>
-                <Link href="/maritime-tracking">
-                  View Maritime Tracking Map
-                </Link>
-              </Button>
+            <CardFooter className="flex justify-end">
               <Button asChild>
                 <a 
                   href="https://www.myshiptracking.com/api-docs/" 
