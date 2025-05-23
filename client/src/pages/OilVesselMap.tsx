@@ -1267,45 +1267,37 @@ export default function OilVesselMap() {
                         
                         {/* Ship position */}
                         {selectedVessel.departureTime && selectedVessel.estimatedArrival && (
-                          <div className="absolute">
-                            <div
-                              className="w-5 h-5 flex items-center justify-center text-primary animate-pulse"
+                          <div 
+                            className="absolute h-5 w-5 flex items-center justify-center text-primary animate-pulse"
+                            style={{
+                              left: (() => {
+                                const departTime = new Date(selectedVessel.departureTime).getTime();
+                                const arrivalTime = new Date(selectedVessel.estimatedArrival).getTime();
+                                const currentTime = new Date().getTime();
+                                
+                                let progressPercent = 0;
+                                if (currentTime >= arrivalTime) {
+                                  progressPercent = 100;
+                                } else if (currentTime <= departTime) {
+                                  progressPercent = 0;
+                                } else {
+                                  const totalTime = arrivalTime - departTime;
+                                  const elapsed = currentTime - departTime;
+                                  progressPercent = Math.min(100, Math.max(0, (elapsed / totalTime) * 100));
+                                }
+                                
+                                // Return value between 10% and 90% of the container width
+                                return `calc(10% + ${progressPercent * 0.8}%)`;
+                              })(),
+                              top: '-10px'
+                            }}
+                          >
+                            <i 
+                              className="fa fa-ship"
                               style={{
-                                transform: `translateX(${(() => {
-                                  // Calculate position
-                                  try {
-                                    const departTime = new Date(selectedVessel.departureTime).getTime();
-                                    const arrivalTime = new Date(selectedVessel.estimatedArrival).getTime();
-                                    const currentTime = new Date().getTime();
-                                    
-                                    let progress = 0;
-                                    if (currentTime >= arrivalTime) {
-                                      progress = 100;
-                                    } else if (currentTime <= departTime) {
-                                      progress = 0;
-                                    } else {
-                                      const totalTime = arrivalTime - departTime;
-                                      const elapsed = currentTime - departTime;
-                                      progress = Math.min(100, Math.max(0, (elapsed / totalTime) * 100));
-                                    }
-                                    
-                                    // Calculate position based on container width (minus dots width)
-                                    // Value between 3% (start) and 97% (end)
-                                    return 3 + (progress * 0.94);
-                                  } catch (e) {
-                                    return 50;
-                                  }
-                                })()}%)`,
-                                top: '-10px'
+                                transform: `rotate(${selectedVessel.course || 0}deg)`
                               }}
-                            >
-                              <FontAwesomeIcon 
-                                icon={faShip} 
-                                style={{
-                                  transform: `rotate(${selectedVessel.course || 0}deg)`
-                                }}
-                              />
-                            </div>
+                            />
                           </div>
                         )}
                         
