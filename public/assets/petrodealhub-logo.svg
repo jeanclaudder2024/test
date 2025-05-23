@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="60" viewBox="0 0 200 60">
+  <defs>
+    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#F97316; stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#EA580C; stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <g fill="url(#logoGradient)">
+    <path d="M20 10H40V20H20V10Z" />
+    <path d="M20 20H30V50H20V20Z" />
+    <path d="M45 10H60V20H45V10Z" />
+    <path d="M45 20H55V50H45V20Z" />
+    <path d="M65 18H75Q80 18 82.5 20.5Q85 23 85 28Q85 33 82.5 35.5Q80 38 75 38H75V50H65V18Z" />
+  </g>
+  <text x="90" y="35" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#333333">PetroDeal</text>
+  <circle cx="175" cy="25" r="10" fill="url(#logoGradient)" />
+</svg>
