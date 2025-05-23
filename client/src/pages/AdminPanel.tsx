@@ -1,0 +1,125 @@
+import React, { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useQuery } from "@tanstack/react-query";
+import { UserManagement } from "@/components/admin/UserManagement";
+import { SystemStats } from "@/components/admin/SystemStats";
+import { DataManagement } from "@/components/admin/DataManagement";
+import { Settings } from "@/components/admin/AdminSettings";
+import { Button } from "@/components/ui/button";
+import { Shield, Database, Users, Settings as SettingsIcon, ChevronLeft } from "lucide-react";
+import { useNavigate } from "wouter";
+
+export default function AdminPanel() {
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("overview");
+
+  // Fetch system stats
+  const { data: stats, isLoading: statsLoading } = useQuery({
+    queryKey: ['/api/admin/stats'],
+    retry: false,
+  });
+
+  return (
+    <div className="container mx-auto py-10">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => navigate("/")}
+            className="mb-2"
+          >
+            <ChevronLeft className="mr-2 h-4 w-4" />
+            Back to Dashboard
+          </Button>
+          <h1 className="text-3xl font-bold">Admin Control Panel</h1>
+          <p className="text-muted-foreground">
+            Manage users, view system statistics, and control platform settings
+          </p>
+        </div>
+      </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList className="grid grid-cols-4 w-full max-w-2xl">
+          <TabsTrigger value="overview" className="flex items-center gap-2">
+            <Shield className="h-4 w-4" />
+            <span className="hidden sm:inline">System Overview</span>
+            <span className="sm:hidden">Overview</span>
+          </TabsTrigger>
+          <TabsTrigger value="users" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            <span className="hidden sm:inline">User Management</span>
+            <span className="sm:hidden">Users</span>
+          </TabsTrigger>
+          <TabsTrigger value="data" className="flex items-center gap-2">
+            <Database className="h-4 w-4" />
+            <span className="hidden sm:inline">Data Management</span>
+            <span className="sm:hidden">Data</span>
+          </TabsTrigger>
+          <TabsTrigger value="settings" className="flex items-center gap-2">
+            <SettingsIcon className="h-4 w-4" />
+            <span className="hidden sm:inline">Settings</span>
+            <span className="sm:hidden">Settings</span>
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>System Overview</CardTitle>
+              <CardDescription>
+                View key statistics and system performance metrics
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <SystemStats loading={statsLoading} stats={stats} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="users" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>User Management</CardTitle>
+              <CardDescription>
+                Manage user accounts, roles, and permissions
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <UserManagement />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="data" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Data Management</CardTitle>
+              <CardDescription>
+                Manage vessels, ports, refineries and system data
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <DataManagement />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="settings" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>System Settings</CardTitle>
+              <CardDescription>
+                Configure system settings and API integrations
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Settings />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
