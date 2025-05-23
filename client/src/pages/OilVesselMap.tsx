@@ -267,10 +267,28 @@ export default function OilVesselMap() {
       {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
         subdomains: 'abcd',
-        maxZoom: 19
+        maxZoom: 19,
+        updateWhenIdle: true,
+        updateWhenZooming: false,
+        keepBuffer: 4
       }
     ).addTo(mapInstanceRef.current);
   }, [mapTheme]);
+  
+  // Navigate to selected region
+  useEffect(() => {
+    if (!mapInstanceRef.current || !selectedRegion || !MAP_REGIONS[selectedRegion]) return;
+    
+    const map = mapInstanceRef.current;
+    const regionData = MAP_REGIONS[selectedRegion];
+    
+    // Animate to the new region with smooth transition
+    map.flyTo(regionData.center, regionData.zoom, {
+      animate: true,
+      duration: 1.5,
+      easeLinearity: 0.25
+    });
+  }, [selectedRegion]);
 
   // Create vessel icon
   const createVesselIcon = (vessel: Vessel) => {
