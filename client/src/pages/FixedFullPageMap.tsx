@@ -471,11 +471,12 @@ export default function FixedFullPageMap() {
     }
     
     if (realTimeUpdates) {
+      // Update every 5 minutes (300000 milliseconds)
       timerRef.current = setInterval(() => {
         if (!loading) {
           updateVessels();
         }
-      }, 30000);
+      }, 300000);
     }
     
     return () => {
@@ -524,8 +525,24 @@ export default function FixedFullPageMap() {
         }
       }
       
+      // Show a success notification
+      toast({
+        title: "Map Updated",
+        description: `Updated positions for ${processedVessels.length} vessels`,
+        variant: "default",
+        duration: 2000,
+      });
+      
     } catch (err) {
       console.error('Error updating vessel data:', err);
+      
+      // Show error toast
+      toast({
+        title: "Update Failed",
+        description: "Could not refresh vessel positions. Retrying in 5 minutes.",
+        variant: "destructive",
+        duration: 3000,
+      });
     }
   };
   
@@ -905,7 +922,7 @@ export default function FixedFullPageMap() {
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Enable automatic vessel position updates every 30 seconds</p>
+                  <p>Enable automatic vessel position updates every 5 minutes</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -1149,7 +1166,7 @@ export default function FixedFullPageMap() {
                 </LayerGroup>
               )}
               
-              {/* Refineries Layer */}
+              {/* Refineries Layer - Enhanced to be more professional */}
               {showRefineries && (
                 <LayerGroup>
                   {filteredRefineries.map((refinery) => (
@@ -1166,7 +1183,10 @@ export default function FixedFullPageMap() {
                     >
                       <Popup className="refinery-popup custom-popup">
                         <div className="p-1">
-                          <h3 className="font-bold text-base">{refinery.name}</h3>
+                          <h3 className="font-bold text-base flex items-center gap-1.5">
+                            <Factory className="h-3.5 w-3.5 text-red-500" />
+                            {refinery.name}
+                          </h3>
                           <div className="grid grid-cols-1 gap-y-1 mt-2 text-xs">
                             <p><strong>Country:</strong> {refinery.country}</p>
                             <p><strong>Region:</strong> {refinery.region}</p>
@@ -1182,7 +1202,7 @@ export default function FixedFullPageMap() {
                             className="p-0 h-auto text-xs mt-2"
                             onClick={() => handleItemSelect(refinery, 'refinery')}
                           >
-                            View Details
+                            View Refinery Details
                           </Button>
                         </div>
                       </Popup>
