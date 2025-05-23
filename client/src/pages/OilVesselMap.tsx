@@ -109,7 +109,7 @@ export default function OilVesselMap() {
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Record<string, L.Marker>>({});
   const layerGroupRef = useRef<L.LayerGroup | null>(null);
-  const [mapTheme, setMapTheme] = useState<'light' | 'dark'>('dark');
+  const [mapTheme, setMapTheme] = useState<'light' | 'dark'>('light');
   
   // UI state
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -177,7 +177,7 @@ export default function OilVesselMap() {
   // Initialize the map
   useEffect(() => {
     if (mapRef.current && !mapInstanceRef.current) {
-      // Create map instance
+      // Create map instance with optimized settings for better performance
       const map = L.map(mapRef.current, {
         center: [20, 0],
         zoom: 3,
@@ -185,10 +185,21 @@ export default function OilVesselMap() {
         maxZoom: 18,
         worldCopyJump: true, // Allows the map to wrap around the world
         maxBounds: L.latLngBounds(L.latLng(-90, -180), L.latLng(90, 180)), // Constrain map to world bounds
-        maxBoundsViscosity: 1.0 // Prevent dragging outside bounds
+        maxBoundsViscosity: 1.0, // Prevent dragging outside bounds
+        preferCanvas: true, // Use canvas renderer for better performance with many markers
+        renderer: L.canvas({ padding: 0.5 }), // Canvas renderer with minimal padding for performance
+        zoomSnap: 0.5, // Smoother zooming
+        zoomDelta: 0.5, // Smoother zooming
+        wheelDebounceTime: 40, // Debounce time for smoother mouse wheel zooming
+        wheelPxPerZoomLevel: 60, // Less sensitive wheel zooming
+        fadeAnimation: true, // Smooth fade on zoom
+        markerZoomAnimation: true, // Animate markers when zooming
+        inertia: true, // Smooth panning
+        inertiaDeceleration: 3000, // Smoother panning deceleration
+        tap: true // For mobile support
       });
       
-      // Set up base tile layer based on theme
+      // Set up high-performance tile layer with optimized loading
       const baseTileLayer = L.tileLayer(
         mapTheme === 'dark' 
           ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
@@ -196,7 +207,13 @@ export default function OilVesselMap() {
         {
           attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
           subdomains: 'abcd',
-          maxZoom: 19
+          maxZoom: 19,
+          updateWhenIdle: true, // Only load tiles when map is idle for better performance
+          updateWhenZooming: false, // Don't update during zoom for smoother experience
+          keepBuffer: 4, // Keep more tiles in memory for smoother panning
+          tileSize: 256,
+          detectRetina: true, // Support for retina displays
+          crossOrigin: true // For better CORS handling
         }
       ).addTo(map);
       
