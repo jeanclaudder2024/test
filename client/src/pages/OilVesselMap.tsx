@@ -445,87 +445,91 @@ export default function OilVesselMap() {
     });
   };
 
-  // Check if coordinates are likely to be in water
+  // Check if coordinates are valid and in water
   const isLikelyInWater = (lat: number, lng: number): boolean => {
-    // Define general land boundaries by region (simplified)
-    const landRegions = [
-      // Europe major land mass
-      { minLat: 36, maxLat: 71, minLng: -10, maxLng: 40, name: 'Europe' },
-      // Africa major land mass
-      { minLat: -35, maxLat: 37, minLng: -17, maxLng: 51, name: 'Africa' },
-      // Asia major land mass
-      { minLat: 0, maxLat: 80, minLng: 40, maxLng: 180, name: 'Asia' },
-      // North America major land mass
-      { minLat: 15, maxLat: 85, minLng: -170, maxLng: -50, name: 'North America' },
-      // South America major land mass
-      { minLat: -56, maxLat: 15, minLng: -81, maxLng: -35, name: 'South America' },
-      // Australia major land mass
-      { minLat: -43, maxLat: -10, minLng: 112, maxLng: 155, name: 'Australia' },
+    // First, handle the case where coordinates are completely invalid
+    if (Math.abs(lat) > 90 || Math.abs(lng) > 180) {
+      return false;
+    }
+    
+    // Define specific known problematic coordinates to exclude
+    const knownBadCoordinates = [
+      // Coordinates from logs that show vessels on land
+      { lat: -30.50, lng: 45.30, radius: 0.5 }, // Africa interior
+      { lat: -15.60, lng: -15.70, radius: 0.5 }, // Africa interior
+      { lat: -25.30, lng: 5.10, radius: 0.5 }, // Africa interior
+      { lat: -25.30, lng: 135.20, radius: 0.5 }, // Australia interior
+      { lat: 57.80, lng: -5.08, radius: 0.5 }, // Scotland interior
+      { lat: 15.50, lng: 55.30, radius: 0.5 }, // Saudi Arabia interior
+      { lat: -45.50, lng: -75.40, radius: 0.5 }, // South America interior
+      { lat: 34.20, lng: 129.50, radius: 0.5 }, // Japan interior
+      { lat: -35.80, lng: -65.20, radius: 0.5 }, // Argentina interior
+      { lat: -36.80, lng: 150.40, radius: 0.5 }, // Australia southeast
+      { lat: 20.50, lng: 38.20, radius: 0.5 }, // Saudi Arabia interior
+      { lat: 20.40, lng: 122.50, radius: 0.5 }, // China interior
+      { lat: -38.30, lng: 145.20, radius: 0.5 }, // Australia interior
+      { lat: -32.50, lng: 115.80, radius: 0.5 }, // Australia west
+      { lat: 25.30, lng: -50.40, radius: 0.5 }, // Qatar interior
+      { lat: 23.07, lng: 56.53, radius: 0.5 }, // Oman interior
+      { lat: 10.50, lng: -65.30, radius: 0.5 }, // Venezuela interior
+      { lat: 22.50, lng: 119.80, radius: 0.5 }, // China interior
+      { lat: 13.40, lng: 110.20, radius: 0.5 }, // Vietnam interior
+      { lat: 35.80, lng: -140.20, radius: 0.5 }, // North Pacific questionable
     ];
     
-    // Special coastal regions where vessels often are
-    const coastalRegions = [
-      // Persian Gulf
-      { minLat: 24, maxLat: 30, minLng: 48, maxLng: 57, name: 'Persian Gulf' },
-      // Mediterranean
-      { minLat: 30, maxLat: 45, minLng: -5, maxLng: 37, name: 'Mediterranean' },
-      // US Gulf Coast
-      { minLat: 24, maxLat: 31, minLng: -98, maxLng: -80, name: 'US Gulf Coast' },
-      // Singapore/Malaysia
-      { minLat: -3, maxLat: 7, minLng: 95, maxLng: 108, name: 'Singapore Area' },
-      // English Channel
-      { minLat: 48, maxLat: 53, minLng: -5, maxLng: 9, name: 'English Channel' },
-    ];
-    
-    // Check if coordinates fall within land regions and not in coastal regions
-    for (const region of landRegions) {
-      if (
-        lat >= region.minLat && lat <= region.maxLat &&
-        lng >= region.minLng && lng <= region.maxLng
-      ) {
-        // It's in a land region, but check if it's in a coastal exception area
-        const inCoastalRegion = coastalRegions.some(coastal => 
-          lat >= coastal.minLat && lat <= coastal.maxLat &&
-          lng >= coastal.minLng && lng <= coastal.maxLng
-        );
-        
-        if (inCoastalRegion) {
-          // It's in a coastal region, allow it
-          return true;
-        }
-        
-        // We're in the middle of a continent, check for some common shipping lanes
-        // Major rivers, lakes, and inland waterways
-        const inlandWaterways = [
-          // Mississippi River (approximate)
-          { minLat: 29, maxLat: 45, minLng: -91, maxLng: -89, name: 'Mississippi River' },
-          // Rhine River (approximate)
-          { minLat: 47, maxLat: 52, minLng: 6, maxLng: 9, name: 'Rhine River' },
-          // Yangtze River (approximate)
-          { minLat: 29, maxLat: 32, minLng: 115, maxLng: 122, name: 'Yangtze River' },
-          // Caspian Sea
-          { minLat: 36, maxLat: 47, minLng: 46, maxLng: 55, name: 'Caspian Sea' },
-          // Great Lakes
-          { minLat: 41, maxLat: 49, minLng: -92, maxLng: -76, name: 'Great Lakes' },
-        ];
-        
-        const inWaterway = inlandWaterways.some(waterway => 
-          lat >= waterway.minLat && lat <= waterway.maxLat &&
-          lng >= waterway.minLng && lng <= waterway.maxLng
-        );
-        
-        if (inWaterway) {
-          return true;
-        }
-        
-        // It's likely on land
-        console.log(`Vessel at ${lat.toFixed(4)}, ${lng.toFixed(4)} appears to be on land in ${region.name}`);
+    // Check against known problematic coordinates
+    for (const badCoord of knownBadCoordinates) {
+      const distance = Math.sqrt(
+        Math.pow(lat - badCoord.lat, 2) + Math.pow(lng - badCoord.lng, 2)
+      );
+      
+      if (distance <= badCoord.radius) {
+        console.log(`Vessel at ${lat.toFixed(4)}, ${lng.toFixed(4)} matches known bad coordinate`);
         return false;
       }
     }
     
-    // Not in any defined land region, likely in open water
-    return true;
+    // Define major water bodies as whitelist regions
+    const waterBodies = [
+      // Major oceans and seas
+      { name: 'North Atlantic', minLat: 0, maxLat: 65, minLng: -80, maxLng: -5 },
+      { name: 'South Atlantic', minLat: -60, maxLat: 0, minLng: -70, maxLng: 20 },
+      { name: 'North Pacific', minLat: 0, maxLat: 65, minLng: 120, maxLng: -115 },
+      { name: 'South Pacific', minLat: -60, maxLat: 0, minLng: 150, maxLng: -70 },
+      { name: 'Indian Ocean', minLat: -50, maxLat: 25, minLng: 20, maxLng: 120 },
+      { name: 'Mediterranean Sea', minLat: 30, maxLat: 45, minLng: -5, maxLng: 37 },
+      { name: 'Red Sea', minLat: 12, maxLat: 30, minLng: 32, maxLng: 43 },
+      { name: 'Persian Gulf', minLat: 23.5, maxLat: 30, minLng: 48, maxLng: 56.5 },
+      { name: 'South China Sea', minLat: 0, maxLat: 25, minLng: 99, maxLng: 125 },
+      { name: 'Caribbean Sea', minLat: 8, maxLat: 22, minLng: -88, maxLng: -59 },
+      { name: 'Gulf of Mexico', minLat: 18, maxLat: 31, minLng: -98, maxLng: -80 },
+      { name: 'Baltic Sea', minLat: 53, maxLat: 66, minLng: 10, maxLng: 30 },
+      { name: 'North Sea', minLat: 51, maxLat: 62, minLng: -4, maxLng: 12 },
+      { name: 'Bering Sea', minLat: 52, maxLat: 65, minLng: 162, maxLng: -157 },
+      { name: 'Yellow Sea', minLat: 32, maxLat: 41, minLng: 118, maxLng: 127 },
+      { name: 'Sea of Japan', minLat: 33, maxLat: 47, minLng: 127, maxLng: 142 },
+      { name: 'East China Sea', minLat: 24, maxLat: 34, minLng: 118, maxLng: 131 },
+      // Major shipping lanes
+      { name: 'English Channel', minLat: 48.5, maxLat: 51.5, minLng: -5, maxLng: 2 },
+      { name: 'Strait of Malacca', minLat: -3, maxLat: 6, minLng: 95, maxLng: 105 },
+      { name: 'Panama Canal Route', minLat: 7, maxLat: 10, minLng: -83, maxLng: -77 },
+      { name: 'Suez Canal Route', minLat: 27, maxLat: 32, minLng: 31, maxLng: 33 },
+    ];
+    
+    // Check if coordinates are in any known water body (whitelist approach)
+    for (const water of waterBodies) {
+      if (
+        lat >= water.minLat && lat <= water.maxLat &&
+        lng >= water.minLng && lng <= water.maxLng
+      ) {
+        return true;
+      }
+    }
+    
+    // If not in any of the defined water bodies, assume it's on land
+    // This is a more conservative approach but will avoid showing vessels in unlikely places
+    console.log(`Vessel at ${lat.toFixed(4)}, ${lng.toFixed(4)} not in any known water body`);
+    return false;
   };
 
   // Update markers when filtered data changes
