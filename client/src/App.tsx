@@ -29,8 +29,7 @@ import Companies from "@/pages/Companies";
 import ApiTest from "@/pages/ApiTest";
 import TranslationPage from "@/pages/TranslationPage";
 import TrafficInsights from "@/pages/TrafficInsights";
-import BasicMap from "@/pages/BasicMap";
-import SimpleMap from "@/pages/SimpleMap";
+import WorkingMap from "@/pages/WorkingMap";
 // Maritime tracking and vessel lookup pages removed as requested
 import { useEffect } from "react";
 import { apiRequest, queryClient } from "./lib/queryClient";
@@ -130,7 +129,7 @@ function Router() {
             <Route path="/trading" component={TradingDashboard} />
             <Route path="/translation" component={TranslationPage} />
             <Route path="/traffic-insights" component={TrafficInsights} />
-            <Route path="/map" component={SimpleMap} />
+            <Route path="/map" component={WorkingMap} />
             {/* Maritime tracking and vessel lookup pages removed as requested */}
             <Route path="/settings" component={Settings} />
             <Route path="/subscribe" component={Subscribe} />
