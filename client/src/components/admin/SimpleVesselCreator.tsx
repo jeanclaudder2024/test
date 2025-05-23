@@ -26,61 +26,88 @@ interface SimpleVesselCreatorProps {
 export function SimpleVesselCreator({ open, onOpenChange }: SimpleVesselCreatorProps) {
   const queryClient = useQueryClient();
   const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   
   const [vessel, setVessel] = useState({
     name: "",
-    mmsi: "",
-    imo: "",
+    mmsi: "123456789",
+    imo: "1234567",
     vesselType: "OIL_TANKER",
     flag: "US",
-    length: "100",
-    width: "20",
+    length: 100,
+    width: 20,
     status: "AT_SEA",
-    currentLat: "",
-    currentLng: "",
-    destination: "",
-    eta: "",
+    currentLat: 0,
+    currentLng: 0,
+    destination: "Sample Port",
+    eta: new Date().toISOString().split('T')[0],
     cargo: "Crude Oil",
-    cargoCapacity: "100000"
+    cargoCapacity: 100000
   });
 
   // Add vessel mutation
   const { mutate: addVessel, isPending: isSubmitting } = useMutation({
     mutationFn: async (vesselData: any) => {
-      const response = await fetch("/api/vessels", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(vesselData),
-      });
-      
-      if (!response.ok) {
-        throw new Error("Failed to add vessel");
+      try {
+        // Format data to match API expectations
+        const formattedData = {
+          ...vesselData,
+          // Make sure numbers are actually numbers
+          mmsi: Number(vesselData.mmsi),
+          imo: Number(vesselData.imo),
+          length: Number(vesselData.length),
+          width: Number(vesselData.width),
+          currentLat: Number(vesselData.currentLat),
+          currentLng: Number(vesselData.currentLng),
+          cargoCapacity: Number(vesselData.cargoCapacity)
+        };
+        
+        console.log("Sending vessel data:", formattedData);
+        
+        const response = await fetch("/api/vessels", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formattedData),
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error("Server error:", errorData);
+          throw new Error(errorData.message || "Failed to add vessel");
+        }
+        
+        return response.json();
+      } catch (error) {
+        console.error("Error in mutation:", error);
+        throw error;
       }
-      
-      return response.json();
     },
     onSuccess: () => {
+      // Update the vessel list
       queryClient.invalidateQueries({ queryKey: ["/api/vessels"] });
+      
+      // Show success message
+      setErrorMessage(""); // Clear any error messages
       setSuccessMessage("Vessel added successfully!");
       
       // Reset form
       setVessel({
         name: "",
-        mmsi: "",
-        imo: "",
+        mmsi: "123456789",
+        imo: "1234567",
         vesselType: "OIL_TANKER",
         flag: "US",
-        length: "100",
-        width: "20",
+        length: 100,
+        width: 20,
         status: "AT_SEA",
-        currentLat: "",
-        currentLng: "",
-        destination: "",
-        eta: "",
+        currentLat: 0,
+        currentLng: 0,
+        destination: "Sample Port",
+        eta: new Date().toISOString().split('T')[0],
         cargo: "Crude Oil",
-        cargoCapacity: "100000"
+        cargoCapacity: 100000
       });
       
       // Close dialog after showing success message
@@ -91,11 +118,12 @@ export function SimpleVesselCreator({ open, onOpenChange }: SimpleVesselCreatorP
     },
     onError: (error: any) => {
       console.error("Failed to add vessel:", error);
-      setSuccessMessage("Error: " + (error.message || "Failed to add vessel. Please check your data."));
+      setSuccessMessage(""); // Clear any success messages
+      setErrorMessage("Error: " + (error.message || "Failed to add vessel. Please check your data."));
     },
   });
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: string, value: any) => {
     setVessel(prev => ({
       ...prev,
       [field]: value
@@ -116,19 +144,24 @@ export function SimpleVesselCreator({ open, onOpenChange }: SimpleVesselCreatorP
           </DialogDescription>
         </DialogHeader>
 
+        {/* Success message */}
         {successMessage && (
-          <Alert className={successMessage.includes("Error") 
-            ? "bg-red-50 text-red-800 border-red-200 mb-4" 
-            : "bg-green-50 text-green-800 border-green-200 mb-4"}>
-            {successMessage.includes("Error") 
-              ? <AlertCircle className="h-4 w-4 text-red-500" />
-              : <CheckCircle className="h-4 w-4 text-green-500" />
-            }
-            <AlertTitle className={successMessage.includes("Error") ? "text-red-800 text-sm" : "text-green-800 text-sm"}>
-              {successMessage.includes("Error") ? "Error" : "Success"}
-            </AlertTitle>
-            <AlertDescription className={successMessage.includes("Error") ? "text-red-700 text-xs" : "text-green-700 text-xs"}>
+          <Alert className="bg-green-50 text-green-800 border-green-200 mb-4">
+            <CheckCircle className="h-4 w-4 text-green-500" />
+            <AlertTitle className="text-green-800 text-sm">Success</AlertTitle>
+            <AlertDescription className="text-green-700 text-xs">
               {successMessage}
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {/* Error message */}
+        {errorMessage && (
+          <Alert className="bg-red-50 text-red-800 border-red-200 mb-4">
+            <AlertCircle className="h-4 w-4 text-red-500" />
+            <AlertTitle className="text-red-800 text-sm">Error</AlertTitle>
+            <AlertDescription className="text-red-700 text-xs">
+              {errorMessage}
             </AlertDescription>
           </Alert>
         )}
@@ -243,16 +276,17 @@ export function SimpleVesselCreator({ open, onOpenChange }: SimpleVesselCreatorP
             
             <EnhancedMapSelector 
               onSelectPosition={(lat, lng) => {
-                handleInputChange("currentLat", lat.toString());
-                handleInputChange("currentLng", lng.toString());
+                // Store coordinates as numbers directly
+                handleInputChange("currentLat", lat);
+                handleInputChange("currentLng", lng);
               }}
-              initialLat={vessel.currentLat ? parseFloat(vessel.currentLat) : undefined}
-              initialLng={vessel.currentLng ? parseFloat(vessel.currentLng) : undefined}
+              initialLat={vessel.currentLat}
+              initialLng={vessel.currentLng}
             />
             
-            {vessel.currentLat && vessel.currentLng && (
+            {vessel.currentLat !== 0 && vessel.currentLng !== 0 && (
               <div className="text-sm text-center">
-                Selected position: {parseFloat(vessel.currentLat).toFixed(4)}, {parseFloat(vessel.currentLng).toFixed(4)}
+                Selected position: {Number(vessel.currentLat).toFixed(4)}, {Number(vessel.currentLng).toFixed(4)}
               </div>
             )}
           </div>
