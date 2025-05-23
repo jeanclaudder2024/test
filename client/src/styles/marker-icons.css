@@ -1,0 +1,42 @@
+/* Custom marker styles */
+.refinery-marker {
+  filter: hue-rotate(240deg); /* Blue */
+}
+
+.port-marker {
+  filter: hue-rotate(120deg); /* Green */
+}
+
+/* Style for marker popups */
+.leaflet-popup-content {
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.leaflet-popup-content h3 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.leaflet-popup-content p {
+  margin: 4px 0;
+  font-size: 14px;
+  color: #555;
+}
+
+/* Make popup content more readable */
+.leaflet-popup-content {
+  max-width: 250px;
+}
+
+/* Better popup styles */
+.leaflet-popup-content-wrapper {
+  border-radius: 6px;
+}
+
+/* Hover effect for markers */
+.leaflet-marker-icon:hover {
+  transform: scale(1.1);
+  transition: transform 0.2s ease;
+}
