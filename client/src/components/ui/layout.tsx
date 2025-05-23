@@ -326,6 +326,23 @@ export function Layout({ children }: LayoutProps) {
             </div>
             
             <div className="flex items-center gap-2">
+              {/* Translation Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-8 gap-1 px-2">
+                    <Globe className="h-4 w-4" />
+                    <span className="hidden sm:inline-block text-sm">English</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-40">
+                  <DropdownMenuItem className="cursor-pointer">English</DropdownMenuItem>
+                  <DropdownMenuItem className="cursor-pointer">French</DropdownMenuItem>
+                  <DropdownMenuItem className="cursor-pointer">Spanish</DropdownMenuItem>
+                  <DropdownMenuItem className="cursor-pointer">Arabic</DropdownMenuItem>
+                  <DropdownMenuItem className="cursor-pointer">Chinese</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              
               <Button variant="ghost" size="icon" className="relative">
                 <Bell className="h-5 w-5" />
                 <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
