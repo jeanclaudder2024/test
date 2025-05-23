@@ -8,10 +8,10 @@ import { DataManagement } from "@/components/admin/DataManagement";
 import { Settings } from "@/components/admin/AdminSettings";
 import { Button } from "@/components/ui/button";
 import { Shield, Database, Users, Settings as SettingsIcon, ChevronLeft } from "lucide-react";
-import { useNavigate } from "wouter";
+import { useLocation } from "wouter";
 
 export default function AdminPanel() {
-  const navigate = useNavigate();
+  const [_, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState("overview");
 
   // Fetch system stats
