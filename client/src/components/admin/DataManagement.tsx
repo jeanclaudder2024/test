@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { VesselFormNew } from "./VesselFormNew";
 import { Card, CardContent } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { MapPositionSelector } from "@/components/admin/MapPositionSelector";
@@ -683,7 +684,7 @@ export function DataManagement() {
       
       {/* Add Vessel Dialog */}
       <Dialog open={showAddVesselDialog} onOpenChange={setShowAddVesselDialog}>
-        <DialogContent className="max-w-4xl h-[90vh] overflow-hidden flex flex-col">
+        <DialogContent className="max-w-4xl h-[90vh] p-4">
           <DialogHeader>
             <DialogTitle>Add New Vessel</DialogTitle>
             <DialogDescription>
@@ -691,9 +692,10 @@ export function DataManagement() {
             </DialogDescription>
           </DialogHeader>
           
-          <div className="overflow-y-auto pr-2 flex-grow">
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="h-[calc(100%-8rem)] overflow-y-auto mt-4">
+            <div className="grid grid-cols-1 gap-6 mb-4">
+              {/* Form content */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Left column - Basic vessel information */}
                 <div className="space-y-6">
                   <div className="bg-muted/30 p-4 rounded-lg">
