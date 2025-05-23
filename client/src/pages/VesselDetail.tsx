@@ -303,6 +303,8 @@ export default function VesselDetail() {
   const [isGeneratingManifest, setIsGeneratingManifest] = useState(false);
   const [refineries, setRefineries] = useState<any[]>([]);
   const [ports, setPorts] = useState<any[]>([]);
+  const [documents, setDocuments] = useState<any[]>([]);
+  const [isLoadingDocuments, setIsLoadingDocuments] = useState(false);
   
   // Fetch refineries data for map connections
   useEffect(() => {
@@ -335,6 +337,29 @@ export default function VesselDetail() {
     
     fetchPorts();
   }, []);
+  
+  // Fetch vessel documents
+  useEffect(() => {
+    const fetchVesselDocuments = async () => {
+      if (!vesselId) return;
+      
+      setIsLoadingDocuments(true);
+      try {
+        const response = await axios.get('/api/documents', {
+          params: { vesselId }
+        });
+        if (response.status === 200) {
+          setDocuments(response.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch vessel documents:', error);
+      } finally {
+        setIsLoadingDocuments(false);
+      }
+    };
+    
+    fetchVesselDocuments();
+  }, [vesselId]);
   
   useEffect(() => {
     const fetchVessel = async () => {
@@ -817,46 +842,42 @@ export default function VesselDetail() {
                           Document History
                         </h3>
                         
-                        <div className="text-sm">
-                          <div className="flex items-center justify-between py-3 border-b border-gray-100 dark:border-gray-800">
-                            <div className="flex items-center">
-                              <FileText className="h-4 w-4 mr-3 text-muted-foreground" />
-                              <span>Bill of Lading #OT-87654</span>
-                            </div>
-                            <div className="flex items-center">
-                              <span className="text-xs text-muted-foreground mr-3">Generated on Apr 15, 2023</span>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <Download className="h-4 w-4" />
-                              </Button>
-                            </div>
+                        {isLoadingDocuments ? (
+                          <div className="flex justify-center py-8">
+                            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
                           </div>
-                          
-                          <div className="flex items-center justify-between py-3 border-b border-gray-100 dark:border-gray-800">
-                            <div className="flex items-center">
-                              <FileText className="h-4 w-4 mr-3 text-muted-foreground" />
-                              <span>Cargo Manifest #CM-12345</span>
-                            </div>
-                            <div className="flex items-center">
-                              <span className="text-xs text-muted-foreground mr-3">Generated on Apr 10, 2023</span>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <Download className="h-4 w-4" />
-                              </Button>
-                            </div>
+                        ) : documents.length > 0 ? (
+                          <div className="text-sm">
+                            {documents.map((doc) => (
+                              <div key={doc.id} className="flex items-center justify-between py-3 border-b border-gray-100 dark:border-gray-800">
+                                <div className="flex items-center">
+                                  <FileText className="h-4 w-4 mr-3 text-muted-foreground" />
+                                  <span>{doc.type} {doc.reference ? `#${doc.reference}` : ''}</span>
+                                </div>
+                                <div className="flex items-center">
+                                  <span className="text-xs text-muted-foreground mr-3">
+                                    Generated on {formatDate(new Date(doc.createdAt))}
+                                  </span>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-8 w-8"
+                                    onClick={() => window.open(doc.fileUrl || `/api/documents/${doc.id}/download`, '_blank')}
+                                  >
+                                    <Download className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
                           </div>
-                          
-                          <div className="flex items-center justify-between py-3">
-                            <div className="flex items-center">
-                              <FileText className="h-4 w-4 mr-3 text-muted-foreground" />
-                              <span>Certificate of Origin #CO-54321</span>
-                            </div>
-                            <div className="flex items-center">
-                              <span className="text-xs text-muted-foreground mr-3">Generated on Apr 10, 2023</span>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <Download className="h-4 w-4" />
-                              </Button>
-                            </div>
+                        ) : (
+                          <div className="text-center py-6 text-muted-foreground">
+                            <p>No documents found for this vessel.</p>
+                            <p className="text-sm mt-2">
+                              Use the document generators above to create vessel documents.
+                            </p>
                           </div>
-                        </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
