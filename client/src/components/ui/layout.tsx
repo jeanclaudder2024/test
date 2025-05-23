@@ -55,7 +55,7 @@ export function Layout({ children }: LayoutProps) {
   const [isMobileNavOpen, setIsMobileNavOpen] = React.useState(false);
 
   const navigation = [
-    { name: "Dashboard", href: "/dashboard", icon: Home },
+    // Dashboard removed as requested
     { name: "Vessels", href: "/vessels", icon: Ship },
     // Vessel Dashboard removed as requested
     // Vessel Lookup removed as requested
@@ -100,11 +100,11 @@ export function Layout({ children }: LayoutProps) {
     <div className="min-h-screen bg-background flex">
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex flex-col w-64 bg-sidebar border-r border-sidebar-border">
-        <div className="flex items-center h-16 px-6 border-b border-sidebar-border">
+        <div className="flex items-center h-30 px-6 border-b border-sidebar-border">
           <img
             src="/assets/petrodealhub-logo.png"
             alt="Logo"
-            className="h-10 w-auto object-contain"
+            className="h-30 w-auto object-contain"
           />
         </div>
 
@@ -205,7 +205,7 @@ export function Layout({ children }: LayoutProps) {
             <img
               src="/assets/petrodealhub-logo.png"
               alt="Logo"
-              style={{ width: '56%', height: '168%' }}
+              style={{ width: "56%", height: "168%" }}
               className="object-contain"
             />
             <Button
