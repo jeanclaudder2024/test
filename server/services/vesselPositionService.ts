@@ -44,7 +44,7 @@ export class VesselPositionService {
   
   /**
    * Start the simulation of vessel position updates
-   * This runs every 10 seconds to update vessel positions
+   * This runs every 15 minutes to update vessel positions
    */
   startPositionUpdates() {
     this.updateInterval = setInterval(async () => {
@@ -57,7 +57,7 @@ export class VesselPositionService {
       await this.updateVesselPositions();
       
       this.lastUpdate = new Date();
-    }, 10000); // Update every 10 seconds
+    }, 15 * 60 * 1000); // Update every 15 minutes
   }
   
   /**

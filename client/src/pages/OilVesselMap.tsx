@@ -603,10 +603,10 @@ export default function OilVesselMap() {
     fetchVesselData();
     fetchFacilities();
     
-    // Set up auto-refresh every 30 seconds
+    // Set up auto-refresh every 15 minutes
     const intervalId = setInterval(() => {
       fetchVesselData();
-    }, 30000);
+    }, 15 * 60 * 1000);
     
     return () => clearInterval(intervalId);
   }, []);
