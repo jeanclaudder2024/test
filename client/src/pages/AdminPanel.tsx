@@ -7,9 +7,10 @@ import { SystemStats } from "@/components/admin/SystemStats";
 import { FixedDataManagement } from "@/components/admin/FixedDataManagement";
 import { VesselManagement } from "@/components/admin/VesselManagement";
 import { RefineryManagement } from "@/components/admin/RefineryManagement";
+import { PortManagement } from "@/components/admin/PortManagement";
 import { Settings } from "@/components/admin/AdminSettings";
 import { Button } from "@/components/ui/button";
-import { Shield, Database, Users, Settings as SettingsIcon, ChevronLeft, Ship, Factory } from "lucide-react";
+import { Shield, Database, Users, Settings as SettingsIcon, ChevronLeft, Ship, Factory, Anchor } from "lucide-react";
 import { useLocation } from "wouter";
 
 export default function AdminPanel() {
@@ -43,7 +44,7 @@ export default function AdminPanel() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid grid-cols-6 w-full max-w-4xl">
+        <TabsList className="grid grid-cols-7 w-full max-w-5xl">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <Shield className="h-4 w-4" />
             <span className="hidden sm:inline">System Overview</span>
@@ -58,6 +59,11 @@ export default function AdminPanel() {
             <Ship className="h-4 w-4" />
             <span className="hidden sm:inline">Vessel Management</span>
             <span className="sm:hidden">Vessels</span>
+          </TabsTrigger>
+          <TabsTrigger value="ports" className="flex items-center gap-2">
+            <Anchor className="h-4 w-4" />
+            <span className="hidden sm:inline">Port Management</span>
+            <span className="sm:hidden">Ports</span>
           </TabsTrigger>
           <TabsTrigger value="refineries" className="flex items-center gap-2">
             <Factory className="h-4 w-4" />
@@ -114,6 +120,20 @@ export default function AdminPanel() {
             </CardHeader>
             <CardContent>
               <VesselManagement />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="ports" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Port Management</CardTitle>
+              <CardDescription>
+                Add, edit, and manage global ports with interactive map positioning
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <PortManagement />
             </CardContent>
           </Card>
         </TabsContent>

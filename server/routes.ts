@@ -3118,6 +3118,178 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+  
+  // Port Management API Endpoints
+  
+  // Get ports with pagination, filtering and search
+  apiRouter.get("/ports", async (req, res) => {
+    try {
+      const page = req.query.page ? parseInt(req.query.page as string) : 1;
+      const pageSize = req.query.pageSize ? parseInt(req.query.pageSize as string) : 10;
+      const region = req.query.region as string | undefined;
+      const search = req.query.search as string | undefined;
+      const type = req.query.type as string | undefined;
+      
+      // Get all ports from database
+      let ports = await storage.getPorts();
+      let totalCount = ports.length;
+      
+      // Apply filters
+      if (region && region !== 'All') {
+        ports = ports.filter(p => p.region === region);
+      }
+      
+      if (type && type !== 'All') {
+        ports = ports.filter(p => p.type === type);
+      }
+      
+      if (search) {
+        const searchLower = search.toLowerCase();
+        ports = ports.filter(p => 
+          p.name.toLowerCase().includes(searchLower) || 
+          p.country.toLowerCase().includes(searchLower) ||
+          p.description?.toLowerCase().includes(searchLower)
+        );
+      }
+      
+      // Get total count after filtering
+      const filteredCount = ports.length;
+      
+      // Apply pagination
+      const totalPages = Math.ceil(filteredCount / pageSize);
+      const start = (page - 1) * pageSize;
+      const end = start + pageSize;
+      const paginatedPorts = ports.slice(start, end);
+      
+      res.json({
+        data: paginatedPorts,
+        page,
+        pageSize,
+        totalPages,
+        totalCount: filteredCount,
+        originalCount: totalCount
+      });
+    } catch (error) {
+      console.error("Error fetching ports:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch ports",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Get port by ID
+  apiRouter.get("/ports/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid port ID" });
+      }
+      
+      const port = await storage.getPortById(id);
+      if (!port) {
+        return res.status(404).json({ message: "Port not found" });
+      }
+      
+      res.json(port);
+    } catch (error) {
+      console.error("Error fetching port:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch port",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Create new port
+  apiRouter.post("/ports", async (req, res) => {
+    try {
+      // Validate the input using the port schema
+      const result = insertPortSchema.safeParse(req.body);
+      
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Invalid port data", 
+          errors: result.error.errors 
+        });
+      }
+      
+      // Create the port in the database
+      const newPort = await storage.createPort(result.data);
+      
+      res.status(201).json(newPort);
+    } catch (error) {
+      console.error("Error creating port:", error);
+      res.status(500).json({ 
+        message: "Failed to create port",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Update port by ID
+  apiRouter.put("/ports/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid port ID" });
+      }
+      
+      // Check if port exists
+      const port = await storage.getPortById(id);
+      if (!port) {
+        return res.status(404).json({ message: "Port not found" });
+      }
+      
+      // Validate partial update data
+      const result = insertPortSchema.partial().safeParse(req.body);
+      
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Invalid port data", 
+          errors: result.error.errors 
+        });
+      }
+      
+      // Update the port
+      const updatedPort = await storage.updatePort(id, result.data);
+      
+      res.json(updatedPort);
+    } catch (error) {
+      console.error("Error updating port:", error);
+      res.status(500).json({ 
+        message: "Failed to update port",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Delete port by ID
+  apiRouter.delete("/ports/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid port ID" });
+      }
+      
+      // Check if port exists
+      const port = await storage.getPortById(id);
+      if (!port) {
+        return res.status(404).json({ message: "Port not found" });
+      }
+      
+      // Delete the port
+      await storage.deletePort(id);
+      
+      res.json({ success: true, message: "Port deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting port:", error);
+      res.status(500).json({ 
+        message: "Failed to delete port",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
 
   // Mount API router for general endpoints
   // Special endpoint to add all 7,183 ports in a simple way
