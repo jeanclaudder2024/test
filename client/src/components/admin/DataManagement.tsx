@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { VesselFormNew } from "./VesselFormNew";
+import { SimpleVesselForm } from "./SimpleVesselForm";
 import { Card, CardContent } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { MapPositionSelector } from "@/components/admin/MapPositionSelector";
@@ -482,6 +482,14 @@ export function DataManagement() {
                         </Alert>
                       )}
                     </div>
+                    
+                    {/* Using our new SimpleVesselForm component */}
+                    <SimpleVesselForm
+                      open={showAddVesselDialog}
+                      onOpenChange={setShowAddVesselDialog}
+                      onAddVessel={handleAddVessel}
+                      loading={addingVessel}
+                    />
                   </div>
                 )}
 
