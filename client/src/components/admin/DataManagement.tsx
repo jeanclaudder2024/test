@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
+import { MapPositionSelector } from "@/components/admin/MapPositionSelector";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -797,48 +798,40 @@ export function DataManagement() {
             
             <div className="pt-4 border-t">
               <h3 className="text-sm font-medium mb-2">Location Information</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Current Latitude</label>
-                  <input 
-                    type="text"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    placeholder="Enter current latitude"
-                    value={newVessel.currentLat}
-                    onChange={(e) => handleVesselInputChange('currentLat', e.target.value)}
+              <div>
+                <div className="space-y-2 mb-4">
+                  <label className="text-sm font-medium">Vessel Position (Click on map to set)</label>
+                  <MapPositionSelector 
+                    onSelectPosition={(lat, lng) => {
+                      handleVesselInputChange('currentLat', lat.toString());
+                      handleVesselInputChange('currentLng', lng.toString());
+                    }}
+                    initialLat={newVessel.currentLat}
+                    initialLng={newVessel.currentLng}
                   />
                 </div>
                 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Current Longitude</label>
-                  <input 
-                    type="text"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    placeholder="Enter current longitude"
-                    value={newVessel.currentLng}
-                    onChange={(e) => handleVesselInputChange('currentLng', e.target.value)}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Destination</label>
-                  <input 
-                    type="text"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    placeholder="Enter destination port"
-                    value={newVessel.destination}
-                    onChange={(e) => handleVesselInputChange('destination', e.target.value)}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">ETA</label>
-                  <input 
-                    type="datetime-local"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    value={newVessel.eta}
-                    onChange={(e) => handleVesselInputChange('eta', e.target.value)}
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Destination</label>
+                    <input 
+                      type="text"
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      placeholder="Enter destination port"
+                      value={newVessel.destination}
+                      onChange={(e) => handleVesselInputChange('destination', e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">ETA</label>
+                    <input 
+                      type="datetime-local"
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      value={newVessel.eta}
+                      onChange={(e) => handleVesselInputChange('eta', e.target.value)}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
