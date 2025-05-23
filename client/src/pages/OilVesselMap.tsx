@@ -23,7 +23,9 @@ import {
   Filter, 
   ArrowUpRight, 
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Clock,
+  Droplets as Fuel
 } from 'lucide-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
@@ -1151,6 +1153,61 @@ export default function OilVesselMap() {
                       <span className="text-sm font-medium">{selectedVessel.cargoType}</span>
                     </div>
                   )}
+
+                  {/* Vessel Performance Section */}
+                  <div className="flex items-center px-4 py-2.5 bg-primary/5">
+                    <span className="text-sm text-muted-foreground w-1/3">Status:</span>
+                    <span className="text-sm font-medium flex items-center">
+                      <div className={`w-2 h-2 rounded-full mr-1.5 ${
+                        selectedVessel.status === 'At Sea' || selectedVessel.status === 'Underway' 
+                          ? 'bg-green-500' 
+                        : selectedVessel.status === 'In Port' || selectedVessel.status === 'Moored' || selectedVessel.status === 'Anchored' 
+                          ? 'bg-amber-500' 
+                        : selectedVessel.status === 'Delayed' || selectedVessel.status === 'Not Moving' 
+                          ? 'bg-red-500' 
+                        : 'bg-slate-500'}`} />
+                      {selectedVessel.status || 'Unknown'}
+                    </span>
+                  </div>
+
+                  {/* Ship Specifications */}
+                  <div className="px-4 py-3 bg-card/50">
+                    <div className="mb-2">
+                      <h4 className="text-xs uppercase tracking-wider text-muted-foreground/80 font-medium">Ship Specifications</h4>
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                      <div>
+                        <p className="text-xs text-muted-foreground">Vessel Type</p>
+                        <p className="text-sm font-medium">{selectedVessel.vesselType || 'Unknown'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Flag</p>
+                        <p className="text-sm font-medium">{selectedVessel.flag || 'Unknown'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Est. Capacity</p>
+                        <p className="text-sm font-medium">
+                          {selectedVessel.vesselType?.includes('VLCC') ? '270,000-320,000 DWT' : 
+                           selectedVessel.vesselType?.includes('Suezmax') ? '120,000-200,000 DWT' :
+                           selectedVessel.vesselType?.includes('Aframax') ? '80,000-120,000 DWT' :
+                           selectedVessel.vesselType?.includes('Panamax') ? '60,000-80,000 DWT' :
+                           selectedVessel.vesselType?.includes('Handysize') ? '20,000-60,000 DWT' :
+                           'Not Available'}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Cargo Capacity</p>
+                        <p className="text-sm font-medium">
+                          {selectedVessel.vesselType?.includes('VLCC') ? '~2 million barrels' : 
+                           selectedVessel.vesselType?.includes('Suezmax') ? '~1 million barrels' :
+                           selectedVessel.vesselType?.includes('Aframax') ? '~700,000 barrels' :
+                           selectedVessel.vesselType?.includes('Panamax') ? '~500,000 barrels' :
+                           selectedVessel.vesselType?.includes('Handysize') ? '~250,000 barrels' :
+                           'Not Available'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
               
@@ -1247,7 +1304,7 @@ export default function OilVesselMap() {
                     )}
                     
                     {/* Additional voyage info */}
-                    {selectedVessel.speed !== undefined && selectedVessel.speed > 0 && (
+                    {selectedVessel.speed !== undefined && (
                       <div className="px-4 pb-4 border-t border-border/50 pt-4">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center">
@@ -1264,6 +1321,52 @@ export default function OilVesselMap() {
                             <span className="text-sm">Est. Daily Distance</span>
                           </div>
                           <span className="text-sm font-medium">~{Math.round(selectedVessel.speed * 24)} nm</span>
+                        </div>
+                        
+                        {/* Estimated transit time */}
+                        <div className="flex items-center justify-between mt-2">
+                          <div className="flex items-center">
+                            <Clock className="h-3.5 w-3.5 mr-1.5 text-primary/70" />
+                            <span className="text-sm">Transit Efficiency</span>
+                          </div>
+                          <span className="text-sm font-medium">
+                            {selectedVessel.speed < 2 ? 'Stationary' : 
+                             selectedVessel.speed < 8 ? 'Slow Steaming' : 
+                             selectedVessel.speed < 12 ? 'Economical' : 
+                             selectedVessel.speed < 16 ? 'Standard' : 'High Speed'}
+                          </span>
+                        </div>
+                        
+                        {/* Fuel consumption estimate */}
+                        <div className="flex items-center justify-between mt-2">
+                          <div className="flex items-center">
+                            <Fuel className="h-3.5 w-3.5 mr-1.5 text-primary/70" />
+                            <span className="text-sm">Est. Fuel Consumption</span>
+                          </div>
+                          <span className="text-sm font-medium">
+                            {(() => {
+                              // Estimate fuel consumption based on vessel type and speed
+                              let baseFuel = 0;
+                              if (selectedVessel.vesselType?.includes('VLCC')) {
+                                baseFuel = 80; // tons per day at economic speed
+                              } else if (selectedVessel.vesselType?.includes('Suezmax')) {
+                                baseFuel = 55;
+                              } else if (selectedVessel.vesselType?.includes('Aframax')) {
+                                baseFuel = 40;
+                              } else if (selectedVessel.vesselType?.includes('Panamax')) {
+                                baseFuel = 30;
+                              } else {
+                                baseFuel = 20;
+                              }
+                              
+                              // Speed factor: consumption increases exponentially with speed
+                              const speedFactor = Math.pow(selectedVessel.speed / 12, 3);
+                              const estimatedConsumption = selectedVessel.speed < 2 ? 
+                                "Minimal" : `~${Math.round(baseFuel * speedFactor)} tons/day`;
+                              
+                              return estimatedConsumption;
+                            })()}
+                          </span>
                         </div>
                       </div>
                     )}
