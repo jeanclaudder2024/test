@@ -56,9 +56,9 @@ function LandingPageRedirect() {
     );
   }
 
-  // If user is logged in, redirect to broker dashboard
+  // If user is logged in, redirect to Oil Vessel Map page
   if (user) {
-    return <Redirect to="/broker-dashboard" />;
+    return <Redirect to="/oil-vessel-map" />;
   }
 
   // Otherwise show landing page
