@@ -34,15 +34,15 @@ export function SimpleVesselCreator({ open, onOpenChange }: SimpleVesselCreatorP
     imo: "1234567",
     vesselType: "OIL_TANKER",
     flag: "US",
-    length: 100,
-    width: 20,
+    length: "100",
+    width: "20",
     status: "AT_SEA",
-    currentLat: 0,
-    currentLng: 0,
+    currentLat: "0",
+    currentLng: "0",
     destination: "Sample Port",
     eta: new Date().toISOString().split('T')[0],
     cargo: "Crude Oil",
-    cargoCapacity: 100000
+    cargoCapacity: "100000"
   });
 
   // Add vessel mutation
@@ -52,14 +52,9 @@ export function SimpleVesselCreator({ open, onOpenChange }: SimpleVesselCreatorP
         // Format data to match API expectations
         const formattedData = {
           ...vesselData,
-          // Make sure numbers are actually numbers
-          mmsi: Number(vesselData.mmsi),
-          imo: Number(vesselData.imo),
-          length: Number(vesselData.length),
-          width: Number(vesselData.width),
-          currentLat: Number(vesselData.currentLat),
-          currentLng: Number(vesselData.currentLng),
-          cargoCapacity: Number(vesselData.cargoCapacity)
+          // Convert coordinates to strings since they need to be passed to the API
+          currentLat: String(vesselData.currentLat),
+          currentLng: String(vesselData.currentLng)
         };
         
         console.log("Sending vessel data:", formattedData);
@@ -99,15 +94,15 @@ export function SimpleVesselCreator({ open, onOpenChange }: SimpleVesselCreatorP
         imo: "1234567",
         vesselType: "OIL_TANKER",
         flag: "US",
-        length: 100,
-        width: 20,
+        length: "100",
+        width: "20",
         status: "AT_SEA",
-        currentLat: 0,
-        currentLng: 0,
+        currentLat: "0",
+        currentLng: "0",
         destination: "Sample Port",
         eta: new Date().toISOString().split('T')[0],
         cargo: "Crude Oil",
-        cargoCapacity: 100000
+        cargoCapacity: "100000"
       });
       
       // Close dialog after showing success message
@@ -276,17 +271,17 @@ export function SimpleVesselCreator({ open, onOpenChange }: SimpleVesselCreatorP
             
             <EnhancedMapSelector 
               onSelectPosition={(lat, lng) => {
-                // Store coordinates as numbers directly
-                handleInputChange("currentLat", lat);
-                handleInputChange("currentLng", lng);
+                // Store coordinates as strings for the API
+                handleInputChange("currentLat", lat.toString());
+                handleInputChange("currentLng", lng.toString());
               }}
-              initialLat={vessel.currentLat}
-              initialLng={vessel.currentLng}
+              initialLat={vessel.currentLat !== "0" ? parseFloat(vessel.currentLat) : undefined}
+              initialLng={vessel.currentLng !== "0" ? parseFloat(vessel.currentLng) : undefined}
             />
             
-            {vessel.currentLat !== 0 && vessel.currentLng !== 0 && (
+            {vessel.currentLat !== "0" && vessel.currentLng !== "0" && (
               <div className="text-sm text-center">
-                Selected position: {Number(vessel.currentLat).toFixed(4)}, {Number(vessel.currentLng).toFixed(4)}
+                Selected position: {parseFloat(vessel.currentLat).toFixed(4)}, {parseFloat(vessel.currentLng).toFixed(4)}
               </div>
             )}
           </div>
