@@ -1382,70 +1382,238 @@ export default function OilVesselMap() {
                       </div>
                     )}
                     
+                    {/* Voyage Route Visualization */}
+                    {selectedVessel.departureTime && selectedVessel.estimatedArrival && (
+                      <div className="px-4 pt-4 pb-2 border-t border-border/50">
+                        <h4 className="text-xs font-medium mb-3">Route Visualization</h4>
+                        
+                        {/* Route map - Stylized representation */}
+                        <div className="bg-muted/30 h-28 mb-2 rounded-md overflow-hidden relative">
+                          {/* Water background */}
+                          <div className="absolute inset-0 bg-blue-50/10"></div>
+                          
+                          {/* Departure port */}
+                          <div className="absolute left-4 top-4 flex items-center">
+                            <div className="h-3 w-3 bg-blue-500 rounded-full"></div>
+                            <div className="ml-1.5 text-xs font-medium truncate max-w-[100px]">
+                              {selectedVessel.lastPort?.split(',')[0] || 'Origin'}
+                            </div>
+                          </div>
+                          
+                          {/* Destination port */}
+                          <div className="absolute right-4 top-4 flex items-center">
+                            <div className="mr-1.5 text-xs font-medium truncate max-w-[100px] text-right">
+                              {selectedVessel.destination?.split(',')[0] || 'Destination'}
+                            </div>
+                            <div className="h-3 w-3 bg-green-500 rounded-full"></div>
+                          </div>
+                          
+                          {/* Route path - dotted curve */}
+                          <svg className="absolute inset-0 w-full h-full" viewBox="0 0 400 100" preserveAspectRatio="none">
+                            <path 
+                              d="M 40,40 C 100,70 300,30 360,40" 
+                              fill="none" 
+                              stroke="currentColor" 
+                              strokeWidth="1.5" 
+                              strokeDasharray="3,3" 
+                              className="text-primary/50" 
+                            />
+                          </svg>
+                          
+                          {/* Ship position on route */}
+                          {(() => {
+                            const departTime = new Date(selectedVessel.departureTime).getTime();
+                            const arrivalTime = new Date(selectedVessel.estimatedArrival).getTime();
+                            const currentTime = new Date().getTime();
+                            
+                            let progressPercent = 0;
+                            if (currentTime >= arrivalTime) {
+                              progressPercent = 100;
+                            } else if (currentTime <= departTime) {
+                              progressPercent = 0;
+                            } else {
+                              const totalTime = arrivalTime - departTime;
+                              const elapsed = currentTime - departTime;
+                              progressPercent = Math.min(100, Math.max(0, (elapsed / totalTime) * 100));
+                            }
+                            
+                            // Position calculation - left position based on progress
+                            const leftPos = 10 + (progressPercent * 0.8); // 10% to 90%
+                            
+                            // Y position - following a slight curve
+                            const curve = Math.sin((progressPercent / 100) * Math.PI) * 15;
+                            const topPos = 40 - curve;
+                            
+                            return (
+                              <div 
+                                className="absolute"
+                                style={{
+                                  left: `${leftPos}%`,
+                                  top: `${topPos}%`,
+                                  transform: 'translate(-50%, -50%)'
+                                }}
+                              >
+                                <div 
+                                  className="text-primary text-lg animate-pulse"
+                                  style={{
+                                    transform: `rotate(${progressPercent < 50 ? 20 : -20}deg)`
+                                  }}
+                                >
+                                  <i className="fa fa-ship"></i>
+                                </div>
+                              </div>
+                            );
+                          })()}
+                          
+                          {/* Environmental indicators - waves/weather */}
+                          <div className="absolute bottom-3 left-0 right-0 flex justify-between px-6">
+                            <div className="text-xs text-muted-foreground/70">
+                              <i className="fa fa-water mr-1"></i> 
+                              {
+                                selectedVessel.region === 'Middle East' ? 'Calm seas' : 
+                                selectedVessel.region === 'Asia-Pacific' ? 'Moderate waves' :
+                                selectedVessel.region === 'North America' ? 'Choppy waves' :
+                                'Normal conditions'
+                              }
+                            </div>
+                            <div className="text-xs text-muted-foreground/70">
+                              <i className="fa fa-wind mr-1"></i>
+                              {Math.round(Math.random() * 15) + 5} knots
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Voyage milestones */}
+                        <div className="flex justify-between text-xs mt-1 mb-2">
+                          <div className="flex flex-col items-start">
+                            <span className="text-muted-foreground">Departed</span>
+                            <span className="font-medium">{formatDate(selectedVessel.departureTime).split(' ')[0]}</span>
+                          </div>
+                          
+                          {/* Mid-voyage point */}
+                          {(() => {
+                            if (selectedVessel.departureTime && selectedVessel.estimatedArrival) {
+                              const departTime = new Date(selectedVessel.departureTime).getTime();
+                              const arrivalTime = new Date(selectedVessel.estimatedArrival).getTime();
+                              const midpointTime = new Date(departTime + ((arrivalTime - departTime) / 2));
+                              
+                              return (
+                                <div className="flex flex-col items-center">
+                                  <span className="text-muted-foreground">Midpoint</span>
+                                  <span className="font-medium">{formatDate(midpointTime).split(' ')[0]}</span>
+                                </div>
+                              );
+                            }
+                            return null;
+                          })()}
+                          
+                          <div className="flex flex-col items-end">
+                            <span className="text-muted-foreground">ETA</span>
+                            <span className="font-medium">{formatDate(selectedVessel.estimatedArrival).split(' ')[0]}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
                     {/* Additional voyage info */}
                     {selectedVessel.speed !== undefined && (
-                      <div className="px-4 pb-4 border-t border-border/50 pt-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center">
-                            <Navigation className="h-3.5 w-3.5 mr-1.5 text-primary/70" />
-                            <span className="text-sm">Current Speed</span>
+                      <div className="px-4 pb-4 pt-3 border-t border-border/50">
+                        <h4 className="text-xs font-medium mb-2">Vessel Performance</h4>
+                        <div className="grid grid-cols-2 gap-3">
+                          {/* Speed and transit efficiency */}
+                          <div className="bg-muted/30 rounded-md p-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs text-muted-foreground">Current Speed</span>
+                              <span className="text-sm font-medium">{selectedVessel.speed} knots</span>
+                            </div>
+                            <div className="mt-1.5 flex items-center justify-between">
+                              <span className="text-xs text-muted-foreground">Transit Mode</span>
+                              <span className="text-xs font-medium">
+                                {selectedVessel.speed < 2 ? 'Stationary' : 
+                                 selectedVessel.speed < 8 ? 'Slow Steaming' : 
+                                 selectedVessel.speed < 12 ? 'Economical' : 
+                                 selectedVessel.speed < 16 ? 'Standard' : 'High Speed'}
+                              </span>
+                            </div>
                           </div>
-                          <span className="text-sm font-medium">{selectedVessel.speed} knots</span>
+                          
+                          {/* Distance metrics */}
+                          <div className="bg-muted/30 rounded-md p-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs text-muted-foreground">Daily Distance</span>
+                              <span className="text-sm font-medium">~{Math.round(selectedVessel.speed * 24)} nm</span>
+                            </div>
+                            <div className="mt-1.5 flex items-center justify-between">
+                              <span className="text-xs text-muted-foreground">Fuel Economy</span>
+                              <span className={`text-xs font-medium ${selectedVessel.speed < 10 ? 'text-green-600' : selectedVessel.speed > 15 ? 'text-red-500' : ''}`}>
+                                {selectedVessel.speed < 8 ? 'Excellent' : 
+                                 selectedVessel.speed < 12 ? 'Good' : 
+                                 selectedVessel.speed < 15 ? 'Average' : 'Poor'}
+                              </span>
+                            </div>
+                          </div>
                         </div>
                         
-                        {/* Estimated daily distance */}
-                        <div className="flex items-center justify-between mt-2">
-                          <div className="flex items-center">
-                            <MapPin className="h-3.5 w-3.5 mr-1.5 text-primary/70" />
-                            <span className="text-sm">Est. Daily Distance</span>
+                        {/* Fuel consumption and environmental impact */}
+                        <div className="mt-2 grid grid-cols-2 gap-3">
+                          <div className="bg-muted/30 rounded-md p-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs text-muted-foreground">Fuel Consumption</span>
+                              <span className="text-sm font-medium">
+                                {(() => {
+                                  // Estimate fuel consumption based on vessel type and speed
+                                  let baseFuel = 0;
+                                  if (selectedVessel.vesselType?.includes('VLCC')) {
+                                    baseFuel = 80; // tons per day at economic speed
+                                  } else if (selectedVessel.vesselType?.includes('Suezmax')) {
+                                    baseFuel = 55;
+                                  } else if (selectedVessel.vesselType?.includes('Aframax')) {
+                                    baseFuel = 40;
+                                  } else if (selectedVessel.vesselType?.includes('Panamax')) {
+                                    baseFuel = 30;
+                                  } else {
+                                    baseFuel = 20;
+                                  }
+                                  
+                                  // Speed factor: consumption increases exponentially with speed
+                                  const speedFactor = Math.pow(selectedVessel.speed / 12, 3);
+                                  return selectedVessel.speed < 2 ? 
+                                    "Minimal" : `~${Math.round(baseFuel * speedFactor)} tons/day`;
+                                })()}
+                              </span>
+                            </div>
+                            <div className="mt-1.5 flex items-center justify-between">
+                              <span className="text-xs text-muted-foreground">Engine Load</span>
+                              <span className="text-xs font-medium">
+                                {selectedVessel.speed < 5 ? 'Low (25%)' : 
+                                 selectedVessel.speed < 10 ? 'Medium (50%)' : 
+                                 selectedVessel.speed < 15 ? 'High (75%)' : 'Maximum (100%)'}
+                              </span>
+                            </div>
                           </div>
-                          <span className="text-sm font-medium">~{Math.round(selectedVessel.speed * 24)} nm</span>
-                        </div>
-                        
-                        {/* Estimated transit time */}
-                        <div className="flex items-center justify-between mt-2">
-                          <div className="flex items-center">
-                            <Clock className="h-3.5 w-3.5 mr-1.5 text-primary/70" />
-                            <span className="text-sm">Transit Efficiency</span>
+                          
+                          <div className="bg-muted/30 rounded-md p-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs text-muted-foreground">Est. Arrival</span>
+                              <span className="text-sm font-medium">
+                                {selectedVessel.estimatedArrival ? 
+                                  formatDate(selectedVessel.estimatedArrival) : 'Unknown'}
+                              </span>
+                            </div>
+                            <div className="mt-1.5 flex items-center justify-between">
+                              <span className="text-xs text-muted-foreground">Total Journey</span>
+                              <span className="text-xs font-medium">
+                                {selectedVessel.departureTime && selectedVessel.estimatedArrival ? 
+                                  (() => {
+                                    const days = (new Date(selectedVessel.estimatedArrival).getTime() - 
+                                                 new Date(selectedVessel.departureTime).getTime()) / 
+                                                 (1000 * 60 * 60 * 24);
+                                    return `${Math.round(days)} days`;
+                                  })() : 
+                                  'Unknown'}
+                              </span>
+                            </div>
                           </div>
-                          <span className="text-sm font-medium">
-                            {selectedVessel.speed < 2 ? 'Stationary' : 
-                             selectedVessel.speed < 8 ? 'Slow Steaming' : 
-                             selectedVessel.speed < 12 ? 'Economical' : 
-                             selectedVessel.speed < 16 ? 'Standard' : 'High Speed'}
-                          </span>
-                        </div>
-                        
-                        {/* Fuel consumption estimate */}
-                        <div className="flex items-center justify-between mt-2">
-                          <div className="flex items-center">
-                            <Fuel className="h-3.5 w-3.5 mr-1.5 text-primary/70" />
-                            <span className="text-sm">Est. Fuel Consumption</span>
-                          </div>
-                          <span className="text-sm font-medium">
-                            {(() => {
-                              // Estimate fuel consumption based on vessel type and speed
-                              let baseFuel = 0;
-                              if (selectedVessel.vesselType?.includes('VLCC')) {
-                                baseFuel = 80; // tons per day at economic speed
-                              } else if (selectedVessel.vesselType?.includes('Suezmax')) {
-                                baseFuel = 55;
-                              } else if (selectedVessel.vesselType?.includes('Aframax')) {
-                                baseFuel = 40;
-                              } else if (selectedVessel.vesselType?.includes('Panamax')) {
-                                baseFuel = 30;
-                              } else {
-                                baseFuel = 20;
-                              }
-                              
-                              // Speed factor: consumption increases exponentially with speed
-                              const speedFactor = Math.pow(selectedVessel.speed / 12, 3);
-                              const estimatedConsumption = selectedVessel.speed < 2 ? 
-                                "Minimal" : `~${Math.round(baseFuel * speedFactor)} tons/day`;
-                              
-                              return estimatedConsumption;
-                            })()}
-                          </span>
                         </div>
                       </div>
                     )}
