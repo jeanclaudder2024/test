@@ -2945,6 +2945,179 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+  
+  // Refinery Management API Endpoints
+  
+  // Get refineries with pagination, filtering and search
+  apiRouter.get("/refineries", async (req, res) => {
+    try {
+      const page = req.query.page ? parseInt(req.query.page as string) : 1;
+      const pageSize = req.query.pageSize ? parseInt(req.query.pageSize as string) : 10;
+      const region = req.query.region as string | undefined;
+      const search = req.query.search as string | undefined;
+      const status = req.query.status as string | undefined;
+      
+      // Get all refineries from database
+      let refineries = await storage.getRefineries();
+      let totalCount = refineries.length;
+      
+      // Apply filters
+      if (region && region !== 'All') {
+        refineries = refineries.filter(r => r.region === region);
+      }
+      
+      if (status) {
+        refineries = refineries.filter(r => r.status === status);
+      }
+      
+      if (search) {
+        const searchLower = search.toLowerCase();
+        refineries = refineries.filter(r => 
+          r.name.toLowerCase().includes(searchLower) || 
+          r.country.toLowerCase().includes(searchLower) ||
+          r.city?.toLowerCase().includes(searchLower) ||
+          r.operator?.toLowerCase().includes(searchLower)
+        );
+      }
+      
+      // Get total count after filtering
+      const filteredCount = refineries.length;
+      
+      // Apply pagination
+      const totalPages = Math.ceil(filteredCount / pageSize);
+      const start = (page - 1) * pageSize;
+      const end = start + pageSize;
+      const paginatedRefineries = refineries.slice(start, end);
+      
+      res.json({
+        data: paginatedRefineries,
+        page,
+        pageSize,
+        totalPages,
+        totalCount: filteredCount,
+        originalCount: totalCount
+      });
+    } catch (error) {
+      console.error("Error fetching refineries:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch refineries",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Get refinery by ID
+  apiRouter.get("/refineries/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid refinery ID" });
+      }
+      
+      const refinery = await storage.getRefineryById(id);
+      if (!refinery) {
+        return res.status(404).json({ message: "Refinery not found" });
+      }
+      
+      res.json(refinery);
+    } catch (error) {
+      console.error("Error fetching refinery:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch refinery",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Create new refinery
+  apiRouter.post("/refineries", async (req, res) => {
+    try {
+      // Validate the input using the refinery schema
+      const result = insertRefinerySchema.safeParse(req.body);
+      
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Invalid refinery data", 
+          errors: result.error.errors 
+        });
+      }
+      
+      // Create the refinery in the database
+      const newRefinery = await storage.createRefinery(result.data);
+      
+      res.status(201).json(newRefinery);
+    } catch (error) {
+      console.error("Error creating refinery:", error);
+      res.status(500).json({ 
+        message: "Failed to create refinery",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Update refinery by ID
+  apiRouter.put("/refineries/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid refinery ID" });
+      }
+      
+      // Check if refinery exists
+      const refinery = await storage.getRefineryById(id);
+      if (!refinery) {
+        return res.status(404).json({ message: "Refinery not found" });
+      }
+      
+      // Validate partial update data
+      const result = insertRefinerySchema.partial().safeParse(req.body);
+      
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Invalid refinery data", 
+          errors: result.error.errors 
+        });
+      }
+      
+      // Update the refinery
+      const updatedRefinery = await storage.updateRefinery(id, result.data);
+      
+      res.json(updatedRefinery);
+    } catch (error) {
+      console.error("Error updating refinery:", error);
+      res.status(500).json({ 
+        message: "Failed to update refinery",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Delete refinery by ID
+  apiRouter.delete("/refineries/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid refinery ID" });
+      }
+      
+      // Check if refinery exists
+      const refinery = await storage.getRefineryById(id);
+      if (!refinery) {
+        return res.status(404).json({ message: "Refinery not found" });
+      }
+      
+      // Delete the refinery
+      await storage.deleteRefinery(id);
+      
+      res.json({ success: true, message: "Refinery deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting refinery:", error);
+      res.status(500).json({ 
+        message: "Failed to delete refinery",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
 
   // Mount API router for general endpoints
   // Special endpoint to add all 7,183 ports in a simple way

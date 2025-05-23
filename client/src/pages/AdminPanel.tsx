@@ -6,9 +6,10 @@ import { UserManagement } from "@/components/admin/UserManagement";
 import { SystemStats } from "@/components/admin/SystemStats";
 import { FixedDataManagement } from "@/components/admin/FixedDataManagement";
 import { VesselManagement } from "@/components/admin/VesselManagement";
+import { RefineryManagement } from "@/components/admin/RefineryManagement";
 import { Settings } from "@/components/admin/AdminSettings";
 import { Button } from "@/components/ui/button";
-import { Shield, Database, Users, Settings as SettingsIcon, ChevronLeft, Ship } from "lucide-react";
+import { Shield, Database, Users, Settings as SettingsIcon, ChevronLeft, Ship, Factory } from "lucide-react";
 import { useLocation } from "wouter";
 
 export default function AdminPanel() {
@@ -42,7 +43,7 @@ export default function AdminPanel() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid grid-cols-5 w-full max-w-3xl">
+        <TabsList className="grid grid-cols-6 w-full max-w-4xl">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <Shield className="h-4 w-4" />
             <span className="hidden sm:inline">System Overview</span>
@@ -57,6 +58,11 @@ export default function AdminPanel() {
             <Ship className="h-4 w-4" />
             <span className="hidden sm:inline">Vessel Management</span>
             <span className="sm:hidden">Vessels</span>
+          </TabsTrigger>
+          <TabsTrigger value="refineries" className="flex items-center gap-2">
+            <Factory className="h-4 w-4" />
+            <span className="hidden sm:inline">Refinery Management</span>
+            <span className="sm:hidden">Refineries</span>
           </TabsTrigger>
           <TabsTrigger value="data" className="flex items-center gap-2">
             <Database className="h-4 w-4" />
@@ -108,6 +114,20 @@ export default function AdminPanel() {
             </CardHeader>
             <CardContent>
               <VesselManagement />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="refineries" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Refinery Management</CardTitle>
+              <CardDescription>
+                Add, edit, and manage global refineries with interactive map positioning
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <RefineryManagement />
             </CardContent>
           </Card>
         </TabsContent>
