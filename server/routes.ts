@@ -84,6 +84,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register port proximity router - adds vessels near ports and refineries
   app.use("/api/port-proximity", portProximityRouter);
+  
+  // Register vessel-refinery connection routes
+  app.use("/api/vessel-refinery", vesselRefineryRouter);
 
   // Endpoint to clear all vessel and refinery data from the database
   if (app.get("env") === "development") {
