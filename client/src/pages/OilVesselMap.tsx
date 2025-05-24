@@ -149,6 +149,8 @@ export default function OilVesselMap() {
   const layerGroupRef = useRef<L.LayerGroup | null>(null);
   const connectedVesselLayerRef = useRef<L.LayerGroup | null>(null);
   const refineryConnectionsRef = useRef<Record<string, L.Polyline>>({});
+  const temporaryConnectionsRef = useRef<L.Polyline[]>([]);
+  const temporaryHighlightsRef = useRef<{element: HTMLElement, className: string}[]>([]);
   const [mapTheme, setMapTheme] = useState<'light' | 'dark'>('light');
   
   // UI state
@@ -774,11 +776,87 @@ export default function OilVesselMap() {
                 <strong>Country:</strong> ${facility.country || 'Unknown'}
               </p>
               ${facility.capacity ? `<p style="margin: 0 0 3px; font-size: 12px;"><strong>Capacity:</strong> ${facility.capacity.toLocaleString()} bpd</p>` : ''}
+              ${facility.type === 'refinery' ? `
+              <div style="margin-top: 8px;">
+                <button 
+                  style="background: #8b5cf6; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 12px; cursor: pointer;"
+                  onclick="document.dispatchEvent(new CustomEvent('showRefineryConnections', {detail: ${facility.id}}))"
+                >
+                  Show Connected Vessels
+                </button>
+              </div>` : ''}
             </div>
           `);
           
           // Store marker reference by facility type and ID
           markersRef.current[`${facility.type}-${facility.id}`] = marker;
+          
+          // If it's a refinery, add click handler to highlight connected vessels
+          if (facility.type === 'refinery') {
+            marker.on('click', () => {
+              // Find connected vessels for this refinery
+              const connectedToThisRefinery = connectedVessels.filter(v => v.refineryId === facility.id);
+              
+              if (connectedToThisRefinery.length > 0) {
+                // Highlight connections and connected vessels
+                connectedToThisRefinery.forEach(vessel => {
+                  const vesselMarker = markersRef.current[`connected-vessel-${vessel.id}`];
+                  if (vesselMarker && vesselMarker.getLatLng) {
+                    const vesselLatLng = vesselMarker.getLatLng();
+                    const refineryLatLng = marker.getLatLng();
+                    
+                    // Create a pulsing connection line with brighter purple color
+                    const connectionLine = L.polyline([refineryLatLng, vesselLatLng], {
+                      color: '#a855f7', // Brighter purple for highlighted connections
+                      weight: 3,
+                      opacity: 1,
+                      dashArray: '5, 10', // Dashed line for visual distinction
+                      className: 'highlighted-connection'
+                    }).addTo(mapInstanceRef.current!);
+                    
+                    // Add temporary highlight effect to connected vessel markers
+                    const connectedVesselElement = vesselMarker.getElement();
+                    if (connectedVesselElement) {
+                      connectedVesselElement.classList.add('highlighted-vessel');
+                      
+                      // Remove highlight after 3 seconds
+                      setTimeout(() => {
+                        mapInstanceRef.current?.removeLayer(connectionLine);
+                        connectedVesselElement.classList.remove('highlighted-vessel');
+                      }, 5000);
+                    }
+                  }
+                });
+                
+                // Show a toast message
+                const message = `Showing ${connectedToThisRefinery.length} vessel${connectedToThisRefinery.length > 1 ? 's' : ''} connected to ${facility.name}`;
+                const messageElement = document.createElement('div');
+                messageElement.className = 'connection-toast';
+                messageElement.textContent = message;
+                messageElement.style.cssText = `
+                  position: absolute;
+                  top: 80px;
+                  left: 50%;
+                  transform: translateX(-50%);
+                  background-color: rgba(139, 92, 246, 0.9);
+                  color: white;
+                  padding: 8px 16px;
+                  border-radius: 4px;
+                  z-index: 1000;
+                  font-family: sans-serif;
+                  font-size: 14px;
+                  pointer-events: none;
+                  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+                `;
+                document.body.appendChild(messageElement);
+                
+                // Remove the message after 3 seconds
+                setTimeout(() => {
+                  document.body.removeChild(messageElement);
+                }, 3000);
+              }
+            });
+          }
         }
       }
     });
@@ -1026,8 +1104,9 @@ export default function OilVesselMap() {
     return () => clearInterval(intervalId);
   }, []);
   
-  // Listen for custom event from popup button
+  // Listen for custom events from popup buttons
   useEffect(() => {
+    // Handle vessel click from popup
     const handleVesselClick = (e: Event) => {
       const customEvent = e as CustomEvent<number>;
       const vesselId = customEvent.detail;
@@ -1038,12 +1117,106 @@ export default function OilVesselMap() {
       }
     };
     
+    // Handle refinery connections button click
+    const handleShowRefineryConnections = (e: Event) => {
+      const customEvent = e as CustomEvent<number>;
+      const refineryId = customEvent.detail;
+      
+      // Find the refinery marker
+      const refineryMarker = markersRef.current[`refinery-${refineryId}`];
+      if (!refineryMarker) return;
+      
+      // Find all vessels connected to this refinery
+      const connectedToRefinery = connectedVessels.filter(v => v.refineryId === refineryId);
+      
+      if (connectedToRefinery.length > 0) {
+        // Show connections between refinery and vessels
+        connectedToRefinery.forEach(vessel => {
+          const vesselMarker = markersRef.current[`connected-vessel-${vessel.id}`];
+          if (vesselMarker && vesselMarker.getLatLng) {
+            const vesselLatLng = vesselMarker.getLatLng();
+            const refineryLatLng = refineryMarker.getLatLng();
+            
+            // Create a pulsing connection line with brighter purple color
+            const connectionLine = L.polyline([refineryLatLng, vesselLatLng], {
+              color: '#a855f7', // Brighter purple for highlighted connections
+              weight: 3,
+              opacity: 1,
+              dashArray: '5, 10', // Dashed line for visual distinction
+              className: 'highlighted-connection'
+            }).addTo(mapInstanceRef.current!);
+            
+            // Store the connection line to remove it later
+            temporaryConnectionsRef.current.push(connectionLine);
+            
+            // Add a highlight effect to the vessel marker
+            const vesselElement = vesselMarker.getElement();
+            if (vesselElement) {
+              vesselElement.classList.add('highlighted-vessel');
+              temporaryHighlightsRef.current.push({
+                element: vesselElement,
+                className: 'highlighted-vessel'
+              });
+            }
+          }
+        });
+        
+        // Clear previous connections after 5 seconds
+        setTimeout(() => {
+          // Remove all temporary connection lines
+          temporaryConnectionsRef.current.forEach(line => {
+            if (mapInstanceRef.current) {
+              mapInstanceRef.current.removeLayer(line);
+            }
+          });
+          temporaryConnectionsRef.current = [];
+          
+          // Remove all temporary highlights
+          temporaryHighlightsRef.current.forEach(highlight => {
+            highlight.element.classList.remove(highlight.className);
+          });
+          temporaryHighlightsRef.current = [];
+        }, 5000);
+        
+        // Show a toast message
+        const message = `Showing ${connectedToRefinery.length} vessel${connectedToRefinery.length > 1 ? 's' : ''} connected to this refinery`;
+        const messageElement = document.createElement('div');
+        messageElement.className = 'connection-toast';
+        messageElement.textContent = message;
+        messageElement.style.cssText = `
+          position: absolute;
+          top: 80px;
+          left: 50%;
+          transform: translateX(-50%);
+          background-color: rgba(139, 92, 246, 0.9);
+          color: white;
+          padding: 8px 16px;
+          border-radius: 4px;
+          z-index: 1000;
+          font-family: sans-serif;
+          font-size: 14px;
+          pointer-events: none;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        `;
+        document.body.appendChild(messageElement);
+        
+        // Remove the message after 3 seconds
+        setTimeout(() => {
+          if (document.body.contains(messageElement)) {
+            document.body.removeChild(messageElement);
+          }
+        }, 3000);
+      }
+    };
+    
     document.addEventListener('vesselClick', handleVesselClick);
+    document.addEventListener('showRefineryConnections', handleShowRefineryConnections);
     
     return () => {
       document.removeEventListener('vesselClick', handleVesselClick);
+      document.removeEventListener('showRefineryConnections', handleShowRefineryConnections);
     };
-  }, [vessels]);
+  }, [vessels, connectedVessels]);
 
   // Format date string helper
   const formatDate = (dateStr?: string | Date) => {
