@@ -735,13 +735,55 @@ export default function OilVesselMap() {
 
   // Update markers when filtered data changes
   useEffect(() => {
-    if (!mapInstanceRef.current || !layerGroupRef.current) return;
+    if (!mapInstanceRef.current || !layerGroupRef.current || !connectedVesselLayerRef.current) return;
     
-    // Clear existing markers
+    // Clear existing markers and connection lines
     layerGroupRef.current.clearLayers();
+    connectedVesselLayerRef.current.clearLayers();
+    
+    // Remove any existing connection lines
+    Object.values(refineryConnectionsRef.current).forEach(line => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.removeLayer(line);
+      }
+    });
+    refineryConnectionsRef.current = {};
     markersRef.current = {};
     
-    // Add vessel markers
+    // Add facility markers (ports and refineries)
+    filteredFacilities.forEach(facility => {
+      if (facility.lat && facility.lng) {
+        const lat = typeof facility.lat === 'string' ? parseFloat(facility.lat) : facility.lat;
+        const lng = typeof facility.lng === 'string' ? parseFloat(facility.lng) : facility.lng;
+        
+        if (!isNaN(lat) && !isNaN(lng)) {
+          // Create marker
+          const marker = L.marker([lat, lng], {
+            icon: createFacilityIcon(facility),
+            title: facility.name || `${facility.type.charAt(0).toUpperCase() + facility.type.slice(1)} #${facility.id}`
+          }).addTo(layerGroupRef.current!);
+          
+          // Add popup
+          marker.bindPopup(`
+            <div style="font-family: sans-serif; min-width: 180px;">
+              <h3 style="margin: 0 0 5px; font-size: 16px; font-weight: bold;">${facility.name || 'Unknown Facility'}</h3>
+              <p style="margin: 0 0 3px; font-size: 12px;">
+                <strong>Type:</strong> ${facility.type.charAt(0).toUpperCase() + facility.type.slice(1)}
+              </p>
+              <p style="margin: 0 0 3px; font-size: 12px;">
+                <strong>Country:</strong> ${facility.country || 'Unknown'}
+              </p>
+              ${facility.capacity ? `<p style="margin: 0 0 3px; font-size: 12px;"><strong>Capacity:</strong> ${facility.capacity.toLocaleString()} bpd</p>` : ''}
+            </div>
+          `);
+          
+          // Store marker reference by facility type and ID
+          markersRef.current[`${facility.type}-${facility.id}`] = marker;
+        }
+      }
+    });
+    
+    // Add regular vessel markers
     filteredVessels.forEach(vessel => {
       if (vessel.currentLat && vessel.currentLng) {
         const lat = typeof vessel.currentLat === 'string' ? parseFloat(vessel.currentLat) : vessel.currentLat;
@@ -789,39 +831,88 @@ export default function OilVesselMap() {
       }
     });
     
-    // Add facility markers
-    filteredFacilities.forEach(facility => {
-      if (facility.lat && facility.lng) {
-        const lat = typeof facility.lat === 'string' ? parseFloat(facility.lat) : facility.lat;
-        const lng = typeof facility.lng === 'string' ? parseFloat(facility.lng) : facility.lng;
-        
-        if (!isNaN(lat) && !isNaN(lng)) {
-          // Create marker
-          const marker = L.marker([lat, lng], {
-            icon: createFacilityIcon(facility),
-            title: facility.name || `${facility.type.charAt(0).toUpperCase() + facility.type.slice(1)} #${facility.id}`
-          }).addTo(layerGroupRef.current!);
+    // Add connected vessels if toggled on
+    if (showConnectedVessels) {
+      connectedVessels.forEach(vessel => {
+        if (vessel.currentLat && vessel.currentLng) {
+          const lat = typeof vessel.currentLat === 'string' ? parseFloat(vessel.currentLat) : vessel.currentLat;
+          const lng = typeof vessel.currentLng === 'string' ? parseFloat(vessel.currentLng) : vessel.currentLng;
           
-          // Add popup
-          marker.bindPopup(`
-            <div style="font-family: sans-serif; min-width: 180px;">
-              <h3 style="margin: 0 0 5px; font-size: 16px; font-weight: bold;">${facility.name || 'Unknown Facility'}</h3>
-              <p style="margin: 0 0 3px; font-size: 12px;">
-                <strong>Type:</strong> ${facility.type.charAt(0).toUpperCase() + facility.type.slice(1)}
-              </p>
-              <p style="margin: 0 0 3px; font-size: 12px;">
-                <strong>Country:</strong> ${facility.country || 'Unknown'}
-              </p>
-              ${facility.capacity ? `<p style="margin: 0 0 3px; font-size: 12px;"><strong>Capacity:</strong> ${facility.capacity.toLocaleString()} bpd</p>` : ''}
-            </div>
-          `);
-          
-          // Store marker reference
-          markersRef.current[`${facility.type}-${facility.id}`] = marker;
+          if (!isNaN(lat) && !isNaN(lng) && isLikelyInWater(lat, lng)) {
+            // Create marker with special connected vessel icon
+            const marker = L.marker([lat, lng], {
+              icon: createConnectedVesselIcon(vessel),
+              title: `${vessel.name || 'Vessel'} (Connected)`
+            }).addTo(connectedVesselLayerRef.current!);
+            
+            // Add enhanced popup with connection details
+            marker.bindPopup(`
+              <div style="font-family: sans-serif; min-width: 220px;">
+                <h3 style="margin: 0 0 5px; font-size: 16px; font-weight: bold; color: #8b5cf6;">${vessel.name || 'Unknown Vessel'}</h3>
+                <div style="border-left: 3px solid #8b5cf6; padding-left: 8px; margin: 8px 0;">
+                  <p style="margin: 0 0 3px; font-size: 12px;">
+                    <strong>Connection:</strong> ${vessel.connectionType || 'Active'}
+                  </p>
+                  <p style="margin: 0 0 3px; font-size: 12px;">
+                    <strong>Cargo Volume:</strong> ${vessel.cargoVolume || 'Not specified'}
+                  </p>
+                  <p style="margin: 0 0 3px; font-size: 12px;">
+                    <strong>Start Date:</strong> ${vessel.connectionStartDate ? new Date(vessel.connectionStartDate).toLocaleDateString() : 'Not specified'}
+                  </p>
+                  <p style="margin: 0 0 3px; font-size: 12px;">
+                    <strong>End Date:</strong> ${vessel.connectionEndDate ? new Date(vessel.connectionEndDate).toLocaleDateString() : 'Ongoing'}
+                  </p>
+                  <p style="margin: 0 0 3px; font-size: 12px;">
+                    <strong>Status:</strong> ${vessel.connectionStatus || 'Active'}
+                  </p>
+                </div>
+                ${vessel.imo ? `<p style="margin: 0 0 3px; font-size: 12px;"><strong>IMO:</strong> ${vessel.imo}</p>` : ''}
+                ${vessel.flag ? `<p style="margin: 0 0 3px; font-size: 12px;"><strong>Flag:</strong> ${vessel.flag}</p>` : ''}
+                ${vessel.vesselType ? `<p style="margin: 0 0 3px; font-size: 12px;"><strong>Type:</strong> ${vessel.vesselType}</p>` : ''}
+                <div style="margin-top: 8px;">
+                  <button 
+                    style="background: #8b5cf6; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 12px; cursor: pointer;"
+                    onclick="document.dispatchEvent(new CustomEvent('vesselClick', {detail: ${vessel.id}}))"
+                  >
+                    View Details
+                  </button>
+                </div>
+              </div>
+            `);
+            
+            // Add click handler for vessel info panel
+            marker.on('click', () => {
+              setSelectedVessel(vessel);
+              setInfoOpen(true);
+            });
+            
+            // Store marker reference
+            markersRef.current[`connected-vessel-${vessel.id}`] = marker;
+            
+            // Draw connection line to refinery if possible
+            if (vessel.refineryId) {
+              const refineryMarker = markersRef.current[`refinery-${vessel.refineryId}`];
+              if (refineryMarker) {
+                const refineryLatLng = refineryMarker.getLatLng();
+                const vesselLatLng = marker.getLatLng();
+                
+                // Create a pulsing connection line with purple color
+                const connectionLine = L.polyline([refineryLatLng, vesselLatLng], {
+                  color: '#8b5cf6', // Purple for connections
+                  weight: 2,
+                  opacity: 0.8,
+                  dashArray: '5, 10' // Dashed line for visual distinction
+                }).addTo(mapInstanceRef.current!);
+                
+                // Store reference to connection line
+                refineryConnectionsRef.current[`connection-${vessel.id}-${vessel.refineryId}`] = connectionLine;
+              }
+            }
+          }
         }
-      }
-    });
-  }, [filteredVessels, filteredFacilities]);
+      });
+    }
+  }, [filteredVessels, filteredFacilities, connectedVessels, showConnectedVessels]);
 
   // Fetch vessel data
   useEffect(() => {
@@ -1092,6 +1183,18 @@ export default function OilVesselMap() {
                       aria-label="Toggle ports"
                       pressed={showPorts}
                       onPressedChange={setShowPorts}
+                      size="sm"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm flex items-center">
+                      <Ship className="h-3.5 w-3.5 mr-1.5 text-purple-500" />
+                      Connected Vessels
+                    </span>
+                    <Toggle
+                      aria-label="Toggle connected vessels"
+                      pressed={showConnectedVessels}
+                      onPressedChange={setShowConnectedVessels}
                       size="sm"
                     />
                   </div>
