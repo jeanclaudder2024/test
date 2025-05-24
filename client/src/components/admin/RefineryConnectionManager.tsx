@@ -99,13 +99,28 @@ const RefineryConnectionManager: React.FC<RefineryConnectionManagerProps> = ({
     enabled: mode === 'vessel' || isDialogOpen
   });
 
-  // Query vessel-refinery connections based on mode
-  const { data: connections = [], refetch: refetchConnections, isLoading: connectionsLoading } = useQuery<VesselRefineryConnection[]>({
-    queryKey: mode === 'refinery' 
-      ? ['/api/vessel-refinery/refinery', refineryId] 
-      : ['/api/vessel-refinery/vessel', vesselId],
-    enabled: Boolean(refineryId || vesselId)
+  // Query all vessel-refinery connections first to ensure we're getting data
+  const { data: allConnections = [] } = useQuery<VesselRefineryConnection[]>({
+    queryKey: ['/api/vessel-refinery'],
+    enabled: true
   });
+  
+  // Filter connections locally based on the mode and ID
+  const connections = allConnections.filter(conn => {
+    if (mode === 'refinery' && refineryId) {
+      return conn.refineryId === refineryId;
+    } else if (mode === 'vessel' && vesselId) {
+      return conn.vesselId === vesselId;
+    }
+    return false;
+  });
+  
+  const connectionsLoading = false; // We're handling filtering locally
+  
+  // Log for debugging
+  console.log('Mode:', mode, 'ID:', mode === 'refinery' ? refineryId : vesselId);
+  console.log('All connections:', allConnections);
+  console.log('Filtered connections:', connections);
 
   // Query to get detailed vessel and refinery data for each connection
   // Get refinery details by id for vessel mode
