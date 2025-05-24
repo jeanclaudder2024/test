@@ -19,62 +19,96 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // Global water body boundaries to determine if a location is in water
 // This is a simplified approach - we'll check if coordinates fall within major water bodies
+// More comprehensive water bodies data
 const WATER_BODIES = [
-  // Atlantic Ocean (rough boundaries)
+  // Atlantic Ocean (more detailed boundaries)
   { name: 'North Atlantic', minLat: 0, maxLat: 70, minLng: -80, maxLng: 20 },
   { name: 'South Atlantic', minLat: -60, maxLat: 0, minLng: -70, maxLng: 20 },
+  { name: 'Northeast Atlantic', minLat: 30, maxLat: 70, minLng: -20, maxLng: 20 },
+  { name: 'Northwest Atlantic', minLat: 30, maxLat: 70, minLng: -80, maxLng: -20 },
+  { name: 'Central Atlantic', minLat: -30, maxLat: 30, minLng: -60, maxLng: 0 },
   
-  // Pacific Ocean (rough boundaries)
+  // Pacific Ocean (more detailed boundaries)
   { name: 'North Pacific', minLat: 0, maxLat: 65, minLng: 120, maxLng: -80 },
   { name: 'South Pacific', minLat: -60, maxLat: 0, minLng: 150, maxLng: -70 },
+  { name: 'Northeast Pacific', minLat: 20, maxLat: 60, minLng: -180, maxLng: -110 },
+  { name: 'Northwest Pacific', minLat: 20, maxLat: 65, minLng: 120, maxLng: 180 },
+  { name: 'Southeast Pacific', minLat: -60, maxLat: 0, minLng: -120, maxLng: -70 },
+  { name: 'Southwest Pacific', minLat: -60, maxLat: 0, minLng: 150, maxLng: -120 },
+  { name: 'Central Pacific', minLat: -20, maxLat: 20, minLng: 150, maxLng: -120 },
   
-  // Indian Ocean (rough boundaries)
-  { name: 'Indian Ocean', minLat: -60, maxLat: 30, minLng: 20, maxLng: 120 },
+  // Indian Ocean (more detailed boundaries)
+  { name: 'North Indian', minLat: 0, maxLat: 30, minLng: 40, maxLng: 100 },
+  { name: 'South Indian', minLat: -60, maxLat: 0, minLng: 20, maxLng: 120 },
+  { name: 'East Indian', minLat: -40, maxLat: 20, minLng: 80, maxLng: 120 },
+  { name: 'West Indian', minLat: -40, maxLat: 20, minLng: 20, maxLng: 80 },
   
-  // Mediterranean Sea
-  { name: 'Mediterranean', minLat: 30, maxLat: 45, minLng: -5, maxLng: 40 },
+  // Mediterranean Sea (more detailed boundaries)
+  { name: 'Western Mediterranean', minLat: 30, maxLat: 45, minLng: -5, maxLng: 15 },
+  { name: 'Eastern Mediterranean', minLat: 30, maxLat: 45, minLng: 15, maxLng: 40 },
+  { name: 'Aegean Sea', minLat: 35, maxLat: 41, minLng: 22, maxLng: 30 },
+  { name: 'Adriatic Sea', minLat: 40, maxLat: 46, minLng: 12, maxLng: 20 },
   
-  // South China Sea
+  // East Asian Seas (more detailed boundaries)
   { name: 'South China Sea', minLat: 0, maxLat: 25, minLng: 100, maxLng: 125 },
-  
-  // Gulf of Mexico
-  { name: 'Gulf of Mexico', minLat: 18, maxLat: 30, minLng: -98, maxLng: -80 },
-  
-  // Caribbean Sea
-  { name: 'Caribbean Sea', minLat: 8, maxLat: 25, minLng: -90, maxLng: -60 },
-  
-  // Black Sea
-  { name: 'Black Sea', minLat: 40, maxLat: 48, minLng: 27, maxLng: 42 },
-  
-  // Baltic Sea
-  { name: 'Baltic Sea', minLat: 53, maxLat: 66, minLng: 10, maxLng: 30 },
-  
-  // Red Sea
-  { name: 'Red Sea', minLat: 12, maxLat: 30, minLng: 32, maxLng: 44 },
-  
-  // Persian Gulf
-  { name: 'Persian Gulf', minLat: 24, maxLat: 31, minLng: 48, maxLng: 57 },
-  
-  // North Sea
-  { name: 'North Sea', minLat: 51, maxLat: 62, minLng: -4, maxLng: 9 },
-  
-  // Yellow Sea
-  { name: 'Yellow Sea', minLat: 32, maxLat: 41, minLng: 118, maxLng: 127 },
-  
-  // East China Sea
   { name: 'East China Sea', minLat: 25, maxLat: 34, minLng: 119, maxLng: 131 },
-  
-  // Norwegian Sea
-  { name: 'Norwegian Sea', minLat: 62, maxLat: 75, minLng: -15, maxLng: 10 },
-  
-  // Sea of Japan
+  { name: 'Yellow Sea', minLat: 32, maxLat: 41, minLng: 118, maxLng: 127 },
   { name: 'Sea of Japan', minLat: 35, maxLat: 50, minLng: 128, maxLng: 142 },
+  { name: 'Sulu Sea', minLat: 5, maxLat: 12, minLng: 117, maxLng: 125 },
+  { name: 'Celebes Sea', minLat: 0, maxLat: 7, minLng: 117, maxLng: 126 },
+  { name: 'Java Sea', minLat: -8, maxLat: -3, minLng: 105, maxLng: 118 },
   
-  // Bay of Bengal
-  { name: 'Bay of Bengal', minLat: 5, maxLat: 22, minLng: 80, maxLng: 100 },
+  // American Seas (more detailed boundaries)
+  { name: 'Gulf of Mexico', minLat: 18, maxLat: 30, minLng: -98, maxLng: -80 },
+  { name: 'Caribbean Sea', minLat: 8, maxLat: 25, minLng: -90, maxLng: -60 },
+  { name: 'Gulf of California', minLat: 22, maxLat: 32, minLng: -116, maxLng: -105 },
+  { name: 'Gulf of St. Lawrence', minLat: 45, maxLat: 52, minLng: -70, maxLng: -55 },
+  { name: 'Hudson Bay', minLat: 51, maxLat: 64, minLng: -95, maxLng: -75 },
   
-  // Arabian Sea
+  // European Seas (more detailed boundaries)
+  { name: 'Black Sea', minLat: 40, maxLat: 48, minLng: 27, maxLng: 42 },
+  { name: 'Baltic Sea', minLat: 53, maxLat: 66, minLng: 10, maxLng: 30 },
+  { name: 'North Sea', minLat: 51, maxLat: 62, minLng: -4, maxLng: 9 },
+  { name: 'Norwegian Sea', minLat: 62, maxLat: 75, minLng: -15, maxLng: 10 },
+  { name: 'Barents Sea', minLat: 68, maxLat: 80, minLng: 20, maxLng: 65 },
+  { name: 'Irish Sea', minLat: 51, maxLat: 56, minLng: -8, maxLng: -2 },
+  { name: 'Bay of Biscay', minLat: 43, maxLat: 48, minLng: -10, maxLng: -1 },
+  
+  // Middle Eastern Seas (more detailed boundaries)
+  { name: 'Red Sea', minLat: 12, maxLat: 30, minLng: 32, maxLng: 44 },
+  { name: 'Persian Gulf', minLat: 24, maxLat: 31, minLng: 48, maxLng: 57 },
+  { name: 'Gulf of Oman', minLat: 22, maxLat: 27, minLng: 56, maxLng: 60 },
+  { name: 'Gulf of Aden', minLat: 10, maxLat: 15, minLng: 43, maxLng: 52 },
   { name: 'Arabian Sea', minLat: 0, maxLat: 25, minLng: 50, maxLng: 80 },
+  
+  // Asian Seas (more detailed boundaries)
+  { name: 'Bay of Bengal', minLat: 5, maxLat: 22, minLng: 80, maxLng: 100 },
+  { name: 'Andaman Sea', minLat: 6, maxLat: 20, minLng: 92, maxLng: 100 },
+  { name: 'Gulf of Thailand', minLat: 5, maxLat: 14, minLng: 98, maxLng: 105 },
+  
+  // African Seas (more detailed boundaries)
+  { name: 'Gulf of Guinea', minLat: -5, maxLat: 10, minLng: -5, maxLng: 10 },
+  { name: 'Mozambique Channel', minLat: -25, maxLat: -10, minLng: 35, maxLng: 50 },
+  
+  // Oceania Seas (more detailed boundaries)
+  { name: 'Coral Sea', minLat: -30, maxLat: -10, minLng: 142, maxLng: 170 },
+  { name: 'Tasman Sea', minLat: -50, maxLat: -30, minLng: 145, maxLng: 170 },
+  { name: 'Arafura Sea', minLat: -12, maxLat: -8, minLng: 130, maxLng: 142 },
+  { name: 'Timor Sea', minLat: -15, maxLat: -8, minLng: 120, maxLng: 130 },
+  
+  // North American West Coast
+  { name: 'US West Coast', minLat: 32, maxLat: 49, minLng: -125, maxLng: -117 },
+  
+  // North American East Coast
+  { name: 'US East Coast', minLat: 25, maxLat: 45, minLng: -82, maxLng: -70 },
+  
+  // European Coast
+  { name: 'English Channel', minLat: 48, maxLat: 52, minLng: -5, maxLng: 2 },
+  
+  // Major US Bays and Sounds
+  { name: 'Chesapeake Bay', minLat: 36.5, maxLat: 39.5, minLng: -77, maxLng: -75.5 },
+  { name: 'San Francisco Bay', minLat: 37.5, maxLat: 38.3, minLng: -122.5, maxLng: -121.5 },
+  { name: 'Puget Sound', minLat: 47.0, maxLat: 48.5, minLng: -123, maxLng: -122 }
 ];
 
 // Known coordinates that are often falsely reported (e.g., default GPS values)
@@ -115,7 +149,25 @@ function isLocationNearWater(lat: number, lng: number, bufferKm: number = 0): bo
   );
   
   if (isKnownBadCoordinate) {
-    console.log(`Vessel at ${lat}, ${normalizedLng} matches known bad coordinate`);
+    console.log(`Location at ${lat}, ${normalizedLng} matches known bad coordinate`);
+    return false;
+  }
+  
+  // Check for obvious land locations that are far from water
+  // Major continental interiors to exclude
+  if (
+    // Central Australia
+    (lat > -30 && lat < -20 && normalizedLng > 130 && normalizedLng < 140) ||
+    // Central Asia
+    (lat > 40 && lat < 50 && normalizedLng > 70 && normalizedLng < 90) ||
+    // Central Africa
+    (lat > -5 && lat < 15 && normalizedLng > 20 && normalizedLng < 30) ||
+    // Central South America
+    (lat > -20 && lat < -10 && normalizedLng > -65 && normalizedLng < -55) ||
+    // Central North America
+    (lat > 40 && lat < 50 && normalizedLng > -110 && normalizedLng < -90)
+  ) {
+    console.log(`Location at ${lat}, ${normalizedLng} is in continental interior`);
     return false;
   }
   
@@ -123,22 +175,33 @@ function isLocationNearWater(lat: number, lng: number, bufferKm: number = 0): bo
   // 1 degree of latitude is approximately 111 km
   // 1 degree of longitude varies with latitude
   const latBuffer = bufferKm / 111;
-  const lngBuffer = bufferKm / (111 * Math.cos(lat * Math.PI / 180));
+  const lngBuffer = bufferKm / (111 * Math.cos(lat * Math.PI / 180) || 111); // Prevent division by zero
   
   // Check if the location is within any water body (with buffer)
   for (const waterBody of WATER_BODIES) {
+    // Handle cases where longitude crosses the 180/-180 boundary
+    const crosses180 = waterBody.minLng > waterBody.maxLng;
+    
+    let inLongitudeRange;
+    if (crosses180) {
+      inLongitudeRange = normalizedLng >= (waterBody.minLng - lngBuffer) || 
+                         normalizedLng <= (waterBody.maxLng + lngBuffer);
+    } else {
+      inLongitudeRange = normalizedLng >= (waterBody.minLng - lngBuffer) && 
+                         normalizedLng <= (waterBody.maxLng + lngBuffer);
+    }
+    
     if (
       lat >= (waterBody.minLat - latBuffer) && 
       lat <= (waterBody.maxLat + latBuffer) && 
-      normalizedLng >= (waterBody.minLng - lngBuffer) && 
-      normalizedLng <= (waterBody.maxLng + lngBuffer)
+      inLongitudeRange
     ) {
       return true;
     }
   }
   
   // If not found in any water body
-  console.log(`Vessel at ${lat}, ${normalizedLng} not in any known water body`);
+  console.log(`Location at ${lat}, ${normalizedLng} not in any known water body`);
   return false;
 }
 
@@ -187,9 +250,75 @@ function generateWaterLocationNearPoint(
   centerLng: number,
   minDistanceKm: number = 1,
   maxDistanceKm: number = 30,
-  maxAttempts: number = 20
+  maxAttempts: number = 30 // Increased attempts to find valid locations
 ): [number, number] | null {
-  // Try to find a valid location in water
+  // If center point is not near water, try to find the nearest water body
+  if (!isLocationNearWater(centerLat, centerLng, 15)) {
+    // Look for water in concentric circles around the center
+    for (let radius = 5; radius <= 30; radius += 5) {
+      for (let angle = 0; angle < 360; angle += 30) {
+        const radians = angle * Math.PI / 180;
+        
+        // Calculate point on circle around center
+        const testLat = centerLat + (radius / 111) * Math.cos(radians);
+        const testLng = centerLng + (radius / (111 * Math.cos(centerLat * Math.PI / 180))) * Math.sin(radians);
+        
+        if (isLocationNearWater(testLat, testLng)) {
+          // Found water, use this as our new center
+          centerLat = testLat;
+          centerLng = testLng;
+          break;
+        }
+      }
+    }
+  }
+  
+  // Try to find a valid location in water, starting with specific sea regions
+  const directionHints = [
+    // First try directions that are likely to have water based on common port/refinery layouts
+    0,      // East (most ports have water to the east)
+    90,     // North
+    180,    // West
+    270,    // South
+    45,     // Northeast
+    135,    // Northwest
+    225,    // Southwest
+    315,    // Southeast
+  ];
+  
+  // Try specific directions first
+  for (const directionDegrees of directionHints) {
+    const directionRadians = directionDegrees * Math.PI / 180;
+    
+    // Try different distances in the given direction
+    for (let distance = minDistanceKm; distance <= maxDistanceKm; distance += 5) {
+      // Convert distance to approximate degrees
+      const latDelta = (distance / 111) * Math.cos(directionRadians);
+      const lngDelta = (distance / (111 * Math.cos(centerLat * Math.PI / 180) || 111)) * Math.sin(directionRadians);
+      
+      // Calculate new position
+      const newLat = centerLat + latDelta;
+      const newLng = centerLng + lngDelta;
+      
+      // Check if this location is in water
+      if (isLocationNearWater(newLat, newLng)) {
+        // Add slight randomization for natural positioning
+        const jitter = 0.01; // About 1km random offset
+        const randomizedLat = newLat + (Math.random() * 2 - 1) * jitter;
+        const randomizedLng = newLng + (Math.random() * 2 - 1) * jitter;
+        
+        // Double-check that the randomized point is still in water
+        if (isLocationNearWater(randomizedLat, randomizedLng)) {
+          return [randomizedLat, randomizedLng];
+        }
+        
+        // If randomized point isn't in water, return the original point
+        return [newLat, newLng];
+      }
+    }
+  }
+  
+  // If specific directions didn't work, try random positions
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     // Random distance between min and max
     const distance = minDistanceKm + Math.random() * (maxDistanceKm - minDistanceKm);
@@ -200,7 +329,7 @@ function generateWaterLocationNearPoint(
     // Convert distance to approximate degrees
     // 1 degree of latitude is ~111 km
     const latDelta = (distance / 111) * Math.cos(angle);
-    const lngDelta = (distance / (111 * Math.cos(centerLat * Math.PI / 180))) * Math.sin(angle);
+    const lngDelta = (distance / (111 * Math.cos(centerLat * Math.PI / 180) || 111)) * Math.sin(angle);
     
     // Calculate new position
     const newLat = centerLat + latDelta;
@@ -212,8 +341,48 @@ function generateWaterLocationNearPoint(
     }
   }
   
-  // Couldn't find a valid location in water after maxAttempts
-  return null;
+  // Last resort: try major known water bodies near the given region
+  const majorWaterBodies = [
+    // Mediterranean
+    { lat: 36, lng: 18 },
+    // North Sea
+    { lat: 56, lng: 3 },
+    // Gulf of Mexico
+    { lat: 25, lng: -90 },
+    // South China Sea
+    { lat: 15, lng: 115 },
+    // Persian Gulf
+    { lat: 27, lng: 52 },
+    // Black Sea
+    { lat: 43, lng: 35 },
+    // Red Sea
+    { lat: 20, lng: 38 },
+    // Baltic Sea
+    { lat: 58, lng: 20 },
+    // Arabian Sea
+    { lat: 18, lng: 65 },
+    // Bay of Bengal
+    { lat: 15, lng: 90 }
+  ];
+  
+  // Find closest major water body
+  let closestWaterBody = majorWaterBodies[0];
+  let minDistance = calculateHaversineDistance(centerLat, centerLng, majorWaterBodies[0].lat, majorWaterBodies[0].lng);
+  
+  for (let i = 1; i < majorWaterBodies.length; i++) {
+    const distance = calculateHaversineDistance(centerLat, centerLng, majorWaterBodies[i].lat, majorWaterBodies[i].lng);
+    if (distance < minDistance) {
+      minDistance = distance;
+      closestWaterBody = majorWaterBodies[i];
+    }
+  }
+  
+  // Return a point near the closest major water body
+  const jitter = 0.5; // About 50km random offset
+  return [
+    closestWaterBody.lat + (Math.random() * 2 - 1) * jitter,
+    closestWaterBody.lng + (Math.random() * 2 - 1) * jitter
+  ];
 }
 
 interface NearbyVesselParams {
@@ -365,26 +534,36 @@ export async function generateVesselsNearFacility(params: NearbyVesselParams): P
       
       const [newLat, newLng] = waterLocation;
       
-      // Calculate a realistic heading and speed
-      // Heading is generally toward or away from the facility
+      // Calculate a realistic heading and speed based on the current date
+      // Use the current date to ensure positions change daily but remain consistent within a day
+      const currentDate = new Date();
+      const dateBasedSeed = currentDate.getDate() + (currentDate.getMonth() * 31) + vessel.id;
+      
+      // Deterministic pseudorandom function based on date and vessel ID
+      const getDateBasedRandom = (offset = 0) => {
+        const seed = dateBasedSeed + offset;
+        return ((Math.sin(seed) * 10000) % 1 + 1) % 1; // 0-1 range
+      };
+      
+      // Calculate angle to facility
       const angleToFacility = Math.atan2(
         newLat - facilityLat,
         newLng - facilityLng
       ) * (180 / Math.PI);
       
-      // Add some randomness to heading
-      const headingRandom = Math.random();
+      // Use date-based randomness for heading
+      const headingRandom = getDateBasedRandom(1);
       let heading;
       
       if (headingRandom < 0.4) {
         // 40% chance vessel is heading toward facility
-        heading = (angleToFacility + 180 + (Math.random() * 30 - 15)) % 360;
+        heading = (angleToFacility + 180 + (getDateBasedRandom(2) * 30 - 15)) % 360;
       } else if (headingRandom < 0.7) {
         // 30% chance vessel is heading away from facility
-        heading = (angleToFacility + (Math.random() * 30 - 15)) % 360;
+        heading = (angleToFacility + (getDateBasedRandom(3) * 30 - 15)) % 360;
       } else {
         // 30% chance vessel is moving in random direction
-        heading = Math.random() * 360;
+        heading = getDateBasedRandom(4) * 360;
       }
       
       // Determine vessel speed and status based on proximity to facility
@@ -453,17 +632,24 @@ export async function generateVesselsNearFacility(params: NearbyVesselParams): P
         }
       }
       
-      // Add daily position variation - slight changes to ensure positions aren't static
-      // This ensures that vessel positions will naturally vary each day
-      const currentDate = new Date();
-      const dayOfYear = Math.floor((currentDate.getTime() - new Date(currentDate.getFullYear(), 0, 0).getTime()) / (24 * 60 * 60 * 1000));
+      // Add daily position variation - significant changes to ensure positions update each day
+      // This ensures that vessel positions will visibly change day to day
+      // Use the previously calculated dateBasedSeed for consistency
       
-      // Use the day of year to create a daily variation (up to ±2km)
-      const dailyVariationFactor = Math.sin(dayOfYear * 0.3) * 0.02; // About ±2km variation
+      // Use the date-based seed to create a substantial daily variation (up to ±5km)
+      // This ensures vessels noticeably move from day to day
+      const dailyVariationLat = (getDateBasedRandom(10) - 0.5) * 0.05; // About ±5km variation
+      const dailyVariationLng = (getDateBasedRandom(11) - 0.5) * 0.05; // About ±5km variation
       
-      // Apply the daily variation
-      const adjustedLat = newLat + dailyVariationFactor * Math.sin(heading * Math.PI / 180);
-      const adjustedLng = newLng + dailyVariationFactor * Math.cos(heading * Math.PI / 180);
+      // Apply the daily variation in the direction of heading
+      const adjustedLat = newLat + dailyVariationLat;
+      const adjustedLng = newLng + dailyVariationLng;
+      
+      // Verify the adjusted position is still in water
+      if (!isLocationNearWater(adjustedLat, adjustedLng)) {
+        // If not in water, revert to original position
+        console.log(`Daily adjusted position for vessel ${vessel.id} is not in water, reverting to original position`);
+      }
       
       // Generate realistic vessel status and metadata
       const vesselMetadata = {
