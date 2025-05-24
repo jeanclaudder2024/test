@@ -2587,6 +2587,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // API routes for refinery-port connections
   app.use("/api/refinery-port", refineryPortRouter);
+  
+  // API routes for vessel-refinery connections
+  app.use("/api/vessel-refinery", vesselRefineryRouter);
 
   // API routes for AI-powered content generation
   app.use("/api/ai", aiRouter);

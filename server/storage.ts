@@ -681,6 +681,55 @@ export class DatabaseStorage implements IStorage {
     return true;
   }
   
+  // Vessel-Refinery Connection methods
+  async getVesselRefineryConnections(): Promise<VesselRefineryConnection[]> {
+    return await db.select().from(vesselRefineryConnections);
+  }
+
+  async getVesselRefineryConnectionById(id: number): Promise<VesselRefineryConnection | undefined> {
+    const [connection] = await db
+      .select()
+      .from(vesselRefineryConnections)
+      .where(eq(vesselRefineryConnections.id, id));
+    return connection || undefined;
+  }
+
+  async getVesselRefineryConnectionsByVesselId(vesselId: number): Promise<VesselRefineryConnection[]> {
+    return await db
+      .select()
+      .from(vesselRefineryConnections)
+      .where(eq(vesselRefineryConnections.vesselId, vesselId));
+  }
+
+  async getVesselRefineryConnectionsByRefineryId(refineryId: number): Promise<VesselRefineryConnection[]> {
+    return await db
+      .select()
+      .from(vesselRefineryConnections)
+      .where(eq(vesselRefineryConnections.refineryId, refineryId));
+  }
+
+  async createVesselRefineryConnection(connection: InsertVesselRefineryConnection): Promise<VesselRefineryConnection> {
+    const [newConnection] = await db
+      .insert(vesselRefineryConnections)
+      .values(connection)
+      .returning();
+    return newConnection;
+  }
+
+  async updateVesselRefineryConnection(id: number, connectionUpdate: Partial<InsertVesselRefineryConnection>): Promise<VesselRefineryConnection | undefined> {
+    const [updatedConnection] = await db
+      .update(vesselRefineryConnections)
+      .set(connectionUpdate)
+      .where(eq(vesselRefineryConnections.id, id))
+      .returning();
+    return updatedConnection || undefined;
+  }
+
+  async deleteVesselRefineryConnection(id: number): Promise<boolean> {
+    await db.delete(vesselRefineryConnections).where(eq(vesselRefineryConnections.id, id));
+    return true;
+  }
+  
   // Company methods implementation
   async getCompanies(): Promise<Company[]> {
     return await db.select().from(companies);

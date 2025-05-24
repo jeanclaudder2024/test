@@ -43,6 +43,7 @@ import {
   PaginationPrevious 
 } from "@/components/ui/pagination";
 import { RefineryMapSelector } from "./RefineryMapSelector";
+import RefineryConnectionManager from "./RefineryConnectionManager";
 
 // Define the refinery type based on schema
 interface Refinery {
