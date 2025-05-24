@@ -245,7 +245,7 @@ export function RefineryManagement() {
     setIsRefineryMapOpen(false);
   };
 
-  const handleInputChange = (field: string, value: string | number) => {
+  const handleInputChange = (field: string, value: string | number | boolean) => {
     if (isCreating) {
       setFormData(prev => ({ ...prev, [field]: value }));
     } else if (selectedRefinery) {
