@@ -2946,6 +2946,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Create new vessel
+  apiRouter.post("/vessels", async (req, res) => {
+    try {
+      console.log("Received request to create vessel:", req.body);
+      
+      // Validate the input using the vessel schema
+      const result = insertVesselSchema.safeParse(req.body);
+      
+      if (!result.success) {
+        console.error("Validation failed for vessel creation:", result.error.errors);
+        return res.status(400).json({ 
+          message: "Invalid vessel data", 
+          errors: result.error.errors 
+        });
+      }
+      
+      // Create the vessel in the database
+      const newVessel = await storage.createVessel(result.data);
+      
+      console.log("Successfully created vessel:", newVessel.id);
+      res.status(201).json(newVessel);
+    } catch (error) {
+      console.error("Error creating vessel:", error);
+      res.status(500).json({ 
+        message: "Failed to create vessel",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
   // Refinery Management API Endpoints
   
   // Get refineries with pagination, filtering and search
