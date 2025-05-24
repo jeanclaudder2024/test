@@ -1,7 +1,8 @@
 import { eq, and } from "drizzle-orm";
 import { db } from "./db";
 import {
-  users, vessels, refineries, progressEvents, documents, brokers, stats as statsTable, ports, refineryPortConnections, companies,
+  users, vessels, refineries, progressEvents, documents, brokers, stats as statsTable, ports, 
+  refineryPortConnections, companies, vesselRefineryConnections,
   subscriptionPlans, subscriptions, paymentMethods, invoices,
   User, InsertUser, 
   Vessel, InsertVessel,
@@ -12,6 +13,7 @@ import {
   Stats, InsertStats,
   Port, InsertPort,
   RefineryPortConnection, InsertRefineryPortConnection,
+  VesselRefineryConnection, InsertVesselRefineryConnection,
   Company, InsertCompany,
   SubscriptionPlan, InsertSubscriptionPlan,
   Subscription, InsertSubscription,
@@ -118,6 +120,15 @@ export interface IStorage {
   createRefineryPortConnection(connection: InsertRefineryPortConnection): Promise<RefineryPortConnection>;
   updateRefineryPortConnection(id: number, connection: Partial<InsertRefineryPortConnection>): Promise<RefineryPortConnection | undefined>;
   deleteRefineryPortConnection(id: number): Promise<boolean>;
+  
+  // Vessel-Refinery Connection methods
+  getVesselRefineryConnections(): Promise<VesselRefineryConnection[]>;
+  getVesselRefineryConnectionById(id: number): Promise<VesselRefineryConnection | undefined>;
+  getVesselRefineryConnectionsByVesselId(vesselId: number): Promise<VesselRefineryConnection[]>;
+  getVesselRefineryConnectionsByRefineryId(refineryId: number): Promise<VesselRefineryConnection[]>;
+  createVesselRefineryConnection(connection: InsertVesselRefineryConnection): Promise<VesselRefineryConnection>;
+  updateVesselRefineryConnection(id: number, connection: Partial<InsertVesselRefineryConnection>): Promise<VesselRefineryConnection | undefined>;
+  deleteVesselRefineryConnection(id: number): Promise<boolean>;
   
   // Company methods
   getCompanies(): Promise<Company[]>;

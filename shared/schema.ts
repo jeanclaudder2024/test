@@ -261,6 +261,33 @@ export const insertRefineryPortConnectionSchema = createInsertSchema(refineryPor
 export type InsertRefineryPortConnection = z.infer<typeof insertRefineryPortConnectionSchema>;
 export type RefineryPortConnection = typeof refineryPortConnections.$inferSelect;
 
+// Vessel Refinery Connections
+export const vesselRefineryConnections = pgTable("vessel_refinery_connections", {
+  id: serial("id").primaryKey(),
+  vesselId: integer("vessel_id").notNull().references(() => vessels.id),
+  refineryId: integer("refinery_id").notNull().references(() => refineries.id),
+  status: text("status").default("active"), // active, scheduled, completed, cancelled
+  startDate: timestamp("start_date"),
+  endDate: timestamp("end_date"),
+  connectionType: text("connection_type").default("loading"), // loading, unloading, docked
+  cargoVolume: decimal("cargo_volume", { precision: 15, scale: 2 }), // volume in barrels
+  createdAt: timestamp("created_at").defaultNow(),
+  lastUpdated: timestamp("last_updated").defaultNow(),
+});
+
+export const insertVesselRefineryConnectionSchema = createInsertSchema(vesselRefineryConnections).omit({
+  id: true,
+  createdAt: true,
+  lastUpdated: true,
+}).extend({
+  // Allow string input for dates
+  startDate: z.string().optional(),
+  endDate: z.string().optional()
+});
+
+export type InsertVesselRefineryConnection = z.infer<typeof insertVesselRefineryConnectionSchema>;
+export type VesselRefineryConnection = typeof vesselRefineryConnections.$inferSelect;
+
 // Shipping Companies
 export const companies = pgTable("companies", {
   id: serial("id").primaryKey(),
