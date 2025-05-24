@@ -550,6 +550,101 @@ export default function OilVesselMap() {
       popupAnchor: [0, -size/2]
     });
   };
+  
+  // Create a special icon for connected vessels
+  const createConnectedVesselIcon = (vessel: Vessel) => {
+    // Use purple color for connected vessels to distinguish them from regular vessels
+    const color = '#8b5cf6'; // Purple for connected vessels
+    
+    // Direction arrow rotation based on vessel course
+    const rotation = vessel.course !== undefined ? vessel.course : 0;
+    
+    // Connected vessels should be larger to stand out
+    let size = 32;
+    if (vessel.vesselType) {
+      if (vessel.vesselType.includes('VLCC') || vessel.vesselType.includes('ULCC')) {
+        size = 38; // Larger for Very Large and Ultra Large Crude Carriers
+      } else if (vessel.vesselType.includes('Aframax') || vessel.vesselType.includes('Suezmax')) {
+        size = 35; // Large for medium-sized tankers
+      }
+    }
+    
+    // Choose appropriate icon based on vessel type
+    let iconName = 'fa-ship';
+    if (vessel.vesselType?.toLowerCase().includes('lng') || vessel.vesselType?.toLowerCase().includes('gas')) {
+      iconName = 'fa-gas-pump';
+    } else if (vessel.vesselType?.toLowerCase().includes('chemical')) {
+      iconName = 'fa-vial';
+    } else if (vessel.vesselType?.toLowerCase().includes('oil') || vessel.vesselType?.toLowerCase().includes('tanker')) {
+      iconName = 'fa-oil-well';
+    }
+    
+    // Create icon with prominent pulsing effect and connection indicator
+    return L.divIcon({
+      className: 'connected-vessel-marker',
+      html: `
+        <div style="
+          position: relative;
+          width: ${size}px;
+          height: ${size}px;
+        ">
+          <div style="
+            position: absolute;
+            width: ${size+8}px;
+            height: ${size+8}px;
+            top: -4px;
+            left: -4px;
+            border-radius: 50%;
+            background-color: ${color};
+            opacity: 0.25;
+            animation: connected-pulse 2s infinite;
+          "></div>
+          <div style="
+            position: absolute;
+            width: ${size+4}px;
+            height: ${size+4}px;
+            top: -2px;
+            left: -2px;
+            border-radius: 50%;
+            border: 2px solid ${color};
+            opacity: 0.7;
+          "></div>
+          <div style="
+            position: absolute;
+            transform: rotate(${rotation}deg);
+            color: ${color};
+            text-shadow: 0 0 4px rgba(255,255,255,0.7), 0 0 6px rgba(0,0,0,0.5);
+            font-size: ${size}px;
+            width: ${size}px;
+            height: ${size}px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          ">
+            <i class="fa ${iconName}"></i>
+          </div>
+        </div>
+        <style>
+          @keyframes connected-pulse {
+            0% {
+              transform: scale(1);
+              opacity: 0.25;
+            }
+            50% {
+              transform: scale(1.2);
+              opacity: 0.15;
+            }
+            100% {
+              transform: scale(1);
+              opacity: 0.25;
+            }
+          }
+        </style>
+      `,
+      iconSize: [size, size],
+      iconAnchor: [size/2, size/2]
+    });
+  };
 
   // Check if coordinates are valid and in water
   const isLikelyInWater = (lat: number, lng: number): boolean => {
