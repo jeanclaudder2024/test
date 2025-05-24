@@ -55,7 +55,7 @@ export function Layout({ children }: LayoutProps) {
   const [isMobileNavOpen, setIsMobileNavOpen] = React.useState(false);
 
   const navigation = [
-    { name: "Dashboard", href: "/dashboard", icon: Home },
+    // Dashboard removed as requested
     { name: "Vessels", href: "/vessels", icon: Ship },
     // Vessel Dashboard removed as requested
     // Vessel Lookup removed as requested
@@ -67,8 +67,8 @@ export function Layout({ children }: LayoutProps) {
     { name: "Documents", href: "/documents", icon: FileText },
     { name: "Companies", href: "/companies", icon: Briefcase },
     { name: "Brokers", href: "/brokers", icon: UserPlus },
-    { name: "AI Assistant", href: "/ai-assistant", icon: MessageSqAdmin Panel", href: "/admin", icon: AlertCircle },
-    { name: "uare },
+    { name: "AI Assistant", href: "/ai-assistant", icon: MessageSquare },
+    { name: "Admin Panel", href: "/admin", icon: AlertCircle },
     { name: "Pricing", href: "/pricing", icon: ShoppingBag },
     { name: "Settings", href: "/settings", icon: Settings },
   ];
