@@ -31,7 +31,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Plus, Edit, Trash2, Search, Eye, Map } from "lucide-react";
+import { Loader2, Plus, Edit, Trash2, Search, Eye, Map, Ship, Anchor } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { 
   Pagination, 
@@ -162,13 +162,25 @@ export function RefineryManagement() {
       
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // Set the newly created refinery ID and show the connection dialog
+      setNewlyCreatedRefineryId(data.id);
+      
+      // Show success notification
       toast({
-        title: "Refinery Created",
-        description: "The refinery has been successfully created.",
+        title: "Refinery Created Successfully",
+        description: "Your new refinery has been added to the database.",
       });
+      
+      // Show the connection dialog immediately after success
+      setTimeout(() => {
+        setShowConnectionDialog(true);
+      }, 500);
+      
+      // Clear form
       setIsCreating(false);
-      setSelectedRefinery(null);
+      
+      // Update refinery list
       queryClient.invalidateQueries({ queryKey: ['/api/refineries'] });
     },
     onError: (error: Error) => {
@@ -346,13 +358,13 @@ export function RefineryManagement() {
 
   const handleSubmit = () => {
     if (isCreating) {
-      createRefinery(formData, {
-        onSuccess: (data) => {
-          // Ask if user wants to connect a vessel or port
-          setNewlyCreatedRefineryId(data.id);
-          setShowConnectionDialog(true);
-        }
+      // First show toast message so user knows something is happening
+      toast({
+        title: "Creating refinery...",
+        description: "Please wait while we process your request.",
       });
+      
+      createRefinery(formData);
     } else if (selectedRefinery) {
       updateRefinery(selectedRefinery);
     }
