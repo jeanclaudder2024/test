@@ -523,8 +523,8 @@ export function RefineryManagement() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {refineries && refineries.data && refineries.data.length > 0 ? (
-                        refineries.data.map((refinery: Refinery) => (
+                      {refineries && refineries.length > 0 ? (
+                        refineries.map((refinery: Refinery) => (
                           <TableRow key={refinery.id}>
                             <TableCell className="font-medium">{refinery.name}</TableCell>
                             <TableCell>
@@ -565,51 +565,29 @@ export function RefineryManagement() {
                   </Table>
                 </div>
 
-                <Pagination className="mt-4">
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious 
-                        onClick={() => refineries && refineries.totalPages && setPage(p => Math.max(1, p - 1))}
-                        disabled={!refineries || !refineries.totalPages || page === 1} 
-                      />
-                    </PaginationItem>
-                    {refineries && refineries.totalPages && Array.from(Array(refineries.totalPages).keys()).map((p) => {
-                      // Only show the first, last, and pages around current page
-                      if (
-                        p + 1 === 1 || 
-                        p + 1 === refineries.totalPages ||
-                        (p + 1 >= page - 1 && p + 1 <= page + 1)
-                      ) {
-                        return (
-                          <PaginationItem key={p + 1}>
-                            <PaginationLink
-                              onClick={() => setPage(p + 1)}
-                              isActive={page === p + 1}
-                            >
-                              {p + 1}
-                            </PaginationLink>
-                          </PaginationItem>
-                        );
-                      } else if (
-                        (p + 1 === 2 && page > 3) ||
-                        (p + 1 === refineries.totalPages - 1 && page < refineries.totalPages - 2)
-                      ) {
-                        return (
-                          <PaginationItem key={p + 1}>
-                            <PaginationEllipsis />
-                          </PaginationItem>
-                        );
-                      }
-                      return null;
-                    })}
-                    <PaginationItem>
-                      <PaginationNext 
-                        onClick={() => refineries && refineries.totalPages && setPage(p => Math.min(refineries.totalPages, p + 1))}
-                        disabled={!refineries || !refineries.totalPages || page === refineries.totalPages} 
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
+                <div className="mt-4 flex items-center justify-end gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-1" />
+                    Previous
+                  </Button>
+                  <span className="text-sm text-muted-foreground">
+                    Page {page}
+                  </span>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setPage(p => p + 1)}
+                    disabled={!refineries || refineries.length < pageSize}
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </div>
               </>
             )}
           </>
