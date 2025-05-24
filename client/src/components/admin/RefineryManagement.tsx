@@ -31,7 +31,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Plus, Edit, Trash2, Search, Eye, Map, Ship, Anchor } from "lucide-react";
+import { Loader2, Plus, Edit, Trash2, Search, Eye, Map, Ship, Anchor, ChevronLeft, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { 
   Pagination, 
