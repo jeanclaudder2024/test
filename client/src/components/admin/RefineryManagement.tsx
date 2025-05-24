@@ -264,6 +264,37 @@ export function RefineryManagement() {
   };
 
   const handleOpenEdit = (refinery: Refinery) => {
+    // Populate form data with selected refinery values
+    const formValues = {
+      name: refinery.name || "",
+      country: refinery.country || "",
+      region: refinery.region || "Middle East",
+      city: refinery.city || "",
+      capacity: refinery.capacity || 0,
+      lat: refinery.lat || "",
+      lng: refinery.lng || "",
+      status: refinery.status || "active",
+      description: refinery.description || "",
+      operator: refinery.operator || "",
+      owner: refinery.owner || "",
+      type: refinery.type || "Crude Oil",
+      products: refinery.products || "",
+      year_built: refinery.year_built || undefined,
+      complexity: refinery.complexity || undefined,
+      utilization: refinery.utilization || undefined,
+      email: refinery.email || "",
+      phone: refinery.phone || "",
+      website: refinery.website || "",
+      address: refinery.address || "",
+      technical_specs: refinery.technical_specs || "",
+      photo: refinery.photo || "",
+      generateDetails: false // Don't regenerate with AI when editing
+    };
+    
+    // Update form data state with refinery values
+    setFormData(formValues);
+    
+    // Update UI state
     setSelectedRefinery(refinery);
     setIsCreating(false);
     setIsDetailView(false);
