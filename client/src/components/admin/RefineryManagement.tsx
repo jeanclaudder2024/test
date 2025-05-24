@@ -339,9 +339,20 @@ export function RefineryManagement() {
     });
   };
 
+  // State for connection dialog
+  const [showConnectionDialog, setShowConnectionDialog] = useState(false);
+  const [newlyCreatedRefineryId, setNewlyCreatedRefineryId] = useState<number | null>(null);
+  const [connectionType, setConnectionType] = useState<'vessel' | 'port' | null>(null);
+
   const handleSubmit = () => {
     if (isCreating) {
-      createRefinery(formData);
+      createRefinery(formData, {
+        onSuccess: (data) => {
+          // Ask if user wants to connect a vessel or port
+          setNewlyCreatedRefineryId(data.id);
+          setShowConnectionDialog(true);
+        }
+      });
     } else if (selectedRefinery) {
       updateRefinery(selectedRefinery);
     }
@@ -878,6 +889,82 @@ export function RefineryManagement() {
               : undefined
         }
       />
+
+      {/* Connection Selection Dialog */}
+      <Dialog open={showConnectionDialog} onOpenChange={setShowConnectionDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Connect Your New Refinery</DialogTitle>
+            <DialogDescription>
+              Would you like to connect this refinery to vessels or ports?
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid grid-cols-2 gap-4 py-4">
+            <Button
+              variant="outline"
+              className="h-24 flex flex-col items-center justify-center gap-2"
+              onClick={() => {
+                setConnectionType('vessel');
+                setShowConnectionDialog(false);
+                // Show vessel connection interface
+                if (newlyCreatedRefineryId) {
+                  queryClient.invalidateQueries({ queryKey: ['/api/refineries'] });
+                  // Fetch the newly created refinery and open in detail view
+                  fetch(`/api/refineries/${newlyCreatedRefineryId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                      setSelectedRefinery(data);
+                      setIsDetailView(true);
+                    });
+                }
+              }}
+            >
+              <Ship className="h-8 w-8" />
+              <span>Connect to Vessels</span>
+            </Button>
+            
+            <Button
+              variant="outline"
+              className="h-24 flex flex-col items-center justify-center gap-2"
+              onClick={() => {
+                setConnectionType('port');
+                setShowConnectionDialog(false);
+                // Show port connection interface
+                if (newlyCreatedRefineryId) {
+                  queryClient.invalidateQueries({ queryKey: ['/api/refineries'] });
+                  // Fetch the newly created refinery and open in detail view
+                  fetch(`/api/refineries/${newlyCreatedRefineryId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                      setSelectedRefinery(data);
+                      setIsDetailView(true);
+                    });
+                }
+              }}
+            >
+              <Anchor className="h-8 w-8" />
+              <span>Connect to Ports</span>
+            </Button>
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              variant="secondary" 
+              onClick={() => {
+                setShowConnectionDialog(false);
+                setConnectionType(null);
+                toast({
+                  title: "Refinery Created",
+                  description: "You can connect it to vessels or ports later from the refinery details view.",
+                });
+              }}
+            >
+              Skip for Now
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
