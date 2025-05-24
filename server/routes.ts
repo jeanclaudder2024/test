@@ -3094,22 +3094,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
             type: refineryData.type
           });
           
+          // Format the enhanced details and ensure proper data types
+          const yearBuilt = enhancedDetails.year_built ? 
+            (typeof enhancedDetails.year_built === 'string' ? 
+              parseInt(enhancedDetails.year_built, 10) : enhancedDetails.year_built) : null;
+              
+          const complexity = enhancedDetails.complexity ? 
+            (typeof enhancedDetails.complexity === 'string' ? 
+              parseFloat(enhancedDetails.complexity) : enhancedDetails.complexity) : null;
+              
+          const utilization = enhancedDetails.utilization ? 
+            (typeof enhancedDetails.utilization === 'string' ? 
+              parseFloat(enhancedDetails.utilization.replace('%', '')) : enhancedDetails.utilization) : null;
+          
+          // Format products as string if it's an array
+          const products = enhancedDetails.products ? 
+            (Array.isArray(enhancedDetails.products) ? 
+              enhancedDetails.products.join(', ') : enhancedDetails.products) : '';
+              
           // Merge the generated details with the original data
           refineryData = {
             ...refineryData,
-            description: enhancedDetails.description || refineryData.description,
-            owner: enhancedDetails.owner || refineryData.owner,
-            operator: enhancedDetails.operator || refineryData.operator,
-            products: enhancedDetails.products || refineryData.products,
-            year_built: enhancedDetails.year_built || refineryData.year_built,
-            complexity: enhancedDetails.complexity || refineryData.complexity,
-            utilization: enhancedDetails.utilization || refineryData.utilization,
-            city: enhancedDetails.city || refineryData.city,
-            email: enhancedDetails.email || refineryData.email,
-            phone: enhancedDetails.phone || refineryData.phone,
-            website: enhancedDetails.website || refineryData.website,
-            address: enhancedDetails.address || refineryData.address,
-            technical_specs: enhancedDetails.technical_specs || refineryData.technical_specs
+            description: enhancedDetails.description || refineryData.description || '',
+            owner: enhancedDetails.owner || refineryData.owner || '',
+            operator: enhancedDetails.operator || refineryData.operator || '',
+            products: products || refineryData.products || '',
+            year_built: yearBuilt || refineryData.year_built || null,
+            complexity: complexity || refineryData.complexity || null, 
+            utilization: utilization || refineryData.utilization || null,
+            city: enhancedDetails.city || refineryData.city || '',
+            email: enhancedDetails.email || refineryData.email || '',
+            phone: enhancedDetails.phone || refineryData.phone || '',
+            website: enhancedDetails.website || refineryData.website || '',
+            address: enhancedDetails.address || refineryData.address || '',
+            technical_specs: enhancedDetails.technical_specs || refineryData.technical_specs || ''
           };
           
           console.log("Successfully enhanced refinery data with OpenAI");
