@@ -37,13 +37,16 @@ export default function RefineryMap({
   // State for controlling layer visibility
   const [showPorts, setShowPorts] = useState(true);
   const [showVessels, setShowVessels] = useState(true);
+  const [showConnectedVessels, setShowConnectedVessels] = useState(true);
   const [connectedPorts, setConnectedPorts] = useState<any[]>([]);
   const [nearbyVessels, setNearbyVessels] = useState<Vessel[]>([]);
+  const [connectedVessels, setConnectedVessels] = useState<Vessel[]>([]);
   const [loading, setLoading] = useState(false);
   
   // Layer groups to store markers
   const portLayerGroup = useRef<any>(null);
   const vesselLayerGroup = useRef<any>(null);
+  const connectedVesselLayerGroup = useRef<any>(null);
 
   useEffect(() => {
     // Wait for the component to mount
@@ -229,6 +232,40 @@ export default function RefineryMap({
           const vesselsData = await vesselsResponse.json();
           setNearbyVessels(vesselsData);
         }
+        
+        // Fetch vessels directly connected to this refinery via vessel-refinery connections
+        const connectionsResponse = await fetch(`/api/vessel-refinery`);
+        if (connectionsResponse.ok) {
+          const connections = await connectionsResponse.json();
+          // Filter connections for this specific refinery
+          const refineryConnections = connections.filter((conn: any) => conn.refineryId === refinery.id);
+          
+          if (refineryConnections.length > 0) {
+            // Now get the actual vessel details for each connection
+            const vesselsPromises = refineryConnections.map(async (connection: any) => {
+              const vesselResponse = await fetch(`/api/vessels/${connection.vesselId}`);
+              if (vesselResponse.ok) {
+                const vessel = await vesselResponse.json();
+                // Add connection details to vessel object
+                return {
+                  ...vessel,
+                  connectionType: connection.connectionType,
+                  cargoVolume: connection.cargoVolume,
+                  connectionStartDate: connection.startDate,
+                  connectionEndDate: connection.endDate,
+                  connectionStatus: connection.status
+                };
+              }
+              return null;
+            });
+            
+            const vesselsData = await Promise.all(vesselsPromises);
+            // Filter out any null values in case some vessel fetches failed
+            setConnectedVessels(vesselsData.filter(v => v !== null));
+          } else {
+            setConnectedVessels([]);
+          }
+        }
       } catch (error) {
         console.error('Failed to fetch connections:', error);
       } finally {
@@ -258,6 +295,12 @@ export default function RefineryMap({
       vesselLayerGroup.current = L.layerGroup().addTo(leafletMap.current);
     }
     
+    if (connectedVesselLayerGroup.current) {
+      connectedVesselLayerGroup.current.clearLayers();
+    } else {
+      connectedVesselLayerGroup.current = L.layerGroup().addTo(leafletMap.current);
+    }
+    
     // Update layer visibility
     if (portLayerGroup.current) {
       if (showPorts) {
@@ -272,6 +315,14 @@ export default function RefineryMap({
         leafletMap.current.addLayer(vesselLayerGroup.current);
       } else {
         leafletMap.current.removeLayer(vesselLayerGroup.current);
+      }
+    }
+    
+    if (connectedVesselLayerGroup.current) {
+      if (showConnectedVessels) {
+        leafletMap.current.addLayer(connectedVesselLayerGroup.current);
+      } else {
+        leafletMap.current.removeLayer(connectedVesselLayerGroup.current);
       }
     }
     
@@ -413,7 +464,95 @@ export default function RefineryMap({
       });
     }
     
-  }, [connectedPorts, nearbyVessels, showPorts, showVessels, refinery.lat, refinery.lng, showConnections]);
+    // Add connected vessels with a special styling
+    if (showConnectedVessels && connectedVessels.length > 0) {
+      const connectedVesselIcon = L.divIcon({
+        html: `
+          <div class="relative group">
+            <div class="absolute -inset-0.5 rounded-full bg-primary opacity-40 blur-sm group-hover:opacity-70 transition animate-pulse"></div>
+            <div class="relative flex items-center justify-center w-9 h-9 bg-background rounded-full border-2 border-primary shadow-lg">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary">
+                <path d="M18 17 A 10 10 0 0 1 6 17 H18"></path>
+                <path d="M12 2v7"></path>
+                <path d="M4.93 10H19.07"></path>
+                <path d="M12 18v4"></path>
+              </svg>
+            </div>
+          </div>
+        `,
+        className: 'custom-connected-vessel-icon',
+        iconSize: [36, 36],
+        iconAnchor: [18, 18]
+      });
+      
+      connectedVessels.forEach(vessel => {
+        try {
+          if (!vessel.currentLat || !vessel.currentLng) return;
+          
+          const lat = typeof vessel.currentLat === 'number' ? vessel.currentLat : Number(vessel.currentLat || 0);
+          const lng = typeof vessel.currentLng === 'number' ? vessel.currentLng : Number(vessel.currentLng || 0);
+          
+          if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+            console.error('Invalid vessel coordinates:', { lat, lng, vessel });
+            return;
+          }
+          
+          // Add connected vessel marker
+          const marker = L.marker([lat, lng], { 
+            icon: connectedVesselIcon,
+            title: vessel.name
+          })
+          .addTo(connectedVesselLayerGroup.current)
+          .bindPopup(`
+            <div class="vessel-popup">
+              <div class="font-medium text-base mb-1">${vessel.name}</div>
+              <div class="text-xs text-muted-foreground mb-2">${vessel.flag || 'Unknown'}</div>
+              
+              <div class="text-xs font-medium mb-1 text-primary">Connected Vessel</div>
+              <div class="text-sm">${vessel.connectionType || 'Standard'} Connection</div>
+              
+              <div class="mt-2 text-xs font-medium mb-1 text-primary">Vessel Type</div>
+              <div class="text-sm">${vessel.vesselType || 'Tanker'}</div>
+              
+              ${vessel.cargoVolume ? `
+              <div class="mt-2 text-xs font-medium mb-1 text-primary">Cargo Volume</div>
+              <div class="text-sm">${vessel.cargoVolume} MT</div>
+              ` : ''}
+              
+              ${vessel.connectionStartDate ? `
+              <div class="mt-2 text-xs font-medium mb-1 text-primary">Connection Start</div>
+              <div class="text-sm">${new Date(vessel.connectionStartDate).toLocaleDateString()}</div>
+              ` : ''}
+              
+              <div class="mt-3 text-xs">
+                <span class="px-2 py-0.5 rounded-full bg-primary/10 text-primary">${vessel.connectionStatus || 'Active'}</span>
+              </div>
+            </div>
+          `, {
+            className: 'custom-popup connected-vessel-popup',
+            closeButton: false,
+            maxWidth: 300,
+            minWidth: 200
+          });
+          
+          // Add connection line from refinery to connected vessel
+          const refineryLat = typeof refinery.lat === 'number' ? refinery.lat : Number(refinery.lat || 0);
+          const refineryLng = typeof refinery.lng === 'number' ? refinery.lng : Number(refinery.lng || 0);
+          
+          L.polyline([[refineryLat, refineryLng], [lat, lng]], {
+            color: 'rgba(147, 51, 234, 0.6)', // purple with opacity
+            weight: 2,
+            dashArray: '5, 5',
+            className: 'vessel-connection-line'
+          }).addTo(connectedVesselLayerGroup.current);
+          
+        } catch (error) {
+          console.error('Error adding connected vessel marker:', error);
+        }
+      });
+    }
+    
+  }, [connectedPorts, nearbyVessels, connectedVessels, showPorts, showVessels, showConnectedVessels, refinery.lat, refinery.lng, showConnections]);
   
   // Handle window resize to update map
   useEffect(() => {
