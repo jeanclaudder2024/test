@@ -100,9 +100,12 @@ const RefineryConnectionManager: React.FC<RefineryConnectionManagerProps> = ({
   });
 
   // Query all vessel-refinery connections first to ensure we're getting data
-  const { data: allConnections = [] } = useQuery<VesselRefineryConnection[]>({
+  const { data: allConnections = [], isLoading: allConnectionsLoading } = useQuery<VesselRefineryConnection[]>({
     queryKey: ['/api/vessel-refinery'],
-    enabled: true
+    enabled: true,
+    staleTime: 0, // Don't cache this data
+    refetchOnMount: true, // Always refetch when component mounts
+    refetchOnWindowFocus: true // Refetch when window gets focus
   });
   
   // Filter connections locally based on the mode and ID
@@ -115,12 +118,7 @@ const RefineryConnectionManager: React.FC<RefineryConnectionManagerProps> = ({
     return false;
   });
   
-  const connectionsLoading = false; // We're handling filtering locally
-  
-  // Log for debugging
-  console.log('Mode:', mode, 'ID:', mode === 'refinery' ? refineryId : vesselId);
-  console.log('All connections:', allConnections);
-  console.log('Filtered connections:', connections);
+  const connectionsLoading = allConnectionsLoading;
 
   // Query to get detailed vessel and refinery data for each connection
   // Get refinery details by id for vessel mode
@@ -175,13 +173,8 @@ const RefineryConnectionManager: React.FC<RefineryConnectionManagerProps> = ({
       });
       setIsDialogOpen(false);
       resetForm();
-      refetchConnections();
-      // Invalidate relevant queries
-      if (mode === 'refinery') {
-        queryClient.invalidateQueries({ queryKey: ['/api/vessel-refinery/refinery', refineryId] });
-      } else {
-        queryClient.invalidateQueries({ queryKey: ['/api/vessel-refinery/vessel', vesselId] });
-      }
+      // Invalidate ALL vessel-refinery queries to ensure data consistency
+      queryClient.invalidateQueries({ queryKey: ['/api/vessel-refinery'] });
     },
     onError: (error) => {
       toast({
@@ -204,13 +197,8 @@ const RefineryConnectionManager: React.FC<RefineryConnectionManagerProps> = ({
         title: 'Connection deleted',
         description: 'The vessel-refinery connection has been removed.',
       });
-      refetchConnections();
-      // Invalidate relevant queries
-      if (mode === 'refinery') {
-        queryClient.invalidateQueries({ queryKey: ['/api/vessel-refinery/refinery', refineryId] });
-      } else {
-        queryClient.invalidateQueries({ queryKey: ['/api/vessel-refinery/vessel', vesselId] });
-      }
+      // Invalidate ALL vessel-refinery queries to ensure data consistency
+      queryClient.invalidateQueries({ queryKey: ['/api/vessel-refinery'] });
     },
     onError: (error) => {
       toast({
