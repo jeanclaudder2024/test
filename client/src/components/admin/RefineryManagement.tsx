@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { 
   Card, 
   CardHeader, 
@@ -75,38 +75,42 @@ interface Refinery {
 export function RefineryManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  
+  // State for search and filter
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedRegion, setSelectedRegion] = useState<string>("All");
+  const [selectedRegion, setSelectedRegion] = useState("All");
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(10);
+  
+  // State for refinery management
   const [selectedRefinery, setSelectedRefinery] = useState<Refinery | null>(null);
-  const [formData, setFormData] = useState<Partial<Refinery> & { generateDetails?: boolean }>({
+  const [isDetailView, setIsDetailView] = useState(false);
+  const [formData, setFormData] = useState({
     name: "",
     country: "",
     region: "Middle East",
+    city: "",
     capacity: 0,
+    lat: "",
+    lng: "",
     status: "active",
     description: "",
     operator: "",
     owner: "",
     type: "Crude Oil",
     products: "",
-    lat: "",
-    lng: "",
-    city: "",
+    year_built: undefined,
+    complexity: undefined,
+    utilization: undefined,
     email: "",
     phone: "",
     website: "",
     address: "",
     technical_specs: "",
     photo: "",
-    year_built: undefined,
-    complexity: undefined,
-    utilization: undefined,
     generateDetails: true // Enable OpenAI generation by default
   });
   const [isRefineryMapOpen, setIsRefineryMapOpen] = useState(false);
-  const [isDetailView, setIsDetailView] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
   // Query to fetch refineries
@@ -114,29 +118,41 @@ export function RefineryManagement() {
     queryKey: ['/api/refineries', page, pageSize, searchTerm, selectedRegion],
     queryFn: async () => {
       let url = `/api/refineries?page=${page}&pageSize=${pageSize}`;
+      
       if (searchTerm) {
-        url += `&search=${encodeURIComponent(searchTerm)}`;
+        url += `&search=${searchTerm}`;
       }
+      
       if (selectedRegion && selectedRegion !== "All") {
-        url += `&region=${encodeURIComponent(selectedRegion)}`;
+        url += `&region=${selectedRegion}`;
       }
+      
       const response = await fetch(url);
+      
       if (!response.ok) {
-        throw new Error('Failed to fetch refineries');
+        throw new Error("Failed to fetch refineries");
       }
+      
       return response.json();
     }
   });
 
-  // Mutation for creating refinery
+  // Mutation for creating a new refinery
   const { mutate: createRefinery, isPending: isCreatingRefinery } = useMutation({
-    mutationFn: async (refineryData: Partial<Refinery>) => {
+    mutationFn: async (data: any) => {
+      const payload = { ...data };
+      
+      if (payload.generateDetails) {
+        payload.generateWithAI = true;
+        delete payload.generateDetails;
+      }
+      
       const response = await fetch("/api/refineries", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(refineryData),
+        body: JSON.stringify(payload),
       });
       
       if (!response.ok) {
@@ -152,7 +168,7 @@ export function RefineryManagement() {
         description: "The refinery has been successfully created.",
       });
       setIsCreating(false);
-      resetForm();
+      setSelectedRefinery(null);
       queryClient.invalidateQueries({ queryKey: ['/api/refineries'] });
     },
     onError: (error: Error) => {
@@ -164,15 +180,15 @@ export function RefineryManagement() {
     }
   });
 
-  // Mutation for updating refinery
+  // Mutation for updating a refinery
   const { mutate: updateRefinery, isPending: isUpdatingRefinery } = useMutation({
-    mutationFn: async (refineryData: Partial<Refinery>) => {
-      const response = await fetch(`/api/refineries/${refineryData.id}`, {
+    mutationFn: async (data: Refinery) => {
+      const response = await fetch(`/api/refineries/${data.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(refineryData),
+        body: JSON.stringify(data),
       });
       
       if (!response.ok) {
@@ -229,6 +245,46 @@ export function RefineryManagement() {
       });
     }
   });
+
+  const handleOpenCreate = () => {
+    resetForm();
+    setIsCreating(true);
+  };
+
+  const handleOpenEdit = (refinery: Refinery) => {
+    setSelectedRefinery(refinery);
+    setIsCreating(false);
+    setIsDetailView(false);
+  };
+  
+  const handleOpenDetail = (refinery: Refinery) => {
+    setSelectedRefinery(refinery);
+    setIsCreating(false);
+    setIsDetailView(true);
+  };
+
+  const formatCapacity = (capacity: number) => {
+    if (!capacity) return "N/A";
+    
+    if (capacity >= 1000000) {
+      return `${(capacity / 1000000).toFixed(2)}M bpd`;
+    } else if (capacity >= 1000) {
+      return `${(capacity / 1000).toFixed(0)}K bpd`;
+    } else {
+      return `${capacity} bpd`;
+    }
+  };
+
+  // List of regions for filtering
+  const regions = [
+    "All",
+    "Middle East",
+    "North America",
+    "South America",
+    "Europe",
+    "Africa",
+    "Asia Pacific"
+  ];
 
   const handleSelectPosition = (position: { lat: number; lng: number }) => {
     if (isCreating) {
@@ -296,46 +352,6 @@ export function RefineryManagement() {
       deleteRefinery(id);
     }
   };
-
-  const handleOpenCreate = () => {
-    resetForm();
-    setIsCreating(true);
-  };
-
-  const handleOpenEdit = (refinery: Refinery) => {
-    setSelectedRefinery(refinery);
-    setIsCreating(false);
-    setIsDetailView(false);
-  };
-  
-  const handleOpenDetail = (refinery: Refinery) => {
-    setSelectedRefinery(refinery);
-    setIsCreating(false);
-    setIsDetailView(true);
-  };
-
-  const formatCapacity = (capacity: number) => {
-    if (!capacity) return "N/A";
-    
-    if (capacity >= 1000000) {
-      return `${(capacity / 1000000).toFixed(2)}M bpd`;
-    } else if (capacity >= 1000) {
-      return `${(capacity / 1000).toFixed(0)}K bpd`;
-    } else {
-      return `${capacity} bpd`;
-    }
-  };
-
-  // List of regions for filtering
-  const regions = [
-    "All",
-    "Middle East",
-    "North America",
-    "South America",
-    "Europe",
-    "Africa",
-    "Asia Pacific"
-  ];
 
   return (
     <Card className="w-full">
@@ -444,134 +460,141 @@ export function RefineryManagement() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
-          <div className="w-full md:w-1/4">
-            <Select 
-              value={selectedRegion} 
-              onValueChange={(value) => setSelectedRegion(value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Filter by Region" />
-              </SelectTrigger>
-              <SelectContent>
-                {regions.map((region) => (
-                  <SelectItem key={region} value={region}>
-                    {region}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        {isLoading ? (
-          <div className="flex justify-center items-center h-60">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        ) : (
-          <>
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Location</TableHead>
-                    <TableHead>Capacity</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Operator</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {refineries && refineries.data && refineries.data.length > 0 ? (
-                    refineries.data.map((refinery: Refinery) => (
-                      <TableRow key={refinery.id}>
-                        <TableCell className="font-medium">{refinery.name}</TableCell>
-                        <TableCell>
-                          {refinery.city}, {refinery.country}
-                          <div className="text-xs text-muted-foreground">{refinery.region}</div>
-                        </TableCell>
-                        <TableCell>{formatCapacity(refinery.capacity)}</TableCell>
-                        <TableCell>
-                          <Badge variant={refinery.status === "active" ? "default" : "destructive"}>
-                            {refinery.status === "active" ? "Active" : "Inactive"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{refinery.type || "Standard"}</TableCell>
-                        <TableCell>{refinery.operator || "N/A"}</TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button variant="outline" size="icon" onClick={() => handleOpenEdit(refinery)} title="Edit">
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button variant="outline" size="icon" onClick={() => handleOpenDetail(refinery)} title="View Details">
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button variant="destructive" size="icon" onClick={() => confirmDelete(refinery.id)} title="Delete">
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={7} className="text-center py-6">
-                        No refineries found. Try adjusting your filters or add a new refinery.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+              </div>
+              <div className="w-full md:w-1/4">
+                <Select 
+                  value={selectedRegion} 
+                  onValueChange={(value) => setSelectedRegion(value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Filter by Region" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {regions.map((region) => (
+                      <SelectItem key={region} value={region}>
+                        {region}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
-            <Pagination className="mt-4">
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious 
-                    onClick={() => setPage(p => Math.max(1, p - 1))}
-                    disabled={page === 1} 
-                  />
-                </PaginationItem>
-                {page > 1 && (
-                  <PaginationItem>
-                    <PaginationLink onClick={() => setPage(1)}>1</PaginationLink>
-                  </PaginationItem>
-                )}
-                {page > 2 && (
-                  <PaginationItem>
-                    <PaginationEllipsis />
-                  </PaginationItem>
-                )}
-                <PaginationItem>
-                  <PaginationLink isActive>{page}</PaginationLink>
-                </PaginationItem>
-                {refineries && refineries.totalPages && page < refineries.totalPages - 1 && (
-                  <PaginationItem>
-                    <PaginationEllipsis />
-                  </PaginationItem>
-                )}
-                {refineries && refineries.totalPages && page < refineries.totalPages && (
-                  <PaginationItem>
-                    <PaginationLink onClick={() => setPage(refineries.totalPages)}>
-                      {refineries.totalPages}
-                    </PaginationLink>
-                  </PaginationItem>
-                )}
-                <PaginationItem>
-                  <PaginationNext 
-                    onClick={() => refineries && refineries.totalPages && setPage(p => Math.min(refineries.totalPages, p + 1))}
-                    disabled={!refineries || !refineries.totalPages || page === refineries.totalPages} 
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
+            {isLoading ? (
+              <div className="flex justify-center items-center h-60">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <>
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Location</TableHead>
+                        <TableHead>Capacity</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Operator</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {refineries && refineries.data && refineries.data.length > 0 ? (
+                        refineries.data.map((refinery: Refinery) => (
+                          <TableRow key={refinery.id}>
+                            <TableCell className="font-medium">{refinery.name}</TableCell>
+                            <TableCell>
+                              {refinery.city}, {refinery.country}
+                              <div className="text-xs text-muted-foreground">{refinery.region}</div>
+                            </TableCell>
+                            <TableCell>{formatCapacity(refinery.capacity)}</TableCell>
+                            <TableCell>
+                              <Badge variant={refinery.status === "active" ? "default" : "destructive"}>
+                                {refinery.status === "active" ? "Active" : "Inactive"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>{refinery.type || "Standard"}</TableCell>
+                            <TableCell>{refinery.operator || "N/A"}</TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-2">
+                                <Button variant="outline" size="icon" onClick={() => handleOpenEdit(refinery)} title="Edit">
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button variant="outline" size="icon" onClick={() => handleOpenDetail(refinery)} title="View Details">
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                <Button variant="destructive" size="icon" onClick={() => confirmDelete(refinery.id)} title="Delete">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={7} className="text-center py-4">
+                            No refineries found. Try adjusting your search or filters.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                <Pagination className="mt-4">
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        onClick={() => refineries && refineries.totalPages && setPage(p => Math.max(1, p - 1))}
+                        disabled={!refineries || !refineries.totalPages || page === 1} 
+                      />
+                    </PaginationItem>
+                    {refineries && refineries.totalPages && Array.from(Array(refineries.totalPages).keys()).map((p) => {
+                      // Only show the first, last, and pages around current page
+                      if (
+                        p + 1 === 1 || 
+                        p + 1 === refineries.totalPages ||
+                        (p + 1 >= page - 1 && p + 1 <= page + 1)
+                      ) {
+                        return (
+                          <PaginationItem key={p + 1}>
+                            <PaginationLink
+                              onClick={() => setPage(p + 1)}
+                              isActive={page === p + 1}
+                            >
+                              {p + 1}
+                            </PaginationLink>
+                          </PaginationItem>
+                        );
+                      } else if (
+                        (p + 1 === 2 && page > 3) ||
+                        (p + 1 === refineries.totalPages - 1 && page < refineries.totalPages - 2)
+                      ) {
+                        return (
+                          <PaginationItem key={p + 1}>
+                            <PaginationEllipsis />
+                          </PaginationItem>
+                        );
+                      }
+                      return null;
+                    })}
+                    <PaginationItem>
+                      <PaginationNext 
+                        onClick={() => refineries && refineries.totalPages && setPage(p => Math.min(refineries.totalPages, p + 1))}
+                        disabled={!refineries || !refineries.totalPages || page === refineries.totalPages} 
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </>
+            )}
           </>
         )}
       </CardContent>
 
       {/* Create/Edit Refinery Dialog */}
-      <Dialog open={isCreating || !!selectedRefinery} onOpenChange={(open) => {
+      <Dialog open={isCreating || (!!selectedRefinery && !isDetailView)} onOpenChange={(open) => {
         if (!open) {
           setIsCreating(false);
           setSelectedRefinery(null);
@@ -579,14 +602,16 @@ export function RefineryManagement() {
       }}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>{isCreating ? "Add New Refinery" : "Edit Refinery"}</DialogTitle>
+            <DialogTitle>{isCreating ? "Create New Refinery" : "Edit Refinery"}</DialogTitle>
             <DialogDescription>
               {isCreating 
-                ? "Fill in the details to add a new refinery to the system." 
-                : "Update the refinery information."}
+                ? "Add a new refinery to the platform with all relevant details."
+                : "Update the details for this refinery."
+              }
             </DialogDescription>
           </DialogHeader>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4 max-h-[70vh] overflow-y-auto">
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto p-1">
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Refinery Name*</Label>
@@ -640,6 +665,17 @@ export function RefineryManagement() {
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="capacity">Capacity (bpd)</Label>
+                <Input 
+                  id="capacity" 
+                  type="number" 
+                  placeholder="e.g., 400000" 
+                  value={isCreating ? formData.capacity : selectedRefinery?.capacity || ""}
+                  onChange={(e) => handleInputChange("capacity", parseInt(e.target.value) || 0)}
+                />
+              </div>
+              
+              <div className="space-y-2">
                 <Label htmlFor="status">Status</Label>
                 <Select 
                   value={isCreating ? formData.status : selectedRefinery?.status || "active"}
@@ -650,44 +686,11 @@ export function RefineryManagement() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="maintenance">Maintenance</SelectItem>
                     <SelectItem value="inactive">Inactive</SelectItem>
-                    <SelectItem value="closed">Closed</SelectItem>
+                    <SelectItem value="maintenance">Maintenance</SelectItem>
+                    <SelectItem value="planned">Planned</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="capacity">Capacity (barrels per day)</Label>
-                <Input 
-                  id="capacity" 
-                  type="number" 
-                  placeholder="e.g., 400000" 
-                  value={isCreating ? formData.capacity : selectedRefinery?.capacity || ""}
-                  onChange={(e) => handleInputChange("capacity", parseInt(e.target.value) || 0)}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="operator">Operator</Label>
-                <Input 
-                  id="operator" 
-                  placeholder="e.g., Saudi Aramco" 
-                  value={isCreating ? formData.operator : selectedRefinery?.operator || ""}
-                  onChange={(e) => handleInputChange("operator", e.target.value)}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="owner">Owner</Label>
-                <Input 
-                  id="owner" 
-                  placeholder="e.g., Saudi Aramco" 
-                  value={isCreating ? formData.owner : selectedRefinery?.owner || ""}
-                  onChange={(e) => handleInputChange("owner", e.target.value)}
-                />
               </div>
               
               <div className="space-y-2">
@@ -743,14 +746,14 @@ export function RefineryManagement() {
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <Input 
-                    id="latitude" 
+                    id="lat" 
                     placeholder="Latitude" 
                     value={isCreating ? formData.lat : selectedRefinery?.lat || ""}
                     onChange={(e) => handleInputChange("lat", e.target.value)}
                     required
                   />
                   <Input 
-                    id="longitude" 
+                    id="lng" 
                     placeholder="Longitude" 
                     value={isCreating ? formData.lng : selectedRefinery?.lng || ""}
                     onChange={(e) => handleInputChange("lng", e.target.value)}
@@ -759,36 +762,102 @@ export function RefineryManagement() {
                 </div>
               </div>
             </div>
-
-            <div className="col-span-1 md:col-span-2 space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea 
-                id="description" 
-                placeholder="Enter a description of the refinery..."
-                rows={3}
-                value={isCreating ? formData.description : selectedRefinery?.description || ""}
-                onChange={(e) => handleInputChange("description", e.target.value)}
-              />
+            
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="operator">Operator</Label>
+                <Input 
+                  id="operator" 
+                  placeholder="e.g., Saudi Aramco" 
+                  value={isCreating ? formData.operator : selectedRefinery?.operator || ""}
+                  onChange={(e) => handleInputChange("operator", e.target.value)}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="owner">Owner</Label>
+                <Input 
+                  id="owner" 
+                  placeholder="e.g., Saudi Aramco" 
+                  value={isCreating ? formData.owner : selectedRefinery?.owner || ""}
+                  onChange={(e) => handleInputChange("owner", e.target.value)}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="year_built">Year Built</Label>
+                <Input 
+                  id="year_built" 
+                  type="number" 
+                  placeholder="e.g., 1982" 
+                  value={isCreating ? formData.year_built || "" : selectedRefinery?.year_built || ""}
+                  onChange={(e) => handleInputChange("year_built", parseInt(e.target.value) || 0)}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea 
+                  id="description" 
+                  placeholder="Enter a description of the refinery" 
+                  value={isCreating ? formData.description : selectedRefinery?.description || ""}
+                  onChange={(e) => handleInputChange("description", e.target.value)}
+                  className="min-h-[100px]"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input 
+                  id="email" 
+                  type="email" 
+                  placeholder="e.g., contact@refinery.com" 
+                  value={isCreating ? formData.email : selectedRefinery?.email || ""}
+                  onChange={(e) => handleInputChange("email", e.target.value)}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone</Label>
+                <Input 
+                  id="phone" 
+                  placeholder="e.g., +966 123 4567" 
+                  value={isCreating ? formData.phone : selectedRefinery?.phone || ""}
+                  onChange={(e) => handleInputChange("phone", e.target.value)}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="website">Website</Label>
+                <Input 
+                  id="website" 
+                  placeholder="e.g., https://refinery.com" 
+                  value={isCreating ? formData.website : selectedRefinery?.website || ""}
+                  onChange={(e) => handleInputChange("website", e.target.value)}
+                />
+              </div>
             </div>
           </div>
+          
           <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                setIsCreating(false);
-                setSelectedRefinery(null);
-              }}
-            >
+            <Button variant="outline" onClick={() => {
+              setIsCreating(false);
+              setSelectedRefinery(null);
+            }}>
               Cancel
             </Button>
             <Button 
               onClick={handleSubmit}
               disabled={isCreatingRefinery || isUpdatingRefinery}
             >
-              {(isCreatingRefinery || isUpdatingRefinery) && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              {isCreatingRefinery || isUpdatingRefinery ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {isCreating ? "Creating..." : "Updating..."}
+                </>
+              ) : (
+                isCreating ? "Create Refinery" : "Update Refinery"
               )}
-              {isCreating ? "Create Refinery" : "Update Refinery"}
             </Button>
           </DialogFooter>
         </DialogContent>

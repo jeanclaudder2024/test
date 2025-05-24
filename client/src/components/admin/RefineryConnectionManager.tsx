@@ -108,27 +108,42 @@ const RefineryConnectionManager: React.FC<RefineryConnectionManagerProps> = ({
   });
 
   // Query to get detailed vessel and refinery data for each connection
-  const { data: refineryDetails = {} } = useQuery<Record<number, Refinery>>({
+  // Get refinery details by id for vessel mode
+  const { data: refineryList = [] } = useQuery<Refinery[]>({
     queryKey: ['/api/refineries'],
-    select: (data = []) => {
-      return data.reduce((acc: Record<number, Refinery>, refinery: Refinery) => {
-        acc[refinery.id] = refinery;
-        return acc;
-      }, {});
-    },
     enabled: mode === 'vessel' && connections.length > 0
   });
+  
+  // Create a safe reference object for refinery details
+  const refineryDetails: Record<number, Refinery> = {};
+  
+  // Populate refinery details only if we have data
+  if (refineryList && refineryList.length > 0) {
+    refineryList.forEach(refinery => {
+      if (refinery && refinery.id) {
+        refineryDetails[refinery.id] = refinery;
+      }
+    });
+  }
 
-  const { data: vesselDetails = {} } = useQuery<Record<number, Vessel>>({
+  // Get vessel details by id for refinery mode
+  const { data: vesselList = [] } = useQuery<Vessel[]>({
     queryKey: ['/api/vessels'],
-    select: (data = []) => {
-      return data.reduce((acc: Record<number, Vessel>, vessel: Vessel) => {
-        acc[vessel.id] = vessel;
-        return acc;
-      }, {});
-    },
     enabled: mode === 'refinery' && connections.length > 0
   });
+  
+  // Create lookup object for vessels
+  // Create a safe reference object for vessel details
+  const vesselDetails: Record<number, Vessel> = {};
+  
+  // Populate vessel details only if we have data
+  if (vesselList && vesselList.length > 0) {
+    vesselList.forEach(vessel => {
+      if (vessel && vessel.id) {
+        vesselDetails[vessel.id] = vessel;
+      }
+    });
+  }
 
   // Create connection mutation
   const createConnectionMutation = useMutation({
