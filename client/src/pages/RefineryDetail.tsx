@@ -61,7 +61,13 @@ const StatusBadge = ({ status }: { status: string }) => {
 };
 
 // Component for a connected vessel card
-const VesselCard = ({ vessel }: { vessel: Vessel }) => (
+const VesselCard = ({ vessel }: { vessel: Vessel & { 
+  connectionType?: string;
+  cargoVolume?: number | null;
+  connectionStartDate?: string | null;
+  connectionEndDate?: string | null;
+  connectionStatus?: string | null;
+}}) => (
   <div className="flex items-start p-3 rounded-lg border border-border bg-muted/10 hover:bg-muted/20 transition-colors">
     <div className="flex-shrink-0 w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mr-3 text-blue-600 dark:text-blue-400">
       <Ship className="h-5 w-5" />
@@ -81,18 +87,50 @@ const VesselCard = ({ vessel }: { vessel: Vessel }) => (
             </span>
           </p>
         </div>
-        <Badge variant="outline" className="text-xs">
-          {vessel.vesselType || 'Tanker'}
-        </Badge>
+        <div className="flex flex-col items-end gap-1">
+          <Badge variant="outline" className="text-xs">
+            {vessel.vesselType || 'Tanker'}
+          </Badge>
+          {vessel.connectionType && (
+            <Badge variant={vessel.connectionType === 'loading' ? 'default' : 'secondary'} className="text-xs">
+              {vessel.connectionType}
+            </Badge>
+          )}
+        </div>
       </div>
+      
+      {/* Connection details */}
+      {vessel.connectionType && (
+        <div className="mt-2 px-2 py-1.5 bg-muted/20 rounded-md">
+          <div className="flex justify-between text-xs">
+            <span className="text-muted-foreground">Connection:</span>
+            <span className="font-medium">{vessel.connectionStatus || 'Active'}</span>
+          </div>
+          {vessel.cargoVolume && (
+            <div className="flex justify-between text-xs mt-1">
+              <span className="text-muted-foreground">Cargo volume:</span>
+              <span className="font-medium">{vessel.cargoVolume.toLocaleString()} MT</span>
+            </div>
+          )}
+          {vessel.connectionStartDate && (
+            <div className="flex justify-between text-xs mt-1">
+              <span className="text-muted-foreground">Start date:</span>
+              <span className="font-medium">{new Date(vessel.connectionStartDate).toLocaleDateString()}</span>
+            </div>
+          )}
+        </div>
+      )}
+      
       <div className="mt-2 flex justify-between items-center">
         <span className="text-xs text-muted-foreground">
           {vessel.currentLat && vessel.currentLng ? 'Currently at sea' : 'Position unknown'}
         </span>
-        <Button variant="ghost" size="sm" className="h-7 text-xs">
-          <ExternalLink className="h-3 w-3 mr-1.5" />
-          Details
-        </Button>
+        <Link href={`/vessels/${vessel.id}`}>
+          <Button variant="ghost" size="sm" className="h-7 text-xs">
+            <ExternalLink className="h-3 w-3 mr-1.5" />
+            Details
+          </Button>
+        </Link>
       </div>
     </div>
   </div>
@@ -151,20 +189,51 @@ export default function RefineryDetail() {
   // Find the refinery from our stream data
   const refinery = refineries.find(r => r.id === refineryId);
   
-  // Fetch vessels from API that are associated with this refinery
+  // Fetch vessels from API that are associated with this refinery using the vessel-refinery connections
   useEffect(() => {
     if (refineryId) {
       const fetchAssociatedVessels = async () => {
         try {
-          const response = await fetch(`/api/refineries/${refineryId}/vessels`);
-          if (response.ok) {
-            const data = await response.json();
-            setAssociatedVessels(data);
+          // First get all vessel-refinery connections for this refinery
+          const connectionsResponse = await fetch(`/api/vessel-refinery`);
+          
+          if (connectionsResponse.ok) {
+            const connections = await connectionsResponse.json();
+            // Filter connections for this specific refinery
+            const refineryConnections = connections.filter(conn => conn.refineryId === refineryId);
+            
+            if (refineryConnections.length > 0) {
+              // Now get the actual vessel details for each connection
+              const vesselsPromises = refineryConnections.map(async (connection) => {
+                const vesselResponse = await fetch(`/api/vessels/${connection.vesselId}`);
+                if (vesselResponse.ok) {
+                  const vessel = await vesselResponse.json();
+                  // Add connection details to vessel object
+                  return {
+                    ...vessel,
+                    connectionType: connection.connectionType,
+                    cargoVolume: connection.cargoVolume,
+                    connectionStartDate: connection.startDate,
+                    connectionEndDate: connection.endDate,
+                    connectionStatus: connection.status
+                  };
+                }
+                return null;
+              });
+              
+              const vesselsData = await Promise.all(vesselsPromises);
+              // Filter out any null values in case some vessel fetches failed
+              setAssociatedVessels(vesselsData.filter(v => v !== null));
+            } else {
+              setAssociatedVessels([]);
+            }
           } else {
-            console.error('Failed to fetch associated vessels:', await response.text());
+            console.error('Failed to fetch vessel-refinery connections:', await connectionsResponse.text());
+            setAssociatedVessels([]);
           }
         } catch (error) {
           console.error('Error fetching associated vessels:', error);
+          setAssociatedVessels([]);
         }
       };
       
