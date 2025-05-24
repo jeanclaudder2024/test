@@ -353,16 +353,97 @@ export function RefineryManagement() {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="flex flex-col md:flex-row items-center gap-4 mb-6">
-          <div className="relative w-full md:w-1/3">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search refineries..."
-              className="pl-8"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+        {isDetailView && selectedRefinery ? (
+          <div className="space-y-6">
+            {/* Refinery Detail View */}
+            <div className="border rounded-md p-6 mb-6 space-y-6 bg-card">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-bold">{selectedRefinery.name}</h3>
+                <div className="flex space-x-2">
+                  <Button variant="outline" size="sm" onClick={() => setIsDetailView(false)}>
+                    Back to List
+                  </Button>
+                  <Button 
+                    variant="default" 
+                    size="sm" 
+                    onClick={() => {
+                      setIsDetailView(false);
+                      handleOpenEdit(selectedRefinery);
+                    }}
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit Refinery
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground">Location</h4>
+                    <p className="text-base">{selectedRefinery.city ? `${selectedRefinery.city}, ` : ''}{selectedRefinery.country}, {selectedRefinery.region}</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Coordinates: {selectedRefinery.lat}, {selectedRefinery.lng}
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground">Details</h4>
+                    <div className="flex items-center space-x-2 mt-1">
+                      <Badge variant={selectedRefinery.status === "active" ? "default" : "secondary"}>
+                        {selectedRefinery.status}
+                      </Badge>
+                      <span>Capacity: {formatCapacity(selectedRefinery.capacity)}</span>
+                    </div>
+                    <p className="text-sm mt-2">Type: {selectedRefinery.type || "N/A"}</p>
+                  </div>
+                  
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground">Products</h4>
+                    <p className="text-sm">{selectedRefinery.products || "N/A"}</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground">Contact Information</h4>
+                    {selectedRefinery.email && <p className="text-sm">Email: {selectedRefinery.email}</p>}
+                    {selectedRefinery.phone && <p className="text-sm">Phone: {selectedRefinery.phone}</p>}
+                    {selectedRefinery.website && <p className="text-sm">Website: {selectedRefinery.website}</p>}
+                    {!selectedRefinery.email && !selectedRefinery.phone && !selectedRefinery.website && 
+                      <p className="text-sm text-muted-foreground">No contact information available</p>}
+                  </div>
+                  
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground">Operator/Owner</h4>
+                    <p className="text-sm">Operator: {selectedRefinery.operator || "N/A"}</p>
+                    <p className="text-sm">Owner: {selectedRefinery.owner || "N/A"}</p>
+                  </div>
+                  
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground">Description</h4>
+                    <p className="text-sm whitespace-pre-line">{selectedRefinery.description || "No description available"}</p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Vessel Connection Manager */}
+              <div className="mt-8 pt-4 border-t">
+                <RefineryConnectionManager refineryId={selectedRefinery.id} mode="refinery" />
+              </div>
+            </div>
           </div>
+        ) : (
+          <>
+            <div className="flex flex-col md:flex-row items-center gap-4 mb-6">
+              <div className="relative w-full md:w-1/3">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search refineries..."
+                  className="pl-8"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
           <div className="w-full md:w-1/4">
             <Select 
               value={selectedRegion} 
