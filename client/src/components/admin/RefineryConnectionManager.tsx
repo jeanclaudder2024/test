@@ -100,7 +100,7 @@ const RefineryConnectionManager: React.FC<RefineryConnectionManagerProps> = ({
   });
 
   // Query vessel-refinery connections based on mode
-  const { data: connections = [], refetch: refetchConnections } = useQuery<VesselRefineryConnection[]>({
+  const { data: connections = [], refetch: refetchConnections, isLoading: connectionsLoading } = useQuery<VesselRefineryConnection[]>({
     queryKey: mode === 'refinery' 
       ? ['/api/vessel-refinery/refinery', refineryId] 
       : ['/api/vessel-refinery/vessel', vesselId],
@@ -129,7 +129,7 @@ const RefineryConnectionManager: React.FC<RefineryConnectionManagerProps> = ({
   // Get vessel details by id for refinery mode
   const { data: vesselList = [] } = useQuery<Vessel[]>({
     queryKey: ['/api/vessels'],
-    enabled: mode === 'refinery' && connections.length > 0
+    enabled: mode === 'refinery' // Always fetch vessels in refinery mode
   });
   
   // Create lookup object for vessels
@@ -271,12 +271,19 @@ const RefineryConnectionManager: React.FC<RefineryConnectionManagerProps> = ({
                   <Trash2 className="h-4 w-4" />
                 </Button>
 
-                {mode === 'refinery' && vesselDetails[connection.vesselId] && (
+                {mode === 'refinery' && (
                   <div className="flex items-start space-x-3">
                     <Ship className="h-5 w-5 mt-1 text-primary" />
                     <div>
-                      <h4 className="font-medium">{vesselDetails[connection.vesselId]?.name || 'Unknown Vessel'}</h4>
-                      <p className="text-sm text-muted-foreground">Type: {vesselDetails[connection.vesselId]?.vesselType || 'N/A'}</p>
+                      <h4 className="font-medium">
+                        {(vesselDetails[connection.vesselId]?.name) || 
+                         (vesselList.find(v => v.id === connection.vesselId)?.name) || 
+                         `Vessel ID: ${connection.vesselId}`}
+                      </h4>
+                      <p className="text-sm text-muted-foreground">
+                        Type: {(vesselDetails[connection.vesselId]?.vesselType) || 
+                               (vesselList.find(v => v.id === connection.vesselId)?.vesselType) || 'N/A'}
+                      </p>
                       <div className="flex items-center mt-1 space-x-2">
                         <Badge variant={connection.connectionType === 'loading' ? 'default' : 'secondary'}>
                           {connection.connectionType}
@@ -292,14 +299,22 @@ const RefineryConnectionManager: React.FC<RefineryConnectionManagerProps> = ({
                   </div>
                 )}
 
-                {mode === 'vessel' && refineryDetails[connection.refineryId] && (
+                {mode === 'vessel' && (
                   <div className="flex items-start space-x-3">
                     <Building className="h-5 w-5 mt-1 text-primary" />
                     <div>
-                      <h4 className="font-medium">{refineryDetails[connection.refineryId]?.name || 'Unknown Refinery'}</h4>
+                      <h4 className="font-medium">
+                        {(refineryDetails[connection.refineryId]?.name) || 
+                         (refineryList.find(r => r.id === connection.refineryId)?.name) || 
+                         `Refinery ID: ${connection.refineryId}`}
+                      </h4>
                       <p className="text-sm text-muted-foreground">
-                        {refineryDetails[connection.refineryId]?.country || 'Unknown Country'}, 
-                        {refineryDetails[connection.refineryId]?.region || 'Unknown Region'}
+                        {(refineryDetails[connection.refineryId]?.country || 
+                          refineryList.find(r => r.id === connection.refineryId)?.country || 
+                          'Unknown Country')}{', '}
+                        {(refineryDetails[connection.refineryId]?.region || 
+                          refineryList.find(r => r.id === connection.refineryId)?.region || 
+                          'Unknown Region')}
                       </p>
                       <div className="flex items-center mt-1 space-x-2">
                         <Badge variant={connection.connectionType === 'loading' ? 'default' : 'secondary'}>
