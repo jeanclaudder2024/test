@@ -3062,19 +3062,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create new refinery
   apiRouter.post("/refineries", async (req, res) => {
     try {
+      // Import OpenAI service
+      const { generateRefineryDetails } = await import('./services/openai-service');
+      
+      console.log("Creating new refinery with data:", req.body);
+      
       // Validate the input using the refinery schema
       const result = insertRefinerySchema.safeParse(req.body);
       
       if (!result.success) {
+        console.error("Validation failed for refinery creation:", result.error.errors);
         return res.status(400).json({ 
           message: "Invalid refinery data", 
           errors: result.error.errors 
         });
       }
       
-      // Create the refinery in the database
-      const newRefinery = await storage.createRefinery(result.data);
+      let refineryData = result.data;
       
+      // Check if we should generate additional details with OpenAI
+      if (req.body.generateDetails === true) {
+        try {
+          console.log("Generating additional refinery details with OpenAI");
+          
+          // Generate enhanced details using OpenAI
+          const enhancedDetails = await generateRefineryDetails({
+            name: refineryData.name,
+            country: refineryData.country,
+            region: refineryData.region,
+            capacity: refineryData.capacity ? Number(refineryData.capacity) : undefined,
+            type: refineryData.type
+          });
+          
+          // Merge the generated details with the original data
+          refineryData = {
+            ...refineryData,
+            description: enhancedDetails.description || refineryData.description,
+            owner: enhancedDetails.owner || refineryData.owner,
+            operator: enhancedDetails.operator || refineryData.operator,
+            products: enhancedDetails.products || refineryData.products,
+            year_built: enhancedDetails.year_built || refineryData.year_built,
+            complexity: enhancedDetails.complexity || refineryData.complexity,
+            utilization: enhancedDetails.utilization || refineryData.utilization,
+            city: enhancedDetails.city || refineryData.city,
+            email: enhancedDetails.email || refineryData.email,
+            phone: enhancedDetails.phone || refineryData.phone,
+            website: enhancedDetails.website || refineryData.website,
+            address: enhancedDetails.address || refineryData.address,
+            technical_specs: enhancedDetails.technical_specs || refineryData.technical_specs
+          };
+          
+          console.log("Successfully enhanced refinery data with OpenAI");
+        } catch (aiError) {
+          console.error("Error generating refinery details with OpenAI:", aiError);
+          // Continue with original data if AI enhancement fails
+        }
+      }
+      
+      // Create the refinery in the database
+      const newRefinery = await storage.createRefinery(refineryData);
+      
+      console.log("Successfully created refinery:", newRefinery.id);
       res.status(201).json(newRefinery);
     } catch (error) {
       console.error("Error creating refinery:", error);

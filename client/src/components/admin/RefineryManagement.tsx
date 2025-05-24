@@ -7,6 +7,7 @@ import {
   CardContent 
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Table, 
   TableHeader, 
@@ -78,7 +79,7 @@ export function RefineryManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRegion, setSelectedRegion] = useState<string>("All");
   const [selectedRefinery, setSelectedRefinery] = useState<Refinery | null>(null);
-  const [formData, setFormData] = useState<Partial<Refinery>>({
+  const [formData, setFormData] = useState<Partial<Refinery> & { generateDetails?: boolean }>({
     name: "",
     country: "",
     region: "Middle East",
@@ -100,7 +101,8 @@ export function RefineryManagement() {
     photo: "",
     year_built: undefined,
     complexity: undefined,
-    utilization: undefined
+    utilization: undefined,
+    generateDetails: true // Enable OpenAI generation by default
   });
   const [isRefineryMapOpen, setIsRefineryMapOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -264,7 +266,18 @@ export function RefineryManagement() {
       type: "Crude Oil",
       products: "",
       lat: "",
-      lng: ""
+      lng: "",
+      city: "",
+      email: "",
+      phone: "",
+      website: "",
+      address: "",
+      technical_specs: "",
+      photo: "",
+      year_built: undefined,
+      complexity: undefined,
+      utilization: undefined,
+      generateDetails: true // Reset with OpenAI generation enabled
     });
   };
 
@@ -593,6 +606,24 @@ export function RefineryManagement() {
                   onChange={(e) => handleInputChange("type", e.target.value)}
                 />
               </div>
+              
+              {isCreating && (
+                <div className="flex items-center space-x-2 pt-2">
+                  <Checkbox 
+                    id="generateDetails" 
+                    checked={formData.generateDetails}
+                    onCheckedChange={(checked) => 
+                      handleInputChange("generateDetails", checked === true)
+                    }
+                  />
+                  <Label 
+                    htmlFor="generateDetails" 
+                    className="text-sm font-medium leading-none cursor-pointer"
+                  >
+                    Auto-generate additional details with AI
+                  </Label>
+                </div>
+              )}
               
               <div className="space-y-2">
                 <Label htmlFor="products">Products</Label>
