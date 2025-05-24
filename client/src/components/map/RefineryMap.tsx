@@ -694,6 +694,23 @@ export default function RefineryMap({
                       onCheckedChange={setShowVessels}
                     />
                   </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="show-connected-vessels" className="flex items-center cursor-pointer text-sm">
+                      <Ship className="h-4 w-4 mr-2 text-primary" />
+                      <span>Connected Vessels</span>
+                      {connectedVessels.length > 0 && (
+                        <Badge className="ml-2 bg-primary/10 text-primary hover:bg-primary/20" variant="outline">
+                          {connectedVessels.length}
+                        </Badge>
+                      )}
+                    </Label>
+                    <Switch 
+                      id="show-connected-vessels" 
+                      checked={showConnectedVessels}
+                      onCheckedChange={setShowConnectedVessels}
+                    />
+                  </div>
                 </div>
                 
                 <div className="text-xs text-muted-foreground pt-2 border-t">
