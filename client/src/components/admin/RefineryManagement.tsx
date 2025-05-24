@@ -106,6 +106,7 @@ export function RefineryManagement() {
     generateDetails: true // Enable OpenAI generation by default
   });
   const [isRefineryMapOpen, setIsRefineryMapOpen] = useState(false);
+  const [isDetailView, setIsDetailView] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
   // Query to fetch refineries
@@ -304,6 +305,13 @@ export function RefineryManagement() {
   const handleOpenEdit = (refinery: Refinery) => {
     setSelectedRefinery(refinery);
     setIsCreating(false);
+    setIsDetailView(false);
+  };
+  
+  const handleOpenDetail = (refinery: Refinery) => {
+    setSelectedRefinery(refinery);
+    setIsCreating(false);
+    setIsDetailView(true);
   };
 
   const formatCapacity = (capacity: number) => {
@@ -412,10 +420,13 @@ export function RefineryManagement() {
                         <TableCell>{refinery.operator || "N/A"}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
-                            <Button variant="outline" size="icon" onClick={() => handleOpenEdit(refinery)}>
+                            <Button variant="outline" size="icon" onClick={() => handleOpenEdit(refinery)} title="Edit">
                               <Edit className="h-4 w-4" />
                             </Button>
-                            <Button variant="destructive" size="icon" onClick={() => confirmDelete(refinery.id)}>
+                            <Button variant="outline" size="icon" onClick={() => handleOpenDetail(refinery)} title="View Details">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button variant="destructive" size="icon" onClick={() => confirmDelete(refinery.id)} title="Delete">
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>

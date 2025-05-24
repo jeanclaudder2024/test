@@ -109,9 +109,9 @@ const RefineryConnectionManager: React.FC<RefineryConnectionManagerProps> = ({
 
   // Query to get detailed vessel and refinery data for each connection
   const { data: refineryDetails = {} } = useQuery<Record<number, Refinery>>({
-    queryKey: ['/api/refineries/details-map'],
+    queryKey: ['/api/refineries'],
     select: (data = []) => {
-      return data.reduce((acc, refinery) => {
+      return data.reduce((acc: Record<number, Refinery>, refinery: Refinery) => {
         acc[refinery.id] = refinery;
         return acc;
       }, {});
@@ -120,9 +120,9 @@ const RefineryConnectionManager: React.FC<RefineryConnectionManagerProps> = ({
   });
 
   const { data: vesselDetails = {} } = useQuery<Record<number, Vessel>>({
-    queryKey: ['/api/vessels/details-map'],
+    queryKey: ['/api/vessels'],
     select: (data = []) => {
-      return data.reduce((acc, vessel) => {
+      return data.reduce((acc: Record<number, Vessel>, vessel: Vessel) => {
         acc[vessel.id] = vessel;
         return acc;
       }, {});
@@ -136,9 +136,6 @@ const RefineryConnectionManager: React.FC<RefineryConnectionManagerProps> = ({
       return apiRequest('/api/vessel-refinery', {
         method: 'POST',
         body: JSON.stringify(newConnection),
-        headers: {
-          'Content-Type': 'application/json',
-        },
       });
     },
     onSuccess: () => {
@@ -282,7 +279,7 @@ const RefineryConnectionManager: React.FC<RefineryConnectionManagerProps> = ({
 
                 {mode === 'vessel' && refineryDetails[connection.refineryId] && (
                   <div className="flex items-start space-x-3">
-                    <Buildings className="h-5 w-5 mt-1 text-primary" />
+                    <Building className="h-5 w-5 mt-1 text-primary" />
                     <div>
                       <h4 className="font-medium">{refineryDetails[connection.refineryId]?.name || 'Unknown Refinery'}</h4>
                       <p className="text-sm text-muted-foreground">
