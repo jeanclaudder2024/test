@@ -119,6 +119,14 @@ interface Vessel {
   cargoType?: string;
   status?: string;
   departureTime?: string | Date;
+  // Connected vessel properties
+  isConnected?: boolean;
+  connectionType?: string;
+  cargoVolume?: string;
+  connectionStartDate?: string | Date;
+  connectionEndDate?: string | Date;
+  connectionStatus?: string;
+  refineryId?: number;
 }
 
 // Interface for port/refinery
@@ -139,6 +147,8 @@ export default function OilVesselMap() {
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Record<string, L.Marker>>({});
   const layerGroupRef = useRef<L.LayerGroup | null>(null);
+  const connectedVesselLayerRef = useRef<L.LayerGroup | null>(null);
+  const refineryConnectionsRef = useRef<Record<string, L.Polyline>>({});
   const [mapTheme, setMapTheme] = useState<'light' | 'dark'>('light');
   
   // UI state
@@ -149,6 +159,7 @@ export default function OilVesselMap() {
   // Data state
   const [vessels, setVessels] = useState<Vessel[]>([]);
   const [facilities, setFacilities] = useState<Facility[]>([]);
+  const [connectedVessels, setConnectedVessels] = useState<Vessel[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -158,6 +169,7 @@ export default function OilVesselMap() {
   const [cargoTypeFilter, setCargoTypeFilter] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [showRefineries, setShowRefineries] = useState(true);
+  const [showConnectedVessels, setShowConnectedVessels] = useState(true);
   const [showPorts, setShowPorts] = useState(true);
   const [selectedRegion, setSelectedRegion] = useState<string>('global');
 
@@ -283,8 +295,9 @@ export default function OilVesselMap() {
         }
       ).addTo(map);
       
-      // Create layer group for markers
+      // Create layer groups for different marker types
       layerGroupRef.current = L.layerGroup().addTo(map);
+      connectedVesselLayerRef.current = L.layerGroup().addTo(map);
       
       // Set up map reference
       mapInstanceRef.current = map;
@@ -722,6 +735,7 @@ export default function OilVesselMap() {
       setError(null);
       
       try {
+        // Fetch regular vessels
         const response = await apiRequest('/api/vessels');
         if (Array.isArray(response)) {
           setVessels(response);
@@ -730,6 +744,41 @@ export default function OilVesselMap() {
         } else {
           throw new Error('Invalid vessel data format');
         }
+        
+        // Fetch vessels connected to refineries
+        try {
+          // First get all vessel-refinery connections
+          const connectionsResponse = await apiRequest('/api/vessel-refinery');
+          
+          if (connectionsResponse && Array.isArray(connectionsResponse)) {
+            // Get the vessel details for each connection
+            const connectedVesselPromises = connectionsResponse.map(async (connection) => {
+              const vesselResponse = await apiRequest(`/api/vessels/${connection.vesselId}`);
+              if (vesselResponse) {
+                // Add connection details to vessel object
+                return {
+                  ...vesselResponse,
+                  connectionType: connection.connectionType,
+                  cargoVolume: connection.cargoVolume,
+                  connectionStartDate: connection.startDate,
+                  connectionEndDate: connection.endDate,
+                  connectionStatus: connection.status,
+                  refineryId: connection.refineryId,
+                  isConnected: true // Flag to identify connected vessels
+                };
+              }
+              return null;
+            });
+            
+            const connectedVesselData = await Promise.all(connectedVesselPromises);
+            // Filter out any null values in case some vessel fetches failed
+            setConnectedVessels(connectedVesselData.filter(v => v !== null));
+          }
+        } catch (connectionErr) {
+          console.error('Error fetching vessel-refinery connections:', connectionErr);
+          // Non-critical error, so we don't set the main error state
+        }
+        
         setLastUpdated(new Date());
       } catch (err) {
         console.error('Error fetching vessel data:', err);
