@@ -636,6 +636,10 @@ export async function generateVesselsNearFacility(params: NearbyVesselParams): P
       // This ensures that vessel positions will visibly change day to day
       // Use the previously calculated dateBasedSeed for consistency
       
+      // Calculate the day of year for date-based variation
+      const today = new Date();
+      const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / (24 * 60 * 60 * 1000));
+      
       // Use the date-based seed to create a substantial daily variation (up to ±5km)
       // This ensures vessels noticeably move from day to day
       const dailyVariationLat = (getDateBasedRandom(10) - 0.5) * 0.05; // About ±5km variation
@@ -651,34 +655,48 @@ export async function generateVesselsNearFacility(params: NearbyVesselParams): P
         console.log(`Daily adjusted position for vessel ${vessel.id} is not in water, reverting to original position`);
       }
       
-      // Generate realistic vessel status and metadata
+      // Ensure the final position is definitely in water by double-checking
+      const finalLat = isLocationNearWater(adjustedLat, adjustedLng) ? adjustedLat : newLat;
+      const finalLng = isLocationNearWater(adjustedLat, adjustedLng) ? adjustedLng : newLng;
+      
+      // Standardize status strings to match frontend expectations
+      let normalizedStatus = status.toLowerCase();
+      if (normalizedStatus === 'in transit') normalizedStatus = 'At Sea';
+      else if (normalizedStatus === 'awaiting orders' || normalizedStatus === 'anchored') normalizedStatus = 'At Anchor';
+      else if (normalizedStatus === 'maneuvering' || normalizedStatus === 'approaching' || normalizedStatus === 'departing') normalizedStatus = 'Maneuvering';
+      else if (normalizedStatus === 'loading') normalizedStatus = 'Loading';
+      else normalizedStatus = 'At Sea'; // Default
+      
+      // Generate comprehensive vessel metadata with date information for daily changes
       const vesselMetadata = {
         speed: speed.toFixed(1),
         heading: Math.floor(heading),
         timestamp: new Date().toISOString(),
         proximity: facilityType === 'port' ? 'near_port' : 'near_refinery',
         facilityName: facilityName,
-        status: status,
-        dayVariation: dayOfYear,
+        status: normalizedStatus,
+        dateGenerated: new Date().toISOString().split('T')[0], // Store date for later checking
         region: region
       };
       
-      // Update vessel in database
+      // Update vessel in database with verified water position
       await db.update(vessels)
         .set({
-          currentLat: String(adjustedLat.toFixed(6)),
-          currentLng: String(adjustedLng.toFixed(6)),
+          currentLat: String(finalLat.toFixed(6)),
+          currentLng: String(finalLng.toFixed(6)),
           // Associate with facility
           departurePort: facilityType === 'port' ? facilityName : vessel.departurePort,
           destinationPort: facilityType === 'port' ? facilityName : vessel.destinationPort,
           heading: String(Math.floor(heading)),
           speed: String(speed.toFixed(1)),
-          status: status,
+          status: normalizedStatus,
           // Store detailed metadata as JSON string
           metadata: JSON.stringify(vesselMetadata),
           lastUpdated: new Date()
         })
         .where(eq(vessels.id, vessel.id));
+        
+      console.log(`Updated vessel ${vessel.name} (ID: ${vessel.id}) at [${finalLat.toFixed(4)}, ${finalLng.toFixed(4)}] with status ${normalizedStatus}`);
       
       updatedVesselIds.push(vessel.id);
       placedVessels++;
@@ -891,13 +909,66 @@ export async function enhancePortAndRefineryProximity(): Promise<{
  * Periodically enhance vessel distribution
  */
 export async function startProximityEnhancement(intervalMinutes = 15): Promise<void> {
+  // Store the last date we ran the full update
+  let lastFullUpdateDate = new Date().toDateString();
+  
   // Initial enhancement
   const stats = await enhancePortAndRefineryProximity();
   console.log(`Initial port proximity enhancement complete: ${JSON.stringify(stats)}`);
   
   // Set up periodic enhancement
   setInterval(async () => {
-    const stats = await enhancePortAndRefineryProximity();
-    console.log(`Periodic port proximity enhancement complete: ${JSON.stringify(stats)}`);
+    const currentDate = new Date().toDateString();
+    
+    // If date changed, force a full refresh to ensure daily vessel movement
+    if (currentDate !== lastFullUpdateDate) {
+      console.log('Date changed - running full vessel position refresh to update all vessel positions');
+      
+      // Force update of all vessels to ensure daily position changes
+      // First, mark vessels for updating by setting their positions back to valid water coordinates
+      const vesselsToUpdate = await db.query.vessels.findMany({
+        where: eq(vessels.vesselType, "Oil Tanker"),
+        limit: 100 // Process in batches to avoid overloading
+      });
+      
+      for (const vessel of vesselsToUpdate) {
+        if (vessel.currentLat && vessel.currentLng) {
+          const vesselLat = parseFloat(vessel.currentLat);
+          const vesselLng = parseFloat(vessel.currentLng);
+          
+          // Only reset positions if the vessel is not in water
+          if (!isLocationNearWater(vesselLat, vesselLng)) {
+            console.log(`Vessel ${vessel.id} is not in water, will be repositioned`);
+            
+            // Find the nearest water body for repositioning
+            for (const waterBody of WATER_BODIES) {
+              // Use center of water body as approximate position
+              const centerLat = (waterBody.minLat + waterBody.maxLat) / 2;
+              const centerLng = (waterBody.minLng + waterBody.maxLng) / 2;
+              
+              // Move vessel to water
+              await db.update(vessels).set({
+                currentLat: centerLat.toString(),
+                currentLng: centerLng.toString(),
+                status: "At Sea",
+                lastUpdated: new Date()
+              }).where(eq(vessels.id, vessel.id));
+              
+              break; // Just use the first water body found
+            }
+          }
+        }
+      }
+      
+      // Then run the proximity enhancement to place vessels correctly
+      const fullRefreshStats = await enhancePortAndRefineryProximity();
+      console.log(`Daily vessel position refresh complete: ${JSON.stringify(fullRefreshStats)}`);
+      
+      lastFullUpdateDate = currentDate;
+    } else {
+      // Normal interval update
+      const stats = await enhancePortAndRefineryProximity();
+      console.log(`Periodic port proximity enhancement complete: ${JSON.stringify(stats)}`);
+    }
   }, intervalMinutes * 60 * 1000);
 }
