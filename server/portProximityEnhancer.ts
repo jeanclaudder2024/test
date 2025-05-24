@@ -178,7 +178,8 @@ export async function generateVesselsNearFacility(params: NearbyVesselParams): P
 }
 
 /**
- * Enhance vessel distribution around all major ports and refineries
+ * Enhance vessel distribution around all ports and refineries
+ * Ensures every facility has some vessels nearby
  */
 export async function enhancePortAndRefineryProximity(): Promise<{
   updatedPorts: number,
@@ -192,56 +193,153 @@ export async function enhancePortAndRefineryProximity(): Promise<{
   };
   
   try {
-    // Get all ports
-    const allPorts = await db.query.ports.findMany({
-      limit: 50
-    });
+    // Get all ports - no limit to process all ports
+    const allPorts = await db.query.ports.findMany();
     
-    // Get all refineries
-    const allRefineries = await db.query.refineries.findMany({
-      limit: 50
-    });
+    // Get all refineries - no limit to process all refineries
+    const allRefineries = await db.query.refineries.findMany();
     
-    // Process major ports (limit to prevent excessive changes)
-    const majorPorts = allPorts.slice(0, 15);
-    for (const port of majorPorts) {
-      const vesselCount = await calculateExpectedVesselDensity('port', port.name, port.region || 'Unknown');
+    console.log(`Processing ${allPorts.length} ports and ${allRefineries.length} refineries for vessel distribution`);
+    
+    // Process all ports to ensure vessels near every port
+    for (const port of allPorts) {
+      // Skip ports with missing coordinates
+      if (!port.lat || !port.lng) continue;
       
-      const updatedVesselIds = await generateVesselsNearFacility({
-        facilityName: port.name,
-        facilityType: 'port',
-        facilityLat: parseFloat(port.lat),
-        facilityLng: parseFloat(port.lng),
-        vesselCount,
-        region: port.region || 'Unknown'
+      // Check if this port already has vessels nearby using standard distance calculation
+      const portLat = parseFloat(port.lat);
+      const portLng = parseFloat(port.lng);
+      
+      // Get all vessels
+      const allVesselsForPort = await db.query.vessels.findMany({
+        where: and(
+          sql`${vessels.currentLat} IS NOT NULL`,
+          sql`${vessels.currentLng} IS NOT NULL`
+        ),
+        limit: 50
       });
       
-      if (updatedVesselIds.length > 0) {
-        stats.updatedPorts++;
-        stats.totalVesselsRepositioned += updatedVesselIds.length;
+      // Calculate distances manually and filter nearby vessels
+      const nearbyVesselCount = allVesselsForPort.filter(vessel => {
+        if (!vessel.currentLat || !vessel.currentLng) return false;
+        
+        const vesselLat = parseFloat(vessel.currentLat);
+        const vesselLng = parseFloat(vessel.currentLng);
+        
+        // Skip invalid coordinates
+        if (isNaN(vesselLat) || isNaN(vesselLng) || isNaN(portLat) || isNaN(portLng)) {
+          return false;
+        }
+        
+        // Calculate distance using the Haversine formula (approximate distance in km)
+        const R = 6371; // Radius of the Earth in km
+        const dLat = (vesselLat - portLat) * Math.PI / 180;
+        const dLng = (vesselLng - portLng) * Math.PI / 180;
+        const a = 
+          Math.sin(dLat/2) * Math.sin(dLat/2) +
+          Math.cos(portLat * Math.PI / 180) * Math.cos(vesselLat * Math.PI / 180) * 
+          Math.sin(dLng/2) * Math.sin(dLng/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        const distance = R * c;
+        
+        // Consider vessels within 50km
+        return distance < 50;
+      });
+      
+      // Only add vessels if fewer than minimum are present
+      const minimumVessels = 2; // Every port should have at least 2 vessels
+      
+      if (nearbyVesselCount.length < minimumVessels) {
+        // Calculate how many vessels to add
+        const baseVesselCount = await calculateExpectedVesselDensity('port', port.name, port.region || 'Unknown');
+        const vesselCount = Math.max(minimumVessels - nearbyVesselCount.length, Math.floor(baseVesselCount * 0.7));
+        
+        const updatedVesselIds = await generateVesselsNearFacility({
+          facilityName: port.name,
+          facilityType: 'port',
+          facilityLat: parseFloat(port.lat),
+          facilityLng: parseFloat(port.lng),
+          vesselCount,
+          region: port.region || 'Unknown'
+        });
+        
+        if (updatedVesselIds.length > 0) {
+          stats.updatedPorts++;
+          stats.totalVesselsRepositioned += updatedVesselIds.length;
+        }
       }
     }
     
-    // Process major refineries (limit to prevent excessive changes)
-    const majorRefineries = allRefineries.slice(0, 10);
-    for (const refinery of majorRefineries) {
-      const vesselCount = await calculateExpectedVesselDensity('refinery', refinery.name, refinery.region || 'Unknown');
+    // Process all refineries to ensure vessels near every refinery
+    for (const refinery of allRefineries) {
+      // Skip refineries with missing coordinates
+      if (!refinery.lat || !refinery.lng) continue;
       
-      const updatedVesselIds = await generateVesselsNearFacility({
-        facilityName: refinery.name,
-        facilityType: 'refinery',
-        facilityLat: parseFloat(refinery.lat),
-        facilityLng: parseFloat(refinery.lng),
-        vesselCount,
-        region: refinery.region || 'Unknown'
+      // Check if this refinery already has vessels nearby using standard distance calculation
+      const refineryLat = parseFloat(refinery.lat);
+      const refineryLng = parseFloat(refinery.lng);
+      
+      // Get all vessels
+      const allVesselsForRefinery = await db.query.vessels.findMany({
+        where: and(
+          sql`${vessels.currentLat} IS NOT NULL`,
+          sql`${vessels.currentLng} IS NOT NULL`
+        ),
+        limit: 50
       });
       
-      if (updatedVesselIds.length > 0) {
-        stats.updatedRefineries++;
-        stats.totalVesselsRepositioned += updatedVesselIds.length;
+      // Calculate distances manually and filter nearby vessels
+      const nearbyVesselCount = allVesselsForRefinery.filter(vessel => {
+        if (!vessel.currentLat || !vessel.currentLng) return false;
+        
+        const vesselLat = parseFloat(vessel.currentLat);
+        const vesselLng = parseFloat(vessel.currentLng);
+        
+        // Skip invalid coordinates
+        if (isNaN(vesselLat) || isNaN(vesselLng) || isNaN(refineryLat) || isNaN(refineryLng)) {
+          return false;
+        }
+        
+        // Calculate distance using the Haversine formula (approximate distance in km)
+        const R = 6371; // Radius of the Earth in km
+        const dLat = (vesselLat - refineryLat) * Math.PI / 180;
+        const dLng = (vesselLng - refineryLng) * Math.PI / 180;
+        const a = 
+          Math.sin(dLat/2) * Math.sin(dLat/2) +
+          Math.cos(refineryLat * Math.PI / 180) * Math.cos(vesselLat * Math.PI / 180) * 
+          Math.sin(dLng/2) * Math.sin(dLng/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        const distance = R * c;
+        
+        // Consider vessels within 40km
+        return distance < 40;
+      });
+      
+      // Only add vessels if fewer than minimum are present
+      const minimumVessels = 1; // Every refinery should have at least 1 vessel
+      
+      if (nearbyVesselCount.length < minimumVessels) {
+        // Calculate how many vessels to add
+        const baseVesselCount = await calculateExpectedVesselDensity('refinery', refinery.name, refinery.region || 'Unknown');
+        const vesselCount = Math.max(minimumVessels - nearbyVesselCount.length, Math.floor(baseVesselCount * 0.6));
+        
+        const updatedVesselIds = await generateVesselsNearFacility({
+          facilityName: refinery.name,
+          facilityType: 'refinery',
+          facilityLat: parseFloat(refinery.lat),
+          facilityLng: parseFloat(refinery.lng),
+          vesselCount,
+          region: refinery.region || 'Unknown'
+        });
+        
+        if (updatedVesselIds.length > 0) {
+          stats.updatedRefineries++;
+          stats.totalVesselsRepositioned += updatedVesselIds.length;
+        }
       }
     }
     
+    console.log(`Port and refinery proximity enhancement completed: ${JSON.stringify(stats)}`);
     return stats;
   } catch (error) {
     console.error("Error enhancing port and refinery proximity:", error);
@@ -252,7 +350,7 @@ export async function enhancePortAndRefineryProximity(): Promise<{
 /**
  * Periodically enhance vessel distribution
  */
-export async function startProximityEnhancement(intervalMinutes = 30): Promise<void> {
+export async function startProximityEnhancement(intervalMinutes = 15): Promise<void> {
   // Initial enhancement
   const stats = await enhancePortAndRefineryProximity();
   console.log(`Initial port proximity enhancement complete: ${JSON.stringify(stats)}`);
