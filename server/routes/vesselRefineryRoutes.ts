@@ -74,12 +74,25 @@ vesselRefineryRouter.post("/", async (req, res) => {
     }
     
     // Create the connection
+    // Handle cargoVolume to ensure it's within database limits (less than 10^13)
+    let processedCargoVolume = null;
+    if (cargoVolume) {
+      // Parse and validate the cargo volume to ensure it doesn't overflow
+      const parsedVolume = parseFloat(cargoVolume);
+      if (!isNaN(parsedVolume) && parsedVolume < 9999999999999) { // Less than 10^13
+        processedCargoVolume = parsedVolume;
+      } else {
+        // If the value is too large, cap it at a reasonable maximum
+        processedCargoVolume = 9999999999;
+      }
+    }
+    
     const newConnection: InsertVesselRefineryConnection = {
       vesselId: vId,
       refineryId: rId,
       connectionType: connectionType || "loading",
       status: status || "active",
-      cargoVolume: cargoVolume ? parseFloat(cargoVolume) : null,
+      cargoVolume: processedCargoVolume,
       startDate: startDate ? new Date(startDate) : new Date(),
       endDate: endDate ? new Date(endDate) : null
     };

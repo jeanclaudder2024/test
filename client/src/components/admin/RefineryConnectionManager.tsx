@@ -409,8 +409,23 @@ const RefineryConnectionManager: React.FC<RefineryConnectionManagerProps> = ({
                 id="cargoVolume"
                 placeholder="Cargo volume in metric tons"
                 value={cargoVolume}
-                onChange={(e) => setCargoVolume(e.target.value)}
+                onChange={(e) => {
+                  // Validate input to prevent numeric overflow
+                  const value = e.target.value;
+                  const numValue = parseFloat(value);
+                  
+                  // Only allow valid numbers within safe range
+                  if (value === "" || (
+                    !isNaN(numValue) && 
+                    numValue >= 0 && 
+                    numValue < 9999999999
+                  )) {
+                    setCargoVolume(value);
+                  }
+                }}
                 type="number"
+                min="0"
+                max="9999999999"
               />
             </div>
           </div>
