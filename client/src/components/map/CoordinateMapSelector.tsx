@@ -118,7 +118,9 @@ export function CoordinateMapSelector({
       setMapInstance(map);
     };
 
-    loadLeaflet();
+    if (isOpen) {
+      loadLeaflet();
+    }
 
     // Cleanup
     return () => {
@@ -127,12 +129,12 @@ export function CoordinateMapSelector({
         setMapInstance(null);
       }
     };
-  }, []);
+  }, [isOpen]);
 
   const handleConfirmSelection = () => {
     if (selectedCoords) {
       onCoordinateSelect(selectedCoords.lat, selectedCoords.lng);
-      if (onClose) onClose();
+      onClose();
     }
   };
 
@@ -168,6 +170,7 @@ export function CoordinateMapSelector({
             {description}
           </DialogDescription>
         </DialogHeader>
+        
         <div className="space-y-4">
           {/* Instructions */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -253,6 +256,7 @@ export function CoordinateMapSelector({
               Use These Coordinates
             </Button>
           </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
