@@ -248,7 +248,10 @@ function PortCard({ port }: { port: Port }) {
 function AddPortDialog() {
   const [open, setOpen] = useState(false);
   const [showMap, setShowMap] = useState(false);
+  const [showConnectionDialog, setShowConnectionDialog] = useState(false);
   const [selectedCoordinates, setSelectedCoordinates] = useState<{ lat: number; lng: number } | null>(null);
+  const [newPortId, setNewPortId] = useState<number | null>(null);
+  const [newPortName, setNewPortName] = useState<string>('');
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
