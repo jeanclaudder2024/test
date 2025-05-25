@@ -372,12 +372,12 @@ export default function OilVesselMap() {
     const rotation = vessel.course !== undefined ? vessel.course : 0;
     
     // Determine vessel size for visual scaling (based on capacity or vessel type)
-    let size = 24;
+    let size = 12; // Much smaller default size
     if (vessel.vesselType) {
       if (vessel.vesselType.includes('VLCC') || vessel.vesselType.includes('ULCC')) {
-        size = 32; // Larger for Very Large and Ultra Large Crude Carriers
+        size = 16; // Larger for Very Large and Ultra Large Crude Carriers
       } else if (vessel.vesselType.includes('Aframax') || vessel.vesselType.includes('Suezmax')) {
-        size = 28; // Large for medium-sized tankers
+        size = 14; // Large for medium-sized tankers
       }
     }
     
