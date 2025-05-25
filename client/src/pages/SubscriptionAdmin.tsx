@@ -485,7 +485,7 @@ export default function SubscriptionAdmin() {
                         </div>
                       </div>
                       
-                      <div className="grid grid-cols-3 gap-4 pt-4 border-t">
+                      <div className="grid grid-cols-2 gap-4 pt-4 border-t">
                         <div>
                           <Label htmlFor="new-vessels-limit" className="text-sm font-medium">Vessels Limit</Label>
                           <Select name="vessels-limit">
@@ -497,19 +497,6 @@ export default function SubscriptionAdmin() {
                               <SelectItem value="50">50 vessels</SelectItem>
                               <SelectItem value="100">100 vessels</SelectItem>
                               <SelectItem value="unlimited">Unlimited</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div>
-                          <Label htmlFor="new-ports-limit" className="text-sm font-medium">Ports Access</Label>
-                          <Select name="ports-limit">
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select access" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="basic">Basic Ports</SelectItem>
-                              <SelectItem value="regional">Regional Ports</SelectItem>
-                              <SelectItem value="global">Global Access</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -526,6 +513,72 @@ export default function SubscriptionAdmin() {
                               <SelectItem value="unlimited">Unlimited</SelectItem>
                             </SelectContent>
                           </Select>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4 pt-4 border-t">
+                        <Label className="text-sm font-semibold">Access Filtering Controls</Label>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="new-vessel-types-filter" className="text-sm font-medium">Allowed Vessel Types</Label>
+                            <Select name="vessel-types-filter">
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select vessel types access" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="oil-tankers-only">Oil Tankers Only</SelectItem>
+                                <SelectItem value="commercial-vessels">Commercial Vessels</SelectItem>
+                                <SelectItem value="cargo-vessels">Cargo + Oil Vessels</SelectItem>
+                                <SelectItem value="all-vessel-types">All Vessel Types</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label htmlFor="new-regions-access" className="text-sm font-medium">Regional Access</Label>
+                            <Select name="regions-access">
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select regional access" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="single-region">Single Region</SelectItem>
+                                <SelectItem value="three-regions">Up to 3 Regions</SelectItem>
+                                <SelectItem value="five-regions">Up to 5 Regions</SelectItem>
+                                <SelectItem value="global-access">Global Access</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="new-vessel-types-count" className="text-sm font-medium">Max Vessel Types Visible</Label>
+                            <Select name="vessel-types-count">
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select max types" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="2">2 vessel types</SelectItem>
+                                <SelectItem value="5">5 vessel types</SelectItem>
+                                <SelectItem value="10">10 vessel types</SelectItem>
+                                <SelectItem value="unlimited">All vessel types</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label htmlFor="new-regions-count" className="text-sm font-medium">Max Regions Visible</Label>
+                            <Select name="regions-count">
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select max regions" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="1">1 region</SelectItem>
+                                <SelectItem value="3">3 regions</SelectItem>
+                                <SelectItem value="5">5 regions</SelectItem>
+                                <SelectItem value="8">8 regions</SelectItem>
+                                <SelectItem value="unlimited">All regions</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -804,7 +857,7 @@ export default function SubscriptionAdmin() {
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-3 gap-4 pt-4 border-t">
+                  <div className="grid grid-cols-2 gap-4 pt-4 border-t">
                     <div>
                       <Label htmlFor="vessels-limit" className="text-sm font-medium">Vessels Limit</Label>
                       <Select name="vessels-limit">
@@ -816,19 +869,6 @@ export default function SubscriptionAdmin() {
                           <SelectItem value="50">50 vessels</SelectItem>
                           <SelectItem value="100">100 vessels</SelectItem>
                           <SelectItem value="unlimited">Unlimited</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="ports-limit" className="text-sm font-medium">Ports Access</Label>
-                      <Select name="ports-limit">
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select access" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="basic">Basic Ports</SelectItem>
-                          <SelectItem value="regional">Regional Ports</SelectItem>
-                          <SelectItem value="global">Global Access</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -845,6 +885,72 @@ export default function SubscriptionAdmin() {
                           <SelectItem value="unlimited">Unlimited</SelectItem>
                         </SelectContent>
                       </Select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 pt-4 border-t">
+                    <Label className="text-sm font-semibold">Access Filtering Controls</Label>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="vessel-types-filter" className="text-sm font-medium">Allowed Vessel Types</Label>
+                        <Select name="vessel-types-filter">
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select vessel types access" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="oil-tankers-only">Oil Tankers Only</SelectItem>
+                            <SelectItem value="commercial-vessels">Commercial Vessels</SelectItem>
+                            <SelectItem value="cargo-vessels">Cargo + Oil Vessels</SelectItem>
+                            <SelectItem value="all-vessel-types">All Vessel Types</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="regions-access" className="text-sm font-medium">Regional Access</Label>
+                        <Select name="regions-access">
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select regional access" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="single-region">Single Region</SelectItem>
+                            <SelectItem value="three-regions">Up to 3 Regions</SelectItem>
+                            <SelectItem value="five-regions">Up to 5 Regions</SelectItem>
+                            <SelectItem value="global-access">Global Access</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="vessel-types-count" className="text-sm font-medium">Max Vessel Types Visible</Label>
+                        <Select name="vessel-types-count">
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select max types" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="2">2 vessel types</SelectItem>
+                            <SelectItem value="5">5 vessel types</SelectItem>
+                            <SelectItem value="10">10 vessel types</SelectItem>
+                            <SelectItem value="unlimited">All vessel types</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="regions-count" className="text-sm font-medium">Max Regions Visible</Label>
+                        <Select name="regions-count">
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select max regions" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">1 region</SelectItem>
+                            <SelectItem value="3">3 regions</SelectItem>
+                            <SelectItem value="5">5 regions</SelectItem>
+                            <SelectItem value="8">8 regions</SelectItem>
+                            <SelectItem value="unlimited">All regions</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                   </div>
                 </div>
