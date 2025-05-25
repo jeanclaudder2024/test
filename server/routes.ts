@@ -3082,8 +3082,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         buyerName: result.data.buyerName,
         sellerName: result.data.sellerName,
         metadata: result.data.metadata,
-        built: undefined,
-        deadweight: undefined,
+        built: null,
+        deadweight: null,
         // Skip date fields completely to avoid conversion issues
         departureDate: undefined,
         eta: undefined
