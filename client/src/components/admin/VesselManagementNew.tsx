@@ -515,6 +515,28 @@ export function VesselManagementNew() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Map Selector Modal */}
+      {showMapSelector && (
+        <Dialog open={showMapSelector} onOpenChange={setShowMapSelector}>
+          <DialogContent className="max-w-4xl h-[80vh]">
+            <DialogHeader>
+              <DialogTitle>Select Vessel Position</DialogTitle>
+              <p className="text-sm text-muted-foreground">
+                Click on the map to select coordinates. You can see refineries (red) and ports (blue) for reference.
+              </p>
+            </DialogHeader>
+            <div className="flex-1">
+              <CoordinateSelector
+                onCoordinateSelect={handleCoordinateSelect}
+                selectedLat={formData.currentLat ? parseFloat(formData.currentLat) : undefined}
+                selectedLng={formData.currentLng ? parseFloat(formData.currentLng) : undefined}
+                height="60vh"
+              />
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
