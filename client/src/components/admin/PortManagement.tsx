@@ -47,7 +47,10 @@ import {
   CheckCircle,
   Clock,
   Users,
-  Gauge
+  Gauge,
+  Link2,
+  GitBranch,
+  Navigation
 } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import { CoordinateMapSelector } from '@/components/map/CoordinateMapSelector';
@@ -224,14 +227,23 @@ function PortCard({ port }: { port: Port }) {
           {/* Quick Actions */}
           <div className="flex justify-between items-center pt-2 border-t border-border">
             <div className="flex space-x-1">
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="View Details">
                 <Eye className="h-3 w-3" />
               </Button>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Edit Port">
                 <Edit className="h-3 w-3" />
               </Button>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="View on Map">
                 <MapIcon className="h-3 w-3" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-8 w-8 p-0 bg-blue-50 hover:bg-blue-100" 
+                title="Manage Connections"
+                onClick={() => handlePortConnections(port.id)}
+              >
+                <Link2 className="h-3 w-3 text-blue-600" />
               </Button>
             </div>
             <p className="text-xs text-muted-foreground">
@@ -698,6 +710,12 @@ export function PortManagement() {
   const [selectedType, setSelectedType] = useState('all');
   const [viewMode, setViewMode] = useState('grid');
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Handle port connections - navigate to dedicated connection management page
+  const handlePortConnections = (portId: number) => {
+    // Navigate to port connection management page
+    window.location.href = `/admin/port-connections/${portId}`;
+  };
 
   const pageSize = 12;
 

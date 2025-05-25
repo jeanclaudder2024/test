@@ -12,6 +12,7 @@ import Ports from "@/pages/Ports";
 import PortDetail from "@/pages/PortDetail";
 import PortImport from "@/pages/PortImport";
 import PortVesselProximity from "@/pages/PortVesselProximity";
+import PortConnectionManager from "@/pages/PortConnectionManager";
 import Brokers from "@/pages/Brokers";
 import BrokerDashboard from "@/pages/BrokerDashboard";
 import SimpleBrokerDashboard from "@/pages/SimpleBrokerDashboard";
@@ -122,6 +123,7 @@ function Router() {
             <Route path="/ports" component={Ports} />
             <Route path="/ports/import" component={PortImport} />
             <Route path="/ports/proximity" component={PortVesselProximity} />
+            <Route path="/admin/port-connections/:portId" component={PortConnectionManager} />
             <Route path="/ports/:id" component={PortDetail} />
             <Route path="/brokers" component={Brokers} />
             <Route path="/broker-dashboard" component={SimpleBrokerDashboard} />
