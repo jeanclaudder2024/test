@@ -3241,8 +3241,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get connection data for each port
       const vessels = await storage.getVessels();
       const refineries = await storage.getRefineries();
-      const vesselConnections = await storage.getVesselConnections();
-      const refineryConnections = await storage.getRefineryConnections();
 
       // Add connection counts to each port
       ports = ports.map(port => {
