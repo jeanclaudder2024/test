@@ -1928,22 +1928,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  apiRouter.post("/vessels", async (req, res) => {
-    try {
-      const vesselData = insertVesselSchema.parse(req.body);
-      const vessel = await storage.createVessel(vesselData);
-      res.status(201).json(vessel);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ 
-          message: "Invalid vessel data", 
-          errors: fromZodError(error).details 
-        });
-      }
-      console.error("Error creating vessel:", error);
-      res.status(500).json({ message: "Failed to create vessel" });
-    }
-  });
+
 
   apiRouter.patch("/vessels/:id", async (req, res) => {
     try {
@@ -3040,8 +3025,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         vesselType: req.body.vesselType?.trim() || "",
         flag: req.body.flag?.trim() || "",
         // Handle coordinate fields
-        currentLat: req.body.currentLat?.toString() || null,
-        currentLng: req.body.currentLng?.toString() || null,
+        currentLat: req.body.currentLat?.toString() || undefined,
+        currentLng: req.body.currentLng?.toString() || undefined,
         // Handle optional fields
         cargoCapacity: req.body.cargoCapacity || null,
         built: req.body.built || null,
