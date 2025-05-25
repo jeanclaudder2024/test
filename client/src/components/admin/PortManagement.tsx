@@ -794,8 +794,14 @@ export function PortManagement() {
   const [selectedType, setSelectedType] = useState('all');
   const [viewMode, setViewMode] = useState('grid');
   const [currentPage, setCurrentPage] = useState(1);
+  const [showViewDialog, setShowViewDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [selectedPort, setSelectedPort] = useState<Port | null>(null);
 
   const pageSize = 12;
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Fetch ports data
   const { 
@@ -851,6 +857,57 @@ export function PortManagement() {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, selectedRegion, selectedStatus, selectedType]);
+
+  // Delete port mutation
+  const deletePortMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await fetch(`/api/ports/${id}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete port');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/ports'] });
+      setShowDeleteDialog(false);
+      setSelectedPort(null);
+      toast({
+        title: "Port Deleted",
+        description: "Port has been successfully deleted",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Deletion Failed",
+        description: error.message || "Failed to delete port",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Handler functions for CRUD operations
+  const handleViewPort = (port: Port) => {
+    setSelectedPort(port);
+    setShowViewDialog(true);
+  };
+
+  const handleEditPort = (port: Port) => {
+    setSelectedPort(port);
+    setShowEditDialog(true);
+  };
+
+  const handleDeletePort = (port: Port) => {
+    setSelectedPort(port);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = () => {
+    if (selectedPort) {
+      deletePortMutation.mutate(selectedPort.id);
+    }
+  };
 
   if (portsLoading) {
     return (
@@ -1099,9 +1156,30 @@ export function PortManagement() {
                           
                           <PortStatusBadge status={port.status} />
                           
-                          <Button variant="ghost" size="sm">
-                            <Eye className="h-4 w-4" />
-                          </Button>
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleViewPort(port)}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditPort(port)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeletePort(port)}
+                              className="text-red-500 hover:text-red-700"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1168,6 +1246,148 @@ export function PortManagement() {
           </div>
         </div>
       )}
+
+      {/* View Port Dialog */}
+      <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <Eye className="h-5 w-5" />
+              <span>Port Details</span>
+            </DialogTitle>
+          </DialogHeader>
+
+          {selectedPort && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <span className="text-sm font-medium">Port Name</span>
+                  <p className="text-sm text-muted-foreground">{selectedPort.name}</p>
+                </div>
+                <div>
+                  <span className="text-sm font-medium">Country</span>
+                  <p className="text-sm text-muted-foreground">{selectedPort.country}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <span className="text-sm font-medium">Region</span>
+                  <p className="text-sm text-muted-foreground">{selectedPort.region}</p>
+                </div>
+                <div>
+                  <span className="text-sm font-medium">Status</span>
+                  <PortStatusBadge status={selectedPort.status} />
+                </div>
+              </div>
+
+              <div>
+                <span className="text-sm font-medium">Coordinates</span>
+                <p className="text-sm text-muted-foreground font-mono">
+                  {parseFloat(selectedPort.lat).toFixed(6)}, {parseFloat(selectedPort.lng).toFixed(6)}
+                </p>
+              </div>
+
+              {selectedPort.description && (
+                <div>
+                  <span className="text-sm font-medium">Description</span>
+                  <p className="text-sm text-muted-foreground">{selectedPort.description}</p>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4">
+                {selectedPort.vesselCount !== undefined && (
+                  <div>
+                    <span className="text-sm font-medium">Connected Vessels</span>
+                    <div className="flex items-center space-x-2">
+                      <Ship className="h-4 w-4" />
+                      <span className="text-sm text-muted-foreground">{selectedPort.vesselCount}</span>
+                    </div>
+                  </div>
+                )}
+                {selectedPort.connectedRefineries !== undefined && (
+                  <div>
+                    <span className="text-sm font-medium">Connected Refineries</span>
+                    <div className="flex items-center space-x-2">
+                      <Building2 className="h-4 w-4" />
+                      <span className="text-sm text-muted-foreground">{selectedPort.connectedRefineries}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end space-x-3 pt-4">
+            <Button variant="outline" onClick={() => setShowViewDialog(false)}>
+              Close
+            </Button>
+            {selectedPort && (
+              <Button onClick={() => {
+                setShowViewDialog(false);
+                handleEditPort(selectedPort);
+              }}>
+                <Edit className="h-4 w-4 mr-2" />
+                Edit Port
+              </Button>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <Trash2 className="h-5 w-5 text-red-500" />
+              <span>Delete Port</span>
+            </DialogTitle>
+          </DialogHeader>
+
+          {selectedPort && (
+            <div className="space-y-4">
+              <p className="text-muted-foreground">
+                Are you sure you want to delete <strong>"{selectedPort.name}"</strong>? 
+                This action cannot be undone and will remove all associated connections.
+              </p>
+              
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                <div className="flex items-center space-x-2">
+                  <AlertTriangle className="h-4 w-4 text-red-600" />
+                  <span className="text-sm font-medium text-red-800">Warning</span>
+                </div>
+                <p className="text-sm text-red-700 mt-1">
+                  This will also disconnect {selectedPort.vesselCount || 0} vessels and {selectedPort.connectedRefineries || 0} refineries.
+                </p>
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end space-x-3 pt-4">
+            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={confirmDelete}
+              disabled={deletePortMutation.isPending}
+            >
+              {deletePortMutation.isPending ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Port
+                </>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
