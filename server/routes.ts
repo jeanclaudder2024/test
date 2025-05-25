@@ -3042,22 +3042,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!result.success) {
         console.error("Validation failed for vessel creation:");
         result.error.errors.forEach(error => {
-          console.error(`- Field '${error.path.join('.')}': ${error.message} (received: ${JSON.stringify(error.received)})`);
+          console.error(`- Field '${error.path.join('.')}': ${error.message}`);
         });
         return res.status(400).json({ 
           message: "Invalid vessel data", 
           errors: result.error.errors.map(err => ({
             field: err.path.join('.'),
-            message: err.message,
-            received: err.received
+            message: err.message
           }))
         });
       }
       
       console.log("Validation successful, creating vessel with data:", JSON.stringify(result.data, null, 2));
       
+      // Process the validated data to handle date fields properly
+      const vesselData = {
+        ...result.data,
+        // Convert string dates to Date objects
+        departureDate: result.data.departureDate ? new Date(result.data.departureDate) : null,
+        eta: result.data.eta ? new Date(result.data.eta) : null
+      };
+      
       // Create the vessel in the database
-      const newVessel = await storage.createVessel(result.data);
+      const newVessel = await storage.createVessel(vesselData);
       
       console.log("Successfully created vessel:", newVessel.id);
       res.status(201).json(newVessel);
