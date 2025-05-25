@@ -1,19 +1,32 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { MapPin, CheckCircle, RotateCcw } from 'lucide-react';
 
 interface CoordinateMapSelectorProps {
+  isOpen: boolean;
+  onClose: () => void;
   onCoordinateSelect: (lat: number, lng: number) => void;
+  title?: string;
+  description?: string;
   initialLat?: number;
   initialLng?: number;
-  onClose?: () => void;
 }
 
 export function CoordinateMapSelector({ 
+  isOpen,
+  onClose,
   onCoordinateSelect, 
+  title = "Select Location",
+  description = "Click on the map to select coordinates",
   initialLat = 25.276987, 
-  initialLng = 55.296249,
-  onClose 
+  initialLng = 55.296249
 }: CoordinateMapSelectorProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const [selectedCoords, setSelectedCoords] = useState<{lat: number, lng: number} | null>(null);
@@ -147,91 +160,100 @@ export function CoordinateMapSelector({
   };
 
   return (
-    <div className="space-y-4">
-      {/* Instructions */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <div className="flex items-start space-x-3">
-          <MapPin className="h-5 w-5 text-blue-600 mt-0.5" />
-          <div>
-            <h4 className="text-sm font-medium text-blue-900">Select Port Location</h4>
-            <p className="text-sm text-blue-700 mt-1">
-              Click anywhere on the map to place a marker and select the exact coordinates for your port.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Location Buttons */}
-      <div>
-        <h5 className="text-sm font-medium mb-2">Quick Locations:</h5>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-          {quickLocations.map((location) => (
-            <Button
-              key={location.name}
-              variant="outline"
-              size="sm"
-              onClick={() => handleQuickLocation(location.lat, location.lng)}
-              className="text-xs"
-            >
-              {location.name}
-            </Button>
-          ))}
-        </div>
-      </div>
-
-      {/* Map Container */}
-      <div className="relative">
-        <div 
-          ref={mapRef} 
-          className="w-full h-96 rounded-lg border border-border"
-          style={{ minHeight: '384px' }}
-        />
-        
-        {/* Map Controls */}
-        <div className="absolute top-4 right-4 flex flex-col space-y-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleResetMap}
-            className="bg-white/90 backdrop-blur-sm"
-            disabled={!selectedCoords}
-          >
-            <RotateCcw className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-
-      {/* Selected Coordinates Display */}
-      {selectedCoords && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <CheckCircle className="h-5 w-5 text-green-600" />
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>
+            {description}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          {/* Instructions */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-start space-x-3">
+              <MapPin className="h-5 w-5 text-blue-600 mt-0.5" />
               <div>
-                <h4 className="text-sm font-medium text-green-900">Coordinates Selected</h4>
-                <p className="text-sm text-green-700">
-                  Latitude: {selectedCoords.lat.toFixed(6)}, Longitude: {selectedCoords.lng.toFixed(6)}
+                <h4 className="text-sm font-medium text-blue-900">{title}</h4>
+                <p className="text-sm text-blue-700 mt-1">
+                  {description}
                 </p>
               </div>
             </div>
           </div>
-        </div>
-      )}
 
-      {/* Action Buttons */}
-      <div className="flex justify-end space-x-3 pt-4 border-t">
-        <Button variant="outline" onClick={onClose}>
-          Cancel
-        </Button>
-        <Button 
-          onClick={handleConfirmSelection}
-          disabled={!selectedCoords}
-          className="bg-blue-600 hover:bg-blue-700"
-        >
-          <CheckCircle className="h-4 w-4 mr-2" />
-          Use These Coordinates
-        </Button>
-      </div>
-    </div>
+          {/* Quick Location Buttons */}
+          <div>
+            <h5 className="text-sm font-medium mb-2">Quick Locations:</h5>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              {quickLocations.map((location) => (
+                <Button
+                  key={location.name}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleQuickLocation(location.lat, location.lng)}
+                  className="text-xs"
+                >
+                  {location.name}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* Map Container */}
+          <div className="relative">
+            <div 
+              ref={mapRef} 
+              className="w-full h-96 rounded-lg border border-border"
+              style={{ minHeight: '384px' }}
+            />
+            
+            {/* Map Controls */}
+            <div className="absolute top-4 right-4 flex flex-col space-y-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleResetMap}
+                className="bg-white/90 backdrop-blur-sm"
+                disabled={!selectedCoords}
+              >
+                <RotateCcw className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Selected Coordinates Display */}
+          {selectedCoords && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  <div>
+                    <h4 className="text-sm font-medium text-green-900">Coordinates Selected</h4>
+                    <p className="text-sm text-green-700">
+                      Latitude: {selectedCoords.lat.toFixed(6)}, Longitude: {selectedCoords.lng.toFixed(6)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex justify-end space-x-3 pt-4 border-t">
+            <Button variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleConfirmSelection}
+              disabled={!selectedCoords}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              <CheckCircle className="h-4 w-4 mr-2" />
+              Use These Coordinates
+            </Button>
+          </div>
+      </DialogContent>
+    </Dialog>
   );
 }
