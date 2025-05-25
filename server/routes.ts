@@ -2957,18 +2957,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create new vessel
   apiRouter.post("/vessels", async (req, res) => {
     try {
-      console.log("Received request to create vessel:", req.body);
+      console.log("Received request to create vessel:", JSON.stringify(req.body, null, 2));
+      
+      // Pre-process the data to handle common issues
+      const processedData = {
+        ...req.body,
+        // Ensure required string fields are not empty
+        name: req.body.name?.trim() || "",
+        imo: req.body.imo?.toString()?.trim() || "",
+        mmsi: req.body.mmsi?.toString()?.trim() || "",
+        vesselType: req.body.vesselType?.trim() || "",
+        flag: req.body.flag?.trim() || "",
+        // Handle coordinate fields
+        currentLat: req.body.currentLat?.toString() || null,
+        currentLng: req.body.currentLng?.toString() || null,
+        // Handle optional fields
+        cargoCapacity: req.body.cargoCapacity || null,
+        built: req.body.built || null,
+        deadweight: req.body.deadweight || null,
+        speed: req.body.speed || "0"
+      };
+      
+      console.log("Processed vessel data:", JSON.stringify(processedData, null, 2));
       
       // Validate the input using the vessel schema
-      const result = insertVesselSchema.safeParse(req.body);
+      const result = insertVesselSchema.safeParse(processedData);
       
       if (!result.success) {
-        console.error("Validation failed for vessel creation:", result.error.errors);
+        console.error("Validation failed for vessel creation:");
+        result.error.errors.forEach(error => {
+          console.error(`- Field '${error.path.join('.')}': ${error.message} (received: ${JSON.stringify(error.received)})`);
+        });
         return res.status(400).json({ 
           message: "Invalid vessel data", 
-          errors: result.error.errors 
+          errors: result.error.errors.map(err => ({
+            field: err.path.join('.'),
+            message: err.message,
+            received: err.received
+          }))
         });
       }
+      
+      console.log("Validation successful, creating vessel with data:", JSON.stringify(result.data, null, 2));
       
       // Create the vessel in the database
       const newVessel = await storage.createVessel(result.data);
