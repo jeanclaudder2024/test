@@ -31,9 +31,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Ship, Plus, Edit, Trash2, Search, MapPin } from "lucide-react";
+import { Ship, Plus, Edit, Trash2, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { CoordinateSelector } from "@/components/map/CoordinateSelector";
 
 interface Vessel {
   id: number;
@@ -87,10 +86,7 @@ const vesselStatuses = [
 
 export function VesselManagementNew() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [editingVessel, setEditingVessel] = useState<Vessel | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [showMapSelector, setShowMapSelector] = useState(false);
   const [formData, setFormData] = useState<VesselFormData>({
     name: "",
     imo: "",
@@ -169,85 +165,6 @@ export function VesselManagementNew() {
     }
   });
 
-  const updateVesselMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: VesselFormData }) => {
-      const payload = {
-        name: data.name,
-        imo: data.imo,
-        mmsi: data.mmsi,
-        vesselType: data.vesselType,
-        flag: data.flag,
-        currentLat: data.currentLat || undefined,
-        currentLng: data.currentLng || undefined,
-        status: data.status,
-        speed: data.speed || "0",
-        cargoType: data.cargoType || undefined,
-        cargoCapacity: data.cargoCapacity ? parseInt(data.cargoCapacity) : undefined
-      };
-
-      const response = await fetch(`/api/vessels/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to update vessel");
-      }
-
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/vessels"] });
-      setIsEditDialogOpen(false);
-      setEditingVessel(null);
-      resetForm();
-      toast({
-        title: "Success",
-        description: "Vessel updated successfully",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  });
-
-  const deleteVesselMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const response = await fetch(`/api/vessels/${id}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to delete vessel");
-      }
-
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/vessels"] });
-      toast({
-        title: "Success",
-        description: "Vessel deleted successfully",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  });
-
   const resetForm = () => {
     setFormData({
       name: "",
@@ -269,39 +186,6 @@ export function VesselManagementNew() {
       ...prev,
       [field]: value
     }));
-  };
-
-  const handleCoordinateSelect = (lat: number, lng: number) => {
-    setFormData(prev => ({
-      ...prev,
-      currentLat: lat.toString(),
-      currentLng: lng.toString()
-    }));
-    setShowMapSelector(false);
-  };
-
-  const handleEditVessel = (vessel: Vessel) => {
-    setEditingVessel(vessel);
-    setFormData({
-      name: vessel.name,
-      imo: vessel.imo,
-      mmsi: vessel.mmsi,
-      vesselType: vessel.vesselType,
-      flag: vessel.flag,
-      currentLat: vessel.currentLat || "",
-      currentLng: vessel.currentLng || "",
-      status: vessel.status || "underway",
-      speed: vessel.speed || "0",
-      cargoType: vessel.cargoType || "",
-      cargoCapacity: vessel.cargoCapacity?.toString() || ""
-    });
-    setIsEditDialogOpen(true);
-  };
-
-  const handleDeleteVessel = (vessel: Vessel) => {
-    if (confirm(`Are you sure you want to delete vessel "${vessel.name}"? This action cannot be undone.`)) {
-      deleteVesselMutation.mutate(vessel.id);
-    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -443,51 +327,29 @@ export function VesselManagementNew() {
                     </div>
                   </div>
 
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="currentLat">Latitude</Label>
-                        <Input
-                          id="currentLat"
-                          value={formData.currentLat}
-                          onChange={(e) => handleInputChange("currentLat", e.target.value)}
-                          placeholder="e.g., 25.7617"
-                          type="number"
-                          step="any"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="currentLng">Longitude</Label>
-                        <Input
-                          id="currentLng"
-                          value={formData.currentLng}
-                          onChange={(e) => handleInputChange("currentLng", e.target.value)}
-                          placeholder="e.g., -80.1918"
-                          type="number"
-                          step="any"
-                        />
-                      </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="currentLat">Latitude</Label>
+                      <Input
+                        id="currentLat"
+                        value={formData.currentLat}
+                        onChange={(e) => handleInputChange("currentLat", e.target.value)}
+                        placeholder="e.g., 25.7617"
+                        type="number"
+                        step="any"
+                      />
                     </div>
-                    
-                    {/* Map Selector Button */}
-                    <div className="flex justify-center">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => setShowMapSelector(true)}
-                        className="flex items-center gap-2"
-                      >
-                        <MapPin className="h-4 w-4" />
-                        Select Position on Map
-                      </Button>
+                    <div className="space-y-2">
+                      <Label htmlFor="currentLng">Longitude</Label>
+                      <Input
+                        id="currentLng"
+                        value={formData.currentLng}
+                        onChange={(e) => handleInputChange("currentLng", e.target.value)}
+                        placeholder="e.g., -80.1918"
+                        type="number"
+                        step="any"
+                      />
                     </div>
-                    
-                    {/* Show current coordinates if set */}
-                    {formData.currentLat && formData.currentLng && (
-                      <div className="text-sm text-center text-muted-foreground">
-                        Selected: {parseFloat(formData.currentLat).toFixed(6)}, {parseFloat(formData.currentLng).toFixed(6)}
-                      </div>
-                    )}
                   </div>
 
                   <div className="grid grid-cols-3 gap-4">
@@ -599,18 +461,10 @@ export function VesselManagementNew() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => handleEditVessel(vessel)}
-                        >
+                        <Button variant="ghost" size="sm">
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => handleDeleteVessel(vessel)}
-                        >
+                        <Button variant="ghost" size="sm">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -628,224 +482,6 @@ export function VesselManagementNew() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Edit Vessel Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit Vessel</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={(e) => {
-            e.preventDefault();
-            if (editingVessel) {
-              updateVesselMutation.mutate({ id: editingVessel.id, data: formData });
-            }
-          }} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-name">Vessel Name *</Label>
-                <Input
-                  id="edit-name"
-                  value={formData.name}
-                  onChange={(e) => handleInputChange("name", e.target.value)}
-                  placeholder="Enter vessel name"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-vesselType">Vessel Type</Label>
-                <Select
-                  value={formData.vesselType}
-                  onValueChange={(value) => handleInputChange("vesselType", value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {vesselTypes.map((type) => (
-                      <SelectItem key={type} value={type}>
-                        {type}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-imo">IMO Number *</Label>
-                <Input
-                  id="edit-imo"
-                  value={formData.imo}
-                  onChange={(e) => handleInputChange("imo", e.target.value)}
-                  placeholder="e.g., 9593505"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-mmsi">MMSI *</Label>
-                <Input
-                  id="edit-mmsi"
-                  value={formData.mmsi}
-                  onChange={(e) => handleInputChange("mmsi", e.target.value)}
-                  placeholder="e.g., 636024450"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-flag">Flag</Label>
-                <Input
-                  id="edit-flag"
-                  value={formData.flag}
-                  onChange={(e) => handleInputChange("flag", e.target.value)}
-                  placeholder="e.g., Panama"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-status">Status</Label>
-                <Select
-                  value={formData.status}
-                  onValueChange={(value) => handleInputChange("status", value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {vesselStatuses.map((status) => (
-                      <SelectItem key={status} value={status}>
-                        {status.charAt(0).toUpperCase() + status.slice(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-currentLat">Latitude</Label>
-                  <Input
-                    id="edit-currentLat"
-                    value={formData.currentLat}
-                    onChange={(e) => handleInputChange("currentLat", e.target.value)}
-                    placeholder="e.g., 25.7617"
-                    type="number"
-                    step="any"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-currentLng">Longitude</Label>
-                  <Input
-                    id="edit-currentLng"
-                    value={formData.currentLng}
-                    onChange={(e) => handleInputChange("currentLng", e.target.value)}
-                    placeholder="e.g., -80.1918"
-                    type="number"
-                    step="any"
-                  />
-                </div>
-              </div>
-              
-              <div className="flex justify-center">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setShowMapSelector(true)}
-                  className="flex items-center gap-2"
-                >
-                  <MapPin className="h-4 w-4" />
-                  Select Position on Map
-                </Button>
-              </div>
-              
-              {formData.currentLat && formData.currentLng && (
-                <div className="text-sm text-center text-muted-foreground">
-                  Selected: {parseFloat(formData.currentLat).toFixed(6)}, {parseFloat(formData.currentLng).toFixed(6)}
-                </div>
-              )}
-            </div>
-
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-speed">Speed (knots)</Label>
-                <Input
-                  id="edit-speed"
-                  value={formData.speed}
-                  onChange={(e) => handleInputChange("speed", e.target.value)}
-                  placeholder="0"
-                  type="number"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-cargoType">Cargo Type</Label>
-                <Input
-                  id="edit-cargoType"
-                  value={formData.cargoType}
-                  onChange={(e) => handleInputChange("cargoType", e.target.value)}
-                  placeholder="e.g., Crude Oil"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-cargoCapacity">Cargo Capacity (MT)</Label>
-                <Input
-                  id="edit-cargoCapacity"
-                  value={formData.cargoCapacity}
-                  onChange={(e) => handleInputChange("cargoCapacity", e.target.value)}
-                  placeholder="e.g., 50000"
-                  type="number"
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => {
-                  setIsEditDialogOpen(false);
-                  setEditingVessel(null);
-                  resetForm();
-                }}
-              >
-                Cancel
-              </Button>
-              <Button 
-                type="submit" 
-                disabled={updateVesselMutation.isPending}
-              >
-                {updateVesselMutation.isPending ? "Updating..." : "Update Vessel"}
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Map Selector Modal */}
-      {showMapSelector && (
-        <Dialog open={showMapSelector} onOpenChange={setShowMapSelector}>
-          <DialogContent className="max-w-4xl h-[80vh]">
-            <DialogHeader>
-              <DialogTitle>Select Vessel Position</DialogTitle>
-              <p className="text-sm text-muted-foreground">
-                Click on the map to select coordinates. You can see refineries (red) and ports (blue) for reference.
-              </p>
-            </DialogHeader>
-            <div className="flex-1">
-              <CoordinateSelector
-                onCoordinateSelect={handleCoordinateSelect}
-                selectedLat={formData.currentLat ? parseFloat(formData.currentLat) : undefined}
-                selectedLng={formData.currentLng ? parseFloat(formData.currentLng) : undefined}
-                height="60vh"
-              />
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
     </div>
   );
 }
