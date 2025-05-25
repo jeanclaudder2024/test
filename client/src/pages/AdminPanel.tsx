@@ -7,7 +7,7 @@ import { SystemStats } from "@/components/admin/SystemStats";
 import { FixedDataManagement } from "@/components/admin/FixedDataManagement";
 import { VesselManagement } from "@/components/admin/VesselManagement";
 import { RefineryManagement } from "@/components/admin/RefineryManagement";
-import { EnhancedPortManagement } from "@/components/admin/EnhancedPortManagement";
+import { PortManagement } from "@/components/admin/PortManagement";
 import { Settings } from "@/components/admin/AdminSettings";
 import { Button } from "@/components/ui/button";
 import { Shield, Database, Users, Settings as SettingsIcon, ChevronLeft, Ship, Factory, Anchor } from "lucide-react";
@@ -125,7 +125,17 @@ export default function AdminPanel() {
         </TabsContent>
 
         <TabsContent value="ports" className="space-y-4">
-          <EnhancedPortManagement />
+          <Card>
+            <CardHeader>
+              <CardTitle>Port Management</CardTitle>
+              <CardDescription>
+                Add, edit, and manage global ports with interactive map positioning
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <PortManagement />
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="refineries" className="space-y-4">
