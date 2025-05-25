@@ -629,6 +629,202 @@ export function VesselManagementNew() {
         </CardContent>
       </Card>
 
+      {/* Edit Vessel Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Vessel</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            if (editingVessel) {
+              updateVesselMutation.mutate({ id: editingVessel.id, data: formData });
+            }
+          }} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-name">Vessel Name *</Label>
+                <Input
+                  id="edit-name"
+                  value={formData.name}
+                  onChange={(e) => handleInputChange("name", e.target.value)}
+                  placeholder="Enter vessel name"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-vesselType">Vessel Type</Label>
+                <Select
+                  value={formData.vesselType}
+                  onValueChange={(value) => handleInputChange("vesselType", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {vesselTypes.map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {type}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-imo">IMO Number *</Label>
+                <Input
+                  id="edit-imo"
+                  value={formData.imo}
+                  onChange={(e) => handleInputChange("imo", e.target.value)}
+                  placeholder="e.g., 9593505"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-mmsi">MMSI *</Label>
+                <Input
+                  id="edit-mmsi"
+                  value={formData.mmsi}
+                  onChange={(e) => handleInputChange("mmsi", e.target.value)}
+                  placeholder="e.g., 636024450"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-flag">Flag</Label>
+                <Input
+                  id="edit-flag"
+                  value={formData.flag}
+                  onChange={(e) => handleInputChange("flag", e.target.value)}
+                  placeholder="e.g., Panama"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-status">Status</Label>
+                <Select
+                  value={formData.status}
+                  onValueChange={(value) => handleInputChange("status", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {vesselStatuses.map((status) => (
+                      <SelectItem key={status} value={status}>
+                        {status.charAt(0).toUpperCase() + status.slice(1)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-currentLat">Latitude</Label>
+                  <Input
+                    id="edit-currentLat"
+                    value={formData.currentLat}
+                    onChange={(e) => handleInputChange("currentLat", e.target.value)}
+                    placeholder="e.g., 25.7617"
+                    type="number"
+                    step="any"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-currentLng">Longitude</Label>
+                  <Input
+                    id="edit-currentLng"
+                    value={formData.currentLng}
+                    onChange={(e) => handleInputChange("currentLng", e.target.value)}
+                    placeholder="e.g., -80.1918"
+                    type="number"
+                    step="any"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex justify-center">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowMapSelector(true)}
+                  className="flex items-center gap-2"
+                >
+                  <MapPin className="h-4 w-4" />
+                  Select Position on Map
+                </Button>
+              </div>
+              
+              {formData.currentLat && formData.currentLng && (
+                <div className="text-sm text-center text-muted-foreground">
+                  Selected: {parseFloat(formData.currentLat).toFixed(6)}, {parseFloat(formData.currentLng).toFixed(6)}
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-speed">Speed (knots)</Label>
+                <Input
+                  id="edit-speed"
+                  value={formData.speed}
+                  onChange={(e) => handleInputChange("speed", e.target.value)}
+                  placeholder="0"
+                  type="number"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-cargoType">Cargo Type</Label>
+                <Input
+                  id="edit-cargoType"
+                  value={formData.cargoType}
+                  onChange={(e) => handleInputChange("cargoType", e.target.value)}
+                  placeholder="e.g., Crude Oil"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-cargoCapacity">Cargo Capacity (MT)</Label>
+                <Input
+                  id="edit-cargoCapacity"
+                  value={formData.cargoCapacity}
+                  onChange={(e) => handleInputChange("cargoCapacity", e.target.value)}
+                  placeholder="e.g., 50000"
+                  type="number"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => {
+                  setIsEditDialogOpen(false);
+                  setEditingVessel(null);
+                  resetForm();
+                }}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={updateVesselMutation.isPending}
+              >
+                {updateVesselMutation.isPending ? "Updating..." : "Update Vessel"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
       {/* Map Selector Modal */}
       {showMapSelector && (
         <Dialog open={showMapSelector} onOpenChange={setShowMapSelector}>
