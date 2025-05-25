@@ -243,30 +243,7 @@ export function VesselManagementNew() {
                     Add Vessel
                   </Button>
                 </DialogTrigger>
-            </div>
-            
-            {/* Search Bar */}
-            <div className="relative max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Search vessels by name, IMO, MMSI, type, or flag..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {/* Results count */}
-            <div className="text-sm text-muted-foreground">
-              Showing {filteredVessels.length} of {vessels.length} vessels
-              {searchTerm && ` matching "${searchTerm}"`}
-            </div>
-            
-            <div className="rounded-md border">
-              <DialogContent className="max-w-2xl">
+                <DialogContent className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle>Add New Vessel</DialogTitle>
                 </DialogHeader>
@@ -427,10 +404,29 @@ export function VesselManagementNew() {
                 </form>
               </DialogContent>
             </Dialog>
+            </div>
+            
+            {/* Search Bar */}
+            <div className="relative max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                placeholder="Search vessels by name, IMO, MMSI, type, or flag..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9"
+              />
+            </div>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
+          <div className="space-y-4">
+            {/* Results count */}
+            <div className="text-sm text-muted-foreground">
+              Showing {filteredVessels.length} of {vessels.length} vessels
+              {searchTerm && ` matching "${searchTerm}"`}
+            </div>
+            
+            <div className="rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
