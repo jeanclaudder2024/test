@@ -69,48 +69,6 @@ export class MarineTrafficService {
   }
   
   /**
-   * Fetch a single vessel by IMO number for import
-   * @param imo IMO number
-   * @returns Vessel data or null if not found
-   */
-  async fetchVesselByIMO(imo: string): Promise<any | null> {
-    if (!this.isConfigured()) {
-      console.warn('MyShipTracking API is not configured');
-      return null;
-    }
-    
-    try {
-      // For now, return mock data structure that matches what the import expects
-      // This ensures the import feature works while we wait for real API data
-      console.log(`Fetching vessel data for IMO: ${imo}`);
-      
-      return {
-        name: `Vessel ${imo}`,
-        mmsi: `${imo.slice(0,3)}${Math.floor(Math.random() * 1000000)}`,
-        vesselType: 'Oil Tanker',
-        flag: 'Unknown',
-        built: 2010 + Math.floor(Math.random() * 14),
-        deadweight: 50000 + Math.floor(Math.random() * 200000),
-        length: 150 + Math.floor(Math.random() * 200),
-        width: 25 + Math.floor(Math.random() * 20),
-        status: 'At Sea',
-        currentLat: (Math.random() * 180 - 90).toFixed(6),
-        currentLng: (Math.random() * 360 - 180).toFixed(6),
-        destination: 'Unknown Port',
-        eta: null,
-        speed: (5 + Math.random() * 20).toFixed(1),
-        course: Math.floor(Math.random() * 360).toString(),
-        draught: (10 + Math.random() * 15).toFixed(1),
-        cargo: 'Crude Oil',
-        cargoCapacity: 100000 + Math.floor(Math.random() * 200000)
-      };
-    } catch (error) {
-      console.error(`Error fetching vessel ${imo} from MyShipTracking API:`, error);
-      return null;
-    }
-  }
-
-  /**
    * Fetch a single vessel by IMO or MMSI number
    * @param identifier IMO or MMSI
    * @returns Vessel or null if not found

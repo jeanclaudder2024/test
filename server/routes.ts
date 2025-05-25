@@ -833,9 +833,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Import vessel from API using IMO number
-  apiRouter.post("/vessels/import/:imo", async (req, res) => {
+  apiRouter.post("/vessels/import-from-api", async (req, res) => {
     try {
-      const { imo } = req.params;
+      const { imo } = req.body;
       
       if (!imo) {
         return res.status(400).json({ message: "IMO number is required" });
