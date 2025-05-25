@@ -8,7 +8,7 @@ import { FixedDataManagement } from "@/components/admin/FixedDataManagement";
 
 import { RefineryManagement } from "@/components/admin/RefineryManagement";
 import { PortManagement } from "@/components/admin/PortManagement";
-import { VesselCrudManagement } from "@/components/admin/VesselCrudManagement";
+import { VesselManagementNew } from "@/components/admin/VesselManagementNew";
 import { Settings } from "@/components/admin/AdminSettings";
 import { Button } from "@/components/ui/button";
 import { Shield, Database, Users, Settings as SettingsIcon, ChevronLeft, Factory, Anchor, Ship } from "lucide-react";
@@ -120,7 +120,7 @@ export default function AdminPanel() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <VesselCrudManagement />
+              <VesselManagementNew />
             </CardContent>
           </Card>
         </TabsContent>

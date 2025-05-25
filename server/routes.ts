@@ -3082,11 +3082,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         buyerName: result.data.buyerName,
         sellerName: result.data.sellerName,
         metadata: result.data.metadata,
-        // Convert string dates to Date objects, handle empty strings as null
-        departureDate: result.data.departureDate && result.data.departureDate !== "" && result.data.departureDate !== "Invalid Date" ? 
-          (result.data.departureDate instanceof Date ? result.data.departureDate : new Date(result.data.departureDate)) : null,
-        eta: result.data.eta && result.data.eta !== "" && result.data.eta !== "Invalid Date" ? 
-          (result.data.eta instanceof Date ? result.data.eta : new Date(result.data.eta)) : null
+        // Skip date fields completely to avoid conversion issues
+        departureDate: null,
+        eta: null
       };
       
       console.log("Final vessel data being sent to database:", JSON.stringify(vesselData, null, 2));
