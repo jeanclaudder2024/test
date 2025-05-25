@@ -3014,6 +3014,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   apiRouter.post("/vessels", async (req, res) => {
     try {
       console.log("Received request to create vessel:", JSON.stringify(req.body, null, 2));
+      console.log("ETA field type and value:", typeof req.body.eta, req.body.eta);
+      console.log("Departure date field type and value:", typeof req.body.departureDate, req.body.departureDate);
       
       // Pre-process the data to handle common issues
       const processedData = {
@@ -3081,8 +3083,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sellerName: result.data.sellerName,
         metadata: result.data.metadata,
         // Convert string dates to Date objects, handle empty strings as null
-        departureDate: result.data.departureDate && result.data.departureDate !== "" ? new Date(result.data.departureDate) : null,
-        eta: result.data.eta && result.data.eta !== "" ? new Date(result.data.eta) : null
+        departureDate: result.data.departureDate && result.data.departureDate !== "" && result.data.departureDate !== "Invalid Date" ? 
+          (result.data.departureDate instanceof Date ? result.data.departureDate : new Date(result.data.departureDate)) : null,
+        eta: result.data.eta && result.data.eta !== "" && result.data.eta !== "Invalid Date" ? 
+          (result.data.eta instanceof Date ? result.data.eta : new Date(result.data.eta)) : null
       };
       
       console.log("Final vessel data being sent to database:", JSON.stringify(vesselData, null, 2));
