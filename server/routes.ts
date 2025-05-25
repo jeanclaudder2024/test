@@ -7,6 +7,7 @@ import { openaiService } from "./services/openaiService";
 import { AIEnhancementService } from "./services/aiEnhancementService";
 // Replace dataService from asiStreamService with marineTrafficService
 import { marineTrafficService } from "./services/marineTrafficService";
+import { aisStreamService } from "./services/asiStreamService";
 import { refineryDataService } from "./services/refineryDataService";
 import { brokerService } from "./services/brokerService";
 import { stripeService } from "./services/stripeService";
@@ -857,45 +858,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      if (!marineTrafficService.isConfigured()) {
-        return res.status(503).json({ 
-          message: "Maritime API is not configured. Please provide your API key to enable vessel import functionality." 
-        });
-      }
-      
-      // Fetch vessel data from maritime API using IMO or MMSI
+      // Try AIS Stream API first, then fallback to Marine Traffic
       let vesselData = null;
+      let apiUsed = '';
       
       if (imo) {
-        vesselData = await marineTrafficService.fetchVesselByIMO(imo);
-        
-        if (!vesselData) {
-          return res.status(404).json({ 
-            message: `No vessel found with IMO ${imo}. Please verify the IMO number is correct.` 
-          });
-        }
-        
-        // Check if vessel already exists in database
+        // Check if vessel already exists in database first
         const existingVessel = await storage.getVesselByIMO(imo);
         if (existingVessel) {
           return res.status(409).json({ 
             message: `Vessel with IMO ${imo} already exists in the database.` 
           });
         }
-      } else if (mmsi) {
-        vesselData = await marineTrafficService.fetchVesselByMMSI(mmsi);
         
-        if (!vesselData) {
-          return res.status(404).json({ 
-            message: `No vessel found with MMSI ${mmsi}. Please verify the MMSI number is correct.` 
-          });
+        // Try AIS Stream API first
+        if (aisStreamService.isConfigured()) {
+          try {
+            vesselData = await aisStreamService.fetchVesselByIMO(imo);
+            if (vesselData) {
+              apiUsed = 'AIS Stream';
+              console.log(`Successfully fetched vessel ${imo} from AIS Stream API`);
+            }
+          } catch (error) {
+            console.warn(`AIS Stream API failed for IMO ${imo}, trying fallback:`, error);
+          }
         }
         
-        // Check if vessel already exists in database
+        // Fallback to Marine Traffic if AIS Stream failed
+        if (!vesselData && marineTrafficService.isConfigured()) {
+          try {
+            vesselData = await marineTrafficService.fetchVesselByIMO(imo);
+            if (vesselData) {
+              apiUsed = 'Marine Traffic';
+              console.log(`Successfully fetched vessel ${imo} from Marine Traffic API`);
+            }
+          } catch (error) {
+            console.warn(`Marine Traffic API also failed for IMO ${imo}:`, error);
+          }
+        }
+        
+        if (!vesselData) {
+          const availableAPIs = [];
+          if (aisStreamService.isConfigured()) availableAPIs.push('AIS Stream');
+          if (marineTrafficService.isConfigured()) availableAPIs.push('Marine Traffic');
+          
+          return res.status(404).json({ 
+            message: `No vessel found with IMO ${imo} in available APIs (${availableAPIs.join(', ')}). Please verify the IMO number is correct.` 
+          });
+        }
+      } else if (mmsi) {
+        // Check if vessel already exists in database first
         const existingVessel = await storage.getVesselByMmsi(mmsi);
         if (existingVessel) {
           return res.status(409).json({ 
             message: `Vessel with MMSI ${mmsi} already exists in the database.` 
+          });
+        }
+        
+        // Try AIS Stream API first
+        if (aisStreamService.isConfigured()) {
+          try {
+            vesselData = await aisStreamService.fetchVesselByMMSI(mmsi);
+            if (vesselData) {
+              apiUsed = 'AIS Stream';
+              console.log(`Successfully fetched vessel ${mmsi} from AIS Stream API`);
+            }
+          } catch (error) {
+            console.warn(`AIS Stream API failed for MMSI ${mmsi}, trying fallback:`, error);
+          }
+        }
+        
+        // Fallback to Marine Traffic if AIS Stream failed
+        if (!vesselData && marineTrafficService.isConfigured()) {
+          try {
+            vesselData = await marineTrafficService.fetchVesselByMMSI(mmsi);
+            if (vesselData) {
+              apiUsed = 'Marine Traffic';
+              console.log(`Successfully fetched vessel ${mmsi} from Marine Traffic API`);
+            }
+          } catch (error) {
+            console.warn(`Marine Traffic API also failed for MMSI ${mmsi}:`, error);
+          }
+        }
+        
+        if (!vesselData) {
+          const availableAPIs = [];
+          if (aisStreamService.isConfigured()) availableAPIs.push('AIS Stream');
+          if (marineTrafficService.isConfigured()) availableAPIs.push('Marine Traffic');
+          
+          return res.status(404).json({ 
+            message: `No vessel found with MMSI ${mmsi} in available APIs (${availableAPIs.join(', ')}). Please verify the MMSI number is correct.` 
           });
         }
       }
