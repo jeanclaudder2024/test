@@ -31,8 +31,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Ship, Plus, Edit, Trash2, Search } from "lucide-react";
+import { Ship, Plus, Edit, Trash2, Search, MapPin } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { CoordinateSelector } from "@/components/map/CoordinateSelector";
 
 interface Vessel {
   id: number;
@@ -87,6 +88,7 @@ const vesselStatuses = [
 export function VesselManagementNew() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showMapSelector, setShowMapSelector] = useState(false);
   const [formData, setFormData] = useState<VesselFormData>({
     name: "",
     imo: "",
@@ -186,6 +188,15 @@ export function VesselManagementNew() {
       ...prev,
       [field]: value
     }));
+  };
+
+  const handleCoordinateSelect = (lat: number, lng: number) => {
+    setFormData(prev => ({
+      ...prev,
+      currentLat: lat.toString(),
+      currentLng: lng.toString()
+    }));
+    setShowMapSelector(false);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -327,29 +338,51 @@ export function VesselManagementNew() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="currentLat">Latitude</Label>
-                      <Input
-                        id="currentLat"
-                        value={formData.currentLat}
-                        onChange={(e) => handleInputChange("currentLat", e.target.value)}
-                        placeholder="e.g., 25.7617"
-                        type="number"
-                        step="any"
-                      />
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="currentLat">Latitude</Label>
+                        <Input
+                          id="currentLat"
+                          value={formData.currentLat}
+                          onChange={(e) => handleInputChange("currentLat", e.target.value)}
+                          placeholder="e.g., 25.7617"
+                          type="number"
+                          step="any"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="currentLng">Longitude</Label>
+                        <Input
+                          id="currentLng"
+                          value={formData.currentLng}
+                          onChange={(e) => handleInputChange("currentLng", e.target.value)}
+                          placeholder="e.g., -80.1918"
+                          type="number"
+                          step="any"
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="currentLng">Longitude</Label>
-                      <Input
-                        id="currentLng"
-                        value={formData.currentLng}
-                        onChange={(e) => handleInputChange("currentLng", e.target.value)}
-                        placeholder="e.g., -80.1918"
-                        type="number"
-                        step="any"
-                      />
+                    
+                    {/* Map Selector Button */}
+                    <div className="flex justify-center">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setShowMapSelector(true)}
+                        className="flex items-center gap-2"
+                      >
+                        <MapPin className="h-4 w-4" />
+                        Select Position on Map
+                      </Button>
                     </div>
+                    
+                    {/* Show current coordinates if set */}
+                    {formData.currentLat && formData.currentLng && (
+                      <div className="text-sm text-center text-muted-foreground">
+                        Selected: {parseFloat(formData.currentLat).toFixed(6)}, {parseFloat(formData.currentLng).toFixed(6)}
+                      </div>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-3 gap-4">
