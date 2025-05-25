@@ -4055,13 +4055,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
         connections: results,
         summary: {
           primary: results.primary ? "Connected" : "Failed",
-          supabase: results.supabase ? "Connected" : results.errors.supabase ? "Failed" : "Not configured"
+          supabase: results.supabase ? "Connected" : results.errors.supabase ? "Failed" : "Not configured",
+          mysql: results.mysql ? "Connected" : results.errors.mysql ? "Failed" : "Not configured"
         }
       });
     } catch (error) {
       console.error("Error testing database connections:", error);
       res.status(500).json({ 
         message: "Failed to test database connections",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Get vessels near a specific port
+  apiRouter.get("/vessels/near-port/:portId", async (req, res) => {
+    try {
+      const portId = parseInt(req.params.portId);
+      
+      if (isNaN(portId)) {
+        return res.status(400).json({ message: "Invalid port ID" });
+      }
+
+      // Get the port details first
+      const port = await storage.getPort(portId);
+      if (!port) {
+        return res.status(404).json({ message: "Port not found" });
+      }
+
+      // Get all vessels
+      const vessels = await storage.getVessels();
+      
+      // Filter vessels that are near this port (within reasonable distance)
+      const nearbyVessels = vessels.filter(vessel => {
+        if (!vessel.currentLat || !vessel.currentLng) return false;
+        
+        try {
+          const vesselLat = parseFloat(vessel.currentLat);
+          const vesselLng = parseFloat(vessel.currentLng);
+          const portLat = parseFloat(port.lat);
+          const portLng = parseFloat(port.lng);
+          
+          // Calculate simple distance (in a real app, use proper haversine formula)
+          const distance = Math.sqrt(
+            Math.pow(vesselLat - portLat, 2) + 
+            Math.pow(vesselLng - portLng, 2)
+          );
+          
+          // Consider vessels within 0.5 degrees (~55km) as "near" the port
+          return distance <= 0.5;
+        } catch (error) {
+          return false;
+        }
+      });
+
+      res.json(nearbyVessels);
+    } catch (error) {
+      console.error("Error getting vessels near port:", error);
+      res.status(500).json({ 
+        message: "Failed to get vessels near port",
         error: error instanceof Error ? error.message : "Unknown error"
       });
     }
