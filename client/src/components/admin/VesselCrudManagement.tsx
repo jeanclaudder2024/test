@@ -57,6 +57,8 @@ import {
   MapPin,
   AlertCircle,
   Map,
+  Download,
+  Globe,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CoordinateMapSelector } from "@/components/map/CoordinateMapSelector";
@@ -141,6 +143,9 @@ export function VesselCrudManagement() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [showMapSelector, setShowMapSelector] = useState(false);
+  const [showApiImport, setShowApiImport] = useState(false);
+  const [apiImportImo, setApiImportImo] = useState("");
+  const [isImporting, setIsImporting] = useState(false);
   const itemsPerPage = 10;
 
   const { toast } = useToast();
@@ -297,6 +302,42 @@ export function VesselCrudManagement() {
     },
   });
 
+  // Import vessel from API mutation
+  const importVesselMutation = useMutation({
+    mutationFn: async (imo: string) => {
+      const response = await fetch("/api/vessels/import-from-api", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ imo }),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to import vessel data");
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/vessels"] });
+      setShowApiImport(false);
+      setApiImportImo("");
+      toast({
+        title: "Success!",
+        description: `Vessel "${data.name}" imported successfully from API.`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Import Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const resetForm = () => {
     setFormData({
       name: "",
@@ -427,13 +468,76 @@ export function VesselCrudManagement() {
             Manage your vessel fleet with full CRUD operations
           </p>
         </div>
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Vessel
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <Dialog open={showApiImport} onOpenChange={setShowApiImport}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Globe className="h-4 w-4 mr-2" />
+                Import from API
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Import Vessel from API</DialogTitle>
+                <DialogDescription>
+                  Enter an IMO number to automatically fetch real vessel data from maritime APIs.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="imo-input">IMO Number</Label>
+                  <Input
+                    id="imo-input"
+                    placeholder="e.g., 9234567"
+                    value={apiImportImo}
+                    onChange={(e) => setApiImportImo(e.target.value)}
+                    disabled={importVesselMutation.isPending}
+                  />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Enter the 7-digit IMO number to fetch vessel details automatically
+                  </p>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowApiImport(false)}
+                  disabled={importVesselMutation.isPending}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={() => {
+                    if (apiImportImo.trim()) {
+                      setIsImporting(true);
+                      importVesselMutation.mutate(apiImportImo.trim());
+                    }
+                  }}
+                  disabled={!apiImportImo.trim() || importVesselMutation.isPending}
+                >
+                  {importVesselMutation.isPending ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      Importing...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="h-4 w-4 mr-2" />
+                      Import Vessel
+                    </>
+                  )}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Vessel
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Create New Vessel</DialogTitle>
