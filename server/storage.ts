@@ -67,6 +67,8 @@ export interface IStorage {
   // Vessel methods
   getVessels(): Promise<Vessel[]>;
   getVesselById(id: number): Promise<Vessel | undefined>;
+  getVesselByIMO(imo: string): Promise<Vessel | undefined>;
+  getVesselByMmsi(mmsi: string): Promise<Vessel | undefined>;
   getVesselsByRegion(region: string): Promise<Vessel[]>;
   createVessel(vessel: InsertVessel): Promise<Vessel>;
   updateVessel(id: number, vessel: Partial<InsertVessel>): Promise<Vessel | undefined>;
@@ -385,6 +387,16 @@ export class DatabaseStorage implements IStorage {
 
   async getVesselById(id: number): Promise<Vessel | undefined> {
     const [vessel] = await db.select().from(vessels).where(eq(vessels.id, id));
+    return vessel || undefined;
+  }
+
+  async getVesselByIMO(imo: string): Promise<Vessel | undefined> {
+    const [vessel] = await db.select().from(vessels).where(eq(vessels.imo, imo));
+    return vessel || undefined;
+  }
+
+  async getVesselByMmsi(mmsi: string): Promise<Vessel | undefined> {
+    const [vessel] = await db.select().from(vessels).where(eq(vessels.mmsi, mmsi));
     return vessel || undefined;
   }
 

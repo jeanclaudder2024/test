@@ -9,7 +9,7 @@ export class MarineTrafficService {
   private baseUrl: string;
   
   constructor() {
-    this.apiKey = process.env.MARINE_TRAFFIC_API_KEY;
+    this.apiKey = process.env.MYSHIPTRACKING_API_KEY;
     this.baseUrl = 'https://api.myshiptracking.com/v1';
     
     console.log(`MyShipTracking API configuration status: ${this.apiKey ? 'API Key present' : 'API Key missing'}`);
@@ -196,6 +196,24 @@ export class MarineTrafficService {
     }
   }
   
+  /**
+   * Fetch vessel by IMO number
+   * @param imo IMO number
+   * @returns Vessel data or null if not found
+   */
+  async fetchVesselByIMO(imo: string): Promise<any | null> {
+    return this.fetchVessel(imo);
+  }
+
+  /**
+   * Fetch vessel by MMSI number
+   * @param mmsi MMSI number
+   * @returns Vessel data or null if not found
+   */
+  async fetchVesselByMMSI(mmsi: string): Promise<any | null> {
+    return this.fetchVessel(mmsi);
+  }
+
   /**
    * Fetch voyage progress details for a vessel
    * @param identifier IMO or MMSI
