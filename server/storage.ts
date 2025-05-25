@@ -1,4 +1,4 @@
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { db, getActiveDb } from "./db";
 import {
   users, vessels, refineries, progressEvents, documents, brokers, stats as statsTable, ports, 
@@ -445,34 +445,7 @@ export class DatabaseStorage implements IStorage {
 
   // Port methods implementation
   async getPorts(): Promise<Port[]> {
-    // Get ports with connection counts
-    const portsWithConnections = await db
-      .select({
-        id: ports.id,
-        name: ports.name,
-        country: ports.country,
-        region: ports.region,
-        lat: ports.lat,
-        lng: ports.lng,
-        type: ports.type,
-        status: ports.status,
-        capacity: ports.capacity,
-        description: ports.description,
-        lastUpdated: ports.lastUpdated,
-        vesselCount: sql`COALESCE((
-          SELECT COUNT(*)::int 
-          FROM vessel_port_connections 
-          WHERE port_id = ${ports.id}
-        ), 0)`.as('vesselCount'),
-        connectedRefineries: sql`COALESCE((
-          SELECT COUNT(*)::int 
-          FROM refinery_port_connections 
-          WHERE port_id = ${ports.id}
-        ), 0)`.as('connectedRefineries')
-      })
-      .from(ports);
-    
-    return portsWithConnections;
+    return await db.select().from(ports);
   }
 
   async getPortById(id: number): Promise<Port | undefined> {

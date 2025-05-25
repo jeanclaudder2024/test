@@ -32,8 +32,6 @@ import TrafficInsights from "@/pages/TrafficInsights";
 import WorkingMap from "@/pages/WorkingMap";
 import OilVesselMap from "@/pages/OilVesselMap";
 import AdminPanel from "@/pages/AdminPanel";
-import ConnectionManager from "@/pages/ConnectionManager";
-import PortCRUD from "@/pages/PortCRUD";
 // Maritime tracking and vessel lookup pages removed as requested
 import { useEffect } from "react";
 import { apiRequest, queryClient } from "./lib/queryClient";
@@ -122,7 +120,6 @@ function Router() {
             <Route path="/refineries" component={Refineries} />
             <Route path="/refineries/:id" component={RefineryDetail} />
             <Route path="/ports" component={Ports} />
-            <Route path="/ports/crud" component={PortCRUD} />
             <Route path="/ports/import" component={PortImport} />
             <Route path="/ports/proximity" component={PortVesselProximity} />
             <Route path="/ports/:id" component={PortDetail} />
@@ -132,7 +129,6 @@ function Router() {
             <Route path="/documents" component={Documents} />
             <Route path="/ai-assistant" component={AIAssistantPage} />
             <Route path="/admin" component={AdminPanel} />
-            <Route path="/admin/connections" component={ConnectionManager} />
             <Route path="/trading" component={TradingDashboard} />
             <Route path="/translation" component={TranslationPage} />
             <Route path="/traffic-insights" component={TrafficInsights} />

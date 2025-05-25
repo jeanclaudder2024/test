@@ -121,13 +121,7 @@ function PortStatusBadge({ status }: { status: string | null }) {
 }
 
 // Port Card Component
-function PortCard({ port, onManageConnections, onViewPort, onEditPort, onDeletePort }: { 
-  port: Port;
-  onManageConnections: (port: Port, type: 'vessels' | 'refineries') => void;
-  onViewPort: (port: Port) => void;
-  onEditPort: (port: Port) => void;
-  onDeletePort: (port: Port) => void;
-}) {
+function PortCard({ port }: { port: Port }) {
   const getStatusIcon = (status: string | null) => {
     const s = status?.toLowerCase() || 'unknown';
     if (s.includes('operational') || s.includes('active')) {
@@ -202,36 +196,8 @@ function PortCard({ port, onManageConnections, onViewPort, onEditPort, onDeleteP
             </div>
           </div>
 
-          {/* Connection Management Buttons */}
+          {/* Port Statistics */}
           <div className="pt-3 border-t border-border">
-            <div className="grid grid-cols-2 gap-2 mb-3">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => onManageConnections(port, 'vessels')}
-                className="flex items-center justify-center space-x-1 text-xs"
-              >
-                <Ship className="h-3 w-3" />
-                <span>Vessels</span>
-                <Badge variant="secondary" className="ml-1 text-[10px] px-1 py-0">
-                  {port.vesselCount || 0}
-                </Badge>
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => onManageConnections(port, 'refineries')}
-                className="flex items-center justify-center space-x-1 text-xs"
-              >
-                <Building2 className="h-3 w-3" />
-                <span>Refineries</span>
-                <Badge variant="secondary" className="ml-1 text-[10px] px-1 py-0">
-                  {port.connectedRefineries || 0}
-                </Badge>
-              </Button>
-            </div>
-
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4 text-sm">
                 <div className="flex items-center space-x-1">
@@ -247,7 +213,6 @@ function PortCard({ port, onManageConnections, onViewPort, onEditPort, onDeleteP
               <Button 
                 variant="ghost" 
                 size="sm"
-                onClick={() => onViewPort(port)}
                 className="group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
               >
                 View Details
@@ -317,33 +282,21 @@ function AddPortDialog() {
       });
     },
     onSuccess: async (response) => {
-      // Force refresh of ports data
-      await queryClient.invalidateQueries({ queryKey: ['/api/ports'] });
-      await queryClient.refetchQueries({ queryKey: ['/api/ports'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/ports'] });
       
       // Generate AI-powered port description if needed
       if (response.id && (!response.description || response.description === '')) {
         await generatePortDescription(response.id);
-        // Refresh again after description update
-        await queryClient.refetchQueries({ queryKey: ['/api/ports'] });
       }
-      
-      // Store new port info for potential connections
-      setNewPortId(response.id);
-      setNewPortName(response.name);
       
       setOpen(false);
       form.reset();
       setSelectedCoordinates(null);
       setShowMap(false);
-      
       toast({
         title: "Port Added Successfully",
-        description: "The new port has been created with AI-generated details.",
+        description: "The new port has been added with AI-generated details.",
       });
-
-      // Ask if user wants to connect vessels and refineries
-      setShowConnectionDialog(true);
     },
     onError: (error: any) => {
       toast({
@@ -371,16 +324,6 @@ function AddPortDialog() {
     form.setValue('lat', lat.toFixed(6));
     form.setValue('lng', lng.toFixed(6));
     setShowMap(false);
-  };
-
-  // Handle opening connection manager
-  const handleOpenConnectionManager = (type: 'vessels' | 'refineries' | 'both') => {
-    setShowConnectionDialog(false);
-    
-    // Navigate to connection management page with port ID and type
-    if (newPortId) {
-      window.location.href = `/admin/connections?portId=${newPortId}&type=${type}&portName=${encodeURIComponent(newPortName)}`;
-    }
   };
 
   const onSubmit = (data: PortFormData) => {
@@ -665,81 +608,6 @@ function AddPortDialog() {
           </DialogContent>
         </Dialog>
       )}
-
-      {/* Connection Dialog */}
-      {showConnectionDialog && newPortId && (
-        <Dialog open={showConnectionDialog} onOpenChange={setShowConnectionDialog}>
-          <DialogContent className="sm:max-w-[800px]">
-            <DialogHeader>
-              <DialogTitle>Connect Port to Vessels & Refineries</DialogTitle>
-              <p className="text-muted-foreground">
-                Would you like to connect "{newPortName}" to vessels and refineries?
-              </p>
-            </DialogHeader>
-            
-            <div className="space-y-6">
-              <div className="flex items-center justify-center space-x-4">
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <Anchor className="h-8 w-8 text-blue-600" />
-                  </div>
-                  <h3 className="font-semibold text-lg">{newPortName}</h3>
-                  <p className="text-sm text-muted-foreground">New Port Created</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="text-center p-6 border rounded-lg hover:bg-accent transition-colors">
-                  <Ship className="h-12 w-12 text-green-600 mx-auto mb-3" />
-                  <h4 className="font-semibold mb-2">Connect Vessels</h4>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Link multiple vessels to this port for cargo operations
-                  </p>
-                  <Button 
-                    onClick={() => handleOpenConnectionManager('vessels')}
-                    className="w-full"
-                  >
-                    <Ship className="h-4 w-4 mr-2" />
-                    Manage Vessel Connections
-                  </Button>
-                </div>
-
-                <div className="text-center p-6 border rounded-lg hover:bg-accent transition-colors">
-                  <Building2 className="h-12 w-12 text-orange-600 mx-auto mb-3" />
-                  <h4 className="font-semibold mb-2">Connect Refineries</h4>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Link multiple refineries to this port for supply chain management
-                  </p>
-                  <Button 
-                    onClick={() => handleOpenConnectionManager('refineries')}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    <Building2 className="h-4 w-4 mr-2" />
-                    Manage Refinery Connections
-                  </Button>
-                </div>
-              </div>
-
-              <div className="flex justify-end space-x-3 pt-4 border-t">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setShowConnectionDialog(false)}
-                >
-                  Skip for Now
-                </Button>
-                <Button 
-                  onClick={() => handleOpenConnectionManager('both')}
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                  <Settings className="h-4 w-4 mr-2" />
-                  Manage All Connections
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
     </Dialog>
   );
 }
@@ -833,14 +701,8 @@ export function PortManagement() {
   const [selectedType, setSelectedType] = useState('all');
   const [viewMode, setViewMode] = useState('grid');
   const [currentPage, setCurrentPage] = useState(1);
-  const [showViewDialog, setShowViewDialog] = useState(false);
-  const [showEditDialog, setShowEditDialog] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [selectedPort, setSelectedPort] = useState<Port | null>(null);
 
   const pageSize = 12;
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
 
   // Fetch ports data
   const { 
@@ -896,66 +758,6 @@ export function PortManagement() {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, selectedRegion, selectedStatus, selectedType]);
-
-  // Delete port mutation
-  const deletePortMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const response = await fetch(`/api/ports/${id}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok) {
-        throw new Error('Failed to delete port');
-      }
-      return response.json();
-    },
-    onSuccess: async () => {
-      // Force refresh of ports data immediately
-      await queryClient.invalidateQueries({ queryKey: ['/api/ports'] });
-      await queryClient.refetchQueries({ queryKey: ['/api/ports'] });
-      
-      setShowDeleteDialog(false);
-      setSelectedPort(null);
-      toast({
-        title: "Port Deleted",
-        description: "Port has been successfully deleted",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Deletion Failed",
-        description: error.message || "Failed to delete port",
-        variant: "destructive",
-      });
-    }
-  });
-
-  // Handler functions for CRUD operations
-  const handleViewPort = (port: Port) => {
-    setSelectedPort(port);
-    setShowViewDialog(true);
-  };
-
-  const handleEditPort = (port: Port) => {
-    setSelectedPort(port);
-    setShowEditDialog(true);
-  };
-
-  const handleDeletePort = (port: Port) => {
-    setSelectedPort(port);
-    setShowDeleteDialog(true);
-  };
-
-  const confirmDelete = () => {
-    if (selectedPort) {
-      deletePortMutation.mutate(selectedPort.id);
-    }
-  };
-
-  // Handle connection management for vessels and refineries
-  const handleManageConnections = (port: Port, type: 'vessels' | 'refineries') => {
-    const url = `/connection-manager?portId=${port.id}&portName=${encodeURIComponent(port.name)}&focus=${type}`;
-    window.open(url, '_blank');
-  };
 
   if (portsLoading) {
     return (
@@ -1140,14 +942,7 @@ export function PortManagement() {
           {paginatedPorts.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {paginatedPorts.map((port) => (
-                <PortCard 
-                  key={port.id} 
-                  port={port}
-                  onManageConnections={handleManageConnections}
-                  onViewPort={handleViewPort}
-                  onEditPort={handleEditPort}
-                  onDeletePort={handleDeletePort}
-                />
+                <PortCard key={port.id} port={port} />
               ))}
             </div>
           ) : (
@@ -1211,30 +1006,9 @@ export function PortManagement() {
                           
                           <PortStatusBadge status={port.status} />
                           
-                          <div className="flex items-center space-x-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleViewPort(port)}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEditPort(port)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDeletePort(port)}
-                              className="text-red-500 hover:text-red-700"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
+                          <Button variant="ghost" size="sm">
+                            <Eye className="h-4 w-4" />
+                          </Button>
                         </div>
                       </div>
                     </div>
@@ -1299,390 +1073,6 @@ export function PortManagement() {
               <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           </div>
-        </div>
-      )}
-
-      {/* View Port Dialog */}
-      <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center space-x-2">
-              <Eye className="h-5 w-5" />
-              <span>Port Details</span>
-            </DialogTitle>
-          </DialogHeader>
-
-          {selectedPort && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <span className="text-sm font-medium">Port Name</span>
-                  <p className="text-sm text-muted-foreground">{selectedPort.name}</p>
-                </div>
-                <div>
-                  <span className="text-sm font-medium">Country</span>
-                  <p className="text-sm text-muted-foreground">{selectedPort.country}</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <span className="text-sm font-medium">Region</span>
-                  <p className="text-sm text-muted-foreground">{selectedPort.region}</p>
-                </div>
-                <div>
-                  <span className="text-sm font-medium">Status</span>
-                  <PortStatusBadge status={selectedPort.status} />
-                </div>
-              </div>
-
-              <div>
-                <span className="text-sm font-medium">Coordinates</span>
-                <p className="text-sm text-muted-foreground font-mono">
-                  {parseFloat(selectedPort.lat).toFixed(6)}, {parseFloat(selectedPort.lng).toFixed(6)}
-                </p>
-              </div>
-
-              {selectedPort.description && (
-                <div>
-                  <span className="text-sm font-medium">Description</span>
-                  <p className="text-sm text-muted-foreground">{selectedPort.description}</p>
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-4">
-                {selectedPort.vesselCount !== undefined && (
-                  <div>
-                    <span className="text-sm font-medium">Connected Vessels</span>
-                    <div className="flex items-center space-x-2">
-                      <Ship className="h-4 w-4" />
-                      <span className="text-sm text-muted-foreground">{selectedPort.vesselCount}</span>
-                    </div>
-                  </div>
-                )}
-                {selectedPort.connectedRefineries !== undefined && (
-                  <div>
-                    <span className="text-sm font-medium">Connected Refineries</span>
-                    <div className="flex items-center space-x-2">
-                      <Building2 className="h-4 w-4" />
-                      <span className="text-sm text-muted-foreground">{selectedPort.connectedRefineries}</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          <div className="flex justify-end space-x-3 pt-4">
-            <Button variant="outline" onClick={() => setShowViewDialog(false)}>
-              Close
-            </Button>
-            {selectedPort && (
-              <Button onClick={() => {
-                setShowViewDialog(false);
-                handleEditPort(selectedPort);
-              }}>
-                <Edit className="h-4 w-4 mr-2" />
-                Edit Port
-              </Button>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent className="sm:max-w-[400px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center space-x-2">
-              <Trash2 className="h-5 w-5 text-red-500" />
-              <span>Delete Port</span>
-            </DialogTitle>
-          </DialogHeader>
-
-          {selectedPort && (
-            <div className="space-y-4">
-              <p className="text-muted-foreground">
-                Are you sure you want to delete <strong>"{selectedPort.name}"</strong>? 
-                This action cannot be undone and will remove all associated connections.
-              </p>
-              
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                <div className="flex items-center space-x-2">
-                  <AlertTriangle className="h-4 w-4 text-red-600" />
-                  <span className="text-sm font-medium text-red-800">Warning</span>
-                </div>
-                <p className="text-sm text-red-700 mt-1">
-                  This will also disconnect {selectedPort.vesselCount || 0} vessels and {selectedPort.connectedRefineries || 0} refineries.
-                </p>
-              </div>
-            </div>
-          )}
-
-          <div className="flex justify-end space-x-3 pt-4">
-            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
-              Cancel
-            </Button>
-            <Button 
-              variant="destructive" 
-              onClick={confirmDelete}
-              disabled={deletePortMutation.isPending}
-            >
-              {deletePortMutation.isPending ? (
-                <>
-                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                  Deleting...
-                </>
-              ) : (
-                <>
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete Port
-                </>
-              )}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Port Dialog */}
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Edit Port</DialogTitle>
-          </DialogHeader>
-          {selectedPort && (
-            <EditPortForm 
-              port={selectedPort} 
-              onSave={(updates) => {
-                editPortMutation.mutate({ id: selectedPort.id, updates });
-              }}
-              onCancel={() => setShowEditDialog(false)}
-              isLoading={editPortMutation.isPending}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* View Port Dialog */}
-      <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
-        <DialogContent className="max-w-4xl">
-          <DialogHeader>
-            <DialogTitle>Port Details</DialogTitle>
-          </DialogHeader>
-          {selectedPort && (
-            <ViewPortDetails port={selectedPort} />
-          )}
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-}
-
-// Edit Port Form Component
-function EditPortForm({ port, onSave, onCancel, isLoading }: {
-  port: Port;
-  onSave: (updates: Partial<Port>) => void;
-  onCancel: () => void;
-  isLoading: boolean;
-}) {
-  const form = useForm({
-    defaultValues: {
-      name: port.name,
-      country: port.country,
-      region: port.region,
-      lat: port.lat,
-      lng: port.lng,
-      type: port.type || '',
-      status: port.status || '',
-      capacity: port.capacity || 0,
-      description: port.description || ''
-    }
-  });
-
-  const onSubmit = (data: any) => {
-    onSave(data);
-  };
-
-  return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="name">Port Name</Label>
-          <Input 
-            {...form.register('name')} 
-            placeholder="Enter port name"
-          />
-        </div>
-        <div>
-          <Label htmlFor="country">Country</Label>
-          <Input 
-            {...form.register('country')} 
-            placeholder="Enter country"
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="region">Region</Label>
-          <Select 
-            value={form.watch('region')} 
-            onValueChange={(value) => form.setValue('region', value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select region" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Middle East">Middle East</SelectItem>
-              <SelectItem value="Asia-Pacific">Asia-Pacific</SelectItem>
-              <SelectItem value="Europe">Europe</SelectItem>
-              <SelectItem value="North America">North America</SelectItem>
-              <SelectItem value="Latin America">Latin America</SelectItem>
-              <SelectItem value="Africa">Africa</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label htmlFor="type">Port Type</Label>
-          <Select 
-            value={form.watch('type')} 
-            onValueChange={(value) => form.setValue('type', value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="oil_terminal">Oil Terminal</SelectItem>
-              <SelectItem value="container_port">Container Port</SelectItem>
-              <SelectItem value="bulk_port">Bulk Port</SelectItem>
-              <SelectItem value="general_cargo">General Cargo</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="lat">Latitude</Label>
-          <Input 
-            {...form.register('lat')} 
-            placeholder="Enter latitude"
-          />
-        </div>
-        <div>
-          <Label htmlFor="lng">Longitude</Label>
-          <Input 
-            {...form.register('lng')} 
-            placeholder="Enter longitude"
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="status">Status</Label>
-          <Select 
-            value={form.watch('status')} 
-            onValueChange={(value) => form.setValue('status', value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="operational">Operational</SelectItem>
-              <SelectItem value="under_construction">Under Construction</SelectItem>
-              <SelectItem value="maintenance">Maintenance</SelectItem>
-              <SelectItem value="inactive">Inactive</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label htmlFor="capacity">Capacity</Label>
-          <Input 
-            {...form.register('capacity', { valueAsNumber: true })} 
-            type="number"
-            placeholder="Enter capacity"
-          />
-        </div>
-      </div>
-
-      <div>
-        <Label htmlFor="description">Description</Label>
-        <Textarea 
-          {...form.register('description')} 
-          placeholder="Enter port description"
-          rows={3}
-        />
-      </div>
-
-      <div className="flex justify-end space-x-2 pt-4">
-        <Button type="button" variant="outline" onClick={onCancel}>
-          Cancel
-        </Button>
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? 'Saving...' : 'Save Changes'}
-        </Button>
-      </div>
-    </form>
-  );
-}
-
-// View Port Details Component
-function ViewPortDetails({ port }: { port: Port }) {
-  return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-2 gap-6">
-        <div>
-          <h3 className="text-lg font-semibold mb-4">Basic Information</h3>
-          <div className="space-y-3">
-            <div>
-              <Label className="text-sm font-medium">Name</Label>
-              <p className="text-sm text-muted-foreground">{port.name}</p>
-            </div>
-            <div>
-              <Label className="text-sm font-medium">Country</Label>
-              <p className="text-sm text-muted-foreground">{port.country}</p>
-            </div>
-            <div>
-              <Label className="text-sm font-medium">Region</Label>
-              <p className="text-sm text-muted-foreground">{port.region}</p>
-            </div>
-            <div>
-              <Label className="text-sm font-medium">Type</Label>
-              <p className="text-sm text-muted-foreground">{port.type || 'Not specified'}</p>
-            </div>
-          </div>
-        </div>
-        
-        <div>
-          <h3 className="text-lg font-semibold mb-4">Status & Capacity</h3>
-          <div className="space-y-3">
-            <div>
-              <Label className="text-sm font-medium">Status</Label>
-              <PortStatusBadge status={port.status} />
-            </div>
-            <div>
-              <Label className="text-sm font-medium">Capacity</Label>
-              <p className="text-sm text-muted-foreground">
-                {port.capacity ? `${port.capacity.toLocaleString()} TEU` : 'Not specified'}
-              </p>
-            </div>
-            <div>
-              <Label className="text-sm font-medium">Coordinates</Label>
-              <p className="text-sm text-muted-foreground">{port.lat}, {port.lng}</p>
-            </div>
-            <div>
-              <Label className="text-sm font-medium">Connected Vessels</Label>
-              <p className="text-sm text-muted-foreground">{port.vesselCount || 0} vessels</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {port.description && (
-        <div>
-          <h3 className="text-lg font-semibold mb-4">Description</h3>
-          <p className="text-sm text-muted-foreground">{port.description}</p>
         </div>
       )}
     </div>
