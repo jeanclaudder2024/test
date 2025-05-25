@@ -347,9 +347,12 @@ function AddPortDialog() {
           Add New Port
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[600px]" aria-describedby="add-port-description">
         <DialogHeader>
           <DialogTitle>Add New Port</DialogTitle>
+          <div id="add-port-description" className="text-sm text-muted-foreground">
+            Add a new port to the maritime database with location details and specifications.
+          </div>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -604,9 +607,12 @@ function AddPortDialog() {
       {/* Interactive Map Modal */}
       {showMap && (
         <Dialog open={showMap} onOpenChange={setShowMap}>
-          <DialogContent className="sm:max-w-[900px] sm:max-h-[700px]">
+          <DialogContent className="sm:max-w-[900px] sm:max-h-[700px]" aria-describedby="map-selector-description">
             <DialogHeader>
               <DialogTitle>Select Port Location</DialogTitle>
+              <div id="map-selector-description" className="text-sm text-muted-foreground">
+                Click on the map to select precise coordinates for the port location.
+              </div>
             </DialogHeader>
             <CoordinateMapSelector
               onCoordinateSelect={handleCoordinateSelect}
