@@ -66,6 +66,39 @@ export const vessels = pgTable("vessels", {
 export const insertVesselSchema = createInsertSchema(vessels).omit({
   id: true,
   lastUpdated: true,
+}).extend({
+  // Make coordinate fields accept strings and convert them
+  currentLat: z.string().optional(),
+  currentLng: z.string().optional(),
+  departureLat: z.string().optional(),
+  departureLng: z.string().optional(),
+  destinationLat: z.string().optional(),
+  destinationLng: z.string().optional(),
+  // Allow string input for timestamps
+  departureDate: z.string().optional(),
+  eta: z.string().optional(),
+  // Ensure required fields have defaults if empty
+  name: z.string().min(1, "Vessel name is required"),
+  imo: z.string().min(1, "IMO number is required"),
+  mmsi: z.string().min(1, "MMSI number is required"),
+  vesselType: z.string().min(1, "Vessel type is required"),
+  flag: z.string().min(1, "Flag is required"),
+  // Allow numeric fields to be strings and convert them
+  built: z.union([z.number(), z.string()]).optional().transform(val => {
+    if (val === "" || val === null || val === undefined) return null;
+    const num = typeof val === "string" ? parseInt(val) : val;
+    return isNaN(num) ? null : num;
+  }),
+  deadweight: z.union([z.number(), z.string()]).optional().transform(val => {
+    if (val === "" || val === null || val === undefined) return null;
+    const num = typeof val === "string" ? parseInt(val) : val;
+    return isNaN(num) ? null : num;
+  }),
+  cargoCapacity: z.union([z.number(), z.string()]).optional().transform(val => {
+    if (val === "" || val === null || val === undefined) return null;
+    const num = typeof val === "string" ? parseInt(val) : val;
+    return isNaN(num) ? null : num;
+  })
 });
 
 // Refineries
