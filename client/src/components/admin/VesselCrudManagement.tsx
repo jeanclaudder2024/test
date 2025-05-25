@@ -166,6 +166,8 @@ export function VesselCrudManagement() {
   const [showMapSelector, setShowMapSelector] = useState(false);
   const [formData, setFormData] = useState<VesselFormData>(initialFormData);
   const [imoInput, setImoInput] = useState("");
+  const [mmsiInput, setMmsiInput] = useState("");
+  const [importType, setImportType] = useState<"imo" | "mmsi">("imo");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
@@ -180,9 +182,11 @@ export function VesselCrudManagement() {
 
   // Import vessel from API mutation
   const importVesselMutation = useMutation({
-    mutationFn: async (imo: string) => {
-      const response = await apiRequest(`/api/vessels/import/${imo}`, {
+    mutationFn: async ({ imo, mmsi }: { imo?: string; mmsi?: string }) => {
+      const response = await apiRequest("/api/vessels/import-from-api", {
         method: "POST",
+        body: JSON.stringify({ imo, mmsi }),
+        headers: { "Content-Type": "application/json" },
       });
       return response;
     },
@@ -194,11 +198,12 @@ export function VesselCrudManagement() {
       });
       setShowApiImport(false);
       setImoInput("");
+      setMmsiInput("");
     },
     onError: (error: Error) => {
       toast({
         title: "Import Failed",
-        description: error.message || "Failed to import vessel data. Please check the IMO number and try again.",
+        description: error.message || "Failed to import vessel data. Please check the number and try again.",
         variant: "destructive",
       });
     },
@@ -352,15 +357,27 @@ export function VesselCrudManagement() {
   };
 
   const handleImportVessel = () => {
-    if (!imoInput.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a valid IMO number",
-        variant: "destructive",
-      });
-      return;
+    if (importType === "imo") {
+      if (!imoInput.trim()) {
+        toast({
+          title: "Error",
+          description: "Please enter a valid IMO number",
+          variant: "destructive",
+        });
+        return;
+      }
+      importVesselMutation.mutate({ imo: imoInput.trim() });
+    } else {
+      if (!mmsiInput.trim()) {
+        toast({
+          title: "Error",
+          description: "Please enter a valid MMSI number",
+          variant: "destructive",
+        });
+        return;
+      }
+      importVesselMutation.mutate({ mmsi: mmsiInput.trim() });
     }
-    importVesselMutation.mutate(imoInput.trim());
   };
 
   // Filter and search vessels
@@ -413,23 +430,52 @@ export function VesselCrudManagement() {
               <DialogHeader>
                 <DialogTitle>Import Vessel from Maritime API</DialogTitle>
                 <DialogDescription>
-                  Enter the IMO number to automatically fetch vessel data from maritime databases.
+                  Enter either an IMO or MMSI number to automatically fetch vessel data from maritime databases.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="imo-input">IMO Number</Label>
-                  <Input
-                    id="imo-input"
-                    placeholder="Enter 7-digit IMO number (e.g., 9074729)"
-                    value={imoInput}
-                    onChange={(e) => setImoInput(e.target.value)}
-                    maxLength={7}
-                  />
-                  <p className="text-sm text-muted-foreground mt-1">
-                    IMO numbers are 7-digit identifiers for vessels
-                  </p>
+                  <Label>Import Method</Label>
+                  <Select value={importType} onValueChange={(value: "imo" | "mmsi") => setImportType(value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="imo">IMO Number</SelectItem>
+                      <SelectItem value="mmsi">MMSI Number</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
+                
+                {importType === "imo" ? (
+                  <div>
+                    <Label htmlFor="imo-input">IMO Number</Label>
+                    <Input
+                      id="imo-input"
+                      placeholder="Enter 7-digit IMO number (e.g., 9074729)"
+                      value={imoInput}
+                      onChange={(e) => setImoInput(e.target.value)}
+                      maxLength={7}
+                    />
+                    <p className="text-sm text-muted-foreground mt-1">
+                      IMO numbers are 7-digit identifiers for vessels
+                    </p>
+                  </div>
+                ) : (
+                  <div>
+                    <Label htmlFor="mmsi-input">MMSI Number</Label>
+                    <Input
+                      id="mmsi-input"
+                      placeholder="Enter 9-digit MMSI number (e.g., 244314000)"
+                      value={mmsiInput}
+                      onChange={(e) => setMmsiInput(e.target.value)}
+                      maxLength={9}
+                    />
+                    <p className="text-sm text-muted-foreground mt-1">
+                      MMSI numbers are 9-digit maritime mobile service identifiers
+                    </p>
+                  </div>
+                )}
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setShowApiImport(false)}>

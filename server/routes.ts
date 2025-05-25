@@ -832,19 +832,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Import vessel from API using IMO number
+  // Import vessel from API using IMO or MMSI number
   apiRouter.post("/vessels/import-from-api", async (req, res) => {
     try {
-      const { imo } = req.body;
+      const { imo, mmsi } = req.body;
       
-      if (!imo) {
-        return res.status(400).json({ message: "IMO number is required" });
+      if (!imo && !mmsi) {
+        return res.status(400).json({ message: "Either IMO or MMSI number is required" });
       }
       
-      // Validate IMO format (7 digits)
-      const imoPattern = /^\d{7}$/;
-      if (!imoPattern.test(imo)) {
-        return res.status(400).json({ message: "IMO number must be exactly 7 digits" });
+      // Validate IMO format (7 digits) if provided
+      if (imo) {
+        const imoPattern = /^\d{7}$/;
+        if (!imoPattern.test(imo)) {
+          return res.status(400).json({ message: "IMO number must be exactly 7 digits" });
+        }
+      }
+      
+      // Validate MMSI format (9 digits) if provided
+      if (mmsi) {
+        const mmsiPattern = /^\d{9}$/;
+        if (!mmsiPattern.test(mmsi)) {
+          return res.status(400).json({ message: "MMSI number must be exactly 9 digits" });
+        }
       }
       
       if (!marineTrafficService.isConfigured()) {
