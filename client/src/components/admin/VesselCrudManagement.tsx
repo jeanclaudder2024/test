@@ -56,8 +56,10 @@ import {
   RefreshCw,
   MapPin,
   AlertCircle,
+  Map,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { CoordinateMapSelector } from "@/components/map/CoordinateMapSelector";
 
 // Types
 interface Vessel {
@@ -138,6 +140,7 @@ export function VesselCrudManagement() {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [showMapSelector, setShowMapSelector] = useState(false);
   const itemsPerPage = 10;
 
   const { toast } = useToast();
@@ -353,6 +356,19 @@ export function VesselCrudManagement() {
     }
   };
 
+  const handleCoordinateSelect = (lat: number, lng: number) => {
+    setFormData({
+      ...formData,
+      currentLat: lat.toString(),
+      currentLng: lng.toString(),
+    });
+    setShowMapSelector(false);
+    toast({
+      title: "Coordinates Selected",
+      description: `Position set to ${lat.toFixed(4)}, ${lng.toFixed(4)}`,
+    });
+  };
+
   // Filter vessels
   const filteredVessels = vesselsData.filter((vessel: Vessel) => {
     const matchesSearch = vessel.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -539,12 +555,23 @@ export function VesselCrudManagement() {
                 </div>
                 <div>
                   <Label htmlFor="currentLat">Current Latitude</Label>
-                  <Input
-                    id="currentLat"
-                    value={formData.currentLat}
-                    onChange={(e) => setFormData({ ...formData, currentLat: e.target.value })}
-                    placeholder="e.g., 40.7128"
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      id="currentLat"
+                      value={formData.currentLat}
+                      onChange={(e) => setFormData({ ...formData, currentLat: e.target.value })}
+                      placeholder="e.g., 40.7128"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowMapSelector(true)}
+                      className="px-3"
+                    >
+                      <Map className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
                 <div>
                   <Label htmlFor="currentLng">Current Longitude</Label>
@@ -912,11 +939,22 @@ export function VesselCrudManagement() {
               </div>
               <div>
                 <Label htmlFor="edit-currentLat">Current Latitude</Label>
-                <Input
-                  id="edit-currentLat"
-                  value={formData.currentLat}
-                  onChange={(e) => setFormData({ ...formData, currentLat: e.target.value })}
-                />
+                <div className="flex gap-2">
+                  <Input
+                    id="edit-currentLat"
+                    value={formData.currentLat}
+                    onChange={(e) => setFormData({ ...formData, currentLat: e.target.value })}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowMapSelector(true)}
+                    className="px-3"
+                  >
+                    <Map className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
               <div>
                 <Label htmlFor="edit-currentLng">Current Longitude</Label>
@@ -987,6 +1025,19 @@ export function VesselCrudManagement() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Map Coordinate Selector */}
+      {showMapSelector && (
+        <CoordinateMapSelector
+          isOpen={showMapSelector}
+          onClose={() => setShowMapSelector(false)}
+          onCoordinateSelect={handleCoordinateSelect}
+          title="Select Vessel Position"
+          description="Click on the map to set the vessel's current coordinates. Vessels should be positioned in water areas for realistic placement."
+          initialLat={formData.currentLat ? parseFloat(formData.currentLat) : 40.7128}
+          initialLng={formData.currentLng ? parseFloat(formData.currentLng) : -74.0060}
+        />
+      )}
     </div>
   );
 }
