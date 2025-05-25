@@ -9,7 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { useDataStream } from '@/hooks/useDataStream';
-import { PortMap } from '@/components/map/PortMap';
+import PortMap from '@/components/map/PortMap';
 
 // Types
 interface Port {

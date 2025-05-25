@@ -4078,7 +4078,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Get the port details first
-      const port = await storage.getPort(portId);
+      const ports = await storage.getPorts();
+      const port = ports.find(p => p.id === portId);
       if (!port) {
         return res.status(404).json({ message: "Port not found" });
       }

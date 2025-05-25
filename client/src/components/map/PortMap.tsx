@@ -609,4 +609,4 @@ function PortMap({
   );
 }
 
-export { PortMap };
+export default PortMap;
