@@ -479,6 +479,7 @@ export function VesselManagementNew() {
               </div>
             )}
           </div>
+          </div>
         </CardContent>
       </Card>
     </div>
