@@ -24,7 +24,9 @@ import {
 // Storage interface with CRUD methods
 export interface IStorage {
   // User methods
+  getUsers(): Promise<User[]>;
   getUser(id: number): Promise<User | undefined>;
+  getUserById(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByStripeCustomerId(customerId: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
@@ -40,6 +42,7 @@ export interface IStorage {
   
   // Subscription methods
   getSubscriptions(): Promise<Subscription[]>;
+  getSubscriptionsWithDetails(): Promise<any[]>;
   getSubscriptionById(id: number): Promise<Subscription | undefined>;
   getSubscriptionsByUserId(userId: number): Promise<Subscription[]>;
   getActiveSubscriptionByUserId(userId: number): Promise<Subscription | undefined>;
@@ -141,7 +144,16 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  async getUsers(): Promise<User[]> {
+    return await db.select().from(users).orderBy(users.createdAt);
+  }
+
   async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
+
+  async getUserById(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user || undefined;
   }

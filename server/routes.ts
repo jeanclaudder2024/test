@@ -4535,5 +4535,367 @@ Keep the description professional, informative, and around 150-200 words. Focus 
     }
   });
 
+  // ========================================
+  // SUBSCRIPTION MANAGEMENT API ROUTES
+  // ========================================
+
+  // Get all users for admin panel
+  app.get("/api/admin/users", async (req: Request, res: Response) => {
+    try {
+      const users = await storage.getUsers();
+      res.json(users);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  // Get subscription plans
+  app.get("/api/admin/subscription-plans", async (req: Request, res: Response) => {
+    try {
+      const plans = await storage.getSubscriptionPlans();
+      res.json(plans);
+    } catch (error) {
+      console.error("Error fetching subscription plans:", error);
+      res.status(500).json({ message: "Failed to fetch subscription plans" });
+    }
+  });
+
+  // Create subscription plan
+  app.post("/api/admin/subscription-plans", async (req: Request, res: Response) => {
+    try {
+      const planData = req.body;
+      
+      // Validate required fields
+      if (!planData.name || !planData.slug || !planData.monthlyPrice || !planData.yearlyPrice) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      // Create the plan
+      const plan = await storage.createSubscriptionPlan(planData);
+      res.json(plan);
+    } catch (error) {
+      console.error("Error creating subscription plan:", error);
+      res.status(500).json({ message: "Failed to create subscription plan" });
+    }
+  });
+
+  // Update subscription plan
+  app.patch("/api/admin/subscription-plans/:id", async (req: Request, res: Response) => {
+    try {
+      const planId = parseInt(req.params.id);
+      const updateData = req.body;
+      
+      const plan = await storage.updateSubscriptionPlan(planId, updateData);
+      res.json(plan);
+    } catch (error) {
+      console.error("Error updating subscription plan:", error);
+      res.status(500).json({ message: "Failed to update subscription plan" });
+    }
+  });
+
+  // Delete subscription plan
+  app.delete("/api/admin/subscription-plans/:id", async (req: Request, res: Response) => {
+    try {
+      const planId = parseInt(req.params.id);
+      await storage.deleteSubscriptionPlan(planId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting subscription plan:", error);
+      res.status(500).json({ message: "Failed to delete subscription plan" });
+    }
+  });
+
+  // Get all subscriptions with user and plan details
+  app.get("/api/admin/subscriptions", async (req: Request, res: Response) => {
+    try {
+      const subscriptions = await storage.getSubscriptionsWithDetails();
+      res.json(subscriptions);
+    } catch (error) {
+      console.error("Error fetching subscriptions:", error);
+      res.status(500).json({ message: "Failed to fetch subscriptions" });
+    }
+  });
+
+  // Update subscription
+  app.patch("/api/admin/subscriptions/:id", async (req: Request, res: Response) => {
+    try {
+      const subscriptionId = parseInt(req.params.id);
+      const updateData = req.body;
+      
+      const subscription = await storage.updateSubscription(subscriptionId, updateData);
+      res.json(subscription);
+    } catch (error) {
+      console.error("Error updating subscription:", error);
+      res.status(500).json({ message: "Failed to update subscription" });
+    }
+  });
+
+  // Get subscription statistics
+  app.get("/api/admin/subscription-stats", async (req: Request, res: Response) => {
+    try {
+      const users = await storage.getUsers();
+      const subscriptions = await storage.getSubscriptionsWithDetails();
+      const plans = await storage.getSubscriptionPlans();
+      
+      // Calculate statistics
+      const totalUsers = users.length;
+      const subscribedUsers = users.filter(u => u.isSubscribed).length;
+      const activeSubscriptions = subscriptions.filter(s => s.status === 'active').length;
+      const cancelingSubscriptions = subscriptions.filter(s => s.cancelAtPeriodEnd).length;
+      
+      // Calculate estimated monthly revenue
+      let monthlyRevenue = 0;
+      subscriptions.forEach(sub => {
+        if (sub.status === 'active' && sub.plan) {
+          const price = sub.billingInterval === 'month' 
+            ? parseFloat(sub.plan.monthlyPrice) 
+            : parseFloat(sub.plan.yearlyPrice) / 12;
+          monthlyRevenue += price;
+        }
+      });
+
+      const stats = {
+        totalUsers,
+        subscribedUsers,
+        activeSubscriptions,
+        cancelingSubscriptions,
+        monthlyRevenue: monthlyRevenue.toFixed(2),
+        totalPlans: plans.length,
+        activePlans: plans.filter(p => p.isActive).length
+      };
+
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching subscription stats:", error);
+      res.status(500).json({ message: "Failed to fetch subscription stats" });
+    }
+  });
+
+  // Create Stripe customer for user
+  app.post("/api/admin/users/:id/create-stripe-customer", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const user = await storage.getUserById(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Create Stripe customer using your stripe service
+      const customer = await stripeService.createCustomer({
+        email: user.email,
+        name: user.username,
+        metadata: { userId: userId.toString() }
+      });
+
+      // Update user with Stripe customer ID
+      await storage.updateUser(userId, { stripeCustomerId: customer.id });
+
+      res.json({ 
+        success: true, 
+        customerId: customer.id,
+        message: "Stripe customer created successfully"
+      });
+    } catch (error) {
+      console.error("Error creating Stripe customer:", error);
+      res.status(500).json({ message: "Failed to create Stripe customer" });
+    }
+  });
+
+  // Create subscription for user
+  app.post("/api/admin/users/:id/create-subscription", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { planId, billingInterval = 'month' } = req.body;
+      
+      const user = await storage.getUserById(userId);
+      const plan = await storage.getSubscriptionPlanById(planId);
+      
+      if (!user || !plan) {
+        return res.status(404).json({ message: "User or plan not found" });
+      }
+
+      // Ensure user has Stripe customer ID
+      if (!user.stripeCustomerId) {
+        return res.status(400).json({ 
+          message: "User must have a Stripe customer ID. Create one first." 
+        });
+      }
+
+      // Get the appropriate price ID based on billing interval
+      const priceId = billingInterval === 'month' ? plan.monthlyPriceId : plan.yearlyPriceId;
+      
+      if (!priceId) {
+        return res.status(400).json({ 
+          message: `No ${billingInterval}ly price ID configured for this plan` 
+        });
+      }
+
+      // Create Stripe subscription
+      const stripeSubscription = await stripeService.createSubscription({
+        customer: user.stripeCustomerId,
+        items: [{ price: priceId }],
+        metadata: { userId: userId.toString(), planId: planId.toString() }
+      });
+
+      // Create subscription record in database
+      const subscription = await storage.createSubscription({
+        userId,
+        planId,
+        status: stripeSubscription.status,
+        stripeCustomerId: user.stripeCustomerId,
+        stripeSubscriptionId: stripeSubscription.id,
+        currentPeriodStart: new Date(stripeSubscription.current_period_start * 1000).toISOString(),
+        currentPeriodEnd: new Date(stripeSubscription.current_period_end * 1000).toISOString(),
+        billingInterval,
+        cancelAtPeriodEnd: false
+      });
+
+      // Update user subscription status
+      await storage.updateUser(userId, {
+        isSubscribed: true,
+        subscriptionTier: plan.slug,
+        stripeSubscriptionId: stripeSubscription.id
+      });
+
+      res.json({ 
+        success: true, 
+        subscription,
+        stripeSubscription,
+        message: "Subscription created successfully"
+      });
+    } catch (error) {
+      console.error("Error creating subscription:", error);
+      res.status(500).json({ message: "Failed to create subscription" });
+    }
+  });
+
+  // Cancel subscription
+  app.post("/api/admin/subscriptions/:id/cancel", async (req: Request, res: Response) => {
+    try {
+      const subscriptionId = parseInt(req.params.id);
+      const { cancelAtPeriodEnd = true } = req.body;
+      
+      const subscription = await storage.getSubscriptionById(subscriptionId);
+      
+      if (!subscription) {
+        return res.status(404).json({ message: "Subscription not found" });
+      }
+
+      // Cancel Stripe subscription
+      if (subscription.stripeSubscriptionId) {
+        await stripeService.cancelSubscription(subscription.stripeSubscriptionId, cancelAtPeriodEnd);
+      }
+
+      // Update local subscription record
+      await storage.updateSubscription(subscriptionId, {
+        cancelAtPeriodEnd,
+        status: cancelAtPeriodEnd ? subscription.status : 'canceled'
+      });
+
+      res.json({ 
+        success: true,
+        message: cancelAtPeriodEnd ? "Subscription will cancel at period end" : "Subscription canceled immediately"
+      });
+    } catch (error) {
+      console.error("Error canceling subscription:", error);
+      res.status(500).json({ message: "Failed to cancel subscription" });
+    }
+  });
+
+  // Reactivate subscription
+  app.post("/api/admin/subscriptions/:id/reactivate", async (req: Request, res: Response) => {
+    try {
+      const subscriptionId = parseInt(req.params.id);
+      
+      const subscription = await storage.getSubscriptionById(subscriptionId);
+      
+      if (!subscription) {
+        return res.status(404).json({ message: "Subscription not found" });
+      }
+
+      // Reactivate Stripe subscription
+      if (subscription.stripeSubscriptionId) {
+        await stripeService.reactivateSubscription(subscription.stripeSubscriptionId);
+      }
+
+      // Update local subscription record
+      await storage.updateSubscription(subscriptionId, {
+        cancelAtPeriodEnd: false,
+        status: 'active'
+      });
+
+      res.json({ 
+        success: true,
+        message: "Subscription reactivated successfully"
+      });
+    } catch (error) {
+      console.error("Error reactivating subscription:", error);
+      res.status(500).json({ message: "Failed to reactivate subscription" });
+    }
+  });
+
+  // Feature access control endpoint
+  app.get("/api/user/features", async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const userId = req.user.id;
+      const user = await storage.getUserById(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Get user's subscription details
+      let features = {
+        // Free tier features
+        basicVesselTracking: true,
+        limitedPorts: true,
+        basicSupport: true,
+        // Premium features (default to false)
+        unlimitedVessels: false,
+        advancedAnalytics: false,
+        prioritySupport: false,
+        apiAccess: false,
+        customReports: false,
+        realTimeAlerts: false
+      };
+
+      if (user.isSubscribed && user.subscriptionTier) {
+        const subscription = await storage.getActiveSubscriptionByUserId(userId);
+        
+        if (subscription && subscription.plan) {
+          // Parse features from plan
+          const planFeatures = subscription.plan.features.split('\n').map(f => f.trim().toLowerCase());
+          
+          // Map plan features to feature flags
+          if (planFeatures.includes('unlimited vessels')) features.unlimitedVessels = true;
+          if (planFeatures.includes('advanced analytics')) features.advancedAnalytics = true;
+          if (planFeatures.includes('priority support')) features.prioritySupport = true;
+          if (planFeatures.includes('api access')) features.apiAccess = true;
+          if (planFeatures.includes('custom reports')) features.customReports = true;
+          if (planFeatures.includes('real-time alerts')) features.realTimeAlerts = true;
+        }
+      }
+
+      res.json({
+        user: {
+          id: user.id,
+          email: user.email,
+          subscriptionTier: user.subscriptionTier || 'free',
+          isSubscribed: user.isSubscribed || false
+        },
+        features
+      });
+    } catch (error) {
+      console.error("Error fetching user features:", error);
+      res.status(500).json({ message: "Failed to fetch user features" });
+    }
+  });
+
   return httpServer;
 }
