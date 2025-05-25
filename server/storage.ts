@@ -1,5 +1,5 @@
 import { eq, and } from "drizzle-orm";
-import { db } from "./db";
+import { db, getActiveDb } from "./db";
 import {
   users, vessels, refineries, progressEvents, documents, brokers, stats as statsTable, ports, 
   refineryPortConnections, companies, vesselRefineryConnections,

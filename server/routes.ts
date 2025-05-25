@@ -17,6 +17,7 @@ import { portService } from "./services/portService";
 import { vesselPositionService } from "./services/vesselPositionService";
 import { setupAuth } from "./auth";
 import { db } from "./db";
+import { dbSwitcher } from "./database-switcher";
 import { REGIONS } from "@shared/constants";
 import { 
   getCachedVessels, 
@@ -3955,6 +3956,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('Error sending port-vessel connections via WebSocket:', error);
     }
   }
+
+  // Database Switching API Endpoints
+  
+  // Get current database status
+  apiRouter.get("/database/status", async (req, res) => {
+    try {
+      const currentType = dbSwitcher.getDatabaseType();
+      const testResults = await dbSwitcher.testConnections();
+      
+      res.json({
+        currentDatabase: currentType,
+        connections: {
+          primary: testResults.primary,
+          supabase: testResults.supabase
+        },
+        environment: {
+          hasSupabaseUrl: !!process.env.SUPABASE_DATABASE_URL,
+          useSupabase: process.env.USE_SUPABASE === 'true'
+        }
+      });
+    } catch (error) {
+      console.error("Error checking database status:", error);
+      res.status(500).json({ 
+        message: "Failed to check database status",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Switch to primary database
+  apiRouter.post("/database/switch/primary", async (req, res) => {
+    try {
+      const db = dbSwitcher.usePrimaryDatabase();
+      
+      res.json({
+        success: true,
+        message: "Switched to primary database",
+        currentDatabase: "primary"
+      });
+    } catch (error) {
+      console.error("Error switching to primary database:", error);
+      res.status(500).json({ 
+        message: "Failed to switch to primary database",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Switch to Supabase database
+  apiRouter.post("/database/switch/supabase", async (req, res) => {
+    try {
+      const db = dbSwitcher.useSupabaseDatabase();
+      
+      res.json({
+        success: true,
+        message: "Switched to Supabase database",
+        currentDatabase: "supabase"
+      });
+    } catch (error) {
+      console.error("Error switching to Supabase database:", error);
+      res.status(500).json({ 
+        message: "Failed to switch to Supabase database. Make sure SUPABASE_DATABASE_URL is configured.",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Test database connections
+  apiRouter.get("/database/test", async (req, res) => {
+    try {
+      const results = await dbSwitcher.testConnections();
+      
+      res.json({
+        success: true,
+        connections: results,
+        summary: {
+          primary: results.primary ? "Connected" : "Failed",
+          supabase: results.supabase ? "Connected" : results.errors.supabase ? "Failed" : "Not configured"
+        }
+      });
+    } catch (error) {
+      console.error("Error testing database connections:", error);
+      res.status(500).json({ 
+        message: "Failed to test database connections",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
 
   return httpServer;
 }
