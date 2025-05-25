@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useLocation } from 'wouter';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -48,10 +47,7 @@ import {
   CheckCircle,
   Clock,
   Users,
-  Gauge,
-  Link2,
-  GitBranch,
-  Navigation
+  Gauge
 } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import { CoordinateMapSelector } from '@/components/map/CoordinateMapSelector';
@@ -125,7 +121,7 @@ function PortStatusBadge({ status }: { status: string | null }) {
 }
 
 // Port Card Component
-function PortCard({ port, handlePortConnections }: { port: Port; handlePortConnections: (portId: number) => void }) {
+function PortCard({ port }: { port: Port }) {
   const getStatusIcon = (status: string | null) => {
     const s = status?.toLowerCase() || 'unknown';
     if (s.includes('operational') || s.includes('active')) {
@@ -228,23 +224,14 @@ function PortCard({ port, handlePortConnections }: { port: Port; handlePortConne
           {/* Quick Actions */}
           <div className="flex justify-between items-center pt-2 border-t border-border">
             <div className="flex space-x-1">
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="View Details">
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                 <Eye className="h-3 w-3" />
               </Button>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Edit Port">
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                 <Edit className="h-3 w-3" />
               </Button>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="View on Map">
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                 <MapIcon className="h-3 w-3" />
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-8 w-8 p-0 bg-blue-50 hover:bg-blue-100" 
-                title="Manage Connections"
-                onClick={() => handlePortConnections(port.id)}
-              >
-                <Link2 className="h-3 w-3 text-blue-600" />
               </Button>
             </div>
             <p className="text-xs text-muted-foreground">
@@ -348,12 +335,9 @@ function AddPortDialog() {
           Add New Port
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px]" aria-describedby="add-port-description">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Add New Port</DialogTitle>
-          <div id="add-port-description" className="text-sm text-muted-foreground">
-            Add a new port to the maritime database with location details and specifications.
-          </div>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -608,12 +592,9 @@ function AddPortDialog() {
       {/* Interactive Map Modal */}
       {showMap && (
         <Dialog open={showMap} onOpenChange={setShowMap}>
-          <DialogContent className="sm:max-w-[900px] sm:max-h-[700px]" aria-describedby="map-selector-description">
+          <DialogContent className="sm:max-w-[900px] sm:max-h-[700px]">
             <DialogHeader>
               <DialogTitle>Select Port Location</DialogTitle>
-              <div id="map-selector-description" className="text-sm text-muted-foreground">
-                Click on the map to select precise coordinates for the port location.
-              </div>
             </DialogHeader>
             <CoordinateMapSelector
               onCoordinateSelect={handleCoordinateSelect}
@@ -717,13 +698,6 @@ export function PortManagement() {
   const [selectedType, setSelectedType] = useState('all');
   const [viewMode, setViewMode] = useState('grid');
   const [currentPage, setCurrentPage] = useState(1);
-  const [, setLocation] = useLocation();
-
-  // Handle port connections - navigate to dedicated connection management page
-  const handlePortConnections = (portId: number) => {
-    // Navigate to port connection management page
-    setLocation(`/admin/port-connections/${portId}`);
-  };
 
   const pageSize = 12;
 
@@ -964,8 +938,8 @@ export function PortManagement() {
         <TabsContent value="grid" className="mt-0">
           {paginatedPorts.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {paginatedPorts.map((port: any) => (
-                <PortCard key={port.id} port={port} handlePortConnections={handlePortConnections} />
+              {paginatedPorts.map((port) => (
+                <PortCard key={port.id} port={port} />
               ))}
             </div>
           ) : (
@@ -1002,7 +976,7 @@ export function PortManagement() {
             <CardContent className="p-0">
               {paginatedPorts.length > 0 ? (
                 <div className="divide-y divide-border">
-                  {paginatedPorts.map((port: any) => (
+                  {paginatedPorts.map((port) => (
                     <div key={port.id} className="p-6 hover:bg-muted/50 transition-colors">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-4">
