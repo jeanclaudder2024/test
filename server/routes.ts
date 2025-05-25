@@ -4254,5 +4254,105 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Generate AI-powered port description
+  apiRouter.post("/ports/:portId/generate-description", async (req, res) => {
+    try {
+      const portId = parseInt(req.params.portId);
+      
+      if (isNaN(portId)) {
+        return res.status(400).json({ message: "Invalid port ID" });
+      }
+
+      const ports = await storage.getPorts();
+      const port = ports.find(p => p.id === portId);
+      
+      if (!port) {
+        return res.status(404).json({ message: "Port not found" });
+      }
+
+      // Check if OpenAI is available
+      if (!process.env.OPENAI_API_KEY) {
+        return res.status(400).json({ 
+          message: "AI description generation requires OpenAI API key" 
+        });
+      }
+
+      // Import OpenAI (using dynamic import for optional dependency)
+      let OpenAI;
+      try {
+        OpenAI = (await import('openai')).default;
+      } catch (error) {
+        return res.status(500).json({ 
+          message: "OpenAI library not available" 
+        });
+      }
+
+      const openai = new OpenAI({ 
+        apiKey: process.env.OPENAI_API_KEY 
+      });
+
+      // Generate comprehensive port description using AI
+      const prompt = `Generate a comprehensive and professional description for this maritime port:
+
+Port Details:
+- Name: ${port.name}
+- Country: ${port.country}
+- Region: ${port.region}
+- Type: ${port.type || 'Commercial'}
+- Status: ${port.status || 'Operational'}
+- Capacity: ${port.capacity ? (port.capacity / 1000000).toFixed(1) + ' Million TEU' : 'Not specified'}
+- Coordinates: ${port.lat}, ${port.lng}
+
+Please provide:
+1. A detailed overview of the port's strategic importance and location
+2. Key facilities and infrastructure capabilities
+3. Types of cargo and vessels typically handled
+4. Economic significance to the region
+5. Notable operational features or advantages
+
+Keep the description professional, informative, and around 150-200 words. Focus on factual maritime industry details.`;
+
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+        messages: [
+          {
+            role: "system",
+            content: "You are a maritime industry expert who writes detailed, professional port descriptions for a maritime logistics platform."
+          },
+          {
+            role: "user",
+            content: prompt
+          }
+        ],
+        max_tokens: 300,
+        temperature: 0.7
+      });
+
+      const aiDescription = completion.choices[0]?.message?.content;
+
+      if (!aiDescription) {
+        return res.status(500).json({ 
+          message: "Failed to generate AI description" 
+        });
+      }
+
+      // Update the port with the AI-generated description
+      await storage.updatePort(portId, { description: aiDescription });
+
+      res.json({ 
+        success: true, 
+        description: aiDescription,
+        message: "AI description generated successfully"
+      });
+
+    } catch (error) {
+      console.error("Error generating AI port description:", error);
+      res.status(500).json({ 
+        message: "Failed to generate AI description",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   return httpServer;
 }

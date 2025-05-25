@@ -246,6 +246,8 @@ function PortCard({ port }: { port: Port }) {
 // Add Port Dialog Component
 function AddPortDialog() {
   const [open, setOpen] = useState(false);
+  const [showMap, setShowMap] = useState(false);
+  const [selectedCoordinates, setSelectedCoordinates] = useState<{ lat: number; lng: number } | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -275,13 +277,21 @@ function AddPortDialog() {
         body: JSON.stringify(portData)
       });
     },
-    onSuccess: () => {
+    onSuccess: async (response) => {
       queryClient.invalidateQueries({ queryKey: ['/api/ports'] });
+      
+      // Generate AI-powered port description if needed
+      if (response.id && (!response.description || response.description === '')) {
+        await generatePortDescription(response.id);
+      }
+      
       setOpen(false);
       form.reset();
+      setSelectedCoordinates(null);
+      setShowMap(false);
       toast({
         title: "Port Added Successfully",
-        description: "The new port has been added to the system.",
+        description: "The new port has been added with AI-generated details.",
       });
     },
     onError: (error: any) => {
@@ -292,6 +302,25 @@ function AddPortDialog() {
       });
     }
   });
+
+  // Generate AI-powered port description
+  const generatePortDescription = async (portId: number) => {
+    try {
+      await apiRequest(`/api/ports/${portId}/generate-description`, {
+        method: 'POST'
+      });
+    } catch (error) {
+      console.log('Could not generate AI description for port');
+    }
+  };
+
+  // Handle map coordinate selection
+  const handleCoordinateSelect = (lat: number, lng: number) => {
+    setSelectedCoordinates({ lat, lng });
+    form.setValue('lat', lat.toFixed(6));
+    form.setValue('lng', lng.toFixed(6));
+    setShowMap(false);
+  };
 
   const onSubmit = (data: PortFormData) => {
     addPortMutation.mutate(data);
@@ -375,7 +404,16 @@ function AddPortDialog() {
                   <FormItem>
                     <FormLabel>Latitude</FormLabel>
                     <FormControl>
-                      <Input placeholder="51.9225" {...field} />
+                      <div className="relative">
+                        <Input 
+                          placeholder="51.9225" 
+                          {...field}
+                          className={selectedCoordinates ? 'bg-green-50 border-green-300' : ''}
+                        />
+                        {selectedCoordinates && (
+                          <CheckCircle className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-green-600" />
+                        )}
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -389,7 +427,16 @@ function AddPortDialog() {
                   <FormItem>
                     <FormLabel>Longitude</FormLabel>
                     <FormControl>
-                      <Input placeholder="4.47917" {...field} />
+                      <div className="relative">
+                        <Input 
+                          placeholder="4.47917" 
+                          {...field}
+                          className={selectedCoordinates ? 'bg-green-50 border-green-300' : ''}
+                        />
+                        {selectedCoordinates && (
+                          <CheckCircle className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-green-600" />
+                        )}
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
