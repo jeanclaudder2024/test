@@ -1,75 +1,72 @@
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { FullPageSpinner } from "@/components/common/FullPageSpinner";
+import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Textarea } from '@/components/ui/textarea';
+import { Progress } from '@/components/ui/progress';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useToast } from '@/hooks/use-toast';
 import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle, 
-  CardFooter 
-} from "@/components/ui/card";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue
-} from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { 
-  Pagination, 
-  PaginationContent, 
-  PaginationEllipsis, 
-  PaginationItem, 
-  PaginationLink, 
-  PaginationNext, 
-  PaginationPrevious 
-} from "@/components/ui/pagination";
-import { RefineryMapSelector } from "./RefineryMapSelector";
-import { Textarea } from "@/components/ui/textarea";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { Pencil, Trash2, Search, Plus, MapPin, X, Filter, RefreshCw } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+  Anchor, 
+  Ship, 
+  MapPin, 
+  Building2, 
+  Search, 
+  Filter, 
+  Grid3x3, 
+  List, 
+  Map as MapIcon, 
+  Plus, 
+  Activity,
+  TrendingUp,
+  BarChart3,
+  Globe,
+  Truck,
+  Waves,
+  Calendar,
+  ChevronRight,
+  ChevronLeft,
+  MoreVertical,
+  Edit,
+  Trash2,
+  Eye,
+  RefreshCw,
+  Download,
+  Upload,
+  Settings,
+  Database,
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  Users,
+  Gauge
+} from 'lucide-react';
+import { apiRequest } from '@/lib/queryClient';
 
-// Define the port type based on schema
+// Form validation schema
+const portFormSchema = z.object({
+  name: z.string().min(1, 'Port name is required'),
+  country: z.string().min(1, 'Country is required'),
+  region: z.string().min(1, 'Region is required'),
+  lat: z.string().min(1, 'Latitude is required'),
+  lng: z.string().min(1, 'Longitude is required'),
+  type: z.string().optional(),
+  status: z.string().optional(),
+  capacity: z.string().optional(),
+  description: z.string().optional()
+});
+
+type PortFormData = z.infer<typeof portFormSchema>;
+
+// Types
 interface Port {
   id: number;
   name: string;
@@ -77,714 +74,903 @@ interface Port {
   region: string;
   lat: string;
   lng: string;
-  type: string;
-  capacity: number;
-  status: string;
-  description: string;
-  lastUpdated: Date;
+  type: string | null;
+  status: string | null;
+  capacity: number | null;
+  description: string | null;
+  lastUpdated: Date | null;
+  vesselCount?: number;
+  connectedRefineries?: number;
+  totalCargo?: number;
 }
 
-// Port form schema
-const portFormSchema = z.object({
-  name: z.string().min(2, { message: "Name must be at least 2 characters" }),
-  country: z.string().min(2, { message: "Country must be at least 2 characters" }),
-  region: z.string().min(2, { message: "Region is required" }),
-  lat: z.string().min(1, { message: "Latitude is required" }),
-  lng: z.string().min(1, { message: "Longitude is required" }),
-  type: z.string().min(1, { message: "Port type is required" }),
-  capacity: z.number().optional(),
-  status: z.string().default("active"),
-  description: z.string().optional()
-});
+interface PortStats {
+  totalPorts: number;
+  operationalPorts: number;
+  totalVessels: number;
+  totalCapacity: number;
+  averageVesselsPerPort: number;
+  topRegions: Array<{ region: string; count: number }>;
+}
 
-type PortFormValues = z.infer<typeof portFormSchema>;
+// Port Status Badge Component
+function PortStatusBadge({ status }: { status: string | null }) {
+  const getStatusStyle = (status: string | null) => {
+    const s = status?.toLowerCase() || 'unknown';
+    if (s.includes('operational') || s.includes('active')) {
+      return 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-400';
+    }
+    if (s.includes('maintenance') || s.includes('repair')) {
+      return 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400';
+    }
+    if (s.includes('construction') || s.includes('planned')) {
+      return 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400';
+    }
+    if (s.includes('closed') || s.includes('inactive')) {
+      return 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/20 dark:text-red-400';
+    }
+    return 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800 dark:text-gray-400';
+  };
 
-// Custom pagination component
-const CustomPagination = ({ totalPages, currentPage, onPageChange }: { 
-  totalPages: number; 
-  currentPage: number; 
-  onPageChange: (page: number) => void 
-}) => {
-  const pageNumbers = [];
-  
-  // Determine which page numbers to show
-  for (let i = 1; i <= totalPages; i++) {
-    if (
-      i === 1 || 
-      i === totalPages || 
-      i === currentPage || 
-      i === currentPage - 1 || 
-      i === currentPage + 1
-    ) {
-      pageNumbers.push(i);
-    } else if (
-      i === currentPage - 2 || 
-      i === currentPage + 2
-    ) {
-      pageNumbers.push(-1); // -1 represents ellipsis
-    }
-  }
-  
-  // Filter out duplicate ellipses
-  const filteredPageNumbers = pageNumbers.filter((num, index, arr) => {
-    if (num === -1) {
-      return arr[index - 1] !== -1;
-    }
-    return true;
-  });
-  
   return (
-    <Pagination>
-      <PaginationContent>
-        <PaginationItem>
-          <PaginationPrevious 
-            onClick={() => onPageChange(currentPage - 1)} 
-            disabled={currentPage === 1}
-          />
-        </PaginationItem>
-        
-        {filteredPageNumbers.map((page, index) => (
-          page === -1 ? (
-            <PaginationItem key={`ellipsis-${index}`}>
-              <PaginationEllipsis />
-            </PaginationItem>
-          ) : (
-            <PaginationItem key={page}>
-              {page === currentPage ? (
-                <PaginationLink isActive={true}>{page}</PaginationLink>
-              ) : (
-                <PaginationLink onClick={() => onPageChange(page)}>{page}</PaginationLink>
-              )}
-            </PaginationItem>
-          )
-        ))}
-        
-        <PaginationItem>
-          <PaginationNext 
-            onClick={() => onPageChange(currentPage + 1)} 
-            disabled={currentPage === totalPages || totalPages === 0}
-          />
-        </PaginationItem>
-      </PaginationContent>
-    </Pagination>
+    <Badge variant="outline" className={getStatusStyle(status)}>
+      {status || 'Unknown'}
+    </Badge>
   );
-};
+}
 
-export function PortManagement() {
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedRegion, setSelectedRegion] = useState<string>("All");
-  const [selectedPortType, setSelectedPortType] = useState<string>("All");
-  const [selectedPort, setSelectedPort] = useState<Port | null>(null);
-  const [formData, setFormData] = useState<Partial<Port>>({
-    name: "",
-    country: "",
-    region: "Middle East",
-    lat: "",
-    lng: "",
-    type: "commercial",
-    capacity: 0,
-    status: "active",
-    description: ""
-  });
-  const [isRefineryMapOpen, setIsRefineryMapOpen] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
-
-  // Query to fetch ports
-  const { data: portsData, isLoading, refetch } = useQuery({
-    queryKey: ['/api/ports', page, pageSize, searchTerm, selectedRegion, selectedPortType],
-    queryFn: () => apiRequest(`/api/ports?page=${page}&pageSize=${pageSize}&search=${searchTerm}&region=${selectedRegion}&type=${selectedPortType}`),
-  });
-
-  // Initialize query client for cache management
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-
-  // Create port form
-  const form = useForm<PortFormValues>({
-    resolver: zodResolver(portFormSchema),
-    defaultValues: formData,
-  });
-
-  // Creation mutation
-  const createMutation = useMutation({
-    mutationFn: (newPort: any) => apiRequest('/api/ports', {
-      method: 'POST',
-      data: newPort
-    }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/ports'] });
-      toast({
-        title: "Port created",
-        description: "The port has been created successfully.",
-      });
-      setIsCreating(false);
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Failed to create port",
-        description: error.message,
-        variant: "destructive",
-      });
+// Port Card Component
+function PortCard({ port }: { port: Port }) {
+  const getStatusIcon = (status: string | null) => {
+    const s = status?.toLowerCase() || 'unknown';
+    if (s.includes('operational') || s.includes('active')) {
+      return <CheckCircle className="h-4 w-4 text-green-600" />;
     }
-  });
-
-  // Update mutation
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number, data: any }) => apiRequest(`/api/ports/${id}`, {
-      method: 'PUT',
-      data
-    }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/ports'] });
-      toast({
-        title: "Port updated",
-        description: "The port has been updated successfully.",
-      });
-      setSelectedPort(null);
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Failed to update port",
-        description: error.message,
-        variant: "destructive",
-      });
+    if (s.includes('maintenance') || s.includes('repair')) {
+      return <Clock className="h-4 w-4 text-orange-600" />;
     }
-  });
-
-  // Delete mutation
-  const deleteMutation = useMutation({
-    mutationFn: (id: number) => apiRequest(`/api/ports/${id}`, {
-      method: 'DELETE'
-    }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/ports'] });
-      toast({
-        title: "Port deleted",
-        description: "The port has been deleted successfully.",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Failed to delete port",
-        description: error.message,
-        variant: "destructive",
-      });
+    if (s.includes('construction') || s.includes('planned')) {
+      return <Activity className="h-4 w-4 text-blue-600" />;
     }
-  });
-
-  // Handle create port action
-  const handleCreatePort = () => {
-    setFormData({
-      name: "",
-      country: "",
-      region: "Middle East",
-      lat: "",
-      lng: "",
-      type: "commercial",
-      capacity: 0,
-      status: "active",
-      description: ""
-    });
-    form.reset({
-      name: "",
-      country: "",
-      region: "Middle East",
-      lat: "",
-      lng: "",
-      type: "commercial",
-      capacity: 0,
-      status: "active",
-      description: ""
-    });
-    setIsCreating(true);
-  };
-
-  // Handle edit port action
-  const handleOpenEdit = (port: Port) => {
-    setSelectedPort(port);
-    setFormData(port);
-    form.reset({
-      ...port,
-      capacity: port.capacity || 0,
-    });
-  };
-
-  // Handle submit action (create or update)
-  const onSubmit = (values: PortFormValues) => {
-    if (selectedPort) {
-      updateMutation.mutate({ id: selectedPort.id, data: values });
-    } else {
-      createMutation.mutate(values);
+    if (s.includes('closed') || s.includes('inactive')) {
+      return <AlertTriangle className="h-4 w-4 text-red-600" />;
     }
+    return <Activity className="h-4 w-4 text-gray-600" />;
   };
-
-  // Handle location selection from map
-  const handleSelectLocation = (position: [number, number]) => {
-    const [lat, lng] = position;
-    setFormData(prev => ({
-      ...prev,
-      lat: lat.toFixed(6),
-      lng: lng.toFixed(6)
-    }));
-    form.setValue('lat', lat.toFixed(6));
-    form.setValue('lng', lng.toFixed(6));
-    setIsRefineryMapOpen(false);
-  };
-
-  // Handle cancel action
-  const handleCancel = () => {
-    setSelectedPort(null);
-    setIsCreating(false);
-  };
-
-  // Handle delete action
-  const handleDelete = (id: number) => {
-    if (confirm("Are you sure you want to delete this port? This action cannot be undone.")) {
-      deleteMutation.mutate(id);
-    }
-  };
-
-  // Show loading state
-  if (isLoading) {
-    return <FullPageSpinner />;
-  }
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <div className="flex justify-between items-center">
-          <div>
-            <CardTitle>Port Management</CardTitle>
-            <CardDescription>Manage all ports in the system</CardDescription>
+    <Card className="group cursor-pointer hover:shadow-lg transition-all duration-200 border-border hover:border-primary/30">
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center">
+              <Anchor className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div>
+              <CardTitle className="text-lg group-hover:text-primary transition-colors">
+                {port.name}
+              </CardTitle>
+              <p className="text-sm text-muted-foreground flex items-center mt-1">
+                <MapPin className="h-3 w-3 mr-1" />
+                {port.country}, {port.region}
+              </p>
+            </div>
           </div>
-          <Button onClick={handleCreatePort}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Port
-          </Button>
+          <div className="flex items-center space-x-2">
+            {getStatusIcon(port.status)}
+            <PortStatusBadge status={port.status} />
+          </div>
         </div>
       </CardHeader>
-      
       <CardContent>
-        {/* Search and Filters */}
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <div className="relative flex-1">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search ports..."
-              className="pl-8"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          
-          <div className="flex gap-2">
-            <Select
-              value={selectedRegion}
-              onValueChange={setSelectedRegion}
-            >
-              <SelectTrigger className="w-[180px]">
-                <Filter className="mr-2 h-4 w-4" />
-                <SelectValue placeholder="Filter by region" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="All">All Regions</SelectItem>
-                <SelectItem value="Middle East">Middle East</SelectItem>
-                <SelectItem value="Asia-Pacific">Asia-Pacific</SelectItem>
-                <SelectItem value="Europe">Europe</SelectItem>
-                <SelectItem value="North America">North America</SelectItem>
-                <SelectItem value="Latin America">Latin America</SelectItem>
-                <SelectItem value="Africa">Africa</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <Select
-              value={selectedPortType}
-              onValueChange={setSelectedPortType}
-            >
-              <SelectTrigger className="w-[180px]">
-                <Filter className="mr-2 h-4 w-4" />
-                <SelectValue placeholder="Filter by type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="All">All Types</SelectItem>
-                <SelectItem value="commercial">Commercial</SelectItem>
-                <SelectItem value="oil">Oil</SelectItem>
-                <SelectItem value="container">Container</SelectItem>
-                <SelectItem value="bulk">Bulk</SelectItem>
-                <SelectItem value="cruise">Cruise</SelectItem>
-                <SelectItem value="ferry">Ferry</SelectItem>
-                <SelectItem value="lng">LNG</SelectItem>
-                <SelectItem value="offshore">Offshore</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <Button variant="outline" onClick={() => refetch()}>
-              <RefreshCw className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-        
-        {/* Ports Table */}
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Country</TableHead>
-                <TableHead>Region</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {portsData?.data?.length > 0 ? (
-                portsData.data.map((port: Port) => (
-                  <TableRow key={port.id}>
-                    <TableCell className="font-medium">{port.id}</TableCell>
-                    <TableCell>{port.name}</TableCell>
-                    <TableCell>{port.country}</TableCell>
-                    <TableCell>{port.region}</TableCell>
-                    <TableCell>
-                      <span className="capitalize">{port.type}</span>
-                    </TableCell>
-                    <TableCell>
-                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                        port.status === 'active' 
-                          ? 'bg-green-100 text-green-800' 
-                          : port.status === 'maintenance' 
-                            ? 'bg-yellow-100 text-yellow-800' 
-                            : 'bg-red-100 text-red-800'
-                      }`}>
-                        {port.status}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleOpenEdit(port)}
-                        title="Edit port"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(port.id)}
-                        title="Delete port"
-                      >
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
-                    No ports found. Try adjusting your filters or create a new port.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-        
-        {/* Pagination */}
-        {portsData?.totalPages > 1 && (
-          <div className="flex justify-between items-center mt-4">
-            <div className="text-sm text-muted-foreground">
-              Showing {Math.min((page - 1) * pageSize + 1, portsData.totalCount || 0)} to {Math.min(page * pageSize, portsData.totalCount || 0)} of {portsData.totalCount || 0} ports
+        <div className="space-y-4">
+          {/* Port Details */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Type:</span>
+                <span className="font-medium capitalize">{port.type || 'Commercial'}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Vessels:</span>
+                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                  {port.vesselCount || 0}
+                </Badge>
+              </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <Select
-                value={pageSize.toString()}
-                onValueChange={(val) => {
-                  setPageSize(parseInt(val));
-                  setPage(1);
-                }}
-              >
-                <SelectTrigger className="w-[80px]">
-                  <SelectValue placeholder="10" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="5">5</SelectItem>
-                  <SelectItem value="10">10</SelectItem>
-                  <SelectItem value="20">20</SelectItem>
-                  <SelectItem value="50">50</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              <CustomPagination
-                totalPages={portsData.totalPages}
-                currentPage={page}
-                onPageChange={setPage}
-              />
+            
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Capacity:</span>
+                <span className="font-medium">
+                  {port.capacity ? (port.capacity / 1000000).toFixed(1) + 'M TEU' : 'N/A'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Refineries:</span>
+                <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
+                  {port.connectedRefineries || 0}
+                </Badge>
+              </div>
             </div>
           </div>
-        )}
-      </CardContent>
-      
-      {/* Port Form Dialog */}
-      <Dialog open={isCreating || !!selectedPort} onOpenChange={(open) => {
-        if (!open) handleCancel();
-      }}>
-        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {selectedPort ? `Edit Port: ${selectedPort.name}` : 'Create Port'}
-            </DialogTitle>
-            <DialogDescription>
-              {selectedPort 
-                ? 'Update the port details below.' 
-                : 'Fill in the port details to create a new port entry.'}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Port Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Port of Rotterdam" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="country"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Country</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Netherlands" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="region"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Region</FormLabel>
-                      <Select
-                        value={field.value}
-                        onValueChange={field.onChange}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select region" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="Middle East">Middle East</SelectItem>
-                          <SelectItem value="Asia-Pacific">Asia-Pacific</SelectItem>
-                          <SelectItem value="Europe">Europe</SelectItem>
-                          <SelectItem value="North America">North America</SelectItem>
-                          <SelectItem value="Latin America">Latin America</SelectItem>
-                          <SelectItem value="Africa">Africa</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="type"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Port Type</FormLabel>
-                      <Select
-                        value={field.value}
-                        onValueChange={field.onChange}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select port type" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="commercial">Commercial</SelectItem>
-                          <SelectItem value="oil">Oil</SelectItem>
-                          <SelectItem value="container">Container</SelectItem>
-                          <SelectItem value="bulk">Bulk</SelectItem>
-                          <SelectItem value="cruise">Cruise</SelectItem>
-                          <SelectItem value="ferry">Ferry</SelectItem>
-                          <SelectItem value="lng">LNG</SelectItem>
-                          <SelectItem value="offshore">Offshore</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <Select
-                        value={field.value}
-                        onValueChange={field.onChange}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select status" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="active">Active</SelectItem>
-                          <SelectItem value="maintenance">Maintenance</SelectItem>
-                          <SelectItem value="closed">Closed</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="capacity"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Capacity (tons/day)</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          placeholder="0"
-                          {...field}
-                          value={field.value || ""}
-                          onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Handling capacity in tons per day
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="lat"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Latitude</FormLabel>
-                      <FormControl>
-                        <Input placeholder="51.9489" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="lng"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Longitude</FormLabel>
-                      <FormControl>
-                        <Input placeholder="4.1472" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
-              <div className="flex justify-between items-center">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsRefineryMapOpen(true)}
-                >
-                  <MapPin className="mr-2 h-4 w-4" />
-                  Select Location on Map
-                </Button>
-                
-                <div className="text-sm text-muted-foreground">
-                  {form.watch('lat') && form.watch('lng') 
-                    ? `Selected: ${form.watch('lat')}, ${form.watch('lng')}` 
-                    : 'No location selected'}
+
+          {/* Port Statistics */}
+          <div className="pt-3 border-t border-border">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4 text-sm">
+                <div className="flex items-center space-x-1">
+                  <Activity className="h-3 w-3 text-green-600" />
+                  <span className="text-muted-foreground">Active</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <Gauge className="h-3 w-3 text-blue-600" />
+                  <span className="text-muted-foreground">{port.capacity ? Math.round((port.vesselCount || 0) / (port.capacity / 1000000) * 100) + '%' : 'N/A'}</span>
                 </div>
               </div>
               
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className="group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+              >
+                View Details
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="flex justify-between items-center pt-2 border-t border-border">
+            <div className="flex space-x-1">
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                <Eye className="h-3 w-3" />
+              </Button>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                <Edit className="h-3 w-3" />
+              </Button>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                <MapIcon className="h-3 w-3" />
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {port.lastUpdated ? new Date(port.lastUpdated).toLocaleDateString() : 'No data'}
+            </p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// Add Port Dialog Component
+function AddPortDialog() {
+  const [open, setOpen] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const form = useForm<PortFormData>({
+    resolver: zodResolver(portFormSchema),
+    defaultValues: {
+      name: '',
+      country: '',
+      region: '',
+      lat: '',
+      lng: '',
+      type: 'commercial',
+      status: 'operational',
+      capacity: '',
+      description: ''
+    }
+  });
+
+  const addPortMutation = useMutation({
+    mutationFn: async (data: PortFormData) => {
+      const portData = {
+        ...data,
+        capacity: data.capacity ? parseInt(data.capacity) : null
+      };
+      return apiRequest('/api/ports', {
+        method: 'POST',
+        body: JSON.stringify(portData)
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/ports'] });
+      setOpen(false);
+      form.reset();
+      toast({
+        title: "Port Added Successfully",
+        description: "The new port has been added to the system.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error Adding Port",
+        description: error.message || "Failed to add port",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const onSubmit = (data: PortFormData) => {
+    addPortMutation.mutate(data);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button>
+          <Plus className="h-4 w-4 mr-2" />
+          Add New Port
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[600px]">
+        <DialogHeader>
+          <DialogTitle>Add New Port</DialogTitle>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="description"
+                name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description</FormLabel>
+                    <FormLabel>Port Name</FormLabel>
                     <FormControl>
-                      <Textarea
-                        placeholder="Provide a detailed description of the port"
-                        className="min-h-[100px]"
-                        {...field}
-                      />
+                      <Input placeholder="Port of Rotterdam" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               
-              <DialogFooter>
-                <Button type="button" variant="ghost" onClick={handleCancel}>
-                  Cancel
-                </Button>
-                <Button type="submit">
-                  {selectedPort ? 'Update Port' : 'Create Port'}
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Map Selector Dialog */}
-      <Dialog open={isRefineryMapOpen} onOpenChange={setIsRefineryMapOpen}>
-        <DialogContent className="sm:max-w-[900px] sm:h-[700px] p-0">
-          <DialogHeader className="p-4 pb-0">
-            <DialogTitle>Select Port Location</DialogTitle>
-            <DialogDescription>
-              Click on the map to select the port location.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="h-[600px] w-full relative">
-            <RefineryMapSelector
-              onSelectPosition={handleSelectLocation}
-              initialPosition={form.watch('lat') && form.watch('lng') 
-                ? [parseFloat(form.watch('lat')), parseFloat(form.watch('lng'))] 
-                : undefined}
-              showRefineries={false}
-              showVessels={false}
-              showPorts={true}
+              <FormField
+                control={form.control}
+                name="country"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Country</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Netherlands" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <FormField
+                control={form.control}
+                name="region"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Region</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select region" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Europe">Europe</SelectItem>
+                        <SelectItem value="Asia-Pacific">Asia-Pacific</SelectItem>
+                        <SelectItem value="North America">North America</SelectItem>
+                        <SelectItem value="Latin America">Latin America</SelectItem>
+                        <SelectItem value="Middle East">Middle East</SelectItem>
+                        <SelectItem value="Africa">Africa</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="lat"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Latitude</FormLabel>
+                    <FormControl>
+                      <Input placeholder="51.9225" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="lng"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Longitude</FormLabel>
+                    <FormControl>
+                      <Input placeholder="4.47917" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <FormField
+                control={form.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Port Type</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="commercial">Commercial</SelectItem>
+                        <SelectItem value="oil_terminal">Oil Terminal</SelectItem>
+                        <SelectItem value="container">Container Port</SelectItem>
+                        <SelectItem value="bulk_cargo">Bulk Cargo</SelectItem>
+                        <SelectItem value="passenger">Passenger Port</SelectItem>
+                        <SelectItem value="fishing">Fishing Port</SelectItem>
+                        <SelectItem value="naval">Naval Base</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="operational">Operational</SelectItem>
+                        <SelectItem value="maintenance">Under Maintenance</SelectItem>
+                        <SelectItem value="construction">Under Construction</SelectItem>
+                        <SelectItem value="planned">Planned</SelectItem>
+                        <SelectItem value="closed">Closed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="capacity"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Capacity (TEU)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="14000000" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Enter port description..." 
+                      className="min-h-[80px]"
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
+
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={addPortMutation.isPending}>
+                {addPortMutation.isPending ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Adding...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Port
+                  </>
+                )}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// Statistics Cards Component
+function PortStatistics({ stats }: { stats: PortStats | undefined }) {
+  if (!stats) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        {[1, 2, 3, 4].map((i) => (
+          <Card key={i} className="animate-pulse">
+            <CardHeader className="pb-2">
+              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+            </CardHeader>
+            <CardContent>
+              <div className="h-8 bg-gray-200 rounded w-3/4 mb-2"></div>
+              <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  const statCards = [
+    {
+      title: "Total Ports",
+      value: stats.totalPorts.toLocaleString(),
+      icon: Anchor,
+      color: "blue",
+      description: `${stats.operationalPorts} operational`,
+      trend: "+12% from last month"
+    },
+    {
+      title: "Active Vessels",
+      value: stats.totalVessels.toLocaleString(),
+      icon: Ship,
+      color: "green",
+      description: `${stats.averageVesselsPerPort.toFixed(1)} per port`,
+      trend: "+8% from last week"
+    },
+    {
+      title: "Total Capacity",
+      value: `${(stats.totalCapacity / 1000000).toFixed(1)}M TEU`,
+      icon: Building2,
+      color: "purple",
+      description: "Combined port capacity",
+      trend: "+5% from last quarter"
+    },
+    {
+      title: "Top Region",
+      value: stats.topRegions[0]?.region || "N/A",
+      icon: Globe,
+      color: "orange",
+      description: `${stats.topRegions[0]?.count || 0} ports`,
+      trend: "Leading region"
+    }
+  ];
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+      {statCards.map((stat, index) => (
+        <Card key={index} className="border-border hover:shadow-md transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              {stat.title}
+            </CardTitle>
+            <stat.icon className={`h-4 w-4 text-${stat.color}-600`} />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold mb-1">{stat.value}</div>
+            <p className="text-xs text-muted-foreground mb-1">
+              {stat.description}
+            </p>
+            <div className="flex items-center space-x-1">
+              <TrendingUp className="h-3 w-3 text-green-600" />
+              <span className="text-xs text-green-600">{stat.trend}</span>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+// Main Ports Management Component
+export function PortManagement() {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedRegion, setSelectedRegion] = useState('all');
+  const [selectedStatus, setSelectedStatus] = useState('all');
+  const [selectedType, setSelectedType] = useState('all');
+  const [viewMode, setViewMode] = useState('grid');
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const pageSize = 12;
+
+  // Fetch ports data
+  const { 
+    data: ports = [], 
+    isLoading: portsLoading,
+    error: portsError,
+    refetch: refetchPorts
+  } = useQuery({
+    queryKey: ['/api/ports'],
+    queryFn: async () => {
+      const response = await fetch('/api/ports');
+      if (!response.ok) {
+        throw new Error('Failed to fetch ports');
+      }
+      return response.json();
+    }
+  });
+
+  // Fetch port statistics
+  const { 
+    data: stats,
+    isLoading: statsLoading 
+  } = useQuery({
+    queryKey: ['/api/ports/statistics'],
+    queryFn: async () => {
+      const response = await fetch('/api/ports/statistics');
+      if (!response.ok) {
+        throw new Error('Failed to fetch statistics');
+      }
+      return response.json();
+    }
+  });
+
+  // Filter ports based on search and filters
+  const filteredPorts = ports.filter((port: Port) => {
+    const matchesSearch = !searchTerm || 
+      port.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      port.country.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesRegion = selectedRegion === 'all' || port.region === selectedRegion;
+    const matchesStatus = selectedStatus === 'all' || port.status === selectedStatus;
+    const matchesType = selectedType === 'all' || port.type === selectedType;
+
+    return matchesSearch && matchesRegion && matchesStatus && matchesType;
+  });
+
+  // Pagination
+  const totalPages = Math.ceil(filteredPorts.length / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedPorts = filteredPorts.slice(startIndex, startIndex + pageSize);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedRegion, selectedStatus, selectedType]);
+
+  if (portsLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="animate-pulse space-y-6">
+          <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-32 bg-gray-200 rounded"></div>
+            ))}
           </div>
-        </DialogContent>
-      </Dialog>
-    </Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="h-64 bg-gray-200 rounded"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (portsError) {
+    return (
+      <div className="space-y-6">
+        <Card className="border-destructive">
+          <CardHeader>
+            <CardTitle className="text-destructive">Error Loading Ports</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p>There was a problem loading the ports data.</p>
+            <Button 
+              variant="outline" 
+              className="mt-4" 
+              onClick={() => refetchPorts()}
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Try Again
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Ports Management</h1>
+          <p className="text-muted-foreground mt-1">
+            Comprehensive port management with real-time vessel tracking and analytics
+          </p>
+        </div>
+        <div className="flex gap-2 mt-4 md:mt-0">
+          <Button variant="outline">
+            <Upload className="h-4 w-4 mr-2" />
+            Import Ports
+          </Button>
+          <Button variant="outline">
+            <BarChart3 className="h-4 w-4 mr-2" />
+            Analytics
+          </Button>
+          <AddPortDialog />
+        </div>
+      </div>
+
+      {/* Statistics */}
+      <PortStatistics stats={stats} />
+
+      {/* Filters and Search */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Filters & Search</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                placeholder="Search ports..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+
+            <Select value={selectedRegion} onValueChange={setSelectedRegion}>
+              <SelectTrigger>
+                <SelectValue placeholder="All Regions" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Regions</SelectItem>
+                <SelectItem value="Europe">Europe</SelectItem>
+                <SelectItem value="Asia-Pacific">Asia-Pacific</SelectItem>
+                <SelectItem value="North America">North America</SelectItem>
+                <SelectItem value="Latin America">Latin America</SelectItem>
+                <SelectItem value="Middle East">Middle East</SelectItem>
+                <SelectItem value="Africa">Africa</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+              <SelectTrigger>
+                <SelectValue placeholder="All Statuses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="operational">Operational</SelectItem>
+                <SelectItem value="maintenance">Under Maintenance</SelectItem>
+                <SelectItem value="construction">Under Construction</SelectItem>
+                <SelectItem value="planned">Planned</SelectItem>
+                <SelectItem value="closed">Closed</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={selectedType} onValueChange={setSelectedType}>
+              <SelectTrigger>
+                <SelectValue placeholder="All Types" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="commercial">Commercial</SelectItem>
+                <SelectItem value="oil_terminal">Oil Terminal</SelectItem>
+                <SelectItem value="container">Container Port</SelectItem>
+                <SelectItem value="bulk_cargo">Bulk Cargo</SelectItem>
+                <SelectItem value="passenger">Passenger Port</SelectItem>
+                <SelectItem value="fishing">Fishing Port</SelectItem>
+                <SelectItem value="naval">Naval Base</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => {
+                  setSearchTerm('');
+                  setSelectedRegion('all');
+                  setSelectedStatus('all');
+                  setSelectedType('all');
+                }}
+              >
+                Clear
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => refetchPorts()}
+              >
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* View Mode Tabs */}
+      <Tabs value={viewMode} onValueChange={setViewMode}>
+        <div className="flex justify-between items-center mb-4">
+          <TabsList>
+            <TabsTrigger value="grid">
+              <Grid3x3 className="h-4 w-4 mr-2" />
+              Grid View
+            </TabsTrigger>
+            <TabsTrigger value="list">
+              <List className="h-4 w-4 mr-2" />
+              List View
+            </TabsTrigger>
+            <TabsTrigger value="map">
+              <MapIcon className="h-4 w-4 mr-2" />
+              Map View
+            </TabsTrigger>
+          </TabsList>
+
+          <div className="text-sm text-muted-foreground">
+            Showing {startIndex + 1}-{Math.min(startIndex + pageSize, filteredPorts.length)} of {filteredPorts.length} ports
+          </div>
+        </div>
+
+        <TabsContent value="grid" className="mt-0">
+          {paginatedPorts.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {paginatedPorts.map((port) => (
+                <PortCard key={port.id} port={port} />
+              ))}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <Anchor className="h-12 w-12 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No Ports Found</h3>
+                <p className="text-muted-foreground text-center mb-4">
+                  {searchTerm || selectedRegion !== 'all' || selectedStatus !== 'all' || selectedType !== 'all'
+                    ? "No ports match your current filters."
+                    : "No ports have been added to the system yet."
+                  }
+                </p>
+                <div className="flex gap-2">
+                  {(searchTerm || selectedRegion !== 'all' || selectedStatus !== 'all' || selectedType !== 'all') && (
+                    <Button variant="outline" onClick={() => {
+                      setSearchTerm('');
+                      setSelectedRegion('all');
+                      setSelectedStatus('all');
+                      setSelectedType('all');
+                    }}>
+                      Clear Filters
+                    </Button>
+                  )}
+                  <AddPortDialog />
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="list" className="mt-0">
+          <Card>
+            <CardContent className="p-0">
+              {paginatedPorts.length > 0 ? (
+                <div className="divide-y divide-border">
+                  {paginatedPorts.map((port) => (
+                    <div key={port.id} className="p-6 hover:bg-muted/50 transition-colors">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4">
+                          <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center">
+                            <Anchor className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold">{port.name}</h3>
+                            <p className="text-sm text-muted-foreground">
+                              {port.country}, {port.region}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center space-x-4">
+                          <div className="text-right">
+                            <div className="text-sm font-medium">
+                              {port.vesselCount || 0} vessels
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              {port.type || 'Commercial'}
+                            </div>
+                          </div>
+                          
+                          <PortStatusBadge status={port.status} />
+                          
+                          <Button variant="ghost" size="sm">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <Anchor className="h-12 w-12 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No Ports Found</h3>
+                  <p className="text-muted-foreground text-center">
+                    No ports match your current filters.
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="map" className="mt-0">
+          <Card>
+            <CardContent className="p-6">
+              <div className="h-[600px] bg-muted rounded-lg flex items-center justify-center">
+                <div className="text-center">
+                  <MapIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Interactive Map</h3>
+                  <p className="text-muted-foreground">
+                    Map view will show all ports with real-time vessel data
+                  </p>
+                  <Button className="mt-4">
+                    Open Full Map
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-between items-center mt-6">
+          <div className="text-sm text-muted-foreground">
+            Page {currentPage} of {totalPages}
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+            >
+              Next
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
