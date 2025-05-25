@@ -80,9 +80,9 @@ interface Port {
   capacity: number | null;
   description: string | null;
   lastUpdated: Date | null;
-  vesselCount?: number;
-  connectedRefineries?: number;
-  totalCargo?: number;
+  vesselCount: number;
+  connectedRefineries: number;
+  totalCargo: number;
 }
 
 interface PortStats {

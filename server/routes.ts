@@ -3237,6 +3237,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get all ports from database
       let ports = await storage.getPorts();
       let totalCount = ports.length;
+
+      // Get connection data for each port
+      const vessels = await storage.getVessels();
+      const refineries = await storage.getRefineries();
+      const vesselConnections = await storage.getVesselConnections();
+      const refineryConnections = await storage.getRefineryConnections();
+
+      // Add connection counts to each port
+      ports = ports.map(port => {
+        // Count vessels connected to this port
+        const connectedVessels = vessels.filter(vessel => {
+          // Check if vessel is near this port (within 0.5 degrees)
+          if (!vessel.currentLat || !vessel.currentLng) return false;
+          
+          try {
+            const vesselLat = parseFloat(vessel.currentLat);
+            const vesselLng = parseFloat(vessel.currentLng);
+            const portLat = parseFloat(port.lat);
+            const portLng = parseFloat(port.lng);
+            
+            const distance = Math.sqrt(
+              Math.pow(vesselLat - portLat, 2) + 
+              Math.pow(vesselLng - portLng, 2)
+            );
+            
+            return distance <= 0.5;
+          } catch (error) {
+            return false;
+          }
+        });
+
+        // Count refineries connected to this port
+        const connectedRefineries = refineries.filter(refinery => {
+          if (!refinery.lat || !refinery.lng) return false;
+          
+          try {
+            const refineryLat = parseFloat(refinery.lat);
+            const refineryLng = parseFloat(refinery.lng);
+            const portLat = parseFloat(port.lat);
+            const portLng = parseFloat(port.lng);
+            
+            const distance = Math.sqrt(
+              Math.pow(refineryLat - portLat, 2) + 
+              Math.pow(refineryLng - portLng, 2)
+            );
+            
+            return distance <= 1.0; // Refineries can be further from ports
+          } catch (error) {
+            return false;
+          }
+        });
+
+        // Calculate total cargo from connected vessels
+        const totalCargo = connectedVessels.reduce((sum, vessel) => {
+          return sum + (vessel.cargoCapacity || 0);
+        }, 0);
+
+        return {
+          ...port,
+          vesselCount: connectedVessels.length,
+          connectedRefineries: connectedRefineries.length,
+          totalCargo: totalCargo
+        };
+      });
       
       // Apply filters
       if (region && region !== 'All') {
