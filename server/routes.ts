@@ -863,28 +863,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Fetch vessel data from maritime API using the IMO
-      const vesselData = await marineTrafficService.fetchVesselByIMO(imo);
+      // Fetch vessel data from maritime API using IMO or MMSI
+      let vesselData = null;
       
-      if (!vesselData) {
-        return res.status(404).json({ 
-          message: `No vessel found with IMO ${imo}. Please verify the IMO number is correct.` 
-        });
-      }
-      
-      // Check if vessel already exists in database
-      const existingVessel = await storage.getVesselByIMO(imo);
-      if (existingVessel) {
-        return res.status(409).json({ 
-          message: `Vessel with IMO ${imo} already exists in the database.` 
-        });
+      if (imo) {
+        vesselData = await marineTrafficService.fetchVesselByIMO(imo);
+        
+        if (!vesselData) {
+          return res.status(404).json({ 
+            message: `No vessel found with IMO ${imo}. Please verify the IMO number is correct.` 
+          });
+        }
+        
+        // Check if vessel already exists in database
+        const existingVessel = await storage.getVesselByIMO(imo);
+        if (existingVessel) {
+          return res.status(409).json({ 
+            message: `Vessel with IMO ${imo} already exists in the database.` 
+          });
+        }
+      } else if (mmsi) {
+        vesselData = await marineTrafficService.fetchVesselByMMSI(mmsi);
+        
+        if (!vesselData) {
+          return res.status(404).json({ 
+            message: `No vessel found with MMSI ${mmsi}. Please verify the MMSI number is correct.` 
+          });
+        }
+        
+        // Check if vessel already exists in database
+        const existingVessel = await storage.getVesselByMmsi(mmsi);
+        if (existingVessel) {
+          return res.status(409).json({ 
+            message: `Vessel with MMSI ${mmsi} already exists in the database.` 
+          });
+        }
       }
       
       // Create vessel in database with API data
       const newVessel = await storage.createVessel({
-        name: vesselData.name || `Vessel ${imo}`,
-        imo: imo,
-        mmsi: vesselData.mmsi || '',
+        name: vesselData.name || `Vessel ${imo || mmsi}`,
+        imo: vesselData.imo || imo || '',
+        mmsi: vesselData.mmsi || mmsi || '',
         vesselType: vesselData.vesselType || 'OIL_TANKER',
         flag: vesselData.flag || 'US',
         built: vesselData.built || null,
