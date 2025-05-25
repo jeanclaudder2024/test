@@ -2,7 +2,7 @@ import { eq, and, sql } from "drizzle-orm";
 import { db, getActiveDb } from "./db";
 import {
   users, vessels, refineries, progressEvents, documents, brokers, stats as statsTable, ports, 
-  refineryPortConnections, companies, vesselRefineryConnections, vesselPortConnections,
+  refineryPortConnections, companies, vesselRefineryConnections,
   subscriptionPlans, subscriptions, paymentMethods, invoices,
   User, InsertUser, 
   Vessel, InsertVessel,
