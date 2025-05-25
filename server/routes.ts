@@ -3055,13 +3055,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("Validation successful, creating vessel with data:", JSON.stringify(result.data, null, 2));
       
-      // Process the validated data to handle date fields properly
+      // Process the validated data to handle all date fields properly
       const vesselData = {
-        ...result.data,
-        // Convert string dates to Date objects
-        departureDate: result.data.departureDate ? new Date(result.data.departureDate) : null,
-        eta: result.data.eta ? new Date(result.data.eta) : null
+        name: result.data.name,
+        imo: result.data.imo,
+        mmsi: result.data.mmsi,
+        vesselType: result.data.vesselType,
+        flag: result.data.flag,
+        built: result.data.built,
+        deadweight: result.data.deadweight,
+        currentLat: result.data.currentLat,
+        currentLng: result.data.currentLng,
+        departurePort: result.data.departurePort,
+        destinationPort: result.data.destinationPort,
+        destinationLat: result.data.destinationLat,
+        destinationLng: result.data.destinationLng,
+        departureLat: result.data.departureLat,
+        departureLng: result.data.departureLng,
+        cargoType: result.data.cargoType,
+        cargoCapacity: result.data.cargoCapacity,
+        currentRegion: result.data.currentRegion,
+        status: result.data.status,
+        speed: result.data.speed,
+        buyerName: result.data.buyerName,
+        sellerName: result.data.sellerName,
+        metadata: result.data.metadata,
+        // Convert string dates to Date objects, handle empty strings as null
+        departureDate: result.data.departureDate && result.data.departureDate !== "" ? new Date(result.data.departureDate) : null,
+        eta: result.data.eta && result.data.eta !== "" ? new Date(result.data.eta) : null
       };
+      
+      console.log("Final vessel data being sent to database:", JSON.stringify(vesselData, null, 2));
       
       // Create the vessel in the database
       const newVessel = await storage.createVessel(vesselData);
