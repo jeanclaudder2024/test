@@ -832,6 +832,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Import vessel from API using IMO number
+  apiRouter.post("/vessels/import-from-api", async (req, res) => {
+    try {
+      const { imo } = req.body;
+      
+      if (!imo) {
+        return res.status(400).json({ message: "IMO number is required" });
+      }
+      
+      // Validate IMO format (7 digits)
+      const imoPattern = /^\d{7}$/;
+      if (!imoPattern.test(imo)) {
+        return res.status(400).json({ message: "IMO number must be exactly 7 digits" });
+      }
+      
+      if (!marineTrafficService.isConfigured()) {
+        return res.status(503).json({ 
+          message: "Maritime API is not configured. Please provide your API key to enable vessel import functionality." 
+        });
+      }
+      
+      // Fetch vessel data from maritime API using the IMO
+      const vesselData = await marineTrafficService.fetchVesselByIMO(imo);
+      
+      if (!vesselData) {
+        return res.status(404).json({ 
+          message: `No vessel found with IMO ${imo}. Please verify the IMO number is correct.` 
+        });
+      }
+      
+      // Check if vessel already exists in database
+      const existingVessel = await storage.getVesselByIMO(imo);
+      if (existingVessel) {
+        return res.status(409).json({ 
+          message: `Vessel with IMO ${imo} already exists in the database.` 
+        });
+      }
+      
+      // Create vessel in database with API data
+      const newVessel = await storage.createVessel({
+        name: vesselData.name || `Vessel ${imo}`,
+        imo: imo,
+        mmsi: vesselData.mmsi || '',
+        vesselType: vesselData.vesselType || 'OIL_TANKER',
+        flag: vesselData.flag || 'US',
+        built: vesselData.built || null,
+        deadweight: vesselData.deadweight || null,
+        length: vesselData.length || null,
+        width: vesselData.width || null,
+        status: vesselData.status || 'AT_SEA',
+        currentLat: vesselData.currentLat || null,
+        currentLng: vesselData.currentLng || null,
+        destination: vesselData.destination || null,
+        eta: vesselData.eta || null,
+        speed: vesselData.speed || null,
+        course: vesselData.course || null,
+        draught: vesselData.draught || null,
+        cargo: vesselData.cargo || null,
+        cargoCapacity: vesselData.cargoCapacity || null
+      });
+      
+      res.json(newVessel);
+      
+    } catch (error) {
+      console.error("Error importing vessel from API:", error);
+      res.status(500).json({ 
+        message: "Failed to import vessel data from maritime API. Please try again or contact support." 
+      });
+    }
+  });
+
   // Endpoint to get vessels near a refinery using MyShipTracking API
   apiRouter.get("/vessels/near-refinery/:id", async (req, res) => {
     try {
