@@ -927,8 +927,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
     } catch (error) {
       console.error("Error importing vessel from API:", error);
+      console.error("Error details:", {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        imo,
+        mmsi
+      });
       res.status(500).json({ 
-        message: "Failed to import vessel data from maritime API. Please try again or contact support." 
+        message: "Failed to import vessel data from maritime API. Please try again or contact support.",
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   });
