@@ -5,12 +5,12 @@ import { useQuery } from "@tanstack/react-query";
 import { UserManagement } from "@/components/admin/UserManagement";
 import { SystemStats } from "@/components/admin/SystemStats";
 import { FixedDataManagement } from "@/components/admin/FixedDataManagement";
-import { VesselManagement } from "@/components/admin/VesselManagement";
+
 import { RefineryManagement } from "@/components/admin/RefineryManagement";
 import { PortManagement } from "@/components/admin/PortManagement";
 import { Settings } from "@/components/admin/AdminSettings";
 import { Button } from "@/components/ui/button";
-import { Shield, Database, Users, Settings as SettingsIcon, ChevronLeft, Ship, Factory, Anchor } from "lucide-react";
+import { Shield, Database, Users, Settings as SettingsIcon, ChevronLeft, Factory, Anchor } from "lucide-react";
 import { useLocation } from "wouter";
 
 export default function AdminPanel() {
@@ -44,7 +44,7 @@ export default function AdminPanel() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid grid-cols-7 w-full max-w-5xl">
+        <TabsList className="grid grid-cols-6 w-full max-w-5xl">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <Shield className="h-4 w-4" />
             <span className="hidden sm:inline">System Overview</span>
@@ -54,11 +54,6 @@ export default function AdminPanel() {
             <Users className="h-4 w-4" />
             <span className="hidden sm:inline">User Management</span>
             <span className="sm:hidden">Users</span>
-          </TabsTrigger>
-          <TabsTrigger value="vessels" className="flex items-center gap-2">
-            <Ship className="h-4 w-4" />
-            <span className="hidden sm:inline">Vessel Management</span>
-            <span className="sm:hidden">Vessels</span>
           </TabsTrigger>
           <TabsTrigger value="ports" className="flex items-center gap-2">
             <Anchor className="h-4 w-4" />
@@ -110,19 +105,7 @@ export default function AdminPanel() {
           </Card>
         </TabsContent>
         
-        <TabsContent value="vessels" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Vessel Management</CardTitle>
-              <CardDescription>
-                Add, edit, and manage vessel data with interactive map positioning
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <VesselManagement />
-            </CardContent>
-          </Card>
-        </TabsContent>
+
 
         <TabsContent value="ports" className="space-y-4">
           <Card>
