@@ -121,7 +121,13 @@ function PortStatusBadge({ status }: { status: string | null }) {
 }
 
 // Port Card Component
-function PortCard({ port }: { port: Port }) {
+function PortCard({ port, onManageConnections, onViewPort, onEditPort, onDeletePort }: { 
+  port: Port;
+  onManageConnections: (port: Port, type: 'vessels' | 'refineries') => void;
+  onViewPort: (port: Port) => void;
+  onEditPort: (port: Port) => void;
+  onDeletePort: (port: Port) => void;
+}) {
   const getStatusIcon = (status: string | null) => {
     const s = status?.toLowerCase() || 'unknown';
     if (s.includes('operational') || s.includes('active')) {
@@ -202,7 +208,7 @@ function PortCard({ port }: { port: Port }) {
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={() => handleManageConnections(port, 'vessels')}
+                onClick={() => onManageConnections(port, 'vessels')}
                 className="flex items-center justify-center space-x-1 text-xs"
               >
                 <Ship className="h-3 w-3" />
@@ -215,7 +221,7 @@ function PortCard({ port }: { port: Port }) {
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={() => handleManageConnections(port, 'refineries')}
+                onClick={() => onManageConnections(port, 'refineries')}
                 className="flex items-center justify-center space-x-1 text-xs"
               >
                 <Building2 className="h-3 w-3" />
@@ -241,7 +247,7 @@ function PortCard({ port }: { port: Port }) {
               <Button 
                 variant="ghost" 
                 size="sm"
-                onClick={() => handleViewPort(port)}
+                onClick={() => onViewPort(port)}
                 className="group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
               >
                 View Details
@@ -1134,7 +1140,14 @@ export function PortManagement() {
           {paginatedPorts.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {paginatedPorts.map((port) => (
-                <PortCard key={port.id} port={port} />
+                <PortCard 
+                  key={port.id} 
+                  port={port}
+                  onManageConnections={handleManageConnections}
+                  onViewPort={handleViewPort}
+                  onEditPort={handleEditPort}
+                  onDeletePort={handleDeletePort}
+                />
               ))}
             </div>
           ) : (
@@ -1430,6 +1443,248 @@ export function PortManagement() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Port Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Port</DialogTitle>
+          </DialogHeader>
+          {selectedPort && (
+            <EditPortForm 
+              port={selectedPort} 
+              onSave={(updates) => {
+                editPortMutation.mutate({ id: selectedPort.id, updates });
+              }}
+              onCancel={() => setShowEditDialog(false)}
+              isLoading={editPortMutation.isPending}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* View Port Dialog */}
+      <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Port Details</DialogTitle>
+          </DialogHeader>
+          {selectedPort && (
+            <ViewPortDetails port={selectedPort} />
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+// Edit Port Form Component
+function EditPortForm({ port, onSave, onCancel, isLoading }: {
+  port: Port;
+  onSave: (updates: Partial<Port>) => void;
+  onCancel: () => void;
+  isLoading: boolean;
+}) {
+  const form = useForm({
+    defaultValues: {
+      name: port.name,
+      country: port.country,
+      region: port.region,
+      lat: port.lat,
+      lng: port.lng,
+      type: port.type || '',
+      status: port.status || '',
+      capacity: port.capacity || 0,
+      description: port.description || ''
+    }
+  });
+
+  const onSubmit = (data: any) => {
+    onSave(data);
+  };
+
+  return (
+    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="name">Port Name</Label>
+          <Input 
+            {...form.register('name')} 
+            placeholder="Enter port name"
+          />
+        </div>
+        <div>
+          <Label htmlFor="country">Country</Label>
+          <Input 
+            {...form.register('country')} 
+            placeholder="Enter country"
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="region">Region</Label>
+          <Select 
+            value={form.watch('region')} 
+            onValueChange={(value) => form.setValue('region', value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select region" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Middle East">Middle East</SelectItem>
+              <SelectItem value="Asia-Pacific">Asia-Pacific</SelectItem>
+              <SelectItem value="Europe">Europe</SelectItem>
+              <SelectItem value="North America">North America</SelectItem>
+              <SelectItem value="Latin America">Latin America</SelectItem>
+              <SelectItem value="Africa">Africa</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label htmlFor="type">Port Type</Label>
+          <Select 
+            value={form.watch('type')} 
+            onValueChange={(value) => form.setValue('type', value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="oil_terminal">Oil Terminal</SelectItem>
+              <SelectItem value="container_port">Container Port</SelectItem>
+              <SelectItem value="bulk_port">Bulk Port</SelectItem>
+              <SelectItem value="general_cargo">General Cargo</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="lat">Latitude</Label>
+          <Input 
+            {...form.register('lat')} 
+            placeholder="Enter latitude"
+          />
+        </div>
+        <div>
+          <Label htmlFor="lng">Longitude</Label>
+          <Input 
+            {...form.register('lng')} 
+            placeholder="Enter longitude"
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="status">Status</Label>
+          <Select 
+            value={form.watch('status')} 
+            onValueChange={(value) => form.setValue('status', value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="operational">Operational</SelectItem>
+              <SelectItem value="under_construction">Under Construction</SelectItem>
+              <SelectItem value="maintenance">Maintenance</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label htmlFor="capacity">Capacity</Label>
+          <Input 
+            {...form.register('capacity', { valueAsNumber: true })} 
+            type="number"
+            placeholder="Enter capacity"
+          />
+        </div>
+      </div>
+
+      <div>
+        <Label htmlFor="description">Description</Label>
+        <Textarea 
+          {...form.register('description')} 
+          placeholder="Enter port description"
+          rows={3}
+        />
+      </div>
+
+      <div className="flex justify-end space-x-2 pt-4">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button type="submit" disabled={isLoading}>
+          {isLoading ? 'Saving...' : 'Save Changes'}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+// View Port Details Component
+function ViewPortDetails({ port }: { port: Port }) {
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 gap-6">
+        <div>
+          <h3 className="text-lg font-semibold mb-4">Basic Information</h3>
+          <div className="space-y-3">
+            <div>
+              <Label className="text-sm font-medium">Name</Label>
+              <p className="text-sm text-muted-foreground">{port.name}</p>
+            </div>
+            <div>
+              <Label className="text-sm font-medium">Country</Label>
+              <p className="text-sm text-muted-foreground">{port.country}</p>
+            </div>
+            <div>
+              <Label className="text-sm font-medium">Region</Label>
+              <p className="text-sm text-muted-foreground">{port.region}</p>
+            </div>
+            <div>
+              <Label className="text-sm font-medium">Type</Label>
+              <p className="text-sm text-muted-foreground">{port.type || 'Not specified'}</p>
+            </div>
+          </div>
+        </div>
+        
+        <div>
+          <h3 className="text-lg font-semibold mb-4">Status & Capacity</h3>
+          <div className="space-y-3">
+            <div>
+              <Label className="text-sm font-medium">Status</Label>
+              <PortStatusBadge status={port.status} />
+            </div>
+            <div>
+              <Label className="text-sm font-medium">Capacity</Label>
+              <p className="text-sm text-muted-foreground">
+                {port.capacity ? `${port.capacity.toLocaleString()} TEU` : 'Not specified'}
+              </p>
+            </div>
+            <div>
+              <Label className="text-sm font-medium">Coordinates</Label>
+              <p className="text-sm text-muted-foreground">{port.lat}, {port.lng}</p>
+            </div>
+            <div>
+              <Label className="text-sm font-medium">Connected Vessels</Label>
+              <p className="text-sm text-muted-foreground">{port.vesselCount || 0} vessels</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {port.description && (
+        <div>
+          <h3 className="text-lg font-semibold mb-4">Description</h3>
+          <p className="text-sm text-muted-foreground">{port.description}</p>
+        </div>
+      )}
     </div>
   );
 }
