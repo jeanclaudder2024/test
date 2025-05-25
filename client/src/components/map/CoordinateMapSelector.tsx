@@ -75,6 +75,11 @@ export function CoordinateMapSelector({
         maxZoom: 18
       }).addTo(map);
 
+      // Force map to resize properly in modal
+      setTimeout(() => {
+        map.invalidateSize();
+      }, 100);
+
       // Add click handler
       map.on('click', (e: any) => {
         const { lat, lng } = e.latlng;
@@ -119,7 +124,12 @@ export function CoordinateMapSelector({
     };
 
     if (isOpen) {
-      loadLeaflet();
+      // Small delay to ensure modal is fully rendered
+      const timer = setTimeout(() => {
+        loadLeaflet();
+      }, 100);
+      
+      return () => clearTimeout(timer);
     }
 
     // Cleanup
@@ -130,6 +140,16 @@ export function CoordinateMapSelector({
       }
     };
   }, [isOpen]);
+
+  // Additional effect to resize map when modal is opened
+  useEffect(() => {
+    if (isOpen && mapInstance) {
+      // Small delay to let modal finish opening animation
+      setTimeout(() => {
+        mapInstance.invalidateSize();
+      }, 200);
+    }
+  }, [isOpen, mapInstance]);
 
   const handleConfirmSelection = () => {
     if (selectedCoords) {
@@ -207,9 +227,33 @@ export function CoordinateMapSelector({
           <div className="relative">
             <div 
               ref={mapRef} 
-              className="w-full h-96 rounded-lg border border-border"
+              className="w-full h-96 rounded-lg border border-border bg-gray-100"
               style={{ minHeight: '384px' }}
-            />
+              onClick={(e) => {
+                // Fallback click handler if map doesn't load
+                if (!mapInstance) {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const x = e.clientX - rect.left;
+                  const y = e.clientY - rect.top;
+                  
+                  // Convert pixel coordinates to approximate lat/lng
+                  const lat = initialLat + (rect.height / 2 - y) * 0.001;
+                  const lng = initialLng + (x - rect.width / 2) * 0.001;
+                  
+                  setSelectedCoords({ lat, lng });
+                }
+              }}
+            >
+              {!mapInstance && (
+                <div className="absolute inset-0 flex items-center justify-center bg-blue-50 rounded-lg">
+                  <div className="text-center p-4">
+                    <MapPin className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+                    <p className="text-blue-700 text-sm">Loading interactive map...</p>
+                    <p className="text-blue-600 text-xs mt-1">Click anywhere to select coordinates</p>
+                  </div>
+                </div>
+              )}
+            </div>
             
             {/* Map Controls */}
             <div className="absolute top-4 right-4 flex flex-col space-y-2">
