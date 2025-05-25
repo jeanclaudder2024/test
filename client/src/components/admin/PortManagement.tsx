@@ -196,8 +196,36 @@ function PortCard({ port }: { port: Port }) {
             </div>
           </div>
 
-          {/* Port Statistics */}
+          {/* Connection Management Buttons */}
           <div className="pt-3 border-t border-border">
+            <div className="grid grid-cols-2 gap-2 mb-3">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => handleManageConnections(port, 'vessels')}
+                className="flex items-center justify-center space-x-1 text-xs"
+              >
+                <Ship className="h-3 w-3" />
+                <span>Vessels</span>
+                <Badge variant="secondary" className="ml-1 text-[10px] px-1 py-0">
+                  {port.vesselCount || 0}
+                </Badge>
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => handleManageConnections(port, 'refineries')}
+                className="flex items-center justify-center space-x-1 text-xs"
+              >
+                <Building2 className="h-3 w-3" />
+                <span>Refineries</span>
+                <Badge variant="secondary" className="ml-1 text-[10px] px-1 py-0">
+                  {port.connectedRefineries || 0}
+                </Badge>
+              </Button>
+            </div>
+
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4 text-sm">
                 <div className="flex items-center space-x-1">
@@ -213,6 +241,7 @@ function PortCard({ port }: { port: Port }) {
               <Button 
                 variant="ghost" 
                 size="sm"
+                onClick={() => handleViewPort(port)}
                 className="group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
               >
                 View Details
@@ -914,6 +943,12 @@ export function PortManagement() {
     if (selectedPort) {
       deletePortMutation.mutate(selectedPort.id);
     }
+  };
+
+  // Handle connection management for vessels and refineries
+  const handleManageConnections = (port: Port, type: 'vessels' | 'refineries') => {
+    const url = `/connection-manager?portId=${port.id}&portName=${encodeURIComponent(port.name)}&focus=${type}`;
+    window.open(url, '_blank');
   };
 
   if (portsLoading) {
