@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { apiRequest } from '@/lib/queryClient';
@@ -992,22 +992,21 @@ export default function OilVesselMap() {
     }
   }, [filteredVessels, filteredFacilities, connectedVessels, showConnectedVessels]);
 
-  // Fetch vessel data
-  useEffect(() => {
-    const fetchVesselData = async () => {
-      setLoading(true);
-      setError(null);
-      
-      try {
-        // Fetch regular vessels
-        const response = await apiRequest('/api/vessels');
-        if (Array.isArray(response)) {
-          setVessels(response);
-        } else if (response && Array.isArray(response.vessels)) {
-          setVessels(response.vessels);
-        } else {
-          throw new Error('Invalid vessel data format');
-        }
+  // Fetch vessel data with auto-refresh functionality
+  const fetchVesselData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      // Fetch regular vessels
+      const response = await apiRequest('/api/vessels');
+      if (Array.isArray(response)) {
+        setVessels(response);
+      } else if (response && Array.isArray(response.vessels)) {
+        setVessels(response.vessels);
+      } else {
+        throw new Error('Invalid vessel data format');
+      }
         
         // Fetch vessels connected to refineries
         try {
@@ -1050,7 +1049,7 @@ export default function OilVesselMap() {
       } finally {
         setLoading(false);
       }
-    };
+    }, []);
     
     // Fetch ports and refineries
     const fetchFacilities = async () => {
@@ -1092,17 +1091,63 @@ export default function OilVesselMap() {
       }
     };
     
+  // Auto-refresh effect
+  useEffect(() => {
     // Initial data fetch
     fetchVesselData();
+    
+    // Fetch ports and refineries
+    const fetchFacilities = async () => {
+      try {
+        // Fetch ports
+        const portsResponse = await apiRequest('/api/ports');
+        let portsData: Facility[] = [];
+        if (Array.isArray(portsResponse)) {
+          portsData = portsResponse.map((port: any) => ({
+            ...port,
+            type: 'port' as const
+          }));
+        } else if (portsResponse && Array.isArray(portsResponse.ports)) {
+          portsData = portsResponse.ports.map((port: any) => ({
+            ...port,
+            type: 'port' as const
+          }));
+        }
+        
+        // Fetch refineries
+        const refineriesResponse = await apiRequest('/api/refineries');
+        let refineriesData: Facility[] = [];
+        if (Array.isArray(refineriesResponse)) {
+          refineriesData = refineriesResponse.map(refinery => ({
+            ...refinery,
+            type: 'refinery'
+          }));
+        } else if (refineriesResponse && Array.isArray(refineriesResponse.refineries)) {
+          refineriesData = refineriesResponse.refineries.map((refinery: Record<string, any>) => ({
+            ...refinery,
+            type: 'refinery' as const
+          }));
+        }
+        
+        // Combine data
+        setFacilities([...portsData, ...refineriesData]);
+      } catch (err) {
+        console.error('Error fetching facilities data:', err);
+      }
+    };
+    
     fetchFacilities();
     
-    // Set up auto-refresh every 15 minutes
+    // Set up auto-refresh every 2 minutes for real-time updates
     const intervalId = setInterval(() => {
       fetchVesselData();
-    }, 15 * 60 * 1000);
+    }, 2 * 60 * 1000); // Refresh every 2 minutes
     
-    return () => clearInterval(intervalId);
-  }, []);
+    // Cleanup interval on unmount
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [fetchVesselData]); // Add fetchVesselData as dependency
   
   // Listen for custom events from popup buttons
   useEffect(() => {
