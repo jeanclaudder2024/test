@@ -50,6 +50,7 @@ import {
   Gauge
 } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
+import { CoordinateMapSelector } from '@/components/map/CoordinateMapSelector';
 
 // Form validation schema
 const portFormSchema = z.object({
@@ -370,6 +371,42 @@ function AddPortDialog() {
               />
             </div>
 
+            {/* Map Selection Section */}
+            <div className="col-span-full">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h4 className="text-sm font-medium">Port Location</h4>
+                  <p className="text-xs text-muted-foreground">Select coordinates on map or enter manually</p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowMap(true)}
+                  className="flex items-center gap-2"
+                >
+                  <MapIcon className="h-4 w-4" />
+                  Select on Map
+                </Button>
+              </div>
+              
+              {selectedCoordinates && (
+                <div className="p-3 bg-green-50 border border-green-200 rounded-lg mb-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <span className="text-sm font-medium text-green-800">
+                        Coordinates Selected from Map
+                      </span>
+                    </div>
+                    <span className="text-sm text-green-700">
+                      {selectedCoordinates.lat.toFixed(6)}, {selectedCoordinates.lng.toFixed(6)}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div className="grid grid-cols-3 gap-4">
               <FormField
                 control={form.control}
@@ -551,6 +588,23 @@ function AddPortDialog() {
           </form>
         </Form>
       </DialogContent>
+
+      {/* Interactive Map Modal */}
+      {showMap && (
+        <Dialog open={showMap} onOpenChange={setShowMap}>
+          <DialogContent className="sm:max-w-[900px] sm:max-h-[700px]">
+            <DialogHeader>
+              <DialogTitle>Select Port Location</DialogTitle>
+            </DialogHeader>
+            <CoordinateMapSelector
+              onCoordinateSelect={handleCoordinateSelect}
+              onClose={() => setShowMap(false)}
+              initialLat={25.276987}
+              initialLng={55.296249}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
     </Dialog>
   );
 }
