@@ -87,6 +87,8 @@ const vesselStatuses = [
 
 export function VesselManagementNew() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingVessel, setEditingVessel] = useState<Vessel | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [showMapSelector, setShowMapSelector] = useState(false);
   const [formData, setFormData] = useState<VesselFormData>({
@@ -167,6 +169,85 @@ export function VesselManagementNew() {
     }
   });
 
+  const updateVesselMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: VesselFormData }) => {
+      const payload = {
+        name: data.name,
+        imo: data.imo,
+        mmsi: data.mmsi,
+        vesselType: data.vesselType,
+        flag: data.flag,
+        currentLat: data.currentLat || undefined,
+        currentLng: data.currentLng || undefined,
+        status: data.status,
+        speed: data.speed || "0",
+        cargoType: data.cargoType || undefined,
+        cargoCapacity: data.cargoCapacity ? parseInt(data.cargoCapacity) : undefined
+      };
+
+      const response = await fetch(`/api/vessels/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to update vessel");
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/vessels"] });
+      setIsEditDialogOpen(false);
+      setEditingVessel(null);
+      resetForm();
+      toast({
+        title: "Success",
+        description: "Vessel updated successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
+  const deleteVesselMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await fetch(`/api/vessels/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to delete vessel");
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/vessels"] });
+      toast({
+        title: "Success",
+        description: "Vessel deleted successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
   const resetForm = () => {
     setFormData({
       name: "",
@@ -197,6 +278,30 @@ export function VesselManagementNew() {
       currentLng: lng.toString()
     }));
     setShowMapSelector(false);
+  };
+
+  const handleEditVessel = (vessel: Vessel) => {
+    setEditingVessel(vessel);
+    setFormData({
+      name: vessel.name,
+      imo: vessel.imo,
+      mmsi: vessel.mmsi,
+      vesselType: vessel.vesselType,
+      flag: vessel.flag,
+      currentLat: vessel.currentLat || "",
+      currentLng: vessel.currentLng || "",
+      status: vessel.status || "underway",
+      speed: vessel.speed || "0",
+      cargoType: vessel.cargoType || "",
+      cargoCapacity: vessel.cargoCapacity?.toString() || ""
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDeleteVessel = (vessel: Vessel) => {
+    if (confirm(`Are you sure you want to delete vessel "${vessel.name}"? This action cannot be undone.`)) {
+      deleteVesselMutation.mutate(vessel.id);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -494,10 +599,18 @@ export function VesselManagementNew() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="sm">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleEditVessel(vessel)}
+                        >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleDeleteVessel(vessel)}
+                        >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>

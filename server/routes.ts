@@ -3082,9 +3082,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         buyerName: result.data.buyerName,
         sellerName: result.data.sellerName,
         metadata: result.data.metadata,
+        built: undefined,
+        deadweight: undefined,
         // Skip date fields completely to avoid conversion issues
-        departureDate: null,
-        eta: null
+        departureDate: undefined,
+        eta: undefined
       };
       
       console.log("Final vessel data being sent to database:", JSON.stringify(vesselData, null, 2));
