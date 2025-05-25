@@ -443,9 +443,102 @@ export default function SubscriptionAdmin() {
                       <Input id="yearlyPriceId" name="yearlyPriceId" placeholder="price_0987654321" />
                     </div>
                   </div>
-                  <div>
-                    <Label htmlFor="features">Features (one per line)</Label>
-                    <Textarea id="features" name="features" placeholder="Unlimited vessels&#10;Advanced analytics&#10;Priority support" />
+                  <div className="space-y-4">
+                    <Label className="text-base font-semibold">Plan Features & Access Control</Label>
+                    <div className="grid grid-cols-1 gap-4 p-4 border rounded-lg bg-muted/50">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="new-feature-vessel-tracking" className="text-sm font-medium">Vessel Tracking</Label>
+                            <Switch id="new-feature-vessel-tracking" name="feature-vessel-tracking" />
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="new-feature-port-analytics" className="text-sm font-medium">Port Analytics</Label>
+                            <Switch id="new-feature-port-analytics" name="feature-port-analytics" />
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="new-feature-cargo-monitoring" className="text-sm font-medium">Cargo Monitoring</Label>
+                            <Switch id="new-feature-cargo-monitoring" name="feature-cargo-monitoring" />
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="new-feature-route-optimization" className="text-sm font-medium">Route Optimization</Label>
+                            <Switch id="new-feature-route-optimization" name="feature-route-optimization" />
+                          </div>
+                        </div>
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="new-feature-ai-assistant" className="text-sm font-medium">AI Assistant</Label>
+                            <Switch id="new-feature-ai-assistant" name="feature-ai-assistant" />
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="new-feature-document-generation" className="text-sm font-medium">Document Generation</Label>
+                            <Switch id="new-feature-document-generation" name="feature-document-generation" />
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="new-feature-premium-support" className="text-sm font-medium">Premium Support</Label>
+                            <Switch id="new-feature-premium-support" name="feature-premium-support" />
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="new-feature-api-access" className="text-sm font-medium">API Access</Label>
+                            <Switch id="new-feature-api-access" name="feature-api-access" />
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-3 gap-4 pt-4 border-t">
+                        <div>
+                          <Label htmlFor="new-vessels-limit" className="text-sm font-medium">Vessels Limit</Label>
+                          <Select name="vessels-limit">
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select limit" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="10">10 vessels</SelectItem>
+                              <SelectItem value="50">50 vessels</SelectItem>
+                              <SelectItem value="100">100 vessels</SelectItem>
+                              <SelectItem value="unlimited">Unlimited</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label htmlFor="new-ports-limit" className="text-sm font-medium">Ports Access</Label>
+                          <Select name="ports-limit">
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select access" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="basic">Basic Ports</SelectItem>
+                              <SelectItem value="regional">Regional Ports</SelectItem>
+                              <SelectItem value="global">Global Access</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label htmlFor="new-data-retention" className="text-sm font-medium">Data Retention</Label>
+                          <Select name="data-retention">
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select period" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="30">30 days</SelectItem>
+                              <SelectItem value="90">90 days</SelectItem>
+                              <SelectItem value="365">1 year</SelectItem>
+                              <SelectItem value="unlimited">Unlimited</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="features">Additional Features (one per line)</Label>
+                      <Textarea 
+                        id="features" 
+                        name="features" 
+                        placeholder="Enter additional custom features..."
+                        className="mt-2"
+                      />
+                    </div>
                   </div>
                   <div className="grid grid-cols-3 gap-4">
                     <div>
@@ -669,9 +762,103 @@ export default function SubscriptionAdmin() {
                   <Input id="edit-yearlyPriceId" name="yearlyPriceId" defaultValue={selectedPlan.yearlyPriceId} />
                 </div>
               </div>
-              <div>
-                <Label htmlFor="edit-features">Features (one per line)</Label>
-                <Textarea id="edit-features" name="features" defaultValue={selectedPlan.features} />
+              <div className="space-y-4">
+                <Label className="text-base font-semibold">Plan Features & Access Control</Label>
+                <div className="grid grid-cols-1 gap-4 p-4 border rounded-lg bg-muted/50">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="feature-vessel-tracking" className="text-sm font-medium">Vessel Tracking</Label>
+                        <Switch id="feature-vessel-tracking" name="feature-vessel-tracking" />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="feature-port-analytics" className="text-sm font-medium">Port Analytics</Label>
+                        <Switch id="feature-port-analytics" name="feature-port-analytics" />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="feature-cargo-monitoring" className="text-sm font-medium">Cargo Monitoring</Label>
+                        <Switch id="feature-cargo-monitoring" name="feature-cargo-monitoring" />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="feature-route-optimization" className="text-sm font-medium">Route Optimization</Label>
+                        <Switch id="feature-route-optimization" name="feature-route-optimization" />
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="feature-ai-assistant" className="text-sm font-medium">AI Assistant</Label>
+                        <Switch id="feature-ai-assistant" name="feature-ai-assistant" />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="feature-document-generation" className="text-sm font-medium">Document Generation</Label>
+                        <Switch id="feature-document-generation" name="feature-document-generation" />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="feature-premium-support" className="text-sm font-medium">Premium Support</Label>
+                        <Switch id="feature-premium-support" name="feature-premium-support" />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="feature-api-access" className="text-sm font-medium">API Access</Label>
+                        <Switch id="feature-api-access" name="feature-api-access" />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-4 pt-4 border-t">
+                    <div>
+                      <Label htmlFor="vessels-limit" className="text-sm font-medium">Vessels Limit</Label>
+                      <Select name="vessels-limit">
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select limit" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="10">10 vessels</SelectItem>
+                          <SelectItem value="50">50 vessels</SelectItem>
+                          <SelectItem value="100">100 vessels</SelectItem>
+                          <SelectItem value="unlimited">Unlimited</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="ports-limit" className="text-sm font-medium">Ports Access</Label>
+                      <Select name="ports-limit">
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select access" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="basic">Basic Ports</SelectItem>
+                          <SelectItem value="regional">Regional Ports</SelectItem>
+                          <SelectItem value="global">Global Access</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="data-retention" className="text-sm font-medium">Data Retention</Label>
+                      <Select name="data-retention">
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select period" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="30">30 days</SelectItem>
+                          <SelectItem value="90">90 days</SelectItem>
+                          <SelectItem value="365">1 year</SelectItem>
+                          <SelectItem value="unlimited">Unlimited</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <Label htmlFor="edit-features">Additional Features (one per line)</Label>
+                  <Textarea 
+                    id="edit-features" 
+                    name="features" 
+                    defaultValue={selectedPlan.features} 
+                    placeholder="Enter additional custom features..."
+                    className="mt-2"
+                  />
+                </div>
               </div>
               <div className="grid grid-cols-4 gap-4">
                 <div>
