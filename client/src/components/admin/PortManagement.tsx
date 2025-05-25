@@ -289,14 +289,22 @@ function AddPortDialog() {
         await generatePortDescription(response.id);
       }
       
+      // Store new port info for potential connections
+      setNewPortId(response.id);
+      setNewPortName(response.name);
+      
       setOpen(false);
       form.reset();
       setSelectedCoordinates(null);
       setShowMap(false);
+      
       toast({
         title: "Port Added Successfully",
-        description: "The new port has been added with AI-generated details.",
+        description: "The new port has been created with AI-generated details.",
       });
+
+      // Ask if user wants to connect vessels and refineries
+      setShowConnectionDialog(true);
     },
     onError: (error: any) => {
       toast({
@@ -324,6 +332,16 @@ function AddPortDialog() {
     form.setValue('lat', lat.toFixed(6));
     form.setValue('lng', lng.toFixed(6));
     setShowMap(false);
+  };
+
+  // Handle opening connection manager
+  const handleOpenConnectionManager = (type: 'vessels' | 'refineries' | 'both') => {
+    setShowConnectionDialog(false);
+    
+    // Navigate to connection management page with port ID and type
+    if (newPortId) {
+      window.location.href = `/admin/connections?portId=${newPortId}&type=${type}&portName=${encodeURIComponent(newPortName)}`;
+    }
   };
 
   const onSubmit = (data: PortFormData) => {
@@ -605,6 +623,81 @@ function AddPortDialog() {
               initialLat={25.276987}
               initialLng={55.296249}
             />
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Connection Dialog */}
+      {showConnectionDialog && newPortId && (
+        <Dialog open={showConnectionDialog} onOpenChange={setShowConnectionDialog}>
+          <DialogContent className="sm:max-w-[800px]">
+            <DialogHeader>
+              <DialogTitle>Connect Port to Vessels & Refineries</DialogTitle>
+              <p className="text-muted-foreground">
+                Would you like to connect "{newPortName}" to vessels and refineries?
+              </p>
+            </DialogHeader>
+            
+            <div className="space-y-6">
+              <div className="flex items-center justify-center space-x-4">
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <Anchor className="h-8 w-8 text-blue-600" />
+                  </div>
+                  <h3 className="font-semibold text-lg">{newPortName}</h3>
+                  <p className="text-sm text-muted-foreground">New Port Created</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center p-6 border rounded-lg hover:bg-accent transition-colors">
+                  <Ship className="h-12 w-12 text-green-600 mx-auto mb-3" />
+                  <h4 className="font-semibold mb-2">Connect Vessels</h4>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Link multiple vessels to this port for cargo operations
+                  </p>
+                  <Button 
+                    onClick={() => handleOpenConnectionManager('vessels')}
+                    className="w-full"
+                  >
+                    <Ship className="h-4 w-4 mr-2" />
+                    Manage Vessel Connections
+                  </Button>
+                </div>
+
+                <div className="text-center p-6 border rounded-lg hover:bg-accent transition-colors">
+                  <Building2 className="h-12 w-12 text-orange-600 mx-auto mb-3" />
+                  <h4 className="font-semibold mb-2">Connect Refineries</h4>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Link multiple refineries to this port for supply chain management
+                  </p>
+                  <Button 
+                    onClick={() => handleOpenConnectionManager('refineries')}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    <Building2 className="h-4 w-4 mr-2" />
+                    Manage Refinery Connections
+                  </Button>
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4 border-t">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowConnectionDialog(false)}
+                >
+                  Skip for Now
+                </Button>
+                <Button 
+                  onClick={() => handleOpenConnectionManager('both')}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  Manage All Connections
+                </Button>
+              </div>
+            </div>
           </DialogContent>
         </Dialog>
       )}
