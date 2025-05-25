@@ -282,11 +282,15 @@ function AddPortDialog() {
       });
     },
     onSuccess: async (response) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/ports'] });
+      // Force refresh of ports data
+      await queryClient.invalidateQueries({ queryKey: ['/api/ports'] });
+      await queryClient.refetchQueries({ queryKey: ['/api/ports'] });
       
       // Generate AI-powered port description if needed
       if (response.id && (!response.description || response.description === '')) {
         await generatePortDescription(response.id);
+        // Refresh again after description update
+        await queryClient.refetchQueries({ queryKey: ['/api/ports'] });
       }
       
       // Store new port info for potential connections
@@ -869,8 +873,11 @@ export function PortManagement() {
       }
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/ports'] });
+    onSuccess: async () => {
+      // Force refresh of ports data immediately
+      await queryClient.invalidateQueries({ queryKey: ['/api/ports'] });
+      await queryClient.refetchQueries({ queryKey: ['/api/ports'] });
+      
       setShowDeleteDialog(false);
       setSelectedPort(null);
       toast({
