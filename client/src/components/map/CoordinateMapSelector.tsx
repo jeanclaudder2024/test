@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { MapPin, CheckCircle, RotateCcw } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 
 interface CoordinateMapSelectorProps {
   isOpen: boolean;
@@ -32,6 +33,19 @@ export function CoordinateMapSelector({
   const [selectedCoords, setSelectedCoords] = useState<{lat: number, lng: number} | null>(null);
   const [mapInstance, setMapInstance] = useState<any>(null);
   const [markerInstance, setMarkerInstance] = useState<any>(null);
+  const [refineryMarkers, setRefineryMarkers] = useState<any[]>([]);
+  const [portMarkers, setPortMarkers] = useState<any[]>([]);
+
+  // Fetch refineries and ports to display on map
+  const { data: refineries } = useQuery({
+    queryKey: ['/api/refineries'],
+    enabled: isOpen
+  });
+
+  const { data: ports } = useQuery({
+    queryKey: ['/api/ports'],
+    enabled: isOpen
+  });
 
   useEffect(() => {
     // Dynamically load Leaflet
@@ -140,6 +154,94 @@ export function CoordinateMapSelector({
       }
     };
   }, [isOpen]);
+
+  // Add refineries and ports to map when data is loaded
+  useEffect(() => {
+    if (!mapInstance || !isOpen) return;
+
+    const L = (window as any).L;
+    if (!L) return;
+
+    // Clear existing markers
+    refineryMarkers.forEach(marker => mapInstance.removeLayer(marker));
+    portMarkers.forEach(marker => mapInstance.removeLayer(marker));
+    setRefineryMarkers([]);
+    setPortMarkers([]);
+
+    // Add refinery markers
+    if (refineries?.length > 0) {
+      const newRefineryMarkers = refineries.map((refinery: any) => {
+        if (!refinery.lat || !refinery.lng) return null;
+        
+        const refineryIcon = L.divIcon({
+          className: 'refinery-marker',
+          html: `<div style="
+            background: #ef4444;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+          "></div>`,
+          iconSize: [12, 12],
+          iconAnchor: [6, 6]
+        });
+
+        const marker = L.marker([parseFloat(refinery.lat), parseFloat(refinery.lng)], { 
+          icon: refineryIcon 
+        }).addTo(mapInstance);
+
+        marker.bindPopup(`
+          <div class="text-sm">
+            <strong class="text-red-600">🏭 ${refinery.name}</strong><br/>
+            <span class="text-gray-600">${refinery.country}</span><br/>
+            <span class="text-xs text-gray-500">${refinery.lat}, ${refinery.lng}</span>
+          </div>
+        `);
+
+        return marker;
+      }).filter(Boolean);
+
+      setRefineryMarkers(newRefineryMarkers);
+    }
+
+    // Add port markers
+    if (ports?.length > 0) {
+      const newPortMarkers = ports.map((port: any) => {
+        if (!port.lat || !port.lng) return null;
+        
+        const portIcon = L.divIcon({
+          className: 'port-marker',
+          html: `<div style="
+            background: #3b82f6;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+          "></div>`,
+          iconSize: [12, 12],
+          iconAnchor: [6, 6]
+        });
+
+        const marker = L.marker([parseFloat(port.lat), parseFloat(port.lng)], { 
+          icon: portIcon 
+        }).addTo(mapInstance);
+
+        marker.bindPopup(`
+          <div class="text-sm">
+            <strong class="text-blue-600">⚓ ${port.name}</strong><br/>
+            <span class="text-gray-600">${port.country}</span><br/>
+            <span class="text-xs text-gray-500">${port.lat}, ${port.lng}</span>
+          </div>
+        `);
+
+        return marker;
+      }).filter(Boolean);
+
+      setPortMarkers(newPortMarkers);
+    }
+  }, [mapInstance, refineries, ports, isOpen]);
 
   // Additional effect to resize map when modal is opened
   useEffect(() => {
@@ -253,6 +355,25 @@ export function CoordinateMapSelector({
                   </div>
                 </div>
               )}
+            </div>
+            
+            {/* Map Legend */}
+            <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm rounded-lg p-3 shadow-lg border">
+              <div className="text-xs font-medium text-gray-700 mb-2">Map Legend</div>
+              <div className="space-y-1 text-xs">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-red-500 rounded-full border border-white"></div>
+                  <span className="text-gray-600">🏭 Refineries ({refineries?.length || 0})</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-blue-500 rounded-full border border-white"></div>
+                  <span className="text-gray-600">⚓ Ports ({ports?.length || 0})</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-green-500 rounded-full border border-white"></div>
+                  <span className="text-gray-600">📍 Selected Location</span>
+                </div>
+              </div>
             </div>
             
             {/* Map Controls */}
