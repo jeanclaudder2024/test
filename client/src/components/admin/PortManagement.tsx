@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useLocation } from 'wouter';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -716,11 +717,12 @@ export function PortManagement() {
   const [selectedType, setSelectedType] = useState('all');
   const [viewMode, setViewMode] = useState('grid');
   const [currentPage, setCurrentPage] = useState(1);
+  const [, setLocation] = useLocation();
 
   // Handle port connections - navigate to dedicated connection management page
   const handlePortConnections = (portId: number) => {
     // Navigate to port connection management page
-    window.location.href = `/admin/port-connections/${portId}`;
+    setLocation(`/admin/port-connections/${portId}`);
   };
 
   const pageSize = 12;
