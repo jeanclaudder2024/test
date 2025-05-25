@@ -1111,7 +1111,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Vessel endpoints
+  // Vessel endpoints - Oil vessels only
   apiRouter.get("/vessels", async (req, res) => {
     try {
       const region = req.query.region as string | undefined;
@@ -1125,6 +1125,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         vessels = await vesselService.getAllVessels();
       }
+      
+      // Filter to show only oil-related vessels and exclude inactive vessels
+      vessels = vessels.filter(v => {
+        // Only show active vessels (exclude inactive ones which are non-oil vessels)
+        if (v.status === 'inactive') return false;
+        
+        // Only show oil-related vessel types
+        const vesselTypeStr = v.vesselType?.toLowerCase() || '';
+        return vesselTypeStr.includes('tanker') || 
+               vesselTypeStr.includes('oil') || 
+               vesselTypeStr.includes('crude') || 
+               vesselTypeStr.includes('lng') || 
+               vesselTypeStr.includes('lpg') || 
+               vesselTypeStr.includes('chemical') || 
+               vesselTypeStr.includes('product') || 
+               vesselTypeStr.includes('vlcc') || 
+               vesselTypeStr.includes('ulcc') ||
+               vesselTypeStr.includes('aframax') ||
+               vesselTypeStr.includes('suezmax') ||
+               vesselTypeStr.includes('panamax') ||
+               vesselTypeStr.includes('shuttle') ||
+               vesselTypeStr.includes('bunker') ||
+               vesselTypeStr.includes('asphalt') ||
+               vesselTypeStr.includes('bitumen');
+      });
       
       // Apply vessel type filter if specified
       if (vesselType && vesselType !== 'all') {
