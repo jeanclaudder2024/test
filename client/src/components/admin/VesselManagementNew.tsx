@@ -31,7 +31,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Ship, Plus, Edit, Trash2 } from "lucide-react";
+import { Ship, Plus, Edit, Trash2, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Vessel {
@@ -86,6 +86,7 @@ const vesselStatuses = [
 
 export function VesselManagementNew() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const [formData, setFormData] = useState<VesselFormData>({
     name: "",
     imo: "",
@@ -203,6 +204,20 @@ export function VesselManagementNew() {
     createVesselMutation.mutate(formData);
   };
 
+  // Filter vessels based on search term
+  const filteredVessels = vessels.filter((vessel: Vessel) => {
+    if (!searchTerm) return true;
+    
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      vessel.name.toLowerCase().includes(searchLower) ||
+      vessel.imo.toLowerCase().includes(searchLower) ||
+      vessel.mmsi.toLowerCase().includes(searchLower) ||
+      vessel.vesselType.toLowerCase().includes(searchLower) ||
+      vessel.flag.toLowerCase().includes(searchLower)
+    );
+  });
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -215,18 +230,42 @@ export function VesselManagementNew() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Ship className="h-5 w-5" />
-              Vessel Management
-            </CardTitle>
-            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Vessel
-                </Button>
-              </DialogTrigger>
+          <div className="flex flex-col space-y-4">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Ship className="h-5 w-5" />
+                Vessel Management
+              </CardTitle>
+              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Vessel
+                  </Button>
+                </DialogTrigger>
+            </div>
+            
+            {/* Search Bar */}
+            <div className="relative max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                placeholder="Search vessels by name, IMO, MMSI, type, or flag..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {/* Results count */}
+            <div className="text-sm text-muted-foreground">
+              Showing {filteredVessels.length} of {vessels.length} vessels
+              {searchTerm && ` matching "${searchTerm}"`}
+            </div>
+            
+            <div className="rounded-md border">
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle>Add New Vessel</DialogTitle>
@@ -406,7 +445,7 @@ export function VesselManagementNew() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {vessels.map((vessel: Vessel) => (
+                {filteredVessels.map((vessel: Vessel) => (
                   <TableRow key={vessel.id}>
                     <TableCell className="font-medium">{vessel.name}</TableCell>
                     <TableCell>{vessel.vesselType}</TableCell>
