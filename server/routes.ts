@@ -3969,11 +3969,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         currentDatabase: currentType,
         connections: {
           primary: testResults.primary,
-          supabase: testResults.supabase
+          supabase: testResults.supabase,
+          mysql: testResults.mysql
         },
         environment: {
           hasSupabaseUrl: !!process.env.SUPABASE_DATABASE_URL,
-          useSupabase: process.env.USE_SUPABASE === 'true'
+          hasMySQLUrl: !!process.env.MYSQL_DATABASE_URL,
+          useSupabase: process.env.USE_SUPABASE === 'true',
+          useMySQL: process.env.USE_MYSQL === 'true'
         }
       });
     } catch (error) {
@@ -4018,6 +4021,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error switching to Supabase database:", error);
       res.status(500).json({ 
         message: "Failed to switch to Supabase database. Make sure SUPABASE_DATABASE_URL is configured.",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Switch to MySQL database
+  apiRouter.post("/database/switch/mysql", async (req, res) => {
+    try {
+      const db = dbSwitcher.useMySQLDatabase();
+      
+      res.json({
+        success: true,
+        message: "Switched to MySQL database",
+        currentDatabase: "mysql"
+      });
+    } catch (error) {
+      console.error("Error switching to MySQL database:", error);
+      res.status(500).json({ 
+        message: "Failed to switch to MySQL database. Make sure MYSQL_DATABASE_URL is configured.",
         error: error instanceof Error ? error.message : "Unknown error"
       });
     }
