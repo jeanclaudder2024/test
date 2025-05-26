@@ -464,92 +464,106 @@ export default function OilVesselMap() {
     });
   };
 
-  // Create port/refinery icons (simplified version)
+  // Create beautiful, compact port/refinery icons
   const createFacilityIcon = (facility: Facility) => {
-    // Base colors for facilities
+    // Beautiful colors for facilities
     const colors = {
-      refinery: '#8b5cf6', // Purple
-      port: '#3b82f6'      // Blue
+      refinery: '#ff6b35', // Orange-red for refineries
+      port: '#0ea5e9'      // Sky blue for ports
     };
     
     // Select the color based on facility type
     const color = facility.type === 'refinery' ? colors.refinery : colors.port;
     
-    // Determine the size based on capacity if available
-    const baseSize = facility.type === 'refinery' ? 26 : 24;
+    // Much smaller base sizes - compact and clean
+    const baseSize = facility.type === 'refinery' ? 14 : 12;
     let size = baseSize;
     
-    if (facility.capacity) {
-      // Scale size based on capacity - larger facilities get slightly bigger icons
-      if (facility.capacity > 500000) {
-        size = baseSize + 6;
-      } else if (facility.capacity > 200000) {
-        size = baseSize + 4;
-      } else if (facility.capacity > 100000) {
-        size = baseSize + 2;
-      }
+    // Only minimal size scaling for very large facilities
+    if (facility.capacity && facility.capacity > 1000000) {
+      size = baseSize + 2; // Only slightly bigger for massive refineries
     }
     
-    // Choose the appropriate Font Awesome icon
-    const iconName = facility.type === 'refinery' ? 'fa-industry' : 'fa-anchor';
+    // Beautiful SVG icons instead of Font Awesome
+    const iconContent = facility.type === 'refinery' 
+      ? `<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="${color}" stroke="white" stroke-width="1">
+           <path d="M12 2l2 2v4l-1 1h-2l-1-1V4l2-2z"/>
+           <rect x="11" y="8" width="2" height="12" fill="${color}"/>
+           <rect x="9" y="13" width="6" height="1.5" fill="${color}"/>
+           <rect x="8" y="17" width="8" height="1.5" fill="${color}"/>
+           <circle cx="12" cy="3" r="0.8" fill="white"/>
+         </svg>`
+      : `<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="${color}" stroke="white" stroke-width="1.5">
+           <path d="M12 2l-2 7h4l-2-7z"/>
+           <path d="M8 9l4 13 4-13z"/>
+           <circle cx="12" cy="12" r="1.5" fill="white"/>
+         </svg>`;
     
-    // Create simple icon with Font Awesome
+    // Create modern, compact icon
     return L.divIcon({
-      className: `${facility.type}-marker`,
+      className: `${facility.type}-marker-compact`,
       html: `
-        <div style="position: relative; width: ${size}px; height: ${size}px;">
-          <div style="
-            position: absolute;
-            width: ${size}px;
-            height: ${size}px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: ${color};
-            text-shadow: 0 0 5px rgba(255,255,255,0.8), 0 0 7px rgba(0,0,0,0.4);
-            font-size: ${size}px;
-          ">
-            <i class="fa ${iconName}"></i>
-          </div>
+        <div style="
+          position: relative; 
+          width: ${size}px; 
+          height: ${size}px;
+          border-radius: 50%;
+          background: white;
+          border: 1.5px solid ${color};
+          box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        " 
+        onmouseover="this.style.transform='scale(1.15)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.2)'" 
+        onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 1px 4px rgba(0,0,0,0.12)'">
+          ${iconContent}
           
-          <!-- Facility name tooltip on hover -->
+          <!-- Compact hover tooltip -->
           <div style="
             position: absolute;
-            bottom: ${size + 3}px;
+            bottom: ${size + 4}px;
             left: 50%;
             transform: translateX(-50%);
-            background-color: rgba(0, 0, 0, 0.7);
+            background: rgba(0,0,0,0.85);
             color: white;
             padding: 3px 6px;
             border-radius: 3px;
-            font-size: 11px;
+            font-size: 9px;
+            font-weight: 500;
             white-space: nowrap;
             opacity: 0;
-            transition: opacity 0.2s;
+            transition: opacity 0.25s ease;
             pointer-events: none;
-            z-index: 20;
-          " class="facility-tooltip">
-            ${facility.name}
+            z-index: 1000;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          " class="compact-tooltip">
+            ${facility.name.length > 20 ? facility.name.substring(0, 17) + '...' : facility.name}
           </div>
         </div>
         
         <style>
-          .${facility.type}-marker:hover .facility-tooltip {
+          .${facility.type}-marker-compact:hover .compact-tooltip {
             opacity: 1;
           }
           
-          .fa-industry:before {
-            content: "\\f275";
+          .${facility.type}-marker-compact {
+            filter: drop-shadow(0 0.5px 2px rgba(0,0,0,0.1));
           }
           
-          .fa-anchor:before {
-            content: "\\f13d";
+          .${facility.type}-marker-compact:hover {
+            filter: drop-shadow(0 2px 6px rgba(0,0,0,0.15));
           }
         </style>
       `,
       iconSize: [size, size],
       iconAnchor: [size/2, size/2],
-      popupAnchor: [0, -size/2]
+      popupAnchor: [0, -size/2 - 2]
     });
   };
   
