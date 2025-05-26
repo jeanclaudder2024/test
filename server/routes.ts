@@ -3931,6 +3931,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Database Health Check and Auto-Failover Status
+  app.get("/api/database/status", async (req, res) => {
+    try {
+      const { getFailoverStatus } = await import('./auto-failover-db');
+      const status = getFailoverStatus();
+      
+      // اختبار سريع لقاعدة البيانات النشطة
+      const testResult = await db.select().from(vessels).limit(1);
+      
+      res.json({
+        success: true,
+        status: status,
+        activeDatabase: status.currentDatabase,
+        isFailoverActive: status.isFailoverActive,
+        lastHealthCheck: status.lastHealthCheck,
+        testQuery: testResult.length > 0 ? 'success' : 'no_data'
+      });
+    } catch (error) {
+      console.error('Database status check failed:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Database status check failed',
+        message: 'فشل في فحص حالة قاعدة البيانات'
+      });
+    }
+  });
+
+  // Force Database Failover (for testing)
+  app.post("/api/database/force-failover", async (req, res) => {
+    try {
+      const { autoFailoverDb } = await import('./auto-failover-db');
+      const result = await autoFailoverDb.forceFailover();
+      
+      res.json({
+        success: result,
+        message: result ? 'تم التبديل إلى MySQL بنجاح' : 'فشل في التبديل إلى MySQL'
+      });
+    } catch (error) {
+      console.error('Force failover failed:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Force failover failed'
+      });
+    }
+  });
+
+  // Force Database Recovery (back to primary)
+  app.post("/api/database/force-recovery", async (req, res) => {
+    try {
+      const { autoFailoverDb } = await import('./auto-failover-db');
+      const result = await autoFailoverDb.forceRecovery();
+      
+      res.json({
+        success: result,
+        message: result ? 'تم العودة إلى قاعدة البيانات الرئيسية بنجاح' : 'فشل في العودة إلى قاعدة البيانات الرئيسية'
+      });
+    } catch (error) {
+      console.error('Force recovery failed:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Force recovery failed'
+      });
+    }
+  });
+
   app.use("/api", apiRouter);
 
   const httpServer = createServer(app);
