@@ -12,18 +12,7 @@ import { promisify } from "util";
 const MemoryStore = createMemoryStore(session);
 const scryptAsync = promisify(scrypt);
 
-// Mock user for testing - database-independent
-const mockUser: Express.User = {
-  id: 1,
-  username: "test",
-  password: "password",
-  email: "test@example.com",
-  stripeCustomerId: null,
-  stripeSubscriptionId: null,
-  isSubscribed: true,
-  subscriptionTier: "premium",
-  createdAt: new Date()
-};
+// Removed mock user - only real authenticated users allowed
 
 declare global {
   namespace Express {
