@@ -82,12 +82,22 @@ export async function generateRealisticVoyages(): Promise<VoyageRoute[]> {
   const voyageRoutes: VoyageRoute[] = [];
 
   for (const vessel of activeVessels) {
+    // تحويل الإحداثيات إلى أرقام بشكل صحيح
+    const vesselLat = parseFloat(vessel.currentLat!.toString());
+    const vesselLng = parseFloat(vessel.currentLng!.toString());
+    
+    // تخطي السفينة إذا كانت الإحداثيات غير صالحة
+    if (isNaN(vesselLat) || isNaN(vesselLng)) {
+      console.log(`تخطي السفينة ${vessel.id} - إحداثيات غير صالحة: ${vessel.currentLat}, ${vessel.currentLng}`);
+      continue;
+    }
+    
     // اختيار وجهة عشوائية واقعية
     const destination = destinations[Math.floor(Math.random() * destinations.length)];
     
     const distance = calculateDistance(
-      vessel.currentLat!,
-      vessel.currentLng!,
+      vesselLat,
+      vesselLng,
       destination.lat,
       destination.lng
     );
@@ -152,14 +162,14 @@ export async function moveVesselsToNewPositions(): Promise<{
                    route.status === 'transit' ? 15 + Math.random() * 3 :
                    10 + Math.random() * 8;
 
-      // تحديث موقع السفينة
+      // تحديث موقع السفينة مع تنسيق صحيح للإحداثيات
       await db
         .update(vessels)
         .set({
-          currentLat: newLat,
-          currentLng: newLng,
+          currentLat: parseFloat(newLat.toFixed(6)).toString(),
+          currentLng: parseFloat(newLng.toFixed(6)).toString(),
           status: route.status,
-          speed: Math.round(speed * 10) / 10 + '', // تحويل إلى نص مع رقم عشري
+          speed: (Math.round(speed * 10) / 10).toString(),
           lastUpdated: new Date()
         })
         .where(eq(vessels.id, route.vesselId));
