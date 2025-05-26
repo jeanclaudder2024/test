@@ -197,6 +197,10 @@ export default function AdminPanel() {
           </Card>
         </TabsContent>
 
+        <TabsContent value="migration" className="space-y-4">
+          <DatabaseMigration />
+        </TabsContent>
+
         <TabsContent value="settings" className="space-y-4">
           <Card>
             <CardHeader>
