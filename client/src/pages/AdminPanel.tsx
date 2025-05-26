@@ -10,8 +10,9 @@ import { RefineryManagement } from "@/components/admin/RefineryManagement";
 import { PortManagement } from "@/components/admin/PortManagement";
 import { VesselManagementNew } from "@/components/admin/VesselManagementNew";
 import { Settings } from "@/components/admin/AdminSettings";
+import { DatabaseMigration } from "@/components/admin/DatabaseMigration";
 import { Button } from "@/components/ui/button";
-import { Shield, Database, Users, Settings as SettingsIcon, ChevronLeft, Factory, Anchor, Ship, CreditCard } from "lucide-react";
+import { Shield, Database, Users, Settings as SettingsIcon, ChevronLeft, Factory, Anchor, Ship, CreditCard, HardDrive } from "lucide-react";
 import { useLocation } from "wouter";
 import SubscriptionAdmin from "@/pages/SubscriptionAdmin";
 
@@ -46,7 +47,7 @@ export default function AdminPanel() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid grid-cols-8 w-full max-w-6xl">
+        <TabsList className="grid grid-cols-9 w-full max-w-7xl">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <Shield className="h-4 w-4" />
             <span className="hidden sm:inline">System Overview</span>
@@ -81,6 +82,11 @@ export default function AdminPanel() {
             <Database className="h-4 w-4" />
             <span className="hidden sm:inline">Data Management</span>
             <span className="sm:hidden">Data</span>
+          </TabsTrigger>
+          <TabsTrigger value="migration" className="flex items-center gap-2">
+            <HardDrive className="h-4 w-4" />
+            <span className="hidden sm:inline">Database Migration</span>
+            <span className="sm:hidden">Migration</span>
           </TabsTrigger>
           <TabsTrigger value="settings" className="flex items-center gap-2">
             <SettingsIcon className="h-4 w-4" />
@@ -173,6 +179,20 @@ export default function AdminPanel() {
             </CardHeader>
             <CardContent>
               <FixedDataManagement />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="migration" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Database Migration to MySQL</CardTitle>
+              <CardDescription>
+                Migrate all 18 tables and authentic data from PostgreSQL to MySQL backup database
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <DatabaseMigration />
             </CardContent>
           </Card>
         </TabsContent>
