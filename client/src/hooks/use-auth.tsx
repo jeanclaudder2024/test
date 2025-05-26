@@ -8,6 +8,7 @@ import { apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { signInWithGoogle, handleRedirectResult, auth } from "@/lib/firebase";
 import { User as FirebaseUser } from "firebase/auth";
+import { useLocation } from "wouter";
 
 type User = {
   id: number;
@@ -46,6 +47,7 @@ export const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
+  const [, navigate] = useLocation();
   const {
     data: user,
     error,
