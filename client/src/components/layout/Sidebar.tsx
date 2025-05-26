@@ -18,11 +18,13 @@ import {
   Database,
   Anchor,
   Globe,
-  Briefcase
+  Briefcase,
+  Shield
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/hooks/use-language";
+import { useAdminCheck } from "@/hooks/useAdminCheck";
 
 interface SidebarProps {
   mobile?: boolean;
@@ -33,6 +35,7 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
   const [location] = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const { t } = useLanguage();
+  const { isAdmin, isLoading: adminLoading } = useAdminCheck();
 
   const toggleSidebar = () => {
     setCollapsed(!collapsed);

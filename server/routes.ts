@@ -4149,6 +4149,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
 
   // Function to send only port-vessel connections (dedicated for the port detail/proximity views)
+  // Admin check endpoint - للتحقق من الصلاحيات الإدارية
+  app.get('/api/admin/check', async (req: Request, res: Response) => {
+    try {
+      const user = await storage.getUserById(1); // Get current user - replace with actual auth
+      const isAdmin = user && user.role === 'admin';
+      
+      res.json({ 
+        success: true,
+        isAdmin: isAdmin,
+        user: isAdmin ? { id: user.id, username: user.username, role: user.role } : null
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        success: false,
+        isAdmin: false,
+        message: 'Authentication error' 
+      });
+    }
+  });
+
   async function sendPortVesselConnections(ws: VesselTrackingWebSocket) {
     try {
       if (ws.readyState !== WebSocket.OPEN) return;
