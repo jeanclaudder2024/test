@@ -3779,16 +3779,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // حماية صفحات الإدارة
-  app.use('/api/admin/*', async (req: Request, res: Response, next: NextFunction) => {
-    const { adminSecurityCheck, adminRateLimiter } = await import('./security-middleware');
-    adminRateLimiter(req, res, () => {
-      adminSecurityCheck(req, res, next);
-    });
-  });
-
-  // Vessel Movement Management Routes - محمي للإدارة فقط
-  app.post("/api/admin/vessels/trigger-movement", async (req, res) => {
+  // Vessel Movement Management Routes
+  app.post("/api/vessels/trigger-movement", async (req, res) => {
     try {
       const { triggerManualVesselMovement } = await import('./vessel-movement-scheduler');
       const result = await triggerManualVesselMovement();
@@ -3805,24 +3797,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ 
         success: false,
         message: "فشل في تحريك السفن" 
-      });
-    }
-  });
-
-  // Admin Dashboard Routes - محمية بالكامل
-  app.get("/api/admin/dashboard", async (req, res) => {
-    try {
-      const stats = await storage.getSystemStats();
-      res.json({
-        success: true,
-        stats,
-        timestamp: new Date().toISOString()
-      });
-    } catch (error) {
-      console.error('Error fetching admin dashboard:', error);
-      res.status(500).json({ 
-        success: false,
-        message: "فشل في جلب إحصائيات الإدارة" 
       });
     }
   });
@@ -4149,26 +4123,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
 
   // Function to send only port-vessel connections (dedicated for the port detail/proximity views)
-  // Admin check endpoint - للتحقق من الصلاحيات الإدارية
-  app.get('/api/admin/check', async (req: Request, res: Response) => {
-    try {
-      const user = await storage.getUserById(1); // Get current user - replace with actual auth
-      const isAdmin = user && user.role === 'admin';
-      
-      res.json({ 
-        success: true,
-        isAdmin: isAdmin,
-        user: isAdmin ? { id: user.id, username: user.username, role: user.role } : null
-      });
-    } catch (error) {
-      res.status(500).json({ 
-        success: false,
-        isAdmin: false,
-        message: 'Authentication error' 
-      });
-    }
-  });
-
   async function sendPortVesselConnections(ws: VesselTrackingWebSocket) {
     try {
       if (ws.readyState !== WebSocket.OPEN) return;
