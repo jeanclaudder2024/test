@@ -3779,46 +3779,154 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Vessel Movement Management Routes
-  app.post("/api/vessels/trigger-movement", async (req, res) => {
+  // Perfect Vessel Distribution - 9 vessels per port/refinery, rest in water
+  app.post("/api/vessels/perfect-distribution", async (req, res) => {
     try {
-      const { triggerManualVesselMovement } = await import('./vessel-movement-scheduler');
-      const result = await triggerManualVesselMovement();
+      console.log('🚢 بدء التوزيع المثالي للسفن...');
+      
+      // الحصول على جميع الموانئ النفطية
+      const allPorts = await db.select().from(ports).where(isNotNull(ports.lat));
+      console.log(`📍 تم العثور على ${allPorts.length} ميناء نفطي`);
+      
+      // الحصول على المصافي الساحلية فقط
+      const coastalRefineries = await db.select().from(refineries)
+        .where(and(isNotNull(refineries.lat), isNotNull(refineries.lng)));
+      console.log(`🏭 تم العثور على ${coastalRefineries.length} مصفاة ساحلية`);
+      
+      // الحصول على جميع السفن النشطة
+      const allVessels = await db.select({ id: vessels.id })
+        .from(vessels)
+        .where(sql`status != 'inactive'`)
+        .orderBy(vessels.id);
+      console.log(`⚓ تم العثور على ${allVessels.length} سفينة نشطة`);
+      
+      let vesselIndex = 0;
+      let assignedToLocations = 0;
+      
+      // توزيع 9 سفن لكل ميناء
+      for (const port of allPorts) {
+        const portLat = parseFloat(port.lat);
+        const portLng = parseFloat(port.lng);
+        
+        for (let i = 0; i < 9 && vesselIndex < allVessels.length; i++) {
+          const vessel = allVessels[vesselIndex];
+          
+          // إحداثيات قريبة من الميناء (في المياه)
+          const randomLat = portLat + (Math.random() * 0.05 - 0.025);
+          const randomLng = portLng + (Math.random() * 0.05 - 0.025);
+          
+          const status = ['docked', 'anchored', 'loading'][i % 3];
+          const speed = status === 'docked' ? '0' : 
+                       status === 'anchored' ? '1.5' : '3.2';
+          
+          await db.update(vessels)
+            .set({
+              currentLat: randomLat.toFixed(6),
+              currentLng: randomLng.toFixed(6),
+              status: status,
+              speed: speed,
+              lastUpdated: new Date()
+            })
+            .where(eq(vessels.id, vessel.id));
+          
+          vesselIndex++;
+          assignedToLocations++;
+        }
+      }
+      
+      // توزيع 9 سفن لكل مصفاة ساحلية
+      for (const refinery of coastalRefineries) {
+        const refineryLat = parseFloat(refinery.lat);
+        const refineryLng = parseFloat(refinery.lng);
+        
+        for (let i = 0; i < 9 && vesselIndex < allVessels.length; i++) {
+          const vessel = allVessels[vesselIndex];
+          
+          // إحداثيات قريبة من المصفاة (في المياه)
+          const randomLat = refineryLat + (Math.random() * 0.05 - 0.025);
+          const randomLng = refineryLng + (Math.random() * 0.05 - 0.025);
+          
+          const status = ['docked', 'anchored', 'loading'][i % 3];
+          const speed = status === 'docked' ? '0' : 
+                       status === 'anchored' ? '1.8' : '2.9';
+          
+          await db.update(vessels)
+            .set({
+              currentLat: randomLat.toFixed(6),
+              currentLng: randomLng.toFixed(6),
+              status: status,
+              speed: speed,
+              lastUpdated: new Date()
+            })
+            .where(eq(vessels.id, vessel.id));
+          
+          vesselIndex++;
+          assignedToLocations++;
+        }
+      }
+      
+      // توزيع باقي السفن عشوائياً في المياه العميقة
+      const oceanLocations = [
+        { name: 'شمال المحيط الأطلسي', lat: 45, lng: -30, radius: 15 },
+        { name: 'جنوب المحيط الأطلسي', lat: -20, lng: -15, radius: 20 },
+        { name: 'شمال المحيط الهادئ', lat: 30, lng: -150, radius: 25 },
+        { name: 'جنوب المحيط الهادئ', lat: -15, lng: -120, radius: 20 },
+        { name: 'المحيط الهندي', lat: -10, lng: 70, radius: 25 },
+        { name: 'البحر المتوسط', lat: 36, lng: 15, radius: 8 },
+        { name: 'البحر الأحمر', lat: 20, lng: 38, radius: 5 },
+        { name: 'بحر الشمال', lat: 56, lng: 3, radius: 6 }
+      ];
+      
+      let remainingVessels = 0;
+      
+      while (vesselIndex < allVessels.length) {
+        const vessel = allVessels[vesselIndex];
+        const oceanLocation = oceanLocations[Math.floor(Math.random() * oceanLocations.length)];
+        
+        // إحداثيات عشوائية في المحيط
+        const angle = Math.random() * 2 * Math.PI;
+        const distance = Math.random() * oceanLocation.radius;
+        const randomLat = oceanLocation.lat + (distance * Math.cos(angle));
+        const randomLng = oceanLocation.lng + (distance * Math.sin(angle));
+        
+        const statuses = ['at_sea', 'transit', 'en_route'];
+        const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+        const randomSpeed = (8 + Math.random() * 10).toFixed(1);
+        
+        await db.update(vessels)
+          .set({
+            currentLat: randomLat.toFixed(6),
+            currentLng: randomLng.toFixed(6),
+            status: randomStatus,
+            speed: randomSpeed,
+            lastUpdated: new Date()
+          })
+          .where(eq(vessels.id, vessel.id));
+        
+        vesselIndex++;
+        remainingVessels++;
+      }
+      
+      console.log(`✅ تم توزيع السفن بنجاح:`);
+      console.log(`   📍 ${assignedToLocations} سفينة موزعة على الموانئ والمصافي`);
+      console.log(`   🌊 ${remainingVessels} سفينة موزعة في المحيطات`);
       
       res.json({
         success: true,
-        message: "تم تحريك السفن بنجاح - حركة واقعية كل أسبوعين",
-        movedVessels: result.movedVessels,
-        averageDistance: Math.round(result.averageDistance) + " كم",
-        voyageStats: result.voyageStats
+        message: "تم التوزيع المثالي للسفن بنجاح",
+        totalDistributed: vesselIndex,
+        assignedToLocations: assignedToLocations,
+        inOceans: remainingVessels,
+        ports: allPorts.length,
+        refineries: coastalRefineries.length
       });
-    } catch (error) {
-      console.error('Error triggering vessel movement:', error);
-      res.status(500).json({ 
-        success: false,
-        message: "فشل في تحريك السفن" 
-      });
-    }
-  });
-
-  // AI-Powered Realistic Vessel Distribution
-  app.post("/api/vessels/ai-optimize", async (req, res) => {
-    try {
-      const { applyAIDistribution } = await import('./ai-vessel-optimizer');
-      const result = await applyAIDistribution();
       
-      res.json({
-        success: true,
-        message: "تم توزيع السفن بالذكاء الاصطناعي بنجاح - توزيع واقعي ومحترف",
-        updated: result.updated,
-        errors: result.errors,
-        distribution: result.distribution
-      });
     } catch (error) {
-      console.error('Error in AI vessel optimization:', error);
+      console.error('Error in perfect vessel distribution:', error);
       res.status(500).json({ 
         success: false,
-        message: "فشل في التوزيع الذكي للسفن" 
+        message: "فشل في التوزيع المثالي للسفن",
+        error: error.message
       });
     }
   });
