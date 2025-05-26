@@ -35,14 +35,27 @@ if (process.env.SUPABASE_DATABASE_URL) {
 let mysqlConnection: any = null;
 let mysqlDb: any = null;
 
-if (process.env.MYSQL_DATABASE_URL) {
-  try {
-    mysqlConnection = mysql.createPool(process.env.MYSQL_DATABASE_URL);
-    mysqlDb = drizzleMysql(mysqlConnection, { schema, mode: 'default' });
-    console.log('MySQL database connection established');
-  } catch (error) {
-    console.warn('Failed to connect to MySQL database:', error);
-  }
+// Configure MySQL connection with provided credentials
+const mysqlConfig = {
+  host: 'sql301.infinityfree.com',
+  user: 'u150634185_A99wL',
+  password: 'jonny@2025@',
+  database: 'u150634185_oiltrak',
+  port: 3306,
+  ssl: false,
+  connectionLimit: 10,
+  acquireTimeout: 60000,
+  timeout: 60000,
+  reconnect: true
+};
+
+try {
+  mysqlConnection = mysql.createPool(mysqlConfig);
+  mysqlDb = drizzleMysql(mysqlConnection, { schema, mode: 'default' });
+  console.log('✅ MySQL backup database connection established');
+  console.log(`🔗 Connected to: ${mysqlConfig.database} on ${mysqlConfig.host}`);
+} catch (error) {
+  console.warn('❌ Failed to connect to MySQL backup database:', error);
 }
 
 // Export all database connections

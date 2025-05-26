@@ -89,32 +89,25 @@ class AutoFailoverDatabase {
     try {
       // محاولة استخدام قاعدة البيانات الحالية
       const db = this.currentDatabase === 'mysql' ? tertiaryDb : primaryDb;
+      if (!db) {
+        throw new Error('قاعدة البيانات النشطة غير متاحة');
+      }
       return await operation(db);
     } catch (error) {
       console.error('❌ فشل في العملية مع قاعدة البيانات الحالية:', error);
       
-      // محاولة التبديل
-      if (this.currentDatabase === 'primary' && tertiaryDb) {
-        console.log('🔄 محاولة التبديل إلى MySQL...');
+      // إذا كانت قاعدة البيانات الرئيسية تعمل، استمر معها
+      if (this.currentDatabase === 'primary') {
+        console.log('⚠️ خطأ في قاعدة البيانات الرئيسية، لكن لا يوجد اتصال بـ MySQL');
+        console.log('🔄 محاولة إعادة المحاولة مع قاعدة البيانات الرئيسية...');
+        
+        // محاولة إعادة المحاولة مرة واحدة
         try {
-          this.currentDatabase = 'mysql';
-          this.isFailoverActive = true;
-          return await operation(tertiaryDb);
-        } catch (mysqlError) {
-          console.error('❌ فشل في MySQL أيضاً:', mysqlError);
-          this.currentDatabase = 'primary';
-          throw new Error('جميع قواعد البيانات غير متاحة');
-        }
-      } else if (this.currentDatabase === 'mysql') {
-        console.log('🔄 محاولة العودة إلى قاعدة البيانات الرئيسية...');
-        try {
-          this.currentDatabase = 'primary';
-          this.isFailoverActive = false;
+          await new Promise(resolve => setTimeout(resolve, 1000)); // انتظار ثانية واحدة
           return await operation(primaryDb);
-        } catch (primaryError) {
-          console.error('❌ قاعدة البيانات الرئيسية لا تزال غير متاحة:', primaryError);
-          this.currentDatabase = 'mysql';
-          throw error; // إرجاع الخطأ الأصلي
+        } catch (retryError) {
+          console.error('❌ فشلت إعادة المحاولة أيضاً:', retryError);
+          throw new Error('قاعدة البيانات الرئيسية غير متاحة مؤقتاً');
         }
       }
       
