@@ -407,63 +407,6 @@ export const insertSubscriptionSchema = createInsertSchema(subscriptions).omit({
 export type InsertSubscription = z.infer<typeof insertSubscriptionSchema>;
 export type Subscription = typeof subscriptions.$inferSelect;
 
-// جدول طلبات التواصل بين الوسطاء والشركات
-export const connectionRequests = pgTable("connection_requests", {
-  id: serial("id").primaryKey(),
-  brokerId: integer("broker_id").references(() => brokers.id).notNull(),
-  companyId: integer("company_id").references(() => companies.id).notNull(),
-  requestType: varchar("request_type", { length: 50 }).notNull(), // 'broker_to_company', 'company_to_broker'
-  status: varchar("status", { length: 50 }).default("pending"), // 'pending', 'approved', 'rejected', 'in_progress'
-  priority: varchar("priority", { length: 20 }).default("medium"), // 'low', 'medium', 'high', 'urgent'
-  subject: varchar("subject", { length: 255 }).notNull(),
-  message: text("message").notNull(),
-  requestedServices: text("requested_services"), // JSON string with services
-  budgetRange: varchar("budget_range", { length: 100 }),
-  preferredContactMethod: varchar("preferred_contact_method", { length: 50 }).default("email"),
-  adminNotes: text("admin_notes"), // ملاحظات الإدارة
-  adminResponse: text("admin_response"), // رد الإدارة
-  connectedBy: integer("connected_by").references(() => users.id), // المدير الذي ربط بينهم
-  connectionDate: timestamp("connection_date"),
-  followUpDate: timestamp("follow_up_date"),
-  completionDate: timestamp("completion_date"),
-  rating: integer("rating"), // تقييم من 1-5
-  feedback: text("feedback"),
-  isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-export const insertConnectionRequestSchema = createInsertSchema(connectionRequests).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export type InsertConnectionRequest = z.infer<typeof insertConnectionRequestSchema>;
-export type ConnectionRequest = typeof connectionRequests.$inferSelect;
-
-// جدول رسائل التواصل
-export const connectionMessages = pgTable("connection_messages", {
-  id: serial("id").primaryKey(),
-  requestId: integer("request_id").references(() => connectionRequests.id).notNull(),
-  senderId: integer("sender_id").references(() => users.id).notNull(),
-  senderType: varchar("sender_type", { length: 20 }).notNull(), // 'broker', 'company', 'admin'
-  message: text("message").notNull(),
-  messageType: varchar("message_type", { length: 20 }).default("text"), // 'text', 'file', 'meeting_request'
-  attachments: text("attachments"), // JSON string with file paths
-  isRead: boolean("is_read").default(false),
-  readAt: timestamp("read_at"),
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
-export const insertConnectionMessageSchema = createInsertSchema(connectionMessages).omit({
-  id: true,
-  createdAt: true,
-});
-
-export type InsertConnectionMessage = z.infer<typeof insertConnectionMessageSchema>;
-export type ConnectionMessage = typeof connectionMessages.$inferSelect;
-
 // Customer payment methods
 export const paymentMethods = pgTable("payment_methods", {
   id: serial("id").primaryKey(),
