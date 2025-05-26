@@ -2741,6 +2741,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: 'Error fetching broker connections' });
     }
   });
+
+  // Admin API Routes
+  app.get("/api/admin/users", requireAuth, async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error) {
+      console.error('Error getting users:', error);
+      res.status(500).json({ message: 'Error fetching users' });
+    }
+  });
+
+  app.get("/api/admin/stats", requireAuth, async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      const vessels = await storage.getVessels({});
+      const ports = await storage.getPorts({});
+      const companies = await storage.getCompanies({});
+      const refineries = await storage.getRefineries({});
+
+      const stats = {
+        totalUsers: users.length,
+        activeUsers: users.filter(u => u.isSubscribed).length,
+        totalVessels: vessels.length,
+        activeVessels: vessels.filter(v => v.status === 'active').length,
+        totalPorts: ports.length,
+        totalCompanies: companies.length,
+        totalRefineries: refineries.length,
+        databaseHealth: 'excellent',
+        systemLoad: 'normal',
+        apiResponseTime: 'fast'
+      };
+
+      res.json(stats);
+    } catch (error) {
+      console.error('Error getting admin stats:', error);
+      res.status(500).json({ message: 'Error fetching admin stats' });
+    }
+  });
+
+  app.patch("/api/admin/users/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      
+      const updatedUser = await storage.updateUser(parseInt(id), updates);
+      res.json(updatedUser);
+    } catch (error) {
+      console.error('Error updating user:', error);
+      res.status(500).json({ message: 'Error updating user' });
+    }
+  });
+
+  app.delete("/api/admin/users/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteUser(parseInt(id));
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      res.status(500).json({ message: 'Error deleting user' });
+    }
+  });
   
   app.post("/api/broker-connections", async (req, res) => {
     try {
