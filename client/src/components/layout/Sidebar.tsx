@@ -18,13 +18,11 @@ import {
   Database,
   Anchor,
   Globe,
-  Briefcase,
-  Shield
+  Briefcase
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/hooks/use-language";
-import { useAdminCheck } from "@/hooks/useAdminCheck";
 
 interface SidebarProps {
   mobile?: boolean;
@@ -35,7 +33,6 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
   const [location] = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const { t } = useLanguage();
-  const { isAdmin, isLoading: adminLoading } = useAdminCheck();
 
   const toggleSidebar = () => {
     setCollapsed(!collapsed);
@@ -104,15 +101,7 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
       path: "/api-test",
       icon: <Database className="h-5 w-5 mr-3" />,
       badge: "DEV",
-    },
-    // رابط الإدارة - يظهر للمديرين فقط
-    ...(isAdmin ? [{
-      title: "لوحة الإدارة",
-      path: "/admin",
-      icon: <Shield className="h-5 w-5 mr-3" />,
-      badge: "ADMIN",
-      section: "ADMIN"
-    }] : [])
+    }
   ];
 
   const getUserItems = (): NavItem[] => [
