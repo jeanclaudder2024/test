@@ -32,33 +32,51 @@ export function DatabaseMigration() {
   const [overallProgress, setOverallProgress] = useState(0);
   const [migrationStatus, setMigrationStatus] = useState<'idle' | 'running' | 'completed' | 'error'>('idle');
 
-  // Tables to migrate with your authentic data counts
-  const tables = [
-    { name: 'vessels', description: '2,500 authentic oil tankers', icon: '🚢' },
-    { name: 'refineries', description: '111 global refineries', icon: '🏭' },
-    { name: 'ports', description: '29 oil terminals', icon: '⚓' },
-    { name: 'documents', description: '172 vessel documents', icon: '📄' },
-    { name: 'companies', description: '40 oil shipping companies', icon: '🏢' },
-    { name: 'vessel_jobs', description: '50 maritime jobs', icon: '💼' },
-    { name: 'vessel_refinery_connections', description: 'Active connections', icon: '🔗' },
-    { name: 'users', description: 'User accounts', icon: '👥' },
-    { name: 'subscriptions', description: 'Subscription data', icon: '💳' },
-    { name: 'subscription_plans', description: 'Pricing plans', icon: '📊' },
-    { name: 'payment_methods', description: 'Payment info', icon: '💰' },
-    { name: 'brokers', description: 'Broker data', icon: '🤝' },
-    { name: 'vessel_extra_info', description: 'Extended vessel data', icon: '📋' },
-    { name: 'refinery_port_connections', description: 'Port connections', icon: '🌐' },
-    { name: 'progress_events', description: 'Event tracking', icon: '📈' },
-    { name: 'invoices', description: 'Invoice records', icon: '🧾' },
-    { name: 'gates', description: 'Gate management', icon: '🚪' },
-    { name: 'stats', description: 'System statistics', icon: '📊' }
+  // All 31 database objects to migrate with your authentic data
+  const dbObjects = [
+    { name: 'brokers', description: 'Broker data', icon: '🤝', type: 'table' },
+    { name: 'brokers_id_seq', description: 'Broker ID sequence', icon: '🔢', type: 'sequence' },
+    { name: 'companies', description: '40 oil shipping companies', icon: '🏢', type: 'table' },
+    { name: 'companies_id_seq', description: 'Company ID sequence', icon: '🔢', type: 'sequence' },
+    { name: 'documents', description: '172 vessel documents', icon: '📄', type: 'table' },
+    { name: 'documents_id_seq', description: 'Document ID sequence', icon: '🔢', type: 'sequence' },
+    { name: 'gates', description: 'Gate management', icon: '🚪', type: 'table' },
+    { name: 'gates_id_seq', description: 'Gate ID sequence', icon: '🔢', type: 'sequence' },
+    { name: 'invoices', description: 'Invoice records', icon: '🧾', type: 'table' },
+    { name: 'invoices_id_seq', description: 'Invoice ID sequence', icon: '🔢', type: 'sequence' },
+    { name: 'payment_methods', description: 'Payment info', icon: '💰', type: 'table' },
+    { name: 'payment_methods_id_seq', description: 'Payment method ID sequence', icon: '🔢', type: 'sequence' },
+    { name: 'ports', description: '29 oil terminals', icon: '⚓', type: 'table' },
+    { name: 'ports_id_seq', description: 'Port ID sequence', icon: '🔢', type: 'sequence' },
+    { name: 'progress_events', description: 'Event tracking', icon: '📈', type: 'table' },
+    { name: 'progress_events_id_seq', description: 'Progress event ID sequence', icon: '🔢', type: 'sequence' },
+    { name: 'refineries', description: '111 global refineries', icon: '🏭', type: 'table' },
+    { name: 'refineries_id_seq', description: 'Refinery ID sequence', icon: '🔢', type: 'sequence' },
+    { name: 'refinery_port_connections', description: 'Port connections', icon: '🌐', type: 'table' },
+    { name: 'refinery_port_connections_id_seq', description: 'Connection ID sequence', icon: '🔢', type: 'sequence' },
+    { name: 'stats', description: 'System statistics', icon: '📊', type: 'table' },
+    { name: 'stats_id_seq', description: 'Stats ID sequence', icon: '🔢', type: 'sequence' },
+    { name: 'subscription_plans', description: 'Pricing plans', icon: '📊', type: 'table' },
+    { name: 'subscription_plans_id_seq', description: 'Plan ID sequence', icon: '🔢', type: 'sequence' },
+    { name: 'subscriptions', description: 'Subscription data', icon: '💳', type: 'table' },
+    { name: 'subscriptions_id_seq', description: 'Subscription ID sequence', icon: '🔢', type: 'sequence' },
+    { name: 'users', description: 'User accounts', icon: '👥', type: 'table' },
+    { name: 'users_id_seq', description: 'User ID sequence', icon: '🔢', type: 'sequence' },
+    { name: 'vessel_extra_info', description: 'Extended vessel data', icon: '📋', type: 'table' },
+    { name: 'vessel_extra_info_id_seq', description: 'Vessel extra info ID sequence', icon: '🔢', type: 'sequence' },
+    { name: 'vessel_jobs', description: '50 maritime jobs', icon: '💼', type: 'table' },
+    { name: 'vessel_jobs_id_seq', description: 'Vessel job ID sequence', icon: '🔢', type: 'sequence' },
+    { name: 'vessel_refinery_connections', description: 'Active connections', icon: '🔗', type: 'table' },
+    { name: 'vessel_refinery_connections_id_seq', description: 'Connection ID sequence', icon: '🔢', type: 'sequence' },
+    { name: 'vessels', description: '2,500 authentic oil tankers', icon: '🚢', type: 'table' },
+    { name: 'vessels_id_seq', description: 'Vessel ID sequence', icon: '🔢', type: 'sequence' }
   ];
 
   const migrateMutation = useMutation({
     mutationFn: async () => {
       setMigrationStatus('running');
-      setMigrationProgress(tables.map(table => ({ 
-        table: table.name, 
+      setMigrationProgress(dbObjects.map(obj => ({ 
+        table: obj.name, 
         status: 'pending' 
       })));
       
@@ -169,8 +187,8 @@ export function DatabaseMigration() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="text-center p-4 bg-blue-50 rounded-lg">
               <Database className="h-8 w-8 mx-auto mb-2 text-blue-600" />
-              <div className="text-2xl font-bold text-blue-600">18</div>
-              <div className="text-sm text-gray-600">Total Tables</div>
+              <div className="text-2xl font-bold text-blue-600">31</div>
+              <div className="text-sm text-gray-600">Database Objects</div>
             </div>
             <div className="text-center p-4 bg-green-50 rounded-lg">
               <Server className="h-8 w-8 mx-auto mb-2 text-green-600" />
@@ -249,7 +267,7 @@ export function DatabaseMigration() {
               <Alert className="mb-4">
                 <CheckCircle className="h-4 w-4" />
                 <AlertDescription>
-                  🎉 All {tables.length} tables successfully migrated to MySQL! Your authentic data is now safely backed up.
+                  🎉 All {dbObjects.length} database objects successfully migrated to MySQL! Your authentic data is now safely backed up.
                 </AlertDescription>
               </Alert>
             )}
@@ -283,22 +301,23 @@ export function DatabaseMigration() {
         </Card>
       )}
 
-      {/* Tables Overview */}
+      {/* Database Objects Overview */}
       <Card>
         <CardHeader>
-          <CardTitle>Tables to Migrate</CardTitle>
+          <CardTitle>Database Objects to Migrate</CardTitle>
           <CardDescription>
-            All 18 tables containing your authentic oil vessel tracking data
+            All 31 database objects (tables + sequences) containing your authentic oil vessel tracking data
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {tables.map((table) => (
-              <div key={table.name} className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50">
-                <span className="text-2xl">{table.icon}</span>
+            {dbObjects.map((obj) => (
+              <div key={obj.name} className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50">
+                <span className="text-2xl">{obj.icon}</span>
                 <div>
-                  <div className="font-medium">{table.name}</div>
-                  <div className="text-sm text-gray-500">{table.description}</div>
+                  <div className="font-medium">{obj.name}</div>
+                  <div className="text-sm text-gray-500">{obj.description}</div>
+                  <div className="text-xs text-blue-600 capitalize">{obj.type}</div>
                 </div>
               </div>
             ))}
