@@ -225,12 +225,12 @@ export default function LandingPage() {
         </nav>
         
         <div className="hidden lg:flex items-center gap-4">
-          <Link href="/login">
+          <Link href="/auth">
             <Button variant="ghost" className="text-white hover:text-white hover:bg-white/10">
               Log In
             </Button>
           </Link>
-          <Link href="/login">
+          <Link href="/auth">
             <Button size="default" className="bg-orange-500 hover:bg-orange-600 text-white">
               Get Started
               <ChevronRight className="h-4 w-4 ml-1" />
@@ -278,10 +278,10 @@ export default function LandingPage() {
             </Link>
           </nav>
           <div className="mt-auto flex flex-col gap-3 pt-6">
-            <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+            <Link href="/auth" onClick={() => setMobileMenuOpen(false)}>
               <Button variant="outline" className="w-full border-slate-700 text-white">Log In</Button>
             </Link>
-            <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+            <Link href="/auth" onClick={() => setMobileMenuOpen(false)}>
               <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white">Get Started</Button>
             </Link>
           </div>
@@ -338,7 +338,7 @@ export default function LandingPage() {
                 </p>
                 
                 <div className="flex flex-wrap gap-4 mb-12">
-                  <Link href="/login">
+                  <Link href="/auth">
                     <Button size="lg" className="bg-orange-500 hover:bg-orange-600 text-white font-medium px-8 py-6 rounded-md shadow-lg shadow-orange-500/20 hover:translate-y-[-2px] transition-all duration-200">
                       Request A Demo
                       <ChevronRight className="h-5 w-5 ml-1" />
@@ -1276,7 +1276,7 @@ export default function LandingPage() {
                 </ul>
                 
                 <div className="mt-auto">
-                  <Link href="/login">
+                  <Link href="/auth">
                     <Button className="w-full bg-white/10 hover:bg-white/20 border border-white/20 text-white">
                       Get Started
                     </Button>
@@ -1325,7 +1325,7 @@ export default function LandingPage() {
                 </ul>
                 
                 <div className="mt-auto">
-                  <Link href="/login">
+                  <Link href="/auth">
                     <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white border border-orange-600/50">
                       Get Started
                     </Button>
@@ -1369,7 +1369,7 @@ export default function LandingPage() {
                 </ul>
                 
                 <div className="mt-auto">
-                  <Link href="/login">
+                  <Link href="/auth">
                     <Button className="w-full bg-white/10 hover:bg-white/20 border border-white/20 text-white">
                       Contact Sales
                     </Button>
@@ -1383,7 +1383,7 @@ export default function LandingPage() {
             <p className="text-white/70 mb-6">
               Need a custom solution for your specific business requirements?
             </p>
-            <Link href="/login">
+            <Link href="/auth">
               <Button variant="outline" className="border-white/20 text-white bg-white/5 hover:bg-white/10 font-medium px-6 py-2">
                 Contact Our Enterprise Team
                 <Phone className="h-4 w-4 ml-2" />

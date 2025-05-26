@@ -299,6 +299,7 @@ export function DealManager({ brokerId }: DealManagerProps) {
 
   return (
     <div className="space-y-6">
+      <TabsContent value="deals" className="space-y-6 p-0">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h3 className="text-lg font-medium flex items-center">
@@ -537,6 +538,7 @@ export function DealManager({ brokerId }: DealManagerProps) {
             </CardFooter>
           </Card>
         )}
+      </TabsContent>
 
       {/* Create Deal Dialog */}
       <Dialog open={showCreateDealDialog} onOpenChange={setShowCreateDealDialog}>
