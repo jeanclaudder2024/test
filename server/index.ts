@@ -3,10 +3,25 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { startProximityEnhancement } from "./portProximityEnhancer";
 import { scheduleVesselMovement } from "./vessel-movement-scheduler";
+import { 
+  rateLimiter, 
+  securityHeaders, 
+  hideServerInfo, 
+  sanitizeInput, 
+  sanitizeResponse 
+} from "./security-middleware";
 
 const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+
+// تطبيق الأمان الشامل
+app.use(hideServerInfo);
+app.use(securityHeaders);
+app.use(rateLimiter);
+app.use(sanitizeInput);
+app.use(sanitizeResponse);
+
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 
 app.use((req, res, next) => {
   const start = Date.now();
