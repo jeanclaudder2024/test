@@ -60,7 +60,7 @@ function LandingPageRedirect() {
 
   // If user is logged in, redirect to broker dashboard
   if (user) {
-    return <Redirect to="/brokers" />;
+    return <Redirect to="/broker-dashboard" />;
   }
 
   // Otherwise show landing page
