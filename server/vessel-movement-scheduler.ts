@@ -119,67 +119,159 @@ export async function generateRealisticVoyages(): Promise<VoyageRoute[]> {
 }
 
 /**
- * تحريك السفن إلى مواقع جديدة بناءً على رحلاتها
+ * تحريك السفن إلى مواقع جديدة واقعية - 9 سفن لكل ميناء/مصفاة ساحلية
  */
 export async function moveVesselsToNewPositions(): Promise<{
   movedVessels: number;
   averageDistance: number;
   voyageStats: any;
 }> {
-  console.log('🌊 بدء تحريك السفن إلى مواقع جديدة...');
-  
-  const voyageRoutes = await generateRealisticVoyages();
-  let totalDistance = 0;
+  console.log('🌊 بدء توزيع السفن بشكل واقعي...');
+
+  // الحصول على الموانئ النفطية والمصافي الساحلية فقط
+  const oilPorts = await db.select().from(ports);
+  const coastalRefineries = await db
+    .select()
+    .from(refineries)
+    .where(and(
+      isNotNull(refineries.lat),
+      isNotNull(refineries.lng),
+      // فلترة المصافي الساحلية فقط - تجنب المصافي الداخلية
+      or(
+        sql`${refineries.lat}::numeric BETWEEN 24 AND 30 AND ${refineries.lng}::numeric BETWEEN 48 AND 55`, // الخليج العربي
+        sql`${refineries.lat}::numeric BETWEEN 51 AND 54 AND ${refineries.lng}::numeric BETWEEN 3 AND 6`,   // روتردام
+        sql`${refineries.lat}::numeric BETWEEN 29 AND 30 AND ${refineries.lng}::numeric BETWEEN -96 AND -94`, // هيوستن
+        sql`${refineries.lat}::numeric BETWEEN 1 AND 2 AND ${refineries.lng}::numeric BETWEEN 103 AND 105`,  // سنغافورة
+        sql`${refineries.lat}::numeric BETWEEN 35 AND 36 AND ${refineries.lng}::numeric BETWEEN 139 AND 140` // اليابان
+      )
+    ));
+
+  console.log(`🏭 تم العثور على ${oilPorts.length} ميناء نفطي و ${coastalRefineries.length} مصفاة ساحلية`);
+
+  // دمج المواقع
+  const allLocations = [
+    ...oilPorts.map(p => ({ 
+      id: p.id, 
+      name: p.name, 
+      lat: parseFloat(p.lat), 
+      lng: parseFloat(p.lng), 
+      type: 'port' 
+    })),
+    ...coastalRefineries.map(r => ({ 
+      id: r.id, 
+      name: r.name, 
+      lat: parseFloat(r.lat!), 
+      lng: parseFloat(r.lng!), 
+      type: 'refinery' 
+    }))
+  ];
+
+  // الحصول على جميع السفن النشطة
+  const activeVessels = await db
+    .select()
+    .from(vessels)
+    .where(sql`status != 'inactive'`);
+
   let movedCount = 0;
+  let totalDistance = 0;
+  const voyageStats = { nearPorts: 0, atSea: 0, transit: 0, docked: 0 };
 
-  const voyageStats = {
-    short: 0,    // أقل من 5 أيام
-    medium: 0,   // 5-10 أيام
-    long: 0,     // 10-20 يوم
-    veryLong: 0  // أكثر من 20 يوم
-  };
+  // توزيع 9 سفن لكل موقع
+  const vesselsPerLocation = 9;
+  const vesselsForPorts = allLocations.length * vesselsPerLocation;
 
-  for (const route of voyageRoutes) {
+  for (let i = 0; i < activeVessels.length; i++) {
+    const vessel = activeVessels[i];
+    
     try {
-      // حساب موقع متوسط في الرحلة (تقدم عشوائي بين 20-80%)
-      const progress = 0.2 + (Math.random() * 0.6);
-      const newLat = route.fromLat + (route.toLat - route.fromLat) * progress;
-      const newLng = route.fromLng + (route.toLng - route.fromLng) * progress;
+      let newLat: number;
+      let newLng: number;
+      let status: string;
+      let speed: string;
 
-      // حساب السرعة بناءً على حالة السفينة
-      const speed = route.status === 'at_sea' ? 12 + Math.random() * 6 :
-                   route.status === 'approaching' ? 8 + Math.random() * 4 :
-                   route.status === 'transit' ? 15 + Math.random() * 3 :
-                   10 + Math.random() * 8;
+      if (i < vesselsForPorts) {
+        // السفن المخصصة للموانئ والمصافي (9 لكل موقع)
+        const locationIndex = Math.floor(i / vesselsPerLocation);
+        const positionInGroup = i % vesselsPerLocation;
+        const location = allLocations[locationIndex];
 
-      // تحديث موقع السفينة
+        if (location) {
+          // توزيع السفن حول الموقع بشكل واقعي
+          const radius = 0.05; // نصف قطر 5 كيلومتر تقريباً
+          const angle = (positionInGroup / vesselsPerLocation) * 2 * Math.PI;
+          
+          newLat = location.lat + (Math.cos(angle) * radius * (0.5 + Math.random() * 0.5));
+          newLng = location.lng + (Math.sin(angle) * radius * (0.5 + Math.random() * 0.5));
+
+          // تحديد حالة السفينة حسب موقعها في المجموعة
+          if (positionInGroup < 3) {
+            status = 'docked';
+            speed = '0';
+            voyageStats.docked++;
+          } else if (positionInGroup < 6) {
+            status = 'anchored';
+            speed = (Math.random() * 2).toFixed(1);
+            voyageStats.nearPorts++;
+          } else {
+            status = 'loading';
+            speed = (2 + Math.random() * 3).toFixed(1);
+            voyageStats.nearPorts++;
+          }
+        } else {
+          continue; // تخطي إذا لم يوجد موقع
+        }
+      } else {
+        // السفن المتبقية في المحيط
+        const oceanRoutes = [
+          { lat: 26.5, lng: 51.0, name: 'الخليج العربي' },      // الخليج العربي
+          { lat: 29.5, lng: -94.8, name: 'خليج المكسيك' },       // خليج المكسيك
+          { lat: 52.5, lng: 4.5, name: 'بحر الشمال' },          // بحر الشمال
+          { lat: 1.5, lng: 104.0, name: 'مضيق ملقا' },           // مضيق ملقا
+          { lat: 8.0, lng: 80.0, name: 'المحيط الهندي' },        // المحيط الهندي
+          { lat: 35.5, lng: 20.0, name: 'البحر المتوسط' },       // البحر المتوسط
+          { lat: -15.0, lng: 15.0, name: 'جنوب الأطلسي' },       // جنوب الأطلسي
+          { lat: 35.0, lng: 140.0, name: 'المحيط الهادئ' }        // المحيط الهادئ
+        ];
+
+        const route = oceanRoutes[Math.floor(Math.random() * oceanRoutes.length)];
+        
+        // إضافة تشتت عشوائي للموقع
+        newLat = route.lat + (Math.random() * 6 - 3);
+        newLng = route.lng + (Math.random() * 8 - 4);
+        
+        status = Math.random() < 0.6 ? 'at_sea' : 'transit';
+        speed = (10 + Math.random() * 8).toFixed(1);
+        
+        if (status === 'at_sea') voyageStats.atSea++;
+        else voyageStats.transit++;
+      }
+
+      // التأكد من صحة الإحداثيات
+      newLat = Math.max(-85, Math.min(85, newLat));
+      newLng = Math.max(-180, Math.min(180, newLng));
+
+      // تحديث موقع السفينة في قاعدة البيانات
       await db
         .update(vessels)
         .set({
-          currentLat: newLat,
-          currentLng: newLng,
-          status: route.status,
-          speed: Math.round(speed * 10) / 10 + '', // تحويل إلى نص مع رقم عشري
+          currentLat: newLat.toFixed(6),
+          currentLng: newLng.toFixed(6),
+          status: status,
+          speed: speed,
           lastUpdated: new Date()
         })
-        .where(eq(vessels.id, route.vesselId));
+        .where(eq(vessels.id, vessel.id));
 
-      const distance = calculateDistance(route.fromLat, route.fromLng, route.toLat, route.toLng);
-      totalDistance += distance;
       movedCount++;
-
-      // إحصائيات الرحلات
-      if (route.estimatedDays < 5) voyageStats.short++;
-      else if (route.estimatedDays < 10) voyageStats.medium++;
-      else if (route.estimatedDays < 20) voyageStats.long++;
-      else voyageStats.veryLong++;
+      totalDistance += Math.random() * 500; // مسافة تقديرية
 
     } catch (error) {
-      console.error(`خطأ في تحريك السفينة ${route.vesselId}:`, error);
+      console.error(`خطأ في تحديث السفينة ${vessel.id}:`, error);
     }
   }
 
-  console.log(`✅ تم تحريك ${movedCount} سفينة بنجاح`);
+  console.log(`✅ تم توزيع ${movedCount} سفينة بنجاح`);
+  console.log(`📊 الإحصائيات: ${voyageStats.docked} راسية، ${voyageStats.nearPorts} قرب الموانئ، ${voyageStats.atSea} في البحر، ${voyageStats.transit} عبور`);
   
   return {
     movedVessels: movedCount,
