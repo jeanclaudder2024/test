@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { startProximityEnhancement } from "./portProximityEnhancer";
+import { scheduleVesselMovement } from "./vessel-movement-scheduler";
 
 const app = express();
 app.use(express.json());
@@ -42,6 +43,9 @@ app.use((req, res, next) => {
   
   // Start the proximity enhancement to ensure vessels near all ports and refineries
   startProximityEnhancement(15);
+  
+  // تفعيل نظام حركة السفن التلقائي كل أسبوعين
+  scheduleVesselMovement();
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;

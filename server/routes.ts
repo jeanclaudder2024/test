@@ -3779,6 +3779,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Vessel Movement Management Routes
+  app.post("/api/vessels/trigger-movement", async (req, res) => {
+    try {
+      const { triggerManualVesselMovement } = await import('./vessel-movement-scheduler');
+      const result = await triggerManualVesselMovement();
+      
+      res.json({
+        success: true,
+        message: "تم تحريك السفن بنجاح - حركة واقعية كل أسبوعين",
+        movedVessels: result.movedVessels,
+        averageDistance: Math.round(result.averageDistance) + " كم",
+        voyageStats: result.voyageStats
+      });
+    } catch (error) {
+      console.error('Error triggering vessel movement:', error);
+      res.status(500).json({ 
+        success: false,
+        message: "فشل في تحريك السفن" 
+      });
+    }
+  });
+
   app.use("/api", apiRouter);
 
   const httpServer = createServer(app);
