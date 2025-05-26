@@ -104,7 +104,15 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
       path: "/api-test",
       icon: <Database className="h-5 w-5 mr-3" />,
       badge: "DEV",
-    }
+    },
+    // رابط الإدارة - يظهر للمديرين فقط
+    ...(isAdmin ? [{
+      title: "لوحة الإدارة",
+      path: "/admin",
+      icon: <Shield className="h-5 w-5 mr-3" />,
+      badge: "ADMIN",
+      section: "ADMIN"
+    }] : [])
   ];
 
   const getUserItems = (): NavItem[] => [
