@@ -3801,6 +3801,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // AI-Powered Realistic Vessel Distribution
+  app.post("/api/vessels/ai-optimize", async (req, res) => {
+    try {
+      const { applyAIDistribution } = await import('./ai-vessel-optimizer');
+      const result = await applyAIDistribution();
+      
+      res.json({
+        success: true,
+        message: "تم توزيع السفن بالذكاء الاصطناعي بنجاح - توزيع واقعي ومحترف",
+        updated: result.updated,
+        errors: result.errors,
+        distribution: result.distribution
+      });
+    } catch (error) {
+      console.error('Error in AI vessel optimization:', error);
+      res.status(500).json({ 
+        success: false,
+        message: "فشل في التوزيع الذكي للسفن" 
+      });
+    }
+  });
+
   app.use("/api", apiRouter);
 
   const httpServer = createServer(app);
