@@ -16,7 +16,7 @@ import { seedVesselJobs } from "./scripts/seed-vessel-jobs";
 import { portService } from "./services/portService";
 import { vesselPositionService } from "./services/vesselPositionService";
 import { redistributeVesselsRealistically, getVesselDistributionStats } from "./services/realisticVesselPositioning";
-import { setupAuth } from "./auth";
+import { setupAuth, requireAuth } from "./auth";
 import { db } from "./db";
 import { dbSwitcher } from "./database-switcher";
 import { REGIONS } from "@shared/constants";
