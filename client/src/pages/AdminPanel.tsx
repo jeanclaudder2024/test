@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { UserManagement } from "@/components/admin/UserManagement";
 import { SystemStats } from "@/components/admin/SystemStats";
 import { FixedDataManagement } from "@/components/admin/FixedDataManagement";
+import { AdminProtection } from "@/components/security/AdminProtection";
 
 import { RefineryManagement } from "@/components/admin/RefineryManagement";
 import { PortManagement } from "@/components/admin/PortManagement";
@@ -15,7 +16,7 @@ import { Shield, Database, Users, Settings as SettingsIcon, ChevronLeft, Factory
 import { useLocation } from "wouter";
 import SubscriptionAdmin from "@/pages/SubscriptionAdmin";
 
-export default function AdminPanel() {
+function AdminPanelContent() {
   const [_, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState("overview");
 
@@ -192,5 +193,14 @@ export default function AdminPanel() {
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+// تطبيق نظام الحماية على صفحة الإدارة
+export default function AdminPanel() {
+  return (
+    <AdminProtection>
+      <AdminPanelContent />
+    </AdminProtection>
   );
 }
