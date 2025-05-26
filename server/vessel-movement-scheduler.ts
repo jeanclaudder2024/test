@@ -86,10 +86,10 @@ export async function generateRealisticVoyages(): Promise<VoyageRoute[]> {
     const destination = destinations[Math.floor(Math.random() * destinations.length)];
     
     const distance = calculateDistance(
-      parseFloat(vessel.currentLat!),
-      parseFloat(vessel.currentLng!),
-      parseFloat(destination.lat),
-      parseFloat(destination.lng)
+      vessel.currentLat!,
+      vessel.currentLng!,
+      destination.lat,
+      destination.lng
     );
 
     // تجنب الرحلات القصيرة جداً (أقل من 100 كم)
@@ -143,8 +143,8 @@ export async function moveVesselsToNewPositions(): Promise<{
     try {
       // حساب موقع متوسط في الرحلة (تقدم عشوائي بين 20-80%)
       const progress = 0.2 + (Math.random() * 0.6);
-      const newLat = parseFloat(route.fromLat) + (parseFloat(route.toLat) - parseFloat(route.fromLat)) * progress;
-      const newLng = parseFloat(route.fromLng) + (parseFloat(route.toLng) - parseFloat(route.fromLng)) * progress;
+      const newLat = route.fromLat + (route.toLat - route.fromLat) * progress;
+      const newLng = route.fromLng + (route.toLng - route.fromLng) * progress;
 
       // حساب السرعة بناءً على حالة السفينة
       const speed = route.status === 'at_sea' ? 12 + Math.random() * 6 :
@@ -152,12 +152,12 @@ export async function moveVesselsToNewPositions(): Promise<{
                    route.status === 'transit' ? 15 + Math.random() * 3 :
                    10 + Math.random() * 8;
 
-      // تحديث موقع السفينة مع تأكد من تنسيق الإحداثيات الصحيح
+      // تحديث موقع السفينة
       await db
         .update(vessels)
         .set({
-          currentLat: newLat.toFixed(8), // تأكد من التنسيق الصحيح
-          currentLng: newLng.toFixed(8), // تأكد من التنسيق الصحيح
+          currentLat: newLat,
+          currentLng: newLng,
           status: route.status,
           speed: Math.round(speed * 10) / 10 + '', // تحويل إلى نص مع رقم عشري
           lastUpdated: new Date()
