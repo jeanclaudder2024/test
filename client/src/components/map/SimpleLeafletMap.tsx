@@ -8,6 +8,34 @@ import { mapStyles, LanguageOption } from './MapStyles';
 import MapContainer from './MapContainer';
 import { isLikelyInWater } from '@/utils/mapUtils';
 
+// Oil company logo mapping for vessel popups
+const getCompanyLogo = (companyName: string): string => {
+  const company = companyName?.toLowerCase() || '';
+  
+  if (company.includes('shell')) return '🟡'; // Shell logo representation
+  if (company.includes('exxon')) return '🔴'; // ExxonMobil logo representation
+  if (company.includes('bp')) return '🟢'; // BP logo representation
+  if (company.includes('chevron')) return '🔵'; // Chevron logo representation
+  if (company.includes('total')) return '🟠'; // TotalEnergies logo representation
+  if (company.includes('conocophillips')) return '⚪'; // ConocoPhillips logo representation
+  if (company.includes('eni')) return '🟡'; // Eni logo representation
+  if (company.includes('equinor')) return '🔵'; // Equinor logo representation
+  if (company.includes('petrobras')) return '🟢'; // Petrobras logo representation
+  if (company.includes('aramco')) return '🟢'; // Saudi Aramco logo representation
+  if (company.includes('kuwait')) return '🔵'; // Kuwait Petroleum logo representation
+  if (company.includes('abu dhabi') || company.includes('adnoc')) return '🟠'; // ADNOC logo representation
+  if (company.includes('qatar')) return '🟣'; // Qatar Petroleum logo representation
+  if (company.includes('lukoil')) return '🔴'; // Lukoil logo representation
+  if (company.includes('gazprom')) return '🔵'; // Gazprom logo representation
+  if (company.includes('rosneft')) return '🔴'; // Rosneft logo representation
+  if (company.includes('sinopec')) return '🟡'; // Sinopec logo representation
+  if (company.includes('petrochina')) return '🔴'; // PetroChina logo representation
+  if (company.includes('cnooc')) return '🔵'; // CNOOC logo representation
+  if (company.includes('petronas')) return '🟢'; // Petronas logo representation
+  
+  return '🛢️'; // Default oil company icon
+};
+
 // Define Leaflet types
 declare global {
   interface Window {
@@ -585,6 +613,30 @@ export default function SimpleLeafletMap({
                 <span style="font-weight: 500; margin-right: 4px; color: #555;">Flag:</span>
                 <span style="flex: 1;">${vessel.flag || 'Unknown'}</span>
               </div>
+              
+              ${(vessel as any).ownerName ? `
+              <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">${getCompanyLogo((vessel as any).ownerName)}</span>
+                <span style="font-weight: 500; margin-right: 4px; color: #555;">Owner:</span>
+                <span style="flex: 1; font-weight: 600; color: #2563eb;">${(vessel as any).ownerName}</span>
+              </div>
+              ` : ''}
+              
+              ${(vessel as any).operatorName && (vessel as any).operatorName !== (vessel as any).ownerName ? `
+              <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">${getCompanyLogo((vessel as any).operatorName)}</span>
+                <span style="font-weight: 500; margin-right: 4px; color: #555;">Operator:</span>
+                <span style="flex: 1; font-weight: 600; color: #ea580c;">${(vessel as any).operatorName}</span>
+              </div>
+              ` : ''}
+              
+              ${(vessel as any).oilSource ? `
+              <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                <span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; margin-right: 6px; color: #666;">⬅️</span>
+                <span style="font-weight: 500; margin-right: 4px; color: #555;">Source:</span>
+                <span style="flex: 1; font-weight: 500; color: #16a34a;">${(vessel as any).oilSource}</span>
+              </div>
+              ` : ''}
               
               ${vessel.departurePort ? `
               <div style="display: flex; align-items: center; margin-bottom: 4px;">
