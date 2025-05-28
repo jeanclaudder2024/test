@@ -3,7 +3,7 @@ import { db, getActiveDb } from "./db";
 import {
   users, vessels, refineries, progressEvents, documents, brokers, stats as statsTable, ports, 
   refineryPortConnections, companies, vesselRefineryConnections,
-  subscriptionPlans, subscriptions, paymentMethods, invoices,
+  subscriptionPlans, subscriptions, paymentMethods, invoices, landingPageContent,
   User, InsertUser, 
   Vessel, InsertVessel,
   Refinery, InsertRefinery,
@@ -18,7 +18,8 @@ import {
   SubscriptionPlan, InsertSubscriptionPlan,
   Subscription, InsertSubscription,
   PaymentMethod, InsertPaymentMethod,
-  Invoice, InsertInvoice
+  Invoice, InsertInvoice,
+  LandingPageContent, InsertLandingPageContent
 } from "@shared/schema";
 
 // Storage interface with CRUD methods

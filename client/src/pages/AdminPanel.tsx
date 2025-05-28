@@ -11,8 +11,9 @@ import { PortManagement } from "@/components/admin/PortManagement";
 import { VesselManagementNew } from "@/components/admin/VesselManagementNew";
 import { Settings } from "@/components/admin/AdminSettings";
 import { DatabaseMigration } from "@/components/admin/DatabaseMigration";
+import { LandingPageManagement } from "@/components/admin/LandingPageManagement";
 import { Button } from "@/components/ui/button";
-import { Shield, Database, Users, Settings as SettingsIcon, ChevronLeft, Factory, Anchor, Ship, CreditCard, HardDrive } from "lucide-react";
+import { Shield, Database, Users, Settings as SettingsIcon, ChevronLeft, Factory, Anchor, Ship, CreditCard, HardDrive, Globe } from "lucide-react";
 import { useLocation } from "wouter";
 import SubscriptionAdmin from "@/pages/SubscriptionAdmin";
 

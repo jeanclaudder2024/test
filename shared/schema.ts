@@ -410,6 +410,33 @@ export const insertSubscriptionSchema = createInsertSchema(subscriptions).omit({
 export type InsertSubscription = z.infer<typeof insertSubscriptionSchema>;
 export type Subscription = typeof subscriptions.$inferSelect;
 
+// Landing Page Content Management
+export const landingPageContent = pgTable("landing_page_content", {
+  id: serial("id").primaryKey(),
+  section: text("section").notNull(), // hero, features, why-us, how-it-works, etc.
+  title: text("title"),
+  subtitle: text("subtitle"),
+  description: text("description"),
+  buttonText: text("button_text"),
+  buttonLink: text("button_link"),
+  imageUrl: text("image_url"),
+  videoUrl: text("video_url"),
+  content: text("content"), // JSON string for flexible content
+  isActive: boolean("is_active").default(true),
+  sortOrder: integer("sort_order").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertLandingPageContentSchema = createInsertSchema(landingPageContent).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertLandingPageContent = z.infer<typeof insertLandingPageContentSchema>;
+export type LandingPageContent = typeof landingPageContent.$inferSelect;
+
 // Customer payment methods
 export const paymentMethods = pgTable("payment_methods", {
   id: serial("id").primaryKey(),
