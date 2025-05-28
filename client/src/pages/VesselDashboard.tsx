@@ -444,6 +444,7 @@ const VesselDashboard: React.FC = () => {
                     <TableHead>Status</TableHead>
                     <TableHead>Gate Assignment</TableHead>
                     <TableHead>Cargo</TableHead>
+                    <TableHead>Oil Company</TableHead>
                     <TableHead>Broker</TableHead>
                     <TableHead>Progress</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -498,6 +499,23 @@ const VesselDashboard: React.FC = () => {
                             <span className="text-xs text-muted-foreground">
                               {cargoDetails.quantity && `${cargoDetails.quantity.toLocaleString()} ${cargoDetails.unit}`}
                             </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="font-medium">
+                              {vessel.ownerName || vessel.operatorName || 'Not assigned'}
+                            </span>
+                            {vessel.ownerName && vessel.operatorName && vessel.ownerName !== vessel.operatorName && (
+                              <span className="text-xs text-muted-foreground">
+                                Operator: {vessel.operatorName}
+                              </span>
+                            )}
+                            {vessel.oilSource && (
+                              <span className="text-xs text-muted-foreground">
+                                Source: {vessel.oilSource}
+                              </span>
+                            )}
                           </div>
                         </TableCell>
                         <TableCell>
