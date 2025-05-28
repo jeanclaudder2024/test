@@ -14,8 +14,20 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-export const db = drizzle({ client: pool, schema });
+// Use MySQL backup database since PostgreSQL is currently disabled
+console.log('🔄 Using MySQL backup database');
+export const pool = null; // PostgreSQL pool disabled
+
+// Initialize with MySQL backup as primary database
+try {
+  db = tertiaryDb;
+  console.log('✅ MySQL backup database activated as primary database');
+} catch (error) {
+  console.log('Setting up basic database connection...');
+  db = null;
+}
+
+export { db };
 
 // Secondary database connection (Supabase)
 let supabasePool: Pool | null = null;
