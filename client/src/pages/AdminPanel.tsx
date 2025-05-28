@@ -48,7 +48,7 @@ export default function AdminPanel() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid grid-cols-9 w-full max-w-7xl">
+        <TabsList className="grid grid-cols-10 w-full max-w-7xl">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <Shield className="h-4 w-4" />
             <span className="hidden sm:inline">System Overview</span>
@@ -88,6 +88,11 @@ export default function AdminPanel() {
             <HardDrive className="h-4 w-4" />
             <span className="hidden sm:inline">Database Migration</span>
             <span className="sm:hidden">Migration</span>
+          </TabsTrigger>
+          <TabsTrigger value="landing" className="flex items-center gap-2">
+            <Globe className="h-4 w-4" />
+            <span className="hidden sm:inline">Landing Page</span>
+            <span className="sm:hidden">Landing</span>
           </TabsTrigger>
           <TabsTrigger value="settings" className="flex items-center gap-2">
             <SettingsIcon className="h-4 w-4" />
@@ -200,6 +205,20 @@ export default function AdminPanel() {
 
         <TabsContent value="migration" className="space-y-4">
           <DatabaseMigration />
+        </TabsContent>
+
+        <TabsContent value="landing" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Landing Page Content Management</CardTitle>
+              <CardDescription>
+                Customize and manage your landing page sections, content, and appearance
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <LandingPageManagement />
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="settings" className="space-y-4">
