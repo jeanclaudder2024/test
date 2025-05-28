@@ -49,6 +49,7 @@ interface Vessel {
   cargoCapacity?: number;
   ownerName?: string;
   operatorName?: string;
+  oilType?: string;
 }
 
 interface VesselFormData {
@@ -434,6 +435,7 @@ export function VesselManagementNew() {
                 <TableRow>
                   <TableHead>Name</TableHead>
                   <TableHead>Type</TableHead>
+                  <TableHead>Oil Type</TableHead>
                   <TableHead>Company</TableHead>
                   <TableHead>IMO</TableHead>
                   <TableHead>MMSI</TableHead>
@@ -448,6 +450,18 @@ export function VesselManagementNew() {
                   <TableRow key={vessel.id}>
                     <TableCell className="font-medium">{vessel.name}</TableCell>
                     <TableCell>{vessel.vesselType}</TableCell>
+                    <TableCell>
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                        vessel.oilType?.toLowerCase().includes('crude') ? 'bg-black text-white' :
+                        vessel.oilType?.toLowerCase().includes('lng') ? 'bg-blue-100 text-blue-800' :
+                        vessel.oilType?.toLowerCase().includes('diesel') ? 'bg-yellow-100 text-yellow-800' :
+                        vessel.oilType?.toLowerCase().includes('gasoline') ? 'bg-red-100 text-red-800' :
+                        vessel.oilType?.toLowerCase().includes('jet') ? 'bg-purple-100 text-purple-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {vessel.oilType || 'N/A'}
+                      </span>
+                    </TableCell>
                     <TableCell>
                       <div className="space-y-1">
                         {vessel.ownerName && (
