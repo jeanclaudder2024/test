@@ -61,6 +61,7 @@ export const vessels = pgTable("vessels", {
   sellerName: text("seller_name"),
   ownerName: text("owner_name"), // Oil company that owns the vessel
   operatorName: text("operator_name"), // Oil company that operates the vessel
+  oilSource: text("oil_source"), // Which company/refinery the vessel is taking oil from
   metadata: text("metadata"), // JSON string with additional vessel information (heading, speed, course, etc.)
   lastUpdated: timestamp("last_updated").defaultNow(),
 });

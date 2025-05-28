@@ -34,6 +34,34 @@ import {
 import { Ship, Plus, Edit, Trash2, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+// Oil company logo mapping
+const getCompanyLogo = (companyName: string): string => {
+  const company = companyName?.toLowerCase() || '';
+  
+  if (company.includes('shell')) return '🟡'; // Shell logo representation
+  if (company.includes('exxon')) return '🔴'; // ExxonMobil logo representation
+  if (company.includes('bp')) return '🟢'; // BP logo representation
+  if (company.includes('chevron')) return '🔵'; // Chevron logo representation
+  if (company.includes('total')) return '🟠'; // TotalEnergies logo representation
+  if (company.includes('conocophillips')) return '⚪'; // ConocoPhillips logo representation
+  if (company.includes('eni')) return '🟡'; // Eni logo representation
+  if (company.includes('equinor')) return '🔵'; // Equinor logo representation
+  if (company.includes('petrobras')) return '🟢'; // Petrobras logo representation
+  if (company.includes('aramco')) return '🟢'; // Saudi Aramco logo representation
+  if (company.includes('kuwait')) return '🔵'; // Kuwait Petroleum logo representation
+  if (company.includes('abu dhabi') || company.includes('adnoc')) return '🟠'; // ADNOC logo representation
+  if (company.includes('qatar')) return '🟣'; // Qatar Petroleum logo representation
+  if (company.includes('lukoil')) return '🔴'; // Lukoil logo representation
+  if (company.includes('gazprom')) return '🔵'; // Gazprom logo representation
+  if (company.includes('rosneft')) return '🔴'; // Rosneft logo representation
+  if (company.includes('sinopec')) return '🟡'; // Sinopec logo representation
+  if (company.includes('petrochina')) return '🔴'; // PetroChina logo representation
+  if (company.includes('cnooc')) return '🔵'; // CNOOC logo representation
+  if (company.includes('petronas')) return '🟢'; // Petronas logo representation
+  
+  return '🛢️'; // Default oil company icon
+};
+
 interface Vessel {
   id: number;
   name: string;
@@ -50,6 +78,7 @@ interface Vessel {
   ownerName?: string;
   operatorName?: string;
   oilType?: string;
+  oilSource?: string;
 }
 
 interface VesselFormData {
@@ -465,18 +494,25 @@ export function VesselManagementNew() {
                     <TableCell>
                       <div className="space-y-1">
                         {vessel.ownerName && (
-                          <div className="text-sm font-bold text-blue-800 bg-blue-50 px-2 py-1 rounded">
-                            {vessel.ownerName}
+                          <div className="flex items-center gap-2 text-sm font-bold text-blue-800 bg-blue-50 px-2 py-1 rounded">
+                            <span className="text-lg">{getCompanyLogo(vessel.ownerName)}</span>
+                            <span>{vessel.ownerName}</span>
                           </div>
                         )}
                         {vessel.operatorName && vessel.operatorName !== vessel.ownerName && (
-                          <div className="text-xs text-orange-700 bg-orange-50 px-2 py-1 rounded mt-1">
-                            Operator: {vessel.operatorName}
+                          <div className="flex items-center gap-2 text-xs text-orange-700 bg-orange-50 px-2 py-1 rounded mt-1">
+                            <span className="text-sm">{getCompanyLogo(vessel.operatorName)}</span>
+                            <span>Operator: {vessel.operatorName}</span>
+                          </div>
+                        )}
+                        {vessel.oilSource && (
+                          <div className="text-xs text-green-700 bg-green-50 px-2 py-1 rounded mt-1">
+                            ⬅️ {vessel.oilSource}
                           </div>
                         )}
                         {!vessel.ownerName && !vessel.operatorName && (
                           <div className="text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded">
-                            No company data
+                            🛢️ No company data
                           </div>
                         )}
                       </div>
