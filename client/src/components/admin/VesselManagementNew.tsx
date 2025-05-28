@@ -47,6 +47,8 @@ interface Vessel {
   speed?: string;
   cargoType?: string;
   cargoCapacity?: number;
+  ownerName?: string;
+  operatorName?: string;
 }
 
 interface VesselFormData {
@@ -432,6 +434,7 @@ export function VesselManagementNew() {
                 <TableRow>
                   <TableHead>Name</TableHead>
                   <TableHead>Type</TableHead>
+                  <TableHead>Company</TableHead>
                   <TableHead>IMO</TableHead>
                   <TableHead>MMSI</TableHead>
                   <TableHead>Flag</TableHead>
@@ -445,6 +448,25 @@ export function VesselManagementNew() {
                   <TableRow key={vessel.id}>
                     <TableCell className="font-medium">{vessel.name}</TableCell>
                     <TableCell>{vessel.vesselType}</TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        {vessel.ownerName && (
+                          <div className="text-sm font-medium text-blue-700">
+                            {vessel.ownerName}
+                          </div>
+                        )}
+                        {vessel.operatorName && vessel.operatorName !== vessel.ownerName && (
+                          <div className="text-xs text-gray-600">
+                            Op: {vessel.operatorName}
+                          </div>
+                        )}
+                        {!vessel.ownerName && !vessel.operatorName && (
+                          <div className="text-xs text-gray-400">
+                            No company data
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>{vessel.imo}</TableCell>
                     <TableCell>{vessel.mmsi}</TableCell>
                     <TableCell>{vessel.flag}</TableCell>
