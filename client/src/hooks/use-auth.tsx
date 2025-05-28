@@ -77,22 +77,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify(credentials),
-      });
-      
-      const data = await res.json();
-      
-      if (!data.success) {
-        throw new Error(data.message || "Login failed");
+      try {
+        const res = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify(credentials),
+        });
+        
+        // Check if response is okay
+        if (!res.ok) {
+          const errorText = await res.text();
+          throw new Error(`Login failed: ${errorText}`);
+        }
+        
+        // Try to parse JSON safely
+        let data;
+        try {
+          data = await res.json();
+        } catch (jsonError) {
+          console.error('JSON parsing error:', jsonError);
+          throw new Error("Invalid server response format");
+        }
+        
+        if (!data.success) {
+          throw new Error(data.message || "Login failed");
+        }
+        
+        return data.user;
+      } catch (error) {
+        console.error('Login mutation error:', error);
+        throw error;
       }
-      
-      return data.user;
     },
     onSuccess: (user: User) => {
       queryClient.setQueryData(['/api/auth/me'], user);
@@ -112,22 +130,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const registerMutation = useMutation({
     mutationFn: async (userData: RegisterData) => {
-      const res = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify(userData),
-      });
-      
-      const data = await res.json();
-      
-      if (!data.success) {
-        throw new Error(data.message || "Registration failed");
+      try {
+        const res = await fetch("/api/auth/register", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify(userData),
+        });
+        
+        // Check if response is okay
+        if (!res.ok) {
+          const errorText = await res.text();
+          throw new Error(`Registration failed: ${errorText}`);
+        }
+        
+        // Try to parse JSON safely
+        let data;
+        try {
+          data = await res.json();
+        } catch (jsonError) {
+          console.error('JSON parsing error:', jsonError);
+          throw new Error("Invalid server response format");
+        }
+        
+        if (!data.success) {
+          throw new Error(data.message || "Registration failed");
+        }
+        
+        return data.user;
+      } catch (error) {
+        console.error('Registration mutation error:', error);
+        throw error;
       }
-      
-      return data.user;
     },
     onSuccess: (user: User) => {
       queryClient.setQueryData(['/api/auth/me'], user);
