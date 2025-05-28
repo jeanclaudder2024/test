@@ -41,11 +41,8 @@ app.use((req, res, next) => {
 (async () => {
   const server = await registerRoutes(app);
   
-  // Start the proximity enhancement to ensure vessels near all ports and refineries
-  startProximityEnhancement(15);
-  
-  // تفعيل نظام حركة السفن التلقائي كل أسبوعين
-  scheduleVesselMovement();
+  // Automated systems temporarily disabled due to database endpoint issues
+  console.log('📊 Automated vessel systems temporarily disabled - manual operations available');
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
