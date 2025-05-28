@@ -19,6 +19,7 @@ import { redistributeVesselsRealistically, getVesselDistributionStats } from "./
 import { setupAuth } from "./auth";
 import { db } from "./db";
 import { dbSwitcher } from "./database-switcher";
+import { setupAuthRoutes } from "./simple-mysql-auth.js";
 import { REGIONS } from "@shared/constants";
 import { 
   getCachedVessels, 
@@ -72,6 +73,9 @@ import { reliablePdfRouter } from './routes/reliable-pdf';
 import { maritimeRoutesRouter } from './routes/maritime-routes';
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Set up MySQL authentication system
+  setupAuthRoutes(app);
+  
   // Set up authentication
   setupAuth(app);
   
