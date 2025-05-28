@@ -465,17 +465,17 @@ export function VesselManagementNew() {
                     <TableCell>
                       <div className="space-y-1">
                         {vessel.ownerName && (
-                          <div className="text-sm font-medium text-blue-700">
+                          <div className="text-sm font-bold text-blue-800 bg-blue-50 px-2 py-1 rounded">
                             {vessel.ownerName}
                           </div>
                         )}
                         {vessel.operatorName && vessel.operatorName !== vessel.ownerName && (
-                          <div className="text-xs text-gray-600">
-                            Op: {vessel.operatorName}
+                          <div className="text-xs text-orange-700 bg-orange-50 px-2 py-1 rounded mt-1">
+                            Operator: {vessel.operatorName}
                           </div>
                         )}
                         {!vessel.ownerName && !vessel.operatorName && (
-                          <div className="text-xs text-gray-400">
+                          <div className="text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded">
                             No company data
                           </div>
                         )}
