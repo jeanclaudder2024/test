@@ -20,6 +20,8 @@ import { setupAuth } from "./auth";
 import { db } from "./db";
 import { dbSwitcher } from "./database-switcher";
 import { enterpriseAuthRoutes, setupEnterpriseSession } from "./enterprise-auth-routes.js";
+import { setupSupabaseTables } from "./setup-supabase-tables";
+import { supabaseAuthRoutes } from "./supabase-auth";
 import { REGIONS } from "@shared/constants";
 import { 
   getCachedVessels, 

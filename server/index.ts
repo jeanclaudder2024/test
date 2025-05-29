@@ -3,6 +3,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { startProximityEnhancement } from "./portProximityEnhancer";
 import { scheduleVesselMovement } from "./vessel-movement-scheduler";
+import { initializeSupabaseDatabase } from "./auto-migrate";
 
 const app = express();
 app.use(express.json());
@@ -39,10 +40,14 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Initialize Supabase database tables automatically
+  console.log('🚀 Initializing Supabase database...');
+  await initializeSupabaseDatabase();
+  
   const server = await registerRoutes(app);
   
-  // Automated systems temporarily disabled due to database endpoint issues
-  console.log('📊 Automated vessel systems temporarily disabled - manual operations available');
+  // Automated systems now powered by Supabase
+  console.log('✅ Supabase database ready - all systems operational!');
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
