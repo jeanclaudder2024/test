@@ -356,169 +356,256 @@ export default function OilVesselMap() {
     });
   }, [selectedRegion]);
 
-  // Create vessel icon with Font Awesome (simplified version)
+  // Create beautiful vessel icon with enhanced styling
   const createVesselIcon = (vessel: Vessel) => {
-    // Determine color based on status
-    let color = VESSEL_STATUSES['Unknown'];
+    // Determine color based on status with enhanced color palette
+    let color = '#6B7280'; // Default gray
+    let shadowColor = 'rgba(107, 114, 128, 0.4)';
+    
     if (vessel.status && VESSEL_STATUSES[vessel.status]) {
       color = VESSEL_STATUSES[vessel.status];
     } else if (vessel.speed && vessel.speed > 2) {
-      color = VESSEL_STATUSES['At Sea']; // Moving
+      color = '#10B981'; // Emerald green for moving
+      shadowColor = 'rgba(16, 185, 129, 0.4)';
     } else if (vessel.speed !== undefined && vessel.speed <= 2) {
-      color = VESSEL_STATUSES['Not Moving']; // Not moving
+      color = '#F59E0B'; // Amber for stationary
+      shadowColor = 'rgba(245, 158, 11, 0.4)';
     }
     
     // Direction arrow rotation based on vessel course
     const rotation = vessel.course !== undefined ? vessel.course : 0;
     
-    // Determine vessel size for visual scaling (based on capacity or vessel type)
-    let size = 12; // Much smaller default size
+    // Determine vessel size for visual scaling with enhanced sizing
+    let size = 16; // Increased default size
+    let glowSize = 24;
+    
     if (vessel.vesselType) {
       if (vessel.vesselType.includes('VLCC') || vessel.vesselType.includes('ULCC')) {
-        size = 16; // Larger for Very Large and Ultra Large Crude Carriers
+        size = 22; // Extra large for Very Large and Ultra Large Crude Carriers
+        glowSize = 30;
       } else if (vessel.vesselType.includes('Aframax') || vessel.vesselType.includes('Suezmax')) {
-        size = 14; // Large for medium-sized tankers
+        size = 19; // Large for medium-sized tankers
+        glowSize = 27;
       }
     }
     
-    // Choose appropriate icon based on vessel type
-    let iconName = 'fa-ship';
+    // Choose appropriate icon and styling based on vessel type
+    let vesselIcon = '🛢️'; // Default oil tanker
+    let iconColor = color;
+    
     if (vessel.vesselType?.toLowerCase().includes('lng') || vessel.vesselType?.toLowerCase().includes('gas')) {
-      iconName = 'fa-gas-pump';
+      vesselIcon = '⚡';
+      iconColor = '#3B82F6'; // Blue for LNG
     } else if (vessel.vesselType?.toLowerCase().includes('chemical')) {
-      iconName = 'fa-vial';
-    } else if (vessel.vesselType?.toLowerCase().includes('oil') || vessel.vesselType?.toLowerCase().includes('tanker')) {
-      iconName = 'fa-oil-well';
+      vesselIcon = '⚗️';
+      iconColor = '#8B5CF6'; // Purple for chemical
+    } else if (vessel.vesselType?.toLowerCase().includes('crude')) {
+      vesselIcon = '🛢️';
+      iconColor = '#DC2626'; // Red for crude oil
+    } else if (vessel.vesselType?.toLowerCase().includes('product')) {
+      vesselIcon = '⛽';
+      iconColor = '#059669'; // Green for refined products
     }
     
-    // Create simple icon with Font Awesome
+    // Create enhanced icon with modern styling
     return L.divIcon({
-      className: 'vessel-marker',
+      className: 'modern-vessel-marker',
       html: `
         <div style="
           position: relative;
-          width: ${size}px;
-          height: ${size}px;
+          width: ${glowSize}px;
+          height: ${glowSize}px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         ">
           ${vessel.speed && vessel.speed > 5 ? `
             <div style="
               position: absolute;
-              width: ${size+4}px;
-              height: ${size+4}px;
-              top: -2px;
-              left: -2px;
+              width: ${glowSize + 8}px;
+              height: ${glowSize + 8}px;
               border-radius: 50%;
-              background-color: ${color};
-              opacity: 0.15;
-              animation: pulse 2s infinite;
+              background: radial-gradient(circle, ${shadowColor} 0%, transparent 70%);
+              animation: modernPulse 2s ease-in-out infinite;
             "></div>
           ` : ''}
+          
           <div style="
-            position: absolute;
-            transform: rotate(${rotation}deg);
-            color: ${color};
-            text-shadow: 0 0 4px rgba(255,255,255,0.7), 0 0 6px rgba(0,0,0,0.5);
-            font-size: ${size}px;
+            position: relative;
             width: ${size}px;
             height: ${size}px;
+            background: linear-gradient(135deg, ${iconColor}, ${iconColor}dd);
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
+            box-shadow: 0 2px 8px ${shadowColor}, 0 0 0 2px rgba(255,255,255,0.2);
+            transform: rotate(${rotation}deg);
+            transition: all 0.3s ease;
           ">
-            <i class="fa ${iconName}"></i>
+            <span style="
+              font-size: ${size * 0.6}px;
+              filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+              transform: rotate(${-rotation}deg);
+            ">${vesselIcon}</span>
           </div>
+          
+          ${vessel.speed && vessel.speed > 1 ? `
+            <div style="
+              position: absolute;
+              bottom: -2px;
+              right: -2px;
+              width: 8px;
+              height: 8px;
+              background: #10B981;
+              border-radius: 50%;
+              border: 2px solid white;
+              box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            "></div>
+          ` : ''}
         </div>
+        
         <style>
-          @keyframes pulse {
-            0% { transform: scale(1); opacity: 0.15; }
-            50% { transform: scale(1.3); opacity: 0.1; }
-            100% { transform: scale(1); opacity: 0.15; }
+          @keyframes modernPulse {
+            0% { transform: scale(1); opacity: 0.6; }
+            50% { transform: scale(1.2); opacity: 0.3; }
+            100% { transform: scale(1); opacity: 0.6; }
           }
-          @font-face {
-            font-family: 'Font Awesome 5 Free';
-            font-style: normal;
-            font-weight: 900;
-            font-display: block;
-            src: url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/webfonts/fa-solid-900.woff2") format("woff2");
-          }
-          .fa {
-            font-family: 'Font Awesome 5 Free';
-            font-weight: 900;
-          }
-          .fa-ship:before {
-            content: "\\f21a";
-          }
-          .fa-oil-well:before {
-            content: "\\e532";
-          }
-          .fa-gas-pump:before {
-            content: "\\f52f";
-          }
-          .fa-vial:before {
-            content: "\\f492";
+          
+          .modern-vessel-marker:hover > div > div:first-child {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px ${shadowColor}, 0 0 0 2px rgba(255,255,255,0.4);
           }
         </style>
       `,
-      iconSize: [size, size],
-      iconAnchor: [size/2, size/2]
+      iconSize: [glowSize, glowSize],
+      iconAnchor: [glowSize/2, glowSize/2]
     });
   };
 
-  // Create port/refinery icons (simplified version)
+  // Create enhanced facility icons with modern styling
   const createFacilityIcon = (facility: Facility) => {
-    // Base colors for facilities
-    const colors = {
-      refinery: '#8b5cf6', // Purple
-      port: '#3b82f6'      // Blue
+    // Enhanced color palette for facilities
+    const facilityStyles = {
+      refinery: {
+        color: '#DC2626', // Deep red
+        shadowColor: 'rgba(220, 38, 38, 0.3)',
+        icon: '🏭',
+        gradient: 'linear-gradient(135deg, #DC2626, #B91C1C)'
+      },
+      port: {
+        color: '#1D4ED8', // Deep blue  
+        shadowColor: 'rgba(29, 78, 216, 0.3)',
+        icon: '⚓',
+        gradient: 'linear-gradient(135deg, #1D4ED8, #1E40AF)'
+      }
     };
     
-    // Select the color based on facility type
-    const color = facility.type === 'refinery' ? colors.refinery : colors.port;
+    // Get facility styling
+    const style = facility.type === 'refinery' ? facilityStyles.refinery : facilityStyles.port;
     
-    // Determine the size based on capacity if available
-    const baseSize = facility.type === 'refinery' ? 26 : 24;
+    // Determine the size based on capacity with enhanced scaling
+    const baseSize = facility.type === 'refinery' ? 20 : 18;
+    const glowSize = facility.type === 'refinery' ? 28 : 26;
     let size = baseSize;
+    let finalGlowSize = glowSize;
     
     if (facility.capacity) {
-      // Scale size based on capacity - larger facilities get slightly bigger icons
-      if (facility.capacity > 500000) {
+      // Enhanced scaling based on capacity
+      if (facility.capacity > 1000000) {
+        size = baseSize + 8;
+        finalGlowSize = glowSize + 10;
+      } else if (facility.capacity > 500000) {
         size = baseSize + 6;
+        finalGlowSize = glowSize + 8;
       } else if (facility.capacity > 200000) {
         size = baseSize + 4;
+        finalGlowSize = glowSize + 6;
       } else if (facility.capacity > 100000) {
         size = baseSize + 2;
+        finalGlowSize = glowSize + 4;
       }
     }
     
-    // Choose the appropriate Font Awesome icon
-    const iconName = facility.type === 'refinery' ? 'fa-industry' : 'fa-anchor';
-    
-    // Create simple icon with Font Awesome
+    // Create enhanced facility icon
     return L.divIcon({
-      className: `${facility.type}-marker`,
+      className: `modern-${facility.type}-marker`,
       html: `
-        <div style="position: relative; width: ${size}px; height: ${size}px;">
+        <div style="
+          position: relative;
+          width: ${finalGlowSize}px;
+          height: ${finalGlowSize}px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        ">
           <div style="
             position: absolute;
+            width: ${finalGlowSize + 4}px;
+            height: ${finalGlowSize + 4}px;
+            border-radius: 50%;
+            background: radial-gradient(circle, ${style.shadowColor} 0%, transparent 60%);
+            animation: facilityGlow 3s ease-in-out infinite;
+          "></div>
+          
+          <div style="
+            position: relative;
             width: ${size}px;
             height: ${size}px;
+            background: ${style.gradient};
+            border-radius: ${facility.type === 'refinery' ? '20%' : '50%'};
             display: flex;
             align-items: center;
             justify-content: center;
-            color: ${color};
-            text-shadow: 0 0 5px rgba(255,255,255,0.8), 0 0 7px rgba(0,0,0,0.4);
-            font-size: ${size}px;
+            box-shadow: 
+              0 3px 12px ${style.shadowColor},
+              0 0 0 3px rgba(255,255,255,0.2),
+              inset 0 1px 0 rgba(255,255,255,0.3);
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255,255,255,0.4);
           ">
-            <i class="fa ${iconName}"></i>
+            <span style="
+              font-size: ${size * 0.7}px;
+              filter: drop-shadow(0 1px 3px rgba(0,0,0,0.4));
+              text-shadow: 0 0 8px rgba(255,255,255,0.3);
+            ">${style.icon}</span>
           </div>
           
-          <!-- Facility name tooltip on hover -->
-          <div style="
-            position: absolute;
-            bottom: ${size + 3}px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: rgba(0, 0, 0, 0.7);
+          ${facility.capacity && facility.capacity > 500000 ? `
+            <div style="
+              position: absolute;
+              top: -3px;
+              right: -3px;
+              width: 10px;
+              height: 10px;
+              background: linear-gradient(135deg, #F59E0B, #D97706);
+              border-radius: 50%;
+              border: 2px solid white;
+              box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            "></div>
+          ` : ''}
+        </div>
+        
+        <style>
+          @keyframes facilityGlow {
+            0% { opacity: 0.4; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.05); }
+            100% { opacity: 0.4; transform: scale(1); }
+          }
+          
+          .modern-${facility.type}-marker:hover > div > div:nth-child(2) {
+            transform: scale(1.1);
+            box-shadow: 
+              0 4px 16px ${style.shadowColor},
+              0 0 0 3px rgba(255,255,255,0.4),
+              inset 0 1px 0 rgba(255,255,255,0.4);
+          }
+        </style>
+      `,
+      iconSize: [finalGlowSize, finalGlowSize],
+      iconAnchor: [finalGlowSize/2, finalGlowSize/2]
+    });
+  };
             color: white;
             padding: 3px 6px;
             border-radius: 3px;
