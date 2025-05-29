@@ -16,12 +16,8 @@ import { seedVesselJobs } from "./scripts/seed-vessel-jobs";
 import { portService } from "./services/portService";
 import { vesselPositionService } from "./services/vesselPositionService";
 import { redistributeVesselsRealistically, getVesselDistributionStats } from "./services/realisticVesselPositioning";
-import { setupAuth } from "./auth";
-import { db } from "./db";
-import { dbSwitcher } from "./database-switcher";
-import { enterpriseAuthRoutes, setupEnterpriseSession } from "./enterprise-auth-routes.js";
-import { setupSupabaseTables } from "./setup-supabase-tables";
 import { supabaseAuthRoutes } from "./supabase-auth";
+// Removed old MySQL auth imports to prevent conflicts
 import { REGIONS } from "@shared/constants";
 import { 
   getCachedVessels, 
@@ -75,17 +71,8 @@ import { reliablePdfRouter } from './routes/reliable-pdf';
 import { maritimeRoutesRouter } from './routes/maritime-routes';
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Set up enterprise authentication system
-  setupEnterpriseSession(app);
-  
-  // Setup Supabase Authentication Routes
+  // Setup Supabase Authentication Routes (Primary Auth System)
   supabaseAuthRoutes(app);
-  
-  // Add enterprise authentication routes
-  app.use(enterpriseAuthRoutes);
-  
-  // Set up authentication
-  setupAuth(app);
   
   const apiRouter = express.Router();
 
