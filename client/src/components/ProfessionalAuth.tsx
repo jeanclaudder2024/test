@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Shield, Mail, Lock, User, Building, Phone, CheckCircle, AlertCircle, Ship } from 'lucide-react';
+import { Loader2, Shield, Mail, Lock, User, Building, Phone, CheckCircle, AlertCircle, Ship, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { COUNTRY_CODES, PRIORITY_COUNTRIES } from '@/data/countryCodes';
 
@@ -46,9 +46,12 @@ export function ProfessionalAuth({ onSuccess }: ProfessionalAuthProps) {
     firstName: '',
     lastName: '',
     company: '',
-    countryCode: '+971', // Default to UAE (major oil trading hub)
+    countryCode: '+961', // Default to Lebanon
     phoneNumber: ''
   });
+  
+  // Search functionality for country codes
+  const [countrySearch, setCountrySearch] = useState('');
 
   // Login form state
   const [loginForm, setLoginForm] = useState({
@@ -563,22 +566,50 @@ export function ProfessionalAuth({ onSuccess }: ProfessionalAuthProps) {
                         <SelectValue placeholder="Code" />
                       </SelectTrigger>
                       <SelectContent className="max-h-60">
+                        {/* Search Box */}
+                        <div className="p-2 border-b">
+                          <div className="relative">
+                            <Search className="w-4 h-4 absolute left-2 top-2.5 text-gray-400" />
+                            <Input
+                              placeholder="Search country..."
+                              value={countrySearch}
+                              onChange={(e) => setCountrySearch(e.target.value)}
+                              className="pl-8 h-8 text-sm"
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          </div>
+                        </div>
+                        
                         {/* Priority maritime countries first */}
                         <div className="font-semibold text-xs text-blue-600 px-2 py-1 bg-blue-50">🚢 Maritime Trading Hubs</div>
-                        {PRIORITY_COUNTRIES.map((code) => {
-                          const country = COUNTRY_CODES.find(c => c.code === code);
-                          return country ? (
+                        {PRIORITY_COUNTRIES
+                          .map((code) => COUNTRY_CODES.find(c => c.code === code))
+                          .filter(country => 
+                            country && 
+                            (countrySearch === '' || 
+                             country.country.toLowerCase().includes(countrySearch.toLowerCase()) ||
+                             country.code.includes(countrySearch))
+                          )
+                          .map((country) => (
                             <SelectItem key={`priority-${country.code}-${country.country}`} value={country.code}>
-                              {country.flag} {country.code}
+                              {country.flag} {country.code} {country.country}
                             </SelectItem>
-                          ) : null;
-                        })}
+                          ))}
+                        
+                        {/* All Countries with search filter */}
                         <div className="font-semibold text-xs text-gray-600 px-2 py-1 bg-gray-50 border-t">🌍 All Countries</div>
-                        {COUNTRY_CODES.filter(country => !PRIORITY_COUNTRIES.includes(country.code)).map((country) => (
-                          <SelectItem key={`${country.code}-${country.country}`} value={country.code}>
-                            {country.flag} {country.code} {country.country}
-                          </SelectItem>
-                        ))}
+                        {COUNTRY_CODES
+                          .filter(country => 
+                            !PRIORITY_COUNTRIES.includes(country.code) &&
+                            (countrySearch === '' || 
+                             country.country.toLowerCase().includes(countrySearch.toLowerCase()) ||
+                             country.code.includes(countrySearch))
+                          )
+                          .map((country) => (
+                            <SelectItem key={`${country.code}-${country.country}`} value={country.code}>
+                              {country.flag} {country.code} {country.country}
+                            </SelectItem>
+                          ))}
                       </SelectContent>
                     </Select>
                     <Input

@@ -216,6 +216,7 @@ export const PRIORITY_COUNTRIES = [
   "+974", // Qatar
   "+968", // Oman
   "+973", // Bahrain
+  "+961", // Lebanon
   "+44",  // UK
   "+1",   // USA
   "+33",  // France
