@@ -3,6 +3,7 @@ import { db, getActiveDb } from "./db";
 import {
   users, vessels, refineries, progressEvents, documents, brokers, stats as statsTable, ports, 
   refineryPortConnections, companies, vesselRefineryConnections,
+  brokerCompanies, companyPartnerships, userBrokerConnections,
   subscriptionPlans, subscriptions, paymentMethods, invoices, landingPageContent,
   User, InsertUser, 
   Vessel, InsertVessel,
@@ -15,6 +16,9 @@ import {
   RefineryPortConnection, InsertRefineryPortConnection,
   VesselRefineryConnection, InsertVesselRefineryConnection,
   Company, InsertCompany,
+  BrokerCompany, InsertBrokerCompany,
+  CompanyPartnership, InsertCompanyPartnership,
+  UserBrokerConnection, InsertUserBrokerConnection,
   SubscriptionPlan, InsertSubscriptionPlan,
   Subscription, InsertSubscription,
   PaymentMethod, InsertPaymentMethod,

@@ -13,7 +13,8 @@ import { Settings } from "@/components/admin/AdminSettings";
 import { DatabaseMigration } from "@/components/admin/DatabaseMigration";
 import { LandingPageManagement } from "@/components/admin/LandingPageManagement";
 import { Button } from "@/components/ui/button";
-import { Shield, Database, Users, Settings as SettingsIcon, ChevronLeft, Factory, Anchor, Ship, CreditCard, HardDrive, Globe } from "lucide-react";
+import { Shield, Database, Users, Settings as SettingsIcon, ChevronLeft, Factory, Anchor, Ship, CreditCard, HardDrive, Globe, Building2 } from "lucide-react";
+import { BrokerNetworkHub } from "@/components/broker/BrokerNetworkHub";
 import { useLocation } from "wouter";
 import SubscriptionAdmin from "@/pages/SubscriptionAdmin";
 
@@ -48,7 +49,7 @@ export default function AdminPanel() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid grid-cols-10 w-full max-w-7xl">
+        <TabsList className="grid grid-cols-11 w-full max-w-7xl">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <Shield className="h-4 w-4" />
             <span className="hidden sm:inline">System Overview</span>
