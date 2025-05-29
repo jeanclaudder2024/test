@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2, Shield, Mail, Lock, User, Building, Phone, CheckCircle, AlertCircle, Ship } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { COUNTRY_CODES, PRIORITY_COUNTRIES } from '@/data/countryCodes';
 
 interface AuthResponse {
   success: boolean;
@@ -45,7 +46,8 @@ export function ProfessionalAuth({ onSuccess }: ProfessionalAuthProps) {
     firstName: '',
     lastName: '',
     company: '',
-    phone: ''
+    countryCode: '+971', // Default to UAE (major oil trading hub)
+    phoneNumber: ''
   });
 
   // Login form state
@@ -91,7 +93,7 @@ export function ProfessionalAuth({ onSuccess }: ProfessionalAuthProps) {
           firstName: registerForm.firstName,
           lastName: registerForm.lastName,
           company: registerForm.company,
-          phone: registerForm.phone
+          phone: registerForm.countryCode + registerForm.phoneNumber
         }),
       });
 
@@ -548,14 +550,49 @@ export function ProfessionalAuth({ onSuccess }: ProfessionalAuthProps) {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    placeholder="+1 (555) 123-4567"
-                    value={registerForm.phone}
-                    onChange={(e) => setRegisterForm({ ...registerForm, phone: e.target.value })}
-                  />
+                  <Label htmlFor="phone">
+                    <Phone className="w-4 h-4 inline mr-2" />
+                    International Phone Number
+                  </Label>
+                  <div className="flex gap-2">
+                    <Select 
+                      value={registerForm.countryCode} 
+                      onValueChange={(value) => setRegisterForm({...registerForm, countryCode: value})}
+                    >
+                      <SelectTrigger className="w-32 bg-slate-50">
+                        <SelectValue placeholder="Code" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-60">
+                        {/* Priority maritime countries first */}
+                        <div className="font-semibold text-xs text-blue-600 px-2 py-1 bg-blue-50">🚢 Maritime Trading Hubs</div>
+                        {PRIORITY_COUNTRIES.map((code) => {
+                          const country = COUNTRY_CODES.find(c => c.code === code);
+                          return country ? (
+                            <SelectItem key={`priority-${country.code}-${country.country}`} value={country.code}>
+                              {country.flag} {country.code}
+                            </SelectItem>
+                          ) : null;
+                        })}
+                        <div className="font-semibold text-xs text-gray-600 px-2 py-1 bg-gray-50 border-t">🌍 All Countries</div>
+                        {COUNTRY_CODES.filter(country => !PRIORITY_COUNTRIES.includes(country.code)).map((country) => (
+                          <SelectItem key={`${country.code}-${country.country}`} value={country.code}>
+                            {country.flag} {country.code} {country.country}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Input
+                      id="phoneNumber"
+                      type="tel"
+                      value={registerForm.phoneNumber}
+                      onChange={(e) => setRegisterForm({...registerForm, phoneNumber: e.target.value})}
+                      placeholder="Enter phone number"
+                      className="flex-1 bg-slate-50"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    International format for professional maritime communications
+                  </p>
                 </div>
                 
                 <div className="space-y-2">
