@@ -7,6 +7,7 @@ import { openaiService } from "./services/openaiService";
 import { AIEnhancementService } from "./services/aiEnhancementService";
 // Replace dataService from asiStreamService with marineTrafficService
 import { marineTrafficService } from "./services/marineTrafficService";
+import { aisStreamService } from "./services/aisStreamService";
 import { refineryDataService } from "./services/refineryDataService";
 import { brokerService } from "./services/brokerService";
 import { stripeService } from "./services/stripeService";
