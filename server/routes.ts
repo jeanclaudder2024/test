@@ -229,15 +229,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Continue to vessel seeding even if refinery seeding fails
         }
         
-        try {
-          // Then seed vessels
-          console.log("Seeding vessel data...");
-          vesselResult = await vesselService.seedVesselData();
-          console.log("Vessel data seeded successfully:", vesselResult);
-        } catch (vesselError) {
-          console.error("Error seeding vessel data:", vesselError);
-          // Continue with what we have
-        }
+        // Skip automatic vessel seeding - will use CSV import instead
+        console.log("Skipping automatic vessel seeding - use CSV import instead");
 
         // Seed broker data
         let brokerResult = { count: 0, seeded: false };
@@ -3035,6 +3028,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Import vessels from CSV data
+  apiRouter.post("/vessels/import-csv", async (req, res) => {
+    try {
+      const fs = await import('fs');
+      const { parse } = await import('csv-parse/sync');
+      
+      // Read the CSV file
+      const csvContent = fs.readFileSync('./attached_assets/vessels.csv', 'utf8');
+      const records = parse(csvContent, {
+        columns: true,
+        skip_empty_lines: true,
+        trim: true
+      });
+      
+      let imported = 0;
+      let errors = 0;
+      
+      for (const record of records.slice(0, 50)) { // Import first 50 for testing
+        try {
+          const vesselData = {
+            name: record.name || 'Unknown Vessel',
+            imo: record.imo || `IMO${Date.now()}${imported}`,
+            mmsi: record.mmsi || '',
+            vesselType: record.vessel_type || 'Oil Tanker',
+            flag: record.flag || '',
+            built: record.built && record.built !== '' ? parseInt(record.built) : null,
+            deadweight: record.deadweight && record.deadweight !== '' ? parseInt(record.deadweight) : null,
+            currentLat: record.current_lat || null,
+            currentLng: record.current_lng || null,
+            departurePort: record.departure_port || null,
+            departureDate: record.departure_date && record.departure_date !== '' ? new Date(record.departure_date) : null,
+            departureLat: record.departure_lat || null,
+            departureLng: record.departure_lng || null,
+            destinationPort: record.destination_port || null,
+            destinationLat: record.destination_lat || null,
+            destinationLng: record.destination_lng || null,
+            eta: record.eta && record.eta !== '' ? new Date(record.eta) : null,
+            cargoType: record.cargo_type || null,
+            cargoCapacity: record.cargo_capacity && record.cargo_capacity !== '' ? parseInt(record.cargo_capacity) : null,
+            currentRegion: record.current_region || null,
+            status: 'underway',
+            speed: '0',
+            buyerName: record.buyer_name || 'NA',
+            sellerName: record.seller_name || null,
+            metadata: record.metadata || null
+          };
+          
+          await storage.createVessel(vesselData);
+          imported++;
+          
+        } catch (error) {
+          errors++;
+          console.error(`Error importing vessel ${record.name}:`, error.message);
+        }
+      }
+      
+      res.json({
+        success: true,
+        message: `Imported ${imported} vessels from CSV`,
+        imported,
+        errors,
+        total: records.length
+      });
+      
+    } catch (error: any) {
+      console.error("Error importing CSV:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "Failed to import CSV data",
+        error: error.message
+      });
+    }
+  });
+
   // Fetch real vessel data from AIS Stream
   apiRouter.post("/vessels/fetch-ais", async (req, res) => {
     try {
