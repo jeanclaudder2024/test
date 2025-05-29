@@ -232,8 +232,9 @@ export default function VesselManagementNew() {
     // Convert form data to proper types
     const vesselData = {
       ...formData,
-      built: formData.built ? parseInt(formData.built) : null,
-      deadweight: formData.deadweight ? parseInt(formData.deadweight) : null,
+      mmsi: formData.mmsi || `AUTO${Date.now()}`, // Auto-generate if empty
+      built: formData.built ? parseInt(formData.built) : 2020, // Default year
+      deadweight: formData.deadweight ? parseInt(formData.deadweight) : 50000, // Default weight
       cargoCapacity: formData.cargoCapacity ? parseInt(formData.cargoCapacity) : null,
       departureDate: formData.departureDate ? new Date(formData.departureDate) : null,
       eta: formData.eta ? new Date(formData.eta) : null,
@@ -341,12 +342,12 @@ export default function VesselManagementNew() {
                   </div>
 
                   <div>
-                    <Label htmlFor="mmsi">MMSI Number</Label>
+                    <Label htmlFor="mmsi">MMSI Number (auto-generated if empty)</Label>
                     <Input
                       id="mmsi"
                       value={formData.mmsi}
                       onChange={(e) => setFormData({...formData, mmsi: e.target.value})}
-                      placeholder="e.g., 123456789"
+                      placeholder="e.g., 123456789 (optional)"
                     />
                   </div>
 
