@@ -52,6 +52,11 @@ app.use((req, res, next) => {
   const { registerRoutes } = await import("./routes");
   const server = await registerRoutes(app);
   
+  // Start the server
+  server.listen(port, "0.0.0.0", () => {
+    log(`Server running on port ${port}`);
+  });
+  
   console.log('✅ Platform ready with Supabase authentication!');
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
