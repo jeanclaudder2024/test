@@ -3103,17 +3103,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Fetch real vessel data from AIS Stream
+  // Test AIS Stream API connection and add vessels to database
   apiRouter.post("/vessels/fetch-ais", async (req, res) => {
     try {
-      const { aisStreamService } = await import("./services/aisStreamService");
+      console.log("Testing AIS Stream API connection...");
       const result = await aisStreamService.updateOilVesselsFromAIS();
+      
+      console.log(`AIS Stream result: imported ${result.imported}, errors ${result.errors}`);
       
       res.json({
         success: true,
-        message: `Updated vessel data from AIS Stream`,
-        processed: result.processed,
-        saved: result.saved
+        message: `Successfully added ${result.imported} vessels from AIS Stream to database`,
+        imported: result.imported,
+        errors: result.errors
       });
     } catch (error: any) {
       console.error("Error fetching AIS data:", error);
