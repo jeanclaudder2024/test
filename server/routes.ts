@@ -2063,92 +2063,163 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
+      // Get all vessel-port connections from the database
+      let vesselPortConnections = [];
+      try {
+        vesselPortConnections = await db
+          .select({
+            vesselId: vesselPortConnections.vesselId,
+            portId: vesselPortConnections.portId,
+            connectionType: vesselPortConnections.connectionType,
+            distance: vesselPortConnections.distance,
+            estimatedTime: vesselPortConnections.estimatedTime,
+            status: vesselPortConnections.status,
+            vesselName: vessels.name,
+            vesselType: vessels.vesselType,
+            vesselImo: vessels.imo
+          })
+          .from(vesselPortConnections)
+          .innerJoin(vessels, eq(vesselPortConnections.vesselId, vessels.id))
+          .where(eq(vesselPortConnections.status, 'active'));
+      } catch (error) {
+        console.log('No vessel-port connections table found, using fallback method');
+        vesselPortConnections = [];
+      }
+
+      console.log(`Found ${vesselPortConnections.length} vessel-port connections`);
+
       const portsWithVessels = ports.map(port => {
-        // Find vessels connected to this port (departure, destination, or nearby)
-        const connectedVessels = vessels.filter(vessel => {
-          // Improved port name matching function
-          const matchesPort = (vesselPortName, portName) => {
-            if (!vesselPortName || !portName) return false;
-            
-            const vesselPort = vesselPortName.toLowerCase().trim();
-            const actualPort = portName.toLowerCase().trim();
-            
-            // Clean port names for better matching
-            const cleanVesselPort = vesselPort
-              .replace(/port of |terminal|harbour|harbor|oil terminal|container terminal/gi, '')
-              .replace(/[^\w\s]/g, '')
-              .trim();
-            
-            const cleanActualPort = actualPort
-              .replace(/port of |terminal|harbour|harbor|oil terminal|container terminal/gi, '')
-              .replace(/[^\w\s]/g, '')
-              .trim();
-            
-            // Multiple matching strategies
-            return (
-              vesselPort.includes(cleanActualPort) ||
-              actualPort.includes(cleanVesselPort) ||
-              cleanVesselPort.includes(cleanActualPort) ||
-              cleanActualPort.includes(cleanVesselPort) ||
-              // Match key words (for cases like "Long Beach" vs "Port of Long Beach")
-              cleanVesselPort.split(' ').some(word => 
-                word.length > 3 && cleanActualPort.includes(word)
-              ) ||
-              cleanActualPort.split(' ').some(word => 
-                word.length > 3 && cleanVesselPort.includes(word)
-              )
-            );
+        if (vesselPortConnections.length > 0) {
+          // Use database relationships if available
+          const portConnections = vesselPortConnections.filter(conn => conn.portId === port.id);
+          
+          const departingConnections = portConnections.filter(conn => conn.connectionType === 'departure');
+          const arrivingConnections = portConnections.filter(conn => conn.connectionType === 'arrival');
+          const nearbyConnections = portConnections.filter(conn => conn.connectionType === 'nearby');
+          
+          return {
+            ...port,
+            vesselCount: portConnections.length,
+            departingCount: departingConnections.length,
+            arrivingCount: arrivingConnections.length,
+            nearbyCount: nearbyConnections.length,
+            connectedVessels: portConnections.map(conn => ({
+              id: conn.vesselId,
+              name: conn.vesselName,
+              type: conn.vesselType,
+              imo: conn.vesselImo,
+              connectionType: conn.connectionType === 'departure' ? 'Departing' 
+                           : conn.connectionType === 'arrival' ? 'Arriving' 
+                           : 'Nearby',
+              distance: conn.distance,
+              estimatedTime: conn.estimatedTime
+            }))
           };
-          
-          // Check if vessel is departing from this port
-          const isDeparturePort = matchesPort(vessel.departurePort, port.name);
-            
-          // Check if vessel is heading to this port
-          const isDestinationPort = matchesPort(vessel.destinationPort, port.name);
-            
-          // Check if vessel is nearby (within 0.5 degrees)
-          let isNearby = false;
-          if (vessel.currentLat && vessel.currentLng) {
-            try {
-              const vesselLat = parseFloat(vessel.currentLat);
-              const vesselLng = parseFloat(vessel.currentLng);
-              const portLat = parseFloat(port.lat.toString());
-              const portLng = parseFloat(port.lng.toString());
+        } else {
+          // Fallback to text matching if no relationships exist
+          const connectedVessels = vessels.filter(vessel => {
+            const matchesPort = (vesselPortName, portName) => {
+              if (!vesselPortName || !portName) return false;
               
-              const distance = Math.sqrt(
-                Math.pow(vesselLat - portLat, 2) + 
-                Math.pow(vesselLng - portLng, 2)
-              );
+              const vesselPort = vesselPortName.toLowerCase().trim();
+              const actualPort = portName.toLowerCase().trim();
               
-              isNearby = distance <= 0.5; // Within ~55km
-            } catch (error) {
-              // Invalid coordinates, skip
-            }
-          }
+              return vesselPort.includes(actualPort) || actualPort.includes(vesselPort);
+            };
+            
+            const isDeparturePort = matchesPort(vessel.departurePort, port.name);
+            const isDestinationPort = matchesPort(vessel.destinationPort, port.name);
+            
+            return isDeparturePort || isDestinationPort;
+          });
           
-          return isDeparturePort || isDestinationPort || isNearby;
-        });
-        
-        return {
-          ...port,
-          vesselCount: connectedVessels.length,
-          vessels: connectedVessels.slice(0, 5).map(vessel => ({
-            id: vessel.id,
-            name: vessel.name,
-            imo: vessel.imo,
-            vesselType: vessel.vesselType,
-            flag: vessel.flag,
-            status: vessel.status || 'Active',
-            connectionType: vessel.departurePort?.toLowerCase().includes(port.name.toLowerCase()) ? 'departure' :
-                          vessel.destinationPort?.toLowerCase().includes(port.name.toLowerCase()) ? 'destination' : 'nearby'
-          }))
-        };
+          const departingVessels = connectedVessels.filter(vessel => 
+            vessel.departurePort && vessel.departurePort.toLowerCase().includes(port.name.toLowerCase())
+          );
+          
+          const arrivingVessels = connectedVessels.filter(vessel => 
+            vessel.destinationPort && vessel.destinationPort.toLowerCase().includes(port.name.toLowerCase())
+          );
+          
+          return {
+            ...port,
+            vesselCount: connectedVessels.length,
+            departingCount: departingVessels.length,
+            arrivingCount: arrivingVessels.length,
+            nearbyCount: 0,
+            connectedVessels: connectedVessels.map(vessel => ({
+              id: vessel.id,
+              name: vessel.name,
+              type: vessel.vesselType,
+              imo: vessel.imo,
+              connectionType: vessel.departurePort && vessel.departurePort.toLowerCase().includes(port.name.toLowerCase()) 
+                ? 'Departing' 
+                : vessel.destinationPort && vessel.destinationPort.toLowerCase().includes(port.name.toLowerCase())
+                ? 'Arriving' 
+                : 'Nearby'
+            }))
+          };
+        }
       });
-      
-      res.json(portsWithVessels);
+
+      console.log(`Processed ${portsWithVessels.length} ports with vessel connections`);
+
+      res.json({
+        ports: portsWithVessels,
+        total: portsWithVessels.length,
+        summary: {
+          totalPorts: portsWithVessels.length,
+          portsWithVessels: portsWithVessels.filter(p => p.vesselCount > 0).length,
+          totalVesselConnections: portsWithVessels.reduce((sum, p) => sum + p.vesselCount, 0)
+        }
+      });
     } catch (error) {
-      console.error("Error fetching ports:", error);
-      res.status(500).json({ message: "Failed to fetch ports" });
+      console.error('Error in ports route:', error);
+      res.status(500).json({ error: 'Failed to fetch ports' });
+    }
+  });
+
+  // Individual port details with vessels
+  app.get("/api/ports/:id", async (req: Request, res: Response) => {
+    try {
+      const portId = parseInt(req.params.id);
+      const port = await storage.getPortById(portId);
+      
+      if (!port) {
+        return res.status(404).json({ error: 'Port not found' });
+      }
+
+      const vessels = await storage.getAllVessels();
+      
+      // Find vessels connected to this port
+      const connectedVessels = vessels.filter(vessel => {
+        const matchesPort = (vesselPortName: string, portName: string) => {
+          if (!vesselPortName || !portName) return false;
+          return vesselPortName.toLowerCase().includes(portName.toLowerCase()) ||
+                 portName.toLowerCase().includes(vesselPortName.toLowerCase());
+        };
+        
+        return matchesPort(vessel.departurePort || '', port.name) || 
+               matchesPort(vessel.destinationPort || '', port.name);
+      });
+
+      res.json({
+        ...port,
+        vesselCount: connectedVessels.length,
+        connectedVessels: connectedVessels.map(vessel => ({
+          id: vessel.id,
+          name: vessel.name,
+          imo: vessel.imo,
+          vesselType: vessel.vesselType,
+          flag: vessel.flag,
+          status: vessel.status || 'Active',
+          connectionType: vessel.departurePort?.toLowerCase().includes(port.name.toLowerCase()) ? 'departure' :
+                        vessel.destinationPort?.toLowerCase().includes(port.name.toLowerCase()) ? 'destination' : 'nearby'
+        }))
+      });
+    } catch (error) {
+      console.error('Error fetching port details:', error);
+      res.status(500).json({ error: 'Failed to fetch port details' });
     }
   });
 
