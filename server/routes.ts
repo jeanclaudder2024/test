@@ -48,6 +48,7 @@ import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { apiTesterRouter } from "./routes/apiTester";
 import { brokerRouter } from "./routes/brokerRoutes";
+import vesselRouter from "./routes/vesselRoutes";
 import { tradingRouter } from "./routes/tradingRoutes";
 import { vesselDistributionRouter } from "./routes/vesselDistributionRoutes";
 import { portProximityRouter } from "./routes/port-proximity";
@@ -89,6 +90,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register vessel-refinery connection routes
   app.use("/api/vessel-refinery", vesselRefineryRouter);
+  
+  // Register admin vessel management routes
+  app.use("/api/admin/vessels", vesselRouter);
 
   // Endpoint to clear all vessel and refinery data from the database
   if (app.get("env") === "development") {
