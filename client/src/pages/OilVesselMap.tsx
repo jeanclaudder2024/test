@@ -1,13 +1,11 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { apiRequest } from '@/lib/queryClient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Toggle } from '@/components/ui/toggle';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { 
   Search, 
@@ -17,29 +15,13 @@ import {
   Navigation, 
   Anchor, 
   Factory, 
-  Sun, 
-  Moon, 
   Info, 
   Filter, 
-  ArrowUpRight, 
   ChevronLeft,
   ChevronRight,
   Clock,
   Droplets as Fuel
 } from 'lucide-react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faShip, 
-  faOilWell, 
-  faAnchor, 
-  faGasPump, 
-  faLocationDot, 
-  faIndustry, 
-  faWater, 
-  faVial, 
-  faFire, 
-  faArrowUp 
-} from '@fortawesome/free-solid-svg-icons';
 
 // Oil vessel types based on the provided Excel list
 const OIL_VESSEL_TYPES = [
@@ -356,106 +338,125 @@ export default function OilVesselMap() {
     });
   }, [selectedRegion]);
 
-  // Create vessel icon with Font Awesome (simplified version)
+  // Create professional vessel icon 
   const createVesselIcon = (vessel: Vessel) => {
     // Determine color based on status
-    let color = VESSEL_STATUSES['Unknown'];
-    if (vessel.status && VESSEL_STATUSES[vessel.status]) {
-      color = VESSEL_STATUSES[vessel.status];
-    } else if (vessel.speed && vessel.speed > 2) {
-      color = VESSEL_STATUSES['At Sea']; // Moving
-    } else if (vessel.speed !== undefined && vessel.speed <= 2) {
-      color = VESSEL_STATUSES['Not Moving']; // Not moving
+    let color = '#64748b'; // Default gray
+    let statusColor = '#64748b';
+    
+    if (vessel.status) {
+      const status = vessel.status.toLowerCase();
+      if (status.includes('underway') || status.includes('at sea') || status.includes('sailing')) {
+        color = '#22c55e'; // Green for moving
+        statusColor = '#16a34a';
+      } else if (status.includes('anchored') || status.includes('moored') || status.includes('in port')) {
+        color = '#3b82f6'; // Blue for in port
+        statusColor = '#2563eb';
+      } else if (status.includes('delayed') || status.includes('not moving')) {
+        color = '#f59e0b'; // Orange for delayed
+        statusColor = '#d97706';
+      }
     }
     
     // Direction arrow rotation based on vessel course
     const rotation = vessel.course !== undefined ? vessel.course : 0;
     
-    // Determine vessel size for visual scaling (based on capacity or vessel type)
-    let size = 12; // Much smaller default size
+    // Determine vessel size based on type and capacity
+    let size = 18; // Base size
+    let vesselShape = 'tanker'; // Default shape
+    
     if (vessel.vesselType) {
-      if (vessel.vesselType.includes('VLCC') || vessel.vesselType.includes('ULCC')) {
-        size = 16; // Larger for Very Large and Ultra Large Crude Carriers
-      } else if (vessel.vesselType.includes('Aframax') || vessel.vesselType.includes('Suezmax')) {
-        size = 14; // Large for medium-sized tankers
+      const type = vessel.vesselType.toLowerCase();
+      if (type.includes('vlcc') || type.includes('ulcc')) {
+        size = 24; // Very large tankers
+        vesselShape = 'supertanker';
+      } else if (type.includes('aframax') || type.includes('suezmax')) {
+        size = 22; // Large tankers
+        vesselShape = 'largetanker';
+      } else if (type.includes('lng') || type.includes('lpg')) {
+        size = 20;
+        vesselShape = 'gastanker';
+      } else if (type.includes('chemical')) {
+        size = 18;
+        vesselShape = 'chemical';
       }
     }
     
-    // Choose appropriate icon based on vessel type
-    let iconName = 'fa-ship';
-    if (vessel.vesselType?.toLowerCase().includes('lng') || vessel.vesselType?.toLowerCase().includes('gas')) {
-      iconName = 'fa-gas-pump';
-    } else if (vessel.vesselType?.toLowerCase().includes('chemical')) {
-      iconName = 'fa-vial';
-    } else if (vessel.vesselType?.toLowerCase().includes('oil') || vessel.vesselType?.toLowerCase().includes('tanker')) {
-      iconName = 'fa-oil-well';
-    }
+    // Create professional ship icon with SVG
+    const createShipSVG = () => {
+      switch (vesselShape) {
+        case 'supertanker':
+          return `
+            <path d="M2 10 L22 10 L20 6 L18 6 L18 4 L16 4 L16 6 L14 6 L14 4 L12 4 L12 6 L10 6 L10 4 L8 4 L8 6 L6 6 L6 4 L4 4 L4 6 L2 6 Z M1 12 L23 12 L22 14 L2 14 Z" fill="${color}"/>
+            <circle cx="6" cy="8" r="1" fill="white"/>
+            <circle cx="12" cy="8" r="1" fill="white"/>
+            <circle cx="18" cy="8" r="1" fill="white"/>
+          `;
+        case 'largetanker':
+          return `
+            <path d="M3 10 L21 10 L19 7 L17 7 L17 5 L15 5 L15 7 L13 7 L13 5 L11 5 L11 7 L9 7 L9 5 L7 5 L7 7 L5 7 L5 5 L3 5 Z M2 12 L22 12 L21 14 L3 14 Z" fill="${color}"/>
+            <circle cx="8" cy="8" r="1" fill="white"/>
+            <circle cx="16" cy="8" r="1" fill="white"/>
+          `;
+        case 'gastanker':
+          return `
+            <path d="M4 10 L20 10 L18 7 L16 7 L16 4 L14 4 L14 7 L10 7 L10 4 L8 4 L8 7 L6 7 L6 4 L4 4 Z M3 12 L21 12 L20 14 L4 14 Z" fill="${color}"/>
+            <circle cx="8" cy="6" r="2" fill="white" stroke="${color}" stroke-width="1"/>
+            <circle cx="16" cy="6" r="2" fill="white" stroke="${color}" stroke-width="1"/>
+          `;
+        case 'chemical':
+          return `
+            <path d="M4 10 L20 10 L18 8 L16 8 L16 6 L14 6 L14 8 L10 8 L10 6 L8 6 L8 8 L6 8 L6 6 L4 6 Z M3 12 L21 12 L20 14 L4 14 Z" fill="${color}"/>
+            <rect x="7" y="7" width="2" height="2" fill="white"/>
+            <rect x="15" y="7" width="2" height="2" fill="white"/>
+          `;
+        default: // tanker
+          return `
+            <path d="M4 10 L20 10 L18 8 L6 8 L6 6 L18 6 L18 4 L6 4 Z M3 12 L21 12 L20 14 L4 14 Z" fill="${color}"/>
+            <rect x="8" y="7" width="8" height="1" fill="white"/>
+          `;
+      }
+    };
     
-    // Create simple icon with Font Awesome
+    // Create the complete icon
     return L.divIcon({
-      className: 'vessel-marker',
+      className: 'professional-vessel-marker',
       html: `
         <div style="
           position: relative;
           width: ${size}px;
           height: ${size}px;
+          transform: rotate(${rotation}deg);
         ">
-          ${vessel.speed && vessel.speed > 5 ? `
+          ${vessel.speed && parseFloat(vessel.speed) > 3 ? `
             <div style="
               position: absolute;
-              width: ${size+4}px;
-              height: ${size+4}px;
-              top: -2px;
-              left: -2px;
+              width: ${size + 6}px;
+              height: ${size + 6}px;
+              top: -3px;
+              left: -3px;
               border-radius: 50%;
-              background-color: ${color};
-              opacity: 0.15;
-              animation: pulse 2s infinite;
+              background-color: ${statusColor};
+              opacity: 0.2;
+              animation: vesselPulse 2s infinite;
             "></div>
           ` : ''}
-          <div style="
-            position: absolute;
-            transform: rotate(${rotation}deg);
-            color: ${color};
-            text-shadow: 0 0 4px rgba(255,255,255,0.7), 0 0 6px rgba(0,0,0,0.5);
-            font-size: ${size}px;
-            width: ${size}px;
-            height: ${size}px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-          ">
-            <i class="fa ${iconName}"></i>
-          </div>
+          <svg width="${size}" height="${size}" viewBox="0 0 24 24" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">
+            ${createShipSVG()}
+          </svg>
         </div>
         <style>
-          @keyframes pulse {
-            0% { transform: scale(1); opacity: 0.15; }
-            50% { transform: scale(1.3); opacity: 0.1; }
-            100% { transform: scale(1); opacity: 0.15; }
+          @keyframes vesselPulse {
+            0% { transform: scale(1); opacity: 0.2; }
+            50% { transform: scale(1.2); opacity: 0.1; }
+            100% { transform: scale(1); opacity: 0.2; }
           }
-          @font-face {
-            font-family: 'Font Awesome 5 Free';
-            font-style: normal;
-            font-weight: 900;
-            font-display: block;
-            src: url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/webfonts/fa-solid-900.woff2") format("woff2");
+          .professional-vessel-marker {
+            transition: transform 0.3s ease;
           }
-          .fa {
-            font-family: 'Font Awesome 5 Free';
-            font-weight: 900;
-          }
-          .fa-ship:before {
-            content: "\\f21a";
-          }
-          .fa-oil-well:before {
-            content: "\\e532";
-          }
-          .fa-gas-pump:before {
-            content: "\\f52f";
-          }
-          .fa-vial:before {
-            content: "\\f492";
+          .professional-vessel-marker:hover {
+            transform: scale(1.1) !important;
+            z-index: 1000;
           }
         </style>
       `,
@@ -464,23 +465,36 @@ export default function OilVesselMap() {
     });
   };
 
-  // Create port/refinery icons (simplified version)
+  // Create professional facility icons
   const createFacilityIcon = (facility: Facility) => {
-    // Base colors for facilities
+    // Enhanced color scheme for facilities
     const colors = {
-      refinery: '#8b5cf6', // Purple
-      port: '#3b82f6'      // Blue
+      refinery: '#8b5cf6', // Purple for refineries
+      port: '#0ea5e9',     // Sky blue for ports
+      oilTerminal: '#f97316', // Orange for oil terminals
+      gasTerminal: '#10b981'  // Green for gas terminals
     };
     
-    // Select the color based on facility type
-    const color = facility.type === 'refinery' ? colors.refinery : colors.port;
+    // Determine color and type
+    let color = colors.port;
+    let facilityType = 'port';
     
-    // Determine the size based on capacity if available
-    const baseSize = facility.type === 'refinery' ? 26 : 24;
+    if (facility.type === 'refinery') {
+      color = colors.refinery;
+      facilityType = 'refinery';
+    } else if (facility.name?.toLowerCase().includes('oil') || facility.description?.toLowerCase().includes('oil')) {
+      color = colors.oilTerminal;
+      facilityType = 'oilTerminal';
+    } else if (facility.name?.toLowerCase().includes('gas') || facility.name?.toLowerCase().includes('lng')) {
+      color = colors.gasTerminal;
+      facilityType = 'gasTerminal';
+    }
+    
+    // Determine the size based on capacity
+    const baseSize = facility.type === 'refinery' ? 22 : 20;
     let size = baseSize;
     
     if (facility.capacity) {
-      // Scale size based on capacity - larger facilities get slightly bigger icons
       if (facility.capacity > 500000) {
         size = baseSize + 6;
       } else if (facility.capacity > 200000) {
@@ -490,66 +504,63 @@ export default function OilVesselMap() {
       }
     }
     
-    // Choose the appropriate Font Awesome icon
-    const iconName = facility.type === 'refinery' ? 'fa-industry' : 'fa-anchor';
+    // Create facility SVG based on type
+    const createFacilitySVG = () => {
+      switch (facilityType) {
+        case 'refinery':
+          return `
+            <circle cx="12" cy="12" r="10" fill="white" stroke="${color}" stroke-width="2"/>
+            <path d="M6 18V10L8 8H10V6H14V8H16L18 10V18M8 14H10M14 14H16M6 18H18" stroke="${color}" stroke-width="1.5" fill="none"/>
+            <circle cx="12" cy="11" r="1.5" fill="${color}"/>
+          `;
+        case 'oilTerminal':
+          return `
+            <circle cx="12" cy="12" r="10" fill="white" stroke="${color}" stroke-width="2"/>
+            <path d="M8 16V8H16V16M10 10H14M10 12H14M10 14H14" stroke="${color}" stroke-width="1.5" fill="none"/>
+            <circle cx="12" cy="6" r="1" fill="${color}"/>
+          `;
+        case 'gasTerminal':
+          return `
+            <circle cx="12" cy="12" r="10" fill="white" stroke="${color}" stroke-width="2"/>
+            <circle cx="9" cy="10" r="2" stroke="${color}" stroke-width="1.5" fill="none"/>
+            <circle cx="15" cy="10" r="2" stroke="${color}" stroke-width="1.5" fill="none"/>
+            <path d="M7 14H17M9 16H15" stroke="${color}" stroke-width="1.5"/>
+          `;
+        default: // port
+          return `
+            <circle cx="12" cy="12" r="10" fill="white" stroke="${color}" stroke-width="2"/>
+            <path d="M8 16L12 12L16 16M12 12V6M10 8L12 6L14 8" stroke="${color}" stroke-width="1.5" fill="none"/>
+            <path d="M8 18H16" stroke="${color}" stroke-width="1.5"/>
+          `;
+      }
+    };
     
-    // Create simple icon with Font Awesome
     return L.divIcon({
-      className: `${facility.type}-marker`,
+      className: `professional-facility-marker ${facilityType}-marker`,
       html: `
-        <div style="position: relative; width: ${size}px; height: ${size}px;">
-          <div style="
-            position: absolute;
-            width: ${size}px;
-            height: ${size}px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: ${color};
-            text-shadow: 0 0 5px rgba(255,255,255,0.8), 0 0 7px rgba(0,0,0,0.4);
-            font-size: ${size}px;
+        <div style="
+          position: relative;
+          width: ${size}px;
+          height: ${size}px;
+        ">
+          <svg width="${size}" height="${size}" viewBox="0 0 24 24" style="
+            filter: drop-shadow(0 3px 6px rgba(0,0,0,0.2));
+            transition: transform 0.2s ease;
           ">
-            <i class="fa ${iconName}"></i>
-          </div>
-          
-          <!-- Facility name tooltip on hover -->
-          <div style="
-            position: absolute;
-            bottom: ${size + 3}px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 3px 6px;
-            border-radius: 3px;
-            font-size: 11px;
-            white-space: nowrap;
-            opacity: 0;
-            transition: opacity 0.2s;
-            pointer-events: none;
-            z-index: 20;
-          " class="facility-tooltip">
-            ${facility.name}
-          </div>
+            ${createFacilitySVG()}
+          </svg>
         </div>
-        
         <style>
-          .${facility.type}-marker:hover .facility-tooltip {
-            opacity: 1;
+          .professional-facility-marker:hover svg {
+            transform: scale(1.1);
           }
-          
-          .fa-industry:before {
-            content: "\\f275";
-          }
-          
-          .fa-anchor:before {
-            content: "\\f13d";
+          .professional-facility-marker {
+            cursor: pointer;
           }
         </style>
       `,
       iconSize: [size, size],
-      iconAnchor: [size/2, size/2],
-      popupAnchor: [0, -size/2]
+      iconAnchor: [size/2, size/2]
     });
   };
   
