@@ -8,7 +8,7 @@ import VesselDocuments from "@/pages/VesselDocuments";
 // Vessel dashboard page removed as requested
 import Refineries from "@/pages/Refineries";
 import RefineryDetail from "@/pages/RefineryDetail";
-import Ports from "@/pages/Ports";
+import Ports from "@/pages/PortsNew";
 import PortDetail from "@/pages/PortDetail";
 import PortImport from "@/pages/PortImport";
 import PortVesselProximity from "@/pages/PortVesselProximity";
