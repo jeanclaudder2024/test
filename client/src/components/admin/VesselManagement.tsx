@@ -317,16 +317,30 @@ export default function VesselManagement() {
             
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* AI Generation Button */}
-              <div className="flex justify-end">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => generateAIDataMutation.mutate()}
-                  disabled={generateAIDataMutation.isPending}
-                >
-                  <Zap className="h-4 w-4 mr-2" />
-                  {generateAIDataMutation.isPending ? "Generating..." : "Generate AI Data"}
-                </Button>
+              <div className="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border border-blue-200">
+                <div className="flex flex-col">
+                  <h3 className="font-semibold text-gray-900">Quick Fill Options</h3>
+                  <p className="text-sm text-gray-600">Auto-generate realistic vessel data or clear all fields</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setFormData(defaultFormData)}
+                    className="text-gray-600"
+                  >
+                    Clear All
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => generateAIDataMutation.mutate()}
+                    disabled={generateAIDataMutation.isPending}
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+                  >
+                    <Zap className="h-4 w-4 mr-2" />
+                    {generateAIDataMutation.isPending ? "Generating..." : "Auto-Fill Data"}
+                  </Button>
+                </div>
               </div>
 
               {/* Basic Information */}
