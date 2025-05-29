@@ -41,13 +41,8 @@ import PortsPage from "@/pages/PortsPage";
 import SubscriptionAdmin from "@/pages/SubscriptionAdmin";
 import { Layout } from "@/components/ui/layout";
 
-// Clean Auth Wrapper Component - No Email Verification
-function CleanAuthWrapper() {
-  return <CleanAuthPage />;
-}
-
-// Component to check auth status and redirect if logged in
-function AuthenticatedRouter() {
+// Main app component that handles authentication routing
+function AuthenticatedApp() {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -58,7 +53,7 @@ function AuthenticatedRouter() {
     );
   }
 
-  // If user is not logged in, show login page
+  // If user is not logged in, show login/register pages
   if (!user) {
     return (
       <Switch>
@@ -70,90 +65,37 @@ function AuthenticatedRouter() {
     );
   }
 
-  // If user is logged in, show the main app
-  return <MainAppRouter />;
-}
-
-function Router() {
-  const [location] = useLocation();
-  
-  // Seed data on development
-  useEffect(() => {
-    const seedData = async () => {
-      if (process.env.NODE_ENV === "development") {
-        try {
-          await apiRequest("/api/seed", { method: "POST" });
-          console.log("Data seeded successfully");
-        } catch (error) {
-          console.error("Error seeding data:", error);
-        }
-      }
-    };
-    
-    seedData();
-  }, []);
-
-  // For landing page and auth page, don't use Layout (no sidebar/header)
-  if (location === "/" || location === "/auth") {
-    return (
-      <AnimatePresence mode="wait">
-        <Switch>
-          <Route path="/">
-            <LandingPageRedirect />
-          </Route>
-          <Route path="/auth">
-            <CleanAuthWrapper />
-          </Route>
-        </Switch>
-      </AnimatePresence>
-    );
-  }
-
-  // For app routes, use Layout with modern styling
+  // If user is logged in, show the main app with layout
   return (
     <Layout>
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={location}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          <Switch>
-            {/* Dashboard page removed as requested */}
-            <Route path="/vessels" component={Vessels} />
-            <Route path="/vessels/:id/documents" component={VesselDocuments} />
-            <Route path="/vessels/:id" component={VesselDetail} />
-            {/* Vessel dashboard page removed as requested */}
-            {/* Maritime tracking and vessel lookup pages removed as requested */}
-            <Route path="/refineries" component={Refineries} />
-            <Route path="/refineries/:id" component={RefineryDetail} />
-            <Route path="/ports" component={PortsPage} />
-
-            <Route path="/brokers" component={Brokers} />
-            <Route path="/broker-dashboard" component={SimpleBrokerDashboard} />
-            <Route path="/companies" component={Companies} />
-            <Route path="/documents" component={Documents} />
-            <Route path="/ai-assistant" component={AIAssistantPage} />
-            <Route path="/admin" component={AdminPanel} />
-            <Route path="/admin/subscriptions" component={SubscriptionAdmin} />
-            <Route path="/trading" component={TradingDashboard} />
-            <Route path="/translation" component={TranslationPage} />
-            <Route path="/traffic-insights" component={TrafficInsights} />
-            <Route path="/map" component={WorkingMap} />
-            <Route path="/oil-vessel-map" component={OilVesselMap} />
-            {/* Maritime tracking and vessel lookup pages removed as requested */}
-            <Route path="/settings" component={Settings} />
-            <Route path="/subscribe" component={Subscribe} />
-            <Route path="/pricing" component={Pricing} />
-            <Route path="/account/subscription" component={AccountSubscription} />
-            <Route path="/subscription/success" component={SubscriptionSuccess} />
-            <Route path="/api-test" component={ApiTest} />
-            <Route component={NotFound} />
-          </Switch>
-        </motion.div>
-      </AnimatePresence>
+      <Switch>
+        <Route path="/vessels" component={Vessels} />
+        <Route path="/vessels/:id/documents" component={VesselDocuments} />
+        <Route path="/vessels/:id" component={VesselDetail} />
+        <Route path="/refineries" component={Refineries} />
+        <Route path="/refineries/:id" component={RefineryDetail} />
+        <Route path="/ports" component={PortsPage} />
+        <Route path="/brokers" component={Brokers} />
+        <Route path="/broker-dashboard" component={SimpleBrokerDashboard} />
+        <Route path="/" component={SimpleBrokerDashboard} />
+        <Route path="/companies" component={Companies} />
+        <Route path="/documents" component={Documents} />
+        <Route path="/ai-assistant" component={AIAssistantPage} />
+        <Route path="/admin" component={AdminPanel} />
+        <Route path="/admin/subscriptions" component={SubscriptionAdmin} />
+        <Route path="/trading" component={TradingDashboard} />
+        <Route path="/translation" component={TranslationPage} />
+        <Route path="/traffic-insights" component={TrafficInsights} />
+        <Route path="/map" component={WorkingMap} />
+        <Route path="/oil-vessel-map" component={OilVesselMap} />
+        <Route path="/settings" component={Settings} />
+        <Route path="/subscribe" component={Subscribe} />
+        <Route path="/pricing" component={Pricing} />
+        <Route path="/account/subscription" component={AccountSubscription} />
+        <Route path="/subscription/success" component={SubscriptionSuccess} />
+        <Route path="/api-test" component={ApiTest} />
+        <Route component={NotFound} />
+      </Switch>
     </Layout>
   );
 }
@@ -164,7 +106,7 @@ function App() {
       <ThemeProvider defaultTheme="system">
         <AuthProvider>
           <LanguageProvider>
-            <Router />
+            <AuthenticatedApp />
             <Toaster />
           </LanguageProvider>
         </AuthProvider>
