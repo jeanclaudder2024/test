@@ -4,33 +4,60 @@ import { z } from "zod";
 import { relations } from "drizzle-orm";
 
 export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
-  username: text("username").notNull().unique(),
-  password: text("password"), // Now nullable to support OAuth providers
-  email: text("email").notNull(),
-  phone: text("phone"), // Add phone number field
-  isSubscribed: boolean("is_subscribed"),
-  subscriptionTier: text("subscription_tier").default("free"),
+  id: varchar("id").primaryKey(), // Supabase UUID
+  email: text("email").notNull().unique(),
+  username: text("username"),
+  firstName: text("first_name"),
+  lastName: text("last_name"),
+  profileImageUrl: text("profile_image_url"),
+  phone: text("phone"),
+  
+  // Role and permissions
+  role: text("role").default("user"), // 'admin', 'user', 'premium'
+  isActive: boolean("is_active").default(true),
+  
+  // Subscription management
+  subscriptionPlan: text("subscription_plan").default("free"), // 'free', 'basic', 'premium', 'enterprise'
+  subscriptionStatus: text("subscription_status").default("inactive"), // 'active', 'inactive', 'cancelled', 'past_due'
+  subscriptionStartDate: timestamp("subscription_start_date"),
+  subscriptionEndDate: timestamp("subscription_end_date"),
+  trialEndDate: timestamp("trial_end_date"),
+  
+  // Payment integration
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
-  // OAuth provider fields
-  provider: text("provider"), // 'google', 'local', etc.
-  providerId: text("provider_id"), // ID from the provider
-  photoURL: text("photo_url"), // Profile photo URL from provider
-  displayName: text("display_name"), // Full name from provider
+  
+  // Company affiliation
+  companyName: text("company_name"),
+  companyRole: text("company_role"), // 'owner', 'manager', 'employee'
+  
+  // Profile and preferences
+  timezone: text("timezone").default("UTC"),
+  language: text("language").default("en"),
+  notifications: boolean("notifications").default(true),
+  emailVerified: boolean("email_verified").default(false),
+  
+  // Tracking
+  lastLoginAt: timestamp("last_login_at"),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
-  email: true,
-  phone: true,
-  provider: true,
-  providerId: true,
-  photoURL: true,
-  displayName: true,
+export const insertUserSchema = createInsertSchema(users).omit({
+  createdAt: true,
+  updatedAt: true,
+  lastLoginAt: true,
+}).extend({
+  password: z.string().min(6, "Password must be at least 6 characters").optional(),
 });
+
+export const updateUserSchema = createInsertSchema(users).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).partial();
+
+
 
 // Vessels
 export const vessels = pgTable("vessels", {
@@ -227,6 +254,7 @@ export const insertStatsSchema = createInsertSchema(stats).omit({
 
 // Type Exports
 export type InsertUser = z.infer<typeof insertUserSchema>;
+export type UpdateUser = z.infer<typeof updateUserSchema>;
 export type User = typeof users.$inferSelect;
 
 export type InsertVessel = z.infer<typeof insertVesselSchema>;

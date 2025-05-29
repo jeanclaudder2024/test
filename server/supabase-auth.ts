@@ -1,387 +1,223 @@
-/**
- * Professional Supabase Authentication System
- * Oil Vessel Tracking Platform - Enterprise Security
- */
+import { createClient } from '@supabase/supabase-js';
+import type { Express, Request, Response, NextFunction } from 'express';
+import type { User, InsertUser, UpdateUser } from '@shared/schema';
 
-import { supabase, supabaseAdmin } from './supabase';
-import { Request, Response, NextFunction } from 'express';
-
-interface AuthenticatedRequest extends Request {
-  user?: any;
+if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  throw new Error('Missing required Supabase environment variables');
 }
 
-/**
- * User Registration with Supabase Auth
- */
-export async function registerUser(req: Request, res: Response) {
-  try {
-    const { email, password, firstName, lastName, companyId } = req.body;
-
-    // Validate required fields
-    if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        error: 'Email and password are required'
-      });
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
     }
-
-    // Use Supabase Admin client to create user without email confirmation
-    const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email: email.toLowerCase(),
-      password: password,
-      email_confirm: true, // Auto-confirm email
-      user_metadata: {
-        first_name: firstName || null,
-        last_name: lastName || null,
-        company_id: companyId || null
-      }
-    });
-
-    if (authError) {
-      console.error('Auth creation error:', authError);
-      return res.status(400).json({
-        success: false,
-        error: `Registration failed: ${authError.message}`
-      });
-    }
-
-    // Create user profile in the users table
-    const { data: userData, error: dbError } = await supabase
-      .from('users')
-      .insert([{
-        id: authUser.user.id,
-        email: authUser.user.email,
-        first_name: firstName || '',
-        last_name: lastName || '',
-        company_id: companyId || null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }])
-      .select()
-      .single();
-
-    if (dbError) {
-      console.error('Profile creation error:', dbError);
-      // Still return success since auth user was created successfully
-    }
-
-    return res.json({
-      success: true,
-      message: 'Registration successful! You can now log in to access your oil vessel tracking dashboard.',
-      user: {
-        id: authUser.user.id,
-        email: authUser.user.email,
-        firstName: firstName,
-        lastName: lastName
-      }
-    });
-  } catch (error: any) {
-    console.error('Registration error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Registration failed. Please try again.'
-    });
   }
+);
+
+export interface AuthenticatedRequest extends Request {
+  user?: User;
 }
 
-/**
- * User Login with Supabase Auth
- */
-export async function loginUser(req: Request, res: Response) {
+// Middleware to verify JWT token and get user info
+export const authenticateUser = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        error: 'Email and password are required'
-      });
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Missing or invalid authorization header' });
     }
 
-    // Sign in with Supabase
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      return res.status(400).json({
-        success: false,
-        error: error.message
-      });
-    }
-
-    // Get user profile
-    let userProfile = null;
-    if (data.user) {
-      const { data: profile } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', data.user.id)
-        .single();
-      userProfile = profile;
-    }
-
-    res.json({
-      success: true,
-      user: data.user,
-      session: data.session,
-      profile: userProfile,
-      message: 'Login successful! Welcome to your oil vessel tracking dashboard.',
-    });
-  } catch (error: any) {
-    console.error('Login error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Login failed. Please try again.'
-    });
-  }
-}
-
-/**
- * User Logout
- */
-export async function logoutUser(req: Request, res: Response) {
-  try {
-    const { error } = await supabase.auth.signOut();
-    
-    if (error) {
-      console.error('Logout error:', error);
-    }
-
-    res.json({
-      success: true,
-      message: 'Logout successful!'
-    });
-  } catch (error: any) {
-    console.error('Logout error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Logout failed'
-    });
-  }
-}
-
-/**
- * Get Current User
- */
-export async function getCurrentUser(req: Request, res: Response) {
-  try {
-    const token = req.headers.authorization?.replace('Bearer ', '');
-    
-    if (!token) {
-      return res.status(401).json({
-        success: false,
-        error: 'No authentication token provided'
-      });
-    }
-
+    const token = authHeader.substring(7);
     const { data: { user }, error } = await supabase.auth.getUser(token);
-    
+
     if (error || !user) {
-      return res.status(401).json({
-        success: false,
-        error: 'Invalid or expired token'
-      });
+      return res.status(401).json({ error: 'Invalid token' });
     }
 
-    // Get user profile
-    const { data: profile, error: profileError } = await supabase
+    // Get additional user data from our users table
+    const { data: userData, error: userError } = await supabase
       .from('users')
-      .select('*, companies(name)')
+      .select('*')
       .eq('id', user.id)
       .single();
 
-    if (profileError) {
-      console.error('Profile fetch error:', profileError);
+    if (userError && userError.code !== 'PGRST116') { // PGRST116 = no rows found
+      console.error('Error fetching user data:', userError);
+      return res.status(500).json({ error: 'Failed to fetch user data' });
     }
 
-    res.json({
-      success: true,
-      user: {
-        ...user,
-        profile: profile || null,
-      },
-    });
-  } catch (error: any) {
-    console.error('User fetch error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch user'
-    });
-  }
-}
+    // If user doesn't exist in our users table, create them
+    if (!userData) {
+      const newUser: InsertUser = {
+        id: user.id,
+        email: user.email || '',
+        firstName: user.user_metadata?.first_name || null,
+        lastName: user.user_metadata?.last_name || null,
+        profileImageUrl: user.user_metadata?.avatar_url || null,
+        emailVerified: user.email_confirmed_at ? true : false,
+        role: 'user',
+        subscriptionPlan: 'free',
+        subscriptionStatus: 'inactive'
+      };
 
-/**
- * Password Reset Request
- */
-export async function resetPassword(req: Request, res: Response) {
-  try {
-    const { email } = req.body;
+      const { data: createdUser, error: createError } = await supabase
+        .from('users')
+        .insert(newUser)
+        .select()
+        .single();
 
-    if (!email) {
-      return res.status(400).json({
-        success: false,
-        error: 'Email is required'
-      });
+      if (createError) {
+        console.error('Error creating user:', createError);
+        return res.status(500).json({ error: 'Failed to create user' });
+      }
+
+      req.user = createdUser;
+    } else {
+      req.user = userData;
     }
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${req.protocol}://${req.get('host')}/reset-password-confirm`,
-    });
-
-    if (error) {
-      return res.status(400).json({
-        success: false,
-        error: error.message
-      });
-    }
-
-    res.json({
-      success: true,
-      message: 'Password reset email sent! Please check your inbox.',
-    });
-  } catch (error: any) {
-    console.error('Password reset error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Password reset failed'
-    });
-  }
-}
-
-/**
- * Authentication Middleware
- */
-export async function requireAuth(req: AuthenticatedRequest, res: Response, next: NextFunction) {
-  try {
-    const token = req.headers.authorization?.replace('Bearer ', '');
-    
-    if (!token) {
-      return res.status(401).json({
-        success: false,
-        error: 'No authentication token provided'
-      });
-    }
-
-    const { data: { user }, error } = await supabase.auth.getUser(token);
-    
-    if (error || !user) {
-      return res.status(401).json({
-        success: false,
-        error: 'Invalid or expired token'
-      });
-    }
-
-    req.user = user;
     next();
   } catch (error) {
     console.error('Authentication error:', error);
-    return res.status(401).json({
-      success: false,
-      error: 'Authentication failed'
-    });
+    res.status(500).json({ error: 'Internal server error' });
   }
-}
+};
 
-/**
- * Refresh Session
- */
-export async function refreshSession(req: Request, res: Response) {
-  try {
-    const { refreshToken } = req.body;
-
-    if (!refreshToken) {
-      return res.status(400).json({
-        success: false,
-        error: 'Refresh token is required'
-      });
-    }
-
-    const { data, error } = await supabase.auth.refreshSession({
-      refresh_token: refreshToken,
-    });
-
-    if (error) {
-      return res.status(400).json({
-        success: false,
-        error: error.message
-      });
-    }
-
-    res.json({
-      success: true,
-      session: data.session,
-      user: data.user,
-    });
-  } catch (error: any) {
-    console.error('Refresh error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Session refresh failed'
-    });
+// Middleware to check if user is admin
+export const requireAdmin = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  if (!req.user || req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Admin access required' });
   }
-}
+  next();
+};
 
-/**
- * Update User Profile
- */
-export async function updateProfile(req: AuthenticatedRequest, res: Response) {
+// Middleware to check subscription status
+export const requireActiveSubscription = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+
+  const hasActiveSubscription = req.user.subscriptionStatus === 'active' || req.user.role === 'admin';
+  if (!hasActiveSubscription) {
+    return res.status(403).json({ error: 'Active subscription required' });
+  }
+
+  next();
+};
+
+// Check if user has access to premium features
+export const requirePremiumPlan = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+
+  const hasPremiumAccess = req.user.subscriptionPlan === 'premium' || 
+                          req.user.subscriptionPlan === 'enterprise' || 
+                          req.user.role === 'admin';
+  
+  if (!hasPremiumAccess) {
+    return res.status(403).json({ error: 'Premium subscription required' });
+  }
+
+  next();
+};
+
+// User management functions
+export const updateUserProfile = async (userId: string, updates: UpdateUser): Promise<User | null> => {
   try {
-    const { firstName, lastName, companyId } = req.body;
-    const userId = req.user?.id;
-
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        error: 'User not authenticated'
-      });
-    }
-
-    // Update user profile in database
     const { data, error } = await supabase
       .from('users')
-      .update({
-        first_name: firstName,
-        last_name: lastName,
-        company_id: companyId,
-        updated_at: new Date().toISOString(),
+      .update({ ...updates, updatedAt: new Date() })
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating user:', error);
+      return null;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+    return null;
+  }
+};
+
+export const updateUserSubscription = async (
+  userId: string, 
+  subscriptionData: {
+    subscriptionPlan: string;
+    subscriptionStatus: string;
+    subscriptionStartDate?: Date;
+    subscriptionEndDate?: Date;
+    stripeCustomerId?: string;
+    stripeSubscriptionId?: string;
+  }
+): Promise<User | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .update({ 
+        ...subscriptionData, 
+        updatedAt: new Date() 
       })
       .eq('id', userId)
       .select()
       .single();
 
     if (error) {
-      return res.status(400).json({
-        success: false,
-        error: error.message
-      });
+      console.error('Error updating user subscription:', error);
+      return null;
     }
 
-    res.json({
-      success: true,
-      profile: data,
-      message: 'Profile updated successfully!',
-    });
-  } catch (error: any) {
-    console.error('Profile update error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Profile update failed'
-    });
+    return data;
+  } catch (error) {
+    console.error('Error updating user subscription:', error);
+    return null;
   }
-}
+};
 
-/**
- * Setup authentication routes
- */
-export function supabaseAuthRoutes(app: any) {
-  // Authentication routes
-  app.post('/api/auth/register', registerUser);
-  app.post('/api/auth/login', loginUser);
-  app.post('/api/auth/logout', logoutUser);
-  app.get('/api/auth/user', getCurrentUser);
-  app.post('/api/auth/reset-password', resetPassword);
-  app.post('/api/auth/refresh', refreshSession);
-  app.post('/api/auth/update-profile', requireAuth, updateProfile);
-}
+export const getAllUsers = async (): Promise<User[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .order('createdAt', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching users:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    return [];
+  }
+};
+
+export const updateUserRole = async (userId: string, role: string): Promise<User | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .update({ role, updatedAt: new Date() })
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating user role:', error);
+      return null;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error updating user role:', error);
+    return null;
+  }
+};
+
+export { supabase };
