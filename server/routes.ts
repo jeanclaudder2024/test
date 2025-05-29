@@ -2600,6 +2600,142 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Auto-fill refinery data endpoint
+  apiRouter.post("/refineries/autofill", async (req, res) => {
+    try {
+      const { name } = req.body;
+      
+      if (!name) {
+        return res.status(400).json({ error: 'Refinery name is required' });
+      }
+
+      // Authentic refinery database for auto-fill using real-world data
+      const refineryDatabase: Record<string, any> = {
+        'Ras Tanura Refinery': {
+          country: 'Saudi Arabia',
+          region: 'Middle East',
+          capacity: 550000,
+          latitude: '26.6927',
+          longitude: '50.0279',
+          type: 'Crude Oil Refinery',
+          status: 'Operational',
+          description: 'One of the largest oil refineries in the world, operated by Saudi Aramco'
+        },
+        'Ruwais Refinery': {
+          country: 'United Arab Emirates',
+          region: 'Middle East',
+          capacity: 837000,
+          latitude: '24.0833',
+          longitude: '52.7167',
+          type: 'Crude Oil Refinery',
+          status: 'Operational',
+          description: 'Major refinery complex in Abu Dhabi operated by ADNOC'
+        },
+        'Al-Zour Refinery': {
+          country: 'Kuwait',
+          region: 'Middle East',
+          capacity: 615000,
+          latitude: '28.7500',
+          longitude: '48.3167',
+          type: 'Crude Oil Refinery',
+          status: 'Operational',
+          description: 'Newest and largest refinery in Kuwait'
+        },
+        'Mina Abdullah Refinery': {
+          country: 'Kuwait',
+          region: 'Middle East',
+          capacity: 270000,
+          latitude: '29.0831',
+          longitude: '48.1419',
+          type: 'Crude Oil Refinery',
+          status: 'Operational',
+          description: 'Major refinery operated by Kuwait National Petroleum Company'
+        },
+        'Abadan Refinery': {
+          country: 'Iran',
+          region: 'Middle East',
+          capacity: 400000,
+          latitude: '30.3392',
+          longitude: '48.3043',
+          type: 'Crude Oil Refinery',
+          status: 'Operational',
+          description: 'Historic refinery in southwestern Iran'
+        }
+      };
+
+      // Find matching refinery data
+      const matchedRefinery = refineryDatabase[name] || 
+        Object.entries(refineryDatabase).find(([key]) => 
+          key.toLowerCase().includes(name.toLowerCase()) || 
+          name.toLowerCase().includes(key.toLowerCase())
+        )?.[1];
+
+      if (matchedRefinery) {
+        res.json(matchedRefinery);
+      } else {
+        res.status(404).json({ error: 'Refinery data not found for auto-fill' });
+      }
+    } catch (error) {
+      console.error('Error auto-filling refinery data:', error);
+      res.status(500).json({ error: 'Failed to auto-fill refinery data' });
+    }
+  });
+
+  // AI enhancement endpoint for refinery data
+  apiRouter.post("/refineries/ai-enhance", async (req, res) => {
+    try {
+      const refineryData = req.body;
+      
+      if (!refineryData.name) {
+        return res.status(400).json({ error: 'Refinery name is required' });
+      }
+
+      // Check if OpenAI API key is available
+      if (!process.env.OPENAI_API_KEY) {
+        return res.status(400).json({ error: 'AI enhancement requires OpenAI API key. Please provide your OpenAI API key.' });
+      }
+
+      const OpenAI = (await import('openai')).default;
+      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+      const prompt = `As an oil industry expert, enhance the following refinery data with accurate information. Fill in missing fields and improve descriptions with technical details about capacity, operations, and strategic importance.
+
+Refinery: ${refineryData.name}
+Country: ${refineryData.country || 'Not specified'}
+Region: ${refineryData.region || 'Not specified'}
+Current Description: ${refineryData.description || 'None'}
+
+Please provide enhanced data in JSON format with fields: country, region, capacity (barrels per day), latitude, longitude, type, status, description.
+Only use authentic, real-world data for existing refineries.`;
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [{ role: "user", content: prompt }],
+        response_format: { type: "json_object" },
+        max_tokens: 500,
+      });
+
+      const enhancedData = JSON.parse(response.choices[0].message.content || '{}');
+      
+      // Merge with existing data, keeping user input priority
+      const result = {
+        country: refineryData.country || enhancedData.country,
+        region: refineryData.region || enhancedData.region,
+        capacity: refineryData.capacity || enhancedData.capacity,
+        latitude: refineryData.latitude || enhancedData.latitude,
+        longitude: refineryData.longitude || enhancedData.longitude,
+        type: refineryData.type || enhancedData.type,
+        status: refineryData.status || enhancedData.status,
+        description: enhancedData.description || refineryData.description
+      };
+
+      res.json(result);
+    } catch (error) {
+      console.error('Error enhancing refinery data with AI:', error);
+      res.status(500).json({ error: 'Failed to enhance refinery data with AI' });
+    }
+  });
+
   // Document endpoints
   apiRouter.get("/documents", async (req, res) => {
     try {
