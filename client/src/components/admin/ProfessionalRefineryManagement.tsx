@@ -54,6 +54,7 @@ import {
   Navigation,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import RefineryLocationSelector from '@/components/map/RefineryLocationSelector';
 import { Textarea } from '@/components/ui/textarea';
 
 interface Refinery {
@@ -104,7 +105,7 @@ export default function ProfessionalRefineryManagement() {
   const [selectedStatus, setSelectedStatus] = useState('All Statuses');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingRefinery, setEditingRefinery] = useState<Refinery | null>(null);
-  const [showMap, setShowMap] = useState(false);
+  const [showMapSelector, setShowMapSelector] = useState(false);
   const [isAutoFilling, setIsAutoFilling] = useState(false);
   const [isAiEnhancing, setIsAiEnhancing] = useState(false);
   const [formData, setFormData] = useState({
@@ -266,7 +267,7 @@ export default function ProfessionalRefineryManagement() {
       latitude: lat.toFixed(6),
       longitude: lng.toFixed(6),
     }));
-    setShowMap(false);
+    setShowMapSelector(false);
     toast({ title: 'Location Selected', description: `Coordinates: ${lat.toFixed(6)}, ${lng.toFixed(6)}` });
   };
 
