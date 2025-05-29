@@ -75,6 +75,9 @@ router.post('/api/auth/register', async (req, res) => {
   const connection = await getConnection();
   try {
     const { username, email, password, firstName, lastName, company, phone } = req.body;
+    
+    // Handle international phone format (already combined in frontend)
+    const finalPhone = phone || `${req.body.countryCode || ''}${req.body.phoneNumber || ''}`;
     const clientIP = getClientIP(req);
     
     console.log('🚢 Professional registration attempt:', { username, email, company });
@@ -157,7 +160,7 @@ router.post('/api/auth/register', async (req, res) => {
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), false, true, ?)
     `, [
       username, email, hashedPassword, firstName || null, lastName || null, 
-      company || null, phone || null, verificationToken, verificationExpires, clientIP
+      company || null, finalPhone || null, verificationToken, verificationExpires, clientIP
     ]);
 
     // Get the created user
