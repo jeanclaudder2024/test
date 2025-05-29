@@ -27,9 +27,10 @@ const loginSchema = z.object({
 });
 
 const registerSchema = z.object({
-  username: z.string().min(3, "Username must be at least 3 characters"),
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -52,9 +53,10 @@ export default function AuthPage() {
   const registerForm = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      username: "",
       email: "",
       password: "",
+      firstName: "",
+      lastName: "",
     },
   });
 
@@ -369,17 +371,60 @@ export default function AuthPage() {
                   
                   <Form {...registerForm}>
                     <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={registerForm.control}
+                          name="firstName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">First Name</FormLabel>
+                              <FormControl>
+                                <div className="relative">
+                                  <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                                  <Input
+                                    placeholder="John"
+                                    className="pl-10 h-12 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                                    {...field}
+                                  />
+                                </div>
+                              </FormControl>
+                              <FormMessage className="text-red-500" />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={registerForm.control}
+                          name="lastName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Last Name</FormLabel>
+                              <FormControl>
+                                <div className="relative">
+                                  <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                                  <Input
+                                    placeholder="Doe"
+                                    className="pl-10 h-12 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                                    {...field}
+                                  />
+                                </div>
+                              </FormControl>
+                              <FormMessage className="text-red-500" />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
                       <FormField
                         control={registerForm.control}
-                        name="username"
+                        name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Username</FormLabel>
+                            <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Email</FormLabel>
                             <FormControl>
                               <div className="relative">
-                                <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                                <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                                 <Input
-                                  placeholder="johndoe"
+                                  type="email"
+                                  placeholder="john.doe@oilcompany.com"
                                   className="pl-10 h-12 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 rounded-lg focus:ring-blue-500 focus:border-blue-500"
                                   {...field}
                                 />
