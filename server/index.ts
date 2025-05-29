@@ -1,5 +1,5 @@
 import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes-clean";
+// Using ultra simple setup - no complex routes
 import { setupUltraSimpleAuth } from "./ultra-simple-auth";
 import { setupVite, serveStatic, log } from "./vite";
 // Clean Supabase-only setup for oil vessel tracking platform
@@ -42,10 +42,15 @@ app.use((req, res, next) => {
   // Simple Supabase-only setup
   console.log('🚀 Starting oil vessel tracking platform with Supabase...');
   
+  // Simple server setup without complex routes
+  const port = 5000;
+  
   // Setup ultra simple authentication system
   setupUltraSimpleAuth(app);
   
-  const server = await registerRoutes(app);
+  const server = app.listen(port, "0.0.0.0", () => {
+    log(`Server running on port ${port}`);
+  });
   
   console.log('✅ Platform ready with Supabase authentication!');
 
@@ -66,15 +71,5 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = 5000;
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
-  });
+  // Server already started above - no need to start again
 })();
