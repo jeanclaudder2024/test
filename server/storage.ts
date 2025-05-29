@@ -783,6 +783,94 @@ export class DatabaseStorage implements IStorage {
     await db.delete(vesselRefineryConnections).where(eq(vesselRefineryConnections.id, id));
     return true;
   }
+
+  // Broker Company Methods
+  async getBrokerCompanies(): Promise<BrokerCompany[]> {
+    try {
+      const companies = await db.select().from(brokerCompanies).where(eq(brokerCompanies.status, 'active'));
+      return companies;
+    } catch (error) {
+      console.error("Error fetching broker companies:", error);
+      throw new Error("Failed to fetch broker companies");
+    }
+  }
+
+  async createBrokerCompany(data: InsertBrokerCompany): Promise<BrokerCompany> {
+    try {
+      const [company] = await db.insert(brokerCompanies).values(data).returning();
+      return company;
+    } catch (error) {
+      console.error("Error creating broker company:", error);
+      throw new Error("Failed to create broker company");
+    }
+  }
+
+  // Company Partnership Methods
+  async getCompanyPartnerships(brokerCompanyId?: number): Promise<CompanyPartnership[]> {
+    try {
+      let query = db.select().from(companyPartnerships);
+      
+      if (brokerCompanyId) {
+        query = query.where(eq(companyPartnerships.brokerCompanyId, brokerCompanyId));
+      }
+      
+      const partnerships = await query;
+      return partnerships;
+    } catch (error) {
+      console.error("Error fetching company partnerships:", error);
+      throw new Error("Failed to fetch company partnerships");
+    }
+  }
+
+  async createCompanyPartnership(data: InsertCompanyPartnership): Promise<CompanyPartnership> {
+    try {
+      const [partnership] = await db.insert(companyPartnerships).values(data).returning();
+      return partnership;
+    } catch (error) {
+      console.error("Error creating company partnership:", error);
+      throw new Error("Failed to create company partnership");
+    }
+  }
+
+  // User-Broker Connection Methods
+  async getUserBrokerConnections(userId?: number): Promise<UserBrokerConnection[]> {
+    try {
+      let query = db.select().from(userBrokerConnections);
+      
+      if (userId) {
+        query = query.where(eq(userBrokerConnections.userId, userId));
+      }
+      
+      const connections = await query;
+      return connections;
+    } catch (error) {
+      console.error("Error fetching user-broker connections:", error);
+      throw new Error("Failed to fetch user-broker connections");
+    }
+  }
+
+  async createUserBrokerConnection(data: InsertUserBrokerConnection): Promise<UserBrokerConnection> {
+    try {
+      const [connection] = await db.insert(userBrokerConnections).values(data).returning();
+      return connection;
+    } catch (error) {
+      console.error("Error creating user-broker connection:", error);
+      throw new Error("Failed to create user-broker connection");
+    }
+  }
+
+  async updateUserBrokerConnection(id: number, data: Partial<InsertUserBrokerConnection>): Promise<UserBrokerConnection> {
+    try {
+      const [connection] = await db.update(userBrokerConnections)
+        .set({ ...data, lastActivity: new Date() })
+        .where(eq(userBrokerConnections.id, id))
+        .returning();
+      return connection;
+    } catch (error) {
+      console.error("Error updating user-broker connection:", error);
+      throw new Error("Failed to update user-broker connection");
+    }
+  }
   
   // Company methods implementation
   async getCompanies(): Promise<Company[]> {

@@ -356,6 +356,85 @@ export const insertCompanySchema = createInsertSchema(companies).omit({
 export type InsertCompany = z.infer<typeof insertCompanySchema>;
 export type Company = typeof companies.$inferSelect;
 
+// Broker Companies (intermediary companies users connect to)
+export const brokerCompanies = pgTable("broker_companies", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  country: text("country"),
+  region: text("region"),
+  headquarters: text("headquarters"),
+  foundedYear: integer("founded_year"),
+  ceo: text("ceo"),
+  specialization: text("specialization"),
+  website: text("website"),
+  logo: text("logo"),
+  description: text("description"),
+  employees: integer("employees"),
+  status: text("status").default("active"),
+  connectionFee: decimal("connection_fee", { precision: 10, scale: 2 }),
+  commissionRate: decimal("commission_rate", { precision: 5, scale: 2 }), // percentage
+  minimumDealSize: decimal("minimum_deal_size", { precision: 15, scale: 2 }),
+  verificationStatus: text("verification_status").default("verified"), // verified, pending, unverified
+  rating: decimal("rating", { precision: 3, scale: 2 }), // 1.00 to 5.00
+  totalDeals: integer("total_deals").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  lastUpdated: timestamp("last_updated").defaultNow(),
+});
+
+// Company Partnerships (broker companies partnered with real oil companies)
+export const companyPartnerships = pgTable("company_partnerships", {
+  id: serial("id").primaryKey(),
+  brokerCompanyId: integer("broker_company_id").references(() => brokerCompanies.id),
+  realCompanyId: integer("real_company_id").references(() => companies.id),
+  partnershipType: text("partnership_type"), // exclusive, preferred, standard
+  dealAccess: text("deal_access"), // crude_oil, refined_products, lng, all
+  creditLimit: decimal("credit_limit", { precision: 15, scale: 2 }),
+  preferredTerms: text("preferred_terms"),
+  status: text("status").default("active"),
+  establishedDate: timestamp("established_date").defaultNow(),
+  lastUpdated: timestamp("last_updated").defaultNow(),
+});
+
+// User-Broker Connections (users connected to broker companies)
+export const userBrokerConnections = pgTable("user_broker_connections", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  brokerCompanyId: integer("broker_company_id").references(() => brokerCompanies.id),
+  connectionStatus: text("connection_status").default("pending"), // pending, active, suspended, terminated
+  connectionDate: timestamp("connection_date").defaultNow(),
+  contractTerms: text("contract_terms"),
+  creditAllocation: decimal("credit_allocation", { precision: 15, scale: 2 }),
+  dealCount: integer("deal_count").default(0),
+  totalVolume: decimal("total_volume", { precision: 15, scale: 2 }).default("0"),
+  lastActivity: timestamp("last_activity").defaultNow(),
+  notes: text("notes"),
+});
+
+export const insertBrokerCompanySchema = createInsertSchema(brokerCompanies).omit({
+  id: true,
+  createdAt: true,
+  lastUpdated: true,
+});
+
+export const insertCompanyPartnershipSchema = createInsertSchema(companyPartnerships).omit({
+  id: true,
+  establishedDate: true,
+  lastUpdated: true,
+});
+
+export const insertUserBrokerConnectionSchema = createInsertSchema(userBrokerConnections).omit({
+  id: true,
+  connectionDate: true,
+  lastActivity: true,
+});
+
+export type BrokerCompany = typeof brokerCompanies.$inferSelect;
+export type InsertBrokerCompany = z.infer<typeof insertBrokerCompanySchema>;
+export type CompanyPartnership = typeof companyPartnerships.$inferSelect;
+export type InsertCompanyPartnership = z.infer<typeof insertCompanyPartnershipSchema>;
+export type UserBrokerConnection = typeof userBrokerConnections.$inferSelect;
+export type InsertUserBrokerConnection = z.infer<typeof insertUserBrokerConnectionSchema>;
+
 // Subscription Plans
 export const subscriptionPlans = pgTable("subscription_plans", {
   id: serial("id").primaryKey(),
