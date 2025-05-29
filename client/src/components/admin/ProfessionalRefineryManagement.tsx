@@ -531,7 +531,7 @@ export default function ProfessionalRefineryManagement() {
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => setShowMap(true)}
+                          onClick={() => setShowMapSelector(true)}
                           className="flex items-center gap-2"
                         >
                           <Navigation className="h-4 w-4" />
@@ -796,6 +796,15 @@ export default function ProfessionalRefineryManagement() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Interactive Map Selector */}
+      <RefineryLocationSelector
+        isOpen={showMapSelector}
+        onClose={() => setShowMapSelector(false)}
+        onLocationSelected={handleMapClick}
+        initialLat={formData.latitude ? parseFloat(formData.latitude) : undefined}
+        initialLng={formData.longitude ? parseFloat(formData.longitude) : undefined}
+      />
     </div>
   );
 }
