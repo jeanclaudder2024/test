@@ -95,6 +95,11 @@ export default function AdminPanel() {
             <span className="hidden sm:inline">Landing Page</span>
             <span className="sm:hidden">Landing</span>
           </TabsTrigger>
+          <TabsTrigger value="brokers" className="flex items-center gap-2">
+            <Building2 className="h-4 w-4" />
+            <span className="hidden sm:inline">Broker Network</span>
+            <span className="sm:hidden">Brokers</span>
+          </TabsTrigger>
           <TabsTrigger value="settings" className="flex items-center gap-2">
             <SettingsIcon className="h-4 w-4" />
             <span className="hidden sm:inline">Settings</span>
@@ -218,6 +223,20 @@ export default function AdminPanel() {
             </CardHeader>
             <CardContent>
               <LandingPageManagement />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="brokers" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Professional Broker Network</CardTitle>
+              <CardDescription>
+                Manage broker company connections and partnerships with major oil corporations
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <BrokerNetworkHub />
             </CardContent>
           </Card>
         </TabsContent>
