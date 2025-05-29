@@ -5,8 +5,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Shield, Mail, Lock, User, Building, Phone, CheckCircle, AlertCircle, Ship, Search } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { Loader2, Shield, Mail, Lock, User, Building, CheckCircle, AlertCircle, Ship, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { COUNTRY_CODES, PRIORITY_COUNTRIES } from '@/data/countryCodes';
 
@@ -37,6 +37,32 @@ export function ProfessionalAuth({ onSuccess }: ProfessionalAuthProps) {
   const [tempToken, setTempToken] = useState('');
   const { toast } = useToast();
 
+  // Password strength calculation
+  const calculatePasswordStrength = (password: string) => {
+    let score = 0;
+    if (password.length >= 8) score += 20;
+    if (password.length >= 12) score += 10;
+    if (/[a-z]/.test(password)) score += 15;
+    if (/[A-Z]/.test(password)) score += 15;
+    if (/[0-9]/.test(password)) score += 15;
+    if (/[^a-zA-Z0-9]/.test(password)) score += 25;
+    return Math.min(score, 100);
+  };
+
+  const getPasswordStrengthColor = (strength: number) => {
+    if (strength < 30) return "bg-red-500";
+    if (strength < 60) return "bg-yellow-500";
+    if (strength < 80) return "bg-blue-500";
+    return "bg-green-500";
+  };
+
+  const getPasswordStrengthText = (strength: number) => {
+    if (strength < 30) return "Weak";
+    if (strength < 60) return "Fair";
+    if (strength < 80) return "Good";
+    return "Strong";
+  };
+
   // Registration form state
   const [registerForm, setRegisterForm] = useState({
     username: '',
@@ -45,13 +71,13 @@ export function ProfessionalAuth({ onSuccess }: ProfessionalAuthProps) {
     confirmPassword: '',
     firstName: '',
     lastName: '',
-    company: '',
-    countryCode: '+961', // Default to Lebanon
-    phoneNumber: ''
+    company: ''
   });
   
-  // Search functionality for country codes
-  const [countrySearch, setCountrySearch] = useState('');
+  // Password visibility and strength
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState(0);
 
   // Login form state
   const [loginForm, setLoginForm] = useState({
@@ -95,8 +121,7 @@ export function ProfessionalAuth({ onSuccess }: ProfessionalAuthProps) {
           password: registerForm.password,
           firstName: registerForm.firstName,
           lastName: registerForm.lastName,
-          company: registerForm.company,
-          phone: registerForm.countryCode + registerForm.phoneNumber
+          company: registerForm.company
         }),
       });
 
@@ -553,77 +578,118 @@ export function ProfessionalAuth({ onSuccess }: ProfessionalAuthProps) {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="phone">
-                    <Phone className="w-4 h-4 inline mr-2" />
-                    International Phone Number
+                  <Label htmlFor="password">
+                    <Lock className="w-4 h-4 inline mr-2" />
+                    Password *
                   </Label>
-                  <div className="flex gap-2">
-                    <Select 
-                      value={registerForm.countryCode} 
-                      onValueChange={(value) => setRegisterForm({...registerForm, countryCode: value})}
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Create a strong password"
+                      value={registerForm.password}
+                      onChange={(e) => {
+                        setRegisterForm({ ...registerForm, password: e.target.value });
+                        setPasswordStrength(calculatePasswordStrength(e.target.value));
+                      }}
+                      className="bg-slate-50 pr-10"
+                      required
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
                     >
-                      <SelectTrigger className="w-32 bg-slate-50">
-                        <SelectValue placeholder="Code" />
-                      </SelectTrigger>
-                      <SelectContent className="max-h-60">
-                        {/* Search Box */}
-                        <div className="p-2 border-b">
-                          <div className="relative">
-                            <Search className="w-4 h-4 absolute left-2 top-2.5 text-gray-400" />
-                            <Input
-                              placeholder="Search country..."
-                              value={countrySearch}
-                              onChange={(e) => setCountrySearch(e.target.value)}
-                              className="pl-8 h-8 text-sm"
-                              onClick={(e) => e.stopPropagation()}
-                            />
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4 text-gray-400" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-gray-400" />
+                      )}
+                    </Button>
+                  </div>
+                  
+                  {/* Password Strength Indicator */}
+                  {registerForm.password && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-600">Password Strength:</span>
+                        <span className={`text-xs font-medium ${
+                          passwordStrength < 30 ? 'text-red-600' :
+                          passwordStrength < 60 ? 'text-yellow-600' :
+                          passwordStrength < 80 ? 'text-blue-600' : 'text-green-600'
+                        }`}>
+                          {getPasswordStrengthText(passwordStrength)}
+                        </span>
+                      </div>
+                      <Progress 
+                        value={passwordStrength} 
+                        className={`h-2 ${getPasswordStrengthColor(passwordStrength)}`}
+                      />
+                      <div className="text-xs text-gray-500 space-y-1">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className={`flex items-center ${registerForm.password.length >= 8 ? 'text-green-600' : 'text-gray-400'}`}>
+                            <CheckCircle className="w-3 h-3 mr-1" />
+                            8+ characters
+                          </div>
+                          <div className={`flex items-center ${/[A-Z]/.test(registerForm.password) ? 'text-green-600' : 'text-gray-400'}`}>
+                            <CheckCircle className="w-3 h-3 mr-1" />
+                            Uppercase letter
+                          </div>
+                          <div className={`flex items-center ${/[a-z]/.test(registerForm.password) ? 'text-green-600' : 'text-gray-400'}`}>
+                            <CheckCircle className="w-3 h-3 mr-1" />
+                            Lowercase letter
+                          </div>
+                          <div className={`flex items-center ${/[0-9]/.test(registerForm.password) ? 'text-green-600' : 'text-gray-400'}`}>
+                            <CheckCircle className="w-3 h-3 mr-1" />
+                            Number
+                          </div>
+                          <div className={`flex items-center ${/[^a-zA-Z0-9]/.test(registerForm.password) ? 'text-green-600' : 'text-gray-400'}`}>
+                            <CheckCircle className="w-3 h-3 mr-1" />
+                            Special character
                           </div>
                         </div>
-                        
-                        {/* Priority maritime countries first */}
-                        <div className="font-semibold text-xs text-blue-600 px-2 py-1 bg-blue-50">🚢 Maritime Trading Hubs</div>
-                        {PRIORITY_COUNTRIES
-                          .map((code) => COUNTRY_CODES.find(c => c.code === code))
-                          .filter(country => 
-                            country && 
-                            (countrySearch === '' || 
-                             country.country.toLowerCase().includes(countrySearch.toLowerCase()) ||
-                             country.code.includes(countrySearch))
-                          )
-                          .map((country) => (
-                            <SelectItem key={`priority-${country.code}-${country.country}`} value={country.code}>
-                              {country.flag} {country.code} {country.country}
-                            </SelectItem>
-                          ))}
-                        
-                        {/* All Countries with search filter */}
-                        <div className="font-semibold text-xs text-gray-600 px-2 py-1 bg-gray-50 border-t">🌍 All Countries</div>
-                        {COUNTRY_CODES
-                          .filter(country => 
-                            !PRIORITY_COUNTRIES.includes(country.code) &&
-                            (countrySearch === '' || 
-                             country.country.toLowerCase().includes(countrySearch.toLowerCase()) ||
-                             country.code.includes(countrySearch))
-                          )
-                          .map((country) => (
-                            <SelectItem key={`${country.code}-${country.country}`} value={country.code}>
-                              {country.flag} {country.code} {country.country}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">
+                    <Lock className="w-4 h-4 inline mr-2" />
+                    Confirm Password *
+                  </Label>
+                  <div className="relative">
                     <Input
-                      id="phoneNumber"
-                      type="tel"
-                      value={registerForm.phoneNumber}
-                      onChange={(e) => setRegisterForm({...registerForm, phoneNumber: e.target.value})}
-                      placeholder="Enter phone number"
-                      className="flex-1 bg-slate-50"
+                      id="confirmPassword"
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="Confirm your password"
+                      value={registerForm.confirmPassword}
+                      onChange={(e) => setRegisterForm({ ...registerForm, confirmPassword: e.target.value })}
+                      className="bg-slate-50 pr-10"
+                      required
                     />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="h-4 w-4 text-gray-400" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-gray-400" />
+                      )}
+                    </Button>
                   </div>
-                  <p className="text-xs text-gray-500">
-                    International format for professional maritime communications
-                  </p>
+                  {registerForm.confirmPassword && registerForm.password !== registerForm.confirmPassword && (
+                    <p className="text-xs text-red-500 flex items-center">
+                      <AlertCircle className="w-3 h-3 mr-1" />
+                      Passwords do not match
+                    </p>
+                  )}
                 </div>
                 
                 <div className="space-y-2">
