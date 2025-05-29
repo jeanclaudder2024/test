@@ -8,6 +8,7 @@ import { FixedDataManagement } from "@/components/admin/FixedDataManagement";
 
 import { RefineryManagement } from "@/components/admin/RefineryManagement";
 import { PortManagement } from "@/components/admin/PortManagement";
+import VesselManagement from "@/components/admin/VesselManagement";
 
 import { Settings } from "@/components/admin/AdminSettings";
 import { DatabaseMigration } from "@/components/admin/DatabaseMigration";
@@ -88,7 +89,7 @@ export default function AdminPanel() {
               <option value="overview">📊 System Overview</option>
               <option value="users">👥 User Management</option>
               <option value="subscriptions">💳 Subscriptions</option>
-
+              <option value="vessels">🚢 Vessel Management</option>
               <option value="ports">⚓ Port Management</option>
               <option value="refineries">🏭 Refinery Management</option>
               <option value="brokers">🏢 Broker Network</option>
@@ -100,7 +101,7 @@ export default function AdminPanel() {
           </div>
 
           {/* Desktop Tab Navigation */}
-          <TabsList className="hidden lg:grid lg:grid-cols-10 w-full bg-white/60 backdrop-blur-sm border border-slate-200/60 p-1 rounded-xl shadow-sm">
+          <TabsList className="hidden lg:grid lg:grid-cols-11 w-full bg-white/60 backdrop-blur-sm border border-slate-200/60 p-1 rounded-xl shadow-sm">
             <TabsTrigger 
               value="overview" 
               className="flex items-center gap-2 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-200 hover:bg-blue-50 rounded-lg"
@@ -125,7 +126,14 @@ export default function AdminPanel() {
               <span className="hidden xl:inline font-medium">Billing</span>
               <span className="xl:hidden">Bills</span>
             </TabsTrigger>
-
+            <TabsTrigger 
+              value="vessels" 
+              className="flex items-center gap-2 data-[state=active]:bg-cyan-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-200 hover:bg-cyan-50 rounded-lg"
+            >
+              <Ship className="h-4 w-4" />
+              <span className="hidden xl:inline font-medium">Vessels</span>
+              <span className="xl:hidden">Ships</span>
+            </TabsTrigger>
             <TabsTrigger 
               value="ports" 
               className="flex items-center gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-200 hover:bg-blue-50 rounded-lg"
@@ -269,6 +277,10 @@ export default function AdminPanel() {
 
         <TabsContent value="subscriptions" className="space-y-4">
           <SubscriptionAdmin />
+        </TabsContent>
+
+        <TabsContent value="vessels" className="space-y-4">
+          <VesselManagement />
         </TabsContent>
 
         <TabsContent value="ports" className="space-y-4">

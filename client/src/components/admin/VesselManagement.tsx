@@ -1,0 +1,906 @@
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
+import { Plus, Edit, Trash2, Ship, Search, Filter, Download, Upload, MapPin, Calendar, Anchor } from "lucide-react";
+
+interface Vessel {
+  id: number;
+  name: string;
+  imo: string;
+  mmsi: string;
+  vesselType: string;
+  flag: string;
+  built: number | null;
+  deadweight: number | null;
+  currentLat: string | null;
+  currentLng: string | null;
+  departurePort: string | null;
+  departureDate: string | null;
+  departureLat: string | null;
+  departureLng: string | null;
+  destinationPort: string | null;
+  destinationLat: string | null;
+  destinationLng: string | null;
+  eta: string | null;
+  cargoType: string | null;
+  cargoCapacity: number | null;
+  currentRegion: string | null;
+  status: string | null;
+  speed: string | null;
+  buyerName: string | null;
+  sellerName: string | null;
+  ownerName: string | null;
+  operatorName: string | null;
+  oilSource: string | null;
+  metadata: string | null;
+  lastUpdated: string | null;
+}
+
+interface VesselFormData {
+  name: string;
+  imo: string;
+  mmsi: string;
+  vesselType: string;
+  flag: string;
+  built: string;
+  deadweight: string;
+  currentLat: string;
+  currentLng: string;
+  departurePort: string;
+  departureDate: string;
+  departureLat: string;
+  departureLng: string;
+  destinationPort: string;
+  destinationLat: string;
+  destinationLng: string;
+  eta: string;
+  cargoType: string;
+  cargoCapacity: string;
+  currentRegion: string;
+  status: string;
+  speed: string;
+  buyerName: string;
+  sellerName: string;
+  ownerName: string;
+  operatorName: string;
+  oilSource: string;
+}
+
+const vesselTypes = [
+  "Oil Tanker",
+  "Chemical Tanker", 
+  "LNG Carrier",
+  "LPG Carrier",
+  "Product Tanker",
+  "Crude Oil Tanker",
+  "Bulk Carrier",
+  "Container Ship",
+  "General Cargo"
+];
+
+const vesselStatuses = [
+  "underway",
+  "at anchor",
+  "moored",
+  "at port",
+  "near refinery",
+  "loading",
+  "discharging",
+  "idle",
+  "not under command",
+  "restricted manoeuvrability"
+];
+
+const regions = [
+  "north-atlantic",
+  "south-atlantic", 
+  "north-pacific",
+  "south-pacific",
+  "indian-ocean",
+  "mediterranean",
+  "baltic-sea",
+  "north-sea",
+  "persian-gulf",
+  "red-sea",
+  "caribbean",
+  "asia-pacific",
+  "black-sea",
+  "south-china-sea"
+];
+
+const cargoTypes = [
+  "Crude Oil",
+  "Gasoline",
+  "Diesel",
+  "Fuel Oil",
+  "Kerosene",
+  "Naphtha",
+  "LNG",
+  "LPG",
+  "Chemicals",
+  "Refined Products"
+];
+
+const defaultFormData: VesselFormData = {
+  name: "",
+  imo: "",
+  mmsi: "",
+  vesselType: "",
+  flag: "",
+  built: "",
+  deadweight: "",
+  currentLat: "",
+  currentLng: "",
+  departurePort: "",
+  departureDate: "",
+  departureLat: "",
+  departureLng: "",
+  destinationPort: "",
+  destinationLat: "",
+  destinationLng: "",
+  eta: "",
+  cargoType: "",
+  cargoCapacity: "",
+  currentRegion: "",
+  status: "underway",
+  speed: "",
+  buyerName: "",
+  sellerName: "",
+  ownerName: "",
+  operatorName: "",
+  oilSource: ""
+};
+
+export default function VesselManagement() {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingVessel, setEditingVessel] = useState<Vessel | null>(null);
+  const [formData, setFormData] = useState<VesselFormData>(defaultFormData);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Fetch vessels
+  const { data: vessels, isLoading } = useQuery({
+    queryKey: ["/api/admin/vessels"],
+    queryFn: async () => {
+      const response = await fetch("/api/admin/vessels");
+      if (!response.ok) throw new Error("Failed to fetch vessels");
+      return response.json();
+    }
+  });
+
+  // Create vessel mutation
+  const createVesselMutation = useMutation({
+    mutationFn: async (vesselData: VesselFormData) => {
+      const processedData = {
+        name: vesselData.name.trim(),
+        imo: vesselData.imo.trim(),
+        mmsi: vesselData.mmsi.trim(),
+        vesselType: vesselData.vesselType,
+        flag: vesselData.flag.trim(),
+        built: vesselData.built ? parseInt(vesselData.built) : null,
+        deadweight: vesselData.deadweight ? parseInt(vesselData.deadweight) : null,
+        currentLat: vesselData.currentLat || null,
+        currentLng: vesselData.currentLng || null,
+        departurePort: vesselData.departurePort.trim() || null,
+        departureDate: vesselData.departureDate ? new Date(vesselData.departureDate).toISOString() : null,
+        departureLat: vesselData.departureLat || null,
+        departureLng: vesselData.departureLng || null,
+        destinationPort: vesselData.destinationPort.trim() || null,
+        destinationLat: vesselData.destinationLat || null,
+        destinationLng: vesselData.destinationLng || null,
+        eta: vesselData.eta ? new Date(vesselData.eta).toISOString() : null,
+        cargoType: vesselData.cargoType.trim() || null,
+        cargoCapacity: vesselData.cargoCapacity ? parseInt(vesselData.cargoCapacity) : null,
+        currentRegion: vesselData.currentRegion || null,
+        status: vesselData.status || "underway",
+        speed: vesselData.speed.trim() || null,
+        buyerName: vesselData.buyerName.trim() || null,
+        sellerName: vesselData.sellerName.trim() || null,
+        ownerName: vesselData.ownerName.trim() || null,
+        operatorName: vesselData.operatorName.trim() || null,
+        oilSource: vesselData.oilSource.trim() || null
+      };
+
+      const response = await fetch("/api/admin/vessels", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(processedData)
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to create vessel");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/vessels"] });
+      setIsDialogOpen(false);
+      setFormData(defaultFormData);
+      setEditingVessel(null);
+      toast({ title: "Success", description: "Vessel created successfully" });
+    },
+    onError: (error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  });
+
+  // Update vessel mutation
+  const updateVesselMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: VesselFormData }) => {
+      const processedData = {
+        name: data.name.trim(),
+        imo: data.imo.trim(),
+        mmsi: data.mmsi.trim(),
+        vesselType: data.vesselType,
+        flag: data.flag.trim(),
+        built: data.built ? parseInt(data.built) : null,
+        deadweight: data.deadweight ? parseInt(data.deadweight) : null,
+        currentLat: data.currentLat || null,
+        currentLng: data.currentLng || null,
+        departurePort: data.departurePort.trim() || null,
+        departureDate: data.departureDate ? new Date(data.departureDate).toISOString() : null,
+        departureLat: data.departureLat || null,
+        departureLng: data.departureLng || null,
+        destinationPort: data.destinationPort.trim() || null,
+        destinationLat: data.destinationLat || null,
+        destinationLng: data.destinationLng || null,
+        eta: data.eta ? new Date(data.eta).toISOString() : null,
+        cargoType: data.cargoType.trim() || null,
+        cargoCapacity: data.cargoCapacity ? parseInt(data.cargoCapacity) : null,
+        currentRegion: data.currentRegion || null,
+        status: data.status || "underway",
+        speed: data.speed.trim() || null,
+        buyerName: data.buyerName.trim() || null,
+        sellerName: data.sellerName.trim() || null,
+        ownerName: data.ownerName.trim() || null,
+        operatorName: data.operatorName.trim() || null,
+        oilSource: data.oilSource.trim() || null
+      };
+
+      const response = await fetch(`/api/admin/vessels/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(processedData)
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to update vessel");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/vessels"] });
+      setIsDialogOpen(false);
+      setFormData(defaultFormData);
+      setEditingVessel(null);
+      toast({ title: "Success", description: "Vessel updated successfully" });
+    },
+    onError: (error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  });
+
+  // Delete vessel mutation
+  const deleteVesselMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await fetch(`/api/admin/vessels/${id}`, {
+        method: "DELETE"
+      });
+      if (!response.ok) throw new Error("Failed to delete vessel");
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/vessels"] });
+      toast({ title: "Success", description: "Vessel deleted successfully" });
+    },
+    onError: (error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  });
+
+  const handleEdit = (vessel: Vessel) => {
+    setEditingVessel(vessel);
+    setFormData({
+      name: vessel.name || "",
+      imo: vessel.imo || "",
+      mmsi: vessel.mmsi || "",
+      vesselType: vessel.vesselType || "",
+      flag: vessel.flag || "",
+      built: vessel.built?.toString() || "",
+      deadweight: vessel.deadweight?.toString() || "",
+      currentLat: vessel.currentLat || "",
+      currentLng: vessel.currentLng || "",
+      departurePort: vessel.departurePort || "",
+      departureDate: vessel.departureDate ? vessel.departureDate.split('T')[0] : "",
+      departureLat: vessel.departureLat || "",
+      departureLng: vessel.departureLng || "",
+      destinationPort: vessel.destinationPort || "",
+      destinationLat: vessel.destinationLat || "",
+      destinationLng: vessel.destinationLng || "",
+      eta: vessel.eta ? vessel.eta.split('T')[0] : "",
+      cargoType: vessel.cargoType || "",
+      cargoCapacity: vessel.cargoCapacity?.toString() || "",
+      currentRegion: vessel.currentRegion || "",
+      status: vessel.status || "underway",
+      speed: vessel.speed || "",
+      buyerName: vessel.buyerName || "",
+      sellerName: vessel.sellerName || "",
+      ownerName: vessel.ownerName || "",
+      operatorName: vessel.operatorName || "",
+      oilSource: vessel.oilSource || ""
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Basic validation
+    if (!formData.name || !formData.imo || !formData.mmsi || !formData.vesselType || !formData.flag) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields (name, IMO, MMSI, vessel type, flag)",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (editingVessel) {
+      updateVesselMutation.mutate({ id: editingVessel.id, data: formData });
+    } else {
+      createVesselMutation.mutate(formData);
+    }
+  };
+
+  const resetForm = () => {
+    setFormData(defaultFormData);
+    setEditingVessel(null);
+    setIsDialogOpen(false);
+  };
+
+  // Filter vessels based on search and filters
+  const filteredVessels = vessels?.filter((vessel: Vessel) => {
+    const matchesSearch = !searchTerm || 
+      vessel.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      vessel.imo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      vessel.mmsi.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = !statusFilter || vessel.status === statusFilter;
+    const matchesType = !typeFilter || vessel.vesselType === typeFilter;
+    
+    return matchesSearch && matchesStatus && matchesType;
+  }) || [];
+
+  const getStatusBadgeVariant = (status: string | null) => {
+    switch (status) {
+      case "underway": return "default";
+      case "at port": return "secondary";
+      case "loading": return "destructive";
+      case "discharging": return "destructive";
+      case "at anchor": return "outline";
+      default: return "secondary";
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+            <Ship className="h-8 w-8 text-blue-600" />
+            Vessel Fleet Management
+          </h2>
+          <p className="text-gray-600 mt-1">Comprehensive vessel tracking and management system</p>
+        </div>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={() => resetForm()} className="bg-blue-600 hover:bg-blue-700">
+              <Plus className="h-4 w-4 mr-2" />
+              Add New Vessel
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-semibold">
+                {editingVessel ? "Edit Vessel" : "Add New Vessel"}
+              </DialogTitle>
+            </DialogHeader>
+            
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <Tabs defaultValue="basic" className="w-full">
+                <TabsList className="grid w-full grid-cols-4">
+                  <TabsTrigger value="basic">Basic Info</TabsTrigger>
+                  <TabsTrigger value="technical">Technical</TabsTrigger>
+                  <TabsTrigger value="voyage">Voyage Data</TabsTrigger>
+                  <TabsTrigger value="commercial">Commercial</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="basic" className="space-y-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <Ship className="h-5 w-5" />
+                        Basic Vessel Information
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="name">Vessel Name *</Label>
+                        <Input
+                          id="name"
+                          value={formData.name}
+                          onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                          placeholder="Enter vessel name"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="imo">IMO Number *</Label>
+                        <Input
+                          id="imo"
+                          value={formData.imo}
+                          onChange={(e) => setFormData(prev => ({ ...prev, imo: e.target.value }))}
+                          placeholder="IMO1234567"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="mmsi">MMSI Number *</Label>
+                        <Input
+                          id="mmsi"
+                          value={formData.mmsi}
+                          onChange={(e) => setFormData(prev => ({ ...prev, mmsi: e.target.value }))}
+                          placeholder="123456789"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="vesselType">Vessel Type *</Label>
+                        <Select value={formData.vesselType} onValueChange={(value) => setFormData(prev => ({ ...prev, vesselType: value }))}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select vessel type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {vesselTypes.map(type => (
+                              <SelectItem key={type} value={type}>{type}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="flag">Flag State *</Label>
+                        <Input
+                          id="flag"
+                          value={formData.flag}
+                          onChange={(e) => setFormData(prev => ({ ...prev, flag: e.target.value }))}
+                          placeholder="e.g., Panama, Liberia, Marshall Islands"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="built">Year Built</Label>
+                        <Input
+                          id="built"
+                          type="number"
+                          value={formData.built}
+                          onChange={(e) => setFormData(prev => ({ ...prev, built: e.target.value }))}
+                          placeholder="2020"
+                          min="1900"
+                          max="2030"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="technical" className="space-y-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">Technical Specifications</CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="deadweight">Deadweight (tons)</Label>
+                        <Input
+                          id="deadweight"
+                          type="number"
+                          value={formData.deadweight}
+                          onChange={(e) => setFormData(prev => ({ ...prev, deadweight: e.target.value }))}
+                          placeholder="50000"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="cargoCapacity">Cargo Capacity (tons)</Label>
+                        <Input
+                          id="cargoCapacity"
+                          type="number"
+                          value={formData.cargoCapacity}
+                          onChange={(e) => setFormData(prev => ({ ...prev, cargoCapacity: e.target.value }))}
+                          placeholder="45000"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="cargoType">Cargo Type</Label>
+                        <Select value={formData.cargoType} onValueChange={(value) => setFormData(prev => ({ ...prev, cargoType: value }))}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select cargo type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {cargoTypes.map(type => (
+                              <SelectItem key={type} value={type}>{type}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="speed">Current Speed (knots)</Label>
+                        <Input
+                          id="speed"
+                          value={formData.speed}
+                          onChange={(e) => setFormData(prev => ({ ...prev, speed: e.target.value }))}
+                          placeholder="12.5"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="voyage" className="space-y-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <MapPin className="h-5 w-5" />
+                        Current Position & Voyage
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="currentLat">Current Latitude</Label>
+                        <Input
+                          id="currentLat"
+                          value={formData.currentLat}
+                          onChange={(e) => setFormData(prev => ({ ...prev, currentLat: e.target.value }))}
+                          placeholder="25.276987"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="currentLng">Current Longitude</Label>
+                        <Input
+                          id="currentLng"
+                          value={formData.currentLng}
+                          onChange={(e) => setFormData(prev => ({ ...prev, currentLng: e.target.value }))}
+                          placeholder="55.296249"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="currentRegion">Current Region</Label>
+                        <Select value={formData.currentRegion} onValueChange={(value) => setFormData(prev => ({ ...prev, currentRegion: value }))}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select region" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {regions.map(region => (
+                              <SelectItem key={region} value={region}>
+                                {region.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="status">Vessel Status</Label>
+                        <Select value={formData.status} onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {vesselStatuses.map(status => (
+                              <SelectItem key={status} value={status}>
+                                {status.replace(/\b\w/g, l => l.toUpperCase())}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="departurePort">Departure Port</Label>
+                        <Input
+                          id="departurePort"
+                          value={formData.departurePort}
+                          onChange={(e) => setFormData(prev => ({ ...prev, departurePort: e.target.value }))}
+                          placeholder="Port of Jebel Ali"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="destinationPort">Destination Port</Label>
+                        <Input
+                          id="destinationPort"
+                          value={formData.destinationPort}
+                          onChange={(e) => setFormData(prev => ({ ...prev, destinationPort: e.target.value }))}
+                          placeholder="Port of Rotterdam"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="departureDate">Departure Date</Label>
+                        <Input
+                          id="departureDate"
+                          type="date"
+                          value={formData.departureDate}
+                          onChange={(e) => setFormData(prev => ({ ...prev, departureDate: e.target.value }))}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="eta">Estimated Arrival</Label>
+                        <Input
+                          id="eta"
+                          type="date"
+                          value={formData.eta}
+                          onChange={(e) => setFormData(prev => ({ ...prev, eta: e.target.value }))}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="commercial" className="space-y-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">Commercial Information</CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="ownerName">Owner/Oil Company</Label>
+                        <Input
+                          id="ownerName"
+                          value={formData.ownerName}
+                          onChange={(e) => setFormData(prev => ({ ...prev, ownerName: e.target.value }))}
+                          placeholder="Saudi Aramco, ExxonMobil, etc."
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="operatorName">Operator</Label>
+                        <Input
+                          id="operatorName"
+                          value={formData.operatorName}
+                          onChange={(e) => setFormData(prev => ({ ...prev, operatorName: e.target.value }))}
+                          placeholder="Operating company"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="buyerName">Buyer</Label>
+                        <Input
+                          id="buyerName"
+                          value={formData.buyerName}
+                          onChange={(e) => setFormData(prev => ({ ...prev, buyerName: e.target.value }))}
+                          placeholder="Purchasing company"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="sellerName">Seller</Label>
+                        <Input
+                          id="sellerName"
+                          value={formData.sellerName}
+                          onChange={(e) => setFormData(prev => ({ ...prev, sellerName: e.target.value }))}
+                          placeholder="Selling company"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="oilSource">Oil Source</Label>
+                        <Input
+                          id="oilSource"
+                          value={formData.oilSource}
+                          onChange={(e) => setFormData(prev => ({ ...prev, oilSource: e.target.value }))}
+                          placeholder="Source refinery or field"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
+
+              <div className="flex justify-end gap-3 pt-4 border-t">
+                <Button type="button" variant="outline" onClick={resetForm}>
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={createVesselMutation.isPending || updateVesselMutation.isPending}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  {createVesselMutation.isPending || updateVesselMutation.isPending 
+                    ? "Saving..." 
+                    : editingVessel ? "Update Vessel" : "Create Vessel"
+                  }
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {/* Search and Filter Controls */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  placeholder="Search by vessel name, IMO, or MMSI..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[150px]">
+                  <Filter className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All Statuses</SelectItem>
+                  {vesselStatuses.map(status => (
+                    <SelectItem key={status} value={status}>
+                      {status.replace(/\b\w/g, l => l.toUpperCase())}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All Types</SelectItem>
+                  {vesselTypes.map(type => (
+                    <SelectItem key={type} value={type}>{type}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Vessels Table */}
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <CardTitle className="flex items-center gap-2">
+              <Ship className="h-5 w-5" />
+              Fleet Overview ({filteredVessels.length} vessels)
+            </CardTitle>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm">
+                <Download className="h-4 w-4 mr-2" />
+                Export
+              </Button>
+              <Button variant="outline" size="sm">
+                <Upload className="h-4 w-4 mr-2" />
+                Import
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="mt-2 text-gray-600">Loading vessels...</p>
+            </div>
+          ) : filteredVessels.length === 0 ? (
+            <div className="text-center py-12">
+              <Ship className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No vessels found</h3>
+              <p className="text-gray-500 mb-4">
+                {searchTerm || statusFilter || typeFilter 
+                  ? "No vessels match your current filters."
+                  : "Get started by adding your first vessel to the fleet."
+                }
+              </p>
+              <Button onClick={() => resetForm()}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add First Vessel
+              </Button>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Vessel</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Flag</TableHead>
+                    <TableHead>Current Position</TableHead>
+                    <TableHead>Owner/Operator</TableHead>
+                    <TableHead>Last Updated</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredVessels.map((vessel: Vessel) => (
+                    <TableRow key={vessel.id}>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{vessel.name}</div>
+                          <div className="text-sm text-gray-500">IMO: {vessel.imo}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell>{vessel.vesselType}</TableCell>
+                      <TableCell>
+                        <Badge variant={getStatusBadgeVariant(vessel.status)}>
+                          {vessel.status || "Unknown"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{vessel.flag}</TableCell>
+                      <TableCell>
+                        <div className="text-sm">
+                          {vessel.currentLat && vessel.currentLng ? (
+                            <div>
+                              <div>Lat: {vessel.currentLat}</div>
+                              <div>Lng: {vessel.currentLng}</div>
+                            </div>
+                          ) : (
+                            <span className="text-gray-400">Position unknown</span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm">
+                          {vessel.ownerName && (
+                            <div className="font-medium">{vessel.ownerName}</div>
+                          )}
+                          {vessel.operatorName && (
+                            <div className="text-gray-500">{vessel.operatorName}</div>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm text-gray-500">
+                          {vessel.lastUpdated 
+                            ? new Date(vessel.lastUpdated).toLocaleDateString()
+                            : "Never"
+                          }
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="outline" onClick={() => handleEdit(vessel)}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="destructive" 
+                            onClick={() => deleteVesselMutation.mutate(vessel.id)}
+                            disabled={deleteVesselMutation.isPending}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
