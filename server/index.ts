@@ -1,7 +1,8 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes-clean";
+import { setupCleanAuth } from "./clean-auth";
 import { setupVite, serveStatic, log } from "./vite";
-// Removed old database initialization - using Supabase only
+// Clean Supabase-only setup for oil vessel tracking platform
 
 const app = express();
 app.use(express.json());
@@ -40,6 +41,9 @@ app.use((req, res, next) => {
 (async () => {
   // Simple Supabase-only setup
   console.log('🚀 Starting oil vessel tracking platform with Supabase...');
+  
+  // Setup clean authentication system
+  setupCleanAuth(app);
   
   const server = await registerRoutes(app);
   
