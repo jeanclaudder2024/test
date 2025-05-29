@@ -262,12 +262,24 @@ export const ports = pgTable("ports", {
 export const insertPortSchema = createInsertSchema(ports).omit({
   id: true,
   lastUpdated: true,
-}).transform((port) => ({
-  ...port,
-  // Convert lat/lng to strings if they're passed as numbers
-  lat: port.lat !== undefined ? String(port.lat) : undefined,
-  lng: port.lng !== undefined ? String(port.lng) : undefined
-}));
+}).extend({
+  // Accept string inputs and convert to proper types
+  lat: z.union([z.string(), z.number()]).transform(val => {
+    if (val === "" || val === null || val === undefined) return undefined;
+    const num = typeof val === "string" ? parseFloat(val) : val;
+    return isNaN(num) ? undefined : String(num);
+  }),
+  lng: z.union([z.string(), z.number()]).transform(val => {
+    if (val === "" || val === null || val === undefined) return undefined;
+    const num = typeof val === "string" ? parseFloat(val) : val;
+    return isNaN(num) ? undefined : String(num);
+  }),
+  capacity: z.union([z.number(), z.string(), z.undefined()]).optional().transform(val => {
+    if (val === "" || val === null || val === undefined) return null;
+    const num = typeof val === "string" ? parseInt(val) : val;
+    return isNaN(num) ? null : num;
+  })
+});
 
 export type InsertStats = z.infer<typeof insertStatsSchema>;
 export type Stats = typeof stats.$inferSelect;

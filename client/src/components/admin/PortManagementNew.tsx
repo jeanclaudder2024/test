@@ -154,13 +154,21 @@ export function PortManagementNew() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...portData,
-          lat: portData.lat ? parseFloat(portData.lat) : null,
-          lng: portData.lng ? parseFloat(portData.lng) : null,
-          capacity: portData.capacity ? parseInt(portData.capacity) : null
+          name: portData.name,
+          country: portData.country,
+          region: portData.region,
+          type: portData.type,
+          status: portData.status,
+          description: portData.description,
+          lat: portData.lat,
+          lng: portData.lng,
+          capacity: portData.capacity
         })
       });
-      if (!response.ok) throw new Error("Failed to create port");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to create port");
+      }
       return response.json();
     },
     onSuccess: () => {
@@ -231,6 +239,98 @@ export function PortManagementNew() {
       });
     }
   });
+
+  // Auto Fill function with authentic port data
+  const handleAutoFill = () => {
+    const samplePorts = [
+      {
+        name: "Port of Jebel Ali",
+        country: "UAE",
+        region: "Middle East",
+        lat: "25.012414",
+        lng: "55.113632",
+        type: "Oil Terminal",
+        capacity: "19300000",
+        description: "Major container and oil terminal in Dubai, one of the largest ports in the Middle East",
+        status: "operational"
+      },
+      {
+        name: "Port of Rotterdam",
+        country: "Netherlands", 
+        region: "Europe",
+        lat: "51.942237",
+        lng: "4.141868",
+        type: "Oil Terminal",
+        capacity: "469000000",
+        description: "Europe's largest port and major petrochemical hub with extensive oil refining facilities",
+        status: "operational"
+      },
+      {
+        name: "Port of Houston",
+        country: "United States",
+        region: "North America", 
+        lat: "29.760427",
+        lng: "-95.369803",
+        type: "Oil Terminal",
+        capacity: "285000000",
+        description: "Major US petrochemical port with significant oil and gas handling capabilities",
+        status: "operational"
+      }
+    ];
+    
+    const randomPort = samplePorts[Math.floor(Math.random() * samplePorts.length)];
+    setFormData(randomPort);
+    setMapPosition([parseFloat(randomPort.lat), parseFloat(randomPort.lng)]);
+    
+    toast({
+      title: "Auto Fill Complete",
+      description: `Form filled with ${randomPort.name} data`
+    });
+  };
+
+  // AI Generate function
+  const handleAIGenerate = async () => {
+    setIsGeneratingAI(true);
+    try {
+      const response = await fetch("/api/ports/generate-ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ existingPorts: ports.length })
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to generate AI port data");
+      }
+      
+      const aiPort = await response.json();
+      setFormData({
+        name: aiPort.name,
+        country: aiPort.country,
+        region: aiPort.region,
+        lat: aiPort.lat.toString(),
+        lng: aiPort.lng.toString(),
+        type: aiPort.type,
+        capacity: aiPort.capacity?.toString() || '',
+        description: aiPort.description,
+        status: aiPort.status || 'operational'
+      });
+      
+      setMapPosition([parseFloat(aiPort.lat), parseFloat(aiPort.lng)]);
+      
+      toast({
+        title: "AI Generation Complete",
+        description: `Generated ${aiPort.name} with intelligent data`
+      });
+    } catch (error) {
+      toast({
+        title: "AI Generation Failed",
+        description: "Could not generate AI port data. Please try manual entry.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
 
   // Fix for Leaflet default marker icon
   useEffect(() => {
