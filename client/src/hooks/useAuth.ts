@@ -98,7 +98,7 @@ export function useAuthProvider(): AuthContextType {
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error };
+    return { error: error || undefined };
   };
 
   const signUp = async (email: string, password: string, userData?: any) => {
@@ -109,7 +109,7 @@ export function useAuthProvider(): AuthContextType {
         data: userData
       }
     });
-    return { error };
+    return { error: error || undefined };
   };
 
   const signOut = async () => {

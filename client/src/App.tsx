@@ -1,17 +1,26 @@
 import { Switch, Route, useLocation } from "wouter";
 import { Toaster } from "@/components/ui/toaster";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "./lib/queryClient";
+import { AuthProvider } from "@/components/auth/AuthProvider";
+import { useAuth } from "@/hooks/useAuth";
+import { ThemeProvider } from "@/hooks/use-theme";
+import { LanguageProvider } from "@/hooks/use-language";
+import { Loader2 } from "lucide-react";
+import { Redirect } from "wouter";
+
+// Import authentication pages
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
+
+// Import main app pages
 import NotFound from "@/pages/not-found";
-// Dashboard page removed as requested
 import Vessels from "@/pages/VesselsNew";
 import VesselDetail from "@/pages/VesselDetailNew";
 import VesselDocuments from "@/pages/VesselDocuments";
-// Vessel dashboard page removed as requested
 import Refineries from "@/pages/Refineries";
 import RefineryDetail from "@/pages/RefineryDetail";
-
-
 import Brokers from "@/pages/Brokers";
-import BrokerDashboard from "@/pages/BrokerDashboard";
 import SimpleBrokerDashboard from "@/pages/SimpleBrokerDashboard";
 import Documents from "@/pages/Documents";
 import AIAssistantPage from "@/pages/AIAssistant";
@@ -20,8 +29,6 @@ import Subscribe from "@/pages/Subscribe";
 import Pricing from "@/pages/Pricing";
 import AccountSubscription from "@/pages/AccountSubscription";
 import SubscriptionSuccess from "@/pages/SubscriptionSuccess";
-import LandingPage from "@/pages/LandingPage";
-import CleanAuthPage from "@/pages/CleanAuthPage";
 import TradingDashboard from "@/pages/TradingDashboard";
 import Companies from "@/pages/Companies";
 import ApiTest from "@/pages/ApiTest";
@@ -32,18 +39,7 @@ import OilVesselMap from "@/pages/OilVesselMap";
 import AdminPanel from "@/pages/AdminPanel";
 import PortsPage from "@/pages/PortsPage";
 import SubscriptionAdmin from "@/pages/SubscriptionAdmin";
-// Maritime tracking and vessel lookup pages removed as requested
-import { useEffect } from "react";
-import { apiRequest, queryClient } from "./lib/queryClient";
 import { Layout } from "@/components/ui/layout";
-import { AuthProvider, useProfessionalAuth } from "@/hooks/use-professional-auth";
-import { LanguageProvider } from "@/hooks/use-language";
-import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-import { ThemeProvider } from "@/hooks/use-theme";
-import { motion, AnimatePresence } from "framer-motion";
-import { Redirect } from "wouter";
-import { Loader2 } from "lucide-react";
-import { QueryClientProvider } from "@tanstack/react-query";
 
 // Clean Auth Wrapper Component - No Email Verification
 function CleanAuthWrapper() {
@@ -51,10 +47,10 @@ function CleanAuthWrapper() {
 }
 
 // Component to check auth status and redirect if logged in
-function LandingPageRedirect() {
-  const { user, isLoading } = useProfessionalAuth();
+function AuthenticatedRouter() {
+  const { user, loading } = useAuth();
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -62,13 +58,20 @@ function LandingPageRedirect() {
     );
   }
 
-  // If user is logged in, redirect to broker dashboard
-  if (user) {
-    return <Redirect to="/broker-dashboard" />;
+  // If user is not logged in, show login page
+  if (!user) {
+    return (
+      <Switch>
+        <Route path="/login" component={Login} />
+        <Route path="/register" component={Register} />
+        <Route path="/" component={Login} />
+        <Route component={() => <Redirect to="/login" />} />
+      </Switch>
+    );
   }
 
-  // Otherwise show landing page
-  return <LandingPage />;
+  // If user is logged in, show the main app
+  return <MainAppRouter />;
 }
 
 function Router() {
