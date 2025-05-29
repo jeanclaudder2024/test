@@ -290,10 +290,14 @@ interface LanguageProviderProps {
 export function LanguageProvider({ children }: LanguageProviderProps) {
   // Initialize language state with browser preference or default to English
   const [language, setLanguageState] = useState<Language>(() => {
-    // Check localStorage first
-    const savedLanguage = localStorage.getItem("language") as Language;
-    if (savedLanguage === "en" || savedLanguage === "ar") {
-      return savedLanguage;
+    try {
+      // Check localStorage first
+      const savedLanguage = localStorage.getItem("language") as Language;
+      if (savedLanguage === "en" || savedLanguage === "ar") {
+        return savedLanguage;
+      }
+    } catch (error) {
+      console.log("localStorage not available, using default language");
     }
     
     // Then check browser language
@@ -303,8 +307,14 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
 
   // Set language and save it to localStorage
   const setLanguage = (newLanguage: Language) => {
+    console.log("Setting language to:", newLanguage);
     setLanguageState(newLanguage);
-    localStorage.setItem("language", newLanguage);
+    
+    try {
+      localStorage.setItem("language", newLanguage);
+    } catch (error) {
+      console.log("Failed to save language to localStorage:", error);
+    }
     
     // Set document direction based on language
     document.documentElement.dir = newLanguage === "ar" ? "rtl" : "ltr";
@@ -313,6 +323,8 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
     document.documentElement.lang = newLanguage;
     document.body.classList.remove("lang-en", "lang-ar");
     document.body.classList.add(`lang-${newLanguage}`);
+    
+    console.log("Language updated to:", newLanguage, "Direction:", document.documentElement.dir);
   };
   
   // Translation function
