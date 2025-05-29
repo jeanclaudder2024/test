@@ -4,6 +4,7 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/hooks/use-auth";
+import { AuthProvider } from "@/hooks/use-auth";
 import { Anchor, Globe, Loader2, Lock, Mail, User, Ship } from "lucide-react";
 
 import {
@@ -34,7 +35,7 @@ const registerSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
-export default function CleanAuthPage() {
+function CleanAuthPageInner() {
   const [, navigate] = useLocation();
   const { user, loginMutation, registerMutation } = useAuth();
 
@@ -367,5 +368,13 @@ export default function CleanAuthPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CleanAuthPage() {
+  return (
+    <AuthProvider>
+      <CleanAuthPageInner />
+    </AuthProvider>
   );
 }
