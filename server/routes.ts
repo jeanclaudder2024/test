@@ -1994,44 +1994,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Port API endpoints
+  // Port API endpoints - Direct Supabase connection
   apiRouter.get("/ports", async (req, res) => {
     try {
+      console.log("Fetching ports directly from Supabase database...");
+      
       // Filter by region if specified in the query parameters
       const { region } = req.query;
       
-      // Try to fetch from MyShipTracking API first
-      if (marineTrafficService.isConfigured()) {
-        console.log("Fetching ports from MyShipTracking API...");
-        
-        try {
-          const apiPorts = await marineTrafficService.fetchPorts();
-          console.log(`Fetched ${apiPorts.length} ports from MyShipTracking API`);
-          
-          // Filter by region if requested
-          if (region && typeof region === 'string' && region !== 'all') {
-            const filteredPorts = apiPorts.filter(p => p.region === region);
-            console.log(`Filtered ports by region ${region}: ${apiPorts.length} → ${filteredPorts.length}`);
-            return res.json(filteredPorts);
-          }
-          
-          // If we have ports from the API, return them immediately
-          if (apiPorts.length > 0) {
-            return res.json(apiPorts);
-          }
-        } catch (apiError) {
-          console.error("Error fetching ports from MyShipTracking API:", apiError);
-          // Continue to fallback with database
-        }
-      }
-      
-      // Fallback to database if API fails or not configured
-      console.log("Falling back to database for port data");
+      // Always use Supabase database for authentic port data
       let ports;
       if (region && typeof region === 'string' && region !== 'all') {
         ports = await storage.getPortsByRegion(region);
+        console.log(`Retrieved ${ports.length} ports from Supabase for region: ${region}`);
       } else {
         ports = await storage.getPorts();
+        console.log(`Retrieved ${ports.length} ports from Supabase database`);
       }
       
       // Enhance a small batch of ports with AI data for more professional display

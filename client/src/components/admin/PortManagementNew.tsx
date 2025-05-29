@@ -47,8 +47,8 @@ interface Port {
   country: string;
   region: string;
   type: string;
-  lat: number;
-  lng: number;
+  lat: number | string;
+  lng: number | string;
   capacity?: number | null;
   description?: string | null;
   status?: string | null;
@@ -807,7 +807,7 @@ export function PortManagementNew() {
                         <TableCell>
                           <div className="flex items-center gap-1 text-sm">
                             <MapPin className="h-3 w-3" />
-                            {port.lat.toFixed(3)}, {port.lng.toFixed(3)}
+                            {typeof port.lat === 'number' ? port.lat.toFixed(3) : parseFloat(port.lat).toFixed(3)}, {typeof port.lng === 'number' ? port.lng.toFixed(3) : parseFloat(port.lng).toFixed(3)}
                           </div>
                         </TableCell>
                         <TableCell>
