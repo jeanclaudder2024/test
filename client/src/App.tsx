@@ -8,6 +8,7 @@ import VesselDocuments from "@/pages/VesselDocuments";
 // Vessel dashboard page removed as requested
 import Refineries from "@/pages/Refineries";
 import RefineryDetail from "@/pages/RefineryDetail";
+import PortsDatabase from "@/pages/PortsDatabase";
 
 import Brokers from "@/pages/Brokers";
 import BrokerDashboard from "@/pages/BrokerDashboard";
@@ -124,6 +125,7 @@ function Router() {
             {/* Maritime tracking and vessel lookup pages removed as requested */}
             <Route path="/refineries" component={Refineries} />
             <Route path="/refineries/:id" component={RefineryDetail} />
+            <Route path="/ports-database" component={PortsDatabase} />
 
             <Route path="/brokers" component={Brokers} />
             <Route path="/broker-dashboard" component={SimpleBrokerDashboard} />
