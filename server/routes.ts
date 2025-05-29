@@ -2048,7 +2048,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      res.json(ports);
+      // Add vessel information to each port
+      const vessels = await storage.getVessels();
+      
+      const portsWithVessels = ports.map(port => {
+        // Find vessels connected to this port (departure, destination, or nearby)
+        const connectedVessels = vessels.filter(vessel => {
+          // Check if vessel is departing from this port
+          const isDeparturePort = vessel.departurePort && 
+            vessel.departurePort.toLowerCase().includes(port.name.toLowerCase().replace(/port of |terminal/gi, '').trim());
+            
+          // Check if vessel is heading to this port
+          const isDestinationPort = vessel.destinationPort && 
+            vessel.destinationPort.toLowerCase().includes(port.name.toLowerCase().replace(/port of |terminal/gi, '').trim());
+            
+          // Check if vessel is nearby (within 0.5 degrees)
+          let isNearby = false;
+          if (vessel.currentLat && vessel.currentLng) {
+            try {
+              const vesselLat = parseFloat(vessel.currentLat);
+              const vesselLng = parseFloat(vessel.currentLng);
+              const portLat = parseFloat(port.lat.toString());
+              const portLng = parseFloat(port.lng.toString());
+              
+              const distance = Math.sqrt(
+                Math.pow(vesselLat - portLat, 2) + 
+                Math.pow(vesselLng - portLng, 2)
+              );
+              
+              isNearby = distance <= 0.5; // Within ~55km
+            } catch (error) {
+              // Invalid coordinates, skip
+            }
+          }
+          
+          return isDeparturePort || isDestinationPort || isNearby;
+        });
+        
+        return {
+          ...port,
+          vesselCount: connectedVessels.length,
+          vessels: connectedVessels.slice(0, 5).map(vessel => ({
+            id: vessel.id,
+            name: vessel.name,
+            imo: vessel.imo,
+            vesselType: vessel.vesselType,
+            flag: vessel.flag,
+            status: vessel.status || 'Active',
+            connectionType: vessel.departurePort?.toLowerCase().includes(port.name.toLowerCase()) ? 'departure' :
+                          vessel.destinationPort?.toLowerCase().includes(port.name.toLowerCase()) ? 'destination' : 'nearby'
+          }))
+        };
+      });
+      
+      res.json(portsWithVessels);
     } catch (error) {
       console.error("Error fetching ports:", error);
       res.status(500).json({ message: "Failed to fetch ports" });

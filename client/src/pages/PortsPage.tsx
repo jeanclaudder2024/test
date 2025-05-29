@@ -20,6 +20,16 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
+interface Vessel {
+  id: number;
+  name: string;
+  imo: string;
+  vesselType: string;
+  flag: string;
+  status: string;
+  connectionType: 'departure' | 'destination' | 'nearby';
+}
+
 interface Port {
   id: number;
   name: string;
@@ -32,6 +42,8 @@ interface Port {
   description?: string | null;
   status?: string | null;
   lastUpdated?: string;
+  vesselCount?: number;
+  vessels?: Vessel[];
 }
 
 function getCountryCode(country: string): string {
@@ -516,6 +528,51 @@ export default function PortsPage() {
                           {port.description}
                         </p>
                       )}
+
+                      {/* Vessel Information */}
+                      <div className="mt-4 pt-3 border-t border-gray-200">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="text-sm font-medium text-gray-900">Connected Vessels</h4>
+                          <Badge variant="secondary" className="text-xs">
+                            {port.vesselCount || 0} vessels
+                          </Badge>
+                        </div>
+                        
+                        {port.vessels && port.vessels.length > 0 ? (
+                          <div className="space-y-2">
+                            {port.vessels.map((vessel, index) => (
+                              <div key={vessel.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                                <div className="flex items-center gap-2">
+                                  <FlagIcon code={getCountryCode(vessel.flag)} size={12} />
+                                  <div>
+                                    <p className="text-xs font-medium text-gray-900">{vessel.name}</p>
+                                    <p className="text-xs text-gray-500">{vessel.vesselType}</p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <Badge 
+                                    variant={vessel.connectionType === 'departure' ? 'default' : 
+                                            vessel.connectionType === 'destination' ? 'secondary' : 'outline'}
+                                    className="text-xs"
+                                  >
+                                    {vessel.connectionType === 'departure' ? 'Departing' :
+                                     vessel.connectionType === 'destination' ? 'Arriving' : 'Nearby'}
+                                  </Badge>
+                                </div>
+                              </div>
+                            ))}
+                            {(port.vesselCount || 0) > 5 && (
+                              <p className="text-xs text-gray-500 text-center">
+                                +{(port.vesselCount || 0) - 5} more vessels
+                              </p>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-gray-500 text-center py-2">
+                            No vessels currently connected
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
