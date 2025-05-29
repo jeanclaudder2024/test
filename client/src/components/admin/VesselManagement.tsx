@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Edit, Trash2, Ship, Search, Filter, Download, Upload, MapPin, Calendar, Anchor, Zap, Sparkles } from "lucide-react";
+import MapSelector from "@/components/MapSelector";
 
 interface Vessel {
   id: number;
@@ -175,6 +176,7 @@ export default function VesselManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
+  const [showMapSelector, setShowMapSelector] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -489,6 +491,20 @@ export default function VesselManagement() {
     });
   };
 
+  // Handle map location selection
+  const handleLocationSelect = (lat: number, lng: number) => {
+    setFormData(prev => ({
+      ...prev,
+      currentLat: lat.toFixed(6),
+      currentLng: lng.toFixed(6)
+    }));
+    setShowMapSelector(false);
+    toast({
+      title: "Location Selected",
+      description: `Coordinates set to ${lat.toFixed(6)}, ${lng.toFixed(6)}`
+    });
+  };
+
   // Filter vessels based on search and filters
   const filteredVessels = vessels?.filter((vessel: Vessel) => {
     const matchesSearch = !searchTerm || 
@@ -710,23 +726,39 @@ export default function VesselManagement() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="currentLat">Current Latitude</Label>
-                        <Input
-                          id="currentLat"
-                          value={formData.currentLat}
-                          onChange={(e) => setFormData(prev => ({ ...prev, currentLat: e.target.value }))}
-                          placeholder="25.276987"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="currentLng">Current Longitude</Label>
-                        <Input
-                          id="currentLng"
-                          value={formData.currentLng}
-                          onChange={(e) => setFormData(prev => ({ ...prev, currentLng: e.target.value }))}
-                          placeholder="55.296249"
-                        />
+                      <div className="col-span-2">
+                        <Label>Current Position</Label>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setShowMapSelector(true)}
+                              className="flex items-center gap-2"
+                            >
+                              <MapPin className="h-4 w-4" />
+                              Select on Map
+                            </Button>
+                            {formData.currentLat && formData.currentLng && (
+                              <div className="text-sm text-muted-foreground">
+                                {formData.currentLat}, {formData.currentLng}
+                              </div>
+                            )}
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <Input
+                              placeholder="Latitude"
+                              value={formData.currentLat}
+                              onChange={(e) => setFormData(prev => ({ ...prev, currentLat: e.target.value }))}
+                            />
+                            <Input
+                              placeholder="Longitude"
+                              value={formData.currentLng}
+                              onChange={(e) => setFormData(prev => ({ ...prev, currentLng: e.target.value }))}
+                            />
+                          </div>
+                        </div>
                       </div>
                       <div>
                         <Label htmlFor="currentRegion">Current Region</Label>
@@ -881,6 +913,22 @@ export default function VesselManagement() {
                 </Button>
               </div>
             </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Map Selector Dialog */}
+        <Dialog open={showMapSelector} onOpenChange={setShowMapSelector}>
+          <DialogContent className="max-w-4xl h-[80vh]">
+            <DialogHeader>
+              <DialogTitle>Select Vessel Position</DialogTitle>
+            </DialogHeader>
+            <div className="h-full">
+              <MapSelector
+                onLocationSelect={handleLocationSelect}
+                initialLat={formData.currentLat ? parseFloat(formData.currentLat) : 25.276987}
+                initialLng={formData.currentLng ? parseFloat(formData.currentLng) : 55.296249}
+              />
+            </div>
           </DialogContent>
         </Dialog>
       </div>
