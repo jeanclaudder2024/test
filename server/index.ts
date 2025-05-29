@@ -48,9 +48,9 @@ app.use((req, res, next) => {
   // Setup ultra simple authentication system
   setupUltraSimpleAuth(app);
   
-  const server = app.listen(port, "0.0.0.0", () => {
-    log(`Server running on port ${port}`);
-  });
+  // Import and register API routes
+  const { registerRoutes } = await import("./routes");
+  const server = await registerRoutes(app);
   
   console.log('✅ Platform ready with Supabase authentication!');
 
