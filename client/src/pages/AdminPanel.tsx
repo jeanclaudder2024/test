@@ -7,6 +7,7 @@ import { SystemStats } from "@/components/admin/SystemStats";
 import { FixedDataManagement } from "@/components/admin/FixedDataManagement";
 
 import { RefineryManagement } from "@/components/admin/RefineryManagement";
+import { PortManagementNew } from "@/components/admin/PortManagementNew";
 
 import VesselManagement from "@/components/admin/VesselManagement";
 
@@ -90,7 +91,7 @@ export default function AdminPanel() {
               <option value="users">👥 User Management</option>
               <option value="subscriptions">💳 Subscriptions</option>
               <option value="vessels">🚢 Vessel Management</option>
-
+              <option value="ports">⚓ Ports Management</option>
               <option value="refineries">🏭 Refinery Management</option>
               <option value="brokers">🏢 Broker Network</option>
               <option value="data">💾 Data Management</option>
@@ -134,7 +135,14 @@ export default function AdminPanel() {
               <span className="hidden xl:inline font-medium">Vessels</span>
               <span className="xl:hidden">Ships</span>
             </TabsTrigger>
-
+            <TabsTrigger 
+              value="ports" 
+              className="flex items-center gap-2 data-[state=active]:bg-teal-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-200 hover:bg-teal-50 rounded-lg"
+            >
+              <Anchor className="h-4 w-4" />
+              <span className="hidden xl:inline font-medium">Ports</span>
+              <span className="xl:hidden">Ports</span>
+            </TabsTrigger>
             <TabsTrigger 
               value="refineries" 
               className="flex items-center gap-2 data-[state=active]:bg-orange-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-200 hover:bg-orange-50 rounded-lg"
@@ -276,7 +284,9 @@ export default function AdminPanel() {
           <VesselManagement />
         </TabsContent>
 
-
+        <TabsContent value="ports" className="space-y-4">
+          <PortManagementNew />
+        </TabsContent>
 
         <TabsContent value="refineries" className="space-y-4">
           <Card>
