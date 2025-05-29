@@ -633,4 +633,4 @@ router.get('/api/auth/me', (req, res) => {
   }
 });
 
-export { router as enterpriseAuthRoutes, setupEnterpriseSession };
+export { router as enterpriseAuthRoutes };
