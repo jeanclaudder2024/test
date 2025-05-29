@@ -6,7 +6,7 @@ import { UserManagement } from "@/components/admin/UserManagement";
 import { SystemStats } from "@/components/admin/SystemStats";
 import { FixedDataManagement } from "@/components/admin/FixedDataManagement";
 
-import { RefineryManagement } from "@/components/admin/RefineryManagement";
+
 import { PortManagementNew } from "@/components/admin/PortManagementNew";
 
 import VesselManagement from "@/components/admin/VesselManagement";
@@ -92,7 +92,7 @@ export default function AdminPanel() {
               <option value="subscriptions">💳 Subscriptions</option>
               <option value="vessels">🚢 Vessel Management</option>
               <option value="ports">⚓ Ports Management</option>
-              <option value="refineries">🏭 Refinery Management</option>
+
               <option value="brokers">🏢 Broker Network</option>
               <option value="data">💾 Data Management</option>
               <option value="migration">🔄 Database Migration</option>
@@ -102,7 +102,7 @@ export default function AdminPanel() {
           </div>
 
           {/* Desktop Tab Navigation */}
-          <TabsList className="hidden lg:grid lg:grid-cols-11 w-full bg-white/60 backdrop-blur-sm border border-slate-200/60 p-1 rounded-xl shadow-sm">
+          <TabsList className="hidden lg:grid lg:grid-cols-10 w-full bg-white/60 backdrop-blur-sm border border-slate-200/60 p-1 rounded-xl shadow-sm">
             <TabsTrigger 
               value="overview" 
               className="flex items-center gap-2 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-200 hover:bg-blue-50 rounded-lg"
@@ -143,14 +143,7 @@ export default function AdminPanel() {
               <span className="hidden xl:inline font-medium">Ports</span>
               <span className="xl:hidden">Ports</span>
             </TabsTrigger>
-            <TabsTrigger 
-              value="refineries" 
-              className="flex items-center gap-2 data-[state=active]:bg-orange-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-200 hover:bg-orange-50 rounded-lg"
-            >
-              <Factory className="h-4 w-4" />
-              <span className="hidden xl:inline font-medium">Refineries</span>
-              <span className="xl:hidden">Plants</span>
-            </TabsTrigger>
+
             <TabsTrigger 
               value="brokers" 
               className="flex items-center gap-2 data-[state=active]:bg-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-200 hover:bg-purple-50 rounded-lg"
@@ -288,19 +281,7 @@ export default function AdminPanel() {
           <PortManagementNew />
         </TabsContent>
 
-        <TabsContent value="refineries" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Refinery Management</CardTitle>
-              <CardDescription>
-                Add, edit, and manage global refineries with interactive map positioning
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <RefineryManagement />
-            </CardContent>
-          </Card>
-        </TabsContent>
+
 
         <TabsContent value="data" className="space-y-4">
           <Card>
