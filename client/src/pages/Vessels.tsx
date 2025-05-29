@@ -648,8 +648,15 @@ export default function Vessels() {
               </p>
             </div>
             
-            {/* Connection status indicator */}
+            {/* Connection status and management actions */}
             <div className="mt-4 lg:mt-0 flex items-center gap-3">
+              <Link href="/admin">
+                <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Manage Vessels
+                </Button>
+              </Link>
+              
               <div className="flex items-center px-3 py-1.5 rounded-full bg-gray-100 dark:bg-gray-700 text-sm">
                 <span className="text-gray-500 dark:text-gray-400 mr-2">Connection:</span>
                 {wsConnected ? (
