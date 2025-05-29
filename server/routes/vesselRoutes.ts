@@ -131,7 +131,41 @@ router.post("/generate-ai", async (req, res) => {
 router.get("/", async (req, res) => {
   try {
     const allVessels = await db.select().from(vessels);
-    res.json(allVessels);
+    
+    // Convert port IDs to port names for all vessels
+    const vesselsWithPortNames = await Promise.all(
+      allVessels.map(async (vessel) => {
+        const vesselData = { ...vessel };
+        
+        // Look up departure port name
+        if (vesselData.departurePort && typeof vesselData.departurePort === 'number') {
+          try {
+            const departurePortData = await db.select().from(ports).where(eq(ports.id, vesselData.departurePort)).limit(1);
+            if (departurePortData.length > 0) {
+              vesselData.departurePort = departurePortData[0].name;
+            }
+          } catch (error) {
+            console.log("Failed to lookup departure port name for vessel", vessel.id);
+          }
+        }
+        
+        // Look up destination port name
+        if (vesselData.destinationPort && typeof vesselData.destinationPort === 'number') {
+          try {
+            const destinationPortData = await db.select().from(ports).where(eq(ports.id, vesselData.destinationPort)).limit(1);
+            if (destinationPortData.length > 0) {
+              vesselData.destinationPort = destinationPortData[0].name;
+            }
+          } catch (error) {
+            console.log("Failed to lookup destination port name for vessel", vessel.id);
+          }
+        }
+        
+        return vesselData;
+      })
+    );
+    
+    res.json(vesselsWithPortNames);
   } catch (error) {
     console.error("Error fetching vessels:", error);
     res.status(500).json({ error: "Failed to fetch vessels" });
@@ -148,7 +182,32 @@ router.get("/:id", async (req, res) => {
       return res.status(404).json({ error: "Vessel not found" });
     }
     
-    res.json(vessel[0]);
+    const vesselData = vessel[0];
+    
+    // Look up port names if the ports are stored as IDs
+    if (vesselData.departurePort && typeof vesselData.departurePort === 'number') {
+      try {
+        const departurePortData = await db.select().from(ports).where(eq(ports.id, vesselData.departurePort)).limit(1);
+        if (departurePortData.length > 0) {
+          vesselData.departurePort = departurePortData[0].name;
+        }
+      } catch (error) {
+        console.log("Failed to lookup departure port name");
+      }
+    }
+    
+    if (vesselData.destinationPort && typeof vesselData.destinationPort === 'number') {
+      try {
+        const destinationPortData = await db.select().from(ports).where(eq(ports.id, vesselData.destinationPort)).limit(1);
+        if (destinationPortData.length > 0) {
+          vesselData.destinationPort = destinationPortData[0].name;
+        }
+      } catch (error) {
+        console.log("Failed to lookup destination port name");
+      }
+    }
+    
+    res.json(vesselData);
   } catch (error) {
     console.error("Error fetching vessel:", error);
     res.status(500).json({ error: "Failed to fetch vessel" });
