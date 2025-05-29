@@ -27,6 +27,8 @@ import {
   setCachedVesselsByRegion 
 } from "./utils/cacheManager";
 import { WebSocketServer, WebSocket } from "ws";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 import { 
   insertVesselSchema, 
   insertRefinerySchema, 
@@ -42,7 +44,8 @@ import {
   progressEvents,
   documents,
   stats,
-  ports
+  ports,
+  vesselPortConnections
 } from "@shared/schema";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
@@ -2064,9 +2067,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Get all vessel-port connections from the database
-      let vesselPortConnections = [];
+      let connections = [];
       try {
-        vesselPortConnections = await db
+        connections = await db
           .select({
             vesselId: vesselPortConnections.vesselId,
             portId: vesselPortConnections.portId,
@@ -2076,22 +2079,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
             status: vesselPortConnections.status,
             vesselName: vessels.name,
             vesselType: vessels.vesselType,
-            vesselImo: vessels.imo
+            vesselImo: vessels.imo,
+            portName: ports.name,
+            portLat: ports.lat,
+            portLng: ports.lng
           })
           .from(vesselPortConnections)
           .innerJoin(vessels, eq(vesselPortConnections.vesselId, vessels.id))
+          .innerJoin(ports, eq(vesselPortConnections.portId, ports.id))
           .where(eq(vesselPortConnections.status, 'active'));
       } catch (error) {
         console.log('No vessel-port connections table found, using fallback method');
-        vesselPortConnections = [];
+        connections = [];
       }
 
-      console.log(`Found ${vesselPortConnections.length} vessel-port connections`);
+      console.log(`Found ${connections.length} vessel-port connections`);
 
       const portsWithVessels = ports.map(port => {
-        if (vesselPortConnections.length > 0) {
+        if (connections.length > 0) {
           // Use database relationships if available
-          const portConnections = vesselPortConnections.filter(conn => conn.portId === port.id);
+          const portConnections = connections.filter(conn => conn.portId === port.id);
           
           const departingConnections = portConnections.filter(conn => conn.connectionType === 'departure');
           const arrivingConnections = portConnections.filter(conn => conn.connectionType === 'arrival');
