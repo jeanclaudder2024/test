@@ -3035,6 +3035,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Fetch real vessel data from AIS Stream
+  apiRouter.post("/vessels/fetch-ais", async (req, res) => {
+    try {
+      const { aisStreamService } = await import("./services/aisStreamService");
+      const result = await aisStreamService.updateOilVesselsFromAIS();
+      
+      res.json({
+        success: true,
+        message: `Updated vessel data from AIS Stream`,
+        processed: result.processed,
+        saved: result.saved
+      });
+    } catch (error: any) {
+      console.error("Error fetching AIS data:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "Failed to fetch AIS data",
+        error: error.message
+      });
+    }
+  });
+
   // Create new vessel
   apiRouter.post("/vessels", async (req, res) => {
     try {
