@@ -378,7 +378,37 @@ export default function LandingPage() {
                 </div>
               </div>
               
-              {/* Right Column - Interactive Map */}
+              {/* Right Column - Industry Showcase Slider */}
+              <div className="relative slide-in-right">
+                <IndustryShowcaseSlider />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Industry Partners Slider Section */}
+      <section className="py-20 bg-slate-900/80 border-t border-slate-800/50">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Powering the Global Oil Industry
+            </h2>
+            <p className="text-xl text-white/70 max-w-3xl mx-auto">
+              From major refineries to international oil terminals, our platform connects 
+              the world's petroleum infrastructure
+            </p>
+          </div>
+          
+          <OilIndustrySlider />
+        </div>
+      </section>
+
+      {/* Original Interactive Map Section */}
+      <section className="py-20 bg-slate-950">
+        <div className="container mx-auto px-4">
+          <div className="max-w-7xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               <div className="relative slide-in-right">
                 <div className="relative overflow-hidden rounded-2xl border border-slate-700/50 shadow-2xl shadow-orange-950/20 backdrop-blur-sm bg-slate-900/50">
                   {/* Decorative Elements */}
