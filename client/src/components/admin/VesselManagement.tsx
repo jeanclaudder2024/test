@@ -760,12 +760,23 @@ export default function VesselManagement() {
                       </div>
                       <div>
                         <Label htmlFor="departurePort">Departure Port</Label>
-                        <Input
-                          id="departurePort"
-                          value={formData.departurePort}
-                          onChange={(e) => setFormData(prev => ({ ...prev, departurePort: e.target.value }))}
-                          placeholder="Port of Jebel Ali"
-                        />
+                        <Select value={formData.departurePort} onValueChange={(value) => setFormData(prev => ({ ...prev, departurePort: value }))}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select departure port" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {ports?.map((port) => (
+                              <SelectItem key={port.id} value={port.name}>
+                                <div className="flex items-center justify-between w-full">
+                                  <span>{port.name}</span>
+                                  <span className="text-xs text-muted-foreground ml-2">
+                                    {port.country} • {port.type}
+                                  </span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div>
                         <Label htmlFor="destinationPort">Destination Port</Label>
