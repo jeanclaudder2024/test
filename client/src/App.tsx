@@ -100,7 +100,7 @@ function Router() {
             <LandingPageRedirect />
           </Route>
           <Route path="/auth">
-            <ProfessionalAuthWrapper />
+            <CleanAuthWrapper />
           </Route>
         </Switch>
       </AnimatePresence>
