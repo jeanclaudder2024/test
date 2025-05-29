@@ -377,8 +377,8 @@ export default function VesselManagement() {
       vessel.imo.toLowerCase().includes(searchTerm.toLowerCase()) ||
       vessel.mmsi.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesStatus = !statusFilter || vessel.status === statusFilter;
-    const matchesType = !typeFilter || vessel.vesselType === typeFilter;
+    const matchesStatus = !statusFilter || statusFilter === "all" || vessel.status === statusFilter;
+    const matchesType = !typeFilter || typeFilter === "all" || vessel.vesselType === typeFilter;
     
     return matchesSearch && matchesStatus && matchesType;
   }) || [];
@@ -752,7 +752,7 @@ export default function VesselManagement() {
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Statuses</SelectItem>
+                  <SelectItem value="all">All Statuses</SelectItem>
                   {vesselStatuses.map(status => (
                     <SelectItem key={status} value={status}>
                       {status.replace(/\b\w/g, l => l.toUpperCase())}
@@ -765,7 +765,7 @@ export default function VesselManagement() {
                   <SelectValue placeholder="Type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Types</SelectItem>
+                  <SelectItem value="all">All Types</SelectItem>
                   {vesselTypes.map(type => (
                     <SelectItem key={type} value={type}>{type}</SelectItem>
                   ))}
