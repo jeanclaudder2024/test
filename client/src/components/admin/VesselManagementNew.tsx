@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 import {
   Card,
   CardContent,
@@ -16,6 +17,15 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Ship, Search, Plus, ExternalLink, Loader2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -24,62 +34,28 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Ship, Plus, Edit, Trash2, Search } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 
-// Oil company logo mapping
-const getCompanyLogo = (companyName: string): string => {
-  const company = companyName?.toLowerCase() || '';
-  
-  if (company.includes('shell')) return '🟡'; // Shell logo representation
-  if (company.includes('exxon')) return '🔴'; // ExxonMobil logo representation
-  if (company.includes('bp')) return '🟢'; // BP logo representation
-  if (company.includes('chevron')) return '🔵'; // Chevron logo representation
-  if (company.includes('total')) return '🟠'; // TotalEnergies logo representation
-  if (company.includes('conocophillips')) return '⚪'; // ConocoPhillips logo representation
-  if (company.includes('eni')) return '🟡'; // Eni logo representation
-  if (company.includes('equinor')) return '🔵'; // Equinor logo representation
-  if (company.includes('petrobras')) return '🟢'; // Petrobras logo representation
-  if (company.includes('aramco')) return '🟢'; // Saudi Aramco logo representation
-  if (company.includes('kuwait')) return '🔵'; // Kuwait Petroleum logo representation
-  if (company.includes('abu dhabi') || company.includes('adnoc')) return '🟠'; // ADNOC logo representation
-  if (company.includes('qatar')) return '🟣'; // Qatar Petroleum logo representation
-  if (company.includes('lukoil')) return '🔴'; // Lukoil logo representation
-  if (company.includes('gazprom')) return '🔵'; // Gazprom logo representation
-  if (company.includes('rosneft')) return '🔴'; // Rosneft logo representation
-  if (company.includes('sinopec')) return '🟡'; // Sinopec logo representation
-  if (company.includes('petrochina')) return '🔴'; // PetroChina logo representation
-  if (company.includes('cnooc')) return '🔵'; // CNOOC logo representation
-  if (company.includes('petronas')) return '🟢'; // Petronas logo representation
-  
-  return '🛢️'; // Default oil company icon
-};
+// Vessel types for the form
+const vesselTypes = [
+  "Oil Tanker",
+  "Chemical Tanker",
+  "LNG Carrier",
+  "LPG Carrier",
+  "Product Tanker",
+  "Crude Oil Tanker",
+  "Bulk Carrier",
+  "Container Ship",
+  "General Cargo"
+];
 
-interface Vessel {
-  id: number;
-  name: string;
-  imo: string;
-  mmsi: string;
-  vesselType: string;
-  flag: string;
-  currentLat?: string;
-  currentLng?: string;
-  status?: string;
-  speed?: string;
-  cargoType?: string;
-  cargoCapacity?: number;
-  ownerName?: string;
-  operatorName?: string;
-  oilType?: string;
-  oilSource?: string;
-}
+// Vessel statuses
+const vesselStatuses = [
+  "underway",
+  "anchored",
+  "moored",
+  "not under command",
+  "restricted manoeuvrability"
+];
 
 interface VesselFormData {
   name: string;
@@ -94,27 +70,6 @@ interface VesselFormData {
   cargoType: string;
   cargoCapacity: string;
 }
-
-const vesselTypes = [
-  "Oil Tanker",
-  "Chemical Tanker", 
-  "LNG Carrier",
-  "LPG Carrier",
-  "Product Tanker",
-  "Crude Oil Tanker",
-  "Bulk Carrier",
-  "Container Ship",
-  "General Cargo"
-];
-
-const vesselStatuses = [
-  "underway",
-  "at anchor",
-  "moored", 
-  "at port",
-  "loading",
-  "discharging"
-];
 
 export function VesselManagementNew() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -136,20 +91,46 @@ export function VesselManagementNew() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Fetch vessels
-  const { data: vessels = [], isLoading } = useQuery({
-    queryKey: ["/api/vessels"],
+  // Fetch vessels using the same approach as the Vessels page
+  const { data: vessels = [], isLoading, error } = useQuery({
+    queryKey: ["/api/vessels/myshiptracking"],
     queryFn: async () => {
-      const response = await fetch("/api/vessels");
-      if (!response.ok) throw new Error("Failed to fetch vessels");
-      return response.json();
-    }
+      try {
+        // Try MyShipTracking API first (same as Vessels page)
+        const response = await fetch("/api/vessels/myshiptracking");
+        if (response.ok) {
+          const data = await response.json();
+          // Filter to only oil vessels with real locations
+          return data.filter((vessel: any) => {
+            const hasRealLocation = vessel.currentLat && vessel.currentLng && 
+                                  !isNaN(Number(vessel.currentLat)) && 
+                                  !isNaN(Number(vessel.currentLng));
+            const isOilVessel = 
+              vessel.vesselType?.toLowerCase().includes('tanker') ||
+              vessel.vesselType?.toLowerCase().includes('oil') ||
+              vessel.cargoType?.toLowerCase().includes('oil') ||
+              vessel.cargoType?.toLowerCase().includes('crude') ||
+              vessel.cargoType?.toLowerCase().includes('fuel');
+            return isOilVessel && hasRealLocation;
+          });
+        }
+        
+        // Fallback to regular vessels endpoint
+        const fallbackResponse = await fetch("/api/vessels");
+        if (!fallbackResponse.ok) throw new Error("Failed to fetch vessels");
+        return fallbackResponse.json();
+      } catch (error) {
+        console.error("Failed to fetch vessels:", error);
+        throw error;
+      }
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes
   });
 
   // Create vessel mutation
   const createVesselMutation = useMutation({
     mutationFn: async (vesselData: VesselFormData) => {
-      // Convert form data to API format
       const payload = {
         name: vesselData.name.trim(),
         imo: vesselData.imo.trim(),
@@ -180,7 +161,7 @@ export function VesselManagementNew() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/vessels"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/vessels/myshiptracking"] });
       setIsAddDialogOpen(false);
       resetForm();
       toast({
@@ -223,7 +204,6 @@ export function VesselManagementNew() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Basic validation
     if (!formData.name || !formData.imo || !formData.mmsi || !formData.flag) {
       toast({
         title: "Validation Error",
@@ -237,23 +217,36 @@ export function VesselManagementNew() {
   };
 
   // Filter vessels based on search term
-  const filteredVessels = vessels.filter((vessel: Vessel) => {
+  const filteredVessels = vessels.filter((vessel: any) => {
     if (!searchTerm) return true;
     
     const searchLower = searchTerm.toLowerCase();
     return (
-      vessel.name.toLowerCase().includes(searchLower) ||
-      vessel.imo.toLowerCase().includes(searchLower) ||
-      vessel.mmsi.toLowerCase().includes(searchLower) ||
-      vessel.vesselType.toLowerCase().includes(searchLower) ||
-      vessel.flag.toLowerCase().includes(searchLower)
+      vessel.name?.toLowerCase().includes(searchLower) ||
+      vessel.shipName?.toLowerCase().includes(searchLower) ||
+      vessel.imo?.toLowerCase().includes(searchLower) ||
+      vessel.mmsi?.toLowerCase().includes(searchLower) ||
+      vessel.vesselType?.toLowerCase().includes(searchLower) ||
+      vessel.flag?.toLowerCase().includes(searchLower)
     );
   });
 
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">Loading vessels from authentic sources...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-8 text-center text-red-500">
+        <p>Failed to load vessel data from external sources.</p>
+        <p className="text-sm text-gray-500">
+          This requires API access to vessel tracking services.
+        </p>
       </div>
     );
   }
@@ -266,7 +259,7 @@ export function VesselManagementNew() {
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <Ship className="h-5 w-5" />
-                Vessel Management
+                Vessel Management - Connected to Vessels Page Data
               </CardTitle>
               <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                 <DialogTrigger asChild>
@@ -276,166 +269,79 @@ export function VesselManagementNew() {
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>Add New Vessel</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Vessel Name *</Label>
-                      <Input
-                        id="name"
-                        value={formData.name}
-                        onChange={(e) => handleInputChange("name", e.target.value)}
-                        placeholder="Enter vessel name"
-                        required
-                      />
+                  <DialogHeader>
+                    <DialogTitle>Add New Vessel</DialogTitle>
+                  </DialogHeader>
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="name">Vessel Name *</Label>
+                        <Input
+                          id="name"
+                          value={formData.name}
+                          onChange={(e) => handleInputChange("name", e.target.value)}
+                          placeholder="Enter vessel name"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="vesselType">Vessel Type *</Label>
+                        <Select value={formData.vesselType} onValueChange={(value) => handleInputChange("vesselType", value)}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {vesselTypes.map((type) => (
+                              <SelectItem key={type} value={type}>
+                                {type}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="vesselType">Vessel Type *</Label>
-                      <Select value={formData.vesselType} onValueChange={(value) => handleInputChange("vesselType", value)}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {vesselTypes.map((type) => (
-                            <SelectItem key={type} value={type}>
-                              {type}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="imo">IMO Number *</Label>
-                      <Input
-                        id="imo"
-                        value={formData.imo}
-                        onChange={(e) => handleInputChange("imo", e.target.value)}
-                        placeholder="7-digit IMO number"
-                        required
-                      />
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="imo">IMO Number *</Label>
+                        <Input
+                          id="imo"
+                          value={formData.imo}
+                          onChange={(e) => handleInputChange("imo", e.target.value)}
+                          placeholder="7-digit IMO number"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="mmsi">MMSI Number *</Label>
+                        <Input
+                          id="mmsi"
+                          value={formData.mmsi}
+                          onChange={(e) => handleInputChange("mmsi", e.target.value)}
+                          placeholder="9-digit MMSI number"
+                          required
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="mmsi">MMSI Number *</Label>
-                      <Input
-                        id="mmsi"
-                        value={formData.mmsi}
-                        onChange={(e) => handleInputChange("mmsi", e.target.value)}
-                        placeholder="9-digit MMSI number"
-                        required
-                      />
-                    </div>
-                  </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="flag">Flag *</Label>
-                      <Input
-                        id="flag"
-                        value={formData.flag}
-                        onChange={(e) => handleInputChange("flag", e.target.value)}
-                        placeholder="Flag state"
-                        required
-                      />
+                    <div className="flex justify-end gap-2 pt-4">
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={() => setIsAddDialogOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button 
+                        type="submit" 
+                        disabled={createVesselMutation.isPending}
+                      >
+                        {createVesselMutation.isPending ? "Creating..." : "Create Vessel"}
+                      </Button>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="status">Status</Label>
-                      <Select value={formData.status} onValueChange={(value) => handleInputChange("status", value)}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {vesselStatuses.map((status) => (
-                            <SelectItem key={status} value={status}>
-                              {status}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="currentLat">Latitude</Label>
-                      <Input
-                        id="currentLat"
-                        value={formData.currentLat}
-                        onChange={(e) => handleInputChange("currentLat", e.target.value)}
-                        placeholder="e.g., 25.7617"
-                        type="number"
-                        step="any"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="currentLng">Longitude</Label>
-                      <Input
-                        id="currentLng"
-                        value={formData.currentLng}
-                        onChange={(e) => handleInputChange("currentLng", e.target.value)}
-                        placeholder="e.g., -80.1918"
-                        type="number"
-                        step="any"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="speed">Speed (knots)</Label>
-                      <Input
-                        id="speed"
-                        value={formData.speed}
-                        onChange={(e) => handleInputChange("speed", e.target.value)}
-                        placeholder="0"
-                        type="number"
-                        min="0"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="cargoType">Cargo Type</Label>
-                      <Input
-                        id="cargoType"
-                        value={formData.cargoType}
-                        onChange={(e) => handleInputChange("cargoType", e.target.value)}
-                        placeholder="e.g., Crude Oil"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="cargoCapacity">Cargo Capacity</Label>
-                      <Input
-                        id="cargoCapacity"
-                        value={formData.cargoCapacity}
-                        onChange={(e) => handleInputChange("cargoCapacity", e.target.value)}
-                        placeholder="Capacity in metric tons"
-                        type="number"
-                        min="0"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end gap-2 pt-4">
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      onClick={() => setIsAddDialogOpen(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button 
-                      type="submit" 
-                      disabled={createVesselMutation.isPending}
-                    >
-                      {createVesselMutation.isPending ? "Creating..." : "Create Vessel"}
-                    </Button>
-                  </div>
-                </form>
-              </DialogContent>
-            </Dialog>
+                  </form>
+                </DialogContent>
+              </Dialog>
             </div>
             
             {/* Search Bar */}
@@ -459,98 +365,83 @@ export function VesselManagementNew() {
             </div>
             
             <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Oil Type</TableHead>
-                  <TableHead>Company</TableHead>
-                  <TableHead>IMO</TableHead>
-                  <TableHead>MMSI</TableHead>
-                  <TableHead>Flag</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Position</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredVessels.map((vessel: Vessel) => (
-                  <TableRow key={vessel.id}>
-                    <TableCell className="font-medium">{vessel.name}</TableCell>
-                    <TableCell>{vessel.vesselType}</TableCell>
-                    <TableCell>
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                        vessel.oilType?.toLowerCase().includes('crude') ? 'bg-black text-white' :
-                        vessel.oilType?.toLowerCase().includes('lng') ? 'bg-blue-100 text-blue-800' :
-                        vessel.oilType?.toLowerCase().includes('diesel') ? 'bg-yellow-100 text-yellow-800' :
-                        vessel.oilType?.toLowerCase().includes('gasoline') ? 'bg-red-100 text-red-800' :
-                        vessel.oilType?.toLowerCase().includes('jet') ? 'bg-purple-100 text-purple-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {vessel.oilType || 'N/A'}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        {vessel.ownerName && (
-                          <div className="flex items-center gap-2 text-sm font-bold text-blue-800 bg-blue-50 px-2 py-1 rounded">
-                            <span className="text-lg">{getCompanyLogo(vessel.ownerName)}</span>
-                            <span>{vessel.ownerName}</span>
-                          </div>
-                        )}
-                        {vessel.operatorName && vessel.operatorName !== vessel.ownerName && (
-                          <div className="flex items-center gap-2 text-xs text-orange-700 bg-orange-50 px-2 py-1 rounded mt-1">
-                            <span className="text-sm">{getCompanyLogo(vessel.operatorName)}</span>
-                            <span>Operator: {vessel.operatorName}</span>
-                          </div>
-                        )}
-                        {vessel.oilSource && (
-                          <div className="text-xs text-green-700 bg-green-50 px-2 py-1 rounded mt-1">
-                            ⬅️ {vessel.oilSource}
-                          </div>
-                        )}
-                        {!vessel.ownerName && !vessel.operatorName && (
-                          <div className="text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded">
-                            🛢️ No company data
-                          </div>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>{vessel.imo}</TableCell>
-                    <TableCell>{vessel.mmsi}</TableCell>
-                    <TableCell>{vessel.flag}</TableCell>
-                    <TableCell>
-                      <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-green-50 text-green-700">
-                        {vessel.status || "Unknown"}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      {vessel.currentLat && vessel.currentLng 
-                        ? `${parseFloat(vessel.currentLat).toFixed(2)}, ${parseFloat(vessel.currentLng).toFixed(2)}`
-                        : "Not set"
-                      }
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="sm">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Cargo Type</TableHead>
+                    <TableHead>Flag</TableHead>
+                    <TableHead>IMO</TableHead>
+                    <TableHead>MMSI</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Speed</TableHead>
+                    <TableHead>Position</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            {vessels.length === 0 && (
-              <div className="p-8 text-center text-muted-foreground">
-                No vessels found. Add your first vessel to get started.
-              </div>
-            )}
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {filteredVessels.map((vessel: any) => (
+                    <TableRow key={vessel.id || vessel.imo}>
+                      <TableCell className="font-medium">{vessel.name || vessel.shipName || 'Unknown'}</TableCell>
+                      <TableCell>{vessel.vesselType || vessel.type || 'Oil Tanker'}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={`${
+                          vessel.cargoType?.toLowerCase().includes('crude') ? 'bg-black text-white' :
+                          vessel.cargoType?.toLowerCase().includes('lng') ? 'bg-blue-100 text-blue-800' :
+                          vessel.cargoType?.toLowerCase().includes('diesel') ? 'bg-yellow-100 text-yellow-800' :
+                          vessel.cargoType?.toLowerCase().includes('gasoline') ? 'bg-red-100 text-red-800' :
+                          vessel.cargoType?.toLowerCase().includes('jet') ? 'bg-purple-100 text-purple-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {vessel.cargoType || 'Oil Product'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{vessel.flag || 'N/A'}</TableCell>
+                      <TableCell className="font-mono text-xs">{vessel.imo || 'N/A'}</TableCell>
+                      <TableCell className="font-mono text-xs">{vessel.mmsi || 'N/A'}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={`${
+                          vessel.status === 'underway' ? 'bg-green-100 text-green-800' :
+                          vessel.status === 'anchored' ? 'bg-yellow-100 text-yellow-800' :
+                          vessel.status === 'moored' ? 'bg-blue-100 text-blue-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {vessel.status || 'underway'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{vessel.speed || vessel.currentSpeed || '0'} kn</TableCell>
+                      <TableCell>
+                        {vessel.currentLat && vessel.currentLng ? (
+                          <div className="text-xs">
+                            <div>{Number(vessel.currentLat).toFixed(4)}°N</div>
+                            <div>{Number(vessel.currentLng).toFixed(4)}°E</div>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">No position</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => window.open(`/vessels/${vessel.id || vessel.imo}`, '_blank')}
+                        >
+                          <ExternalLink className="h-4 w-4 mr-1" />
+                          View Details
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              
+              {vessels.length === 0 && (
+                <div className="p-8 text-center text-muted-foreground">
+                  No vessels found. This requires connection to external vessel tracking APIs.
+                </div>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
