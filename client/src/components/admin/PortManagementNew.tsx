@@ -355,6 +355,148 @@ export function PortManagementNew() {
                     Add Port
                   </Button>
                 </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>
+                      {editingPort ? 'Edit Port' : 'Add New Port'}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="name">Port Name *</Label>
+                        <Input
+                          id="name"
+                          value={formData.name}
+                          onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                          placeholder="Port of Houston"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="country">Country *</Label>
+                        <Select 
+                          value={formData.country} 
+                          onValueChange={(value) => setFormData(prev => ({ ...prev, country: value }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select country" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {countries.map(country => (
+                              <SelectItem key={country} value={country}>
+                                <div className="flex items-center gap-2">
+                                  <FlagIcon code={getFlagCode(country)} size={16} />
+                                  {country}
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="region">Region *</Label>
+                        <Select 
+                          value={formData.region} 
+                          onValueChange={(value) => setFormData(prev => ({ ...prev, region: value }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select region" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {regions.map(region => (
+                              <SelectItem key={region} value={region}>{region}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="type">Port Type *</Label>
+                        <Select 
+                          value={formData.type} 
+                          onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {portTypes.map(type => (
+                              <SelectItem key={type} value={type}>{type}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="status">Status</Label>
+                        <Select 
+                          value={formData.status} 
+                          onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {portStatuses.map(status => (
+                              <SelectItem key={status} value={status}>{status}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="capacity">Capacity</Label>
+                        <Input
+                          id="capacity"
+                          value={formData.capacity}
+                          onChange={(e) => setFormData(prev => ({ ...prev, capacity: e.target.value }))}
+                          placeholder="2000000"
+                          type="number"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="lat">Latitude</Label>
+                        <Input
+                          id="lat"
+                          value={formData.lat}
+                          onChange={(e) => setFormData(prev => ({ ...prev, lat: e.target.value }))}
+                          placeholder="29.7604"
+                          type="number"
+                          step="any"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="lng">Longitude</Label>
+                        <Input
+                          id="lng"
+                          value={formData.lng}
+                          onChange={(e) => setFormData(prev => ({ ...prev, lng: e.target.value }))}
+                          placeholder="-95.3698"
+                          type="number"
+                          step="any"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="description">Description</Label>
+                      <Input
+                        id="description"
+                        value={formData.description}
+                        onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                        placeholder="Major oil terminal with deep water berths"
+                      />
+                    </div>
+                    <div className="flex justify-end gap-2 pt-4">
+                      <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button 
+                        type="submit" 
+                        disabled={createPortMutation.isPending || updatePortMutation.isPending}
+                      >
+                        {editingPort ? 'Update Port' : 'Create Port'}
+                      </Button>
+                    </div>
+                  </form>
+                </DialogContent>
               </Dialog>
             </div>
           </div>
@@ -588,149 +730,7 @@ export function PortManagementNew() {
         </CardContent>
       </Card>
 
-      {/* Add/Edit Port Dialog */}
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>
-            {editingPort ? 'Edit Port' : 'Add New Port'}
-          </DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="name">Port Name *</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="Port of Houston"
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="country">Country *</Label>
-              <Select 
-                value={formData.country} 
-                onValueChange={(value) => setFormData(prev => ({ ...prev, country: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select country" />
-                </SelectTrigger>
-                <SelectContent>
-                  {countries.map(country => (
-                    <SelectItem key={country} value={country}>
-                      <div className="flex items-center gap-2">
-                        <FlagIcon code={getFlagCode(country)} size={16} />
-                        {country}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="region">Region *</Label>
-              <Select 
-                value={formData.region} 
-                onValueChange={(value) => setFormData(prev => ({ ...prev, region: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select region" />
-                </SelectTrigger>
-                <SelectContent>
-                  {regions.map(region => (
-                    <SelectItem key={region} value={region}>{region}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="type">Port Type *</Label>
-              <Select 
-                value={formData.type} 
-                onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {portTypes.map(type => (
-                    <SelectItem key={type} value={type}>{type}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="status">Status</Label>
-              <Select 
-                value={formData.status} 
-                onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  {portStatuses.map(status => (
-                    <SelectItem key={status} value={status}>{status}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="capacity">Capacity</Label>
-              <Input
-                id="capacity"
-                value={formData.capacity}
-                onChange={(e) => setFormData(prev => ({ ...prev, capacity: e.target.value }))}
-                placeholder="2000000"
-                type="number"
-              />
-            </div>
-            <div>
-              <Label htmlFor="lat">Latitude</Label>
-              <Input
-                id="lat"
-                value={formData.lat}
-                onChange={(e) => setFormData(prev => ({ ...prev, lat: e.target.value }))}
-                placeholder="29.7604"
-                type="number"
-                step="any"
-              />
-            </div>
-            <div>
-              <Label htmlFor="lng">Longitude</Label>
-              <Input
-                id="lng"
-                value={formData.lng}
-                onChange={(e) => setFormData(prev => ({ ...prev, lng: e.target.value }))}
-                placeholder="-95.3698"
-                type="number"
-                step="any"
-              />
-            </div>
-          </div>
-          <div>
-            <Label htmlFor="description">Description</Label>
-            <Input
-              id="description"
-              value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="Major oil terminal with deep water berths"
-            />
-          </div>
-          <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button 
-              type="submit" 
-              disabled={createPortMutation.isPending || updatePortMutation.isPending}
-            >
-              {editingPort ? 'Update Port' : 'Create Port'}
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
+
     </div>
   );
 }
