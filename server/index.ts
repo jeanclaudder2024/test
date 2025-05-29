@@ -1,9 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
+import { registerRoutes } from "./routes-clean";
 import { setupVite, serveStatic, log } from "./vite";
-import { startProximityEnhancement } from "./portProximityEnhancer";
-import { scheduleVesselMovement } from "./vessel-movement-scheduler";
-import { initializeSupabaseDatabase } from "./auto-migrate";
+// Removed old database initialization - using Supabase only
 
 const app = express();
 app.use(express.json());
@@ -40,14 +38,12 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Initialize Supabase database tables automatically
-  console.log('🚀 Initializing Supabase database...');
-  await initializeSupabaseDatabase();
+  // Simple Supabase-only setup
+  console.log('🚀 Starting oil vessel tracking platform with Supabase...');
   
   const server = await registerRoutes(app);
   
-  // Automated systems now powered by Supabase
-  console.log('✅ Supabase database ready - all systems operational!');
+  console.log('✅ Platform ready with Supabase authentication!');
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;

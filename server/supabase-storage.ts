@@ -1,23 +1,31 @@
-/**
- * Supabase Storage System - Oil Vessel Tracking Platform
- * Replaces problematic PostgreSQL connections with reliable Supabase
- */
+import { supabase } from "./supabase";
 
-import { supabase } from './supabase';
-import type { 
-  Vessel, Port, Refinery, Company, 
-  InsertVessel, InsertPort, InsertRefinery, InsertCompany 
-} from '@shared/schema';
-
-export class SupabaseStorage {
-  
+export interface IStorage {
   // Vessel operations
-  async getVessels(): Promise<Vessel[]> {
+  getVessels(): Promise<any[]>;
+  getVesselById(id: string): Promise<any | undefined>;
+  createVessel(vessel: any): Promise<any>;
+  updateVessel(id: string, vessel: any): Promise<any>;
+  
+  // Port operations
+  getPorts(): Promise<any[]>;
+  getPortById(id: string): Promise<any | undefined>;
+  createPort(port: any): Promise<any>;
+  
+  // User operations (for Supabase auth)
+  getUserById(id: string): Promise<any | undefined>;
+  createUser(user: any): Promise<any>;
+  updateUser(id: string, user: any): Promise<any>;
+}
+
+export class SupabaseStorage implements IStorage {
+  // Vessel operations
+  async getVessels(): Promise<any[]> {
     try {
       const { data, error } = await supabase
         .from('vessels')
         .select('*')
-        .order('name');
+        .order('created_at', { ascending: false });
       
       if (error) throw error;
       return data || [];
@@ -27,7 +35,7 @@ export class SupabaseStorage {
     }
   }
 
-  async getVesselById(id: number): Promise<Vessel | undefined> {
+  async getVesselById(id: string): Promise<any | undefined> {
     try {
       const { data, error } = await supabase
         .from('vessels')
@@ -43,11 +51,11 @@ export class SupabaseStorage {
     }
   }
 
-  async createVessel(vessel: InsertVessel): Promise<Vessel> {
+  async createVessel(vessel: any): Promise<any> {
     try {
       const { data, error } = await supabase
         .from('vessels')
-        .insert(vessel)
+        .insert([vessel])
         .select()
         .single();
       
@@ -59,11 +67,11 @@ export class SupabaseStorage {
     }
   }
 
-  async updateVessel(id: number, updates: Partial<InsertVessel>): Promise<Vessel> {
+  async updateVessel(id: string, vessel: any): Promise<any> {
     try {
       const { data, error } = await supabase
         .from('vessels')
-        .update(updates)
+        .update(vessel)
         .eq('id', id)
         .select()
         .single();
@@ -77,12 +85,12 @@ export class SupabaseStorage {
   }
 
   // Port operations
-  async getPorts(): Promise<Port[]> {
+  async getPorts(): Promise<any[]> {
     try {
       const { data, error } = await supabase
         .from('ports')
         .select('*')
-        .order('name');
+        .order('created_at', { ascending: false });
       
       if (error) throw error;
       return data || [];
@@ -92,7 +100,7 @@ export class SupabaseStorage {
     }
   }
 
-  async getPortById(id: number): Promise<Port | undefined> {
+  async getPortById(id: string): Promise<any | undefined> {
     try {
       const { data, error } = await supabase
         .from('ports')
@@ -108,11 +116,11 @@ export class SupabaseStorage {
     }
   }
 
-  async createPort(port: InsertPort): Promise<Port> {
+  async createPort(port: any): Promise<any> {
     try {
       const { data, error } = await supabase
         .from('ports')
-        .insert(port)
+        .insert([port])
         .select()
         .single();
       
@@ -124,125 +132,55 @@ export class SupabaseStorage {
     }
   }
 
-  // Refinery operations
-  async getRefineries(): Promise<Refinery[]> {
+  // User operations (for Supabase auth integration)
+  async getUserById(id: string): Promise<any | undefined> {
     try {
       const { data, error } = await supabase
-        .from('refineries')
+        .from('users')
         .select('*')
-        .order('name');
+        .eq('id', id)
+        .single();
       
       if (error) throw error;
-      return data || [];
+      return data;
     } catch (error) {
-      console.error('Error fetching refineries:', error);
-      return [];
+      console.error('Error fetching user:', error);
+      return undefined;
     }
   }
 
-  async createRefinery(refinery: InsertRefinery): Promise<Refinery> {
+  async createUser(user: any): Promise<any> {
     try {
       const { data, error } = await supabase
-        .from('refineries')
-        .insert(refinery)
+        .from('users')
+        .insert([user])
         .select()
         .single();
       
       if (error) throw error;
       return data;
     } catch (error) {
-      console.error('Error creating refinery:', error);
+      console.error('Error creating user:', error);
       throw error;
     }
   }
 
-  // Company operations
-  async getCompanies(): Promise<Company[]> {
+  async updateUser(id: string, user: any): Promise<any> {
     try {
       const { data, error } = await supabase
-        .from('companies')
-        .select('*')
-        .order('name');
-      
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      console.error('Error fetching companies:', error);
-      return [];
-    }
-  }
-
-  async createCompany(company: InsertCompany): Promise<Company> {
-    try {
-      const { data, error } = await supabase
-        .from('companies')
-        .insert(company)
+        .from('users')
+        .update(user)
+        .eq('id', id)
         .select()
         .single();
       
       if (error) throw error;
       return data;
     } catch (error) {
-      console.error('Error creating company:', error);
+      console.error('Error updating user:', error);
       throw error;
-    }
-  }
-
-  // Search operations
-  async searchVessels(query: string): Promise<Vessel[]> {
-    try {
-      const { data, error } = await supabase
-        .from('vessels')
-        .select('*')
-        .or(`name.ilike.%${query}%,imo.ilike.%${query}%,mmsi.ilike.%${query}%`)
-        .order('name');
-      
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      console.error('Error searching vessels:', error);
-      return [];
-    }
-  }
-
-  async searchPorts(query: string): Promise<Port[]> {
-    try {
-      const { data, error } = await supabase
-        .from('ports')
-        .select('*')
-        .or(`name.ilike.%${query}%,country.ilike.%${query}%,region.ilike.%${query}%`)
-        .order('name');
-      
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      console.error('Error searching ports:', error);
-      return [];
-    }
-  }
-
-  // Initialize tables if they don't exist
-  async initializeTables(): Promise<boolean> {
-    try {
-      console.log('🔧 Checking Supabase tables...');
-      
-      // Test connection by trying to fetch from vessels table
-      const { error } = await supabase.from('vessels').select('count').limit(1);
-      
-      if (error) {
-        console.log('📋 Tables need to be created in Supabase...');
-        // This would require SQL migrations in Supabase dashboard
-        return false;
-      }
-      
-      console.log('✅ Supabase tables are ready!');
-      return true;
-    } catch (error) {
-      console.error('❌ Supabase table check error:', error);
-      return false;
     }
   }
 }
 
-// Create singleton instance
-export const supabaseStorage = new SupabaseStorage();
+export const storage = new SupabaseStorage();
