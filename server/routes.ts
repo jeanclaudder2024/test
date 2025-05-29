@@ -2054,13 +2054,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const portsWithVessels = ports.map(port => {
         // Find vessels connected to this port (departure, destination, or nearby)
         const connectedVessels = vessels.filter(vessel => {
+          // Improved port name matching function
+          const matchesPort = (vesselPortName, portName) => {
+            if (!vesselPortName || !portName) return false;
+            
+            const vesselPort = vesselPortName.toLowerCase().trim();
+            const actualPort = portName.toLowerCase().trim();
+            
+            // Clean port names for better matching
+            const cleanVesselPort = vesselPort
+              .replace(/port of |terminal|harbour|harbor|oil terminal|container terminal/gi, '')
+              .replace(/[^\w\s]/g, '')
+              .trim();
+            
+            const cleanActualPort = actualPort
+              .replace(/port of |terminal|harbour|harbor|oil terminal|container terminal/gi, '')
+              .replace(/[^\w\s]/g, '')
+              .trim();
+            
+            // Multiple matching strategies
+            return (
+              vesselPort.includes(cleanActualPort) ||
+              actualPort.includes(cleanVesselPort) ||
+              cleanVesselPort.includes(cleanActualPort) ||
+              cleanActualPort.includes(cleanVesselPort) ||
+              // Match key words (for cases like "Long Beach" vs "Port of Long Beach")
+              cleanVesselPort.split(' ').some(word => 
+                word.length > 3 && cleanActualPort.includes(word)
+              ) ||
+              cleanActualPort.split(' ').some(word => 
+                word.length > 3 && cleanVesselPort.includes(word)
+              )
+            );
+          };
+          
           // Check if vessel is departing from this port
-          const isDeparturePort = vessel.departurePort && 
-            vessel.departurePort.toLowerCase().includes(port.name.toLowerCase().replace(/port of |terminal/gi, '').trim());
+          const isDeparturePort = matchesPort(vessel.departurePort, port.name);
             
           // Check if vessel is heading to this port
-          const isDestinationPort = vessel.destinationPort && 
-            vessel.destinationPort.toLowerCase().includes(port.name.toLowerCase().replace(/port of |terminal/gi, '').trim());
+          const isDestinationPort = matchesPort(vessel.destinationPort, port.name);
             
           // Check if vessel is nearby (within 0.5 degrees)
           let isNearby = false;
