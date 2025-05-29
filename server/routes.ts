@@ -68,6 +68,7 @@ import translationRouter from "./routes/translationRoutes";
 import vesselDashboardRouter from "./routes/vessel-dashboard";
 import { cargoManifestRouter } from "./routes/cargo-manifest-router";
 import { seedBrokers } from "./services/seedService";
+import simpleVesselConnectionsRouter from "./routes/simple-vessel-connections";
 
 // Import route handlers
 import { directPdfRouter } from './routes/direct-pdf';
@@ -3140,6 +3141,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // API routes for cargo manifests
   app.use(cargoManifestRouter);
+  
+  // API routes for vessel-port connections
+  app.use("/api/vessel-connections", simpleVesselConnectionsRouter);
 
   // Document routes for vessel documents
   app.use(documentRouter);
