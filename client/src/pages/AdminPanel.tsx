@@ -199,7 +199,7 @@ export default function AdminPanel() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-blue-100 text-sm font-medium">Total Users</p>
-                      <p className="text-3xl font-bold">{stats?.totalUsers || 0}</p>
+                      <p className="text-3xl font-bold">{(stats as any)?.totalUsers || 0}</p>
                     </div>
                     <Users className="h-8 w-8 text-blue-200" />
                   </div>
@@ -211,7 +211,7 @@ export default function AdminPanel() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-cyan-100 text-sm font-medium">Total Vessels</p>
-                      <p className="text-3xl font-bold">{stats?.totalVessels || 0}</p>
+                      <p className="text-3xl font-bold">{(stats as any)?.totalVessels || 0}</p>
                     </div>
                     <Ship className="h-8 w-8 text-cyan-200" />
                   </div>
@@ -223,7 +223,7 @@ export default function AdminPanel() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-orange-100 text-sm font-medium">Refineries</p>
-                      <p className="text-3xl font-bold">{stats?.totalRefineries || 0}</p>
+                      <p className="text-3xl font-bold">{(stats as any)?.totalRefineries || 0}</p>
                     </div>
                     <Factory className="h-8 w-8 text-orange-200" />
                   </div>

@@ -1,15 +1,23 @@
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import ws from "ws";
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
 import * as schema from "@shared/schema";
 
-neonConfig.webSocketConstructor = ws;
+// Use Supabase database URL from environment
+const DATABASE_URL = process.env.SUPABASE_URL 
+  ? `postgresql://postgres.fahvjksfkzmbsyvtktyk:Jonny@2025@@aws-0-us-east-2.pooler.supabase.com:6543/postgres`
+  : process.env.DATABASE_URL;
 
-// Supabase database connection (only database)
-const SUPABASE_DATABASE_URL = "postgresql://postgres.fahvjksfkzmbsyvtktyk:Jonny@2025@@aws-0-us-east-2.pooler.supabase.com:6543/postgres";
+if (!DATABASE_URL) {
+  throw new Error("DATABASE_URL or SUPABASE_URL must be set");
+}
 
-export const pool = new Pool({ connectionString: SUPABASE_DATABASE_URL });
-export const db = drizzle({ client: pool, schema });
+// Create PostgreSQL connection
+const sql = postgres(DATABASE_URL, {
+  max: 10,
+  ssl: { rejectUnauthorized: false }
+});
+
+export const db = drizzle(sql, { schema });
 
 console.log('✅ Connected to Supabase database');
 
