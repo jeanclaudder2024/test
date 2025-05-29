@@ -158,11 +158,9 @@ router.get("/:id", async (req, res) => {
 // Create new vessel
 router.post("/", async (req, res) => {
   try {
-    let vesselData = { ...req.body };
+    console.log("Received request to create vessel:", req.body);
     
-    // Convert dates and numbers
-    vesselData = convertDates(vesselData);
-    vesselData = convertNumbers(vesselData);
+    let vesselData = { ...req.body };
     
     // Ensure required fields
     if (!vesselData.name || !vesselData.imo || !vesselData.mmsi || !vesselData.vesselType || !vesselData.flag) {
@@ -171,21 +169,49 @@ router.post("/", async (req, res) => {
       });
     }
     
-    // Set default values for empty strings
-    Object.keys(vesselData).forEach(key => {
-      if (vesselData[key] === "") {
-        vesselData[key] = null;
-      }
-    });
+    // Clean and validate data
+    const cleanedData = {
+      name: vesselData.name.toString().trim(),
+      imo: vesselData.imo.toString().trim(),
+      mmsi: vesselData.mmsi.toString().trim(),
+      vesselType: vesselData.vesselType.toString().trim(),
+      flag: vesselData.flag.toString().trim(),
+      built: vesselData.built ? parseInt(vesselData.built) : null,
+      deadweight: vesselData.deadweight ? parseInt(vesselData.deadweight) : null,
+      currentLat: vesselData.currentLat ? vesselData.currentLat.toString() : null,
+      currentLng: vesselData.currentLng ? vesselData.currentLng.toString() : null,
+      departurePort: vesselData.departurePort ? vesselData.departurePort.toString().trim() : null,
+      departureDate: vesselData.departureDate ? new Date(vesselData.departureDate) : null,
+      departureLat: vesselData.departureLat ? vesselData.departureLat.toString() : null,
+      departureLng: vesselData.departureLng ? vesselData.departureLng.toString() : null,
+      destinationPort: vesselData.destinationPort ? vesselData.destinationPort.toString().trim() : null,
+      destinationLat: vesselData.destinationLat ? vesselData.destinationLat.toString() : null,
+      destinationLng: vesselData.destinationLng ? vesselData.destinationLng.toString() : null,
+      eta: vesselData.eta ? new Date(vesselData.eta) : null,
+      cargoType: vesselData.cargoType ? vesselData.cargoType.toString().trim() : null,
+      cargoCapacity: vesselData.cargoCapacity ? parseInt(vesselData.cargoCapacity) : null,
+      currentRegion: vesselData.currentRegion ? vesselData.currentRegion.toString().trim() : null,
+      status: vesselData.status ? vesselData.status.toString().trim() : "underway",
+      speed: vesselData.speed ? vesselData.speed.toString().trim() : null,
+      buyerName: vesselData.buyerName ? vesselData.buyerName.toString().trim() : null,
+      sellerName: vesselData.sellerName ? vesselData.sellerName.toString().trim() : null,
+      ownerName: vesselData.ownerName ? vesselData.ownerName.toString().trim() : null,
+      operatorName: vesselData.operatorName ? vesselData.operatorName.toString().trim() : null,
+      oilSource: vesselData.oilSource ? vesselData.oilSource.toString().trim() : null,
+      lastUpdated: new Date()
+    };
     
-    const newVessel = await db.insert(vessels).values(vesselData).returning();
+    console.log("Cleaned vessel data:", cleanedData);
+    
+    const newVessel = await db.insert(vessels).values(cleanedData).returning();
+    console.log("Vessel created successfully:", newVessel[0]);
     res.status(201).json(newVessel[0]);
   } catch (error) {
     console.error("Error creating vessel:", error);
     if (error.code === '23505') {
       res.status(400).json({ error: "Vessel with this IMO number already exists" });
     } else {
-      res.status(500).json({ error: "Failed to create vessel" });
+      res.status(500).json({ error: "Failed to create vessel: " + error.message });
     }
   }
 });
@@ -196,23 +222,48 @@ router.put("/:id", async (req, res) => {
     const vesselId = parseInt(req.params.id);
     let vesselData = { ...req.body };
     
-    // Convert dates and numbers
-    vesselData = convertDates(vesselData);
-    vesselData = convertNumbers(vesselData);
+    // Clean and validate data
+    const cleanedData = {
+      name: vesselData.name ? vesselData.name.toString().trim() : undefined,
+      imo: vesselData.imo ? vesselData.imo.toString().trim() : undefined,
+      mmsi: vesselData.mmsi ? vesselData.mmsi.toString().trim() : undefined,
+      vesselType: vesselData.vesselType ? vesselData.vesselType.toString().trim() : undefined,
+      flag: vesselData.flag ? vesselData.flag.toString().trim() : undefined,
+      built: vesselData.built ? parseInt(vesselData.built) : null,
+      deadweight: vesselData.deadweight ? parseInt(vesselData.deadweight) : null,
+      currentLat: vesselData.currentLat ? vesselData.currentLat.toString() : null,
+      currentLng: vesselData.currentLng ? vesselData.currentLng.toString() : null,
+      departurePort: vesselData.departurePort ? vesselData.departurePort.toString().trim() : null,
+      departureDate: vesselData.departureDate ? new Date(vesselData.departureDate) : null,
+      departureLat: vesselData.departureLat ? vesselData.departureLat.toString() : null,
+      departureLng: vesselData.departureLng ? vesselData.departureLng.toString() : null,
+      destinationPort: vesselData.destinationPort ? vesselData.destinationPort.toString().trim() : null,
+      destinationLat: vesselData.destinationLat ? vesselData.destinationLat.toString() : null,
+      destinationLng: vesselData.destinationLng ? vesselData.destinationLng.toString() : null,
+      eta: vesselData.eta ? new Date(vesselData.eta) : null,
+      cargoType: vesselData.cargoType ? vesselData.cargoType.toString().trim() : null,
+      cargoCapacity: vesselData.cargoCapacity ? parseInt(vesselData.cargoCapacity) : null,
+      currentRegion: vesselData.currentRegion ? vesselData.currentRegion.toString().trim() : null,
+      status: vesselData.status ? vesselData.status.toString().trim() : null,
+      speed: vesselData.speed ? vesselData.speed.toString().trim() : null,
+      buyerName: vesselData.buyerName ? vesselData.buyerName.toString().trim() : null,
+      sellerName: vesselData.sellerName ? vesselData.sellerName.toString().trim() : null,
+      ownerName: vesselData.ownerName ? vesselData.ownerName.toString().trim() : null,
+      operatorName: vesselData.operatorName ? vesselData.operatorName.toString().trim() : null,
+      oilSource: vesselData.oilSource ? vesselData.oilSource.toString().trim() : null,
+      lastUpdated: new Date()
+    };
     
-    // Set default values for empty strings
-    Object.keys(vesselData).forEach(key => {
-      if (vesselData[key] === "") {
-        vesselData[key] = null;
+    // Remove undefined values
+    Object.keys(cleanedData).forEach(key => {
+      if (cleanedData[key] === undefined) {
+        delete cleanedData[key];
       }
     });
     
-    // Add lastUpdated timestamp
-    vesselData.lastUpdated = new Date();
-    
     const updatedVessel = await db
       .update(vessels)
-      .set(vesselData)
+      .set(cleanedData)
       .where(eq(vessels.id, vesselId))
       .returning();
     
@@ -223,7 +274,7 @@ router.put("/:id", async (req, res) => {
     res.json(updatedVessel[0]);
   } catch (error) {
     console.error("Error updating vessel:", error);
-    res.status(500).json({ error: "Failed to update vessel" });
+    res.status(500).json({ error: "Failed to update vessel: " + error.message });
   }
 });
 
