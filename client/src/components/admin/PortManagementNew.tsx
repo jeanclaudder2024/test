@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,9 +29,15 @@ import {
   RefreshCw,
   ChevronLeft,
   ChevronRight,
-  Database
+  Database,
+  Wand2,
+  Bot,
+  Map
 } from 'lucide-react';
 import { FlagIcon } from "react-flag-kit";
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 
 interface Port {
   id: number;
@@ -112,6 +118,9 @@ export function PortManagementNew() {
   const [currentPage, setCurrentPage] = useState(1);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPort, setEditingPort] = useState<Port | null>(null);
+  const [showMap, setShowMap] = useState(false);
+  const [mapPosition, setMapPosition] = useState<[number, number]>([25.276987, 55.296249]);
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [formData, setFormData] = useState<PortFormData>({
     name: '',
     country: '',
@@ -223,6 +232,113 @@ export function PortManagementNew() {
     }
   });
 
+  // Fix for Leaflet default marker icon
+  useEffect(() => {
+    delete (L.Icon.Default.prototype as any)._getIconUrl;
+    L.Icon.Default.mergeOptions({
+      iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+      iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+      shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+    });
+  }, []);
+
+  // Auto-fill with random port data
+  const handleAutoFill = () => {
+    const samplePorts = [
+      {
+        name: "Port of Jebel Ali",
+        country: "UAE",
+        region: "Middle East",
+        type: "Container Port",
+        lat: "25.0118",
+        lng: "55.0618",
+        capacity: "19300000",
+        description: "One of the largest container ports in the Middle East"
+      },
+      {
+        name: "Port of Rotterdam",
+        country: "Netherlands", 
+        region: "Europe",
+        type: "Oil Terminal",
+        lat: "51.9244",
+        lng: "4.4777",
+        capacity: "469000000",
+        description: "Europe's largest port and major oil refining center"
+      },
+      {
+        name: "Port of Houston",
+        country: "United States",
+        region: "North America", 
+        type: "Oil Terminal",
+        lat: "29.7604",
+        lng: "-95.3698",
+        capacity: "285000000",
+        description: "Major petrochemical port serving the US Gulf Coast"
+      }
+    ];
+    
+    const randomPort = samplePorts[Math.floor(Math.random() * samplePorts.length)];
+    setFormData(prev => ({
+      ...prev,
+      ...randomPort
+    }));
+    setMapPosition([parseFloat(randomPort.lat), parseFloat(randomPort.lng)]);
+    
+    toast({
+      title: "Form Auto-Filled",
+      description: "Sample port data has been added to the form"
+    });
+  };
+
+  // AI-powered port data generation
+  const handleAIGenerate = async () => {
+    setIsGeneratingAI(true);
+    try {
+      const response = await fetch('/api/admin/ai-generate-port', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          existingPorts: ports.length,
+          preferredRegion: regionFilter !== 'all' ? regionFilter : undefined
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate AI port data');
+      }
+
+      const aiPortData = await response.json();
+      setFormData(prev => ({
+        ...prev,
+        name: aiPortData.name,
+        country: aiPortData.country,
+        region: aiPortData.region,
+        type: aiPortData.type,
+        lat: aiPortData.lat.toString(),
+        lng: aiPortData.lng.toString(),
+        capacity: aiPortData.capacity.toString(),
+        description: aiPortData.description,
+        status: aiPortData.status || 'operational'
+      }));
+      
+      setMapPosition([aiPortData.lat, aiPortData.lng]);
+      
+      toast({
+        title: "AI Data Generated",
+        description: "Intelligent port data has been generated based on global port patterns"
+      });
+    } catch (error) {
+      toast({
+        title: "AI Generation Failed",
+        description: "Could not generate AI port data. Using sample data instead.",
+        variant: "destructive"
+      });
+      handleAutoFill(); // Fallback to auto-fill
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       name: '',
@@ -236,6 +352,8 @@ export function PortManagementNew() {
       status: 'operational'
     });
     setEditingPort(null);
+    setShowMap(false);
+    setMapPosition([25.276987, 55.296249]);
   };
 
   const handleEdit = (port: Port) => {
@@ -309,6 +427,26 @@ export function PortManagementNew() {
     }
   };
 
+  // Map click handler component
+  function MapClickHandler() {
+    useMapEvents({
+      click(e) {
+        const { lat, lng } = e.latlng;
+        setMapPosition([lat, lng]);
+        setFormData(prev => ({
+          ...prev,
+          lat: lat.toString(),
+          lng: lng.toString()
+        }));
+        toast({
+          title: "Coordinates Selected",
+          description: `Location set to ${lat.toFixed(6)}, ${lng.toFixed(6)}`
+        });
+      },
+    });
+    return null;
+  }
+
   if (error) {
     return (
       <div className="space-y-6">
@@ -355,10 +493,33 @@ export function PortManagementNew() {
                     Add Port
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
-                    <DialogTitle>
-                      {editingPort ? 'Edit Port' : 'Add New Port'}
+                    <DialogTitle className="flex items-center justify-between">
+                      <span>{editingPort ? 'Edit Port' : 'Add New Port'}</span>
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={handleAutoFill}
+                          className="flex items-center gap-2"
+                        >
+                          <Wand2 className="h-4 w-4" />
+                          Auto Fill
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={handleAIGenerate}
+                          disabled={isGeneratingAI}
+                          className="flex items-center gap-2"
+                        >
+                          <Bot className="h-4 w-4" />
+                          {isGeneratingAI ? 'Generating...' : 'AI Generate'}
+                        </Button>
+                      </div>
                     </DialogTitle>
                   </DialogHeader>
                   <form onSubmit={handleSubmit} className="space-y-4">
@@ -454,27 +615,79 @@ export function PortManagementNew() {
                       </div>
                       <div>
                         <Label htmlFor="lat">Latitude</Label>
-                        <Input
-                          id="lat"
-                          value={formData.lat}
-                          onChange={(e) => setFormData(prev => ({ ...prev, lat: e.target.value }))}
-                          placeholder="29.7604"
-                          type="number"
-                          step="any"
-                        />
+                        <div className="flex gap-2">
+                          <Input
+                            id="lat"
+                            value={formData.lat}
+                            onChange={(e) => {
+                              setFormData(prev => ({ ...prev, lat: e.target.value }));
+                              if (e.target.value && formData.lng) {
+                                setMapPosition([parseFloat(e.target.value), parseFloat(formData.lng)]);
+                              }
+                            }}
+                            placeholder="29.7604"
+                            type="number"
+                            step="any"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setShowMap(!showMap)}
+                            className="flex items-center gap-2"
+                          >
+                            <Map className="h-4 w-4" />
+                            {showMap ? 'Hide' : 'Show'} Map
+                          </Button>
+                        </div>
                       </div>
                       <div>
                         <Label htmlFor="lng">Longitude</Label>
                         <Input
                           id="lng"
                           value={formData.lng}
-                          onChange={(e) => setFormData(prev => ({ ...prev, lng: e.target.value }))}
+                          onChange={(e) => {
+                            setFormData(prev => ({ ...prev, lng: e.target.value }));
+                            if (formData.lat && e.target.value) {
+                              setMapPosition([parseFloat(formData.lat), parseFloat(e.target.value)]);
+                            }
+                          }}
                           placeholder="-95.3698"
                           type="number"
                           step="any"
                         />
                       </div>
                     </div>
+                    
+                    {/* Interactive Map for Coordinate Selection */}
+                    {showMap && (
+                      <div className="space-y-2">
+                        <Label>Select Location on Map (Click to set coordinates)</Label>
+                        <div className="h-64 w-full border rounded-lg overflow-hidden">
+                          <MapContainer
+                            center={mapPosition}
+                            zoom={6}
+                            style={{ height: '100%', width: '100%' }}
+                          >
+                            <TileLayer
+                              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                            />
+                            <MapClickHandler />
+                            {formData.lat && formData.lng && (
+                              <Marker position={[parseFloat(formData.lat), parseFloat(formData.lng)]} />
+                            )}
+                          </MapContainer>
+                        </div>
+                        <p className="text-sm text-gray-600">
+                          Current coordinates: {formData.lat && formData.lng ? 
+                            `${parseFloat(formData.lat).toFixed(6)}, ${parseFloat(formData.lng).toFixed(6)}` : 
+                            'Click on the map to select coordinates'
+                          }
+                        </p>
+                      </div>
+                    )}
+                    
                     <div>
                       <Label htmlFor="description">Description</Label>
                       <Input
