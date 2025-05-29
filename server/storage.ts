@@ -446,7 +446,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createVessel(insertVessel: InsertVessel): Promise<Vessel> {
-    const [vessel] = await db.insert(vessels).values(insertVessel).returning();
+    const activeDb = getActiveDb();
+    const [vessel] = await activeDb.insert(vessels).values(insertVessel).returning();
     return vessel;
   }
 

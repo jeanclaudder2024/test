@@ -185,7 +185,23 @@ export function VesselManagementNew() {
         throw new Error(errorMessage);
       }
 
-      const result = await response.json();
+      // Handle the response more carefully
+      let result;
+      try {
+        const responseText = await response.text();
+        console.log("Raw response:", responseText);
+        
+        if (responseText.trim()) {
+          result = JSON.parse(responseText);
+        } else {
+          result = { success: true };
+        }
+      } catch (parseError) {
+        console.error("Failed to parse response as JSON:", parseError);
+        // If JSON parsing fails but status is OK, assume success
+        result = { success: true };
+      }
+      
       console.log("Vessel created successfully:", result);
       return result;
     },
