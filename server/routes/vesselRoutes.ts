@@ -299,4 +299,18 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+// Generate AI vessel data
+router.post("/generate-ai", async (req, res) => {
+  try {
+    const { generateRealisticVesselData } = await import("../services/aiVesselGenerator");
+    const vesselData = await generateRealisticVesselData();
+    res.json(vesselData);
+  } catch (error) {
+    console.error("Error generating AI vessel data:", error);
+    res.status(500).json({ 
+      error: "Failed to generate vessel data. Please ensure OpenAI API access is configured." 
+    });
+  }
+});
+
 export default router;

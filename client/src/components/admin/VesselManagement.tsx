@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit, Trash2, Ship, Search, Filter, Download, Upload, MapPin, Calendar, Anchor } from "lucide-react";
+import { Plus, Edit, Trash2, Ship, Search, Filter, Download, Upload, MapPin, Calendar, Anchor, Zap, Sparkles } from "lucide-react";
 
 interface Vessel {
   id: number;
@@ -310,6 +310,54 @@ export default function VesselManagement() {
     }
   });
 
+  // Generate AI vessel data mutation
+  const generateAIDataMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch("/api/admin/vessels/generate-ai", {
+        method: "POST"
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to generate AI vessel data");
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setFormData(prev => ({
+        ...prev,
+        name: data.name || "",
+        imo: data.imo || "",
+        mmsi: data.mmsi || "",
+        vesselType: data.vesselType || "",
+        flag: data.flag || "",
+        built: data.built?.toString() || "",
+        deadweight: data.deadweight?.toString() || "",
+        currentLat: data.currentLat || "",
+        currentLng: data.currentLng || "",
+        cargoType: data.cargoType || "",
+        cargoCapacity: data.cargoCapacity?.toString() || "",
+        speed: data.speed || "",
+        currentRegion: data.currentRegion || "",
+        ownerName: data.ownerName || "",
+        operatorName: data.operatorName || "",
+        buyerName: data.buyerName || "",
+        sellerName: data.sellerName || "",
+        oilSource: data.oilSource || ""
+      }));
+      toast({ 
+        title: "AI Data Generated", 
+        description: "Realistic vessel data has been generated and filled in the form" 
+      });
+    },
+    onError: (error) => {
+      toast({ 
+        title: "AI Generation Failed", 
+        description: "Could not generate vessel data. Please ensure OpenAI API access is configured.", 
+        variant: "destructive" 
+      });
+    }
+  });
+
   const handleEdit = (vessel: Vessel) => {
     setEditingVessel(vessel);
     setFormData({
@@ -413,9 +461,23 @@ export default function VesselManagement() {
           </DialogTrigger>
           <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle className="text-xl font-semibold">
-                {editingVessel ? "Edit Vessel" : "Add New Vessel"}
-              </DialogTitle>
+              <div className="flex justify-between items-center">
+                <DialogTitle className="text-xl font-semibold">
+                  {editingVessel ? "Edit Vessel" : "Add New Vessel"}
+                </DialogTitle>
+                {!editingVessel && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => generateAIDataMutation.mutate()}
+                    disabled={generateAIDataMutation.isPending}
+                    className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white border-0"
+                  >
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    {generateAIDataMutation.isPending ? "Generating..." : "AI Auto-Fill"}
+                  </Button>
+                )}
+              </div>
             </DialogHeader>
             
             <form onSubmit={handleSubmit} className="space-y-6">
