@@ -34,8 +34,10 @@ import {
   Bot,
   Map
 } from 'lucide-react';
-import { FlagIcon } from "react-flag-kit";
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import { FlagIcon } from 'react-flag-kit';
+import type { FlagIconCode } from 'react-flag-kit';
+import { MapContainer, TileLayer, Marker } from 'react-leaflet';
+import { useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -45,8 +47,8 @@ interface Port {
   country: string;
   region: string;
   type: string;
-  lat?: string | null;
-  lng?: string | null;
+  lat: number;
+  lng: number;
   capacity?: number | null;
   description?: string | null;
   status?: string | null;
@@ -190,7 +192,7 @@ export function PortManagementNew() {
   const updatePortMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: PortFormData }) => {
       const response = await fetch(`/api/ports/${id}`, {
-        method: "PUT",
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...data,
@@ -342,103 +344,6 @@ export function PortManagementNew() {
     });
   }, []);
 
-  // Auto-fill with random port data
-  const handleAutoFill = () => {
-    const samplePorts = [
-      {
-        name: "Port of Jebel Ali",
-        country: "UAE",
-        region: "Middle East",
-        type: "Container Port",
-        lat: "25.0118",
-        lng: "55.0618",
-        capacity: "19300000",
-        description: "One of the largest container ports in the Middle East"
-      },
-      {
-        name: "Port of Rotterdam",
-        country: "Netherlands", 
-        region: "Europe",
-        type: "Oil Terminal",
-        lat: "51.9244",
-        lng: "4.4777",
-        capacity: "469000000",
-        description: "Europe's largest port and major oil refining center"
-      },
-      {
-        name: "Port of Houston",
-        country: "United States",
-        region: "North America", 
-        type: "Oil Terminal",
-        lat: "29.7604",
-        lng: "-95.3698",
-        capacity: "285000000",
-        description: "Major petrochemical port serving the US Gulf Coast"
-      }
-    ];
-    
-    const randomPort = samplePorts[Math.floor(Math.random() * samplePorts.length)];
-    setFormData(prev => ({
-      ...prev,
-      ...randomPort
-    }));
-    setMapPosition([parseFloat(randomPort.lat), parseFloat(randomPort.lng)]);
-    
-    toast({
-      title: "Form Auto-Filled",
-      description: "Sample port data has been added to the form"
-    });
-  };
-
-  // AI-powered port data generation
-  const handleAIGenerate = async () => {
-    setIsGeneratingAI(true);
-    try {
-      const response = await fetch('/api/admin/ai-generate-port', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          existingPorts: ports.length,
-          preferredRegion: regionFilter !== 'all' ? regionFilter : undefined
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to generate AI port data');
-      }
-
-      const aiPortData = await response.json();
-      setFormData(prev => ({
-        ...prev,
-        name: aiPortData.name,
-        country: aiPortData.country,
-        region: aiPortData.region,
-        type: aiPortData.type,
-        lat: aiPortData.lat.toString(),
-        lng: aiPortData.lng.toString(),
-        capacity: aiPortData.capacity.toString(),
-        description: aiPortData.description,
-        status: aiPortData.status || 'operational'
-      }));
-      
-      setMapPosition([aiPortData.lat, aiPortData.lng]);
-      
-      toast({
-        title: "AI Data Generated",
-        description: "Intelligent port data has been generated based on global port patterns"
-      });
-    } catch (error) {
-      toast({
-        title: "AI Generation Failed",
-        description: "Could not generate AI port data. Using sample data instead.",
-        variant: "destructive"
-      });
-      handleAutoFill(); // Fallback to auto-fill
-    } finally {
-      setIsGeneratingAI(false);
-    }
-  };
-
   const resetForm = () => {
     setFormData({
       name: '',
@@ -463,8 +368,8 @@ export function PortManagementNew() {
       country: port.country,
       region: port.region,
       type: port.type,
-      lat: port.lat?.toString() || '',
-      lng: port.lng?.toString() || '',
+      lat: port.lat.toString(),
+      lng: port.lng.toString(),
       capacity: port.capacity?.toString() || '',
       description: port.description || '',
       status: port.status || 'operational'
@@ -475,7 +380,7 @@ export function PortManagementNew() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.country || !formData.region || !formData.type) {
+    if (!formData.name || !formData.country || !formData.region || !formData.lat || !formData.lng) {
       toast({
         title: "Validation Error",
         description: "Please fill in all required fields",
@@ -508,8 +413,8 @@ export function PortManagementNew() {
   const paginatedPorts = filteredPorts.slice(startIndex, startIndex + itemsPerPage);
 
   const getStatusBadgeVariant = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case "operational": 
+    switch (status) {
+      case "operational": return "default";
       case "active": return "default";
       case "maintenance": return "secondary";
       case "inactive": return "destructive";
@@ -550,16 +455,21 @@ export function PortManagementNew() {
   if (error) {
     return (
       <div className="space-y-6">
-        <Card className="border-red-200">
-          <CardHeader>
-            <CardTitle className="text-red-600">Database Connection Error</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-red-600 mb-4">Failed to connect to your ports database.</p>
-            <Button onClick={() => refetch()} variant="outline">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Retry Connection
-            </Button>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Anchor className="h-6 w-6 text-blue-600" />
+            <h2 className="text-2xl font-bold">Port Management</h2>
+          </div>
+        </div>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center py-8">
+              <p className="text-red-600 mb-4">Failed to load ports data</p>
+              <Button onClick={() => refetch()} variant="outline">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Retry
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -568,292 +478,32 @@ export function PortManagementNew() {
 
   return (
     <div className="space-y-6">
-      {/* Header with Statistics */}
-      <Card>
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <div>
-              <CardTitle className="flex items-center">
-                <Database className="h-5 w-5 mr-2 text-blue-600" />
-                Ports Database Management
-              </CardTitle>
-              <p className="text-sm text-gray-600 mt-1">
-                Manage authentic ports from your Supabase database
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => refetch()}>
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Refresh
-              </Button>
-              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button onClick={resetForm} size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Port
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle className="flex items-center justify-between">
-                      <span>{editingPort ? 'Edit Port' : 'Add New Port'}</span>
-                      <div className="flex gap-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={handleAutoFill}
-                          className="flex items-center gap-2"
-                        >
-                          <Wand2 className="h-4 w-4" />
-                          Auto Fill
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={handleAIGenerate}
-                          disabled={isGeneratingAI}
-                          className="flex items-center gap-2"
-                        >
-                          <Bot className="h-4 w-4" />
-                          {isGeneratingAI ? 'Generating...' : 'AI Generate'}
-                        </Button>
-                      </div>
-                    </DialogTitle>
-                  </DialogHeader>
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="name">Port Name *</Label>
-                        <Input
-                          id="name"
-                          value={formData.name}
-                          onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                          placeholder="Port of Houston"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="country">Country *</Label>
-                        <Select 
-                          value={formData.country} 
-                          onValueChange={(value) => setFormData(prev => ({ ...prev, country: value }))}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select country" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {countries.map(country => (
-                              <SelectItem key={country} value={country}>
-                                <div className="flex items-center gap-2">
-                                  <FlagIcon code={getFlagCode(country)} size={16} />
-                                  {country}
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label htmlFor="region">Region *</Label>
-                        <Select 
-                          value={formData.region} 
-                          onValueChange={(value) => setFormData(prev => ({ ...prev, region: value }))}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select region" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {regions.map(region => (
-                              <SelectItem key={region} value={region}>{region}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label htmlFor="type">Port Type *</Label>
-                        <Select 
-                          value={formData.type} 
-                          onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select type" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {portTypes.map(type => (
-                              <SelectItem key={type} value={type}>{type}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label htmlFor="status">Status</Label>
-                        <Select 
-                          value={formData.status} 
-                          onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {portStatuses.map(status => (
-                              <SelectItem key={status} value={status}>{status}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label htmlFor="capacity">Capacity</Label>
-                        <Input
-                          id="capacity"
-                          value={formData.capacity}
-                          onChange={(e) => setFormData(prev => ({ ...prev, capacity: e.target.value }))}
-                          placeholder="2000000"
-                          type="number"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="lat">Latitude</Label>
-                        <div className="flex gap-2">
-                          <Input
-                            id="lat"
-                            value={formData.lat}
-                            onChange={(e) => {
-                              setFormData(prev => ({ ...prev, lat: e.target.value }));
-                              if (e.target.value && formData.lng) {
-                                setMapPosition([parseFloat(e.target.value), parseFloat(formData.lng)]);
-                              }
-                            }}
-                            placeholder="29.7604"
-                            type="number"
-                            step="any"
-                          />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setShowMap(!showMap)}
-                            className="flex items-center gap-2"
-                          >
-                            <Map className="h-4 w-4" />
-                            {showMap ? 'Hide' : 'Show'} Map
-                          </Button>
-                        </div>
-                      </div>
-                      <div>
-                        <Label htmlFor="lng">Longitude</Label>
-                        <Input
-                          id="lng"
-                          value={formData.lng}
-                          onChange={(e) => {
-                            setFormData(prev => ({ ...prev, lng: e.target.value }));
-                            if (formData.lat && e.target.value) {
-                              setMapPosition([parseFloat(formData.lat), parseFloat(e.target.value)]);
-                            }
-                          }}
-                          placeholder="-95.3698"
-                          type="number"
-                          step="any"
-                        />
-                      </div>
-                    </div>
-                    
-                    {/* Interactive Map for Coordinate Selection */}
-                    {showMap && (
-                      <div className="space-y-2">
-                        <Label>Select Location on Map (Click to set coordinates)</Label>
-                        <div className="h-64 w-full border rounded-lg overflow-hidden">
-                          <MapContainer
-                            center={mapPosition}
-                            zoom={6}
-                            style={{ height: '100%', width: '100%' }}
-                          >
-                            <TileLayer
-                              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                            />
-                            <MapClickHandler />
-                            {formData.lat && formData.lng && (
-                              <Marker position={[parseFloat(formData.lat), parseFloat(formData.lng)]} />
-                            )}
-                          </MapContainer>
-                        </div>
-                        <p className="text-sm text-gray-600">
-                          Current coordinates: {formData.lat && formData.lng ? 
-                            `${parseFloat(formData.lat).toFixed(6)}, ${parseFloat(formData.lng).toFixed(6)}` : 
-                            'Click on the map to select coordinates'
-                          }
-                        </p>
-                      </div>
-                    )}
-                    
-                    <div>
-                      <Label htmlFor="description">Description</Label>
-                      <Input
-                        id="description"
-                        value={formData.description}
-                        onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                        placeholder="Major oil terminal with deep water berths"
-                      />
-                    </div>
-                    <div className="flex justify-end gap-2 pt-4">
-                      <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                        Cancel
-                      </Button>
-                      <Button 
-                        type="submit" 
-                        disabled={createPortMutation.isPending || updatePortMutation.isPending}
-                      >
-                        {editingPort ? 'Update Port' : 'Create Port'}
-                      </Button>
-                    </div>
-                  </form>
-                </DialogContent>
-              </Dialog>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center p-3 bg-blue-50 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600">{ports.length}</div>
-              <div className="text-sm text-blue-600">Total Ports</div>
-            </div>
-            <div className="text-center p-3 bg-green-50 rounded-lg">
-              <div className="text-2xl font-bold text-green-600">
-                {ports.filter(p => p.type === 'Oil Terminal').length}
-              </div>
-              <div className="text-sm text-green-600">Oil Terminals</div>
-            </div>
-            <div className="text-center p-3 bg-purple-50 rounded-lg">
-              <div className="text-2xl font-bold text-purple-600">
-                {new Set(ports.map(p => p.country)).size}
-              </div>
-              <div className="text-sm text-purple-600">Countries</div>
-            </div>
-            <div className="text-center p-3 bg-orange-50 rounded-lg">
-              <div className="text-2xl font-bold text-orange-600">
-                {new Set(ports.map(p => p.region)).size}
-              </div>
-              <div className="text-sm text-orange-600">Regions</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Anchor className="h-6 w-6 text-blue-600" />
+          <h2 className="text-2xl font-bold">Port Management</h2>
+          <Badge variant="secondary">{ports.length} Ports</Badge>
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={() => refetch()} variant="outline" size="sm">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
+        </div>
+      </div>
 
-      {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg flex items-center">
-            <Filter className="h-5 w-5 mr-2" />
-            Search & Filter
+          <CardTitle className="flex items-center gap-2">
+            <Database className="h-5 w-5" />
+            Port Database
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+        <CardContent className="space-y-4">
+          {/* Search and Filters */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
                 placeholder="Search ports..."
                 value={searchTerm}
@@ -861,69 +511,266 @@ export function PortManagementNew() {
                 className="pl-10"
               />
             </div>
-            <select
-              value={regionFilter}
-              onChange={(e) => setRegionFilter(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md"
-            >
-              <option value="all">All Regions</option>
-              {regions.map(region => (
-                <option key={region} value={region}>{region}</option>
-              ))}
-            </select>
-            <select
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md"
-            >
-              <option value="all">All Types</option>
-              {portTypes.map(type => (
-                <option key={type} value={type}>{type}</option>
-              ))}
-            </select>
+            <Select value={regionFilter} onValueChange={setRegionFilter}>
+              <SelectTrigger className="w-full sm:w-48">
+                <SelectValue placeholder="Filter by region" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Regions</SelectItem>
+                {regions.map(region => (
+                  <SelectItem key={region} value={region}>{region}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <SelectTrigger className="w-full sm:w-48">
+                <SelectValue placeholder="Filter by type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                {portTypes.map(type => (
+                  <SelectItem key={type} value={type}>{type}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-          <div className="mt-4 flex justify-between items-center">
-            <div className="text-sm text-gray-600">
-              Showing {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredPorts.length)} of {filteredPorts.length} ports
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setSearchTerm('');
-                setRegionFilter('all');
-                setTypeFilter('all');
-                setCurrentPage(1);
-              }}
-            >
-              Clear Filters
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
 
-      {/* Ports Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            Authentic Ports ({filteredPorts.length})
-            {isLoading && <span className="text-sm text-gray-500 ml-2">Loading...</span>}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {filteredPorts.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              {ports.length === 0 ? "No ports found in database" : "No ports match your search criteria"}
+          {/* Add Port Dialog */}
+          <div className="flex justify-end">
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={() => { resetForm(); setIsDialogOpen(true); }}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Port
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center justify-between">
+                    <span>{editingPort ? 'Edit Port' : 'Add New Port'}</span>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleAutoFill}
+                        className="flex items-center gap-2"
+                      >
+                        <Wand2 className="h-4 w-4" />
+                        Auto Fill
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleAIGenerate}
+                        disabled={isGeneratingAI}
+                        className="flex items-center gap-2"
+                      >
+                        <Bot className="h-4 w-4" />
+                        {isGeneratingAI ? 'Generating...' : 'AI Generate'}
+                      </Button>
+                    </div>
+                  </DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="name">Port Name *</Label>
+                      <Input
+                        id="name"
+                        value={formData.name}
+                        onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                        placeholder="Port of Dubai"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="country">Country *</Label>
+                      <Select value={formData.country} onValueChange={(value) => setFormData(prev => ({ ...prev, country: value }))}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select country" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {countries.map(country => (
+                            <SelectItem key={country} value={country}>
+                              <div className="flex items-center gap-2">
+                                <FlagIcon code={getFlagCode(country) as FlagIconCode} size={16} />
+                                {country}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="region">Region *</Label>
+                      <Select value={formData.region} onValueChange={(value) => setFormData(prev => ({ ...prev, region: value }))}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select region" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {regions.map(region => (
+                            <SelectItem key={region} value={region}>{region}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="type">Port Type</Label>
+                      <Select value={formData.type} onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select port type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {portTypes.map(type => (
+                            <SelectItem key={type} value={type}>{type}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="status">Status</Label>
+                      <Select value={formData.status} onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {portStatuses.map(status => (
+                            <SelectItem key={status} value={status}>{status}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="capacity">Capacity (TEU/day)</Label>
+                      <Input
+                        id="capacity"
+                        value={formData.capacity}
+                        onChange={(e) => setFormData(prev => ({ ...prev, capacity: e.target.value }))}
+                        placeholder="2000000"
+                        type="number"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="lat">Latitude</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="lat"
+                          value={formData.lat}
+                          onChange={(e) => {
+                            setFormData(prev => ({ ...prev, lat: e.target.value }));
+                            if (e.target.value && formData.lng) {
+                              setMapPosition([parseFloat(e.target.value), parseFloat(formData.lng)]);
+                            }
+                          }}
+                          placeholder="29.7604"
+                          type="number"
+                          step="any"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowMap(!showMap)}
+                          className="flex items-center gap-2"
+                        >
+                          <Map className="h-4 w-4" />
+                          {showMap ? 'Hide' : 'Show'} Map
+                        </Button>
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="lng">Longitude</Label>
+                      <Input
+                        id="lng"
+                        value={formData.lng}
+                        onChange={(e) => {
+                          setFormData(prev => ({ ...prev, lng: e.target.value }));
+                          if (formData.lat && e.target.value) {
+                            setMapPosition([parseFloat(formData.lat), parseFloat(e.target.value)]);
+                          }
+                        }}
+                        placeholder="-95.3698"
+                        type="number"
+                        step="any"
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* Interactive Map for Coordinate Selection */}
+                  {showMap && (
+                    <div className="space-y-2">
+                      <Label>Select Location on Map (Click to set coordinates)</Label>
+                      <div className="h-64 w-full border rounded-lg overflow-hidden">
+                        <MapContainer
+                          center={mapPosition}
+                          zoom={6}
+                          style={{ height: '100%', width: '100%' }}
+                        >
+                          <TileLayer
+                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                          />
+                          <MapClickHandler />
+                          {formData.lat && formData.lng && (
+                            <Marker position={[parseFloat(formData.lat), parseFloat(formData.lng)]} />
+                          )}
+                        </MapContainer>
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        Current coordinates: {formData.lat && formData.lng ? 
+                          `${parseFloat(formData.lat).toFixed(6)}, ${parseFloat(formData.lng).toFixed(6)}` : 
+                          'Click on the map to select coordinates'
+                        }
+                      </p>
+                    </div>
+                  )}
+                  
+                  <div>
+                    <Label htmlFor="description">Description</Label>
+                    <Input
+                      id="description"
+                      value={formData.description}
+                      onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                      placeholder="Major oil terminal with deep water berths"
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2 pt-4">
+                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button 
+                      type="submit" 
+                      disabled={createPortMutation.isPending || updatePortMutation.isPending}
+                    >
+                      {editingPort ? 'Update Port' : 'Create Port'}
+                    </Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
+
+          {/* Loading State */}
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <RefreshCw className="h-6 w-6 animate-spin mr-2" />
+              Loading ports...
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto">
+              {/* Ports Table */}
+              <div className="border rounded-lg overflow-hidden">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Port Details</TableHead>
-                      <TableHead>Location</TableHead>
-                      <TableHead>Type & Status</TableHead>
+                      <TableHead>Port Name</TableHead>
+                      <TableHead>Country</TableHead>
+                      <TableHead>Region</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Capacity</TableHead>
                       <TableHead>Coordinates</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
@@ -931,74 +778,52 @@ export function PortManagementNew() {
                   <TableBody>
                     {paginatedPorts.map((port) => (
                       <TableRow key={port.id}>
-                        <TableCell>
+                        <TableCell className="font-medium">
                           <div className="flex items-center gap-2">
-                            <Building2 className="h-4 w-4 text-blue-600" />
-                            <div>
-                              <div className="font-medium">{port.name}</div>
-                              {port.description && (
-                                <div className="text-sm text-gray-500 truncate max-w-xs">
-                                  {port.description}
-                                </div>
-                              )}
-                            </div>
+                            <Anchor className="h-4 w-4 text-blue-600" />
+                            {port.name}
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <FlagIcon 
-                              code={getFlagCode(port.country)} 
-                              size={16}
-                            />
-                            <div>
-                              <div className="font-medium">{port.country}</div>
-                              <div className="text-sm text-gray-500">{port.region}</div>
-                            </div>
+                            <FlagIcon code={getFlagCode(port.country) as FlagIconCode} size={16} />
+                            {port.country}
+                          </div>
+                        </TableCell>
+                        <TableCell>{port.region}</TableCell>
+                        <TableCell>
+                          <Badge variant={getTypeBadgeVariant(port.type)}>
+                            {port.type}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={getStatusBadgeVariant(port.status || 'operational')}>
+                            {port.status || 'operational'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {port.capacity ? port.capacity.toLocaleString() : 'N/A'}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1 text-sm">
+                            <MapPin className="h-3 w-3" />
+                            {port.lat.toFixed(3)}, {port.lng.toFixed(3)}
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="space-y-1">
-                            <Badge variant={getTypeBadgeVariant(port.type)}>
-                              {port.type}
-                            </Badge>
-                            {port.status && (
-                              <div>
-                                <Badge variant={getStatusBadgeVariant(port.status)}>
-                                  {port.status}
-                                </Badge>
-                              </div>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {port.lat && port.lng ? (
-                            <div className="text-sm font-mono">
-                              <div className="flex items-center gap-1">
-                                <MapPin className="h-3 w-3 text-gray-400" />
-                                {parseFloat(port.lat).toFixed(3)}°
-                              </div>
-                              <div className="text-gray-600">
-                                {parseFloat(port.lng).toFixed(3)}°
-                              </div>
-                            </div>
-                          ) : (
-                            <span className="text-gray-400">—</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
+                          <div className="flex gap-2">
                             <Button
-                              variant="ghost"
+                              variant="outline"
                               size="sm"
                               onClick={() => handleEdit(port)}
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
                             <Button
-                              variant="ghost"
+                              variant="outline"
                               size="sm"
                               onClick={() => deletePortMutation.mutate(port.id)}
-                              className="text-red-600 hover:text-red-700"
+                              disabled={deletePortMutation.isPending}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -1012,15 +837,15 @@ export function PortManagementNew() {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-between mt-4">
-                  <div className="text-sm text-gray-600">
-                    Page {currentPage} of {totalPages}
-                  </div>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-gray-600">
+                    Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredPorts.length)} of {filteredPorts.length} ports
+                  </p>
                   <div className="flex gap-2">
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                       disabled={currentPage === 1}
                     >
                       <ChevronLeft className="h-4 w-4" />
@@ -1029,7 +854,7 @@ export function PortManagementNew() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                       disabled={currentPage === totalPages}
                     >
                       Next
@@ -1042,8 +867,6 @@ export function PortManagementNew() {
           )}
         </CardContent>
       </Card>
-
-
     </div>
   );
 }
