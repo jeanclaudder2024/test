@@ -724,26 +724,83 @@ export default function OilVesselMap() {
             title: facility.name || `${facility.type.charAt(0).toUpperCase() + facility.type.slice(1)} #${facility.id}`
           }).addTo(layerGroupRef.current!);
           
-          // Add popup
+          // Add comprehensive popup with facility details
           marker.bindPopup(`
-            <div style="font-family: sans-serif; min-width: 180px;">
-              <h3 style="margin: 0 0 5px; font-size: 16px; font-weight: bold;">${facility.name || 'Unknown Facility'}</h3>
-              <p style="margin: 0 0 3px; font-size: 12px;">
-                <strong>Type:</strong> ${facility.type.charAt(0).toUpperCase() + facility.type.slice(1)}
-              </p>
-              <p style="margin: 0 0 3px; font-size: 12px;">
-                <strong>Country:</strong> ${facility.country || 'Unknown'}
-              </p>
-              ${facility.capacity ? `<p style="margin: 0 0 3px; font-size: 12px;"><strong>Capacity:</strong> ${facility.capacity.toLocaleString()} bpd</p>` : ''}
-              ${facility.type === 'refinery' ? `
-              <div style="margin-top: 8px;">
-                <button 
-                  style="background: #8b5cf6; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 12px; cursor: pointer;"
-                  onclick="document.dispatchEvent(new CustomEvent('showRefineryConnections', {detail: ${facility.id}}))"
-                >
-                  Show Connected Vessels
-                </button>
-              </div>` : ''}
+            <div style="font-family: sans-serif; min-width: 300px; max-width: 380px;">
+              <div style="border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 12px;">
+                <h3 style="margin: 0 0 6px; font-size: 20px; font-weight: bold; color: #1f2937;">${facility.name || 'Unknown Facility'}</h3>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="background: ${facility.type === 'refinery' ? '#DC2626' : '#1D4ED8'}; color: white; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; text-transform: uppercase;">
+                    ${facility.type === 'refinery' ? '🏭 Refinery' : '⚓ Port'}
+                  </span>
+                  ${facility.country ? `<span style="background: #f3f4f6; color: #374151; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 500;">${facility.country}</span>` : ''}
+                </div>
+              </div>
+              
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+                ${facility.capacity ? `
+                  <div style="background: #f8fafc; padding: 8px; border-radius: 8px;">
+                    <div style="font-size: 11px; color: #64748b; font-weight: 500; margin-bottom: 3px;">CAPACITY</div>
+                    <div style="font-size: 14px; font-weight: 600; color: #1e293b;">${facility.capacity.toLocaleString()}</div>
+                    <div style="font-size: 10px; color: #64748b;">${facility.type === 'refinery' ? 'bbl/day' : 'DWT'}</div>
+                  </div>
+                ` : ''}
+                ${facility.region ? `
+                  <div style="background: #f8fafc; padding: 8px; border-radius: 8px;">
+                    <div style="font-size: 11px; color: #64748b; font-weight: 500; margin-bottom: 3px;">REGION</div>
+                    <div style="font-size: 14px; font-weight: 600; color: #1e293b;">${facility.region}</div>
+                  </div>
+                ` : ''}
+                <div style="background: #f8fafc; padding: 8px; border-radius: 8px;">
+                  <div style="font-size: 11px; color: #64748b; font-weight: 500; margin-bottom: 3px;">COORDINATES</div>
+                  <div style="font-size: 12px; font-weight: 600; color: #1e293b;">${lat.toFixed(4)}°, ${lng.toFixed(4)}°</div>
+                </div>
+                ${facility.status ? `
+                  <div style="background: #f8fafc; padding: 8px; border-radius: 8px;">
+                    <div style="font-size: 11px; color: #64748b; font-weight: 500; margin-bottom: 3px;">STATUS</div>
+                    <div style="font-size: 14px; font-weight: 600; color: #1e293b;">${facility.status}</div>
+                  </div>
+                ` : ''}
+              </div>
+
+              ${facility.description ? `
+                <div style="border-top: 1px solid #e5e7eb; padding-top: 12px; margin-bottom: 12px;">
+                  <div style="font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 6px;">DESCRIPTION</div>
+                  <div style="font-size: 12px; color: #4b5563; line-height: 1.4;">${facility.description}</div>
+                </div>
+              ` : ''}
+
+              <div style="margin-top: 15px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                  <button 
+                    style="background: linear-gradient(135deg, ${facility.type === 'refinery' ? '#DC2626, #B91C1C' : '#1D4ED8, #1E40AF'}); color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 11px; font-weight: 500; cursor: pointer; transition: all 0.2s;"
+                    onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 8px rgba(0, 0, 0, 0.2)'"
+                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0, 0, 0, 0.1)'"
+                    onclick="document.dispatchEvent(new CustomEvent('facilityDetails', {detail: {id: ${facility.id}, type: '${facility.type}'}}))"
+                  >
+                    📊 View Details
+                  </button>
+                  ${facility.type === 'refinery' ? `
+                    <button 
+                      style="background: linear-gradient(135deg, #8B5CF6, #7C3AED); color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 11px; font-weight: 500; cursor: pointer; transition: all 0.2s;"
+                      onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 8px rgba(139, 92, 246, 0.3)'"
+                      onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0, 0, 0, 0.1)'"
+                      onclick="document.dispatchEvent(new CustomEvent('showConnections', {detail: ${facility.id}}))"
+                    >
+                      🔗 Show Vessels
+                    </button>
+                  ` : `
+                    <button 
+                      style="background: linear-gradient(135deg, #059669, #047857); color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 11px; font-weight: 500; cursor: pointer; transition: all 0.2s;"
+                      onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 8px rgba(5, 150, 105, 0.3)'"
+                      onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0, 0, 0, 0.1)'"
+                      onclick="document.dispatchEvent(new CustomEvent('showPortVessels', {detail: ${facility.id}}))"
+                    >
+                      ⚓ Show Activity
+                    </button>
+                  `}
+                </div>
+              </div>
             </div>
           `);
           
@@ -833,24 +890,72 @@ export default function OilVesselMap() {
             title: vessel.name || `Vessel #${vessel.id}`
           }).addTo(layerGroupRef.current!);
           
-          // Add popup
+          // Add comprehensive popup with vessel details
           marker.bindPopup(`
-            <div style="font-family: sans-serif; min-width: 200px;">
-              <h3 style="margin: 0 0 5px; font-size: 16px; font-weight: bold;">${vessel.name || 'Unknown Vessel'}</h3>
-              <p style="margin: 0 0 3px; font-size: 12px;">
-                <strong>Type:</strong> ${vessel.vesselType || 'Unknown'}
-              </p>
-              ${vessel.imo ? `<p style="margin: 0 0 3px; font-size: 12px;"><strong>IMO:</strong> ${vessel.imo}</p>` : ''}
-              ${vessel.mmsi ? `<p style="margin: 0 0 3px; font-size: 12px;"><strong>MMSI:</strong> ${vessel.mmsi}</p>` : ''}
-              ${vessel.flag ? `<p style="margin: 0 0 3px; font-size: 12px;"><strong>Flag:</strong> ${vessel.flag}</p>` : ''}
-              ${vessel.speed !== undefined ? `<p style="margin: 0 0 3px; font-size: 12px;"><strong>Speed:</strong> ${vessel.speed} knots</p>` : ''}
-              ${vessel.cargoType ? `<p style="margin: 0 0 3px; font-size: 12px;"><strong>Cargo:</strong> ${vessel.cargoType}</p>` : ''}
-              <div style="margin-top: 8px;">
+            <div style="font-family: sans-serif; min-width: 280px; max-width: 350px;">
+              <div style="border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 10px;">
+                <h3 style="margin: 0 0 4px; font-size: 18px; font-weight: bold; color: #1f2937;">${vessel.name || 'Unknown Vessel'}</h3>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="background: #3b82f6; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 500;">
+                    ${vessel.vesselType || 'Unknown Type'}
+                  </span>
+                  ${vessel.status ? `<span style="background: #10b981; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 500;">${vessel.status}</span>` : ''}
+                </div>
+              </div>
+              
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+                ${vessel.imo ? `
+                  <div style="background: #f8fafc; padding: 6px; border-radius: 6px;">
+                    <div style="font-size: 10px; color: #64748b; font-weight: 500; margin-bottom: 2px;">IMO NUMBER</div>
+                    <div style="font-size: 13px; font-weight: 600; color: #1e293b;">${vessel.imo}</div>
+                  </div>
+                ` : ''}
+                ${vessel.mmsi ? `
+                  <div style="background: #f8fafc; padding: 6px; border-radius: 6px;">
+                    <div style="font-size: 10px; color: #64748b; font-weight: 500; margin-bottom: 2px;">MMSI</div>
+                    <div style="font-size: 13px; font-weight: 600; color: #1e293b;">${vessel.mmsi}</div>
+                  </div>
+                ` : ''}
+                ${vessel.flag ? `
+                  <div style="background: #f8fafc; padding: 6px; border-radius: 6px;">
+                    <div style="font-size: 10px; color: #64748b; font-weight: 500; margin-bottom: 2px;">FLAG</div>
+                    <div style="font-size: 13px; font-weight: 600; color: #1e293b;">${vessel.flag}</div>
+                  </div>
+                ` : ''}
+                ${vessel.speed !== undefined ? `
+                  <div style="background: #f8fafc; padding: 6px; border-radius: 6px;">
+                    <div style="font-size: 10px; color: #64748b; font-weight: 500; margin-bottom: 2px;">SPEED</div>
+                    <div style="font-size: 13px; font-weight: 600; color: #1e293b;">${vessel.speed} knots</div>
+                  </div>
+                ` : ''}
+              </div>
+
+              ${vessel.cargoType || vessel.deadweight || vessel.built ? `
+                <div style="border-top: 1px solid #e5e7eb; padding-top: 10px; margin-bottom: 10px;">
+                  <div style="font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 6px;">VESSEL DETAILS</div>
+                  ${vessel.cargoType ? `<div style="font-size: 12px; margin-bottom: 3px;"><span style="color: #64748b;">Cargo Type:</span> <span style="color: #1e293b; font-weight: 500;">${vessel.cargoType}</span></div>` : ''}
+                  ${vessel.deadweight ? `<div style="font-size: 12px; margin-bottom: 3px;"><span style="color: #64748b;">Deadweight:</span> <span style="color: #1e293b; font-weight: 500;">${vessel.deadweight.toLocaleString()} DWT</span></div>` : ''}
+                  ${vessel.built ? `<div style="font-size: 12px; margin-bottom: 3px;"><span style="color: #64748b;">Built:</span> <span style="color: #1e293b; font-weight: 500;">${vessel.built}</span></div>` : ''}
+                </div>
+              ` : ''}
+
+              ${vessel.departurePort || vessel.destinationPort || vessel.estimatedArrival ? `
+                <div style="border-top: 1px solid #e5e7eb; padding-top: 10px; margin-bottom: 10px;">
+                  <div style="font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 6px;">VOYAGE INFORMATION</div>
+                  ${vessel.departurePort ? `<div style="font-size: 12px; margin-bottom: 3px;"><span style="color: #64748b;">From:</span> <span style="color: #1e293b; font-weight: 500;">${vessel.departurePort}</span></div>` : ''}
+                  ${vessel.destinationPort ? `<div style="font-size: 12px; margin-bottom: 3px;"><span style="color: #64748b;">To:</span> <span style="color: #1e293b; font-weight: 500;">${vessel.destinationPort}</span></div>` : ''}
+                  ${vessel.estimatedArrival ? `<div style="font-size: 12px; margin-bottom: 3px;"><span style="color: #64748b;">ETA:</span> <span style="color: #1e293b; font-weight: 500;">${new Date(vessel.estimatedArrival).toLocaleDateString()}</span></div>` : ''}
+                </div>
+              ` : ''}
+
+              <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid #e5e7eb;">
                 <button 
-                  style="background: #3b82f6; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 12px; cursor: pointer;"
+                  style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; width: 100%; transition: all 0.2s;"
+                  onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 8px rgba(59, 130, 246, 0.3)'"
+                  onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0, 0, 0, 0.1)'"
                   onclick="document.dispatchEvent(new CustomEvent('vesselClick', {detail: ${vessel.id}}))"
                 >
-                  View Details
+                  📋 View Full Details
                 </button>
               </div>
             </div>
