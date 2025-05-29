@@ -190,8 +190,18 @@ export default function VesselManagement() {
     }
   });
 
-  // Fetch ports for departure port dropdown
-  const { data: ports } = useQuery<Port[]>({
+  // Fetch refineries for connection options
+  const { data: refineries } = useQuery({
+    queryKey: ["/api/refineries"],
+    queryFn: async () => {
+      const response = await fetch("/api/refineries");
+      if (!response.ok) throw new Error("Failed to fetch refineries");
+      return response.json();
+    }
+  });
+
+  // Fetch ports for departure and destination options
+  const { data: ports } = useQuery({
     queryKey: ["/api/ports"],
     queryFn: async () => {
       const response = await fetch("/api/ports");

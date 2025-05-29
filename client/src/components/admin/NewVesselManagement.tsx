@@ -125,6 +125,26 @@ export default function NewVesselManagement() {
     }
   });
 
+  // Fetch refineries for connection options
+  const { data: refineries } = useQuery({
+    queryKey: ["/api/refineries"],
+    queryFn: async () => {
+      const response = await fetch("/api/refineries");
+      if (!response.ok) throw new Error("Failed to fetch refineries");
+      return response.json();
+    }
+  });
+
+  // Fetch ports for departure and destination options
+  const { data: ports } = useQuery({
+    queryKey: ["/api/ports"],
+    queryFn: async () => {
+      const response = await fetch("/api/ports");
+      if (!response.ok) throw new Error("Failed to fetch ports");
+      return response.json();
+    }
+  });
+
   // Create vessel mutation
   const createVesselMutation = useMutation({
     mutationFn: async (vesselData: VesselFormData) => {
@@ -544,25 +564,89 @@ export default function NewVesselManagement() {
               {/* Voyage Information */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Voyage Information</CardTitle>
+                  <CardTitle>Voyage Information & Connections</CardTitle>
                 </CardHeader>
-                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="departurePort">Departure Port</Label>
-                    <Input
-                      id="departurePort"
-                      value={formData.departurePort}
-                      onChange={(e) => setFormData(prev => ({ ...prev, departurePort: e.target.value }))}
-                    />
+                <CardContent className="space-y-6">
+                  {/* Port and Refinery Connection Section */}
+                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <h4 className="font-semibold text-blue-900 mb-3 flex items-center">
+                      <Anchor className="h-4 w-4 mr-2" />
+                      Port & Refinery Connections
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="departurePort">Departure Location</Label>
+                        <Select 
+                          value={formData.departurePort} 
+                          onValueChange={(value) => setFormData(prev => ({ ...prev, departurePort: value }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select departure port or refinery" />
+                          </SelectTrigger>
+                          <SelectContent className="max-h-60">
+                            <div className="px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted">PORTS</div>
+                            {ports && ports.map((port: any) => (
+                              <SelectItem key={`port-${port.id}`} value={port.name}>
+                                <div className="flex items-center">
+                                  <Anchor className="h-3 w-3 mr-2 text-blue-600" />
+                                  <span>{port.name}</span>
+                                  <span className="text-xs text-muted-foreground ml-2">({port.country})</span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                            <div className="px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted border-t">REFINERIES</div>
+                            {refineries && refineries.map((refinery: any) => (
+                              <SelectItem key={`refinery-${refinery.id}`} value={refinery.name}>
+                                <div className="flex items-center">
+                                  <div className="h-3 w-3 mr-2 bg-orange-500 rounded-sm"></div>
+                                  <span>{refinery.name}</span>
+                                  <span className="text-xs text-muted-foreground ml-2">({refinery.country})</span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="destinationPort">Destination Location</Label>
+                        <Select 
+                          value={formData.destinationPort} 
+                          onValueChange={(value) => setFormData(prev => ({ ...prev, destinationPort: value }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select destination port or refinery" />
+                          </SelectTrigger>
+                          <SelectContent className="max-h-60">
+                            <div className="px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted">PORTS</div>
+                            {ports && ports.map((port: any) => (
+                              <SelectItem key={`port-${port.id}`} value={port.name}>
+                                <div className="flex items-center">
+                                  <Anchor className="h-3 w-3 mr-2 text-blue-600" />
+                                  <span>{port.name}</span>
+                                  <span className="text-xs text-muted-foreground ml-2">({port.country})</span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                            <div className="px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted border-t">REFINERIES</div>
+                            {refineries && refineries.map((refinery: any) => (
+                              <SelectItem key={`refinery-${refinery.id}`} value={refinery.name}>
+                                <div className="flex items-center">
+                                  <div className="h-3 w-3 mr-2 bg-orange-500 rounded-sm"></div>
+                                  <span>{refinery.name}</span>
+                                  <span className="text-xs text-muted-foreground ml-2">({refinery.country})</span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <p className="text-xs text-blue-700 mt-2">
+                      Select from available ports (⚓) or refineries (🟧) to establish vessel connections
+                    </p>
                   </div>
-                  <div>
-                    <Label htmlFor="destinationPort">Destination Port</Label>
-                    <Input
-                      id="destinationPort"
-                      value={formData.destinationPort}
-                      onChange={(e) => setFormData(prev => ({ ...prev, destinationPort: e.target.value }))}
-                    />
-                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="departureDate">Departure Date</Label>
                     <Input
