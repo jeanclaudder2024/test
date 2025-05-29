@@ -2,7 +2,7 @@ import { eq, and } from "drizzle-orm";
 import { db, getActiveDb } from "./db";
 import {
   users, vessels, refineries, progressEvents, documents, brokers, stats as statsTable, ports, 
-  refineryPortConnections, companies, vesselRefineryConnections,
+  refineryPortConnections, vesselPortConnections, companies, vesselRefineryConnections,
   brokerCompanies, companyPartnerships, userBrokerConnections,
   subscriptionPlans, subscriptions, paymentMethods, invoices, landingPageContent,
   User, InsertUser, 
@@ -14,6 +14,7 @@ import {
   Stats, InsertStats,
   Port, InsertPort,
   RefineryPortConnection, InsertRefineryPortConnection,
+  VesselPortConnection, InsertVesselPortConnection,
   VesselRefineryConnection, InsertVesselRefineryConnection,
   Company, InsertCompany,
   BrokerCompany, InsertBrokerCompany,
@@ -96,6 +97,14 @@ export interface IStorage {
   createPortsBulk(ports: InsertPort[]): Promise<Port[]>; // Bulk insert method
   updatePort(id: number, port: Partial<InsertPort>): Promise<Port | undefined>;
   deletePort(id: number): Promise<boolean>;
+
+  // Vessel-Port Connection methods
+  getVesselPortConnections(): Promise<VesselPortConnection[]>;
+  getVesselPortConnectionsByVesselId(vesselId: number): Promise<VesselPortConnection[]>;
+  getVesselPortConnectionsByPortId(portId: number): Promise<VesselPortConnection[]>;
+  createVesselPortConnection(connection: InsertVesselPortConnection): Promise<VesselPortConnection>;
+  updateVesselPortConnection(id: number, connection: Partial<InsertVesselPortConnection>): Promise<VesselPortConnection | undefined>;
+  deleteVesselPortConnection(id: number): Promise<boolean>;
 
   // Progress Event methods
   getProgressEventsByVesselId(vesselId: number): Promise<ProgressEvent[]>;

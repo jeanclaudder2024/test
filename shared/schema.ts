@@ -287,6 +287,28 @@ export type Stats = typeof stats.$inferSelect;
 export type InsertPort = z.infer<typeof insertPortSchema>;
 export type Port = typeof ports.$inferSelect;
 
+export type InsertVesselPortConnection = z.infer<typeof insertVesselPortConnectionSchema>;
+export type VesselPortConnection = typeof vesselPortConnections.$inferSelect;
+
+// Vessel Port Connections
+export const vesselPortConnections = pgTable("vessel_port_connections", {
+  id: serial("id").primaryKey(),
+  vesselId: integer("vessel_id").notNull().references(() => vessels.id),
+  portId: integer("port_id").notNull().references(() => ports.id),
+  connectionType: text("connection_type").notNull(), // "departure", "arrival", "nearby"
+  distance: decimal("distance", { precision: 10, scale: 2 }), // distance in kilometers
+  estimatedTime: timestamp("estimated_time"), // ETA or ETD
+  status: text("status").default("active"), // active, completed, cancelled
+  createdAt: timestamp("created_at").defaultNow(),
+  lastUpdated: timestamp("last_updated").defaultNow(),
+});
+
+export const insertVesselPortConnectionSchema = createInsertSchema(vesselPortConnections).omit({
+  id: true,
+  createdAt: true,
+  lastUpdated: true,
+});
+
 // Refinery Port Connections
 export const refineryPortConnections = pgTable("refinery_port_connections", {
   id: serial("id").primaryKey(),
