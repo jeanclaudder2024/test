@@ -8,7 +8,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { Loader2, Shield, Mail, Lock, User, Building, CheckCircle, AlertCircle, Ship, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { COUNTRY_CODES, PRIORITY_COUNTRIES } from '@/data/countryCodes';
 
 interface AuthResponse {
   success: boolean;
@@ -692,29 +691,7 @@ export function ProfessionalAuth({ onSuccess }: ProfessionalAuthProps) {
                   )}
                 </div>
                 
-                <div className="space-y-2">
-                  <Label htmlFor="registerPassword">Password *</Label>
-                  <Input
-                    id="registerPassword"
-                    type="password"
-                    placeholder="Create a strong password"
-                    value={registerForm.password}
-                    onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm Password *</Label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    placeholder="Confirm your password"
-                    value={registerForm.confirmPassword}
-                    onChange={(e) => setRegisterForm({ ...registerForm, confirmPassword: e.target.value })}
-                    required
-                  />
-                </div>
+
                 
                 {error && (
                   <Alert variant="destructive">
