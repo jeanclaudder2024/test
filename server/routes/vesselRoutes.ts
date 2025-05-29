@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "../db";
-import { vessels } from "@shared/schema";
+import { vessels, ports } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import OpenAI from "openai";
 
@@ -168,6 +168,27 @@ router.post("/", async (req, res) => {
         error: "Missing required fields: name, imo, mmsi, vesselType, flag" 
       });
     }
+
+    // Convert empty strings to null for optional fields
+    const toNullIfEmpty = (value) => {
+      if (value === "" || value === undefined || value === "undefined") return null;
+      return value;
+    };
+
+    const toIntOrNull = (value) => {
+      if (value === "" || value === undefined || value === "undefined" || value === null) return null;
+      const parsed = parseInt(value);
+      return isNaN(parsed) ? null : parsed;
+    };
+
+    const toDateOrNull = (value) => {
+      if (!value || value === "" || value === "undefined") return null;
+      try {
+        return new Date(value);
+      } catch {
+        return null;
+      }
+    };
     
     // Clean and validate data
     const cleanedData = {
@@ -176,28 +197,28 @@ router.post("/", async (req, res) => {
       mmsi: vesselData.mmsi.toString().trim(),
       vesselType: vesselData.vesselType.toString().trim(),
       flag: vesselData.flag.toString().trim(),
-      built: vesselData.built ? parseInt(vesselData.built) : null,
-      deadweight: vesselData.deadweight ? parseInt(vesselData.deadweight) : null,
-      currentLat: vesselData.currentLat ? vesselData.currentLat.toString() : null,
-      currentLng: vesselData.currentLng ? vesselData.currentLng.toString() : null,
-      departurePort: vesselData.departurePort ? vesselData.departurePort.toString().trim() : null,
-      departureDate: vesselData.departureDate ? new Date(vesselData.departureDate) : null,
-      departureLat: vesselData.departureLat ? vesselData.departureLat.toString() : null,
-      departureLng: vesselData.departureLng ? vesselData.departureLng.toString() : null,
-      destinationPort: vesselData.destinationPort ? vesselData.destinationPort.toString().trim() : null,
-      destinationLat: vesselData.destinationLat ? vesselData.destinationLat.toString() : null,
-      destinationLng: vesselData.destinationLng ? vesselData.destinationLng.toString() : null,
-      eta: vesselData.eta ? new Date(vesselData.eta) : null,
-      cargoType: vesselData.cargoType ? vesselData.cargoType.toString().trim() : null,
-      cargoCapacity: vesselData.cargoCapacity ? parseInt(vesselData.cargoCapacity) : null,
-      currentRegion: vesselData.currentRegion ? vesselData.currentRegion.toString().trim() : null,
+      built: toIntOrNull(vesselData.built),
+      deadweight: toIntOrNull(vesselData.deadweight),
+      currentLat: toNullIfEmpty(vesselData.currentLat),
+      currentLng: toNullIfEmpty(vesselData.currentLng),
+      departurePort: toNullIfEmpty(vesselData.departurePort),
+      departureDate: toDateOrNull(vesselData.departureDate),
+      departureLat: toNullIfEmpty(vesselData.departureLat),
+      departureLng: toNullIfEmpty(vesselData.departureLng),
+      destinationPort: toNullIfEmpty(vesselData.destinationPort),
+      destinationLat: toNullIfEmpty(vesselData.destinationLat),
+      destinationLng: toNullIfEmpty(vesselData.destinationLng),
+      eta: toDateOrNull(vesselData.eta),
+      cargoType: toNullIfEmpty(vesselData.cargoType),
+      cargoCapacity: toIntOrNull(vesselData.cargoCapacity),
+      currentRegion: toNullIfEmpty(vesselData.currentRegion),
       status: vesselData.status ? vesselData.status.toString().trim() : "underway",
-      speed: vesselData.speed ? vesselData.speed.toString().trim() : null,
-      buyerName: vesselData.buyerName ? vesselData.buyerName.toString().trim() : null,
-      sellerName: vesselData.sellerName ? vesselData.sellerName.toString().trim() : null,
-      ownerName: vesselData.ownerName ? vesselData.ownerName.toString().trim() : null,
-      operatorName: vesselData.operatorName ? vesselData.operatorName.toString().trim() : null,
-      oilSource: vesselData.oilSource ? vesselData.oilSource.toString().trim() : null,
+      speed: toNullIfEmpty(vesselData.speed),
+      buyerName: toNullIfEmpty(vesselData.buyerName),
+      sellerName: toNullIfEmpty(vesselData.sellerName),
+      ownerName: toNullIfEmpty(vesselData.ownerName),
+      operatorName: toNullIfEmpty(vesselData.operatorName),
+      oilSource: toNullIfEmpty(vesselData.oilSource),
       lastUpdated: new Date()
     };
     
