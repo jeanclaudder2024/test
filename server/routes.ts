@@ -2052,11 +2052,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const vessels = await storage.getVessels();
       console.log(`Found ${vessels.length} vessels in database`);
       
-      // Log some sample vessel departure/destination ports for debugging
-      const sampleVessels = vessels.slice(0, 3);
-      sampleVessels.forEach(v => {
-        console.log(`Sample vessel "${v.name}": departure="${v.departurePort}", destination="${v.destinationPort}"`);
-      });
+      if (vessels.length === 0) {
+        console.log('No vessels found in database - connections will show 0');
+      } else {
+        // Log some sample vessel departure/destination ports for debugging
+        const sampleVessels = vessels.slice(0, 3);
+        sampleVessels.forEach(v => {
+          console.log(`Sample vessel "${v.name}": departure="${v.departurePort}", destination="${v.destinationPort}"`);
+        });
+      }
       
       const portsWithVessels = ports.map(port => {
         // Find vessels connected to this port (departure, destination, or nearby)
