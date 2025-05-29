@@ -418,6 +418,59 @@ export default function VesselManagement() {
     setIsDialogOpen(false);
   };
 
+  // Generate realistic vessel data without AI
+  const handleQuickFill = () => {
+    const vesselNames = [
+      "Gulf Navigator", "Arabian Star", "Petroleum Express", "Ocean Pioneer", 
+      "Maritime Glory", "Atlantic Voyager", "Persian Carrier", "Energy Trader",
+      "Crude Explorer", "Tanker Supreme", "Oil Guardian", "Sea Transporter"
+    ];
+    
+    const flags = ["Panama", "Liberia", "Marshall Islands", "Singapore", "Malta", "Cyprus"];
+    const vesselTypesList = ["Oil Tanker", "Chemical Tanker", "Product Tanker", "Crude Oil Tanker"];
+    const cargoTypesList = ["Crude Oil", "Gasoline", "Diesel", "Fuel Oil", "Kerosene", "Naphtha"];
+    const regions = ["persian-gulf", "north-sea", "mediterranean", "caribbean", "asia-pacific"];
+    const oilCompanies = [
+      "Saudi Aramco", "ExxonMobil", "Shell", "BP", "Chevron", "TotalEnergies", 
+      "Petrobras", "Equinor", "ConocoPhillips", "Eni"
+    ];
+    
+    const randomItem = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
+    const randomNumber = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
+    const randomCoordinate = (min: number, max: number) => (Math.random() * (max - min) + min).toFixed(6);
+    
+    const generatedData = {
+      name: `${randomItem(vesselNames)} ${randomNumber(1, 999)}`,
+      imo: `IMO${randomNumber(1000000, 9999999)}`,
+      mmsi: randomNumber(100000000, 999999999).toString(),
+      vesselType: randomItem(vesselTypesList),
+      flag: randomItem(flags),
+      built: randomNumber(2005, 2024).toString(),
+      deadweight: randomNumber(30000, 150000).toString(),
+      currentLat: randomCoordinate(20, 40),
+      currentLng: randomCoordinate(40, 70),
+      cargoType: randomItem(cargoTypesList),
+      cargoCapacity: randomNumber(25000, 120000).toString(),
+      speed: (Math.random() * 10 + 8).toFixed(1),
+      currentRegion: randomItem(regions),
+      ownerName: randomItem(oilCompanies),
+      operatorName: randomItem(oilCompanies),
+      buyerName: randomItem(oilCompanies),
+      sellerName: randomItem(oilCompanies),
+      oilSource: `${randomItem(["Ghawar", "Safaniya", "North", "Forties", "Brent"])} Oil Field`
+    };
+    
+    setFormData(prev => ({
+      ...prev,
+      ...generatedData
+    }));
+    
+    toast({ 
+      title: "Quick Fill Complete", 
+      description: "Realistic vessel data has been generated and filled in the form" 
+    });
+  };
+
   // Filter vessels based on search and filters
   const filteredVessels = vessels?.filter((vessel: Vessel) => {
     const matchesSearch = !searchTerm || 
@@ -466,16 +519,27 @@ export default function VesselManagement() {
                   {editingVessel ? "Edit Vessel" : "Add New Vessel"}
                 </DialogTitle>
                 {!editingVessel && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => generateAIDataMutation.mutate()}
-                    disabled={generateAIDataMutation.isPending}
-                    className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white border-0"
-                  >
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    {generateAIDataMutation.isPending ? "Generating..." : "AI Auto-Fill"}
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => generateAIDataMutation.mutate()}
+                      disabled={generateAIDataMutation.isPending}
+                      className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white border-0"
+                    >
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      {generateAIDataMutation.isPending ? "Generating..." : "AI Auto-Fill"}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleQuickFill}
+                      className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white border-0"
+                    >
+                      <Zap className="h-4 w-4 mr-2" />
+                      Quick Fill
+                    </Button>
+                  </div>
                 )}
               </div>
             </DialogHeader>
