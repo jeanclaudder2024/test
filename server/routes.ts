@@ -2049,77 +2049,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Add vessel information to each port
-      let vessels = await storage.getVessels();
+      const vessels = await storage.getVessels();
       console.log(`Found ${vessels.length} vessels in database`);
       
       if (vessels.length === 0) {
-        console.log('No vessels found in database - creating sample vessels for demo');
-        // Create some sample vessels to demonstrate connections
-        try {
-          const sampleVessels = [
-            {
-              mmsi: '123456789',
-              imo: '9123456',
-              name: 'Atlantic Pioneer',
-              vesselType: 'Oil Tanker',
-              flag: 'Panama',
-              built: 2018,
-              deadweight: 115000,
-              cargoCapacity: 110000,
-              currentLat: '33.7490',
-              currentLng: '-118.2437',
-              departurePort: 'Long Beach',
-              destinationPort: 'Singapore',
-              status: 'En Route',
-              speed: '14.2',
-              cargoType: 'Crude Oil'
-            },
-            {
-              mmsi: '234567890',
-              imo: '9234567',
-              name: 'Gulf Trader',
-              vesselType: 'Product Tanker',
-              flag: 'Liberia',
-              built: 2020,
-              deadweight: 45000,
-              cargoCapacity: 42000,
-              currentLat: '26.0667',
-              currentLng: '50.1500',
-              departurePort: 'Ras Tanura',
-              destinationPort: 'Houston',
-              status: 'Loading',
-              speed: '0.0',
-              cargoType: 'Refined Products'
-            },
-            {
-              mmsi: '345678901',
-              imo: '9345678',
-              name: 'Nordic Express',
-              vesselType: 'Crude Tanker',
-              flag: 'Norway',
-              built: 2019,
-              deadweight: 280000,
-              cargoCapacity: 275000,
-              currentLat: '29.7604',
-              currentLng: '-95.3698',
-              departurePort: 'Houston',
-              destinationPort: 'Rotterdam',
-              status: 'Discharging',
-              speed: '0.0',
-              cargoType: 'Crude Oil'
-            }
-          ];
-
-          for (const vesselData of sampleVessels) {
-            await storage.createVessel(vesselData);
-          }
-          
-          // Fetch vessels again after creation
-          vessels = await storage.getVessels();
-          console.log(`Created ${vessels.length} sample vessels for demonstration`);
-        } catch (error) {
-          console.error('Error creating sample vessels:', error);
-        }
+        console.log('No vessels found - you need to add vessels through the Admin Panel to see connections');
+        console.log('Go to Admin Panel > Vessel Management to add vessels with departure and destination ports');
       } else {
         // Log some sample vessel departure/destination ports for debugging
         const sampleVessels = vessels.slice(0, 3);
