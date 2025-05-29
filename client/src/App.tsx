@@ -23,7 +23,7 @@ import Pricing from "@/pages/Pricing";
 import AccountSubscription from "@/pages/AccountSubscription";
 import SubscriptionSuccess from "@/pages/SubscriptionSuccess";
 import LandingPage from "@/pages/LandingPage";
-import { ProfessionalAuth } from "@/components/ProfessionalAuth";
+import CleanAuthPage from "@/pages/CleanAuthPage";
 import TradingDashboard from "@/pages/TradingDashboard";
 import Companies from "@/pages/Companies";
 import ApiTest from "@/pages/ApiTest";
@@ -46,17 +46,9 @@ import { Redirect } from "wouter";
 import { Loader2 } from "lucide-react";
 import { QueryClientProvider } from "@tanstack/react-query";
 
-// Professional Auth Wrapper Component
-function ProfessionalAuthWrapper() {
-  const { login } = useProfessionalAuth();
-  
-  return (
-    <ProfessionalAuth 
-      onSuccess={(user, token) => {
-        login(user, token);
-      }} 
-    />
-  );
+// Clean Auth Wrapper Component - No Email Verification
+function CleanAuthWrapper() {
+  return <CleanAuthPage />;
 }
 
 // Component to check auth status and redirect if logged in

@@ -126,7 +126,7 @@ export async function requireAuth(req: any, res: Response, next: NextFunction) {
 }
 
 /**
- * Setup Ultra Simple Auth
+ * Setup Ultra Simple Auth - No Email Verification
  */
 export function setupUltraSimpleAuth(app: any) {
   app.post('/api/auth/register', registerUser);
@@ -134,5 +134,18 @@ export function setupUltraSimpleAuth(app: any) {
   app.get('/api/auth/user', getCurrentUser);
   app.post('/api/auth/logout', logoutUser);
   
-  console.log('✅ Ultra simple authentication ready - no complications!');
+  // Block all verification email routes
+  app.post('/api/auth/resend-verification', (req: any, res: any) => {
+    res.json({ success: true, message: 'No verification needed - you have instant access!' });
+  });
+  
+  app.post('/api/auth/verify-email', (req: any, res: any) => {
+    res.json({ success: true, message: 'No verification needed - you have instant access!' });
+  });
+  
+  app.post('/api/auth/verify-login-otp', (req: any, res: any) => {
+    res.json({ success: true, message: 'No verification needed - you have instant access!' });
+  });
+  
+  console.log('✅ Ultra simple authentication ready - NO email verification!');
 }
