@@ -631,7 +631,7 @@ export default function ProfessionalRefineryManagement() {
               </Dialog>
 
               {/* Map Selection Dialog */}
-              <Dialog open={showMap} onOpenChange={setShowMap}>
+              <Dialog open={showMapSelector} onOpenChange={setShowMapSelector}>
                 <DialogContent className="max-w-4xl h-[600px]">
                   <DialogHeader>
                     <DialogTitle>Select Refinery Location</DialogTitle>
