@@ -78,6 +78,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set up enterprise authentication system
   setupEnterpriseSession(app);
   
+  // Setup Supabase Authentication Routes
+  supabaseAuthRoutes(app);
+  
   // Add enterprise authentication routes
   app.use(enterpriseAuthRoutes);
   
