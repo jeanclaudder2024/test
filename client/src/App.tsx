@@ -126,7 +126,7 @@ function Router() {
             {/* Maritime tracking and vessel lookup pages removed as requested */}
             <Route path="/refineries" component={Refineries} />
             <Route path="/refineries/:id" component={RefineryDetail} />
-
+            <Route path="/ports" component={PortsPage} />
 
             <Route path="/brokers" component={Brokers} />
             <Route path="/broker-dashboard" component={SimpleBrokerDashboard} />

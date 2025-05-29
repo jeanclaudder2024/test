@@ -608,7 +608,7 @@ export default function PortsPage() {
                           </td>
                           <td className="p-4">
                             <div className="flex items-center gap-2">
-                              <FlagIcon country={getCountryCode(port.country) as any} size={16} />
+                              <FlagIcon code={getCountryCode(port.country)} size={16} />
                               <span>{port.country}</span>
                             </div>
                           </td>
