@@ -49,6 +49,9 @@ import {
   Download,
   Upload,
   Settings,
+  Wand2,
+  Target,
+  Navigation,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
@@ -101,6 +104,9 @@ export default function ProfessionalRefineryManagement() {
   const [selectedStatus, setSelectedStatus] = useState('All Statuses');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingRefinery, setEditingRefinery] = useState<Refinery | null>(null);
+  const [showMap, setShowMap] = useState(false);
+  const [isAutoFilling, setIsAutoFilling] = useState(false);
+  const [isAiEnhancing, setIsAiEnhancing] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     country: '',
@@ -190,6 +196,78 @@ export default function ProfessionalRefineryManagement() {
       status: 'Operational',
       description: ''
     });
+  };
+
+  const handleAutoFill = async () => {
+    if (!formData.name) {
+      toast({ title: 'Error', description: 'Please enter a refinery name first', variant: 'destructive' });
+      return;
+    }
+
+    setIsAutoFilling(true);
+    try {
+      const response = await fetch('/api/refineries/autofill', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: formData.name }),
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setFormData(prev => ({
+          ...prev,
+          ...data,
+          capacity: data.capacity?.toString() || prev.capacity,
+        }));
+        toast({ title: 'Success', description: 'Refinery data auto-filled successfully' });
+      } else {
+        toast({ title: 'Error', description: 'Failed to auto-fill refinery data', variant: 'destructive' });
+      }
+    } catch (error) {
+      toast({ title: 'Error', description: 'Failed to auto-fill refinery data', variant: 'destructive' });
+    }
+    setIsAutoFilling(false);
+  };
+
+  const handleAiEnhancement = async () => {
+    if (!formData.name) {
+      toast({ title: 'Error', description: 'Please enter a refinery name first', variant: 'destructive' });
+      return;
+    }
+
+    setIsAiEnhancing(true);
+    try {
+      const response = await fetch('/api/refineries/ai-enhance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setFormData(prev => ({
+          ...prev,
+          ...data,
+          capacity: data.capacity?.toString() || prev.capacity,
+        }));
+        toast({ title: 'Success', description: 'Refinery data enhanced with AI' });
+      } else {
+        toast({ title: 'Error', description: 'Failed to enhance refinery data with AI', variant: 'destructive' });
+      }
+    } catch (error) {
+      toast({ title: 'Error', description: 'Failed to enhance refinery data with AI', variant: 'destructive' });
+    }
+    setIsAiEnhancing(false);
+  };
+
+  const handleMapClick = (lat: number, lng: number) => {
+    setFormData(prev => ({
+      ...prev,
+      latitude: lat.toFixed(6),
+      longitude: lng.toFixed(6),
+    }));
+    setShowMap(false);
+    toast({ title: 'Location Selected', description: `Coordinates: ${lat.toFixed(6)}, ${lng.toFixed(6)}` });
   };
 
   const handleEdit = (refinery: Refinery) => {
@@ -357,6 +435,35 @@ export default function ProfessionalRefineryManagement() {
                     </DialogDescription>
                   </DialogHeader>
                   <form onSubmit={handleSubmit} className="space-y-4">
+                    {/* Auto-fill and AI Enhancement Buttons */}
+                    <div className="flex gap-2 p-3 bg-slate-50 rounded-lg border">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleAutoFill}
+                        disabled={isAutoFilling || !formData.name}
+                        className="flex items-center gap-2"
+                      >
+                        <Target className="h-4 w-4" />
+                        {isAutoFilling ? 'Auto-filling...' : 'Auto Fill'}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleAiEnhancement}
+                        disabled={isAiEnhancing || !formData.name}
+                        className="flex items-center gap-2"
+                      >
+                        <Wand2 className="h-4 w-4" />
+                        {isAiEnhancing ? 'Enhancing...' : 'AI Enhance'}
+                      </Button>
+                      <div className="text-sm text-muted-foreground flex items-center">
+                        Enter refinery name first to use auto-fill features
+                      </div>
+                    </div>
+
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="name">Refinery Name *</Label>
@@ -408,26 +515,41 @@ export default function ProfessionalRefineryManagement() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="latitude">Latitude *</Label>
-                        <Input
-                          id="latitude"
-                          required
-                          value={formData.latitude}
-                          onChange={(e) => setFormData({...formData, latitude: e.target.value})}
-                          placeholder="e.g., 26.6927"
-                        />
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Label>Location Coordinates *</Label>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowMap(true)}
+                          className="flex items-center gap-2"
+                        >
+                          <Navigation className="h-4 w-4" />
+                          Select on Map
+                        </Button>
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="longitude">Longitude *</Label>
-                        <Input
-                          id="longitude"
-                          required
-                          value={formData.longitude}
-                          onChange={(e) => setFormData({...formData, longitude: e.target.value})}
-                          placeholder="e.g., 50.0279"
-                        />
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="latitude">Latitude</Label>
+                          <Input
+                            id="latitude"
+                            required
+                            value={formData.latitude}
+                            onChange={(e) => setFormData({...formData, latitude: e.target.value})}
+                            placeholder="e.g., 26.6927"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="longitude">Longitude</Label>
+                          <Input
+                            id="longitude"
+                            required
+                            value={formData.longitude}
+                            onChange={(e) => setFormData({...formData, longitude: e.target.value})}
+                            placeholder="e.g., 50.0279"
+                          />
+                        </div>
                       </div>
                     </div>
 
@@ -496,6 +618,58 @@ export default function ProfessionalRefineryManagement() {
                       </Button>
                     </div>
                   </form>
+                </DialogContent>
+              </Dialog>
+
+              {/* Map Selection Dialog */}
+              <Dialog open={showMap} onOpenChange={setShowMap}>
+                <DialogContent className="max-w-4xl h-[600px]">
+                  <DialogHeader>
+                    <DialogTitle>Select Refinery Location</DialogTitle>
+                    <DialogDescription>
+                      Click on the map to select coordinates for the refinery
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="flex-1 bg-slate-100 rounded-lg flex items-center justify-center">
+                    <div className="text-center">
+                      <MapPin className="h-12 w-12 mx-auto mb-4 text-blue-600" />
+                      <h3 className="text-lg font-semibold mb-2">Interactive Map</h3>
+                      <p className="text-muted-foreground mb-4">Click anywhere on the map to set coordinates</p>
+                      <div className="grid grid-cols-2 gap-4 max-w-md mx-auto mb-4">
+                        <Button
+                          onClick={() => handleMapClick(26.6927, 50.0279)}
+                          variant="outline"
+                          size="sm"
+                        >
+                          Saudi Arabia
+                        </Button>
+                        <Button
+                          onClick={() => handleMapClick(25.2048, 55.2708)}
+                          variant="outline"
+                          size="sm"
+                        >
+                          UAE
+                        </Button>
+                        <Button
+                          onClick={() => handleMapClick(29.3117, 47.4818)}
+                          variant="outline"
+                          size="sm"
+                        >
+                          Kuwait
+                        </Button>
+                        <Button
+                          onClick={() => handleMapClick(25.3548, 51.1839)}
+                          variant="outline"
+                          size="sm"
+                        >
+                          Qatar
+                        </Button>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Quick select common refinery locations or click for custom coordinates
+                      </p>
+                    </div>
+                  </div>
                 </DialogContent>
               </Dialog>
               <Button variant="outline" size="sm">
