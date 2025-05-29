@@ -169,6 +169,18 @@ router.post("/", async (req, res) => {
       });
     }
 
+    // Helper function to look up port ID by name
+    const getPortId = async (portName) => {
+      if (!portName || portName === "") return null;
+      try {
+        const port = await db.select().from(ports).where(eq(ports.name, portName)).limit(1);
+        return port.length > 0 ? port[0].id : null;
+      } catch (error) {
+        console.log("Port lookup failed for:", portName);
+        return null;
+      }
+    };
+
     // Convert empty strings to null for optional fields
     const toNullIfEmpty = (value) => {
       if (value === "" || value === undefined || value === "undefined") return null;
@@ -189,8 +201,12 @@ router.post("/", async (req, res) => {
         return null;
       }
     };
+
+    // Look up port IDs if the database expects them
+    const departurePortId = await getPortId(vesselData.departurePort);
+    const destinationPortId = await getPortId(vesselData.destinationPort);
     
-    // Clean and validate data
+    // Clean and validate data - try with port IDs first, fallback to names
     const cleanedData = {
       name: vesselData.name.toString().trim(),
       imo: vesselData.imo.toString().trim(),
@@ -201,11 +217,11 @@ router.post("/", async (req, res) => {
       deadweight: toIntOrNull(vesselData.deadweight),
       currentLat: toNullIfEmpty(vesselData.currentLat),
       currentLng: toNullIfEmpty(vesselData.currentLng),
-      departurePort: toNullIfEmpty(vesselData.departurePort),
+      departurePort: departurePortId || toNullIfEmpty(vesselData.departurePort),
       departureDate: toDateOrNull(vesselData.departureDate),
       departureLat: toNullIfEmpty(vesselData.departureLat),
       departureLng: toNullIfEmpty(vesselData.departureLng),
-      destinationPort: toNullIfEmpty(vesselData.destinationPort),
+      destinationPort: destinationPortId || toNullIfEmpty(vesselData.destinationPort),
       destinationLat: toNullIfEmpty(vesselData.destinationLat),
       destinationLng: toNullIfEmpty(vesselData.destinationLng),
       eta: toDateOrNull(vesselData.eta),
@@ -222,7 +238,7 @@ router.post("/", async (req, res) => {
       lastUpdated: new Date()
     };
     
-    console.log("Cleaned vessel data:", cleanedData);
+    console.log("Cleaned vessel data with port IDs:", cleanedData);
     
     const newVessel = await db.insert(vessels).values(cleanedData).returning();
     console.log("Vessel created successfully:", newVessel[0]);
