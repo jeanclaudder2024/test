@@ -25,6 +25,18 @@ export const supabase = createClient(
   }
 );
 
+// Create admin Supabase client for user management
+export const supabaseAdmin = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  }
+);
+
 // Database connection status checker
 export async function checkSupabaseConnection(): Promise<boolean> {
   try {

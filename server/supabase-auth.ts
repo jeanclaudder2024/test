@@ -3,7 +3,7 @@
  * Oil Vessel Tracking Platform - Enterprise Security
  */
 
-import { supabase } from './supabase';
+import { supabase, supabaseAdmin } from './supabase';
 import { Request, Response, NextFunction } from 'express';
 
 interface AuthenticatedRequest extends Request {
@@ -25,15 +25,32 @@ export async function registerUser(req: Request, res: Response) {
       });
     }
 
-    // For now, create a simple user record directly in database
-    // This bypasses Supabase Auth email confirmation issues
-    const userId = `user_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-    
+    // Use Supabase Admin client to create user without email confirmation
+    const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
+      email: email.toLowerCase(),
+      password: password,
+      email_confirm: true, // Auto-confirm email
+      user_metadata: {
+        first_name: firstName || null,
+        last_name: lastName || null,
+        company_id: companyId || null
+      }
+    });
+
+    if (authError) {
+      console.error('Auth creation error:', authError);
+      return res.status(400).json({
+        success: false,
+        error: `Registration failed: ${authError.message}`
+      });
+    }
+
+    // Create user profile in the users table
     const { data: userData, error: dbError } = await supabase
       .from('users')
       .insert([{
-        id: userId,
-        email: email,
+        id: authUser.user.id,
+        email: authUser.user.email,
         first_name: firstName || '',
         last_name: lastName || '',
         company_id: companyId || null,
@@ -44,20 +61,18 @@ export async function registerUser(req: Request, res: Response) {
       .single();
 
     if (dbError) {
-      return res.status(400).json({
-        success: false,
-        error: `Registration failed: ${dbError.message}`
-      });
+      console.error('Profile creation error:', dbError);
+      // Still return success since auth user was created successfully
     }
 
     return res.json({
       success: true,
       message: 'Registration successful! You can now log in to access your oil vessel tracking dashboard.',
       user: {
-        id: userData.id,
-        email: userData.email,
-        firstName: userData.first_name,
-        lastName: userData.last_name
+        id: authUser.user.id,
+        email: authUser.user.email,
+        firstName: firstName,
+        lastName: lastName
       }
     });
   } catch (error: any) {
