@@ -288,9 +288,17 @@ export default function ProfessionalRefineryManagement() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Map form fields to database schema fields
     const submitData = {
-      ...formData,
+      name: formData.name,
+      country: formData.country,
+      region: formData.region,
+      lat: formData.latitude,    // Map latitude to lat
+      lng: formData.longitude,   // Map longitude to lng
       capacity: formData.capacity ? parseInt(formData.capacity) : null,
+      type: formData.type,
+      status: formData.status,
+      description: formData.description
     };
 
     if (editingRefinery) {
