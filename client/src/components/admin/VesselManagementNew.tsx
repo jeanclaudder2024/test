@@ -160,6 +160,8 @@ export function VesselManagementNew() {
         cargoCapacity: vesselData.cargoCapacity ? parseInt(vesselData.cargoCapacity) : undefined
       };
 
+      console.log("Creating vessel with payload:", payload);
+      
       const response = await fetch("/api/vessels", {
         method: "POST",
         headers: {
@@ -168,20 +170,33 @@ export function VesselManagementNew() {
         body: JSON.stringify(payload),
       });
 
+      console.log("Response status:", response.status);
+
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to create vessel");
+        const errorText = await response.text();
+        console.error("Server error:", errorText);
+        let errorMessage = "Failed to create vessel";
+        try {
+          const errorObj = JSON.parse(errorText);
+          errorMessage = errorObj.message || errorMessage;
+        } catch (e) {
+          errorMessage = errorText || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
 
-      return response.json();
+      const result = await response.json();
+      console.log("Vessel created successfully:", result);
+      return result;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/vessels/myshiptracking"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/vessels/combined"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/vessels"] });
       setIsAddDialogOpen(false);
       resetForm();
       toast({
         title: "Success",
-        description: "Vessel created successfully",
+        description: "Vessel created successfully and added to your fleet",
       });
     },
     onError: (error: Error) => {
