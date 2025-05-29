@@ -1,10 +1,10 @@
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useAuth } from "@/hooks/use-auth";
-import { AuthProvider } from "@/hooks/use-auth";
+import { useProfessionalAuth } from "@/hooks/use-professional-auth";
+import { useToast } from "@/hooks/use-toast";
 import { Anchor, Globe, Loader2, Lock, Mail, User, Ship } from "lucide-react";
 
 import {
@@ -17,27 +17,30 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-// Clean form schemas - no unnecessary fields
+// Form schemas - No email verification needed
 const loginSchema = z.object({
-  username: z.string().min(1, "Username is required"),
-  password: z.string().min(1, "Password is required"),
+  username: z.string().min(1, "Email or username required"),
+  password: z.string().min(1, "Password required"),
 });
 
 const registerSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  email: z.string().email("Valid email required"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
+  firstName: z.string().min(1, "First name required"),
+  lastName: z.string().min(1, "Last name required"),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
-function CleanAuthPageInner() {
+export default function CleanAuthPage() {
   const [, navigate] = useLocation();
-  const { user, loginMutation, registerMutation } = useAuth();
+  const { user, login } = useProfessionalAuth();
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
 
   // Form definitions
   const loginForm = useForm<LoginFormValues>({
@@ -61,124 +64,135 @@ function CleanAuthPageInner() {
   // Redirect if already logged in
   useEffect(() => {
     if (user) {
-      navigate("/dashboard");
+      navigate("/broker-dashboard");
     }
   }, [user, navigate]);
 
   const onLoginSubmit = async (data: LoginFormValues) => {
+    setIsLoading(true);
     try {
-      await loginMutation.mutateAsync(data);
-      navigate("/dashboard");
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(data),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        login(result.user, result.token);
+        toast({
+          title: "Login successful",
+          description: "Welcome to your oil vessel tracking platform",
+        });
+        navigate("/broker-dashboard");
+      } else {
+        toast({
+          title: "Login failed",
+          description: result.message || "Invalid credentials",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
-      // Toast handled in auth context
+      toast({
+        title: "Login error",
+        description: "Could not connect to server",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const onRegisterSubmit = async (data: RegisterFormValues) => {
+    setIsLoading(true);
     try {
-      await registerMutation.mutateAsync(data);
-      // Direct navigation to dashboard - no verification needed
-      navigate("/dashboard");
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(data),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        login(result.user, result.token || "temp_token");
+        toast({
+          title: "Registration successful",
+          description: "Welcome to your oil vessel tracking platform - no verification needed!",
+        });
+        navigate("/broker-dashboard");
+      } else {
+        toast({
+          title: "Registration failed",
+          description: result.message || "Could not create account",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
-      // Toast handled in auth context
+      toast({
+        title: "Registration error",
+        description: "Could not connect to server",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 flex">
-      {/* Left panel - Brand showcase */}
-      <div className="hidden lg:flex lg:w-1/2 bg-[#003366] relative overflow-hidden">
-        {/* Decorative maritime pattern */}
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAzNGgyLTJoLTJ6TTM1IDdoMWExIDEgMCAwIDAgMS0xVjRhMSAxIDAgMCAwLTEtMWgtMWExIDEgMCAwIDAtMSAxdjJhMSAxIDAgMCAwIDEgMXptNiAwaDFhMSAxIDAgMCAwIDEtMVY0YTEgMSAwIDAgMC0xLTFoLTFhMSAxIDAgMCAwLTEgMXYyYTEgMSAwIDAgMCAxIDF6bTYgMGgxYTEgMSAwIDAgMCAxLTFWNGExIDEgMCAwIDAtMS0xaC0xYTEgMSAwIDAgMC0xIDF2MmExIDEgMCAwIDAgMSAxeiIgZmlsbD0iI2ZmZiIgZmlsbC1vcGFjaXR5PSIuMTUiLz48cGF0aCBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9Ii4wNSIgZD0iTTMwIDBoNjB2NjBIMHoiLz48L2c+PC9zdmc+')] opacity-20"></div>
-      
-        <div className="relative w-full h-full flex flex-col z-10">
-          {/* Logo area */}
-          <div className="p-12">
-            <div className="flex items-center space-x-3">
-              <Ship className="h-12 w-12 text-white" />
-              <div>
-                <h1 className="text-2xl font-bold text-white">PetroDealHub</h1>
-                <p className="text-blue-200 text-sm">Oil Vessel Tracking</p>
-              </div>
-            </div>
-          </div>
-        
-          {/* Main content area */}
-          <div className="flex-1 flex flex-col justify-center px-12 mb-20">
-            <h2 className="text-4xl font-bold text-white mb-6">Professional Maritime Intelligence</h2>
-            <p className="text-xl font-light text-white/90 mb-8 leading-relaxed">
-              The ultimate platform for oil trading professionals worldwide
-            </p>
-            
-            <div className="space-y-6 max-w-md">
-              <div className="flex items-center space-x-4">
-                <div className="bg-white/20 rounded-full p-2">
-                  <Anchor className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <p className="text-white text-base">Real-time vessel tracking across global shipping routes</p>
-                </div>
-              </div>
-              
-              <div className="flex items-center space-x-4">
-                <div className="bg-white/20 rounded-full p-2">
-                  <Globe className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <p className="text-white text-base">Comprehensive refinery operations and port management</p>
-                </div>
-              </div>
-              
-              <div className="flex items-center space-x-4">
-                <div className="bg-white/20 rounded-full p-2">
-                  <Mail className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <p className="text-white text-base">AI-powered trade documentation and analytics</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          {/* Bottom content */}
-          <div className="p-12">
-            <p className="text-white/80 text-sm">© 2025 PetroDealHub. Professional maritime solutions.</p>
-          </div>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl animate-pulse delay-2000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl animate-pulse delay-1000"></div>
       </div>
-      
-      {/* Right panel - Authentication forms */}
-      <div className="flex flex-col w-full lg:w-1/2">
-        {/* Mobile logo header */}
-        <div className="lg:hidden p-6 border-b bg-white dark:bg-gray-900 dark:border-gray-800">
-          <div className="flex items-center space-x-3">
-            <Ship className="h-8 w-8 text-[#003366]" />
-            <div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">PetroDealHub</h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Oil Vessel Tracking</p>
+
+      <div className="relative z-10 flex items-center justify-center min-h-screen p-4">
+        <div className="w-full max-w-md space-y-8">
+          {/* Header */}
+          <div className="text-center space-y-4">
+            <div className="flex justify-center">
+              <div className="p-4 bg-blue-600/20 rounded-full">
+                <Ship className="w-12 h-12 text-blue-400" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <h1 className="text-3xl font-bold text-white">
+                Oil Vessel Tracking
+              </h1>
+              <p className="text-blue-200">
+                Professional maritime management platform
+              </p>
             </div>
           </div>
-        </div>
-        
-        {/* Auth Form Column */}
-        <div className="w-full flex-1 flex items-center justify-center p-6 sm:p-12 bg-gray-50 dark:bg-gray-900">
-          <div className="w-full max-w-md">
-            <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white mb-2">
-              Welcome to PetroDealHub
-            </h2>
-            <p className="text-gray-500 dark:text-gray-400 mb-8">
-              Access your professional maritime platform
-            </p>
-            
-            <Tabs defaultValue="login" className="w-full">
-              <TabsList className="inline-flex h-10 rounded-lg bg-gray-100 dark:bg-gray-800 p-1 mb-6 w-full">
-                <TabsTrigger value="login" className="flex-1 rounded-md data-[state=active]:bg-[#003366] data-[state=active]:text-white data-[state=active]:shadow-sm">Sign In</TabsTrigger>
-                <TabsTrigger value="register" className="flex-1 rounded-md data-[state=active]:bg-[#003366] data-[state=active]:text-white data-[state=active]:shadow-sm">Create Account</TabsTrigger>
-              </TabsList>
-            
-              {/* Login Form */}
-              <TabsContent value="login">
-                <div className="space-y-6">
+
+          {/* Authentication Card */}
+          <Card className="bg-white/10 backdrop-blur-xl border-white/20 shadow-2xl">
+            <CardHeader className="space-y-1">
+              <CardTitle className="text-2xl text-center text-white">
+                Access Your Platform
+              </CardTitle>
+              <CardDescription className="text-center text-blue-200">
+                Start tracking vessels and managing operations
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Tabs defaultValue="login" className="space-y-4">
+                <TabsList className="grid w-full grid-cols-2 bg-white/10">
+                  <TabsTrigger value="login" className="text-white data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+                    Sign In
+                  </TabsTrigger>
+                  <TabsTrigger value="register" className="text-white data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+                    Create Account
+                  </TabsTrigger>
+                </TabsList>
+
+                {/* Login Tab */}
+                <TabsContent value="login" className="space-y-4">
                   <Form {...loginForm}>
                     <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
                       <FormField
@@ -186,63 +200,73 @@ function CleanAuthPageInner() {
                         name="username"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Username</FormLabel>
+                            <FormLabel className="text-white">Email or Username</FormLabel>
                             <FormControl>
                               <div className="relative">
-                                <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                                <Input 
-                                  placeholder="Enter your username"
-                                  className="pl-10 h-12 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                                <User className="absolute left-3 top-3 h-4 w-4 text-blue-300" />
+                                <Input
                                   {...field}
+                                  placeholder="Enter your email or username"
+                                  className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-blue-200"
                                 />
                               </div>
                             </FormControl>
-                            <FormMessage className="text-red-500" />
+                            <FormMessage className="text-red-300" />
                           </FormItem>
                         )}
                       />
+
                       <FormField
                         control={loginForm.control}
                         name="password"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Password</FormLabel>
+                            <FormLabel className="text-white">Password</FormLabel>
                             <FormControl>
                               <div className="relative">
-                                <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                                <Lock className="absolute left-3 top-3 h-4 w-4 text-blue-300" />
                                 <Input
+                                  {...field}
                                   type="password"
                                   placeholder="Enter your password"
-                                  className="pl-10 h-12 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                                  {...field}
+                                  className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-blue-200"
                                 />
                               </div>
                             </FormControl>
-                            <FormMessage className="text-red-500" />
+                            <FormMessage className="text-red-300" />
                           </FormItem>
                         )}
                       />
-                      
+
                       <Button 
                         type="submit" 
-                        className="w-full bg-[#003366] hover:bg-[#002244] text-white font-medium py-2.5 h-12 rounded-lg mt-6"
-                        disabled={loginMutation.isPending}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                        disabled={isLoading}
                       >
-                        {loginMutation.isPending ? (
-                          <div className="flex items-center justify-center">
-                            <Loader2 className="animate-spin h-4 w-4 mr-2" />
-                            Signing in...
-                          </div>
-                        ) : "Access Platform"}
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Signing In...
+                          </>
+                        ) : (
+                          <>
+                            <Anchor className="mr-2 h-4 w-4" />
+                            Access Platform
+                          </>
+                        )}
                       </Button>
                     </form>
                   </Form>
-                </div>
-              </TabsContent>
-            
-              {/* Register Form */}
-              <TabsContent value="register">
-                <div className="space-y-6">
+                </TabsContent>
+
+                {/* Register Tab */}
+                <TabsContent value="register" className="space-y-4">
+                  <div className="text-center p-3 bg-green-600/20 rounded-lg border border-green-500/30">
+                    <p className="text-green-200 text-sm">
+                      ✓ Instant Access - No email verification required
+                    </p>
+                  </div>
+
                   <Form {...registerForm}>
                     <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
@@ -251,130 +275,114 @@ function CleanAuthPageInner() {
                           name="firstName"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">First Name</FormLabel>
+                              <FormLabel className="text-white">First Name</FormLabel>
                               <FormControl>
-                                <div className="relative">
-                                  <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                                  <Input
-                                    placeholder="John"
-                                    className="pl-10 h-12 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                                    {...field}
-                                  />
-                                </div>
+                                <Input
+                                  {...field}
+                                  placeholder="John"
+                                  className="bg-white/10 border-white/20 text-white placeholder:text-blue-200"
+                                />
                               </FormControl>
-                              <FormMessage className="text-red-500" />
+                              <FormMessage className="text-red-300" />
                             </FormItem>
                           )}
                         />
+
                         <FormField
                           control={registerForm.control}
                           name="lastName"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Last Name</FormLabel>
+                              <FormLabel className="text-white">Last Name</FormLabel>
                               <FormControl>
-                                <div className="relative">
-                                  <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                                  <Input
-                                    placeholder="Doe"
-                                    className="pl-10 h-12 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                                    {...field}
-                                  />
-                                </div>
+                                <Input
+                                  {...field}
+                                  placeholder="Doe"
+                                  className="bg-white/10 border-white/20 text-white placeholder:text-blue-200"
+                                />
                               </FormControl>
-                              <FormMessage className="text-red-500" />
+                              <FormMessage className="text-red-300" />
                             </FormItem>
                           )}
                         />
                       </div>
+
                       <FormField
                         control={registerForm.control}
                         name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Professional Email</FormLabel>
+                            <FormLabel className="text-white">Professional Email</FormLabel>
                             <FormControl>
                               <div className="relative">
-                                <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                                <Mail className="absolute left-3 top-3 h-4 w-4 text-blue-300" />
                                 <Input
-                                  type="email"
-                                  placeholder="john.doe@oilcompany.com"
-                                  className="pl-10 h-12 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 rounded-lg focus:ring-blue-500 focus:border-blue-500"
                                   {...field}
+                                  type="email"
+                                  placeholder="captain@oilcompany.com"
+                                  className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-blue-200"
                                 />
                               </div>
                             </FormControl>
-                            <FormMessage className="text-red-500" />
+                            <FormMessage className="text-red-300" />
                           </FormItem>
                         )}
                       />
+
                       <FormField
                         control={registerForm.control}
                         name="password"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Password</FormLabel>
+                            <FormLabel className="text-white">Password</FormLabel>
                             <FormControl>
                               <div className="relative">
-                                <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                                <Lock className="absolute left-3 top-3 h-4 w-4 text-blue-300" />
                                 <Input
-                                  type="password"
-                                  placeholder="Create secure password"
-                                  className="pl-10 h-12 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 rounded-lg focus:ring-blue-500 focus:border-blue-500"
                                   {...field}
+                                  type="password"
+                                  placeholder="Secure password (6+ characters)"
+                                  className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-blue-200"
                                 />
                               </div>
                             </FormControl>
-                            <FormMessage className="text-red-500" />
+                            <FormMessage className="text-red-300" />
                           </FormItem>
                         )}
                       />
-                      
-                      {/* Instant Access Notice */}
-                      <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 mt-4">
-                        <div className="flex items-start space-x-3">
-                          <div className="flex-shrink-0">
-                            <div className="w-5 h-5 bg-green-100 dark:bg-green-800 rounded-full flex items-center justify-center">
-                              <span className="text-green-600 dark:text-green-400 text-sm font-semibold">✓</span>
-                            </div>
-                          </div>
-                          <div>
-                            <h4 className="text-sm font-medium text-green-900 dark:text-green-200">Instant Platform Access</h4>
-                            <p className="text-xs text-green-700 dark:text-green-300 mt-1">
-                              No email verification required. Start tracking vessels and managing trades immediately.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                      
+
                       <Button 
                         type="submit" 
-                        className="w-full bg-[#003366] hover:bg-[#002244] text-white font-medium py-2.5 h-12 rounded-lg mt-6"
-                        disabled={registerMutation.isPending}
+                        className="w-full bg-green-600 hover:bg-green-700 text-white"
+                        disabled={isLoading}
                       >
-                        {registerMutation.isPending ? (
-                          <div className="flex items-center justify-center">
-                            <Loader2 className="animate-spin h-4 w-4 mr-2" />
-                            Creating account...
-                          </div>
-                        ) : "Create Account & Start Trading"}
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Creating Account...
+                          </>
+                        ) : (
+                          <>
+                            <Globe className="mr-2 h-4 w-4" />
+                            Start Tracking Vessels
+                          </>
+                        )}
                       </Button>
                     </form>
                   </Form>
-                </div>
-              </TabsContent>
-            </Tabs>
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
+
+          {/* Footer */}
+          <div className="text-center">
+            <p className="text-blue-200 text-sm">
+              Professional maritime oil tracking platform
+            </p>
           </div>
         </div>
       </div>
     </div>
-  );
-}
-
-export default function CleanAuthPage() {
-  return (
-    <AuthProvider>
-      <CleanAuthPageInner />
-    </AuthProvider>
   );
 }
