@@ -91,41 +91,56 @@ export function VesselManagementNew() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Fetch vessels using the same approach as the Vessels page
+  // Fetch vessels from both database and external sources
   const { data: vessels = [], isLoading, error } = useQuery({
-    queryKey: ["/api/vessels/myshiptracking"],
+    queryKey: ["/api/vessels/combined"],
     queryFn: async () => {
       try {
-        // Try MyShipTracking API first (same as Vessels page)
-        const response = await fetch("/api/vessels/myshiptracking");
-        if (response.ok) {
-          const data = await response.json();
-          // Filter to only oil vessels with real locations
-          return data.filter((vessel: any) => {
-            const hasRealLocation = vessel.currentLat && vessel.currentLng && 
-                                  !isNaN(Number(vessel.currentLat)) && 
-                                  !isNaN(Number(vessel.currentLng));
-            const isOilVessel = 
-              vessel.vesselType?.toLowerCase().includes('tanker') ||
-              vessel.vesselType?.toLowerCase().includes('oil') ||
-              vessel.cargoType?.toLowerCase().includes('oil') ||
-              vessel.cargoType?.toLowerCase().includes('crude') ||
-              vessel.cargoType?.toLowerCase().includes('fuel');
-            return isOilVessel && hasRealLocation;
-          });
+        let allVessels: any[] = [];
+        
+        // First, get manually added vessels from your database
+        try {
+          const dbResponse = await fetch("/api/vessels");
+          if (dbResponse.ok) {
+            const dbVessels = await dbResponse.json();
+            allVessels = [...dbVessels];
+          }
+        } catch (dbError) {
+          console.warn("Could not fetch database vessels:", dbError);
         }
         
-        // Fallback to regular vessels endpoint
-        const fallbackResponse = await fetch("/api/vessels");
-        if (!fallbackResponse.ok) throw new Error("Failed to fetch vessels");
-        return fallbackResponse.json();
+        // Then try to get external API data if available
+        try {
+          const apiResponse = await fetch("/api/vessels/myshiptracking");
+          if (apiResponse.ok) {
+            const apiData = await apiResponse.json();
+            const filteredApiVessels = apiData.filter((vessel: any) => {
+              const hasRealLocation = vessel.currentLat && vessel.currentLng && 
+                                    !isNaN(Number(vessel.currentLat)) && 
+                                    !isNaN(Number(vessel.currentLng));
+              const isOilVessel = 
+                vessel.vesselType?.toLowerCase().includes('tanker') ||
+                vessel.vesselType?.toLowerCase().includes('oil') ||
+                vessel.cargoType?.toLowerCase().includes('oil') ||
+                vessel.cargoType?.toLowerCase().includes('crude') ||
+                vessel.cargoType?.toLowerCase().includes('fuel');
+              return isOilVessel && hasRealLocation;
+            });
+            allVessels = [...allVessels, ...filteredApiVessels];
+          }
+        } catch (apiError) {
+          console.warn("External API not available:", apiError);
+        }
+        
+        return allVessels;
       } catch (error) {
         console.error("Failed to fetch vessels:", error);
-        throw error;
+        // Return empty array instead of throwing to show empty state
+        return [];
       }
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes
+    staleTime: 5 * 60 * 1000,
+    refetchInterval: 5 * 60 * 1000,
   });
 
   // Create vessel mutation
@@ -271,6 +286,31 @@ export function VesselManagementNew() {
                 <DialogContent className="max-w-2xl">
                   <DialogHeader>
                     <DialogTitle>Add New Vessel</DialogTitle>
+                    <div className="flex gap-2 pt-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const sampleData = {
+                            name: `Oil Tanker ${Math.floor(Math.random() * 1000)}`,
+                            imo: `${Math.floor(1000000 + Math.random() * 9000000)}`,
+                            mmsi: `${Math.floor(100000000 + Math.random() * 900000000)}`,
+                            vesselType: "Oil Tanker",
+                            flag: ["Liberia", "Panama", "Marshall Islands", "Malta", "Singapore"][Math.floor(Math.random() * 5)],
+                            currentLat: (Math.random() * 180 - 90).toFixed(6),
+                            currentLng: (Math.random() * 360 - 180).toFixed(6),
+                            status: "underway",
+                            speed: Math.floor(Math.random() * 15).toString(),
+                            cargoType: ["Crude Oil", "Diesel", "Gasoline", "Jet Fuel", "Heavy Fuel Oil"][Math.floor(Math.random() * 5)],
+                            cargoCapacity: Math.floor(50000 + Math.random() * 250000).toString()
+                          };
+                          setFormData(sampleData);
+                        }}
+                      >
+                        Fill Sample Data
+                      </Button>
+                    </div>
                   </DialogHeader>
                   <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
@@ -320,6 +360,93 @@ export function VesselManagementNew() {
                           onChange={(e) => handleInputChange("mmsi", e.target.value)}
                           placeholder="9-digit MMSI number"
                           required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="flag">Flag *</Label>
+                        <Input
+                          id="flag"
+                          value={formData.flag}
+                          onChange={(e) => handleInputChange("flag", e.target.value)}
+                          placeholder="Flag state (e.g., Liberia, Panama)"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="status">Status</Label>
+                        <Select value={formData.status} onValueChange={(value) => handleInputChange("status", value)}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {vesselStatuses.map((status) => (
+                              <SelectItem key={status} value={status}>
+                                {status}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="currentLat">Latitude</Label>
+                        <Input
+                          id="currentLat"
+                          value={formData.currentLat}
+                          onChange={(e) => handleInputChange("currentLat", e.target.value)}
+                          placeholder="e.g., 25.7617"
+                          type="number"
+                          step="any"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="currentLng">Longitude</Label>
+                        <Input
+                          id="currentLng"
+                          value={formData.currentLng}
+                          onChange={(e) => handleInputChange("currentLng", e.target.value)}
+                          placeholder="e.g., -80.1918"
+                          type="number"
+                          step="any"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="speed">Speed (knots)</Label>
+                        <Input
+                          id="speed"
+                          value={formData.speed}
+                          onChange={(e) => handleInputChange("speed", e.target.value)}
+                          placeholder="0"
+                          type="number"
+                          min="0"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="cargoType">Cargo Type</Label>
+                        <Input
+                          id="cargoType"
+                          value={formData.cargoType}
+                          onChange={(e) => handleInputChange("cargoType", e.target.value)}
+                          placeholder="e.g., Crude Oil"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="cargoCapacity">Cargo Capacity (MT)</Label>
+                        <Input
+                          id="cargoCapacity"
+                          value={formData.cargoCapacity}
+                          onChange={(e) => handleInputChange("cargoCapacity", e.target.value)}
+                          placeholder="Capacity in metric tons"
+                          type="number"
+                          min="0"
                         />
                       </div>
                     </div>
