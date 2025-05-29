@@ -206,7 +206,7 @@ CREATE TABLE IF NOT EXISTS documents (
   title VARCHAR(255),
   content TEXT,
   file_path VARCHAR(500),
-  generated_by INTEGER REFERENCES users(id),
+  generated_by UUID REFERENCES users(id),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
