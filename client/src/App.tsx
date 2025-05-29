@@ -8,10 +8,7 @@ import VesselDocuments from "@/pages/VesselDocuments";
 // Vessel dashboard page removed as requested
 import Refineries from "@/pages/Refineries";
 import RefineryDetail from "@/pages/RefineryDetail";
-import Ports from "@/pages/PortsNew";
-import PortDetail from "@/pages/PortDetail";
-import PortImport from "@/pages/PortImport";
-import PortVesselProximity from "@/pages/PortVesselProximity";
+
 import Brokers from "@/pages/Brokers";
 import BrokerDashboard from "@/pages/BrokerDashboard";
 import SimpleBrokerDashboard from "@/pages/SimpleBrokerDashboard";
@@ -127,10 +124,7 @@ function Router() {
             {/* Maritime tracking and vessel lookup pages removed as requested */}
             <Route path="/refineries" component={Refineries} />
             <Route path="/refineries/:id" component={RefineryDetail} />
-            <Route path="/ports" component={Ports} />
-            <Route path="/ports/import" component={PortImport} />
-            <Route path="/ports/proximity" component={PortVesselProximity} />
-            <Route path="/ports/:id" component={PortDetail} />
+
             <Route path="/brokers" component={Brokers} />
             <Route path="/broker-dashboard" component={SimpleBrokerDashboard} />
             <Route path="/companies" component={Companies} />
