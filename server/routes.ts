@@ -17,7 +17,7 @@ import { seedVesselJobs } from "./scripts/seed-vessel-jobs";
 import { portService } from "./services/portService";
 import { vesselPositionService } from "./services/vesselPositionService";
 import { redistributeVesselsRealistically, getVesselDistributionStats } from "./services/realisticVesselPositioning";
-import authRoutes from "./routes/auth";
+import { supabaseAuthRoutes } from "./supabase-auth";
 // Removed old MySQL auth imports to prevent conflicts
 import { REGIONS } from "@shared/constants";
 import { 
@@ -78,7 +78,7 @@ import { maritimeRoutesRouter } from './routes/maritime-routes';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup Supabase Authentication Routes (Primary Auth System)
-  app.use('/api/auth', authRoutes);
+  supabaseAuthRoutes(app);
   
   const apiRouter = express.Router();
 
