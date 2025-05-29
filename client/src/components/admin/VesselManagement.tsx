@@ -45,6 +45,14 @@ interface Vessel {
   lastUpdated: string | null;
 }
 
+interface Port {
+  id: number;
+  name: string;
+  country: string;
+  region: string;
+  type: string;
+}
+
 interface VesselFormData {
   name: string;
   imo: string;
@@ -176,6 +184,16 @@ export default function VesselManagement() {
     queryFn: async () => {
       const response = await fetch("/api/admin/vessels");
       if (!response.ok) throw new Error("Failed to fetch vessels");
+      return response.json();
+    }
+  });
+
+  // Fetch ports for departure port dropdown
+  const { data: ports } = useQuery<Port[]>({
+    queryKey: ["/api/ports"],
+    queryFn: async () => {
+      const response = await fetch("/api/ports");
+      if (!response.ok) throw new Error("Failed to fetch ports");
       return response.json();
     }
   });
