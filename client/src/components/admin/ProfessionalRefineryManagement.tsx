@@ -55,6 +55,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import RefineryLocationSelector from '@/components/map/RefineryLocationSelector';
+import RefineryLocationMap from '@/components/map/RefineryLocationMap';
 import { Textarea } from '@/components/ui/textarea';
 
 interface Refinery {
@@ -639,45 +640,19 @@ export default function ProfessionalRefineryManagement() {
                       Click on the map to select coordinates for the refinery
                     </DialogDescription>
                   </DialogHeader>
-                  <div className="flex-1 bg-slate-100 rounded-lg flex items-center justify-center">
-                    <div className="text-center">
-                      <MapPin className="h-12 w-12 mx-auto mb-4 text-blue-600" />
-                      <h3 className="text-lg font-semibold mb-2">Interactive Map</h3>
-                      <p className="text-muted-foreground mb-4">Click anywhere on the map to set coordinates</p>
-                      <div className="grid grid-cols-2 gap-4 max-w-md mx-auto mb-4">
-                        <Button
-                          onClick={() => handleMapClick(26.6927, 50.0279)}
-                          variant="outline"
-                          size="sm"
-                        >
-                          Saudi Arabia
-                        </Button>
-                        <Button
-                          onClick={() => handleMapClick(25.2048, 55.2708)}
-                          variant="outline"
-                          size="sm"
-                        >
-                          UAE
-                        </Button>
-                        <Button
-                          onClick={() => handleMapClick(29.3117, 47.4818)}
-                          variant="outline"
-                          size="sm"
-                        >
-                          Kuwait
-                        </Button>
-                        <Button
-                          onClick={() => handleMapClick(25.3548, 51.1839)}
-                          variant="outline"
-                          size="sm"
-                        >
-                          Qatar
-                        </Button>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        Quick select common refinery locations or click for custom coordinates
-                      </p>
-                    </div>
+                  <div className="flex-1">
+                    <RefineryLocationMap
+                      onLocationSelect={(lat, lng, address) => {
+                        setFormData(prev => ({
+                          ...prev,
+                          latitude: lat.toString(),
+                          longitude: lng.toString()
+                        }));
+                        setShowMapSelector(false);
+                      }}
+                      initialLat={parseFloat(formData.latitude) || 25.2048}
+                      initialLng={parseFloat(formData.longitude) || 55.2708}
+                    />
                   </div>
                 </DialogContent>
               </Dialog>
