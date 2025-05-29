@@ -8,7 +8,7 @@ import { FixedDataManagement } from "@/components/admin/FixedDataManagement";
 
 import { RefineryManagement } from "@/components/admin/RefineryManagement";
 import { PortManagement } from "@/components/admin/PortManagement";
-import { VesselManagementNew } from "@/components/admin/VesselManagementNew";
+import VesselManagementNew from "@/components/admin/VesselManagementNew";
 import { Settings } from "@/components/admin/AdminSettings";
 import { DatabaseMigration } from "@/components/admin/DatabaseMigration";
 import { LandingPageManagement } from "@/components/admin/LandingPageManagement";
