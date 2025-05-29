@@ -1,6 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes-clean";
-import { setupPerfectAuth } from "./simple-auth";
+import { setupUltraSimpleAuth } from "./ultra-simple-auth";
 import { setupVite, serveStatic, log } from "./vite";
 // Clean Supabase-only setup for oil vessel tracking platform
 
@@ -42,8 +42,8 @@ app.use((req, res, next) => {
   // Simple Supabase-only setup
   console.log('🚀 Starting oil vessel tracking platform with Supabase...');
   
-  // Setup perfect authentication system
-  setupPerfectAuth(app);
+  // Setup ultra simple authentication system
+  setupUltraSimpleAuth(app);
   
   const server = await registerRoutes(app);
   
