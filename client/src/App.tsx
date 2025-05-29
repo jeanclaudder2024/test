@@ -30,6 +30,7 @@ import TrafficInsights from "@/pages/TrafficInsights";
 import WorkingMap from "@/pages/WorkingMap";
 import OilVesselMap from "@/pages/OilVesselMap";
 import AdminPanel from "@/pages/AdminPanel";
+import PortsPage from "@/pages/PortsPage";
 import SubscriptionAdmin from "@/pages/SubscriptionAdmin";
 // Maritime tracking and vessel lookup pages removed as requested
 import { useEffect } from "react";
