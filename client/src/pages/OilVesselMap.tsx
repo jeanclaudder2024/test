@@ -481,68 +481,7 @@ export default function OilVesselMap() {
         </div>
       </div>
 
-      {/* Controls panel */}
-      <div className="absolute top-4 right-4 z-10 space-y-2">
-        <Card className="w-64 bg-card/90 backdrop-blur-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <Filter className="h-4 w-4" />
-              Map Controls
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div>
-              <label className="text-xs font-medium mb-1 block">Region</label>
-              <Select value={selectedRegion} onValueChange={setSelectedRegion}>
-                <SelectTrigger className="h-8">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(MAP_REGIONS).map(([key, region]) => (
-                    <SelectItem key={key} value={key}>
-                      {region.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="flex flex-col gap-2">
-              <label className="text-xs font-medium">Show Facilities</label>
-              <div className="flex gap-2">
-                <Button
-                  variant={showRefineries ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setShowRefineries(!showRefineries)}
-                  className="flex-1 h-8"
-                >
-                  <Factory className="h-3 w-3 mr-1" />
-                  Refineries
-                </Button>
-                <Button
-                  variant={showPorts ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setShowPorts(!showPorts)}
-                  className="flex-1 h-8"
-                >
-                  <Anchor className="h-3 w-3 mr-1" />
-                  Ports
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
-        {/* Vessel count */}
-        <Card className="bg-card/90 backdrop-blur-sm">
-          <CardContent className="p-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium">Vessels Shown</span>
-              <Badge variant="secondary">{filteredVessels.length}</Badge>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
 
       {/* Vessel details panel */}
       {selectedVessel && (
