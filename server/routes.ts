@@ -4318,11 +4318,10 @@ Only use authentic, real-world data for existing refineries.`;
     }
   });
 
-  // Database Health Check and Auto-Failover Status
+  // Database Health Check Status
   app.get("/api/database/status", async (req, res) => {
     try {
-      const { getFailoverStatus } = await import('./auto-failover-db');
-      const status = getFailoverStatus();
+      const status = { isFailoverActive: false, currentDatabase: 'supabase' };
       
       // اختبار سريع لقاعدة البيانات النشطة
       const testResult = await db.select().from(vessels).limit(1);
@@ -4332,7 +4331,7 @@ Only use authentic, real-world data for existing refineries.`;
         status: status,
         activeDatabase: status.currentDatabase,
         isFailoverActive: status.isFailoverActive,
-        lastHealthCheck: status.lastHealthCheck,
+        lastHealthCheck: Date.now(),
         testQuery: testResult.length > 0 ? 'success' : 'no_data'
       });
     } catch (error) {
@@ -4345,11 +4344,10 @@ Only use authentic, real-world data for existing refineries.`;
     }
   });
 
-  // Force Database Failover (for testing)
+  // Database info (Supabase only)
   app.post("/api/database/force-failover", async (req, res) => {
     try {
-      const { autoFailoverDb } = await import('./auto-failover-db');
-      const result = await autoFailoverDb.forceFailover();
+      const result = false; // No failover needed with Supabase
       
       res.json({
         success: result,
@@ -4364,11 +4362,10 @@ Only use authentic, real-world data for existing refineries.`;
     }
   });
 
-  // Force Database Recovery (back to primary)
+  // Database recovery (already using Supabase)
   app.post("/api/database/force-recovery", async (req, res) => {
     try {
-      const { autoFailoverDb } = await import('./auto-failover-db');
-      const result = await autoFailoverDb.forceRecovery();
+      const result = true; // Always using Supabase
       
       res.json({
         success: result,
