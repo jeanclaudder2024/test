@@ -10,9 +10,14 @@ if (!DATABASE_URL) {
 }
 
 // Create PostgreSQL connection to Supabase
-const sql = postgres(DATABASE_URL, {
-  max: 10,
-  ssl: { rejectUnauthorized: false }
+const sql = postgres({
+  host: 'aws-0-us-east-2.pooler.supabase.com',
+  port: 5432,
+  database: 'postgres',
+  username: 'postgres.fahvjksfkzmbsyvtktyk',
+  password: 'Jonny@2025@',
+  ssl: { rejectUnauthorized: false },
+  max: 10
 });
 
 export const db = drizzle(sql, { schema });
