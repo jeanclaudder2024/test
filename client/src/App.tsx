@@ -2,17 +2,15 @@ import { Switch, Route, useLocation } from "wouter";
 import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 // Dashboard page removed as requested
-import Vessels from "@/pages/VesselsNew";
-import VesselDetail from "@/pages/VesselDetailNew";
+import Vessels from "@/pages/Vessels";
+import VesselDetail from "@/pages/VesselDetail";
 import VesselDocuments from "@/pages/VesselDocuments";
-// Vessel dashboard page removed as requested
 import Refineries from "@/pages/Refineries";
 import RefineryDetail from "@/pages/RefineryDetail";
-
-
+import Ports from "@/pages/Ports";
+import PortDetail from "@/pages/PortDetail";
 import Brokers from "@/pages/Brokers";
 import BrokerDashboard from "@/pages/BrokerDashboard";
-import SimpleBrokerDashboard from "@/pages/SimpleBrokerDashboard";
 import Documents from "@/pages/Documents";
 import AIAssistantPage from "@/pages/AIAssistant";
 import Settings from "@/pages/Settings";
@@ -21,16 +19,14 @@ import Pricing from "@/pages/Pricing";
 import AccountSubscription from "@/pages/AccountSubscription";
 import SubscriptionSuccess from "@/pages/SubscriptionSuccess";
 import LandingPage from "@/pages/LandingPage";
-import CleanAuthPage from "@/pages/CleanAuthPage";
+import AuthPage from "@/pages/AuthPage";
 import TradingDashboard from "@/pages/TradingDashboard";
 import Companies from "@/pages/Companies";
 import ApiTest from "@/pages/ApiTest";
 import TranslationPage from "@/pages/TranslationPage";
 import TrafficInsights from "@/pages/TrafficInsights";
-import WorkingMap from "@/pages/WorkingMap";
-import OilVesselMap from "@/pages/OilVesselMap";
+import FixedFullPageMap from "@/pages/FixedFullPageMap";
 import AdminPanel from "@/pages/AdminPanel";
-import PortsPage from "@/pages/PortsPage";
 import SubscriptionAdmin from "@/pages/SubscriptionAdmin";
 // Maritime tracking and vessel lookup pages removed as requested
 import { useEffect } from "react";
@@ -45,9 +41,9 @@ import { Redirect } from "wouter";
 import { Loader2 } from "lucide-react";
 import { QueryClientProvider } from "@tanstack/react-query";
 
-// Clean Auth Wrapper Component - No Email Verification
-function CleanAuthWrapper() {
-  return <CleanAuthPage />;
+// Auth Wrapper Component
+function AuthWrapper() {
+  return <AuthPage />;
 }
 
 // Component to check auth status and redirect if logged in
@@ -99,7 +95,7 @@ function Router() {
             <LandingPageRedirect />
           </Route>
           <Route path="/auth">
-            <CleanAuthWrapper />
+            <AuthWrapper />
           </Route>
         </Switch>
       </AnimatePresence>
@@ -126,10 +122,10 @@ function Router() {
             {/* Maritime tracking and vessel lookup pages removed as requested */}
             <Route path="/refineries" component={Refineries} />
             <Route path="/refineries/:id" component={RefineryDetail} />
-            <Route path="/ports" component={PortsPage} />
-
+            <Route path="/ports" component={Ports} />
+            <Route path="/ports/:id" component={PortDetail} />
             <Route path="/brokers" component={Brokers} />
-            <Route path="/broker-dashboard" component={SimpleBrokerDashboard} />
+            <Route path="/broker-dashboard" component={BrokerDashboard} />
             <Route path="/companies" component={Companies} />
             <Route path="/documents" component={Documents} />
             <Route path="/ai-assistant" component={AIAssistantPage} />
@@ -138,8 +134,7 @@ function Router() {
             <Route path="/trading" component={TradingDashboard} />
             <Route path="/translation" component={TranslationPage} />
             <Route path="/traffic-insights" component={TrafficInsights} />
-            <Route path="/map" component={WorkingMap} />
-            <Route path="/oil-vessel-map" component={OilVesselMap} />
+            <Route path="/map" component={FixedFullPageMap} />
             {/* Maritime tracking and vessel lookup pages removed as requested */}
             <Route path="/settings" component={Settings} />
             <Route path="/subscribe" component={Subscribe} />
