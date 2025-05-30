@@ -1,0 +1,93 @@
+/* Full screen map container */
+.fullscreen-map-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Make the map fill the entire screen */
+.leaflet-container {
+  width: 100vw !important;
+  height: 100vh !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background-color: #e5e8eb !important;
+}
+
+/* Ensure tiles cover the entire area */
+.leaflet-tile-container {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Fix tile size to eliminate gaps */
+.leaflet-tile {
+  width: 256px !important;
+  height: 256px !important;
+}
+
+/* Ensure controls stay visible */
+.leaflet-control-container {
+  z-index: 1000;
+}
+
+/* Set the entire document body to fill viewport */
+html, 
+body, 
+#root {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  overflow: hidden !important;
+}
+
+/* Custom styling for map elements */
+.custom-popup .leaflet-popup-content-wrapper {
+  border-radius: 8px;
+  box-shadow: 0 3px 14px rgba(0,0,0,0.3);
+  padding: 0;
+  overflow: hidden;
+}
+
+.custom-popup .leaflet-popup-content {
+  margin: 0;
+  padding: 0;
+}
+
+.custom-popup .leaflet-popup-tip {
+  background: white;
+}
+
+/* Map layer controls */
+.map-layer-controls {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  z-index: 1000;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  padding: 12px;
+}
+
+/* Details panel styling */
+.map-details-panel {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  max-width: 300px;
+  overflow: hidden;
+}
