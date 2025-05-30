@@ -17,7 +17,7 @@ import { seedAllData, regenerateGlobalVessels } from "./services/seedService";
 import { portService } from "./services/portService";
 import { vesselPositionService } from "./services/vesselPositionService";
 import { redistributeVesselsRealistically, getVesselDistributionStats } from "./services/realisticVesselPositioning";
-import { supabaseAuthRoutes } from "./supabase-auth";
+// Simplified authentication - using supabase-simple-auth only
 // Removed old MySQL auth imports to prevent conflicts
 import { REGIONS } from "@shared/constants";
 import { 
@@ -78,7 +78,7 @@ import { maritimeRoutesRouter } from './routes/maritime-routes';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup Supabase Authentication Routes (Primary Auth System)
-  supabaseAuthRoutes(app);
+  // Authentication routes handled in index.ts
   
   const apiRouter = express.Router();
 
