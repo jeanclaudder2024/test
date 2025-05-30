@@ -90,19 +90,18 @@ export function useVesselWebSocket({
       }
       
       // 3. Try the regular vessels endpoint
-      console.log('Trying regular vessels endpoint...');
       const response = await fetch(`/api/vessels?${params.toString()}`);
-      console.log('Regular API response status:', response.status);
+      console.log('Database API response status:', response.status);
       
       if (!response.ok) {
         throw new Error(`Failed to fetch vessels: ${response.status}`);
       }
       
       const data = await response.json();
-      console.log(`Regular API returned ${data?.length || 0} vessels`);
+      console.log(`Database returned ${data?.length || 0} authentic vessels`);
       
       if (data && data.length > 0) {
-        console.log('Sample vessel from regular endpoint:', data[0]);
+        console.log('Sample authentic vessel:', data[0]);
         
         // Filter out vessels with invalid coordinates
         const vesselsWithCoordinates = data.filter((v: any) => 
