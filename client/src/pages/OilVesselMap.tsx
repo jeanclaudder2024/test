@@ -5,8 +5,9 @@ import 'leaflet/dist/leaflet.css';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Ship, Anchor, RefreshCw, MapIcon } from 'lucide-react';
+import { Ship, Anchor, RefreshCw, MapIcon, Factory } from 'lucide-react';
 import { useVesselWebSocket } from '@/hooks/useVesselWebSocket';
+import { useQuery } from '@tanstack/react-query';
 
 // Fix leaflet default icon issue
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -37,11 +38,55 @@ const createVesselIcon = (vesselType: string) => {
   });
 };
 
+const createPortIcon = () => {
+  return L.divIcon({
+    html: `<div style="
+      background-color: #10b981;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 2px solid white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    "></div>`,
+    className: 'port-marker',
+    iconSize: [14, 14],
+    iconAnchor: [7, 7]
+  });
+};
+
+const createRefineryIcon = () => {
+  return L.divIcon({
+    html: `<div style="
+      background-color: #f59e0b;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 2px solid white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    "></div>`,
+    className: 'refinery-marker',
+    iconSize: [14, 14],
+    iconAnchor: [7, 7]
+  });
+};
+
 export default function OilVesselMap() {
   const { vessels, loading, error, connectionStatus, refetch } = useVesselWebSocket({
     region: 'global',
     loadAllVessels: true,
     refreshInterval: 30000
+  });
+
+  // Fetch ports data
+  const { data: ports = [] } = useQuery({
+    queryKey: ['/api/ports'],
+    enabled: true
+  });
+
+  // Fetch refineries data
+  const { data: refineries = [] } = useQuery({
+    queryKey: ['/api/refineries'],
+    enabled: true
   });
 
   // Filter for oil vessels only
@@ -103,6 +148,18 @@ export default function OilVesselMap() {
         <div className="flex items-center gap-4">
           <Badge variant={connectionStatus === 'connected' ? 'default' : 'destructive'}>
             {connectionStatus === 'connected' ? 'Live Data' : 'Disconnected'}
+          </Badge>
+          
+          <Badge variant="outline" className="bg-blue-50 text-blue-700">
+            {mappableVessels.length} Vessels
+          </Badge>
+          
+          <Badge variant="outline" className="bg-green-50 text-green-700">
+            {ports.length} Ports
+          </Badge>
+          
+          <Badge variant="outline" className="bg-orange-50 text-orange-700">
+            {refineries.length} Refineries
           </Badge>
           
           <Button
