@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\VesselController;
 use App\Http\Controllers\Api\PortController;
 use App\Http\Controllers\Api\RefineryController;
+use App\Http\Controllers\Api\SupabaseProxyController;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,32 +22,25 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-// Vessel routes
-Route::apiResource('vessels', VesselController::class);
-Route::get('vessels/stats', [VesselController::class, 'stats']);
-Route::get('vessels/tracking', [VesselController::class, 'tracking']);
+// Supabase proxy routes for authentic data
+Route::get('vessels', [SupabaseProxyController::class, 'vessels']);
+Route::get('ports', [SupabaseProxyController::class, 'ports']);
+Route::get('refineries', [SupabaseProxyController::class, 'refineries']);
+Route::get('dashboard/stats', [SupabaseProxyController::class, 'dashboardStats']);
 
-// Port routes
-Route::apiResource('ports', PortController::class);
-Route::get('ports/stats', [PortController::class, 'stats']);
+// Additional vessel routes
+Route::get('vessels/stats', [SupabaseProxyController::class, 'dashboardStats']);
+Route::get('vessels/tracking', [SupabaseProxyController::class, 'vessels']);
 
-// Refinery routes
-Route::apiResource('refineries', RefineryController::class);
-Route::get('refineries/stats', [RefineryController::class, 'stats']);
+// Additional port routes
+Route::get('ports/stats', [SupabaseProxyController::class, 'dashboardStats']);
 
-// Dashboard stats
-Route::get('dashboard/stats', function () {
-    $vesselController = new VesselController();
-    $portController = new PortController();
-    $refineryController = new RefineryController();
-    
-    $vesselStats = $vesselController->stats()->getData()->data;
-    $portStats = $portController->stats()->getData()->data;
-    $refineryStats = $refineryController->stats()->getData()->data;
-    
-    return response()->json([
-        'vessels' => $vesselStats,
-        'ports' => $portStats,
-        'refineries' => $refineryStats
-    ]);
+// Additional refinery routes
+Route::get('refineries/stats', [SupabaseProxyController::class, 'dashboardStats']);
+
+// Fallback Laravel model routes (if needed)
+Route::prefix('laravel')->group(function () {
+    Route::apiResource('vessels', VesselController::class);
+    Route::apiResource('ports', PortController::class);
+    Route::apiResource('refineries', RefineryController::class);
 });

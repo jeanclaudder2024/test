@@ -1,7 +1,16 @@
-// Maritime Platform - Complete Application Bundle for PHP Hosting
-// This bundles your actual React application components
+// Maritime Platform - Complete Laravel Application
+// Professional maritime oil brokerage platform with Laravel backend
 
-// Configuration
+// Configuration for Laravel API
+const API_CONFIG = {
+  baseUrl: '/api',
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+  }
+};
+
+// Fallback Supabase configuration for direct access
 const SUPABASE_CONFIG = {
   url: 'https://hjuxqjpgqacekqixiqol.supabase.co',
   anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhqdXhxanBncWFjZWtxaXhpcW9sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU4MTc1MDIsImV4cCI6MjA1MTM5MzUwMn0.0R8s6MF_rA4gfqAPzGN8LMFEoVJjI2N2xzJNEwTqLYo'
@@ -52,32 +61,34 @@ class SupabaseClient {
 
   async fetchFromPHP(endpoint) {
     try {
-      let phpEndpoint = '';
+      // Use Laravel API endpoints
+      let laravelEndpoint = '';
       if (endpoint.includes('vessels')) {
-        phpEndpoint = './api.php?endpoint=vessels';
+        laravelEndpoint = '/api/vessels';
       } else if (endpoint.includes('ports')) {
-        phpEndpoint = './api.php?endpoint=ports';
+        laravelEndpoint = '/api/ports';
+      } else if (endpoint.includes('refineries')) {
+        laravelEndpoint = '/api/refineries';
       } else {
-        phpEndpoint = './api.php';
+        laravelEndpoint = '/api/dashboard/stats';
       }
       
-      console.log('Fetching from PHP API:', phpEndpoint);
-      const response = await fetch(phpEndpoint);
+      console.log('Fetching from Laravel API:', laravelEndpoint);
+      const response = await fetch(laravelEndpoint, {
+        headers: API_CONFIG.headers
+      });
       
       if (!response.ok) {
-        throw new Error(`PHP API error: ${response.status} ${response.statusText}`);
+        throw new Error(`Laravel API error: ${response.status} ${response.statusText}`);
       }
       
       const data = await response.json();
-      console.log('PHP API response:', data);
+      console.log('Laravel API response:', data);
       
-      if (data.error) {
-        throw new Error(data.message || data.error);
-      }
-      
-      return data;
+      // Laravel returns data in {data: [...]} format
+      return data.data || data;
     } catch (error) {
-      console.error('PHP API fallback error:', error);
+      console.error('Laravel API error:', error);
       throw error;
     }
   }
