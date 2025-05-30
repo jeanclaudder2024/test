@@ -304,6 +304,20 @@ export default function VesselDetail() {
   const [refineries, setRefineries] = useState<any[]>([]);
   const [ports, setPorts] = useState<any[]>([]);
   
+  // Helper function to get port name by ID
+  const getPortName = (portId: number | string | null | undefined): string => {
+    if (!portId || !ports.length) return 'Unknown Port';
+    const port = ports.find(p => p.id === Number(portId));
+    return port ? port.name : `Port ID: ${portId}`;
+  };
+  
+  // Helper function to get departure port name
+  const getDeparturePortName = (portId: number | string | null | undefined): string => {
+    if (!portId || !ports.length) return 'Unknown Port';
+    const port = ports.find(p => p.id === Number(portId));
+    return port ? port.name : `Port ID: ${portId}`;
+  };
+  
   // Fetch refineries data for map connections
   useEffect(() => {
     const fetchRefineries = async () => {
@@ -882,7 +896,7 @@ export default function VesselDetail() {
                         <div className="flex items-start">
                           <MapPin className="h-4 w-4 text-red-500 mr-2 mt-0.5" />
                           <div>
-                            <div className="font-medium">{vessel.departurePort}</div>
+                            <div className="font-medium">{getDeparturePortName(vessel.departurePort)}</div>
                             {vessel.lastPortDepatureTime && (
                               <div className="text-xs text-muted-foreground mt-0.5">
                                 {formatDate(new Date(vessel.lastPortDepatureTime))}
@@ -902,7 +916,7 @@ export default function VesselDetail() {
                             <div className="font-medium">
                               {typeof vessel.destinationPort === 'string' && vessel.destinationPort.startsWith('REF:') 
                                 ? vessel.destinationPort.split(':')[2]
-                                : vessel.destinationPort}
+                                : getPortName(vessel.destinationPort)}
                             </div>
                             {vessel.estimatedArrivalTime && (
                               <div className="text-xs text-muted-foreground mt-0.5">
