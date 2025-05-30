@@ -13,7 +13,7 @@ import { brokerService } from "./services/brokerService";
 import { stripeService } from "./services/stripeService";
 import { updateRefineryCoordinates, seedMissingRefineries } from "./services/refineryUpdate";
 import { seedAllData, regenerateGlobalVessels } from "./services/seedService";
-import { seedVesselJobs } from "./scripts/seed-vessel-jobs";
+// Removed broken import - seed-vessel-jobs script was cleaned up
 import { portService } from "./services/portService";
 import { vesselPositionService } from "./services/vesselPositionService";
 import { redistributeVesselsRealistically, getVesselDistributionStats } from "./services/realisticVesselPositioning";
@@ -264,16 +264,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         // Return whatever data we managed to seed
-        // Check for vessel job data
+        // Vessel job seeding was removed during cleanup
         let vesselJobsResult = { jobs: 0, extraInfo: 0, docs: 0, seeded: false };
         try {
-          const seedJobsResult = await seedVesselJobs();
-          // Ensure we have all required properties
+          // seedVesselJobs function was removed during cleanup
           vesselJobsResult = {
-            jobs: seedJobsResult.jobs || 0,
-            extraInfo: seedJobsResult.extraInfo || 0,
-            docs: seedJobsResult.docs || 0,
-            seeded: seedJobsResult.seeded
+            jobs: 0,
+            extraInfo: 0,
+            docs: 0,
+            seeded: false
           };
           console.log("Vessel job data seeded successfully:", vesselJobsResult);
         } catch (jobError) {

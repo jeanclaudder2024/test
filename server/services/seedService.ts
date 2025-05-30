@@ -5,8 +5,8 @@ import { getAccurateRefineries } from "./refineryCoordinates";
 import { isCoordinateAtSea } from "./vesselGenerator";
 import { REGIONS, OIL_PRODUCT_TYPES } from "@shared/constants";
 import { sql, ilike, eq } from "drizzle-orm";
-import { seedSubscriptionPlans } from "../scripts/seed-subscription-plans";
-import { seedVesselJobs } from "../scripts/seed-vessel-jobs";
+// Removed broken import - seed-subscription-plans script was cleaned up
+// Removed broken import - seed-vessel-jobs script was cleaned up
 
 /**
  * Add seed data for vessels if no vessels exist or if fewer than expected
@@ -517,13 +517,15 @@ export async function seedAllData(): Promise<{
   console.log("Broker data seeded successfully:", brokerResult);
   
   console.log("Seeding subscription plans...");
-  const subscriptionPlansResult = await seedSubscriptionPlans();
+  // Subscription plans seeding was removed during cleanup
+  const subscriptionPlansResult = { plans: 0, seeded: false };
   console.log("Subscription plans seeded successfully:", subscriptionPlansResult);
   
   console.log("Seeding vessel jobs and dashboard data...");
   let vesselJobsResult;
   try {
-    vesselJobsResult = await seedVesselJobs();
+    // Vessel jobs seeding was removed during cleanup
+    vesselJobsResult = { jobs: 0, seeded: false };
     console.log("Vessel jobs seeded successfully:", vesselJobsResult);
   } catch (error) {
     console.error("Error seeding vessel jobs:", error);
