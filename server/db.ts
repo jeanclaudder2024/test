@@ -2,16 +2,14 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from "@shared/schema";
 
-// Use Supabase database URL from environment
-const DATABASE_URL = process.env.SUPABASE_URL 
-  ? `postgresql://postgres.fahvjksfkzmbsyvtktyk:Jonny@2025@@aws-0-us-east-2.pooler.supabase.com:6543/postgres`
-  : process.env.DATABASE_URL;
+// Get Supabase database URL from environment
+const DATABASE_URL = process.env.DATABASE_URL;
 
 if (!DATABASE_URL) {
-  throw new Error("DATABASE_URL or SUPABASE_URL must be set");
+  throw new Error("DATABASE_URL environment variable must be set with your Supabase PostgreSQL connection string");
 }
 
-// Create PostgreSQL connection
+// Create PostgreSQL connection to Supabase
 const sql = postgres(DATABASE_URL, {
   max: 10,
   ssl: { rejectUnauthorized: false }
@@ -19,10 +17,8 @@ const sql = postgres(DATABASE_URL, {
 
 export const db = drizzle(sql, { schema });
 
-console.log('✅ Connected to Supabase database');
+console.log('Connected to Supabase database');
 
-// Helper function to get the active database (always Supabase)
 export function getActiveDb() {
-  console.log('Using Supabase database');
   return db;
 }
