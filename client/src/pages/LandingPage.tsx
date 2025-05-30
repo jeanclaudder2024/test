@@ -75,6 +75,257 @@ const AnimatedCounter = ({ value, label, duration = 2000, prefix = "", suffix = 
   );
 };
 
+// Industry Showcase Slider Component
+const IndustryShowcaseSlider = () => {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  
+  const showcaseImages = [
+    {
+      url: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800",
+      title: "Global Oil Refineries",
+      description: "Major refineries processing crude oil worldwide",
+      category: "Refineries"
+    },
+    {
+      url: "https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=800",
+      title: "Oil Tanker Fleet",
+      description: "Modern petroleum transport vessels",
+      category: "Vessels"
+    },
+    {
+      url: "https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?w=800",
+      title: "Port Terminals",
+      description: "Strategic oil loading and unloading facilities",
+      category: "Ports"
+    },
+    {
+      url: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=800",
+      title: "Oil Companies",
+      description: "Leading petroleum industry corporations",
+      category: "Companies"
+    }
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % showcaseImages.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [showcaseImages.length]);
+
+  return (
+    <div className="relative overflow-hidden rounded-2xl border border-slate-700/50 shadow-2xl shadow-orange-950/20 backdrop-blur-sm bg-slate-900/50 h-96">
+      {/* Decorative Elements */}
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-orange-500 to-transparent"></div>
+      <div className="absolute top-0 left-0 bottom-0 w-1 bg-gradient-to-b from-orange-500/50 via-transparent to-transparent"></div>
+      
+      {/* Control Bar */}
+      <div className="absolute top-0 left-0 right-0 z-20 px-4 py-3 border-b border-slate-700/50 flex items-center justify-between bg-slate-800/80 backdrop-blur-sm">
+        <div className="flex items-center space-x-2">
+          <div className="w-3 h-3 rounded-full bg-red-400"></div>
+          <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
+          <div className="w-3 h-3 rounded-full bg-green-400"></div>
+        </div>
+        <div className="text-xs text-white/70">Oil Industry Network</div>
+        <div className="flex items-center space-x-2">
+          <Search className="h-4 w-4 text-white/70" />
+        </div>
+      </div>
+
+      {/* Image Slider */}
+      <div className="relative h-full mt-12">
+        {showcaseImages.map((image, index) => (
+          <div
+            key={index}
+            className={`absolute inset-0 transition-all duration-1000 ease-in-out ${
+              index === currentSlide ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
+            }`}
+          >
+            <img 
+              src={image.url} 
+              alt={image.title}
+              className="w-full h-full object-cover"
+            />
+            {/* Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-transparent to-transparent"></div>
+            
+            {/* Content */}
+            <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+              <Badge className="mb-2 bg-orange-500/20 text-orange-300 border-orange-500/30">
+                {image.category}
+              </Badge>
+              <h3 className="text-xl font-bold mb-1">{image.title}</h3>
+              <p className="text-sm text-white/80">{image.description}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Navigation Dots */}
+      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 z-20">
+        {showcaseImages.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => setCurrentSlide(index)}
+            className={`w-2 h-2 rounded-full transition-all ${
+              index === currentSlide ? 'bg-orange-500 w-6' : 'bg-white/40'
+            }`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// Oil Industry Partners Slider
+const OilIndustrySlider = () => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  
+  const industryImages = [
+    {
+      url: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400",
+      title: "ExxonMobil",
+      type: "Oil Company",
+      description: "Global energy leader"
+    },
+    {
+      url: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400",
+      title: "Saudi Aramco Refinery",
+      type: "Refinery",
+      description: "World's largest oil processing facility"
+    },
+    {
+      url: "https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=400",
+      title: "VLCC Tanker",
+      type: "Vessel",
+      description: "Very Large Crude Carrier"
+    },
+    {
+      url: "https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?w=400",
+      title: "Rotterdam Port",
+      type: "Port",
+      description: "Europe's largest oil terminal"
+    },
+    {
+      url: "https://images.unsplash.com/photo-1578662996473-25d2ba8ac4b3?w=400",
+      title: "Shell Refinery",
+      type: "Refinery",
+      description: "Advanced petroleum processing"
+    },
+    {
+      url: "https://images.unsplash.com/photo-1587293852726-70cdb56c2866?w=400",
+      title: "Crude Oil Tanker",
+      type: "Vessel",
+      description: "International petroleum transport"
+    },
+    {
+      url: "https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=400",
+      title: "Houston Ship Channel",
+      type: "Port",
+      description: "Major US oil hub"
+    },
+    {
+      url: "https://images.unsplash.com/photo-1516464207144-40c5f7a21a19?w=400",
+      title: "BP Operations",
+      type: "Oil Company",
+      description: "Integrated energy solutions"
+    }
+  ];
+
+  const slidesToShow = 4;
+  const maxIndex = Math.max(0, industryImages.length - slidesToShow);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
+    }, 3000);
+    return () => clearInterval(timer);
+  }, [maxIndex]);
+
+  const nextSlide = () => {
+    setCurrentIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
+  };
+
+  const prevSlide = () => {
+    setCurrentIndex((prev) => (prev <= 0 ? maxIndex : prev - 1));
+  };
+
+  return (
+    <div className="relative">
+      {/* Navigation Buttons */}
+      <button
+        onClick={prevSlide}
+        className="absolute left-0 top-1/2 transform -translate-y-1/2 z-10 bg-slate-800/80 hover:bg-slate-700/80 text-white p-3 rounded-full backdrop-blur-sm transition-all duration-200 hover:scale-110"
+      >
+        <ChevronRight className="h-5 w-5 rotate-180" />
+      </button>
+      
+      <button
+        onClick={nextSlide}
+        className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-slate-800/80 hover:bg-slate-700/80 text-white p-3 rounded-full backdrop-blur-sm transition-all duration-200 hover:scale-110"
+      >
+        <ChevronRight className="h-5 w-5" />
+      </button>
+
+      {/* Slider Container */}
+      <div className="overflow-hidden mx-12">
+        <div 
+          className="flex transition-transform duration-500 ease-in-out"
+          style={{ transform: `translateX(-${currentIndex * (100 / slidesToShow)}%)` }}
+        >
+          {industryImages.map((image, index) => (
+            <div
+              key={index}
+              className="flex-shrink-0 w-1/4 px-3"
+            >
+              <div className="bg-slate-800/50 rounded-lg overflow-hidden border border-slate-700/50 hover:border-orange-500/30 transition-all duration-300 hover:scale-105 group">
+                <div className="relative h-48 overflow-hidden">
+                  <img 
+                    src={image.url} 
+                    alt={image.title}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent"></div>
+                  
+                  {/* Type Badge */}
+                  <div className="absolute top-3 left-3">
+                    <Badge className={`text-xs ${
+                      image.type === 'Oil Company' ? 'bg-blue-500/20 text-blue-300 border-blue-500/30' :
+                      image.type === 'Refinery' ? 'bg-red-500/20 text-red-300 border-red-500/30' :
+                      image.type === 'Vessel' ? 'bg-green-500/20 text-green-300 border-green-500/30' :
+                      'bg-purple-500/20 text-purple-300 border-purple-500/30'
+                    }`}>
+                      {image.type}
+                    </Badge>
+                  </div>
+                </div>
+                
+                <div className="p-4">
+                  <h3 className="font-semibold text-white text-sm mb-1">{image.title}</h3>
+                  <p className="text-white/60 text-xs">{image.description}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Progress Indicators */}
+      <div className="flex justify-center mt-6 space-x-2">
+        {Array.from({ length: maxIndex + 1 }).map((_, index) => (
+          <button
+            key={index}
+            onClick={() => setCurrentIndex(index)}
+            className={`w-2 h-2 rounded-full transition-all ${
+              index === currentIndex ? 'bg-orange-500 w-8' : 'bg-slate-600'
+            }`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const Testimonial = ({ quote, author, company, avatarChar }: { 
   quote: string, 
   author: string, 
