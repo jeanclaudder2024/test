@@ -81,28 +81,39 @@ const IndustryShowcaseSlider = () => {
   
   const showcaseImages = [
     {
-      url: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800",
-      title: "Global Oil Refineries",
-      description: "Major refineries processing crude oil worldwide",
-      category: "Refineries"
+      url: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?q=80&w=1200&auto=format&fit=crop",
+      title: "Advanced Oil Refineries",
+      description: "State-of-the-art petroleum processing facilities with cutting-edge technology",
+      category: "Refineries",
+      stats: "500+ Global Facilities"
     },
     {
-      url: "https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=800",
-      title: "Oil Tanker Fleet",
-      description: "Modern petroleum transport vessels",
-      category: "Vessels"
+      url: "https://images.unsplash.com/photo-1581094794329-c8112a89af12?q=80&w=1200&auto=format&fit=crop",
+      title: "VLCC Oil Tankers",
+      description: "Very Large Crude Carriers transporting millions of barrels worldwide",
+      category: "Vessels",
+      stats: "2,400+ Active Fleet"
     },
     {
-      url: "https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?w=800",
-      title: "Port Terminals",
-      description: "Strategic oil loading and unloading facilities",
-      category: "Ports"
+      url: "https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?q=80&w=1200&auto=format&fit=crop",
+      title: "Strategic Oil Terminals",
+      description: "Critical infrastructure for global petroleum distribution networks",
+      category: "Ports",
+      stats: "150+ Major Terminals"
     },
     {
-      url: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=800",
-      title: "Oil Companies",
-      description: "Leading petroleum industry corporations",
-      category: "Companies"
+      url: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?q=80&w=1200&auto=format&fit=crop",
+      title: "Energy Corporations",
+      description: "Leading oil companies driving the global energy market",
+      category: "Companies",
+      stats: "$2T+ Market Value"
+    },
+    {
+      url: "https://images.unsplash.com/photo-1566228015668-4c45dbc4e2f5?q=80&w=1200&auto=format&fit=crop",
+      title: "Offshore Oil Platforms",
+      description: "Deep-water drilling operations in international waters",
+      category: "Platforms",
+      stats: "1,200+ Active Rigs"
     }
   ];
 
@@ -151,11 +162,27 @@ const IndustryShowcaseSlider = () => {
             
             {/* Content */}
             <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-              <Badge className="mb-2 bg-orange-500/20 text-orange-300 border-orange-500/30">
-                {image.category}
-              </Badge>
-              <h3 className="text-xl font-bold mb-1">{image.title}</h3>
-              <p className="text-sm text-white/80">{image.description}</p>
+              <div className="flex items-center justify-between mb-3">
+                <Badge className="bg-orange-500/20 text-orange-300 border-orange-500/30 backdrop-blur-sm">
+                  {image.category}
+                </Badge>
+                <div className="text-xs text-orange-400 font-semibold bg-orange-500/10 px-2 py-1 rounded backdrop-blur-sm">
+                  {image.stats}
+                </div>
+              </div>
+              <h3 className="text-xl font-bold mb-2 text-white drop-shadow-lg">{image.title}</h3>
+              <p className="text-sm text-white/90 leading-relaxed drop-shadow-md">{image.description}</p>
+              
+              {/* Progress bar animation */}
+              <div className="w-full bg-white/20 rounded-full h-1 mt-4 overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-orange-400 to-orange-600 rounded-full transition-all duration-4000 ease-linear"
+                  style={{ 
+                    width: index === currentSlide ? '100%' : '0%',
+                    transition: index === currentSlide ? 'width 4s linear' : 'width 0s'
+                  }}
+                ></div>
+              </div>
             </div>
           </div>
         ))}
@@ -183,52 +210,84 @@ const OilIndustrySlider = () => {
   
   const industryImages = [
     {
-      url: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400",
-      title: "ExxonMobil",
-      type: "Oil Company",
-      description: "Global energy leader"
-    },
-    {
-      url: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400",
-      title: "Saudi Aramco Refinery",
+      url: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?q=80&w=600&auto=format&fit=crop",
+      title: "Saudi Aramco Complex",
       type: "Refinery",
-      description: "World's largest oil processing facility"
+      description: "World's largest oil processing facility",
+      capacity: "12M bbl/day",
+      location: "Saudi Arabia"
     },
     {
-      url: "https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=400",
-      title: "VLCC Tanker",
+      url: "https://images.unsplash.com/photo-1581094794329-c8112a89af12?q=80&w=600&auto=format&fit=crop",
+      title: "VLCC Supertanker",
       type: "Vessel",
-      description: "Very Large Crude Carrier"
+      description: "Ultra Large Crude Carrier",
+      capacity: "320,000 DWT",
+      location: "International Waters"
     },
     {
-      url: "https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?w=400",
-      title: "Rotterdam Port",
+      url: "https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?q=80&w=600&auto=format&fit=crop",
+      title: "Rotterdam Terminal",
       type: "Port",
-      description: "Europe's largest oil terminal"
+      description: "Europe's energy gateway",
+      capacity: "165M tons/year",
+      location: "Netherlands"
     },
     {
-      url: "https://images.unsplash.com/photo-1578662996473-25d2ba8ac4b3?w=400",
-      title: "Shell Refinery",
+      url: "https://images.unsplash.com/photo-1566228015668-4c45dbc4e2f5?q=80&w=600&auto=format&fit=crop",
+      title: "North Sea Platform",
+      type: "Platform",
+      description: "Offshore drilling operations",
+      capacity: "250K bbl/day",
+      location: "North Sea"
+    },
+    {
+      url: "https://images.unsplash.com/photo-1578662996473-25d2ba8ac4b3?q=80&w=600&auto=format&fit=crop",
+      title: "Bazan Refinery",
       type: "Refinery",
-      description: "Advanced petroleum processing"
+      description: "Advanced petroleum processing",
+      capacity: "9.6M bbl/day",
+      location: "Haifa, Israel"
     },
     {
-      url: "https://images.unsplash.com/photo-1587293852726-70cdb56c2866?w=400",
-      title: "Crude Oil Tanker",
+      url: "https://images.unsplash.com/photo-1587293852726-70cdb56c2866?q=80&w=600&auto=format&fit=crop",
+      title: "Product Tanker",
       type: "Vessel",
-      description: "International petroleum transport"
+      description: "Refined products transport",
+      capacity: "75,000 DWT",
+      location: "Global Routes"
     },
     {
-      url: "https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=400",
+      url: "https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?q=80&w=600&auto=format&fit=crop",
       title: "Houston Ship Channel",
       type: "Port",
-      description: "Major US oil hub"
+      description: "America's energy hub",
+      capacity: "240M tons/year",
+      location: "Texas, USA"
     },
     {
-      url: "https://images.unsplash.com/photo-1516464207144-40c5f7a21a19?w=400",
-      title: "BP Operations",
-      type: "Oil Company",
-      description: "Integrated energy solutions"
+      url: "https://images.unsplash.com/photo-1516464207144-40c5f7a21a19?q=80&w=600&auto=format&fit=crop",
+      title: "Chevron Operations",
+      type: "Company",
+      description: "Integrated energy corporation",
+      capacity: "3.1M bbl/day",
+      location: "Global Operations"
+    },
+    {
+      url: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?q=80&w=600&auto=format&fit=crop",
+      title: "Exxon Complex",
+      type: "Company",
+      description: "Energy and chemical leader",
+      capacity: "5.4M bbl/day",
+      location: "Worldwide"
+    },
+    {
+      url: "https://images.unsplash.com/photo-1494022299300-899b96e49893?q=80&w=600&auto=format&fit=crop",
+      title: "LNG Carrier",
+      type: "Vessel",
+      description: "Liquefied natural gas transport",
+      capacity: "266,000 m³",
+      location: "Asia-Pacific"
     }
   ];
 
@@ -278,31 +337,58 @@ const OilIndustrySlider = () => {
               key={index}
               className="flex-shrink-0 w-1/4 px-3"
             >
-              <div className="bg-slate-800/50 rounded-lg overflow-hidden border border-slate-700/50 hover:border-orange-500/30 transition-all duration-300 hover:scale-105 group">
+              <div className="bg-gradient-to-br from-slate-800/60 to-slate-900/80 rounded-xl overflow-hidden border border-slate-700/50 hover:border-orange-500/50 transition-all duration-300 hover:scale-105 group shadow-xl backdrop-blur-sm">
                 <div className="relative h-48 overflow-hidden">
                   <img 
                     src={image.url} 
                     alt={image.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent"></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/20 to-transparent"></div>
                   
                   {/* Type Badge */}
                   <div className="absolute top-3 left-3">
-                    <Badge className={`text-xs ${
-                      image.type === 'Oil Company' ? 'bg-blue-500/20 text-blue-300 border-blue-500/30' :
-                      image.type === 'Refinery' ? 'bg-red-500/20 text-red-300 border-red-500/30' :
-                      image.type === 'Vessel' ? 'bg-green-500/20 text-green-300 border-green-500/30' :
-                      'bg-purple-500/20 text-purple-300 border-purple-500/30'
+                    <Badge className={`text-xs font-medium backdrop-blur-sm ${
+                      image.type === 'Company' ? 'bg-blue-500/30 text-blue-200 border-blue-400/50' :
+                      image.type === 'Refinery' ? 'bg-red-500/30 text-red-200 border-red-400/50' :
+                      image.type === 'Vessel' ? 'bg-green-500/30 text-green-200 border-green-400/50' :
+                      image.type === 'Platform' ? 'bg-purple-500/30 text-purple-200 border-purple-400/50' :
+                      'bg-orange-500/30 text-orange-200 border-orange-400/50'
                     }`}>
                       {image.type}
                     </Badge>
                   </div>
+
+                  {/* Capacity Badge */}
+                  <div className="absolute top-3 right-3">
+                    <div className="bg-slate-900/70 backdrop-blur-sm rounded-md px-2 py-1 text-xs text-orange-300 font-semibold border border-orange-500/30">
+                      {image.capacity}
+                    </div>
+                  </div>
+
+                  {/* Location */}
+                  <div className="absolute bottom-3 left-3 right-3">
+                    <div className="flex items-center text-xs text-white/80">
+                      <MapPin className="h-3 w-3 mr-1" />
+                      {image.location}
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="p-4">
-                  <h3 className="font-semibold text-white text-sm mb-1">{image.title}</h3>
-                  <p className="text-white/60 text-xs">{image.description}</p>
+                  <h3 className="font-bold text-white text-sm mb-2 leading-tight">{image.title}</h3>
+                  <p className="text-white/70 text-xs leading-relaxed">{image.description}</p>
+                  
+                  {/* Status Indicator */}
+                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-700/50">
+                    <div className="flex items-center text-xs text-green-400">
+                      <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
+                      Active
+                    </div>
+                    <div className="text-xs text-white/50">
+                      24/7 Operations
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
