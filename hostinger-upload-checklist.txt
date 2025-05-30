@@ -1,0 +1,50 @@
+HOSTINGER DEPLOYMENT CHECKLIST
+================================
+
+STEP 1: Files to Upload to Hostinger
+------------------------------------
+□ server/ folder (complete backend code)
+□ client/ folder (complete frontend code) 
+□ shared/ folder (shared schemas and types)
+□ package.json
+□ ecosystem.config.js (PM2 configuration)
+□ node_modules/ (or run 'npm install' on server)
+
+STEP 2: Database Setup on Hostinger
+-----------------------------------
+□ Create PostgreSQL database in Hostinger control panel
+□ Note down: hostname, database name, username, password
+□ Test database connection
+
+STEP 3: Environment Variables (.env file)
+-----------------------------------------
+Create .env file on your Hostinger server with:
+
+DATABASE_URL=postgresql://username:password@hostname:port/database_name
+NODE_ENV=production
+PORT=3000
+OPENAI_API_KEY=your_openai_key
+SUPABASE_URL=your_supabase_url
+SUPABASE_ANON_KEY=your_supabase_key
+
+STEP 4: Installation on Hostinger Server
+----------------------------------------
+□ Upload files via FTP/File Manager
+□ SSH into your server (if available)
+□ Run: npm install --production
+□ Run: npm install -g pm2 (process manager)
+□ Run: npm run build (to build frontend)
+
+STEP 5: Start Your Application
+------------------------------
+□ Run: pm2 start ecosystem.config.js
+□ Run: pm2 save
+□ Run: pm2 startup (for auto-restart)
+
+STEP 6: Web Server Configuration
+--------------------------------
+Configure Apache/Nginx to:
+□ Serve static files from client/dist/
+□ Proxy /api requests to localhost:3000
+
+Your oil vessel tracking platform will be ready!
