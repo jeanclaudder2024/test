@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Shield, Database, Users, Settings as SettingsIcon, ChevronLeft, Factory, Anchor, Ship, CreditCard, HardDrive, Globe, Building2, BarChart3, Activity } from "lucide-react";
 import { BrokerNetworkHub } from "@/components/broker/BrokerNetworkHub";
 import { useLocation } from "wouter";
+import SubscriptionAdmin from "@/pages/SubscriptionAdmin";
 import ProfessionalRefineryManagement from "@/components/admin/ProfessionalRefineryManagement";
 
 export default function AdminPanel() {
@@ -279,10 +280,7 @@ export default function AdminPanel() {
         </TabsContent>
 
         <TabsContent value="subscriptions" className="space-y-4">
-          <div className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Subscription Management</h3>
-            <p className="text-muted-foreground">Subscription management has been simplified for easier hosting.</p>
-          </div>
+          <SubscriptionAdmin />
         </TabsContent>
 
         <TabsContent value="vessels" className="space-y-4">

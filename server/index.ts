@@ -1,5 +1,8 @@
 import express, { type Request, Response, NextFunction } from "express";
+// Using ultra simple setup - no complex routes
+import { setupUltraSimpleAuth } from "./ultra-simple-auth";
 import { setupVite, serveStatic, log } from "./vite";
+// Clean Supabase-only setup for oil vessel tracking platform
 
 const app = express();
 app.use(express.json());
@@ -37,10 +40,13 @@ app.use((req, res, next) => {
 
 (async () => {
   // Simple Supabase-only setup
-  console.log('Starting oil vessel tracking platform with Supabase...');
+  console.log('🚀 Starting oil vessel tracking platform with Supabase...');
   
   // Simple server setup without complex routes
   const port = 5000;
+  
+  // Setup ultra simple authentication system
+  setupUltraSimpleAuth(app);
   
   // Import and register API routes
   const { registerRoutes } = await import("./routes");
@@ -51,7 +57,7 @@ app.use((req, res, next) => {
     log(`Server running on port ${port}`);
   });
   
-  console.log('Platform ready with Supabase!');
+  console.log('✅ Platform ready with Supabase authentication!');
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
