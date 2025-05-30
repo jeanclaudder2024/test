@@ -41,7 +41,7 @@ app.use((req, res, next) => {
   console.log('🚀 Starting oil vessel tracking platform with Supabase...');
   
   // Simple server setup without complex routes
-  const port = process.env.PORT || 5000;
+  const port = 5000;
   
   // Setup Supabase authentication system
   setupSupabaseAuth(app);
