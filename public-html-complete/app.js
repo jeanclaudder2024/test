@@ -364,9 +364,9 @@ function Ports() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function loadPorts() {
+    async function fetchPorts() {
       try {
-        const data = await supabase.from('ports').select('*').execute();
+        const data = await loadPorts();
         setPorts(data);
       } catch (error) {
         console.error('Error loading ports:', error);
@@ -375,7 +375,7 @@ function Ports() {
       }
     }
     
-    loadPorts();
+    fetchPorts();
   }, []);
 
   if (loading) {
@@ -406,39 +406,133 @@ function Ports() {
   ]);
 }
 
-// Simple placeholder components for other pages
+// Refineries Component
 function Refineries() {
+  const [refineries, setRefineries] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchRefineries() {
+      try {
+        const data = await loadRefineries();
+        setRefineries(data);
+      } catch (error) {
+        console.error('Error loading refineries:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    fetchRefineries();
+  }, []);
+
+  if (loading) {
+    return e('div', { className: 'p-6 text-center' }, 'Loading refineries...');
+  }
+
   return e('div', { className: 'p-6' }, [
-    e('h2', { key: 'title', className: 'text-3xl font-bold mb-6' }, 'Refineries'),
-    e('p', { key: 'content' }, 'Refinery management system')
+    e('h2', { 
+      key: 'title',
+      className: 'text-3xl font-bold mb-6 text-slate-800'
+    }, 'Refinery Operations'),
+    
+    e('div', {
+      key: 'refineries-grid',
+      className: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
+    }, refineries.map(refinery => 
+      e('div', {
+        key: refinery.id,
+        className: 'bg-white rounded-lg shadow-lg p-6 border-l-4 border-orange-500'
+      }, [
+        e('h3', { key: 'name', className: 'text-lg font-semibold mb-2' }, refinery.name),
+        e('p', { key: 'country', className: 'text-slate-600' }, `Country: ${refinery.country}`),
+        e('p', { key: 'region', className: 'text-slate-600' }, `Region: ${refinery.region}`),
+        e('p', { key: 'capacity', className: 'text-slate-600' }, `Capacity: ${refinery.capacity} bbl/day`),
+        e('p', { key: 'status', className: 'text-slate-600' }, `Status: ${refinery.status}`)
+      ])
+    ))
   ]);
 }
 
 function Brokers() {
   return e('div', { className: 'p-6' }, [
-    e('h2', { key: 'title', className: 'text-3xl font-bold mb-6' }, 'Brokers'),
-    e('p', { key: 'content' }, 'Broker network management')
+    e('h2', { key: 'title', className: 'text-3xl font-bold mb-6 text-slate-800' }, 'Maritime Brokers'),
+    e('div', { key: 'content', className: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' }, [
+      e('div', { key: 'broker1', className: 'bg-white rounded-lg shadow-lg p-6 border-l-4 border-purple-500' }, [
+        e('h3', { key: 'name', className: 'text-lg font-semibold mb-2' }, 'Global Maritime Solutions'),
+        e('p', { key: 'type', className: 'text-slate-600' }, 'Type: Oil Tanker Broker'),
+        e('p', { key: 'region', className: 'text-slate-600' }, 'Region: Middle East & Asia'),
+        e('p', { key: 'contact', className: 'text-slate-600' }, 'Contact: broker@gms.com')
+      ]),
+      e('div', { key: 'broker2', className: 'bg-white rounded-lg shadow-lg p-6 border-l-4 border-purple-500' }, [
+        e('h3', { key: 'name', className: 'text-lg font-semibold mb-2' }, 'Atlantic Shipping Partners'),
+        e('p', { key: 'type', className: 'text-slate-600' }, 'Type: Crude Oil Specialist'),
+        e('p', { key: 'region', className: 'text-slate-600' }, 'Region: North America & Europe'),
+        e('p', { key: 'contact', className: 'text-slate-600' }, 'Contact: deals@asp.com')
+      ])
+    ])
   ]);
 }
 
 function Trading() {
   return e('div', { className: 'p-6' }, [
-    e('h2', { key: 'title', className: 'text-3xl font-bold mb-6' }, 'Trading Dashboard'),
-    e('p', { key: 'content' }, 'Oil trading operations')
+    e('h2', { key: 'title', className: 'text-3xl font-bold mb-6 text-slate-800' }, 'Oil Trading Dashboard'),
+    e('div', { key: 'stats', className: 'grid grid-cols-1 md:grid-cols-3 gap-6 mb-8' }, [
+      e('div', { key: 'active-trades', className: 'bg-white rounded-lg shadow-lg p-6 border-l-4 border-green-500' }, [
+        e('h3', { key: 'title', className: 'text-lg font-semibold text-slate-600' }, 'Active Trades'),
+        e('p', { key: 'value', className: 'text-3xl font-bold text-green-600' }, '47')
+      ]),
+      e('div', { key: 'daily-volume', className: 'bg-white rounded-lg shadow-lg p-6 border-l-4 border-blue-500' }, [
+        e('h3', { key: 'title', className: 'text-lg font-semibold text-slate-600' }, 'Daily Volume'),
+        e('p', { key: 'value', className: 'text-3xl font-bold text-blue-600' }, '2.3M bbl')
+      ]),
+      e('div', { key: 'profit', className: 'bg-white rounded-lg shadow-lg p-6 border-l-4 border-yellow-500' }, [
+        e('h3', { key: 'title', className: 'text-lg font-semibold text-slate-600' }, 'Daily P&L'),
+        e('p', { key: 'value', className: 'text-3xl font-bold text-yellow-600' }, '+$1.2M')
+      ])
+    ])
   ]);
 }
 
 function Documents() {
   return e('div', { className: 'p-6' }, [
-    e('h2', { key: 'title', className: 'text-3xl font-bold mb-6' }, 'Documents'),
-    e('p', { key: 'content' }, 'Document management system')
+    e('h2', { key: 'title', className: 'text-3xl font-bold mb-6 text-slate-800' }, 'Document Management'),
+    e('div', { key: 'doc-types', className: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6' }, [
+      e('div', { key: 'contracts', className: 'bg-white rounded-lg shadow-lg p-6 border-l-4 border-red-500' }, [
+        e('h3', { key: 'title', className: 'text-lg font-semibold mb-2' }, 'Contracts'),
+        e('p', { key: 'count', className: 'text-2xl font-bold text-red-600' }, '156')
+      ]),
+      e('div', { key: 'bills', className: 'bg-white rounded-lg shadow-lg p-6 border-l-4 border-blue-500' }, [
+        e('h3', { key: 'title', className: 'text-lg font-semibold mb-2' }, 'Bills of Lading'),
+        e('p', { key: 'count', className: 'text-2xl font-bold text-blue-600' }, '89')
+      ]),
+      e('div', { key: 'certificates', className: 'bg-white rounded-lg shadow-lg p-6 border-l-4 border-green-500' }, [
+        e('h3', { key: 'title', className: 'text-lg font-semibold mb-2' }, 'Certificates'),
+        e('p', { key: 'count', className: 'text-2xl font-bold text-green-600' }, '34')
+      ]),
+      e('div', { key: 'reports', className: 'bg-white rounded-lg shadow-lg p-6 border-l-4 border-purple-500' }, [
+        e('h3', { key: 'title', className: 'text-lg font-semibold mb-2' }, 'Reports'),
+        e('p', { key: 'count', className: 'text-2xl font-bold text-purple-600' }, '67')
+      ])
+    ])
   ]);
 }
 
 function Admin() {
   return e('div', { className: 'p-6' }, [
-    e('h2', { key: 'title', className: 'text-3xl font-bold mb-6' }, 'Admin Panel'),
-    e('p', { key: 'content' }, 'System administration')
+    e('h2', { key: 'title', className: 'text-3xl font-bold mb-6 text-slate-800' }, 'System Administration'),
+    e('div', { key: 'admin-sections', className: 'grid grid-cols-1 md:grid-cols-2 gap-6' }, [
+      e('div', { key: 'users', className: 'bg-white rounded-lg shadow-lg p-6 border-l-4 border-indigo-500' }, [
+        e('h3', { key: 'title', className: 'text-lg font-semibold mb-4' }, 'User Management'),
+        e('p', { key: 'active-users', className: 'text-slate-600' }, 'Active Users: 23'),
+        e('p', { key: 'pending', className: 'text-slate-600' }, 'Pending Approvals: 5')
+      ]),
+      e('div', { key: 'system', className: 'bg-white rounded-lg shadow-lg p-6 border-l-4 border-gray-500' }, [
+        e('h3', { key: 'title', className: 'text-lg font-semibold mb-4' }, 'System Status'),
+        e('p', { key: 'uptime', className: 'text-slate-600' }, 'Uptime: 99.8%'),
+        e('p', { key: 'last-backup', className: 'text-slate-600' }, 'Last Backup: 2 hours ago')
+      ])
+    ])
   ]);
 }
 
