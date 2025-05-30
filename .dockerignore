@@ -1,0 +1,15 @@
+node_modules
+npm-debug.log
+.git
+.gitignore
+README.md
+.env
+.nyc_output
+coverage
+.replit
+.config
+maritime-laravel
+production-ready
+*.tar.gz
+dist
+.DS_Store
