@@ -10,24 +10,14 @@ import RefineryDetail from "@/pages/RefineryDetail";
 import Ports from "@/pages/Ports";
 import PortDetail from "@/pages/PortDetail";
 import Brokers from "@/pages/Brokers";
-import BrokerDashboard from "@/pages/BrokerDashboard";
 import Documents from "@/pages/Documents";
-import AIAssistantPage from "@/pages/AIAssistant";
 import Settings from "@/pages/Settings";
-import Subscribe from "@/pages/Subscribe";
 import Pricing from "@/pages/Pricing";
-import AccountSubscription from "@/pages/AccountSubscription";
-import SubscriptionSuccess from "@/pages/SubscriptionSuccess";
 import LandingPage from "@/pages/LandingPage";
 import AuthPage from "@/pages/AuthPage";
-import TradingDashboard from "@/pages/TradingDashboard";
 import Companies from "@/pages/Companies";
-import ApiTest from "@/pages/ApiTest";
-import TranslationPage from "@/pages/TranslationPage";
-import TrafficInsights from "@/pages/TrafficInsights";
 import FixedFullPageMap from "@/pages/FixedFullPageMap";
 import AdminPanel from "@/pages/AdminPanel";
-import SubscriptionAdmin from "@/pages/SubscriptionAdmin";
 // Maritime tracking and vessel lookup pages removed as requested
 import { useEffect } from "react";
 import { apiRequest, queryClient } from "./lib/queryClient";
@@ -58,9 +48,9 @@ function LandingPageRedirect() {
     );
   }
 
-  // If user is logged in, redirect to broker dashboard
+  // If user is logged in, redirect to vessels page
   if (user) {
-    return <Redirect to="/broker-dashboard" />;
+    return <Redirect to="/vessels" />;
   }
 
   // Otherwise show landing page
@@ -125,23 +115,12 @@ function Router() {
             <Route path="/ports" component={Ports} />
             <Route path="/ports/:id" component={PortDetail} />
             <Route path="/brokers" component={Brokers} />
-            <Route path="/broker-dashboard" component={BrokerDashboard} />
             <Route path="/companies" component={Companies} />
             <Route path="/documents" component={Documents} />
-            <Route path="/ai-assistant" component={AIAssistantPage} />
             <Route path="/admin" component={AdminPanel} />
-            <Route path="/admin/subscriptions" component={SubscriptionAdmin} />
-            <Route path="/trading" component={TradingDashboard} />
-            <Route path="/translation" component={TranslationPage} />
-            <Route path="/traffic-insights" component={TrafficInsights} />
             <Route path="/map" component={FixedFullPageMap} />
-            {/* Maritime tracking and vessel lookup pages removed as requested */}
             <Route path="/settings" component={Settings} />
-            <Route path="/subscribe" component={Subscribe} />
             <Route path="/pricing" component={Pricing} />
-            <Route path="/account/subscription" component={AccountSubscription} />
-            <Route path="/subscription/success" component={SubscriptionSuccess} />
-            <Route path="/api-test" component={ApiTest} />
             <Route component={NotFound} />
           </Switch>
         </motion.div>
