@@ -1,6 +1,5 @@
 import express, { type Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
-import { WebSocketServer, WebSocket } from "ws";
 import { db } from "./db";
 import { eq, desc, like, sql } from "drizzle-orm";
 import { 
@@ -23,9 +22,6 @@ import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const server = createServer(app);
-  
-  // WebSocket setup for real-time vessel tracking
-  const wss = new WebSocketServer({ server });
   
   // Basic health check
   app.get("/api/health", async (req: Request, res: Response) => {
@@ -206,28 +202,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Simple WebSocket connection for real-time updates
-  wss.on('connection', (ws: WebSocket) => {
-    console.log('Client connected');
-    
-    ws.on('message', (message: Buffer) => {
-      try {
-        const data = JSON.parse(message.toString());
-        // Echo back simple response
-        ws.send(JSON.stringify({ type: 'response', received: true }));
-      } catch (error) {
-        console.error('WebSocket error:', error);
-      }
-    });
-
-    ws.on('close', () => {
-      console.log('Client disconnected');
-    });
-
-    ws.on('error', (error) => {
-      console.error('WebSocket error:', error);
-    });
-  });
+  // No WebSocket - using simple REST API only for better Hostinger compatibility
 
   return server;
 }
