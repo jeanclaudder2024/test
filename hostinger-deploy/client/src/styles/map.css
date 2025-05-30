@@ -1,0 +1,60 @@
+/* Map fullscreen styles */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  position: absolute !important;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: auto !important; /* Ensure map events work */
+  background: #f0f0f0 !important; /* Match default tile background */
+}
+
+/* Fix map panes to cover full area */
+.leaflet-pane,
+.leaflet-map-pane,
+.leaflet-tile,
+.leaflet-marker-icon,
+.leaflet-marker-shadow,
+.leaflet-tile-container,
+.leaflet-pane > svg,
+.leaflet-pane > canvas,
+.leaflet-zoom-box,
+.leaflet-image-layer,
+.leaflet-layer {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.leaflet-control-container {
+  z-index: 2;
+}
+
+/* Remove any margin or padding that could cause gray areas */
+html, body, #root, [data-rk], #root > div, #root > div > div {
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  width: 100% !important;
+  height: 100% !important;
+  position: relative !important;
+}
+
+/* Custom map popup styles */
+.custom-popup .leaflet-popup-content-wrapper {
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 3px 14px rgba(0,0,0,0.2);
+}
+
+.custom-popup .leaflet-popup-content {
+  margin: 8px;
+  min-width: 180px;
+}
+
+.custom-popup .leaflet-popup-tip {
+  background: #fff;
+}

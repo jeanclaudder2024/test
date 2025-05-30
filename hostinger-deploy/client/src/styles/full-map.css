@@ -1,0 +1,131 @@
+.leaflet-container {
+  width: 100%;
+  height: 100vh;
+  z-index: 1;
+}
+
+/* Override to make sure there is no gray background */
+.leaflet-container {
+  background: #f8f9fa !important;
+}
+
+/* Fix for world wrap */
+.leaflet-tile-pane {
+  z-index: auto;
+}
+
+/* Make attribution more subtle */
+.leaflet-control-attribution {
+  font-size: 10px;
+  background: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Prevent any potential elements from showing outside map */
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Map parent container - full viewport coverage */
+.map-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Fix for zoom controls */
+.leaflet-control-zoom {
+  border: none !important;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.2) !important;
+}
+
+.leaflet-control-zoom a {
+  background-color: white !important;
+  color: #333 !important;
+}
+
+.leaflet-control-zoom a:hover {
+  background-color: #f4f4f4 !important;
+}
+
+/* Map Controls */
+.map-controls {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 999;
+  background: white;
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  max-width: 300px;
+}
+
+.map-controls h3 {
+  margin: 0 0 10px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.region-select {
+  width: 100%;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  background-color: white;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.facility-count {
+  font-size: 13px;
+  color: #666;
+  margin-top: 8px;
+}
+
+/* Style for marker popups */
+.marker-popup h3 {
+  color: #1a202c;
+  font-size: 16px;
+  margin-top: 0;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.marker-popup p {
+  margin: 4px 0;
+  font-size: 14px;
+  color: #4a5568;
+}
+
+.marker-popup .description {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #edf2f7;
+  font-size: 13px;
+}
+
+/* Make layers control more attractive */
+.leaflet-control-layers {
+  border-radius: 8px !important;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1) !important;
+  border: none !important;
+  padding: 8px !important;
+}
+
+.leaflet-control-layers-expanded {
+  padding: 12px !important;
+}
+
+.leaflet-control-layers-selector {
+  margin-right: 5px;
+}
+
+.leaflet-control-layers-separator {
+  margin: 8px 0 !important;
+}

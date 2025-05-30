@@ -79,11 +79,8 @@ npm install
 print_status "Building application..."
 npm run build
 
-# Set up PostgreSQL database
-print_status "Setting up PostgreSQL database..."
-sudo -u postgres psql -c "CREATE DATABASE maritime_platform;" 2>/dev/null || print_warning "Database already exists"
-sudo -u postgres psql -c "CREATE USER maritime_user WITH PASSWORD 'change_this_password';" 2>/dev/null || print_warning "User already exists"
-sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE maritime_platform TO maritime_user;" 2>/dev/null || print_status "Privileges granted"
+# Skip local database setup - using Supabase
+print_status "Using Supabase cloud database - no local database setup needed"
 
 # Set up database schema
 print_status "Setting up database schema..."
@@ -118,7 +115,6 @@ pm2 startup
 
 # Enable services
 systemctl enable nginx
-systemctl enable postgresql
 
 print_status "Deployment completed successfully!"
 echo ""
