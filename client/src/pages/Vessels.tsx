@@ -162,6 +162,8 @@ export default function Vessels() {
   const [selectedRegion, setSelectedRegion] = useState<string>("global");
   // Track which data source is being used
   const [dataSource, setDataSource] = useState<'websocket' | 'myshiptracking' | 'marine-traffic' | 'polling'>('websocket');
+  // Ports data for name resolution
+  const [ports, setPorts] = useState<any[]>([]);
   
   // Use our new robust vessel client with WebSocket and REST API fallback
   const { 
@@ -201,6 +203,29 @@ export default function Vessels() {
   
   // Maximum number of oil vessels to show (as requested by user)
   const MAX_OIL_VESSELS = 1540;
+
+  // Helper function to get port name by ID
+  const getPortName = (portId: number | string | null | undefined): string => {
+    if (!portId || !ports.length) return 'Unknown Port';
+    const port = ports.find(p => p.id === Number(portId));
+    return port ? port.name : `Port ID: ${portId}`;
+  };
+
+  // Fetch ports data for name resolution
+  useEffect(() => {
+    const fetchPorts = async () => {
+      try {
+        const response = await axios.get('/api/ports');
+        if (response.status === 200) {
+          setPorts(response.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch ports for name resolution:', error);
+      }
+    };
+    
+    fetchPorts();
+  }, []);
 
   // Filter function to get only oil vessels with real locations
   const filterOilVesselsWithRealLocations = (vessels: any[]): Vessel[] => {
@@ -1106,7 +1131,9 @@ export default function Vessels() {
                     )}
                   </TableCell>
                   <TableCell>
-                    {vessel.destinationPort}
+                    {typeof vessel.destinationPort === 'string' && vessel.destinationPort.startsWith('REF:') 
+                      ? vessel.destinationPort.split(':')[2]
+                      : getPortName(vessel.destinationPort)}
                     {vessel.eta && (
                       <div className="text-xs text-muted-foreground">
                         ETA: {formatDate(vessel.eta, 'PP')}
