@@ -23,50 +23,86 @@ const createVesselIcon = (vesselType: string) => {
                      vesselType?.toLowerCase().includes('oil') || 
                      vesselType?.toLowerCase().includes('crude');
   
+  const bgColor = isOilVessel ? '#ef4444' : '#3b82f6';
+  const shadowColor = isOilVessel ? 'rgba(239, 68, 68, 0.4)' : 'rgba(59, 130, 246, 0.4)';
+  
   return L.divIcon({
     html: `<div style="
-      background-color: ${isOilVessel ? '#FF6B6B' : '#4ECDC4'};
-      width: 12px;
-      height: 12px;
+      background: linear-gradient(135deg, ${bgColor}, ${bgColor}dd);
+      width: 18px;
+      height: 18px;
       border-radius: 50%;
-      border: 2px solid white;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    "></div>`,
+      border: 3px solid white;
+      box-shadow: 0 4px 8px ${shadowColor}, 0 2px 4px rgba(0,0,0,0.2);
+      position: relative;
+    ">
+      <div style="
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        font-size: 10px;
+        font-weight: bold;
+      ">🚢</div>
+    </div>`,
     className: 'vessel-marker',
-    iconSize: [16, 16],
-    iconAnchor: [8, 8]
+    iconSize: [24, 24],
+    iconAnchor: [12, 12]
   });
 };
 
 const createPortIcon = () => {
   return L.divIcon({
     html: `<div style="
-      background-color: #10b981;
-      width: 10px;
-      height: 10px;
+      background: linear-gradient(135deg, #10b981, #059669);
+      width: 16px;
+      height: 16px;
       border-radius: 50%;
-      border: 2px solid white;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    "></div>`,
+      border: 3px solid white;
+      box-shadow: 0 4px 8px rgba(16, 185, 129, 0.4), 0 2px 4px rgba(0,0,0,0.2);
+      position: relative;
+    ">
+      <div style="
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        font-size: 8px;
+        font-weight: bold;
+      ">⚓</div>
+    </div>`,
     className: 'port-marker',
-    iconSize: [14, 14],
-    iconAnchor: [7, 7]
+    iconSize: [22, 22],
+    iconAnchor: [11, 11]
   });
 };
 
 const createRefineryIcon = () => {
   return L.divIcon({
     html: `<div style="
-      background-color: #f59e0b;
-      width: 10px;
-      height: 10px;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      width: 16px;
+      height: 16px;
       border-radius: 50%;
-      border: 2px solid white;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    "></div>`,
+      border: 3px solid white;
+      box-shadow: 0 4px 8px rgba(245, 158, 11, 0.4), 0 2px 4px rgba(0,0,0,0.2);
+      position: relative;
+    ">
+      <div style="
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        font-size: 8px;
+        font-weight: bold;
+      ">🏭</div>
+    </div>`,
     className: 'refinery-marker',
-    iconSize: [14, 14],
-    iconAnchor: [7, 7]
+    iconSize: [22, 22],
+    iconAnchor: [11, 11]
   });
 };
 
