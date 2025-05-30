@@ -32,11 +32,52 @@ class SupabaseClient {
     try {
       const response = await fetch(url, config);
       if (!response.ok) {
+        console.error(`Supabase API error: ${response.status} ${response.statusText}`);
+        // Try fallback to PHP API if direct Supabase fails
+        if (endpoint.includes('vessels') || endpoint.includes('ports')) {
+          return this.fetchFromPHP(endpoint);
+        }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       return await response.json();
     } catch (error) {
       console.error('Supabase fetch error:', error);
+      // Try fallback to PHP API
+      if (endpoint.includes('vessels') || endpoint.includes('ports')) {
+        return this.fetchFromPHP(endpoint);
+      }
+      throw error;
+    }
+  }
+
+  async fetchFromPHP(endpoint) {
+    try {
+      let phpEndpoint = '';
+      if (endpoint.includes('vessels')) {
+        phpEndpoint = './api.php?endpoint=vessels';
+      } else if (endpoint.includes('ports')) {
+        phpEndpoint = './api.php?endpoint=ports';
+      } else {
+        phpEndpoint = './api.php';
+      }
+      
+      console.log('Fetching from PHP API:', phpEndpoint);
+      const response = await fetch(phpEndpoint);
+      
+      if (!response.ok) {
+        throw new Error(`PHP API error: ${response.status} ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      console.log('PHP API response:', data);
+      
+      if (data.error) {
+        throw new Error(data.message || data.error);
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('PHP API fallback error:', error);
       throw error;
     }
   }
