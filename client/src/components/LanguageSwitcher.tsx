@@ -19,12 +19,16 @@ export default function LanguageSwitcher({ variant = "button", showLabel = true 
   const { toast } = useToast();
 
   const handleLanguageChange = (newLanguage: "en" | "ar") => {
+    console.log("Language change requested:", newLanguage, "Current language:", language);
     if (newLanguage !== language) {
+      console.log("Language is different, updating...");
       setLanguage(newLanguage);
       toast({
         title: newLanguage === "en" ? "Language Changed" : "تم تغيير اللغة",
         description: newLanguage === "en" ? "English language is now active" : "اللغة العربية مفعلة الآن",
       });
+    } else {
+      console.log("Language is already set to:", newLanguage);
     }
   };
 

@@ -20,7 +20,7 @@ import Subscribe from "@/pages/Subscribe";
 import Pricing from "@/pages/Pricing";
 import AccountSubscription from "@/pages/AccountSubscription";
 import SubscriptionSuccess from "@/pages/SubscriptionSuccess";
-import ModernLandingPage from "@/pages/ModernLandingPage";
+import LandingPage from "@/pages/LandingPage";
 import CleanAuthPage from "@/pages/CleanAuthPage";
 import TradingDashboard from "@/pages/TradingDashboard";
 import Companies from "@/pages/Companies";
@@ -68,7 +68,7 @@ function LandingPageRedirect() {
   }
 
   // Otherwise show landing page
-  return <ModernLandingPage />;
+  return <LandingPage />;
 }
 
 function Router() {
