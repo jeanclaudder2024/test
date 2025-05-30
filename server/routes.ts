@@ -49,7 +49,7 @@ import {
 } from "@shared/schema";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
-import { apiTesterRouter } from "./routes/apiTester";
+
 import { brokerRouter } from "./routes/brokerRoutes";
 import vesselRouter from "./routes/vesselRoutes";
 import { tradingRouter } from "./routes/tradingRoutes";
@@ -3286,8 +3286,8 @@ Only use authentic, real-world data for existing refineries.`;
   // Document generation routes using OpenAI
   app.use(generateDocumentRouter);
 
-  // API tester routes (performance testing, etc.)
-  app.use("/api/tester", apiTesterRouter);
+  // API routes configured and ready for production
+
 
   // API endpoint for vessels when WebSockets are not available
   apiRouter.get("/vessels/polling", async (req, res) => {
