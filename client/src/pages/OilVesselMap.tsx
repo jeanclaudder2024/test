@@ -269,14 +269,116 @@ export default function OilVesselMap() {
               </Marker>
             );
           })}
+          
+          {/* Port Markers */}
+          {ports.map((port: any) => {
+            const lat = parseFloat(port.lat?.toString() || '0');
+            const lng = parseFloat(port.lng?.toString() || '0');
+            
+            if (isNaN(lat) || isNaN(lng)) return null;
+            
+            return (
+              <Marker
+                key={`port-${port.id}`}
+                position={[lat, lng]}
+                icon={createPortIcon()}
+              >
+                <Popup>
+                  <div className="p-2 min-w-[200px]">
+                    <div className="font-semibold text-lg mb-2">{port.name}</div>
+                    
+                    <div className="space-y-1 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Type:</span>
+                        <span className="font-medium">Port</span>
+                      </div>
+                      
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Country:</span>
+                        <span className="font-medium">{port.country}</span>
+                      </div>
+                      
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Region:</span>
+                        <span className="font-medium">{port.region}</span>
+                      </div>
+                      
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Position:</span>
+                        <span className="font-mono text-xs">
+                          {lat.toFixed(4)}, {lng.toFixed(4)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </Popup>
+              </Marker>
+            );
+          })}
+          
+          {/* Refinery Markers */}
+          {refineries.map((refinery: any) => {
+            const lat = parseFloat(refinery.latitude?.toString() || '0');
+            const lng = parseFloat(refinery.longitude?.toString() || '0');
+            
+            if (isNaN(lat) || isNaN(lng)) return null;
+            
+            return (
+              <Marker
+                key={`refinery-${refinery.id}`}
+                position={[lat, lng]}
+                icon={createRefineryIcon()}
+              >
+                <Popup>
+                  <div className="p-2 min-w-[200px]">
+                    <div className="font-semibold text-lg mb-2">{refinery.name}</div>
+                    
+                    <div className="space-y-1 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Type:</span>
+                        <span className="font-medium">Refinery</span>
+                      </div>
+                      
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Country:</span>
+                        <span className="font-medium">{refinery.country}</span>
+                      </div>
+                      
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Capacity:</span>
+                        <span className="font-medium">{refinery.capacity || 'N/A'}</span>
+                      </div>
+                      
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Position:</span>
+                        <span className="font-mono text-xs">
+                          {lat.toFixed(4)}, {lng.toFixed(4)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </Popup>
+              </Marker>
+            );
+          })}
         </MapContainer>
 
         {/* Legend */}
         <div className="absolute bottom-4 right-4 bg-white rounded-lg shadow-lg p-3 z-[1000]">
-          <div className="text-sm font-semibold mb-2">Oil Vessels</div>
-          <div className="flex items-center gap-2 text-xs">
-            <div className="w-3 h-3 bg-red-400 rounded-full border border-white shadow"></div>
-            <span>{mappableVessels.length} vessels shown</span>
+          <div className="text-sm font-semibold mb-2">Map Legend</div>
+          <div className="space-y-1 text-xs">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-red-400 rounded-full border border-white shadow"></div>
+              <span>{mappableVessels.length} Oil Vessels</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2.5 h-2.5 bg-green-500 rounded-full border border-white shadow"></div>
+              <span>{(ports as any[]).length} Ports</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2.5 h-2.5 bg-orange-500 rounded-full border border-white shadow"></div>
+              <span>{(refineries as any[]).length} Refineries</span>
+            </div>
           </div>
         </div>
       </div>
