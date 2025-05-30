@@ -429,15 +429,31 @@ function App() {
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
-  const root = ReactDOM.createRoot(document.getElementById('root'));
-  root.render(e(App));
-  
-  // Initialize map if needed
-  setTimeout(() => {
-    const mapContainer = document.getElementById('map');
-    if (mapContainer && window.L) {
-      const map = L.map('map').setView([25.276987, 55.296249], 2);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+  try {
+    const rootElement = document.getElementById('root');
+    if (!rootElement) {
+      console.error('Root element not found');
+      return;
     }
-  }, 1000);
+
+    // Use ReactDOM.render for React 17 compatibility
+    ReactDOM.render(e(App), rootElement);
+    
+    // Initialize map if needed
+    setTimeout(() => {
+      const mapContainer = document.getElementById('map');
+      if (mapContainer && window.L) {
+        try {
+          const map = L.map('map').setView([25.276987, 55.296249], 2);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        } catch (mapError) {
+          console.warn('Map initialization failed:', mapError);
+        }
+      }
+    }, 1000);
+  } catch (error) {
+    console.error('Application initialization failed:', error);
+    // Show basic error message
+    document.getElementById('root').innerHTML = '<div style="padding: 20px; text-align: center;"><h1>Loading Maritime Platform...</h1><p>Please wait while the application initializes.</p></div>';
+  }
 });

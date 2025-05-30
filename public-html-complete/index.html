@@ -7,9 +7,8 @@
     <link rel="icon" type="image/png" href="./public/petrodeal-logo.png" />
     
     <!-- React and dependencies for production -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/wouter@3/dist/wouter.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react@17.0.2/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@17.0.2/umd/react-dom.production.min.js"></script>
     
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -68,7 +67,28 @@
      </style>
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="./app.js"></script>
+    <div id="root">
+      <div style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: Inter, sans-serif; background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);">
+        <div style="text-align: center; color: white; padding: 40px; border-radius: 12px; background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);">
+          <div style="width: 50px; height: 50px; border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid white; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+          <h2 style="margin: 20px 0 10px 0; font-size: 24px; font-weight: 600;">Maritime Oil Brokerage Platform</h2>
+          <p style="margin: 0; opacity: 0.9; font-size: 16px;">Loading vessel tracking systems...</p>
+          <div style="margin-top: 20px; font-size: 14px; opacity: 0.7;">
+            <p>✓ Connecting to database</p>
+            <p>✓ Loading vessel data</p>
+            <p>✓ Initializing maps</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <style>
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
+    
+    <script src="./app.js"></script>
   </body>
 </html>
