@@ -7,7 +7,7 @@ import { SystemStats } from "@/components/admin/SystemStats";
 import { FixedDataManagement } from "@/components/admin/FixedDataManagement";
 
 
-import { PortManagementNew } from "@/components/admin/PortManagementNew";
+import { PortManagement } from "@/components/admin/PortManagement";
 
 import VesselManagement from "@/components/admin/VesselManagement";
 
@@ -288,7 +288,7 @@ export default function AdminPanel() {
         </TabsContent>
 
         <TabsContent value="ports" className="space-y-4">
-          <PortManagementNew />
+          <PortManagement />
         </TabsContent>
 
         <TabsContent value="refineries" className="space-y-4">
