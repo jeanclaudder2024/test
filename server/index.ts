@@ -41,7 +41,7 @@ app.use((req, res, next) => {
   console.log('🚀 Starting oil vessel tracking platform with Supabase...');
   
   // Server setup for Render deployment
-  const port = process.env.PORT || 5000;
+  const port = parseInt(process.env.PORT || "5000", 10);
   
   // Setup Supabase authentication system
   setupSupabaseAuth(app);
@@ -51,7 +51,7 @@ app.use((req, res, next) => {
   const server = await registerRoutes(app);
   
   // Start the server
-  server.listen(port, "0.0.0.0", () => {
+  server.listen(port, () => {
     log(`Server running on port ${port}`);
   });
   
