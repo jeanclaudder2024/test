@@ -3,14 +3,14 @@
 // Replace these values with your actual Supabase credentials
 
 return [
-    // Supabase Configuration
-    'supabase_url' => 'your_supabase_project_url_here',
-    'supabase_anon_key' => 'your_supabase_anon_key_here',
-    'supabase_service_key' => 'your_supabase_service_role_key_here',
+    // Supabase Configuration - REQUIRED
+    'supabase_url' => 'https://your-project-id.supabase.co',
+    'supabase_anon_key' => 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.your_anon_key_here',
+    'supabase_service_key' => 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.your_service_key_here',
     
     // Optional API Keys
-    'openai_key' => 'your_openai_api_key_here',
-    'stripe_key' => 'your_stripe_secret_key_here',
+    'openai_key' => '',
+    'stripe_key' => '',
     
     // Application Settings
     'app_name' => 'Maritime Oil Brokerage Platform',

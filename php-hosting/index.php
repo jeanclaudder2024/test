@@ -3,12 +3,8 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-// Configuration
-$config = [
-    'supabase_url' => getenv('SUPABASE_URL') ?: 'your_supabase_url_here',
-    'supabase_key' => getenv('SUPABASE_ANON_KEY') ?: 'your_supabase_anon_key_here',
-    'openai_key' => getenv('OPENAI_API_KEY') ?: 'your_openai_key_here'
-];
+// Load configuration
+$config = require_once 'config.php';
 
 // Simple routing
 $request = $_SERVER['REQUEST_URI'];
