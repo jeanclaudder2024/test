@@ -71,12 +71,14 @@ $method = $_SERVER['REQUEST_METHOD'];
 // Debug logging
 error_log("API Request: " . $request_uri . " Method: " . $method);
 
-// Handle different routing scenarios
-if (strpos($path, '/api.php') !== false) {
-    $path = str_replace('/api.php', '', $path);
+// Get path from query parameter (set by .htaccess rewrite)
+if (isset($_GET['path'])) {
+    $path = '/' . trim($_GET['path'], '/');
+} elseif (isset($_GET['endpoint'])) {
+    $path = '/' . trim($_GET['endpoint'], '/');
 } else {
-    // Direct access to api.php
-    $path = isset($_GET['endpoint']) ? '/' . $_GET['endpoint'] : '/test';
+    // Default test endpoint
+    $path = '/test';
 }
 
 // Log the processed path

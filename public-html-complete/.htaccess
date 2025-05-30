@@ -1,13 +1,14 @@
 RewriteEngine On
 
-# Handle React Router
+# API routing - must come first
+RewriteRule ^api/(.*)$ api.php?path=$1 [QSA,L]
+RewriteRule ^api$ api.php [QSA,L]
+
+# Handle React Router - after API routing
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond %{REQUEST_URI} !^/api\.php
+RewriteCond %{REQUEST_URI} !^/api
 RewriteRule ^(.*)$ index.html [QSA,L]
-
-# API routing
-RewriteRule ^api/(.*)$ api.php/$1 [QSA,L]
 
 # Security headers
 <IfModule mod_headers.c>
