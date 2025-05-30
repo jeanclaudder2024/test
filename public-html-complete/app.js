@@ -114,6 +114,52 @@ class SupabaseClient {
 
 const supabase = new SupabaseClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
 
+// PHP API Helper Functions
+async function fetchFromAPI(endpoint) {
+  try {
+    const response = await fetch(`./api.php?path=${endpoint}`);
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    const data = await response.json();
+    if (data.error) {
+      throw new Error(data.message || data.error);
+    }
+    return data;
+  } catch (error) {
+    console.error(`Error fetching ${endpoint}:`, error);
+    throw error;
+  }
+}
+
+// Data loading functions
+async function loadVessels() {
+  try {
+    return await fetchFromAPI('vessels');
+  } catch (error) {
+    console.error('Failed to load vessels:', error);
+    return [];
+  }
+}
+
+async function loadPorts() {
+  try {
+    return await fetchFromAPI('ports');
+  } catch (error) {
+    console.error('Failed to load ports:', error);
+    return [];
+  }
+}
+
+async function loadRefineries() {
+  try {
+    return await fetchFromAPI('refineries');
+  } catch (error) {
+    console.error('Failed to load refineries:', error);
+    return [];
+  }
+}
+
 // React Components
 const { useState, useEffect, createElement: e } = React;
 
@@ -186,8 +232,8 @@ function Dashboard() {
     async function loadStats() {
       try {
         const [vessels, ports] = await Promise.all([
-          supabase.from('vessels').select('*').execute(),
-          supabase.from('ports').select('*').execute()
+          loadVessels(),
+          loadPorts()
         ]);
         
         setStats({
@@ -269,9 +315,9 @@ function Vessels() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function loadVessels() {
+    async function fetchVessels() {
       try {
-        const data = await supabase.from('vessels').select('*').execute();
+        const data = await loadVessels();
         setVessels(data);
       } catch (error) {
         console.error('Error loading vessels:', error);
@@ -280,7 +326,7 @@ function Vessels() {
       }
     }
     
-    loadVessels();
+    fetchVessels();
   }, []);
 
   if (loading) {
