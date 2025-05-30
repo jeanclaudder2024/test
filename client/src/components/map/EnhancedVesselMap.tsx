@@ -869,7 +869,7 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
                            index === vesselRoute.waypoints.length - 1 ? 'Destination' : 
                            `Waypoint ${index}`}
                         </h3>
-                        <p className="text-xs">Lat: {point[0].toFixed(4)}, Lng: {point[1].toFixed(4)}</p>
+                        <p className="text-xs">Lat: {point[0]?.toFixed(4) || 'N/A'}, Lng: {point[1]?.toFixed(4) || 'N/A'}</p>
                       </div>
                     </Popup>
                   </Circle>
@@ -897,7 +897,7 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
                   
                   <div className="text-gray-500">Position:</div>
                   <div>
-                    {realTimePosition[0].toFixed(4)}, {realTimePosition[1].toFixed(4)}
+                    {realTimePosition ? `${realTimePosition[0].toFixed(4)}, ${realTimePosition[1].toFixed(4)}` : 'Loading...'}
                   </div>
                   
                   <div className="text-gray-500">MMSI:</div>
@@ -1308,7 +1308,7 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
           <div>
             <span className="text-gray-500 block">Current Position</span>
             <span className="font-medium">
-              {realTimePosition[0].toFixed(4)}, {realTimePosition[1].toFixed(4)}
+              {realTimePosition ? `${realTimePosition[0].toFixed(4)}, ${realTimePosition[1].toFixed(4)}` : 'Loading...'}
             </span>
           </div>
           
