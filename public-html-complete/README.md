@@ -7,7 +7,24 @@ This package contains your full maritime platform with proper build structure, r
 ```
 /
 ├── index.php          # Main application file with API routing
-├── config.php         # Database configuration
+├── config.php         # Database configuration (PRE-CONFIGURED)
+├── .htaccess         # Apache configuration for hosting
+├── favicon.ico       # Website icon
+├── petrodeal-logo.png # Main logo
+├── robots.txt        # SEO configuration
+├── assets/           # All application assets
+│   ├── petrodealhub-logo.png
+│   ├── vessel-icon.svg
+│   ├── port-icon.svg
+│   ├── refinery-icon.svg
+│   ├── oil-tanker.svg
+│   ├── chemical-tanker.svg
+│   ├── lng-carrier.svg
+│   ├── lpg-carrier.svg
+│   ├── crude-tanker.svg
+│   ├── product-tanker.svg
+│   ├── port.svg
+│   └── refinery.svg
 ├── dist/              # Built application files
 │   ├── main.css      # Compiled styles with maritime themes
 │   └── main.js       # Complete React application
