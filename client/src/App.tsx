@@ -26,6 +26,7 @@ import ApiTest from "@/pages/ApiTest";
 import TranslationPage from "@/pages/TranslationPage";
 import TrafficInsights from "@/pages/TrafficInsights";
 import FixedFullPageMap from "@/pages/FixedFullPageMap";
+import OilVesselMap from "@/pages/OilVesselMap";
 import AdminPanel from "@/pages/AdminPanel";
 import SubscriptionAdmin from "@/pages/SubscriptionAdmin";
 // Maritime tracking and vessel lookup pages removed as requested
@@ -135,6 +136,7 @@ function Router() {
             <Route path="/translation" component={TranslationPage} />
             <Route path="/traffic-insights" component={TrafficInsights} />
             <Route path="/map" component={FixedFullPageMap} />
+            <Route path="/oil-vessel-map" component={OilVesselMap} />
             {/* Maritime tracking and vessel lookup pages removed as requested */}
             <Route path="/settings" component={Settings} />
             <Route path="/subscribe" component={Subscribe} />
