@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: oil-vessel-tracker
+    env: node
+    plan: starter
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: vessel-tracker-db
+          property: connectionString
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+    autoDeploy: true
+    
+databases:
+  - name: vessel-tracker-db
+    databaseName: vessel_tracker
+    user: vessel_tracker_user
+    plan: starter
