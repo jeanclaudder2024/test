@@ -900,7 +900,7 @@ export default function VesselDetail() {
                           <MapPin className="h-4 w-4 text-green-500 mr-2 mt-0.5" />
                           <div>
                             <div className="font-medium">
-                              {vessel.destinationPort.startsWith('REF:') 
+                              {typeof vessel.destinationPort === 'string' && vessel.destinationPort.startsWith('REF:') 
                                 ? vessel.destinationPort.split(':')[2]
                                 : vessel.destinationPort}
                             </div>
