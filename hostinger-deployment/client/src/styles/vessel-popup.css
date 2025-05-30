@@ -1,0 +1,56 @@
+.vessel-popup-container {
+  width: 350px;
+  max-width: 100%;
+}
+
+.vessel-icon {
+  transition: transform 0.2s ease;
+}
+
+.vessel-icon:hover {
+  transform: scale(1.2);
+  z-index: 1000 !important;
+}
+
+.vessel-popup-container .tabs-content {
+  height: 200px;
+  overflow-y: auto;
+}
+
+/* Status colors */
+.status-stopped {
+  filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.7));
+}
+
+.status-maneuvering {
+  filter: drop-shadow(0 0 4px rgba(249, 115, 22, 0.7));
+}
+
+.status-slow {
+  filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.7));
+}
+
+.status-medium {
+  filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.7));
+}
+
+.status-fast {
+  filter: drop-shadow(0 0 4px rgba(139, 92, 246, 0.7));
+}
+
+/* Animations for vessels in motion */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.status-medium, .status-fast {
+  animation: pulse 2s infinite;
+}
