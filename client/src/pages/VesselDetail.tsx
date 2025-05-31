@@ -493,13 +493,14 @@ export default function VesselDetail() {
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <Link href="/vessels">
-        <Button variant="ghost" className="mb-4 hover:bg-blue-50 transition-colors">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Vessels
-        </Button>
-      </Link>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+      <div className="container mx-auto p-6">
+        <Link href="/vessels">
+          <Button variant="ghost" className="mb-6 hover:bg-blue-100 dark:hover:bg-blue-900 transition-all duration-200 group">
+            <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-1 transition-transform" />
+            Back to Vessels
+          </Button>
+        </Link>
       
       {loading ? (
         <div className="flex justify-center items-center h-64">
@@ -586,17 +587,19 @@ export default function VesselDetail() {
                 </TabsList>
                 
                 <TabsContent value="details">
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="flex items-center">
-                        <Ship className="h-5 w-5 mr-2 text-primary" />
+                  <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
+                    <CardHeader className="pb-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 rounded-t-lg">
+                      <CardTitle className="flex items-center text-xl">
+                        <div className="bg-blue-100 dark:bg-blue-900 p-2 rounded-full mr-3">
+                          <Ship className="h-6 w-6 text-blue-600" />
+                        </div>
                         Vessel Specifications
                       </CardTitle>
-                      <CardDescription>
-                        Technical details and specifications - التفاصيل والمواصفات التقنية
+                      <CardDescription className="text-base">
+                        Comprehensive technical details and maritime specifications
                       </CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="p-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                           <h3 className="text-sm font-medium mb-3 flex items-center">
@@ -957,6 +960,7 @@ export default function VesselDetail() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }
