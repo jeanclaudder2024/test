@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -7,7 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import {
   FileText, Download, Loader2, Ship, MapPin, Calendar, 
   Fuel, Package, AlertCircle, Globe, BarChart, Shield,
-  Clipboard, FileCheck, Factory, Anchor
+  Clipboard, FileCheck, Factory, Anchor, Copy, RefreshCw
 } from 'lucide-react';
 
 interface AIDocumentGeneratorProps {
@@ -195,51 +195,110 @@ export default function AIDocumentGenerator({ vessel }: AIDocumentGeneratorProps
       </div>
 
       {generatedDocument && (
-        <Card>
-          <CardHeader>
+        <Card className="mt-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-blue-200 dark:border-blue-800 shadow-xl">
+          <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-lg">
             <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center">
-                <FileCheck className="h-5 w-5 mr-2 text-green-600" />
+              <CardTitle className="flex items-center text-xl">
+                <FileCheck className="h-6 w-6 mr-3" />
                 {documentType}
               </CardTitle>
-              <Button onClick={downloadDocument} size="sm">
-                <Download className="h-4 w-4 mr-2" />
-                Download
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  onClick={() => {
+                    navigator.clipboard.writeText(
+                      generatedDocument.map(s => `${s.title}\n${s.content}`).join('\n\n')
+                    )
+                    toast({ title: "Document copied to clipboard" })
+                  }}
+                  size="sm"
+                  variant="secondary"
+                  className="bg-white/20 hover:bg-white/30 text-white border-white/30"
+                >
+                  <Copy className="h-4 w-4 mr-2" />
+                  Copy
+                </Button>
+                <Button 
+                  onClick={downloadDocument} 
+                  size="sm"
+                  className="bg-white/20 hover:bg-white/30 text-white border-white/30"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Download PDF
+                </Button>
+              </div>
             </div>
+            <CardDescription className="text-blue-100 mt-2">
+              Comprehensive AI-generated analysis for {vessel.name} • Generated on {new Date().toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              })}
+            </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="max-h-96 overflow-y-auto space-y-4 border rounded-lg p-4 bg-muted/30">
+          <CardContent className="p-6">
+            <div className="max-h-[600px] overflow-y-auto space-y-6 pr-2">
               {generatedDocument.map((section, index) => (
-                <div key={index}>
+                <div key={index} className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all duration-200">
                   {section.type === 'header' && (
-                    <h3 className="text-lg font-semibold text-primary mb-2">
-                      {section.title}
-                    </h3>
+                    <div className="flex items-start mb-4">
+                      <div className="bg-blue-100 dark:bg-blue-900 p-3 rounded-full mr-4 mt-1">
+                        <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 leading-tight">
+                          {section.title}
+                        </h3>
+                        <div className="w-full h-1 bg-gradient-to-r from-blue-500 to-indigo-500 rounded mt-2"></div>
+                      </div>
+                    </div>
                   )}
                   {section.type === 'paragraph' && (
-                    <p className="text-sm leading-relaxed text-muted-foreground">
-                      {section.content}
-                    </p>
+                    <div className="ml-16">
+                      <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-base whitespace-pre-wrap">
+                        {section.content}
+                      </p>
+                    </div>
                   )}
                   {section.type === 'list' && (
-                    <ul className="list-disc list-inside text-sm space-y-1 text-muted-foreground">
-                      {section.content.split('\n').map((item, i) => (
-                        <li key={i}>{item}</li>
-                      ))}
-                    </ul>
-                  )}
-                  {index < generatedDocument.length - 1 && section.type !== 'header' && (
-                    <Separator className="my-3" />
+                    <div className="ml-16">
+                      <ul className="space-y-2 text-gray-700 dark:text-gray-300">
+                        {section.content.split('\n').filter(item => item.trim()).map((item, i) => (
+                          <li key={i} className="flex items-start">
+                            <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                            <span className="text-base leading-relaxed">{item.trim()}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   )}
                 </div>
               ))}
             </div>
-            <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
-              <span>Generated using AI analysis</span>
-              <Badge variant="outline">
-                {new Date().toLocaleDateString()}
-              </Badge>
+            
+            <Separator className="my-6" />
+            
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">
+                  AI Generated
+                </Badge>
+                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-300">
+                  Maritime Analysis
+                </Badge>
+                <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-300">
+                  Professional Report
+                </Badge>
+              </div>
+              <Button 
+                onClick={() => setGeneratedDocument(null)}
+                variant="outline"
+                className="border-blue-300 text-blue-700 hover:bg-blue-50 dark:border-blue-600 dark:text-blue-300 dark:hover:bg-blue-950"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Generate New Document
+              </Button>
             </div>
           </CardContent>
         </Card>

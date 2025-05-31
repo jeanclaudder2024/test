@@ -6155,37 +6155,81 @@ CREATE TABLE ports (
         apiKey: process.env.OPENAI_API_KEY 
       });
 
+      // Calculate additional maritime metrics
+      const vesselAge = vesselData.built ? new Date().getFullYear() - vesselData.built : null;
+      const currentDate = new Date().toISOString().split('T')[0];
+      
       // Generate comprehensive vessel document using AI
-      const prompt = `Generate a comprehensive ${documentType} for the following vessel:
+      const prompt = `Generate a comprehensive professional ${documentType} for the following maritime vessel:
 
-Vessel Information:
-- Name: ${vesselData.name}
-- IMO: ${vesselData.imo}
+VESSEL IDENTIFICATION & SPECIFICATIONS:
+- Vessel Name: ${vesselData.name}
+- IMO Number: ${vesselData.imo}
 - MMSI: ${vesselData.mmsi}
-- Type: ${vesselData.vesselType}
-- Flag: ${vesselData.flag}
-- Built: ${vesselData.built || 'Unknown'}
-- Deadweight: ${vesselData.deadweight || 'Unknown'} tons
-- Current Position: ${vesselData.currentLat || 'Unknown'}, ${vesselData.currentLng || 'Unknown'}
-- Departure Port: ${vesselData.departurePort || 'Unknown'}
-- Destination Port: ${vesselData.destinationPort || 'Unknown'}
-- Cargo Type: ${vesselData.cargoType || 'Unknown'}
-- Cargo Quantity: ${vesselData.cargoQuantity || 'Unknown'}
-- Deal Value: ${vesselData.dealValue || 'Unknown'}
-- Speed: ${vesselData.speed || 'Unknown'} knots
-- Course: ${vesselData.course || 'Unknown'}°
-- Status: ${vesselData.status || 'Unknown'}
+- Vessel Type: ${vesselData.vesselType}
+- Flag State: ${vesselData.flag}
+- Year Built: ${vesselData.built || 'Not Available'}
+- Vessel Age: ${vesselAge ? `${vesselAge} years` : 'Not Available'}
+- Deadweight Tonnage (DWT): ${vesselData.deadweight ? `${vesselData.deadweight.toLocaleString()} tons` : 'Not Available'}
 
-Please provide a detailed, professional ${documentType} with the following structure:
-1. Executive Summary
-2. Vessel Specifications
-3. Operational Details
-4. Commercial Information
-5. Technical Analysis
-6. Recommendations
-7. Conclusion
+CURRENT OPERATIONAL STATUS:
+- Current Position: ${vesselData.currentLat && vesselData.currentLng ? `${vesselData.currentLat}°N, ${vesselData.currentLng}°E` : 'Position Not Available'}
+- Current Speed: ${vesselData.speed || 'Not Available'} knots
+- Course/Heading: ${vesselData.course || 'Not Available'}°
+- Operational Status: ${vesselData.status || 'In Transit'}
 
-Make it comprehensive, accurate, and suitable for maritime industry professionals. Include relevant industry terminology and standards.`;
+VOYAGE & CARGO INFORMATION:
+- Departure Port: ${vesselData.departurePort || 'Not Specified'}
+- Destination Port: ${vesselData.destinationPort || 'Not Specified'}
+- Cargo Type: ${vesselData.cargoType || 'Not Specified'}
+- Cargo Quantity: ${vesselData.cargoQuantity || 'Not Specified'}
+- Commercial Deal Value: ${vesselData.dealValue || 'Confidential'}
+
+ANALYSIS DATE: ${currentDate}
+
+Generate a detailed, professional maritime ${documentType} following these requirements:
+
+1. EXECUTIVE SUMMARY
+   - Key vessel metrics and current status
+   - Strategic importance and market position
+   - Critical operational highlights
+
+2. VESSEL TECHNICAL SPECIFICATIONS
+   - Detailed vessel characteristics and capabilities
+   - Technical compliance and certification status
+   - Performance metrics and efficiency ratings
+
+3. OPERATIONAL ANALYSIS
+   - Current voyage analysis and route optimization
+   - Port performance and logistics efficiency
+   - Crew management and operational protocols
+
+4. COMMERCIAL & MARKET ASSESSMENT
+   - Market position and competitive analysis
+   - Revenue performance and cost optimization
+   - Commercial opportunities and risks
+
+5. SAFETY & COMPLIANCE EVALUATION
+   - Maritime safety record and compliance status
+   - Environmental impact and sustainability measures
+   - Risk assessment and mitigation strategies
+
+6. FINANCIAL & ECONOMIC ANALYSIS
+   - Operational costs and revenue analysis
+   - Market trends affecting vessel performance
+   - Investment recommendations and ROI projections
+
+7. STRATEGIC RECOMMENDATIONS
+   - Operational improvements and optimization
+   - Market opportunities and strategic positioning
+   - Long-term sustainability and growth plans
+
+8. CONCLUSION & OUTLOOK
+   - Summary of key findings
+   - Future prospects and market outlook
+   - Final recommendations for stakeholders
+
+Ensure the report is comprehensive, data-driven, and suitable for maritime industry professionals, shipowners, port authorities, and maritime finance institutions. Use appropriate maritime terminology, industry standards (IMO, MARPOL, SOLAS), and provide actionable insights throughout the analysis.`;
 
       const response = await openai.chat.completions.create({
         model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
