@@ -363,17 +363,19 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
     }
   }, [vessel, enhancedVesselData]);
   
-  // Prioritize AI-generated voyage progress over all other data
+  // Prioritize AI-generated voyage progress over all other data with safe fallbacks
   const effectiveVoyageProgress = aiVoyageProgress || 
     (enhancedVesselData && enhancedVesselData.voyageProgress 
       ? {
-          percentComplete: simulatedProgress !== null ? simulatedProgress : enhancedVesselData.voyageProgress,
+          percentComplete: simulatedProgress !== null ? simulatedProgress : enhancedVesselData.voyageProgress || 0,
           currentSpeed: enhancedVesselData.currentSpeed || 0,
           averageSpeed: enhancedVesselData.currentSpeed ? enhancedVesselData.currentSpeed * 0.9 : 0,
           estimated: true,
           generatedData: true,
           estimatedArrival: simulatedProgress === 100 ? 'Arrived at destination' : 
-                           `${Math.ceil((100 - (simulatedProgress || 0)) / 4)} days`
+                           `${Math.ceil((100 - (simulatedProgress || 0)) / 4)} days`,
+          distanceTraveled: null,
+          distanceRemaining: null
         } 
       : voyageProgress);
   
