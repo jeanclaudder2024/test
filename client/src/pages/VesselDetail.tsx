@@ -996,7 +996,7 @@ export default function VesselDetail() {
                         📊 Quantity
                       </span>
                       <span className="font-medium">
-                        {vessel.quantity 
+                        {vessel.quantity && !isNaN(parseFloat(vessel.quantity))
                           ? `${parseFloat(vessel.quantity).toLocaleString()} barrels`
                           : vessel.cargoCapacity 
                           ? `${vessel.cargoCapacity.toLocaleString()} barrels` 
@@ -1009,7 +1009,7 @@ export default function VesselDetail() {
                         💰 Value
                       </span>
                       <span className="font-medium">
-                        {vessel.dealValue 
+                        {vessel.dealValue && !isNaN(parseFloat(vessel.dealValue))
                           ? `$${parseFloat(vessel.dealValue).toLocaleString()} USD`
                           : vessel.cargoType && vessel.cargoType.toLowerCase().includes('crude') 
                           ? '$45M - $60M USD'
@@ -1033,7 +1033,7 @@ export default function VesselDetail() {
                         ➕ Price
                       </span>
                       <span className="font-medium">
-                        {vessel.price 
+                        {vessel.price && !isNaN(parseFloat(vessel.price))
                           ? `$${parseFloat(vessel.price).toFixed(2)} per barrel`
                           : 'N/A'}
                       </span>
@@ -1044,7 +1044,7 @@ export default function VesselDetail() {
                         📈 Market Price
                       </span>
                       <span className="font-medium">
-                        {vessel.marketPrice 
+                        {vessel.marketPrice && !isNaN(parseFloat(vessel.marketPrice))
                           ? `$${parseFloat(vessel.marketPrice).toFixed(2)} per barrel`
                           : 'N/A'}
                       </span>
