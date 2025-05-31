@@ -76,6 +76,10 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
   const [routeGenerationError, setRouteGenerationError] = useState<string | null>(null);
   const [destinationPortMarker, setDestinationPortMarker] = useState<any>(null);
   const [destinationRefineryMarker, setDestinationRefineryMarker] = useState<any>(null);
+  const [voyageLine, setVoyageLine] = useState<[number, number][]>([]);
+  const [connectedPorts, setConnectedPorts] = useState<any[]>([]);
+  const [routeWaypoints, setRouteWaypoints] = useState<[number, number][]>([]);
+  const [departurePort, setDeparturePort] = useState<any>(null);
   const mapRef = useRef<any>(null);
   
   // Load actual vessel position from API
@@ -369,6 +373,114 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
     }
   }, [vessel, toast, routeGenerationError]);
 
+  // Function to find departure port
+  const findDeparturePort = useCallback(async () => {
+    if (!vessel || !vessel.departurePort) return;
+    
+    try {
+      const portsResponse = await axios.get('/api/ports');
+      if (portsResponse.data && Array.isArray(portsResponse.data)) {
+        const port = portsResponse.data.find((port: any) => 
+          port && port.name && vessel.departurePort && 
+          port.name.toLowerCase().includes(vessel.departurePort.toLowerCase())
+        );
+        
+        if (port && port.lat && port.lng) {
+          setDeparturePort(port);
+        }
+      }
+    } catch (error) {
+      console.error("Error finding departure port:", error);
+    }
+  }, [vessel]);
+
+  // Function to generate voyage line from departure to destination
+  const generateVoyageLine = useCallback(() => {
+    if (!realTimePosition) return;
+    
+    const waypoints: [number, number][] = [];
+    
+    // Add departure port if available
+    if (departurePort && departurePort.lat && departurePort.lng) {
+      waypoints.push([parseFloat(departurePort.lat), parseFloat(departurePort.lng)]);
+    }
+    
+    // Add current vessel position
+    waypoints.push(realTimePosition);
+    
+    // Add destination port if available
+    if (destinationPortMarker && destinationPortMarker.lat && destinationPortMarker.lng) {
+      waypoints.push([parseFloat(destinationPortMarker.lat), parseFloat(destinationPortMarker.lng)]);
+    } else if (destinationRefineryMarker && destinationRefineryMarker.lat && destinationRefineryMarker.lng) {
+      waypoints.push([parseFloat(destinationRefineryMarker.lat), parseFloat(destinationRefineryMarker.lng)]);
+    }
+    
+    setVoyageLine(waypoints);
+  }, [realTimePosition, departurePort, destinationPortMarker, destinationRefineryMarker]);
+
+  // Function to find connected ports (ports the vessel has visited or will visit)
+  const findConnectedPorts = useCallback(async () => {
+    if (!vessel) return;
+    
+    try {
+      const portsResponse = await axios.get('/api/ports');
+      if (portsResponse.data && Array.isArray(portsResponse.data)) {
+        const connected = [];
+        
+        // Add departure port
+        if (vessel.departurePort) {
+          const depPort = portsResponse.data.find((port: any) => 
+            port && port.name && vessel.departurePort && 
+            port.name.toLowerCase().includes(vessel.departurePort.toLowerCase())
+          );
+          if (depPort) {
+            connected.push({ ...depPort, type: 'departure' });
+          }
+        }
+        
+        // Add destination port
+        if (vessel.destinationPort) {
+          const destPort = portsResponse.data.find((port: any) => 
+            port && port.name && vessel.destinationPort && 
+            port.name.toLowerCase().includes(vessel.destinationPort.toLowerCase())
+          );
+          if (destPort) {
+            connected.push({ ...destPort, type: 'destination' });
+          }
+        }
+        
+        // Add nearby major ports (within 500km) as potential connection points
+        if (realTimePosition) {
+          const nearbyMajorPorts = portsResponse.data.filter((port: any) => {
+            if (!port.lat || !port.lng) return false;
+            
+            const distance = calculateDistance(
+              realTimePosition[0],
+              realTimePosition[1],
+              parseFloat(port.lat),
+              parseFloat(port.lng)
+            );
+            
+            // Only include major ports (assume capacity > 1000000 or important ports)
+            const isMajorPort = (port.capacity && port.capacity > 1000000) || 
+                               port.name.toLowerCase().includes('terminal') ||
+                               port.name.toLowerCase().includes('hub');
+            
+            return distance <= 500 && isMajorPort;
+          });
+          
+          nearbyMajorPorts.forEach((port: any) => {
+            connected.push({ ...port, type: 'nearby' });
+          });
+        }
+        
+        setConnectedPorts(connected);
+      }
+    } catch (error) {
+      console.error("Error finding connected ports:", error);
+    }
+  }, [vessel, realTimePosition]);
+
   // Function to find destination port or refinery
   const findDestinationLocation = useCallback(async () => {
     if (!vessel) return;
@@ -437,11 +549,22 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
       // Find destination port/refinery
       findDestinationLocation();
       
+      // Find departure port
+      findDeparturePort();
+      
       if (vessel.destinationPort) {
         loadVesselRoute();
       }
     }
-  }, [vessel, loadRealVesselPosition, loadVesselRoute, findDestinationLocation]);
+  }, [vessel, loadRealVesselPosition, loadVesselRoute, findDestinationLocation, findDeparturePort]);
+
+  // Update voyage line and connected ports when positions change
+  useEffect(() => {
+    if (realTimePosition) {
+      generateVoyageLine();
+      findConnectedPorts();
+    }
+  }, [realTimePosition, departurePort, destinationPortMarker, destinationRefineryMarker, generateVoyageLine, findConnectedPorts]);
   
   // Find nearby locations and vessels when position is loaded
   useEffect(() => {
@@ -1149,6 +1272,107 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
             />
           )}
           
+          {/* Voyage Line - showing departure to current to destination */}
+          {voyageLine && voyageLine.length > 1 && (
+            <Polyline
+              positions={voyageLine}
+              pathOptions={{
+                color: '#FF6B35',
+                weight: 4,
+                opacity: 0.8
+              }}
+            >
+              <Popup>
+                <div className="text-sm">
+                  <div className="font-semibold text-base flex items-center">
+                    <Navigation className="h-4 w-4 mr-1.5 text-orange-600" />
+                    Voyage Line
+                  </div>
+                  <div className="text-xs text-gray-600 mt-1">
+                    Current voyage path from departure to destination
+                  </div>
+                </div>
+              </Popup>
+            </Polyline>
+          )}
+
+          {/* Connected Ports - showing departure port */}
+          {departurePort && (
+            <Marker
+              position={[parseFloat(departurePort.lat), parseFloat(departurePort.lng)]}
+              icon={L.divIcon({
+                html: `<div style="background: #10B981; border: 2px solid white; border-radius: 50%; width: 16px; height: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
+                className: 'custom-div-icon',
+                iconSize: [16, 16],
+                iconAnchor: [8, 8]
+              })}
+            >
+              <Popup>
+                <div className="text-sm space-y-2 max-w-[250px]">
+                  <div className="font-semibold text-base flex items-center">
+                    <Anchor className="h-4 w-4 mr-1.5 text-green-600" />
+                    {departurePort.name}
+                  </div>
+                  <div className="text-xs">
+                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                      Departure Port
+                    </Badge>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
+                    <div className="text-gray-500">Country:</div>
+                    <div>{departurePort.country || 'N/A'}</div>
+                    <div className="text-green-600 font-medium col-span-2 mt-1">
+                      Voyage started from this port
+                    </div>
+                  </div>
+                </div>
+              </Popup>
+            </Marker>
+          )}
+
+          {/* Connected Ports - showing other connected ports */}
+          {connectedPorts.map((port: any) => (
+            <Marker
+              key={`connected-port-${port.id}`}
+              position={[parseFloat(port.lat), parseFloat(port.lng)]}
+              icon={L.divIcon({
+                html: `<div style="background: ${port.type === 'departure' ? '#10B981' : port.type === 'destination' ? '#EF4444' : '#3B82F6'}; border: 2px solid white; border-radius: 50%; width: 12px; height: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
+                className: 'custom-div-icon',
+                iconSize: [12, 12],
+                iconAnchor: [6, 6]
+              })}
+            >
+              <Popup>
+                <div className="text-sm space-y-2 max-w-[250px]">
+                  <div className="font-semibold text-base flex items-center">
+                    <Anchor className="h-4 w-4 mr-1.5" />
+                    {port.name}
+                  </div>
+                  <div className="text-xs">
+                    <Badge variant="outline" className={
+                      port.type === 'departure' ? "bg-green-50 text-green-700 border-green-200" :
+                      port.type === 'destination' ? "bg-red-50 text-red-700 border-red-200" :
+                      "bg-blue-50 text-blue-700 border-blue-200"
+                    }>
+                      {port.type === 'departure' ? 'Departure' : 
+                       port.type === 'destination' ? 'Destination' : 'Connected'} Port
+                    </Badge>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
+                    <div className="text-gray-500">Country:</div>
+                    <div>{port.country || 'N/A'}</div>
+                    {port.capacity && (
+                      <>
+                        <div className="text-gray-500">Capacity:</div>
+                        <div>{port.capacity.toLocaleString()} TEU</div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </Popup>
+            </Marker>
+          ))}
+
           {/* Enhanced connection lines to nearby entities with distance-based styling */}
           {nearbyRefineries.map((refinery: any) => {
             // Calculate opacity and dash pattern based on distance
