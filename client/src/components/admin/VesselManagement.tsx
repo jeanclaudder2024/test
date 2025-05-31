@@ -482,6 +482,64 @@ export default function VesselManagement() {
         shippingType: data.shippingType || "FOB",
         routeDistance: data.routeDistance?.toString() || "8450",
         
+        // Generate departure and destination ports from available ports
+        departurePort: (() => {
+          if (ports && ports.length > 0) {
+            const randomDepartureIndex = Math.floor(Math.random() * ports.length);
+            return ports[randomDepartureIndex].name;
+          }
+          return data.departurePort || "Port of Houston";
+        })(),
+        destinationPort: (() => {
+          if (ports && ports.length > 0) {
+            const randomDestinationIndex = Math.floor(Math.random() * ports.length);
+            return ports[randomDestinationIndex].name;
+          }
+          return data.destinationPort || "Port of Rotterdam";
+        })(),
+        
+        // Generate realistic voyage dates
+        departureDate: (() => {
+          const departureDate = new Date();
+          departureDate.setDate(departureDate.getDate() - Math.floor(Math.random() * 10 + 1)); // 1-10 days ago
+          return departureDate.toISOString().split('T')[0];
+        })(),
+        eta: (() => {
+          const etaDate = new Date();
+          etaDate.setDate(etaDate.getDate() + Math.floor(Math.random() * 20 + 5)); // 5-25 days from now
+          return etaDate.toISOString().split('T')[0];
+        })(),
+        
+        // Generate departure and destination coordinates from port data
+        departureLat: (() => {
+          if (ports && ports.length > 0) {
+            const randomPort = ports[Math.floor(Math.random() * ports.length)];
+            return randomPort.lat;
+          }
+          return data.departureLat || "29.7604";
+        })(),
+        departureLng: (() => {
+          if (ports && ports.length > 0) {
+            const randomPort = ports[Math.floor(Math.random() * ports.length)];
+            return randomPort.lng;
+          }
+          return data.departureLng || "-95.3698";
+        })(),
+        destinationLat: (() => {
+          if (ports && ports.length > 0) {
+            const randomPort = ports[Math.floor(Math.random() * ports.length)];
+            return randomPort.lat;
+          }
+          return data.destinationLat || "51.9225";
+        })(),
+        destinationLng: (() => {
+          if (ports && ports.length > 0) {
+            const randomPort = ports[Math.floor(Math.random() * ports.length)];
+            return randomPort.lng;
+          }
+          return data.destinationLng || "4.4792";
+        })(),
+        
         // Technical Specifications - populate with AI generated data
         callsign: data.callsign || "9V" + Math.random().toString(36).substr(2, 4).toUpperCase(),
         course: data.course?.toString() || Math.floor(Math.random() * 360).toString(),
