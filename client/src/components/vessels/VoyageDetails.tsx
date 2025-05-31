@@ -82,6 +82,44 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
 }) => {
   const [showWeatherDetails, setShowWeatherDetails] = useState(false);
   const [showFuelDetails, setShowFuelDetails] = useState(false);
+  const [ports, setPorts] = useState<any[]>([]);
+  
+  // Fetch ports data for proper name resolution
+  useEffect(() => {
+    const fetchPorts = async () => {
+      try {
+        const response = await axios.get('/api/ports');
+        if (response.status === 200) {
+          setPorts(response.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch ports for voyage details:', error);
+      }
+    };
+    
+    fetchPorts();
+  }, []);
+  
+  // Helper function to get port name by ID or name
+  const getPortName = (portIdOrName: number | string | null | undefined): string => {
+    if (!portIdOrName) return 'Unknown Port';
+    
+    // If it's already a port name (string that doesn't look like an ID)
+    if (typeof portIdOrName === 'string' && isNaN(Number(portIdOrName))) {
+      return portIdOrName;
+    }
+    
+    // If we have ports data, try to find the port by ID
+    if (ports.length > 0) {
+      const port = ports.find(p => p.id === Number(portIdOrName) || p.name === portIdOrName);
+      if (port) {
+        return `${port.name}, ${port.country}`;
+      }
+    }
+    
+    // If it's a number but we can't find the port, show it as is
+    return typeof portIdOrName === 'string' ? portIdOrName : `Port ID: ${portIdOrName}`;
+  };
 
   // Weather condition data - would be from API in production
   const weatherData = {
@@ -404,12 +442,12 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                       <div className="flex justify-between items-center text-xs text-gray-500 mb-1">
                         <div className="flex flex-col items-center">
                           <MapPin className="h-3 w-3 text-primary mb-1" />
-                          <span>{typeof vessel.departurePort === 'string' ? vessel.departurePort.split(',')[0] : vessel.departurePort || 'Unknown'}</span>
+                          <span>{getPortName(vessel.departurePort)}</span>
                         </div>
                         <span className="text-primary font-medium">{effectiveVoyageProgress.percentComplete}% Complete</span>
                         <div className="flex flex-col items-center">
                           <MapPin className="h-3 w-3 text-primary mb-1" />
-                          <span>{typeof vessel.destinationPort === 'string' ? vessel.destinationPort.split(',')[0] : vessel.destinationPort || 'Unknown'}</span>
+                          <span>{getPortName(vessel.destinationPort)}</span>
                         </div>
                       </div>
                       
@@ -514,7 +552,7 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                   </div>
                   <div className="ml-3">
                     <p className="text-xs text-gray-500">DEPARTURE</p>
-                    <p className="text-sm font-medium">{vessel.departurePort || "N/A"}</p>
+                    <p className="text-sm font-medium">{getPortName(vessel.departurePort)}</p>
                     <p className="text-xs text-gray-500">
                       {vessel.departureTime ? formatDate(new Date(vessel.departureTime)) : "N/A"}
                     </p>
@@ -528,7 +566,7 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                   </div>
                   <div className="ml-3">
                     <p className="text-xs text-gray-500">DESTINATION</p>
-                    <p className="text-sm font-medium">{vessel.destinationPort || "N/A"}</p>
+                    <p className="text-sm font-medium">{getPortName(vessel.destinationPort)}</p>
                     <p className="text-xs text-gray-500">
                       {vessel.eta ? `ETA: ${formatDate(new Date(vessel.eta))}` : "ETA: N/A"}
                     </p>
@@ -849,7 +887,7 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                         >
                           <Popup>
                             <div className="text-sm">
-                              <strong>Departure:</strong> {routeData.departurePosition.portName || vessel.departurePort}<br/>
+                              <strong>Departure:</strong> {routeData.departurePosition.portName || getPortName(vessel.departurePort)}<br/>
                               <span className="text-xs text-gray-500">
                                 {vessel.departureTime ? formatDate(new Date(vessel.departureTime)) : "Unknown date"}
                               </span>
@@ -914,7 +952,7 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                         >
                           <Popup>
                             <div className="text-sm">
-                              <strong>Destination:</strong> {routeData.destinationPosition.portName || vessel.destinationPort}<br/>
+                              <strong>Destination:</strong> {routeData.destinationPosition.portName || getPortName(vessel.destinationPort)}<br/>
                               <span className="text-xs text-gray-500">
                                 {vessel.eta ? `ETA: ${formatDate(new Date(vessel.eta))}` : "Unknown ETA"}
                               </span>
@@ -1051,7 +1089,7 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                 <div className="space-y-2">
                   <div>
                     <p className="text-xs text-gray-500">Departure Port</p>
-                    <p className="text-sm font-medium">{vessel.departurePort || 'Not specified'}</p>
+                    <p className="text-sm font-medium">{getPortName(vessel.departurePort)}</p>
                   </div>
                   {vessel.departureDate && (
                     <div>
