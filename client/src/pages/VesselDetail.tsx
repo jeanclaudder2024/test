@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Vessel } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, Circle } from 'react-leaflet';
-import VoyageDetails from '@/components/vessels/VoyageDetails';
+import { VoyageDetailsClean } from '@/components/vessels/VoyageDetailsClean';
 import EnhancedVesselMap from '@/components/map/EnhancedVesselMap';
 import axios from 'axios';
 import L from 'leaflet';
@@ -742,25 +742,7 @@ export default function VesselDetail() {
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <VoyageDetails 
-                        vessel={vessel} 
-                        voyageProgress={{ 
-                          percentComplete: vessel.voyageProgress || 45,
-                          distanceTraveled: 1825,
-                          distanceRemaining: 2231,
-                          currentSpeed: vessel.currentSpeed || 12.5,
-                          averageSpeed: 13.2,
-                          estimatedArrival: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-                        }}
-                        isLoadingVoyage={false}
-                        onRefreshVoyage={() => {}}
-                        currentLocation={{
-                          lat: vessel.currentLat,
-                          lng: vessel.currentLng
-                        }}
-                        isLoadingLocation={false}
-                        onRefreshLocation={() => {}}
-                      />
+                      <VoyageDetailsClean vessel={vessel} />
                     </CardContent>
                   </Card>
                 </TabsContent>
