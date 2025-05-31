@@ -48,4 +48,4 @@ npm run dev
 - **Backend**: Express.js, Node.js
 - **Database**: PostgreSQL with Drizzle ORM
 - **Maps**: Leaflet.js
-- **Authentication**: Supabase Auth
+- **Authentication**: Supabase Auth# test
