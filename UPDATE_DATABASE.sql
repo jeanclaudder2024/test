@@ -1,4 +1,4 @@
--- Add new deal information fields to vessels table
+-- Enhanced vessel data fields for complete vessel management
 -- Run this in your Supabase SQL Editor
 
 ALTER TABLE vessels 
@@ -11,4 +11,14 @@ ADD COLUMN IF NOT EXISTS market_price DECIMAL(15,2),
 ADD COLUMN IF NOT EXISTS source_company TEXT,
 ADD COLUMN IF NOT EXISTS target_refinery TEXT,
 ADD COLUMN IF NOT EXISTS shipping_type TEXT,
-ADD COLUMN IF NOT EXISTS route_distance DECIMAL(10,2);
+ADD COLUMN IF NOT EXISTS route_distance DECIMAL(10,2),
+ADD COLUMN IF NOT EXISTS callsign TEXT,
+ADD COLUMN IF NOT EXISTS course INTEGER,
+ADD COLUMN IF NOT EXISTS nav_status TEXT,
+ADD COLUMN IF NOT EXISTS draught DECIMAL(5,2),
+ADD COLUMN IF NOT EXISTS length DECIMAL(8,2),
+ADD COLUMN IF NOT EXISTS width DECIMAL(6,2),
+ADD COLUMN IF NOT EXISTS engine_power INTEGER,
+ADD COLUMN IF NOT EXISTS fuel_consumption DECIMAL(8,2),
+ADD COLUMN IF NOT EXISTS crew_size INTEGER,
+ADD COLUMN IF NOT EXISTS gross_tonnage INTEGER;

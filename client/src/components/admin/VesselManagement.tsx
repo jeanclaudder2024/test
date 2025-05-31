@@ -82,6 +82,30 @@ interface VesselFormData {
   ownerName: string;
   operatorName: string;
   oilSource: string;
+  
+  // Deal Information
+  oilType: string;
+  quantity: string;
+  dealValue: string;
+  loadingPort: string;
+  price: string;
+  marketPrice: string;
+  sourceCompany: string;
+  targetRefinery: string;
+  shippingType: string;
+  routeDistance: string;
+  
+  // Technical Specifications
+  callsign: string;
+  course: string;
+  navStatus: string;
+  draught: string;
+  length: string;
+  width: string;
+  enginePower: string;
+  fuelConsumption: string;
+  crewSize: string;
+  grossTonnage: string;
 }
 
 const vesselTypes = [
@@ -166,7 +190,31 @@ const defaultFormData: VesselFormData = {
   sellerName: "",
   ownerName: "",
   operatorName: "",
-  oilSource: ""
+  oilSource: "",
+  
+  // Deal Information
+  oilType: "",
+  quantity: "",
+  dealValue: "",
+  loadingPort: "",
+  price: "",
+  marketPrice: "",
+  sourceCompany: "",
+  targetRefinery: "",
+  shippingType: "",
+  routeDistance: "",
+  
+  // Technical Specifications
+  callsign: "",
+  course: "",
+  navStatus: "",
+  draught: "",
+  length: "",
+  width: "",
+  enginePower: "",
+  fuelConsumption: "",
+  crewSize: "",
+  grossTonnage: ""
 };
 
 export default function VesselManagement() {
@@ -240,7 +288,31 @@ export default function VesselManagement() {
         sellerName: vesselData.sellerName?.trim() || null,
         ownerName: vesselData.ownerName?.trim() || null,
         operatorName: vesselData.operatorName?.trim() || null,
-        oilSource: vesselData.oilSource?.trim() || null
+        oilSource: vesselData.oilSource?.trim() || null,
+        
+        // Deal Information
+        oilType: vesselData.oilType?.trim() || null,
+        quantity: vesselData.quantity ? parseFloat(vesselData.quantity) : null,
+        dealValue: vesselData.dealValue ? parseFloat(vesselData.dealValue) : null,
+        loadingPort: vesselData.loadingPort?.trim() || null,
+        price: vesselData.price ? parseFloat(vesselData.price) : null,
+        marketPrice: vesselData.marketPrice ? parseFloat(vesselData.marketPrice) : null,
+        sourceCompany: vesselData.sourceCompany?.trim() || null,
+        targetRefinery: vesselData.targetRefinery?.trim() || null,
+        shippingType: vesselData.shippingType?.trim() || null,
+        routeDistance: vesselData.routeDistance ? parseFloat(vesselData.routeDistance) : null,
+        
+        // Technical Specifications
+        callsign: vesselData.callsign?.trim() || null,
+        course: vesselData.course ? parseInt(vesselData.course) : null,
+        navStatus: vesselData.navStatus?.trim() || null,
+        draught: vesselData.draught ? parseFloat(vesselData.draught) : null,
+        length: vesselData.length ? parseFloat(vesselData.length) : null,
+        width: vesselData.width ? parseFloat(vesselData.width) : null,
+        enginePower: vesselData.enginePower ? parseInt(vesselData.enginePower) : null,
+        fuelConsumption: vesselData.fuelConsumption ? parseFloat(vesselData.fuelConsumption) : null,
+        crewSize: vesselData.crewSize ? parseInt(vesselData.crewSize) : null,
+        grossTonnage: vesselData.grossTonnage ? parseInt(vesselData.grossTonnage) : null
       };
 
       const response = await fetch("/api/admin/vessels", {
@@ -296,7 +368,31 @@ export default function VesselManagement() {
         sellerName: data.sellerName?.trim() || null,
         ownerName: data.ownerName?.trim() || null,
         operatorName: data.operatorName?.trim() || null,
-        oilSource: data.oilSource?.trim() || null
+        oilSource: data.oilSource?.trim() || null,
+        
+        // Deal Information
+        oilType: data.oilType?.trim() || null,
+        quantity: data.quantity ? parseFloat(data.quantity) : null,
+        dealValue: data.dealValue ? parseFloat(data.dealValue) : null,
+        loadingPort: data.loadingPort?.trim() || null,
+        price: data.price ? parseFloat(data.price) : null,
+        marketPrice: data.marketPrice ? parseFloat(data.marketPrice) : null,
+        sourceCompany: data.sourceCompany?.trim() || null,
+        targetRefinery: data.targetRefinery?.trim() || null,
+        shippingType: data.shippingType?.trim() || null,
+        routeDistance: data.routeDistance ? parseFloat(data.routeDistance) : null,
+        
+        // Technical Specifications
+        callsign: data.callsign?.trim() || null,
+        course: data.course ? parseInt(data.course) : null,
+        navStatus: data.navStatus?.trim() || null,
+        draught: data.draught ? parseFloat(data.draught) : null,
+        length: data.length ? parseFloat(data.length) : null,
+        width: data.width ? parseFloat(data.width) : null,
+        enginePower: data.enginePower ? parseInt(data.enginePower) : null,
+        fuelConsumption: data.fuelConsumption ? parseFloat(data.fuelConsumption) : null,
+        crewSize: data.crewSize ? parseInt(data.crewSize) : null,
+        grossTonnage: data.grossTonnage ? parseInt(data.grossTonnage) : null
       };
 
       const response = await fetch(`/api/admin/vessels/${id}`, {

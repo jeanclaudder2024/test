@@ -77,6 +77,18 @@ export const vessels = pgTable("vessels", {
   // Route information
   routeDistance: decimal("route_distance", { precision: 10, scale: 2 }), // Distance in nautical miles
   
+  // Enhanced vessel technical specifications
+  callsign: text("callsign"), // Radio callsign
+  course: integer("course"), // Heading in degrees (0-360)
+  navStatus: text("nav_status"), // Navigation status from AIS
+  draught: decimal("draught", { precision: 5, scale: 2 }), // Current draught in meters
+  length: decimal("length", { precision: 8, scale: 2 }), // Vessel length in meters
+  width: decimal("width", { precision: 6, scale: 2 }), // Vessel width in meters
+  enginePower: integer("engine_power"), // Engine power in HP
+  fuelConsumption: decimal("fuel_consumption", { precision: 8, scale: 2 }), // Fuel consumption tons/day
+  crewSize: integer("crew_size"), // Number of crew members
+  grossTonnage: integer("gross_tonnage"), // Gross tonnage
+  
   metadata: text("metadata"), // JSON string with additional vessel information (heading, speed, course, etc.)
   lastUpdated: timestamp("last_updated").defaultNow(),
 });
