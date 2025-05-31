@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { vesselService } from "./services/vesselService";
 import { refineryService } from "./services/refineryService";
 import { openaiService } from "./services/openaiService";
+import OpenAI from 'openai';
 import { AIEnhancementService } from "./services/aiEnhancementService";
 // Replace dataService from asiStreamService with marineTrafficService
 import { marineTrafficService } from "./services/marineTrafficService";
@@ -6135,6 +6136,117 @@ CREATE TABLE ports (
         filename: 'basic_database_structure.sql',
         timestamp: new Date().toISOString(),
         message: "Basic database structure exported (use migration tool for data)"
+      });
+    }
+  });
+
+  // AI Document Generation endpoint
+  app.post("/api/vessels/generate-document", async (req: Request, res: Response) => {
+    try {
+      const { vesselId, documentType, vesselData } = req.body;
+
+      if (!process.env.OPENAI_API_KEY) {
+        return res.status(400).json({ 
+          error: "OpenAI API key not configured. Please contact administrator." 
+        });
+      }
+
+      const openai = new OpenAI({ 
+        apiKey: process.env.OPENAI_API_KEY 
+      });
+
+      // Generate comprehensive vessel document using AI
+      const prompt = `Generate a comprehensive ${documentType} for the following vessel:
+
+Vessel Information:
+- Name: ${vesselData.name}
+- IMO: ${vesselData.imo}
+- MMSI: ${vesselData.mmsi}
+- Type: ${vesselData.vesselType}
+- Flag: ${vesselData.flag}
+- Built: ${vesselData.built || 'Unknown'}
+- Deadweight: ${vesselData.deadweight || 'Unknown'} tons
+- Current Position: ${vesselData.currentLat || 'Unknown'}, ${vesselData.currentLng || 'Unknown'}
+- Departure Port: ${vesselData.departurePort || 'Unknown'}
+- Destination Port: ${vesselData.destinationPort || 'Unknown'}
+- Cargo Type: ${vesselData.cargoType || 'Unknown'}
+- Cargo Quantity: ${vesselData.cargoQuantity || 'Unknown'}
+- Deal Value: ${vesselData.dealValue || 'Unknown'}
+- Speed: ${vesselData.speed || 'Unknown'} knots
+- Course: ${vesselData.course || 'Unknown'}°
+- Status: ${vesselData.status || 'Unknown'}
+
+Please provide a detailed, professional ${documentType} with the following structure:
+1. Executive Summary
+2. Vessel Specifications
+3. Operational Details
+4. Commercial Information
+5. Technical Analysis
+6. Recommendations
+7. Conclusion
+
+Make it comprehensive, accurate, and suitable for maritime industry professionals. Include relevant industry terminology and standards.`;
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+        messages: [
+          {
+            role: "system",
+            content: "You are a maritime industry expert specializing in vessel documentation and analysis. Provide detailed, professional reports suitable for shipping industry stakeholders."
+          },
+          {
+            role: "user",
+            content: prompt
+          }
+        ],
+        max_tokens: 3000,
+        temperature: 0.7
+      });
+
+      const generatedContent = response.choices[0].message.content;
+      
+      // Parse the content into structured sections
+      const sections = [];
+      const lines = generatedContent?.split('\n') || [];
+      let currentSection = { title: '', content: '', type: 'paragraph' as const };
+      
+      for (const line of lines) {
+        const trimmedLine = line.trim();
+        
+        if (trimmedLine.match(/^\d+\.\s+[A-Z]/)) {
+          // This is a section header
+          if (currentSection.content) {
+            sections.push(currentSection);
+          }
+          currentSection = {
+            title: trimmedLine,
+            content: '',
+            type: 'header' as const
+          };
+        } else if (trimmedLine.length > 0) {
+          // Add content to current section
+          currentSection.content += (currentSection.content ? '\n' : '') + trimmedLine;
+          currentSection.type = 'paragraph' as const;
+        }
+      }
+      
+      // Add the last section
+      if (currentSection.content) {
+        sections.push(currentSection);
+      }
+
+      res.json({ 
+        success: true, 
+        sections,
+        documentType,
+        generatedAt: new Date().toISOString(),
+        vesselName: vesselData.name
+      });
+
+    } catch (error) {
+      console.error('AI document generation error:', error);
+      res.status(500).json({ 
+        error: "Failed to generate document. Please check API configuration and try again." 
       });
     }
   });

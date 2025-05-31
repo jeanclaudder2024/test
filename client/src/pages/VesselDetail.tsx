@@ -3,6 +3,7 @@ import { Vessel } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import VoyageDetails from '@/components/vessels/VoyageDetails';
 import SimpleVesselMap from '@/components/map/SimpleVesselMap';
+import AIDocumentGenerator from '@/components/vessels/AIDocumentGenerator';
 import axios from 'axios';
 import {
   Card,
@@ -763,136 +764,14 @@ export default function VesselDetail() {
                     <CardHeader className="pb-3">
                       <CardTitle className="flex items-center">
                         <FileText className="h-5 w-5 mr-2 text-primary" />
-                        Vessel Documents
+                        AI-Generated Vessel Documents
                       </CardTitle>
                       <CardDescription>
-                        Official documentation for this vessel - الوثائق الرسمية لهذه السفينة
+                        Comprehensive maritime documentation powered by AI analysis
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <Card>
-                          <CardContent className="p-4">
-                            <div className="flex items-start">
-                              <div className="bg-primary/10 p-2 rounded-md mr-3">
-                                <FileCheck className="h-6 w-6 text-primary" />
-                              </div>
-                              <div>
-                                <h3 className="font-medium">Cargo Manifest</h3>
-                                <p className="text-xs text-muted-foreground mt-1">Detailed inventory of cargo</p>
-                              </div>
-                            </div>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="w-full mt-3"
-                              onClick={() => generateVesselDocument('Cargo Manifest')}
-                              disabled={isGeneratingManifest}
-                            >
-                              <Download className="h-4 w-4 mr-2" />
-                              {isGeneratingManifest ? 'Generating...' : 'Generate & Download'}
-                            </Button>
-                          </CardContent>
-                        </Card>
-                        
-                        <Card>
-                          <CardContent className="p-4">
-                            <div className="flex items-start">
-                              <div className="bg-primary/10 p-2 rounded-md mr-3">
-                                <FileCheck className="h-6 w-6 text-primary" />
-                              </div>
-                              <div>
-                                <h3 className="font-medium">Bill of Lading</h3>
-                                <p className="text-xs text-muted-foreground mt-1">Receipt of freight services</p>
-                              </div>
-                            </div>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="w-full mt-3"
-                              onClick={() => generateVesselDocument('Bill of Lading')}
-                              disabled={isGeneratingManifest}
-                            >
-                              <Download className="h-4 w-4 mr-2" />
-                              {isGeneratingManifest ? 'Generating...' : 'Generate & Download'}
-                            </Button>
-                          </CardContent>
-                        </Card>
-                        
-                        <Card>
-                          <CardContent className="p-4">
-                            <div className="flex items-start">
-                              <div className="bg-primary/10 p-2 rounded-md mr-3">
-                                <FileCheck className="h-6 w-6 text-primary" />
-                              </div>
-                              <div>
-                                <h3 className="font-medium">Certificate of Origin</h3>
-                                <p className="text-xs text-muted-foreground mt-1">Proof of cargo origin</p>
-                              </div>
-                            </div>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="w-full mt-3"
-                              onClick={() => generateVesselDocument('Certificate of Origin')}
-                              disabled={isGeneratingManifest}
-                            >
-                              <Download className="h-4 w-4 mr-2" />
-                              {isGeneratingManifest ? 'Generating...' : 'Generate & Download'}
-                            </Button>
-                          </CardContent>
-                        </Card>
-                      </div>
-                      
-                      <Separator className="my-6" />
-                      
-                      <div>
-                        <h3 className="text-sm font-medium mb-4 flex items-center">
-                          <History className="h-4 w-4 mr-2 text-primary" />
-                          Document History
-                        </h3>
-                        
-                        <div className="text-sm">
-                          <div className="flex items-center justify-between py-3 border-b border-gray-100 dark:border-gray-800">
-                            <div className="flex items-center">
-                              <FileText className="h-4 w-4 mr-3 text-muted-foreground" />
-                              <span>Bill of Lading #OT-87654</span>
-                            </div>
-                            <div className="flex items-center">
-                              <span className="text-xs text-muted-foreground mr-3">Generated on Apr 15, 2023</span>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <Download className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-center justify-between py-3 border-b border-gray-100 dark:border-gray-800">
-                            <div className="flex items-center">
-                              <FileText className="h-4 w-4 mr-3 text-muted-foreground" />
-                              <span>Cargo Manifest #CM-12345</span>
-                            </div>
-                            <div className="flex items-center">
-                              <span className="text-xs text-muted-foreground mr-3">Generated on Apr 10, 2023</span>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <Download className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-center justify-between py-3">
-                            <div className="flex items-center">
-                              <FileText className="h-4 w-4 mr-3 text-muted-foreground" />
-                              <span>Certificate of Origin #CO-54321</span>
-                            </div>
-                            <div className="flex items-center">
-                              <span className="text-xs text-muted-foreground mr-3">Generated on Apr 10, 2023</span>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <Download className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                      <AIDocumentGenerator vessel={vessel} />
                     </CardContent>
                   </Card>
                 </TabsContent>
