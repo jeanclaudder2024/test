@@ -1,6 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { setupSupabaseAuth } from "./supabase-simple-auth";
-import { setupVite, serveStatic, log } from "./vite";
+import { log } from "./vite";
 
 const app = express();
 app.use(express.json());
@@ -68,10 +68,35 @@ app.use((req, res, next) => {
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
+  if (process.env.NODE_ENV === "development") {
+    try {
+      const { setupVite } = await import("./vite");
+      await setupVite(app, server);
+    } catch (error) {
+      console.log("Development mode: Vite setup skipped");
+    }
   } else {
-    serveStatic(app);
+    // Production mode: serve static files
+    const path = await import("path");
+    const fs = await import("fs");
+    
+    const staticPath = path.join(process.cwd(), "dist");
+    const indexPath = path.join(staticPath, "index.html");
+    
+    // Check if build files exist
+    if (fs.existsSync(staticPath)) {
+      app.use(express.static(staticPath));
+      app.get("*", (_req, res) => {
+        if (fs.existsSync(indexPath)) {
+          res.sendFile(indexPath);
+        } else {
+          res.status(404).send("Application not built");
+        }
+      });
+      log("Production static files served from /dist");
+    } else {
+      log("Warning: No built files found, serving API only");
+    }
   }
 
   // Server already started above - no need to start again
