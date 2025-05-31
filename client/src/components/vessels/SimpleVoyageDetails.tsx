@@ -41,12 +41,21 @@ export function SimpleVoyageDetails({ vessel, enhancedVesselData, voyageProgress
   const getPortName = (portIdOrName: number | string | null | undefined): string => {
     if (!portIdOrName) return 'Unknown Port';
     
-    if (typeof portIdOrName === 'string') {
+    // If it's already a port name (string that doesn't look like an ID)
+    if (typeof portIdOrName === 'string' && isNaN(Number(portIdOrName))) {
       return portIdOrName;
     }
     
-    const port = ports.find(p => p.id === portIdOrName);
-    return port ? port.name : 'Unknown Port';
+    // If we have ports data, try to find the port by ID
+    if (ports.length > 0) {
+      const port = ports.find(p => p.id === Number(portIdOrName) || p.name === portIdOrName);
+      if (port) {
+        return `${port.name}, ${port.country}`;
+      }
+    }
+    
+    // If it's a number but we can't find the port, show it as is
+    return typeof portIdOrName === 'string' ? portIdOrName : `Port ID: ${portIdOrName}`;
   };
 
   // Calculate basic progress based on departure date and ETA

@@ -528,42 +528,10 @@ export default function VesselDetail() {
                 </p>
               </div>
               
-              <div className="flex space-x-2 mt-4 md:mt-0">
-                <Button 
-                  variant="outline" 
-                  className="bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white"
-                  onClick={() => setIsUpdatingLocation(!isUpdatingLocation)}
-                >
-                  <MapPin className="mr-2 h-4 w-4" />
-                  {isUpdatingLocation ? 'Cancel' : 'Update Location'}
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white"
-                  onClick={() => generateVesselDocument('Cargo Manifest')}
-                  disabled={isGeneratingManifest}
-                >
-                  {isGeneratingManifest ? (
-                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-t-2 border-b-2 border-white"></div>
-                  ) : (
-                    <FileText className="mr-2 h-4 w-4" />
-                  )}
-                  Generate Manifest
-                </Button>
-              </div>
+
             </div>
             
-            {isUpdatingLocation && (
-              <div className="mt-6 p-4 bg-white/10 rounded-md">
-                <h3 className="text-white text-lg font-medium mb-4">Update Vessel Location</h3>
-                <LocationUpdateForm 
-                  vesselId={vessel.id}
-                  initialLat={vessel.currentLat}
-                  initialLng={vessel.currentLng}
-                  onSuccess={handleLocationUpdateSuccess}
-                />
-              </div>
-            )}
+
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
