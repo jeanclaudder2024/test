@@ -983,25 +983,35 @@ export default function VesselDetail() {
                 <CardContent>
                   <div className="flex flex-col space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Cargo Type</span>
+                      <span className="text-sm text-muted-foreground flex items-center">
+                        🛢️ Oil Type / Cargo Type
+                      </span>
                       <span className="font-medium">
-                        {vessel.cargoType || 'N/A'}
+                        {vessel.oilType || vessel.cargoType || 'N/A'}
                       </span>
                     </div>
                     
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Quantity</span>
+                      <span className="text-sm text-muted-foreground flex items-center">
+                        📊 Quantity
+                      </span>
                       <span className="font-medium">
-                        {vessel.cargoCapacity 
+                        {vessel.quantity 
+                          ? `${parseFloat(vessel.quantity).toLocaleString()} barrels`
+                          : vessel.cargoCapacity 
                           ? `${vessel.cargoCapacity.toLocaleString()} barrels` 
                           : 'N/A'}
                       </span>
                     </div>
                     
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Value (est.)</span>
+                      <span className="text-sm text-muted-foreground flex items-center">
+                        💰 Value
+                      </span>
                       <span className="font-medium">
-                        {vessel.cargoType && vessel.cargoType.toLowerCase().includes('crude') 
+                        {vessel.dealValue 
+                          ? `$${parseFloat(vessel.dealValue).toLocaleString()} USD`
+                          : vessel.cargoType && vessel.cargoType.toLowerCase().includes('crude') 
                           ? '$45M - $60M USD'
                           : vessel.cargoType && vessel.cargoType.toLowerCase().includes('gas')
                           ? '$30M - $40M USD'
@@ -1010,10 +1020,55 @@ export default function VesselDetail() {
                     </div>
                     
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Loading Status</span>
-                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                        Fully Loaded
-                      </Badge>
+                      <span className="text-sm text-muted-foreground flex items-center">
+                        ⚓ Loading Port
+                      </span>
+                      <span className="font-medium">
+                        {vessel.loadingPort || getDeparturePortName(vessel.departurePort) || 'N/A'}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground flex items-center">
+                        ➕ Price
+                      </span>
+                      <span className="font-medium">
+                        {vessel.price 
+                          ? `$${parseFloat(vessel.price).toFixed(2)} per barrel`
+                          : 'N/A'}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground flex items-center">
+                        📈 Market Price
+                      </span>
+                      <span className="font-medium">
+                        {vessel.marketPrice 
+                          ? `$${parseFloat(vessel.marketPrice).toFixed(2)} per barrel`
+                          : 'N/A'}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground flex items-center">
+                        🏢 Source (اسم الشركة)
+                      </span>
+                      <span className="font-medium">
+                        {vessel.sourceCompany || vessel.oilSource || vessel.sellerName || 'N/A'}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground flex items-center">
+                        🏭 Refinery
+                      </span>
+                      <span className="font-medium">
+                        {vessel.targetRefinery || 
+                         (vessel.destinationPort && vessel.destinationPort.startsWith('REF:') 
+                           ? vessel.destinationPort.split(':')[2] 
+                           : 'N/A')}
+                      </span>
                     </div>
                   </div>
                 </CardContent>
