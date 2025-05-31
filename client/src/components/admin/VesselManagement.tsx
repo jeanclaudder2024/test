@@ -468,7 +468,31 @@ export default function VesselManagement() {
         operatorName: data.operatorName || "",
         buyerName: data.buyerName || "",
         sellerName: data.sellerName || "",
-        oilSource: data.oilSource || ""
+        oilSource: data.oilSource || "",
+        
+        // Deal Information - populate with AI generated data
+        oilType: data.oilType || "Crude Oil",
+        quantity: data.quantity?.toString() || "750000",
+        dealValue: data.dealValue?.toString() || "52500000",
+        loadingPort: data.loadingPort || "Ras Tanura",
+        price: data.price?.toString() || "70.00",
+        marketPrice: data.marketPrice?.toString() || "72.50",
+        sourceCompany: data.sourceCompany || "Saudi Aramco",
+        targetRefinery: data.targetRefinery || "Rotterdam Refinery",
+        shippingType: data.shippingType || "FOB",
+        routeDistance: data.routeDistance?.toString() || "8450",
+        
+        // Technical Specifications - populate with AI generated data
+        callsign: data.callsign || "9V" + Math.random().toString(36).substr(2, 4).toUpperCase(),
+        course: data.course?.toString() || Math.floor(Math.random() * 360).toString(),
+        navStatus: data.navStatus || "Under way using engine",
+        draught: data.draught?.toString() || (12 + Math.random() * 8).toFixed(1),
+        length: data.length?.toString() || (250 + Math.random() * 100).toFixed(1),
+        width: data.width?.toString() || (40 + Math.random() * 20).toFixed(1),
+        enginePower: data.enginePower?.toString() || (20000 + Math.random() * 15000).toFixed(0),
+        fuelConsumption: data.fuelConsumption?.toString() || (80 + Math.random() * 40).toFixed(1),
+        crewSize: data.crewSize?.toString() || (18 + Math.random() * 12).toFixed(0),
+        grossTonnage: data.grossTonnage?.toString() || (75000 + Math.random() * 25000).toFixed(0)
       }));
       toast({ 
         title: "AI Data Generated", 
@@ -513,7 +537,31 @@ export default function VesselManagement() {
       sellerName: vessel.sellerName || "",
       ownerName: vessel.ownerName || "",
       operatorName: vessel.operatorName || "",
-      oilSource: vessel.oilSource || ""
+      oilSource: vessel.oilSource || "",
+      
+      // Deal Information
+      oilType: (vessel as any).oilType || "",
+      quantity: (vessel as any).quantity?.toString() || "",
+      dealValue: (vessel as any).dealValue?.toString() || "",
+      loadingPort: (vessel as any).loadingPort || "",
+      price: (vessel as any).price?.toString() || "",
+      marketPrice: (vessel as any).marketPrice?.toString() || "",
+      sourceCompany: (vessel as any).sourceCompany || "",
+      targetRefinery: (vessel as any).targetRefinery || "",
+      shippingType: (vessel as any).shippingType || "",
+      routeDistance: (vessel as any).routeDistance?.toString() || "",
+      
+      // Technical Specifications
+      callsign: (vessel as any).callsign || "",
+      course: (vessel as any).course?.toString() || "",
+      navStatus: (vessel as any).navStatus || "",
+      draught: (vessel as any).draught?.toString() || "",
+      length: (vessel as any).length?.toString() || "",
+      width: (vessel as any).width?.toString() || "",
+      enginePower: (vessel as any).enginePower?.toString() || "",
+      fuelConsumption: (vessel as any).fuelConsumption?.toString() || "",
+      crewSize: (vessel as any).crewSize?.toString() || "",
+      grossTonnage: (vessel as any).grossTonnage?.toString() || ""
     });
     setIsDialogOpen(true);
   };
@@ -686,10 +734,11 @@ export default function VesselManagement() {
             
             <form onSubmit={handleSubmit} className="space-y-6">
               <Tabs defaultValue="basic" className="w-full">
-                <TabsList className="grid w-full grid-cols-4">
+                <TabsList className="grid w-full grid-cols-5">
                   <TabsTrigger value="basic">Basic Info</TabsTrigger>
+                  <TabsTrigger value="voyage">Voyage</TabsTrigger>
                   <TabsTrigger value="technical">Technical</TabsTrigger>
-                  <TabsTrigger value="voyage">Voyage Data</TabsTrigger>
+                  <TabsTrigger value="deal">Deal Info</TabsTrigger>
                   <TabsTrigger value="commercial">Commercial</TabsTrigger>
                 </TabsList>
 
@@ -1007,6 +1056,258 @@ export default function VesselManagement() {
                           value={formData.oilSource}
                           onChange={(e) => setFormData(prev => ({ ...prev, oilSource: e.target.value }))}
                           placeholder="Source refinery or field"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                {/* Technical Specifications Tab */}
+                <TabsContent value="technical" className="space-y-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">Technical Specifications</CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="callsign">Radio Callsign</Label>
+                        <Input
+                          id="callsign"
+                          value={formData.callsign}
+                          onChange={(e) => setFormData(prev => ({ ...prev, callsign: e.target.value }))}
+                          placeholder="e.g., 9V7890"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="course">Course/Heading (degrees)</Label>
+                        <Input
+                          id="course"
+                          type="number"
+                          min="0"
+                          max="360"
+                          value={formData.course}
+                          onChange={(e) => setFormData(prev => ({ ...prev, course: e.target.value }))}
+                          placeholder="0-360 degrees"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="navStatus">Navigation Status</Label>
+                        <Select value={formData.navStatus} onValueChange={(value) => setFormData(prev => ({ ...prev, navStatus: value }))}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select navigation status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Under way using engine">Under way using engine</SelectItem>
+                            <SelectItem value="At anchor">At anchor</SelectItem>
+                            <SelectItem value="Not under command">Not under command</SelectItem>
+                            <SelectItem value="Restricted manoeuvrability">Restricted manoeuvrability</SelectItem>
+                            <SelectItem value="Moored">Moored</SelectItem>
+                            <SelectItem value="Aground">Aground</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="draught">Current Draught (meters)</Label>
+                        <Input
+                          id="draught"
+                          type="number"
+                          step="0.1"
+                          value={formData.draught}
+                          onChange={(e) => setFormData(prev => ({ ...prev, draught: e.target.value }))}
+                          placeholder="e.g., 14.5"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="length">Length (meters)</Label>
+                        <Input
+                          id="length"
+                          type="number"
+                          step="0.1"
+                          value={formData.length}
+                          onChange={(e) => setFormData(prev => ({ ...prev, length: e.target.value }))}
+                          placeholder="e.g., 280.5"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="width">Width/Beam (meters)</Label>
+                        <Input
+                          id="width"
+                          type="number"
+                          step="0.1"
+                          value={formData.width}
+                          onChange={(e) => setFormData(prev => ({ ...prev, width: e.target.value }))}
+                          placeholder="e.g., 45.2"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="enginePower">Engine Power (HP)</Label>
+                        <Input
+                          id="enginePower"
+                          type="number"
+                          value={formData.enginePower}
+                          onChange={(e) => setFormData(prev => ({ ...prev, enginePower: e.target.value }))}
+                          placeholder="e.g., 25000"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="fuelConsumption">Fuel Consumption (tons/day)</Label>
+                        <Input
+                          id="fuelConsumption"
+                          type="number"
+                          step="0.1"
+                          value={formData.fuelConsumption}
+                          onChange={(e) => setFormData(prev => ({ ...prev, fuelConsumption: e.target.value }))}
+                          placeholder="e.g., 85.5"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="crewSize">Crew Size</Label>
+                        <Input
+                          id="crewSize"
+                          type="number"
+                          value={formData.crewSize}
+                          onChange={(e) => setFormData(prev => ({ ...prev, crewSize: e.target.value }))}
+                          placeholder="e.g., 22"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="grossTonnage">Gross Tonnage</Label>
+                        <Input
+                          id="grossTonnage"
+                          type="number"
+                          value={formData.grossTonnage}
+                          onChange={(e) => setFormData(prev => ({ ...prev, grossTonnage: e.target.value }))}
+                          placeholder="e.g., 85000"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                {/* Deal Information Tab */}
+                <TabsContent value="deal" className="space-y-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">Deal & Cargo Information</CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="oilType">Oil/Cargo Type</Label>
+                        <Select value={formData.oilType} onValueChange={(value) => setFormData(prev => ({ ...prev, oilType: value }))}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select oil type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Crude Oil">Crude Oil</SelectItem>
+                            <SelectItem value="Brent Crude">Brent Crude</SelectItem>
+                            <SelectItem value="WTI Crude">WTI Crude</SelectItem>
+                            <SelectItem value="Heavy Fuel Oil">Heavy Fuel Oil</SelectItem>
+                            <SelectItem value="Marine Gas Oil">Marine Gas Oil</SelectItem>
+                            <SelectItem value="Jet Fuel">Jet Fuel</SelectItem>
+                            <SelectItem value="Gasoline">Gasoline</SelectItem>
+                            <SelectItem value="Diesel">Diesel</SelectItem>
+                            <SelectItem value="Naphtha">Naphtha</SelectItem>
+                            <SelectItem value="LPG">LPG</SelectItem>
+                            <SelectItem value="LNG">LNG</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="quantity">Quantity (barrels/tons)</Label>
+                        <Input
+                          id="quantity"
+                          type="number"
+                          step="0.01"
+                          value={formData.quantity}
+                          onChange={(e) => setFormData(prev => ({ ...prev, quantity: e.target.value }))}
+                          placeholder="e.g., 750000"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="dealValue">Deal Value (USD)</Label>
+                        <Input
+                          id="dealValue"
+                          type="number"
+                          step="0.01"
+                          value={formData.dealValue}
+                          onChange={(e) => setFormData(prev => ({ ...prev, dealValue: e.target.value }))}
+                          placeholder="e.g., 45000000"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="price">Price per Unit (USD)</Label>
+                        <Input
+                          id="price"
+                          type="number"
+                          step="0.01"
+                          value={formData.price}
+                          onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
+                          placeholder="e.g., 72.50"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="marketPrice">Current Market Price (USD)</Label>
+                        <Input
+                          id="marketPrice"
+                          type="number"
+                          step="0.01"
+                          value={formData.marketPrice}
+                          onChange={(e) => setFormData(prev => ({ ...prev, marketPrice: e.target.value }))}
+                          placeholder="e.g., 74.20"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="loadingPort">Loading Port</Label>
+                        <Input
+                          id="loadingPort"
+                          value={formData.loadingPort}
+                          onChange={(e) => setFormData(prev => ({ ...prev, loadingPort: e.target.value }))}
+                          placeholder="e.g., Ras Tanura"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="sourceCompany">Source Company</Label>
+                        <Input
+                          id="sourceCompany"
+                          value={formData.sourceCompany}
+                          onChange={(e) => setFormData(prev => ({ ...prev, sourceCompany: e.target.value }))}
+                          placeholder="e.g., Saudi Aramco"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="targetRefinery">Target Refinery</Label>
+                        <Input
+                          id="targetRefinery"
+                          value={formData.targetRefinery}
+                          onChange={(e) => setFormData(prev => ({ ...prev, targetRefinery: e.target.value }))}
+                          placeholder="e.g., Rotterdam Refinery"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="shippingType">Shipping Terms</Label>
+                        <Select value={formData.shippingType} onValueChange={(value) => setFormData(prev => ({ ...prev, shippingType: value }))}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select shipping terms" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="FOB">FOB (Free on Board)</SelectItem>
+                            <SelectItem value="CIF">CIF (Cost, Insurance, Freight)</SelectItem>
+                            <SelectItem value="CFR">CFR (Cost and Freight)</SelectItem>
+                            <SelectItem value="In Tank">In Tank</SelectItem>
+                            <SelectItem value="Ex Ship">Ex Ship</SelectItem>
+                            <SelectItem value="DES">DES (Delivered Ex Ship)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="routeDistance">Route Distance (nautical miles)</Label>
+                        <Input
+                          id="routeDistance"
+                          type="number"
+                          step="0.1"
+                          value={formData.routeDistance}
+                          onChange={(e) => setFormData(prev => ({ ...prev, routeDistance: e.target.value }))}
+                          placeholder="e.g., 8450.5"
                         />
                       </div>
                     </CardContent>
