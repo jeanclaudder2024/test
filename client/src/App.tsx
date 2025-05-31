@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 // Dashboard page removed as requested
 import Vessels from "@/pages/Vessels";
-import VesselDetail from "@/pages/VesselDetailNew";
+import VesselDetail from "@/pages/VesselDetail";
 import VesselDocuments from "@/pages/VesselDocuments";
 import Refineries from "@/pages/Refineries";
 import RefineryDetail from "@/pages/RefineryDetail";

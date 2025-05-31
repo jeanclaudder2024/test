@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit, Trash2, Ship, Search, Filter, Download, Upload, MapPin, Calendar, Anchor, Zap, Sparkles } from "lucide-react";
+import { Plus, Edit, Trash2, Ship, Search, Filter, Download, Upload, MapPin, Calendar, Anchor, Zap, Sparkles, RefreshCw } from "lucide-react";
 import MapSelector from "@/components/MapSelector";
 
 interface Vessel {
@@ -436,6 +436,34 @@ export default function VesselManagement() {
     }
   });
 
+  // Update vessel deals mutation
+  const updateVesselDealsMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch("/api/admin/update-vessel-deals", {
+        method: "POST"
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to update vessel deals");
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/vessels"] });
+      toast({ 
+        title: "Deal Information Updated", 
+        description: `Successfully updated ${data.updatedCount} vessels with complete deal information`
+      });
+    },
+    onError: (error) => {
+      toast({ 
+        title: "Update Failed", 
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
   // Generate AI vessel data mutation
   const generateAIDataMutation = useMutation({
     mutationFn: async () => {
@@ -470,17 +498,53 @@ export default function VesselManagement() {
         sellerName: data.sellerName || "",
         oilSource: data.oilSource || "",
         
-        // Deal Information - populate with AI generated data
-        oilType: data.oilType || "Crude Oil",
-        quantity: data.quantity?.toString() || "750000",
-        dealValue: data.dealValue?.toString() || "52500000",
-        loadingPort: data.loadingPort || "Ras Tanura",
-        price: data.price?.toString() || "70.00",
-        marketPrice: data.marketPrice?.toString() || "72.50",
-        sourceCompany: data.sourceCompany || "Saudi Aramco",
-        targetRefinery: data.targetRefinery || "Rotterdam Refinery",
-        shippingType: data.shippingType || "FOB",
-        routeDistance: data.routeDistance?.toString() || "8450",
+        // Deal Information - populate with realistic AI generated data
+        oilType: (() => {
+          const oilTypes = ["Crude Oil", "Light Sweet Crude", "Heavy Crude", "Brent Crude", "WTI Crude", "Diesel", "Gasoline", "Jet Fuel"];
+          return data.oilType || oilTypes[Math.floor(Math.random() * oilTypes.length)];
+        })(),
+        quantity: (() => {
+          const baseQuantity = Math.floor(Math.random() * 1000000) + 500000; // 500K-1.5M barrels
+          return data.quantity?.toString() || baseQuantity.toString();
+        })(),
+        dealValue: (() => {
+          const pricePerBarrel = 65 + Math.random() * 20; // $65-85 per barrel
+          const quantity = Math.floor(Math.random() * 1000000) + 500000;
+          const totalValue = Math.floor(pricePerBarrel * quantity);
+          return data.dealValue?.toString() || totalValue.toString();
+        })(),
+        loadingPort: (() => {
+          const loadingPorts = ["Ras Tanura", "Kharg Island", "Basra Oil Terminal", "Kuwait Oil Pier", "Fujairah", "Rotterdam"];
+          return data.loadingPort || loadingPorts[Math.floor(Math.random() * loadingPorts.length)];
+        })(),
+        price: (() => {
+          const price = (65 + Math.random() * 20).toFixed(2); // $65-85 per barrel
+          return data.price?.toString() || price;
+        })(),
+        marketPrice: (() => {
+          const basePrice = 65 + Math.random() * 20;
+          const marketPrice = (basePrice + Math.random() * 4 - 2).toFixed(2); // Slightly above/below spot price
+          return data.marketPrice?.toString() || marketPrice;
+        })(),
+        sourceCompany: (() => {
+          const sourceCompanies = ["Saudi Aramco", "National Iranian Oil Company", "Iraq Oil Ministry", "Kuwait Petroleum", "ADNOC", "Shell", "BP"];
+          return data.sourceCompany || sourceCompanies[Math.floor(Math.random() * sourceCompanies.length)];
+        })(),
+        targetRefinery: (() => {
+          if (refineries && refineries.length > 0) {
+            const randomRefinery = refineries[Math.floor(Math.random() * refineries.length)];
+            return randomRefinery.name;
+          }
+          return data.targetRefinery || "Rotterdam Refinery";
+        })(),
+        shippingType: (() => {
+          const shippingTypes = ["FOB", "CIF", "CFR", "EXW", "DDP"];
+          return data.shippingType || shippingTypes[Math.floor(Math.random() * shippingTypes.length)];
+        })(),
+        routeDistance: (() => {
+          const distance = Math.floor(Math.random() * 12000) + 3000; // 3,000-15,000 nautical miles
+          return data.routeDistance?.toString() || distance.toString();
+        })(),
         
         // Generate departure and destination ports from available ports
         departurePort: (() => {
@@ -751,14 +815,25 @@ export default function VesselManagement() {
           </h2>
           <p className="text-gray-600 mt-1">Comprehensive vessel tracking and management system</p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => resetForm()} className="bg-blue-600 hover:bg-blue-700">
-              <Plus className="h-4 w-4 mr-2" />
-              Add New Vessel
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+        <div className="flex gap-2">
+          <Button 
+            onClick={() => updateVesselDealsMutation.mutate()}
+            disabled={updateVesselDealsMutation.isPending}
+            variant="outline"
+            className="bg-orange-50 border-orange-200 text-orange-700 hover:bg-orange-100"
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${updateVesselDealsMutation.isPending ? 'animate-spin' : ''}`} />
+            {updateVesselDealsMutation.isPending ? "Updating..." : "Fix Deal Info"}
+          </Button>
+          
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={() => resetForm()} className="bg-blue-600 hover:bg-blue-700">
+                <Plus className="h-4 w-4 mr-2" />
+                Add New Vessel
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <div className="flex justify-between items-center">
                 <DialogTitle className="text-xl font-semibold">
@@ -1391,6 +1466,7 @@ export default function VesselManagement() {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
 
         {/* Map Selector Dialog */}
         <Dialog open={showMapSelector} onOpenChange={setShowMapSelector}>
