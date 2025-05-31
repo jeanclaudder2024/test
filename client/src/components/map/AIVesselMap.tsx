@@ -358,8 +358,8 @@ export default function AIVesselMap({ vessel, initialLat, initialLng }: AIVessel
 
   return (
     <div className="space-y-4">
-      {/* Map Controls */}
-      <div className="flex items-center justify-between">
+      {/* Enhanced Map Controls */}
+      <div className="flex flex-wrap items-center gap-2 mb-4">
         <div className="flex items-center space-x-2">
           <Button
             size="sm"
@@ -386,6 +386,8 @@ export default function AIVesselMap({ vessel, initialLat, initialLng }: AIVessel
             Terrain
           </Button>
         </div>
+
+        <Separator orientation="vertical" className="h-6" />
         
         <Button
           size="sm"
@@ -395,6 +397,41 @@ export default function AIVesselMap({ vessel, initialLat, initialLng }: AIVessel
           <Brain className="h-4 w-4 mr-1" />
           AI Insights
         </Button>
+
+        <Button
+          size="sm"
+          variant={showAllPorts ? 'default' : 'outline'}
+          onClick={() => setShowAllPorts(!showAllPorts)}
+        >
+          <Anchor className="h-4 w-4 mr-1" />
+          {showAllPorts ? 'Nearby Ports' : 'All Ports'}
+        </Button>
+
+        <Button
+          size="sm"
+          variant={showNearbyVessels ? 'default' : 'outline'}
+          onClick={() => setShowNearbyVessels(!showNearbyVessels)}
+        >
+          <Ship className="h-4 w-4 mr-1" />
+          Vessels ({nearbyVessels.length})
+        </Button>
+
+        <Separator orientation="vertical" className="h-6" />
+
+        <div className="flex items-center space-x-2">
+          <span className="text-sm font-medium">Search Radius:</span>
+          {[100, 250, 500, 1000].map((radius) => (
+            <Button
+              key={radius}
+              size="sm"
+              variant={searchRadius === radius ? 'default' : 'outline'}
+              onClick={() => setSearchRadius(radius)}
+              className="px-2"
+            >
+              {radius}km
+            </Button>
+          ))}
+        </div>
       </div>
 
       {/* AI Analysis Panel */}
@@ -456,8 +493,8 @@ export default function AIVesselMap({ vessel, initialLat, initialLng }: AIVessel
             attribution='&copy; OpenStreetMap contributors'
           />
 
-          {/* Vessel Marker */}
-          <Marker position={vesselPosition} icon={vesselIcon}>
+          {/* Current Vessel Marker */}
+          <Marker position={vesselPosition} icon={getVesselIcon(vessel.vesselType, true)}>
             <Popup>
               <div className="text-sm space-y-2 max-w-[200px]">
                 <div className="font-semibold text-base flex items-center">
@@ -469,15 +506,78 @@ export default function AIVesselMap({ vessel, initialLat, initialLng }: AIVessel
                   <div>MMSI: {vessel.mmsi}</div>
                   <div>Type: {vessel.vesselType}</div>
                   <div>Flag: {vessel.flag}</div>
+                  {vessel.speed && <div>Speed: {vessel.speed} knots</div>}
+                  {vessel.course && <div>Course: {vessel.course}°</div>}
+                  {vessel.status && <div>Status: {vessel.status}</div>}
                 </div>
-                {vessel.speed && (
-                  <div className="text-xs">
-                    <Badge variant="secondary">Speed: {vessel.speed} knots</Badge>
-                  </div>
-                )}
+                <Badge variant="destructive" className="text-xs">Current Vessel</Badge>
               </div>
             </Popup>
           </Marker>
+
+          {/* Nearby Vessels */}
+          {showNearbyVessels && nearbyVessels.map((nearbyVessel) => (
+            <Marker
+              key={nearbyVessel.id}
+              position={[parseFloat(nearbyVessel.currentLat), parseFloat(nearbyVessel.currentLng)]}
+              icon={getVesselIcon(nearbyVessel.vesselType, false)}
+            >
+              <Popup>
+                <div className="text-sm space-y-2 max-w-[200px]">
+                  <div className="font-semibold text-base flex items-center">
+                    <Ship className="h-4 w-4 mr-1.5 text-green-600" />
+                    {nearbyVessel.name}
+                  </div>
+                  <div className="space-y-1 text-xs">
+                    <div>IMO: {nearbyVessel.imo}</div>
+                    <div>MMSI: {nearbyVessel.mmsi}</div>
+                    <div>Type: {nearbyVessel.vesselType}</div>
+                    <div>Flag: {nearbyVessel.flag}</div>
+                    {nearbyVessel.speed && <div>Speed: {nearbyVessel.speed} knots</div>}
+                    {nearbyVessel.status && <div>Status: {nearbyVessel.status}</div>}
+                    <div>Distance: {calculateDistance(
+                      vesselPosition[0], vesselPosition[1],
+                      parseFloat(nearbyVessel.currentLat), parseFloat(nearbyVessel.currentLng)
+                    ).toFixed(1)} km</div>
+                  </div>
+                  <Badge variant="secondary" className="text-xs">Nearby Vessel</Badge>
+                </div>
+              </Popup>
+            </Marker>
+          ))}
+
+          {/* All Ports or Nearby Ports */}
+          {(showAllPorts ? allPorts : nearbyPorts).map((port) => (
+            <Marker
+              key={`port-${port.id}`}
+              position={[parseFloat(port.lat), parseFloat(port.lng)]}
+              icon={portIcon(port, port.id === departurePort?.id || port.id === destinationPort?.id)}
+            >
+              <Popup>
+                <div className="text-sm space-y-2 max-w-[200px]">
+                  <div className="font-semibold text-base flex items-center">
+                    <Anchor className="h-4 w-4 mr-1.5 text-green-600" />
+                    {port.name}
+                  </div>
+                  <div className="space-y-1 text-xs">
+                    <div>Country: {port.country}</div>
+                    {port.type && <div>Type: {port.type}</div>}
+                    {port.capacity && <div>Capacity: {port.capacity.toLocaleString()} TEU</div>}
+                    {port.region && <div>Region: {port.region}</div>}
+                    <div>Distance: {calculateDistance(
+                      vesselPosition[0], vesselPosition[1],
+                      parseFloat(port.lat), parseFloat(port.lng)
+                    ).toFixed(1)} km</div>
+                  </div>
+                  {(port.id === departurePort?.id || port.id === destinationPort?.id) && (
+                    <Badge variant="outline" className="text-xs">
+                      {port.id === departurePort?.id ? 'Departure' : 'Destination'}
+                    </Badge>
+                  )}
+                </div>
+              </Popup>
+            </Marker>
+          ))}
 
           {/* Voyage Route */}
           {voyageRoute.length > 1 && (
@@ -546,6 +646,61 @@ export default function AIVesselMap({ vessel, initialLat, initialLng }: AIVessel
                 </div>
               </Popup>
             </Marker>
+          )}
+
+          {/* Nearby Refineries */}
+          {nearbyRefineries.map((refinery) => (
+            <Marker
+              key={`refinery-${refinery.id}`}
+              position={[parseFloat(refinery.lat), parseFloat(refinery.lng)]}
+              icon={refineryIcon}
+            >
+              <Popup>
+                <div className="text-sm space-y-2 max-w-[200px]">
+                  <div className="font-semibold text-base flex items-center">
+                    <Factory className="h-4 w-4 mr-1.5 text-red-600" />
+                    {refinery.name}
+                  </div>
+                  <div className="space-y-1 text-xs">
+                    <div>Country: {refinery.country}</div>
+                    {refinery.capacity && <div>Capacity: {refinery.capacity.toLocaleString()} bbl/day</div>}
+                    <div>Distance: {calculateDistance(
+                      vesselPosition[0], vesselPosition[1],
+                      parseFloat(refinery.lat), parseFloat(refinery.lng)
+                    ).toFixed(1)} km</div>
+                  </div>
+                  <Badge variant="destructive" className="text-xs">Oil Refinery</Badge>
+                </div>
+              </Popup>
+            </Marker>
+          ))}
+
+          {/* Search Radius Circle */}
+          <Circle
+            center={vesselPosition}
+            radius={searchRadius * 1000} // Convert km to meters
+            pathOptions={{
+              color: '#3B82F6',
+              weight: 2,
+              opacity: 0.6,
+              fillOpacity: 0.1,
+              dashArray: '5, 10'
+            }}
+          />
+
+          {/* Vessel Proximity Circle (100km) */}
+          {showNearbyVessels && (
+            <Circle
+              center={vesselPosition}
+              radius={100000} // 100km in meters
+              pathOptions={{
+                color: '#10B981',
+                weight: 1,
+                opacity: 0.4,
+                fillOpacity: 0.05,
+                dashArray: '3, 6'
+              }}
+            />
           )}
 
           {/* Nearby Ports */}
