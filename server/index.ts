@@ -80,22 +80,50 @@ app.use((req, res, next) => {
     const path = await import("path");
     const fs = await import("fs");
     
-    const staticPath = path.join(process.cwd(), "dist");
-    const indexPath = path.join(staticPath, "index.html");
+    // Try multiple possible static file locations
+    const possiblePaths = [
+      path.join(process.cwd(), "dist", "client"),
+      path.join(process.cwd(), "client", "dist"),
+      path.join(process.cwd(), "dist")
+    ];
     
-    // Check if build files exist
-    if (fs.existsSync(staticPath)) {
+    let staticPath = null;
+    let indexPath = null;
+    
+    for (const testPath of possiblePaths) {
+      const testIndex = path.join(testPath, "index.html");
+      if (fs.existsSync(testIndex)) {
+        staticPath = testPath;
+        indexPath = testIndex;
+        break;
+      }
+    }
+    
+    if (staticPath && indexPath) {
       app.use(express.static(staticPath));
       app.get("*", (_req, res) => {
-        if (fs.existsSync(indexPath)) {
-          res.sendFile(indexPath);
-        } else {
-          res.status(404).send("Application not built");
-        }
+        res.sendFile(indexPath);
       });
-      log("Production static files served from /dist");
+      log(`Production static files served from ${staticPath}`);
     } else {
-      log("Warning: No built files found, serving API only");
+      // List available directories for debugging
+      const currentDir = fs.readdirSync(process.cwd());
+      log(`Available directories: ${currentDir.join(", ")}`);
+      
+      // Serve basic response
+      app.get("*", (_req, res) => {
+        res.status(200).send(`
+          <html>
+            <head><title>Oil Vessel Tracker</title></head>
+            <body>
+              <h1>Oil Vessel Tracking Platform</h1>
+              <p>API is running. Static files not found.</p>
+              <p>Available directories: ${currentDir.join(", ")}</p>
+            </body>
+          </html>
+        `);
+      });
+      log("Serving basic HTML response - static files not found");
     }
   }
 
