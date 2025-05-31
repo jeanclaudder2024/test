@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Vessel } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import VoyageDetails from '@/components/vessels/VoyageDetails';
-import AIVesselMap from '@/components/map/AIVesselMap';
+import SimpleVesselMap from '@/components/map/SimpleVesselMap';
 import axios from 'axios';
 import {
   Card,
@@ -709,11 +709,7 @@ export default function VesselDetail() {
                     </CardHeader>
                     <CardContent className="p-4">
                       {vessel.currentLat && vessel.currentLng ? (
-                        <AIVesselMap 
-                          vessel={vessel}
-                          initialLat={vessel.currentLat}
-                          initialLng={vessel.currentLng}
-                        />
+                        <SimpleVesselMap vessel={vessel} />
                       ) : (
                         <div className="h-96 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
                           <div className="text-center text-muted-foreground">
