@@ -1078,7 +1078,7 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                         <span className="ml-2 text-xs text-gray-500">
                           {(vessel as any).shippingType === 'FOB' ? '(Free On Board)' : 
                            (vessel as any).shippingType === 'CIF' ? '(Cost, Insurance, Freight)' : 
-                           vessel.shippingType === 'In Tank' ? '(In Tank Storage)' : ''}
+                           (vessel as any).shippingType === 'In Tank' ? '(In Tank Storage)' : ''}
                         </span>
                       )}
                     </p>
