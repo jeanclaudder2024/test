@@ -5755,61 +5755,6 @@ Keep the description professional, informative, and around 150-200 words. Focus 
     }
   });
 
-  // Update all vessels with complete deal information
-  app.post("/api/admin/update-vessel-deals", async (req: Request, res: Response) => {
-    try {
-      const vessels = await storage.getVessels();
-      const ports = await storage.getPorts();
-      const refineries = await storage.getRefineries();
-      
-      let updatedCount = 0;
-      
-      for (const vessel of vessels) {
-        // Check if vessel needs deal data update
-        const needsUpdate = !vessel.quantity || !vessel.dealValue || !vessel.price || !vessel.oilType;
-        
-        if (needsUpdate) {
-          // Generate realistic deal data
-          const oilTypes = ["Crude Oil", "Light Sweet Crude", "Heavy Crude", "Brent Crude", "WTI Crude", "Diesel", "Gasoline", "Jet Fuel"];
-          const sourceCompanies = ["Saudi Aramco", "National Iranian Oil Company", "Iraq Oil Ministry", "Kuwait Petroleum", "ADNOC", "Shell", "BP"];
-          const shippingTypes = ["FOB", "CIF", "CFR", "EXW", "DDP"];
-          const loadingPorts = ["Ras Tanura", "Kharg Island", "Basra Oil Terminal", "Kuwait Oil Pier", "Fujairah", "Rotterdam"];
-          
-          const pricePerBarrel = 65 + Math.random() * 20; // $65-85 per barrel
-          const quantity = Math.floor(Math.random() * 1000000) + 500000; // 500K-1.5M barrels
-          const totalValue = Math.floor(pricePerBarrel * quantity);
-          
-          const updateData = {
-            oilType: vessel.oilType || oilTypes[Math.floor(Math.random() * oilTypes.length)],
-            quantity: vessel.quantity || quantity.toString(),
-            dealValue: vessel.dealValue || totalValue.toString(),
-            price: vessel.price || pricePerBarrel.toFixed(2),
-            marketPrice: vessel.marketPrice || (pricePerBarrel + Math.random() * 4 - 2).toFixed(2),
-            sourceCompany: vessel.sourceCompany || sourceCompanies[Math.floor(Math.random() * sourceCompanies.length)],
-            loadingPort: vessel.loadingPort || loadingPorts[Math.floor(Math.random() * loadingPorts.length)],
-            shippingType: vessel.shippingType || shippingTypes[Math.floor(Math.random() * shippingTypes.length)],
-            routeDistance: vessel.routeDistance || (Math.floor(Math.random() * 12000) + 3000).toString(),
-            targetRefinery: vessel.targetRefinery || (refineries.length > 0 ? refineries[Math.floor(Math.random() * refineries.length)].name : "Rotterdam Refinery"),
-            buyerName: vessel.buyerName || "Shell Trading",
-            sellerName: vessel.sellerName || sourceCompanies[Math.floor(Math.random() * sourceCompanies.length)]
-          };
-          
-          await storage.updateVessel(vessel.id, updateData);
-          updatedCount++;
-        }
-      }
-      
-      res.json({
-        success: true,
-        message: `Updated ${updatedCount} vessels with complete deal information`,
-        updatedCount
-      });
-    } catch (error) {
-      console.error("Error updating vessel deals:", error);
-      res.status(500).json({ message: "Failed to update vessel deals" });
-    }
-  });
-
   // Database Migration API Endpoints
   apiRouter.post("/admin/migrate-to-mysql", async (req, res) => {
     try {
