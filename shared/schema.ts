@@ -62,6 +62,21 @@ export const vessels = pgTable("vessels", {
   ownerName: text("owner_name"), // Oil company that owns the vessel
   operatorName: text("operator_name"), // Oil company that operates the vessel
   oilSource: text("oil_source"), // Which company/refinery the vessel is taking oil from
+  
+  // Deal Information Fields
+  oilType: text("oil_type"), // Type of oil/cargo
+  quantity: decimal("quantity", { precision: 15, scale: 2 }), // Quantity in barrels/tons
+  dealValue: decimal("deal_value", { precision: 15, scale: 2 }), // Value in USD
+  loadingPort: text("loading_port"), // Port where cargo is loaded
+  price: decimal("price", { precision: 15, scale: 2 }), // Price per barrel/ton
+  marketPrice: decimal("market_price", { precision: 15, scale: 2 }), // Current market price
+  sourceCompany: text("source_company"), // Source company name
+  targetRefinery: text("target_refinery"), // Target refinery name
+  shippingType: text("shipping_type"), // FOB, In Tank, CIF, etc.
+  
+  // Route information
+  routeDistance: decimal("route_distance", { precision: 10, scale: 2 }), // Distance in nautical miles
+  
   metadata: text("metadata"), // JSON string with additional vessel information (heading, speed, course, etc.)
   lastUpdated: timestamp("last_updated").defaultNow(),
 });
@@ -101,6 +116,32 @@ export const insertVesselSchema = createInsertSchema(vessels).omit({
     if (val === "" || val === null || val === undefined) return null;
     const num = typeof val === "string" ? parseInt(val) : val;
     return isNaN(num) ? null : num;
+  }),
+  // Deal information fields validation
+  quantity: z.union([z.number(), z.string()]).optional().transform(val => {
+    if (val === "" || val === null || val === undefined) return null;
+    const num = typeof val === "string" ? parseFloat(val) : val;
+    return isNaN(num) ? null : String(num);
+  }),
+  dealValue: z.union([z.number(), z.string()]).optional().transform(val => {
+    if (val === "" || val === null || val === undefined) return null;
+    const num = typeof val === "string" ? parseFloat(val) : val;
+    return isNaN(num) ? null : String(num);
+  }),
+  price: z.union([z.number(), z.string()]).optional().transform(val => {
+    if (val === "" || val === null || val === undefined) return null;
+    const num = typeof val === "string" ? parseFloat(val) : val;
+    return isNaN(num) ? null : String(num);
+  }),
+  marketPrice: z.union([z.number(), z.string()]).optional().transform(val => {
+    if (val === "" || val === null || val === undefined) return null;
+    const num = typeof val === "string" ? parseFloat(val) : val;
+    return isNaN(num) ? null : String(num);
+  }),
+  routeDistance: z.union([z.number(), z.string()]).optional().transform(val => {
+    if (val === "" || val === null || val === undefined) return null;
+    const num = typeof val === "string" ? parseFloat(val) : val;
+    return isNaN(num) ? null : String(num);
   })
 });
 

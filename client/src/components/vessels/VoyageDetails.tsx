@@ -358,9 +358,10 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
 
       <CardContent className="pt-0">
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid grid-cols-4 mb-4">
+          <TabsList className="grid grid-cols-5 mb-4">
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="route">Route</TabsTrigger>
+            <TabsTrigger value="destinations">Destinations</TabsTrigger>
+            <TabsTrigger value="deal">Deal Info</TabsTrigger>
             <TabsTrigger value="conditions">Conditions</TabsTrigger>
             <TabsTrigger value="history">History</TabsTrigger>
           </TabsList>
@@ -874,6 +875,208 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                       {vessel?.eta && vessel?.departureTime
                         ? `${Math.ceil((new Date(vessel.eta).getTime() - new Date(vessel.departureTime).getTime()) / (1000 * 60 * 60 * 24))} days`
                         : "N/A"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="destinations" className="mt-0">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Destination From */}
+              <div className="bg-white rounded-lg border p-4 shadow-sm">
+                <h3 className="text-sm font-medium flex items-center mb-3">
+                  <MapPin className="h-4 w-4 mr-2 text-green-600" />
+                  Destination From
+                </h3>
+                <div className="space-y-2">
+                  <div>
+                    <p className="text-xs text-gray-500">Departure Port</p>
+                    <p className="text-sm font-medium">{vessel.departurePort || 'Not specified'}</p>
+                  </div>
+                  {vessel.departureDate && (
+                    <div>
+                      <p className="text-xs text-gray-500">Departure Date</p>
+                      <p className="text-sm font-medium">{formatDate(new Date(vessel.departureDate))}</p>
+                    </div>
+                  )}
+                  {vessel.departureLat && vessel.departureLng && (
+                    <div>
+                      <p className="text-xs text-gray-500">Coordinates</p>
+                      <p className="text-sm font-medium">{vessel.departureLat}°, {vessel.departureLng}°</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Destination To */}
+              <div className="bg-white rounded-lg border p-4 shadow-sm">
+                <h3 className="text-sm font-medium flex items-center mb-3">
+                  <MapPin className="h-4 w-4 mr-2 text-red-600" />
+                  Destination To
+                </h3>
+                <div className="space-y-2">
+                  <div>
+                    <p className="text-xs text-gray-500">Destination Port</p>
+                    <p className="text-sm font-medium">{vessel.destinationPort || 'Not specified'}</p>
+                  </div>
+                  {vessel.eta && (
+                    <div>
+                      <p className="text-xs text-gray-500">ETA</p>
+                      <p className="text-sm font-medium">{formatDate(new Date(vessel.eta))}</p>
+                    </div>
+                  )}
+                  {vessel.destinationLat && vessel.destinationLng && (
+                    <div>
+                      <p className="text-xs text-gray-500">Coordinates</p>
+                      <p className="text-sm font-medium">{vessel.destinationLat}°, {vessel.destinationLng}°</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Target Refinery */}
+              <div className="bg-white rounded-lg border p-4 shadow-sm">
+                <h3 className="text-sm font-medium flex items-center mb-3">
+                  <Building className="h-4 w-4 mr-2 text-blue-600" />
+                  Target Refinery
+                </h3>
+                <div className="space-y-2">
+                  <div>
+                    <p className="text-xs text-gray-500">Refinery Name</p>
+                    <p className="text-sm font-medium">{vessel.targetRefinery || vessel.destinationPort || 'Not specified'}</p>
+                  </div>
+                  {vessel.oilSource && (
+                    <div>
+                      <p className="text-xs text-gray-500">Oil Source</p>
+                      <p className="text-sm font-medium">{vessel.oilSource}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Route Distance */}
+              <div className="bg-white rounded-lg border p-4 shadow-sm">
+                <h3 className="text-sm font-medium flex items-center mb-3">
+                  <Route className="h-4 w-4 mr-2 text-purple-600" />
+                  Route / Distance
+                </h3>
+                <div className="space-y-2">
+                  <div>
+                    <p className="text-xs text-gray-500">Total Distance</p>
+                    <p className="text-sm font-medium">
+                      {vessel.routeDistance ? `${vessel.routeDistance} nautical miles` : 
+                       (voyageProgress?.distanceTraveled && voyageProgress?.distanceRemaining) ? 
+                       `${(parseFloat(String(voyageProgress.distanceTraveled)) + parseFloat(String(voyageProgress.distanceRemaining))).toLocaleString()} nautical miles` : 
+                       'Not calculated'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Current Speed</p>
+                    <p className="text-sm font-medium">{vessel.speed || currentLocation?.speed || 'Not available'} knots</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="deal" className="mt-0">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Oil Type & Cargo */}
+              <div className="bg-white rounded-lg border p-4 shadow-sm">
+                <h3 className="text-sm font-medium flex items-center mb-3">
+                  <Fuel className="h-4 w-4 mr-2 text-amber-600" />
+                  Oil Type / Cargo Type
+                </h3>
+                <div className="space-y-2">
+                  <div>
+                    <p className="text-xs text-gray-500">Cargo Type</p>
+                    <p className="text-sm font-medium">{vessel.oilType || vessel.cargoType || 'Not specified'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Cargo Capacity</p>
+                    <p className="text-sm font-medium">{vessel.cargoCapacity ? `${vessel.cargoCapacity.toLocaleString()} tons` : 'Not specified'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quantity & Value */}
+              <div className="bg-white rounded-lg border p-4 shadow-sm">
+                <h3 className="text-sm font-medium flex items-center mb-3">
+                  <Package className="h-4 w-4 mr-2 text-green-600" />
+                  Quantity & Value
+                </h3>
+                <div className="space-y-2">
+                  <div>
+                    <p className="text-xs text-gray-500">Quantity</p>
+                    <p className="text-sm font-medium">{vessel.quantity ? `${parseFloat(vessel.quantity).toLocaleString()} barrels` : 'Not specified'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Deal Value</p>
+                    <p className="text-sm font-medium">{vessel.dealValue ? `$${parseFloat(vessel.dealValue).toLocaleString()}` : 'Not specified'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Loading Port & Pricing */}
+              <div className="bg-white rounded-lg border p-4 shadow-sm">
+                <h3 className="text-sm font-medium flex items-center mb-3">
+                  <DollarSign className="h-4 w-4 mr-2 text-blue-600" />
+                  Loading Port & Pricing
+                </h3>
+                <div className="space-y-2">
+                  <div>
+                    <p className="text-xs text-gray-500">Loading Port</p>
+                    <p className="text-sm font-medium">{vessel.loadingPort || vessel.departurePort || 'Not specified'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Price per Barrel</p>
+                    <p className="text-sm font-medium">{vessel.price ? `$${parseFloat(vessel.price).toFixed(2)}` : 'Not specified'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Market Data & Source */}
+              <div className="bg-white rounded-lg border p-4 shadow-sm">
+                <h3 className="text-sm font-medium flex items-center mb-3">
+                  <TrendingUp className="h-4 w-4 mr-2 text-purple-600" />
+                  Market Price & Source
+                </h3>
+                <div className="space-y-2">
+                  <div>
+                    <p className="text-xs text-gray-500">Market Price</p>
+                    <p className="text-sm font-medium">{vessel.marketPrice ? `$${parseFloat(vessel.marketPrice).toFixed(2)}` : 'Not available'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Source Company</p>
+                    <p className="text-sm font-medium">{vessel.sourceCompany || vessel.sellerName || 'Not specified'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Refinery & Shipping Type */}
+              <div className="bg-white rounded-lg border p-4 shadow-sm col-span-1 md:col-span-2">
+                <h3 className="text-sm font-medium flex items-center mb-3">
+                  <Ship className="h-4 w-4 mr-2 text-indigo-600" />
+                  Refinery & Shipping Details
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-gray-500">Target Refinery</p>
+                    <p className="text-sm font-medium">{vessel.targetRefinery || 'Not specified'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Shipping Type</p>
+                    <p className="text-sm font-medium">
+                      {vessel.shippingType || 'Not specified'}
+                      {vessel.shippingType && (
+                        <span className="ml-2 text-xs text-gray-500">
+                          {vessel.shippingType === 'FOB' ? '(Free On Board)' : 
+                           vessel.shippingType === 'CIF' ? '(Cost, Insurance, Freight)' : 
+                           vessel.shippingType === 'In Tank' ? '(In Tank Storage)' : ''}
+                        </span>
+                      )}
                     </p>
                   </div>
                 </div>
