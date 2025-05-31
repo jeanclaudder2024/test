@@ -33,6 +33,7 @@ interface Port {
   country: string;
   type?: string;
   capacity?: number;
+  region?: string;
 }
 
 interface Refinery {
@@ -44,18 +45,38 @@ interface Refinery {
   capacity?: number;
 }
 
+interface Vessel {
+  id: number;
+  name: string;
+  mmsi: string;
+  imo: string;
+  currentLat: string;
+  currentLng: string;
+  vesselType: string;
+  flag: string;
+  speed?: string;
+  course?: string;
+  status?: string;
+  departurePort?: string;
+  destinationPort?: string;
+}
+
 interface AIAnalysis {
   routeOptimization: string;
   weatherConditions: string;
   trafficAnalysis: string;
   riskAssessment: string;
   recommendations: string[];
+  nearbyVessels: number;
+  portCongestion: string;
 }
 
 export default function AIVesselMap({ vessel, initialLat, initialLng }: AIVesselMapProps) {
   const [vesselPosition, setVesselPosition] = useState<[number, number] | null>(null);
+  const [allPorts, setAllPorts] = useState<Port[]>([]);
   const [nearbyPorts, setNearbyPorts] = useState<Port[]>([]);
   const [nearbyRefineries, setNearbyRefineries] = useState<Refinery[]>([]);
+  const [nearbyVessels, setNearbyVessels] = useState<Vessel[]>([]);
   const [departurePort, setDeparturePort] = useState<Port | null>(null);
   const [destinationPort, setDestinationPort] = useState<Port | null>(null);
   const [voyageRoute, setVoyageRoute] = useState<[number, number][]>([]);
@@ -63,6 +84,9 @@ export default function AIVesselMap({ vessel, initialLat, initialLng }: AIVessel
   const [loading, setLoading] = useState(true);
   const [mapView, setMapView] = useState<'satellite' | 'terrain' | 'standard'>('standard');
   const [showAIInsights, setShowAIInsights] = useState(false);
+  const [showAllPorts, setShowAllPorts] = useState(false);
+  const [showNearbyVessels, setShowNearbyVessels] = useState(true);
+  const [searchRadius, setSearchRadius] = useState(500);
 
   // Initialize vessel position
   useEffect(() => {
@@ -75,25 +99,28 @@ export default function AIVesselMap({ vessel, initialLat, initialLng }: AIVessel
     }
   }, [vessel, initialLat, initialLng]);
 
-  // Load nearby ports and refineries
+  // Load nearby ports, refineries, and vessels
   const loadNearbyData = useCallback(async () => {
     if (!vesselPosition) return;
 
     try {
       setLoading(true);
       
-      // Load ports
+      // Load all ports
       const portsResponse = await axios.get('/api/ports');
       if (portsResponse.data) {
-        const ports = portsResponse.data.filter((port: Port) => {
+        setAllPorts(portsResponse.data);
+        
+        // Filter nearby ports
+        const nearby = portsResponse.data.filter((port: Port) => {
           const distance = calculateDistance(
             vesselPosition[0], vesselPosition[1],
             parseFloat(port.lat), parseFloat(port.lng)
           );
-          return distance <= 500; // 500km radius
-        }).slice(0, 10); // Limit to 10 closest ports
+          return distance <= searchRadius;
+        }).slice(0, 15); // Limit to 15 closest ports
         
-        setNearbyPorts(ports);
+        setNearbyPorts(nearby);
       }
 
       // Load refineries
@@ -105,9 +132,28 @@ export default function AIVesselMap({ vessel, initialLat, initialLng }: AIVessel
             parseFloat(refinery.lat), parseFloat(refinery.lng)
           );
           return distance <= 300; // 300km radius for refineries
-        }).slice(0, 8); // Limit to 8 closest refineries
+        }).slice(0, 10);
         
         setNearbyRefineries(refineries);
+      }
+
+      // Load nearby vessels
+      if (showNearbyVessels) {
+        const vesselsResponse = await axios.get('/api/vessels/polling?page=1&pageSize=100');
+        if (vesselsResponse.data && vesselsResponse.data.vessels) {
+          const nearby = vesselsResponse.data.vessels.filter((v: any) => {
+            if (v.id === vessel.id) return false; // Exclude current vessel
+            if (!v.currentLat || !v.currentLng) return false;
+            
+            const distance = calculateDistance(
+              vesselPosition[0], vesselPosition[1],
+              parseFloat(v.currentLat), parseFloat(v.currentLng)
+            );
+            return distance <= 100; // 100km radius for vessels
+          }).slice(0, 20); // Limit to 20 nearby vessels
+          
+          setNearbyVessels(nearby);
+        }
       }
 
     } catch (error) {
@@ -115,30 +161,30 @@ export default function AIVesselMap({ vessel, initialLat, initialLng }: AIVessel
     } finally {
       setLoading(false);
     }
-  }, [vesselPosition]);
+  }, [vesselPosition, searchRadius, showNearbyVessels, vessel.id]);
 
   // Find departure and destination ports
   useEffect(() => {
-    if (!vessel || !nearbyPorts.length) return;
+    if (!vessel || !allPorts.length) return;
 
-    // Find departure port
+    // Find departure port from all ports
     if (vessel.departurePort) {
-      const departure = nearbyPorts.find(port => 
+      const departure = allPorts.find(port => 
         port.name.toLowerCase().includes(vessel.departurePort.toLowerCase()) ||
         vessel.departurePort.toLowerCase().includes(port.name.toLowerCase())
       );
       setDeparturePort(departure || null);
     }
 
-    // Find destination port
+    // Find destination port from all ports
     if (vessel.destinationPort) {
-      const destination = nearbyPorts.find(port => 
+      const destination = allPorts.find(port => 
         port.name.toLowerCase().includes(vessel.destinationPort.toLowerCase()) ||
         vessel.destinationPort.toLowerCase().includes(port.name.toLowerCase())
       );
       setDestinationPort(destination || null);
     }
-  }, [vessel, nearbyPorts]);
+  }, [vessel, allPorts]);
 
   // Generate maritime route with AI optimization
   const generateVoyageRoute = useCallback(() => {
@@ -186,12 +232,14 @@ export default function AIVesselMap({ vessel, initialLat, initialLng }: AIVessel
       const analysis: AIAnalysis = {
         routeOptimization: `Current route efficiency: 87%. Optimal path via major shipping lanes detected.`,
         weatherConditions: `Moderate sea conditions. Wind speed: 12-15 knots. Wave height: 1.5-2m.`,
-        trafficAnalysis: `Medium traffic density in current area. ${nearbyPorts.length} ports within 500km radius.`,
+        trafficAnalysis: `Medium traffic density. ${nearbyVessels.length} vessels within 100km radius.`,
         riskAssessment: `Low risk level. Clear navigation channels. No weather warnings in effect.`,
+        nearbyVessels: nearbyVessels.length,
+        portCongestion: nearbyPorts.length > 10 ? 'High port density area' : 'Normal port accessibility',
         recommendations: [
           'Maintain current speed for fuel efficiency',
           'Monitor weather patterns near destination',
-          'Consider port congestion at arrival',
+          `${nearbyVessels.length} nearby vessels detected - maintain safe distance`,
           'Optimal arrival window: Next 24-48 hours'
         ]
       };
@@ -200,7 +248,7 @@ export default function AIVesselMap({ vessel, initialLat, initialLng }: AIVessel
     } catch (error) {
       console.error('Error generating AI analysis:', error);
     }
-  }, [vessel, vesselPosition, nearbyPorts]);
+  }, [vessel, vesselPosition, nearbyPorts, nearbyVessels]);
 
   // Calculate distance between two points (Haversine formula)
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
@@ -214,15 +262,45 @@ export default function AIVesselMap({ vessel, initialLat, initialLng }: AIVessel
     return R * c;
   };
 
-  // Custom vessel icon
-  const vesselIcon = L.divIcon({
-    html: `<div style="background: #3B82F6; border: 2px solid white; border-radius: 50%; width: 20px; height: 20px; box-shadow: 0 2px 8px rgba(59, 130, 246, 0.5); display: flex; align-items: center; justify-content: center;">
-      <div style="color: white; font-size: 10px;">⚓</div>
-    </div>`,
-    className: 'custom-vessel-icon',
-    iconSize: [20, 20],
-    iconAnchor: [10, 10]
-  });
+  // Enhanced vessel icon with type-based styling
+  const getVesselIcon = (vesselType: string, isCurrentVessel = false) => {
+    const size = isCurrentVessel ? 24 : 18;
+    const colors = {
+      'Tanker': '#EF4444',
+      'Oil Tanker': '#DC2626',
+      'Chemical Tanker': '#8B5CF6',
+      'LNG Tanker': '#06B6D4',
+      'Bulk Carrier': '#3B82F6',
+      'Container Ship': '#10B981',
+      'General Cargo': '#F59E0B',
+      'Cargo': '#F59E0B',
+      'default': '#6B7280'
+    };
+    
+    const color = colors[vesselType as keyof typeof colors] || colors.default;
+    const borderWidth = isCurrentVessel ? 3 : 2;
+    const symbol = isCurrentVessel ? '⚓' : '●';
+    
+    return L.divIcon({
+      html: `<div style="
+        background: ${color}; 
+        border: ${borderWidth}px solid white; 
+        border-radius: 50%; 
+        width: ${size}px; 
+        height: ${size}px; 
+        box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: ${Math.max(10, size-8)}px;
+        color: white;
+        font-weight: bold;
+      ">${symbol}</div>`,
+      className: 'custom-vessel-icon',
+      iconSize: [size, size],
+      iconAnchor: [size/2, size/2]
+    });
+  };
 
   // Port icon
   const portIcon = (port: Port, isSpecial = false) => L.divIcon({
