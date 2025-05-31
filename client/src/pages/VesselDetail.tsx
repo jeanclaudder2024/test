@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Vessel } from '@/types';
 import { useToast } from '@/hooks/use-toast';
-import VoyageDetails from '@/components/vessels/VoyageDetails';
+import { SimpleVoyageDetails } from '@/components/vessels/SimpleVoyageDetails';
 import SimpleVesselMap from '@/components/map/SimpleVesselMap';
 import AIDocumentGenerator from '@/components/vessels/AIDocumentGenerator';
 import axios from 'axios';
@@ -736,7 +736,7 @@ export default function VesselDetail() {
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <VoyageDetails 
+                      <SimpleVoyageDetails 
                         vessel={vessel} 
                         voyageProgress={{ 
                           percentComplete: vessel.voyageProgress || 45,
@@ -746,14 +746,6 @@ export default function VesselDetail() {
                           averageSpeed: 13.2,
                           estimatedArrival: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
                         }}
-                        isLoadingVoyage={false}
-                        onRefreshVoyage={() => {}}
-                        currentLocation={{
-                          lat: vessel.currentLat,
-                          lng: vessel.currentLng
-                        }}
-                        isLoadingLocation={false}
-                        onRefreshLocation={() => {}}
                       />
                     </CardContent>
                   </Card>
