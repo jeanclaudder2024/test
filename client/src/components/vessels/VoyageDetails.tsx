@@ -120,10 +120,26 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
       try {
         const response = await axios.get(`/api/vessels/${vessel.id}/progress`);
         if (response.status === 200 && response.data.success) {
-          setAiVoyageProgress(response.data.data);
+          // Ensure we're setting a proper object structure and not rendering the object directly
+          const progressData = response.data.data;
+          if (progressData && typeof progressData === 'object') {
+            setAiVoyageProgress({
+              percentComplete: progressData.percentComplete || 0,
+              currentSpeed: progressData.currentSpeed || 0,
+              averageSpeed: progressData.averageSpeed || 0,
+              estimatedArrival: progressData.estimatedArrival || null,
+              distanceTraveled: progressData.distanceTraveled || 0,
+              distanceRemaining: progressData.distanceRemaining || 0,
+              currentStatus: progressData.currentStatus || '',
+              nextMilestone: progressData.nextMilestone || '',
+              weatherConditions: progressData.weatherConditions || '',
+              fuelConsumption: progressData.fuelConsumption || 0
+            });
+          }
         }
       } catch (error) {
         console.error('Failed to fetch voyage progress:', error);
+        setHasError(true);
       }
     };
 
@@ -138,10 +154,26 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
     try {
       const response = await axios.post(`/api/vessels/${vessel.id}/update-progress`);
       if (response.status === 200 && response.data.success) {
-        setAiVoyageProgress(response.data.data);
+        // Ensure we're setting a proper object structure and not rendering the object directly
+        const progressData = response.data.data;
+        if (progressData && typeof progressData === 'object') {
+          setAiVoyageProgress({
+            percentComplete: progressData.percentComplete || 0,
+            currentSpeed: progressData.currentSpeed || 0,
+            averageSpeed: progressData.averageSpeed || 0,
+            estimatedArrival: progressData.estimatedArrival || null,
+            distanceTraveled: progressData.distanceTraveled || 0,
+            distanceRemaining: progressData.distanceRemaining || 0,
+            currentStatus: progressData.currentStatus || '',
+            nextMilestone: progressData.nextMilestone || '',
+            weatherConditions: progressData.weatherConditions || '',
+            fuelConsumption: progressData.fuelConsumption || 0
+          });
+        }
       }
     } catch (error) {
       console.error('Failed to update voyage progress:', error);
+      setHasError(true);
     } finally {
       setIsUpdatingProgress(false);
     }
