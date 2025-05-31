@@ -1997,6 +1997,133 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin vessel management endpoints
+  apiRouter.get("/admin/vessels", async (req, res) => {
+    try {
+      console.log("Admin vessels endpoint called");
+      const vessels = await storage.getVessels();
+      console.log(`Retrieved ${vessels.length} vessels for admin`);
+      res.json(vessels);
+    } catch (error) {
+      console.error("Error fetching vessels for admin:", error);
+      res.status(500).json({ error: "Failed to fetch vessels" });
+    }
+  });
+
+  apiRouter.post("/admin/vessels", async (req, res) => {
+    try {
+      console.log("Creating new vessel via admin:", req.body);
+      
+      // Validate required fields
+      const { name, imo, mmsi, vesselType, flag } = req.body;
+      if (!name || !imo || !mmsi || !vesselType || !flag) {
+        return res.status(400).json({ 
+          error: "Missing required fields: name, imo, mmsi, vesselType, flag are required" 
+        });
+      }
+
+      // Create vessel with petition status
+      const vesselData = {
+        ...req.body,
+        status: req.body.status || 'petition', // Default to petition for new vessels
+        lastUpdated: new Date().toISOString()
+      };
+
+      const newVessel = await storage.createVessel(vesselData);
+      console.log("Created new vessel:", newVessel);
+      
+      res.status(201).json(newVessel);
+    } catch (error) {
+      console.error("Error creating vessel:", error);
+      res.status(500).json({ error: "Failed to create vessel" });
+    }
+  });
+
+  apiRouter.put("/admin/vessels/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid vessel ID" });
+      }
+
+      console.log(`Updating vessel ${id} via admin:`, req.body);
+
+      // Check if vessel exists
+      const existingVessel = await storage.getVesselById(id);
+      if (!existingVessel) {
+        return res.status(404).json({ error: "Vessel not found" });
+      }
+
+      // Update vessel data
+      const updateData = {
+        ...req.body,
+        lastUpdated: new Date().toISOString()
+      };
+
+      const updatedVessel = await storage.updateVessel(id, updateData);
+      console.log("Updated vessel:", updatedVessel);
+      
+      res.json(updatedVessel);
+    } catch (error) {
+      console.error("Error updating vessel:", error);
+      res.status(500).json({ error: "Failed to update vessel" });
+    }
+  });
+
+  apiRouter.delete("/admin/vessels/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid vessel ID" });
+      }
+
+      console.log(`Deleting vessel ${id} via admin`);
+
+      const deleted = await storage.deleteVessel(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Vessel not found" });
+      }
+      
+      res.json({ message: "Vessel deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting vessel:", error);
+      res.status(500).json({ error: "Failed to delete vessel" });
+    }
+  });
+
+  // Generate AI vessel data endpoint for admin
+  apiRouter.post("/admin/vessels/generate-ai", async (req, res) => {
+    try {
+      const { generateRealisticVesselData } = await import("./services/aiVesselGenerator");
+      const vesselData = await generateRealisticVesselData();
+      res.json(vesselData);
+    } catch (error) {
+      console.error("Error generating AI vessel data:", error);
+      res.status(500).json({ 
+        error: "Failed to generate vessel data. Please ensure OpenAI API access is configured." 
+      });
+    }
+  });
+
+  // Get vessels for vessel management page (including petitions)
+  apiRouter.get("/vessel-management", async (req, res) => {
+    try {
+      const vessels = await storage.getVessels();
+      
+      // Include all vessels but mark petitions clearly
+      const vesselsWithStatus = vessels.map(vessel => ({
+        ...vessel,
+        isPetition: vessel.status === 'petition',
+        managementStatus: vessel.status === 'petition' ? 'petition' : 'active'
+      }));
+
+      res.json(vesselsWithStatus);
+    } catch (error) {
+      console.error("Error fetching vessels for management:", error);
+      res.status(500).json({ error: "Failed to fetch vessels for management" });
+    }
+  });
+
   // Port API endpoints - Direct Supabase connection
   apiRouter.get("/ports", async (req, res) => {
     try {
