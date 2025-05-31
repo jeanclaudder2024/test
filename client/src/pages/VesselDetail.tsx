@@ -1,11 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Vessel } from '@/types';
 import { useToast } from '@/hooks/use-toast';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, Circle } from 'react-leaflet';
 import VoyageDetails from '@/components/vessels/VoyageDetails';
-import EnhancedVesselMap from '@/components/map/EnhancedVesselMap';
+import AIVesselMap from '@/components/map/AIVesselMap';
 import axios from 'axios';
-import L from 'leaflet';
 import {
   Card,
   CardContent,
@@ -709,20 +707,19 @@ export default function VesselDetail() {
                         Real-time position with nearby ports and refineries (20km radius)
                       </CardDescription>
                     </CardHeader>
-                    <CardContent className="p-0">
+                    <CardContent className="p-4">
                       {vessel.currentLat && vessel.currentLng ? (
-                        <div className="relative">
-                          <EnhancedVesselMap 
-                            vessel={vessel}
-                            initialLat={vessel.currentLat}
-                            initialLng={vessel.currentLng}
-                          />
-                        </div>
+                        <AIVesselMap 
+                          vessel={vessel}
+                          initialLat={vessel.currentLat}
+                          initialLng={vessel.currentLng}
+                        />
                       ) : (
-                        <div className="h-64 bg-gray-100 dark:bg-gray-800 rounded-md flex items-center justify-center">
+                        <div className="h-96 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
                           <div className="text-center text-muted-foreground">
-                            <MapPin className="h-10 w-10 mx-auto mb-2 text-muted-foreground/50" />
-                            <p>No position data available</p>
+                            <MapPin className="h-12 w-12 mx-auto mb-3 text-muted-foreground/50" />
+                            <p className="text-lg font-medium">No Position Data</p>
+                            <p className="text-sm">Vessel coordinates not available</p>
                           </div>
                         </div>
                       )}
