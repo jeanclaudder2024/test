@@ -399,12 +399,12 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                       <div className="flex justify-between items-center text-xs text-gray-500 mb-1">
                         <div className="flex flex-col items-center">
                           <MapPin className="h-3 w-3 text-primary mb-1" />
-                          <span>{vessel.departurePort?.split(',')[0]}</span>
+                          <span>{typeof vessel.departurePort === 'string' ? vessel.departurePort.split(',')[0] : vessel.departurePort || 'Unknown'}</span>
                         </div>
                         <span className="text-primary font-medium">{effectiveVoyageProgress.percentComplete}% Complete</span>
                         <div className="flex flex-col items-center">
                           <MapPin className="h-3 w-3 text-primary mb-1" />
-                          <span>{vessel.destinationPort?.split(',')[0]}</span>
+                          <span>{typeof vessel.destinationPort === 'string' ? vessel.destinationPort.split(',')[0] : vessel.destinationPort || 'Unknown'}</span>
                         </div>
                       </div>
                       
