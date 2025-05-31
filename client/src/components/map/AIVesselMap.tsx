@@ -703,35 +703,6 @@ export default function AIVesselMap({ vessel, initialLat, initialLng }: AIVessel
             />
           )}
 
-          {/* Nearby Ports */}
-          {nearbyPorts.filter(port => 
-            port.id !== departurePort?.id && port.id !== destinationPort?.id
-          ).map((port) => (
-            <Marker
-              key={`port-${port.id}`}
-              position={[parseFloat(port.lat), parseFloat(port.lng)]}
-              icon={portIcon(port)}
-            >
-              <Popup>
-                <div className="text-sm space-y-2">
-                  <div className="font-semibold flex items-center">
-                    <Anchor className="h-4 w-4 mr-1 text-blue-600" />
-                    {port.name}
-                  </div>
-                  <Badge variant="outline">Nearby Port</Badge>
-                  <div className="text-xs">
-                    <div>Country: {port.country}</div>
-                    {port.capacity && <div>Capacity: {port.capacity.toLocaleString()} TEU</div>}
-                    <div>Distance: {Math.round(calculateDistance(
-                      vesselPosition[0], vesselPosition[1],
-                      parseFloat(port.lat), parseFloat(port.lng)
-                    ))} km</div>
-                  </div>
-                </div>
-              </Popup>
-            </Marker>
-          ))}
-
           {/* Nearby Refineries */}
           {nearbyRefineries.map((refinery) => (
             <Marker
@@ -740,36 +711,24 @@ export default function AIVesselMap({ vessel, initialLat, initialLng }: AIVessel
               icon={refineryIcon}
             >
               <Popup>
-                <div className="text-sm space-y-2">
-                  <div className="font-semibold flex items-center">
-                    <Factory className="h-4 w-4 mr-1 text-orange-600" />
+                <div className="text-sm space-y-2 max-w-[200px]">
+                  <div className="font-semibold text-base flex items-center">
+                    <Factory className="h-4 w-4 mr-1.5 text-red-600" />
                     {refinery.name}
                   </div>
-                  <Badge className="bg-orange-100 text-orange-800">Refinery</Badge>
-                  <div className="text-xs">
+                  <div className="space-y-1 text-xs">
                     <div>Country: {refinery.country}</div>
                     {refinery.capacity && <div>Capacity: {refinery.capacity.toLocaleString()} bbl/day</div>}
-                    <div>Distance: {Math.round(calculateDistance(
+                    <div>Distance: {calculateDistance(
                       vesselPosition[0], vesselPosition[1],
                       parseFloat(refinery.lat), parseFloat(refinery.lng)
-                    ))} km</div>
+                    ).toFixed(1)} km</div>
                   </div>
+                  <Badge variant="destructive" className="text-xs">Oil Refinery</Badge>
                 </div>
               </Popup>
             </Marker>
           ))}
-
-          {/* 20km Proximity Circle */}
-          <Circle
-            center={vesselPosition}
-            radius={20000} // 20km in meters
-            pathOptions={{
-              color: '#3B82F6',
-              weight: 1,
-              opacity: 0.3,
-              fillOpacity: 0.1
-            }}
-          />
         </MapContainer>
       </div>
 
