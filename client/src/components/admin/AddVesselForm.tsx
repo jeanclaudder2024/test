@@ -33,7 +33,16 @@ export function AddVesselForm({ open, onOpenChange, onAddVessel, loading }: AddV
     destination: "",
     eta: "",
     cargo: "",
-    cargoCapacity: ""
+    cargoCapacity: "",
+    // New cargo information fields
+    oilType: "",
+    quantity: "",
+    dealValue: "",
+    loadingPort: "",
+    price: "",
+    marketPrice: "",
+    sourceCompany: "",
+    targetRefinery: ""
   });
 
   const handleInputChange = (field: string, value: string) => {
@@ -184,24 +193,123 @@ export function AddVesselForm({ open, onOpenChange, onAddVessel, loading }: AddV
                       Cargo Information
                     </h4>
                     
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Cargo Type</label>
-                        <input 
-                          type="text"
-                          className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-                          placeholder="e.g., Crude Oil"
-                          value={vessel.cargo}
-                          onChange={(e) => handleInputChange('cargo', e.target.value)}
-                        />
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">🛢️ Oil Type / Cargo Type</label>
+                          <select 
+                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+                            value={vessel.oilType}
+                            onChange={(e) => handleInputChange('oilType', e.target.value)}
+                          >
+                            <option value="">Select Oil Type</option>
+                            <option value="Crude Oil">Crude Oil</option>
+                            <option value="Brent Crude">Brent Crude</option>
+                            <option value="WTI Crude">WTI Crude</option>
+                            <option value="Heavy Crude">Heavy Crude</option>
+                            <option value="Light Crude">Light Crude</option>
+                            <option value="Gasoline">Gasoline</option>
+                            <option value="Diesel">Diesel</option>
+                            <option value="Jet Fuel">Jet Fuel</option>
+                            <option value="LNG">LNG</option>
+                            <option value="LPG">LPG</option>
+                            <option value="Naphtha">Naphtha</option>
+                            <option value="Fuel Oil">Fuel Oil</option>
+                          </select>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">📊 Quantity (barrels)</label>
+                          <input 
+                            type="number"
+                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+                            placeholder="e.g., 2000000"
+                            value={vessel.quantity}
+                            onChange={(e) => handleInputChange('quantity', e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">💰 Deal Value (USD)</label>
+                          <input 
+                            type="number"
+                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+                            placeholder="e.g., 150000000"
+                            value={vessel.dealValue}
+                            onChange={(e) => handleInputChange('dealValue', e.target.value)}
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">⚓ Loading Port</label>
+                          <input 
+                            type="text"
+                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+                            placeholder="e.g., Ras Tanura"
+                            value={vessel.loadingPort}
+                            onChange={(e) => handleInputChange('loadingPort', e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">➕ Price per Barrel (USD)</label>
+                          <input 
+                            type="number"
+                            step="0.01"
+                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+                            placeholder="e.g., 85.50"
+                            value={vessel.price}
+                            onChange={(e) => handleInputChange('price', e.target.value)}
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">📈 Market Price per Barrel (USD)</label>
+                          <input 
+                            type="number"
+                            step="0.01"
+                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+                            placeholder="e.g., 87.25"
+                            value={vessel.marketPrice}
+                            onChange={(e) => handleInputChange('marketPrice', e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">🏢 Source Company (اسم الشركة)</label>
+                          <input 
+                            type="text"
+                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+                            placeholder="e.g., Saudi Aramco"
+                            value={vessel.sourceCompany}
+                            onChange={(e) => handleInputChange('sourceCompany', e.target.value)}
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">🏭 Target Refinery</label>
+                          <input 
+                            type="text"
+                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+                            placeholder="e.g., Ruwais Refinery"
+                            value={vessel.targetRefinery}
+                            onChange={(e) => handleInputChange('targetRefinery', e.target.value)}
+                          />
+                        </div>
                       </div>
                       
                       <div className="space-y-2">
-                        <label className="text-sm font-medium">Capacity (MT)</label>
+                        <label className="text-sm font-medium">Cargo Capacity (MT)</label>
                         <input 
                           type="number"
                           className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-                          placeholder="Capacity"
+                          placeholder="Capacity in metric tons"
                           value={vessel.cargoCapacity}
                           onChange={(e) => handleInputChange('cargoCapacity', e.target.value)}
                         />
