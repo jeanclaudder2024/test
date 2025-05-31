@@ -1325,7 +1325,7 @@ export default function VesselManagement() {
                     </CardHeader>
                     <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="oilType">Oil/Cargo Type</Label>
+                        <Label htmlFor="oilType">🛢️ Oil/Cargo Type</Label>
                         <Select value={formData.oilType} onValueChange={(value) => setFormData(prev => ({ ...prev, oilType: value }))}>
                           <SelectTrigger>
                             <SelectValue placeholder="Select oil type" />
@@ -1346,7 +1346,7 @@ export default function VesselManagement() {
                         </Select>
                       </div>
                       <div>
-                        <Label htmlFor="quantity">Quantity (barrels/tons)</Label>
+                        <Label htmlFor="quantity">📊 Quantity (barrels/tons)</Label>
                         <Input
                           id="quantity"
                           type="number"
@@ -1357,7 +1357,7 @@ export default function VesselManagement() {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="dealValue">Deal Value (USD)</Label>
+                        <Label htmlFor="dealValue">💰 Deal Value (USD)</Label>
                         <Input
                           id="dealValue"
                           type="number"
@@ -1368,7 +1368,7 @@ export default function VesselManagement() {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="price">Price per Unit (USD)</Label>
+                        <Label htmlFor="price">➕ Price per Unit (USD)</Label>
                         <Input
                           id="price"
                           type="number"
@@ -1379,7 +1379,7 @@ export default function VesselManagement() {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="marketPrice">Current Market Price (USD)</Label>
+                        <Label htmlFor="marketPrice">📈 Current Market Price (USD)</Label>
                         <Input
                           id="marketPrice"
                           type="number"
@@ -1390,7 +1390,7 @@ export default function VesselManagement() {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="loadingPort">Loading Port</Label>
+                        <Label htmlFor="loadingPort">⚓ Loading Port</Label>
                         <Input
                           id="loadingPort"
                           value={formData.loadingPort}
@@ -1399,7 +1399,7 @@ export default function VesselManagement() {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="sourceCompany">Source Company</Label>
+                        <Label htmlFor="sourceCompany">🏢 Source Company (اسم الشركة)</Label>
                         <Input
                           id="sourceCompany"
                           value={formData.sourceCompany}
@@ -1408,7 +1408,7 @@ export default function VesselManagement() {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="targetRefinery">Target Refinery</Label>
+                        <Label htmlFor="targetRefinery">🏭 Target Refinery</Label>
                         <Input
                           id="targetRefinery"
                           value={formData.targetRefinery}
