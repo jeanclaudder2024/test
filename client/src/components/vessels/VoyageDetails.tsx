@@ -85,6 +85,18 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
   const [ports, setPorts] = useState<any[]>([]);
   const [aiVoyageProgress, setAiVoyageProgress] = useState<any>(null);
   const [isUpdatingProgress, setIsUpdatingProgress] = useState(false);
+  const [hasError, setHasError] = useState(false);
+
+  // Error boundary effect
+  useEffect(() => {
+    const handleError = (error: ErrorEvent) => {
+      console.error('VoyageDetails error:', error);
+      setHasError(true);
+    };
+
+    window.addEventListener('error', handleError);
+    return () => window.removeEventListener('error', handleError);
+  }, []);
   
   // Fetch ports data for proper name resolution
   useEffect(() => {
@@ -234,14 +246,30 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
     }
   ];
 
-  // Calculate the estimated time of arrival display
+  // Calculate the estimated time of arrival display with enhanced error handling
   const getETADisplay = () => {
     try {
+      // Check AI voyage progress first
+      if (effectiveVoyageProgress?.estimatedArrival) {
+        if (typeof effectiveVoyageProgress.estimatedArrival === 'string') {
+          return effectiveVoyageProgress.estimatedArrival;
+        }
+        return formatDate(new Date(effectiveVoyageProgress.estimatedArrival));
+      }
+      
+      // Check standard voyage progress
       if (voyageProgress?.estimatedArrival) {
+        if (typeof voyageProgress.estimatedArrival === 'string') {
+          return voyageProgress.estimatedArrival;
+        }
         return formatDate(new Date(voyageProgress.estimatedArrival));
-      } else if (vessel?.eta) {
+      } 
+      
+      // Check vessel ETA
+      if (vessel?.eta) {
         return formatDate(new Date(vessel.eta));
       }
+      
       return "Not available";
     } catch (error) {
       console.error("Error formatting ETA:", error);
@@ -379,6 +407,30 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
         } 
       : voyageProgress);
   
+  // Safety check for error state
+  if (hasError) {
+    return (
+      <Card className="mb-6">
+        <CardContent className="p-6">
+          <div className="text-center py-8">
+            <AlertTriangle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Voyage Information Temporarily Unavailable</h3>
+            <p className="text-gray-500 mb-4">There was an issue loading the voyage details. Please try refreshing the page.</p>
+            <Button 
+              onClick={() => {
+                setHasError(false);
+                window.location.reload();
+              }}
+              variant="outline"
+            >
+              Refresh Page
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="mb-6">
       <CardHeader className="pb-3">
