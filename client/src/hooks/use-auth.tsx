@@ -6,8 +6,6 @@ import {
 } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { signInWithGoogle, handleRedirectResult, auth } from "@/lib/firebase";
-import { User as FirebaseUser } from "firebase/auth";
 
 type User = {
   id: number;
@@ -214,78 +212,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   });
 
-  // Google Sign In mutation
-  const googleAuthMutation = useMutation({
-    mutationFn: async (firebaseUser: FirebaseUser) => {
-      // Send Firebase auth data to the server to create/login the user
-      const authData = {
-        idToken: await firebaseUser.getIdToken(),
-        email: firebaseUser.email,
-        displayName: firebaseUser.displayName,
-        photoURL: firebaseUser.photoURL,
-        uid: firebaseUser.uid
-      };
+  // Google authentication removed - using Supabase auth only
 
-      const res = await apiRequest("/api/auth/google", {
-        method: "POST",
-        body: JSON.stringify(authData),
-      });
-      return res;
-    },
-    onSuccess: (user: User) => {
-      queryClient.setQueryData(['/api/user'], user);
-      toast({
-        title: "Google login successful",
-        description: `Welcome, ${user.displayName || user.username}!`,
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Google login failed",
-        description: error.message || "Could not authenticate with Google",
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Handle Google sign-in
+  // Google sign-in function (disabled - using Supabase auth only)
   const googleSignIn = async () => {
-    try {
-      const userCredential = await signInWithGoogle();
-      if (userCredential?.user) {
-        await googleAuthMutation.mutateAsync(userCredential.user);
-      }
-    } catch (error: any) {
-      toast({
-        title: "Google login failed",
-        description: error.message || "Could not authenticate with Google",
-        variant: "destructive",
-      });
-    }
+    toast({
+      title: "Google Sign-In Unavailable",
+      description: "Please use email/password login with your Supabase account",
+      variant: "destructive",
+    });
   };
-
-  // Handle Google redirect result on component mount
-  useEffect(() => {
-    const checkRedirectResult = async () => {
-      try {
-        const result = await handleRedirectResult();
-        if (result?.user) {
-          await googleAuthMutation.mutateAsync(result.user);
-        }
-      } catch (error: any) {
-        // Only show error if not canceled by user
-        if (error.code !== 'auth/cancelled-popup-request') {
-          toast({
-            title: "Google login failed",
-            description: error.message || "Could not authenticate with Google",
-            variant: "destructive",
-          });
-        }
-      }
-    };
-
-    checkRedirectResult();
-  }, []);
 
   return (
     <AuthContext.Provider
