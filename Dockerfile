@@ -5,7 +5,7 @@ FROM node:18-alpine
 WORKDIR /app
 
 # Install system dependencies for native modules
-RUN apk add --no-cache python3 make g++
+RUN apk add --no-cache python3 make g++ git
 
 # Copy package files
 COPY package*.json ./
@@ -19,10 +19,19 @@ COPY . .
 # Build the application
 RUN npm run build
 
-# Remove dev dependencies after build
+# Remove dev dependencies after build to reduce image size
 RUN npm prune --production
 
-# Expose port
+# Create non-root user for security
+RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
+
+# Change ownership of app directory
+RUN chown -R nodejs:nodejs /app
+
+# Switch to non-root user
+USER nodejs
+
+# Expose port (Render uses PORT environment variable)
 EXPOSE 5000
 
 # Start the application

@@ -4,6 +4,8 @@ npm-debug.log
 .gitignore
 README.md
 .env
+.env.local
+.env.development
 .nyc_output
 coverage
 .replit
@@ -11,5 +13,12 @@ coverage
 maritime-laravel
 production-ready
 *.tar.gz
-dist
 .DS_Store
+*.log
+.vscode
+.idea
+.next
+.nuxt
+.output
+.vercel
+.netlify
