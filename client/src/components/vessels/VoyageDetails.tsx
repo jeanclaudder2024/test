@@ -101,6 +101,39 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
     
     fetchPorts();
   }, []);
+
+  // Fetch AI-generated voyage progress
+  useEffect(() => {
+    const fetchVoyageProgress = async () => {
+      try {
+        const response = await axios.get(`/api/vessels/${vessel.id}/progress`);
+        if (response.status === 200 && response.data.success) {
+          setAiVoyageProgress(response.data.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch voyage progress:', error);
+      }
+    };
+
+    if (vessel.id) {
+      fetchVoyageProgress();
+    }
+  }, [vessel.id]);
+
+  // Function to manually update voyage progress
+  const updateVoyageProgress = async () => {
+    setIsUpdatingProgress(true);
+    try {
+      const response = await axios.post(`/api/vessels/${vessel.id}/update-progress`);
+      if (response.status === 200 && response.data.success) {
+        setAiVoyageProgress(response.data.data);
+      }
+    } catch (error) {
+      console.error('Failed to update voyage progress:', error);
+    } finally {
+      setIsUpdatingProgress(false);
+    }
+  };
   
   // Helper function to get port name by ID or name
   const getPortName = (portIdOrName: number | string | null | undefined): string => {
@@ -330,24 +363,8 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
     }
   }, [vessel, enhancedVesselData]);
   
-  // Use enhanced data for voyage progress if available
-  const voyageProgressData = enhancedVesselData && enhancedVesselData.voyageProgress 
-    ? { 
-        percentComplete: simulatedProgress !== null ? simulatedProgress : enhancedVesselData.voyageProgress,
-        currentSpeed: enhancedVesselData.currentSpeed,
-        averageSpeed: enhancedVesselData.currentSpeed * 0.9, // Just an estimate
-        fromAPI: false,
-        estimated: true,
-        generatedData: enhancedVesselData.generatedData,
-        navStatus: enhancedVesselData.navStatus,
-        // Estimate arrival based on percentage
-        estimatedArrival: simulatedProgress === 100 ? 'Arrived at destination' : 
-                         `${Math.ceil((100 - (simulatedProgress || 0)) / 4)} days`
-      } 
-    : voyageProgress;
-    
-  // If no voyage progress provided and metadata exists, create a basic object
-  const effectiveVoyageProgress = voyageProgressData || 
+  // Prioritize AI-generated voyage progress over all other data
+  const effectiveVoyageProgress = aiVoyageProgress || 
     (enhancedVesselData && enhancedVesselData.voyageProgress 
       ? {
           percentComplete: simulatedProgress !== null ? simulatedProgress : enhancedVesselData.voyageProgress,
@@ -358,7 +375,7 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
           estimatedArrival: simulatedProgress === 100 ? 'Arrived at destination' : 
                            `${Math.ceil((100 - (simulatedProgress || 0)) / 4)} days`
         } 
-      : null);
+      : voyageProgress);
   
   return (
     <Card className="mb-6">
@@ -421,16 +438,40 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                       Journey Progress
                     </h3>
                     <div className="flex space-x-1">
-                      {voyageProgress?.fromAPI && (
+                      {aiVoyageProgress && (
+                        <Badge variant="outline" className="text-xs bg-blue-50 border-blue-200 text-blue-700">
+                          AI Generated
+                        </Badge>
+                      )}
+                      {voyageProgress?.fromAPI && !aiVoyageProgress && (
                         <Badge variant="outline" className="text-xs bg-green-50 border-green-200 text-green-700">
                           Live Data
                         </Badge>
                       )}
-                      {voyageProgress?.estimated && (
+                      {voyageProgress?.estimated && !aiVoyageProgress && (
                         <Badge variant="outline" className="text-xs bg-yellow-50 border-yellow-200 text-yellow-700">
                           Estimated
                         </Badge>
                       )}
+                      <Button
+                        onClick={updateVoyageProgress}
+                        disabled={isUpdatingProgress}
+                        size="sm"
+                        variant="outline"
+                        className="text-xs h-6 px-2"
+                      >
+                        {isUpdatingProgress ? (
+                          <>
+                            <Ship className="h-3 w-3 mr-1 animate-spin" />
+                            Updating...
+                          </>
+                        ) : (
+                          <>
+                            <RefreshCw className="h-3 w-3 mr-1" />
+                            Update
+                          </>
+                        )}
+                      </Button>
                     </div>
                   </div>
                   
