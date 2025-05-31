@@ -83,6 +83,8 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
   const [showWeatherDetails, setShowWeatherDetails] = useState(false);
   const [showFuelDetails, setShowFuelDetails] = useState(false);
   const [ports, setPorts] = useState<any[]>([]);
+  const [aiVoyageProgress, setAiVoyageProgress] = useState<any>(null);
+  const [isUpdatingProgress, setIsUpdatingProgress] = useState(false);
   
   // Fetch ports data for proper name resolution
   useEffect(() => {

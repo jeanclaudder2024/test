@@ -28,6 +28,7 @@ import {
 } from "./utils/cacheManager";
 import { WebSocketServer, WebSocket } from "ws";
 import { db } from "./db";
+import { VoyageProgressService } from "./services/voyageProgressService.js";
 import { eq } from "drizzle-orm";
 import { 
   insertVesselSchema, 
@@ -5651,6 +5652,109 @@ Keep the description professional, informative, and around 150-200 words. Focus 
     }
   });
 
+  // Voyage Progress API Endpoints
+  app.post("/api/vessels/:id/update-progress", async (req: Request, res: Response) => {
+    try {
+      const vesselId = parseInt(req.params.id);
+      
+      if (isNaN(vesselId)) {
+        return res.status(400).json({ message: "Invalid vessel ID" });
+      }
+
+      const progressData = await VoyageProgressService.updateVesselProgress(vesselId);
+      
+      if (!progressData) {
+        return res.status(404).json({ message: "Vessel not found or no voyage data available" });
+      }
+
+      res.json({
+        success: true,
+        data: progressData,
+        message: "Voyage progress updated successfully"
+      });
+    } catch (error) {
+      console.error("Error updating vessel progress:", error);
+      res.status(500).json({ message: "Failed to update voyage progress" });
+    }
+  });
+
+  app.post("/api/admin/update-all-voyage-progress", async (req: Request, res: Response) => {
+    try {
+      // Start the update process asynchronously
+      VoyageProgressService.updateAllVoyageProgress().then(() => {
+        console.log('Voyage progress update completed');
+      }).catch((error) => {
+        console.error('Error in voyage progress update:', error);
+      });
+
+      res.json({
+        success: true,
+        message: "Voyage progress update started for all vessels"
+      });
+    } catch (error) {
+      console.error("Error starting voyage progress update:", error);
+      res.status(500).json({ message: "Failed to start voyage progress update" });
+    }
+  });
+
+  app.get("/api/vessels/:id/progress", async (req: Request, res: Response) => {
+    try {
+      const vesselId = parseInt(req.params.id);
+      
+      if (isNaN(vesselId)) {
+        return res.status(400).json({ message: "Invalid vessel ID" });
+      }
+
+      const vessel = await storage.getVesselById(vesselId);
+      
+      if (!vessel) {
+        return res.status(404).json({ message: "Vessel not found" });
+      }
+
+      // Extract voyage progress from metadata
+      let voyageProgress = null;
+      if (vessel.metadata) {
+        try {
+          const metadata = typeof vessel.metadata === 'string' 
+            ? JSON.parse(vessel.metadata) 
+            : vessel.metadata;
+          voyageProgress = metadata.voyageProgress || null;
+        } catch (error) {
+          console.error('Error parsing vessel metadata:', error);
+        }
+      }
+
+      // If no progress data, calculate basic progress
+      if (!voyageProgress && vessel.departureDate && vessel.eta) {
+        const timeBasedProgress = VoyageProgressService.calculateTimeBasedProgress(
+          new Date(vessel.departureDate), 
+          new Date(vessel.eta)
+        );
+        voyageProgress = {
+          percentComplete: timeBasedProgress,
+          currentStatus: timeBasedProgress < 10 ? "Departed" : 
+                        timeBasedProgress < 90 ? "En route" : "Approaching destination",
+          estimatedArrival: vessel.eta,
+          nextMilestone: timeBasedProgress < 50 ? "Halfway point" : "Final approach"
+        };
+      }
+
+      res.json({
+        success: true,
+        data: voyageProgress,
+        vessel: {
+          id: vessel.id,
+          name: vessel.name,
+          departureDate: vessel.departureDate,
+          eta: vessel.eta
+        }
+      });
+    } catch (error) {
+      console.error("Error fetching vessel progress:", error);
+      res.status(500).json({ message: "Failed to fetch voyage progress" });
+    }
+  });
+
   // Database Migration API Endpoints
   apiRouter.post("/admin/migrate-to-mysql", async (req, res) => {
     try {
@@ -5979,6 +6083,10 @@ CREATE TABLE ports (
       });
     }
   });
+
+  // Start the automatic voyage progress scheduler
+  console.log('🚢 Starting voyage progress scheduler...');
+  VoyageProgressService.startProgressUpdateScheduler();
 
   return httpServer;
 }
