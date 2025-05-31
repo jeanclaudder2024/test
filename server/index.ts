@@ -50,8 +50,8 @@ app.use((req, res, next) => {
   const { registerRoutes } = await import("./routes");
   const server = await registerRoutes(app);
   
-  // Start the server
-  server.listen(port, () => {
+  // Start the server - bind to 0.0.0.0 for Render deployment
+  server.listen(port, "0.0.0.0", () => {
     log(`Server running on port ${port}`);
   });
   
@@ -80,26 +80,11 @@ app.use((req, res, next) => {
     const path = await import("path");
     const fs = await import("fs");
     
-    // Try multiple possible static file locations
-    const possiblePaths = [
-      path.join(process.cwd(), "dist", "client"),
-      path.join(process.cwd(), "client", "dist"),
-      path.join(process.cwd(), "dist")
-    ];
+    // Static files are built to dist/client by Vite
+    const staticPath = path.join(process.cwd(), "dist", "client");
+    const indexPath = path.join(staticPath, "index.html");
     
-    let staticPath = null;
-    let indexPath = null;
-    
-    for (const testPath of possiblePaths) {
-      const testIndex = path.join(testPath, "index.html");
-      if (fs.existsSync(testIndex)) {
-        staticPath = testPath;
-        indexPath = testIndex;
-        break;
-      }
-    }
-    
-    if (staticPath && indexPath) {
+    if (fs.existsSync(indexPath)) {
       app.use(express.static(staticPath));
       app.get("*", (_req, res) => {
         res.sendFile(indexPath);
