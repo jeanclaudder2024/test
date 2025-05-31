@@ -19,8 +19,8 @@ COPY . .
 # Build the application
 RUN npm run build
 
-# Remove dev dependencies after build to reduce image size
-RUN npm prune --production
+# Don't remove dev dependencies in production - needed for Vite serving
+# RUN npm prune --production
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
