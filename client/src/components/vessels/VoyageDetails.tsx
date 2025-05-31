@@ -1115,7 +1115,7 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                 <div className="space-y-2">
                   <div>
                     <p className="text-xs text-gray-500">Destination Port</p>
-                    <p className="text-sm font-medium">{vessel.destinationPort || 'Not specified'}</p>
+                    <p className="text-sm font-medium">{getPortName(vessel.destinationPort)}</p>
                   </div>
                   {vessel.eta && (
                     <div>
@@ -1141,7 +1141,7 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                 <div className="space-y-2">
                   <div>
                     <p className="text-xs text-gray-500">Refinery Name</p>
-                    <p className="text-sm font-medium">{vessel.targetRefinery || vessel.destinationPort || 'Not specified'}</p>
+                    <p className="text-sm font-medium">{vessel.targetRefinery || getPortName(vessel.destinationPort)}</p>
                   </div>
                   {vessel.oilSource && (
                     <div>
@@ -1224,7 +1224,7 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                 <div className="space-y-2">
                   <div>
                     <p className="text-xs text-gray-500">Loading Port</p>
-                    <p className="text-sm font-medium">{(vessel as any).loadingPort || vessel.departurePort || 'Not specified'}</p>
+                    <p className="text-sm font-medium">{getPortName((vessel as any).loadingPort || vessel.departurePort)}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">Price per Barrel</p>
