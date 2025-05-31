@@ -978,7 +978,7 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">Current Speed</p>
-                    <p className="text-sm font-medium">{vessel.speed || currentLocation?.speed || 'Not available'} knots</p>
+                    <p className="text-sm font-medium">{(vessel as any).speed || currentLocation?.speed || 'Not available'} knots</p>
                   </div>
                 </div>
               </div>
@@ -996,7 +996,7 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                 <div className="space-y-2">
                   <div>
                     <p className="text-xs text-gray-500">Cargo Type</p>
-                    <p className="text-sm font-medium">{vessel.oilType || vessel.cargoType || 'Not specified'}</p>
+                    <p className="text-sm font-medium">{(vessel as any).oilType || vessel.cargoType || 'Not specified'}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">Cargo Capacity</p>
@@ -1014,11 +1014,11 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                 <div className="space-y-2">
                   <div>
                     <p className="text-xs text-gray-500">Quantity</p>
-                    <p className="text-sm font-medium">{vessel.quantity ? `${parseFloat(vessel.quantity).toLocaleString()} barrels` : 'Not specified'}</p>
+                    <p className="text-sm font-medium">{(vessel as any).quantity ? `${parseFloat((vessel as any).quantity).toLocaleString()} barrels` : 'Not specified'}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">Deal Value</p>
-                    <p className="text-sm font-medium">{vessel.dealValue ? `$${parseFloat(vessel.dealValue).toLocaleString()}` : 'Not specified'}</p>
+                    <p className="text-sm font-medium">{(vessel as any).dealValue ? `$${parseFloat((vessel as any).dealValue).toLocaleString()}` : 'Not specified'}</p>
                   </div>
                 </div>
               </div>
@@ -1032,11 +1032,11 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                 <div className="space-y-2">
                   <div>
                     <p className="text-xs text-gray-500">Loading Port</p>
-                    <p className="text-sm font-medium">{vessel.loadingPort || vessel.departurePort || 'Not specified'}</p>
+                    <p className="text-sm font-medium">{(vessel as any).loadingPort || vessel.departurePort || 'Not specified'}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">Price per Barrel</p>
-                    <p className="text-sm font-medium">{vessel.price ? `$${parseFloat(vessel.price).toFixed(2)}` : 'Not specified'}</p>
+                    <p className="text-sm font-medium">{(vessel as any).price ? `$${parseFloat((vessel as any).price).toFixed(2)}` : 'Not specified'}</p>
                   </div>
                 </div>
               </div>
@@ -1050,11 +1050,11 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                 <div className="space-y-2">
                   <div>
                     <p className="text-xs text-gray-500">Market Price</p>
-                    <p className="text-sm font-medium">{vessel.marketPrice ? `$${parseFloat(vessel.marketPrice).toFixed(2)}` : 'Not available'}</p>
+                    <p className="text-sm font-medium">{(vessel as any).marketPrice ? `$${parseFloat((vessel as any).marketPrice).toFixed(2)}` : 'Not available'}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">Source Company</p>
-                    <p className="text-sm font-medium">{vessel.sourceCompany || vessel.sellerName || 'Not specified'}</p>
+                    <p className="text-sm font-medium">{(vessel as any).sourceCompany || vessel.sellerName || 'Not specified'}</p>
                   </div>
                 </div>
               </div>
@@ -1068,16 +1068,16 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <p className="text-xs text-gray-500">Target Refinery</p>
-                    <p className="text-sm font-medium">{vessel.targetRefinery || 'Not specified'}</p>
+                    <p className="text-sm font-medium">{(vessel as any).targetRefinery || 'Not specified'}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">Shipping Type</p>
                     <p className="text-sm font-medium">
-                      {vessel.shippingType || 'Not specified'}
-                      {vessel.shippingType && (
+                      {(vessel as any).shippingType || 'Not specified'}
+                      {(vessel as any).shippingType && (
                         <span className="ml-2 text-xs text-gray-500">
-                          {vessel.shippingType === 'FOB' ? '(Free On Board)' : 
-                           vessel.shippingType === 'CIF' ? '(Cost, Insurance, Freight)' : 
+                          {(vessel as any).shippingType === 'FOB' ? '(Free On Board)' : 
+                           (vessel as any).shippingType === 'CIF' ? '(Cost, Insurance, Freight)' : 
                            vessel.shippingType === 'In Tank' ? '(In Tank Storage)' : ''}
                         </span>
                       )}
