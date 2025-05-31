@@ -304,18 +304,46 @@ export default function VesselDetail() {
   const [refineries, setRefineries] = useState<any[]>([]);
   const [ports, setPorts] = useState<any[]>([]);
   
-  // Helper function to get port name by ID
-  const getPortName = (portId: number | string | null | undefined): string => {
-    if (!portId || !ports.length) return 'Unknown Port';
-    const port = ports.find(p => p.id === Number(portId));
-    return port ? port.name : `Port ID: ${portId}`;
+  // Helper function to get port name by ID or name
+  const getPortName = (portIdOrName: number | string | null | undefined): string => {
+    if (!portIdOrName) return 'Unknown Port';
+    
+    // If it's already a port name (string that doesn't look like an ID)
+    if (typeof portIdOrName === 'string' && isNaN(Number(portIdOrName))) {
+      return portIdOrName;
+    }
+    
+    // If we have ports data, try to find the port by ID
+    if (ports.length > 0) {
+      const port = ports.find(p => p.id === Number(portIdOrName) || p.name === portIdOrName);
+      if (port) {
+        return `${port.name}, ${port.country}`;
+      }
+    }
+    
+    // If it's a number but we can't find the port, show it as is
+    return typeof portIdOrName === 'string' ? portIdOrName : `Port ID: ${portIdOrName}`;
   };
   
-  // Helper function to get departure port name
-  const getDeparturePortName = (portId: number | string | null | undefined): string => {
-    if (!portId || !ports.length) return 'Unknown Port';
-    const port = ports.find(p => p.id === Number(portId));
-    return port ? port.name : `Port ID: ${portId}`;
+  // Helper function to get departure port name with additional details
+  const getDeparturePortName = (portIdOrName: number | string | null | undefined): string => {
+    if (!portIdOrName) return 'Unknown Port';
+    
+    // If it's already a port name (string that doesn't look like an ID)
+    if (typeof portIdOrName === 'string' && isNaN(Number(portIdOrName))) {
+      return portIdOrName;
+    }
+    
+    // If we have ports data, try to find the port by ID
+    if (ports.length > 0) {
+      const port = ports.find(p => p.id === Number(portIdOrName) || p.name === portIdOrName);
+      if (port) {
+        return `${port.name}, ${port.country}`;
+      }
+    }
+    
+    // If it's a number but we can't find the port, show it as is
+    return typeof portIdOrName === 'string' ? portIdOrName : `Port ID: ${portIdOrName}`;
   };
   
   // Fetch refineries data for map connections
