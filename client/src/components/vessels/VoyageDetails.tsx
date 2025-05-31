@@ -601,6 +601,160 @@ export const VoyageDetails: React.FC<VoyageDetailsProps> = ({
                   </div>
                 </div>
               </div>
+
+              {/* Maritime Specifications */}
+              <div className="bg-white rounded-lg border p-4 shadow-sm">
+                <h3 className="text-sm font-medium flex items-center mb-3">
+                  <Anchor className="h-4 w-4 mr-2 text-slate-600" />
+                  Vessel Specifications
+                </h3>
+                <div className="space-y-2">
+                  <div>
+                    <p className="text-xs text-gray-500">Vessel Type</p>
+                    <p className="text-sm font-medium">{vessel.vesselType || "Not specified"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Flag State</p>
+                    <p className="text-sm font-medium">{vessel.flag || "Not specified"}</p>
+                  </div>
+                  {vessel.built && (
+                    <div>
+                      <p className="text-xs text-gray-500">Year Built</p>
+                      <p className="text-sm font-medium">{vessel.built}</p>
+                    </div>
+                  )}
+                  {vessel.deadweight && (
+                    <div>
+                      <p className="text-xs text-gray-500">Deadweight Tonnage</p>
+                      <p className="text-sm font-medium">{vessel.deadweight.toLocaleString()} DWT</p>
+                    </div>
+                  )}
+                  {vessel.imo && (
+                    <div>
+                      <p className="text-xs text-gray-500">IMO Number</p>
+                      <p className="text-sm font-medium">{vessel.imo}</p>
+                    </div>
+                  )}
+                  {vessel.mmsi && (
+                    <div>
+                      <p className="text-xs text-gray-500">MMSI</p>
+                      <p className="text-sm font-medium">{vessel.mmsi}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Navigation Details */}
+              <div className="bg-white rounded-lg border p-4 shadow-sm">
+                <h3 className="text-sm font-medium flex items-center mb-3">
+                  <Navigation className="h-4 w-4 mr-2 text-blue-600" />
+                  Navigation & Performance
+                </h3>
+                <div className="space-y-2">
+                  {enhancedVesselData?.course && (
+                    <div>
+                      <p className="text-xs text-gray-500">Course (Heading)</p>
+                      <p className="text-sm font-medium">{enhancedVesselData.course}° True</p>
+                    </div>
+                  )}
+                  {enhancedVesselData?.navStatus && (
+                    <div>
+                      <p className="text-xs text-gray-500">Navigation Status</p>
+                      <p className="text-sm font-medium">{enhancedVesselData.navStatus}</p>
+                    </div>
+                  )}
+                  {vessel.speed && (
+                    <div>
+                      <p className="text-xs text-gray-500">Current Speed</p>
+                      <p className="text-sm font-medium">{vessel.speed} knots</p>
+                    </div>
+                  )}
+                  {enhancedVesselData?.draught && (
+                    <div>
+                      <p className="text-xs text-gray-500">Current Draught</p>
+                      <p className="text-sm font-medium">{enhancedVesselData.draught} meters</p>
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-xs text-gray-500">Last Position Update</p>
+                    <p className="text-sm font-medium">
+                      {vessel.lastUpdated ? formatDate(new Date(vessel.lastUpdated)) : "Not available"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Cargo & Operational Information */}
+              <div className="bg-white rounded-lg border p-4 shadow-sm">
+                <h3 className="text-sm font-medium flex items-center mb-3">
+                  <BarChart3 className="h-4 w-4 mr-2 text-orange-600" />
+                  Cargo & Operations
+                </h3>
+                <div className="space-y-2">
+                  {vessel.cargoType && (
+                    <div>
+                      <p className="text-xs text-gray-500">Cargo Type</p>
+                      <p className="text-sm font-medium">{vessel.cargoType}</p>
+                    </div>
+                  )}
+                  {vessel.cargoCapacity && (
+                    <div>
+                      <p className="text-xs text-gray-500">Cargo Capacity</p>
+                      <p className="text-sm font-medium">{vessel.cargoCapacity.toLocaleString()} metric tons</p>
+                    </div>
+                  )}
+                  {vessel.ownerName && (
+                    <div>
+                      <p className="text-xs text-gray-500">Owner</p>
+                      <p className="text-sm font-medium">{vessel.ownerName}</p>
+                    </div>
+                  )}
+                  {vessel.operatorName && (
+                    <div>
+                      <p className="text-xs text-gray-500">Operator</p>
+                      <p className="text-sm font-medium">{vessel.operatorName}</p>
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-xs text-gray-500">Current Region</p>
+                    <p className="text-sm font-medium">{vessel.currentRegion || "Unknown"}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Voyage Economics */}
+              <div className="bg-white rounded-lg border p-4 shadow-sm">
+                <h3 className="text-sm font-medium flex items-center mb-3">
+                  <DollarSign className="h-4 w-4 mr-2 text-green-600" />
+                  Commercial Information
+                </h3>
+                <div className="space-y-2">
+                  {vessel.buyerName && (
+                    <div>
+                      <p className="text-xs text-gray-500">Buyer</p>
+                      <p className="text-sm font-medium">{vessel.buyerName}</p>
+                    </div>
+                  )}
+                  {vessel.sellerName && (
+                    <div>
+                      <p className="text-xs text-gray-500">Seller</p>
+                      <p className="text-sm font-medium">{vessel.sellerName}</p>
+                    </div>
+                  )}
+                  {vessel.oilSource && (
+                    <div>
+                      <p className="text-xs text-gray-500">Oil Source</p>
+                      <p className="text-sm font-medium">{vessel.oilSource}</p>
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-xs text-gray-500">Voyage Status</p>
+                    <Badge variant={vessel.status === "underway" ? "default" : "secondary"} className="text-xs">
+                      {vessel.status || "Unknown"}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Alerts Section */}
