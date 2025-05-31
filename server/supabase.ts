@@ -1,20 +1,17 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Default values to prevent deployment errors
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://placeholder.supabase.co';
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'placeholder-key';
+if (!process.env.SUPABASE_URL) {
+  throw new Error('SUPABASE_URL environment variable is required');
+}
 
-// Check if we have real credentials
-const hasValidCredentials = process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY;
-
-if (!hasValidCredentials) {
-  console.warn('⚠️  Supabase credentials missing - database features will be limited');
+if (!process.env.SUPABASE_ANON_KEY) {
+  throw new Error('SUPABASE_ANON_KEY environment variable is required');
 }
 
 // Create Supabase client for server-side operations
 export const supabase = createClient(
-  SUPABASE_URL,
-  SUPABASE_ANON_KEY,
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY,
   {
     auth: {
       autoRefreshToken: true,
@@ -22,8 +19,6 @@ export const supabase = createClient(
     }
   }
 );
-
-export { hasValidCredentials };
 
 // Database connection status checker
 export async function checkSupabaseConnection(): Promise<boolean> {
