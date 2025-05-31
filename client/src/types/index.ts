@@ -121,30 +121,47 @@ export interface Document {
 export interface Vessel {
   id: number;
   name: string;
-  mmsi?: number;
-  imo?: number;
-  type?: string;
-  flag?: string;
-  status?: string;
-  destination?: string;
-  eta?: string;
-  lat?: number;
-  lng?: number;
-  heading?: number;
-  speed?: number;
-  lastReport?: string;
-  sellerName?: string;
-  buyerName?: string;
-  cargoType?: string;
-  cargoAmount?: number;
-  cargoUnit?: string;
-  departurePort?: string;
-  departureLat?: number;
-  departureLng?: number;
-  destinationPort?: string;
-  destinationLat?: number;
-  destinationLng?: number;
-  progress?: number;
+  imo: string;
+  mmsi: string;
+  vesselType: string;
+  flag: string;
+  built?: number | null;
+  deadweight?: number | null;
+  currentLat?: string | null;
+  currentLng?: string | null;
+  departurePort?: string | null;
+  departureDate?: string | null;
+  departureLat?: string | null;
+  departureLng?: string | null;
+  destinationPort?: string | null;
+  destinationLat?: string | null;
+  destinationLng?: string | null;
+  eta?: string | null;
+  cargoType?: string | null;
+  cargoCapacity?: number | null;
+  currentRegion?: string | null;
+  status?: string | null;
+  speed?: string | null;
+  buyerName?: string | null;
+  sellerName?: string | null;
+  ownerName?: string | null;
+  operatorName?: string | null;
+  oilSource?: string | null;
+  
+  // Deal Information Fields
+  oilType?: string | null;
+  quantity?: number | null;
+  dealValue?: number | null;
+  loadingPort?: string | null;
+  price?: number | null;
+  marketPrice?: number | null;
+  sourceCompany?: string | null;
+  targetRefinery?: string | null;
+  shippingType?: string | null;
+  routeDistance?: number | null;
+  
+  metadata?: string | null;
+  lastUpdated?: string | null;
 }
 
 // Response types

@@ -16,7 +16,11 @@ import {
   Route,
   ChevronDown,
   ChevronUp,
-  RefreshCw
+  RefreshCw,
+  Building,
+  Package,
+  DollarSign,
+  TrendingUp
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
