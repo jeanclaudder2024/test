@@ -1466,6 +1466,7 @@ export default function VesselManagement() {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
 
         {/* Map Selector Dialog */}
         <Dialog open={showMapSelector} onOpenChange={setShowMapSelector}>
