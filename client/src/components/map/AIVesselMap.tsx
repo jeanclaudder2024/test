@@ -547,37 +547,40 @@ export default function AIVesselMap({ vessel, initialLat, initialLng }: AIVessel
           ))}
 
           {/* All Ports or Nearby Ports */}
-          {(showAllPorts ? allPorts : nearbyPorts).map((port) => (
-            <Marker
-              key={`port-${port.id}`}
-              position={[parseFloat(port.lat), parseFloat(port.lng)]}
-              icon={portIcon(port, port.id === departurePort?.id || port.id === destinationPort?.id)}
-            >
-              <Popup>
-                <div className="text-sm space-y-2 max-w-[200px]">
-                  <div className="font-semibold text-base flex items-center">
-                    <Anchor className="h-4 w-4 mr-1.5 text-green-600" />
-                    {port.name}
+          {(showAllPorts ? allPorts : nearbyPorts).map((port) => {
+            const isSpecial = port.id === departurePort?.id || port.id === destinationPort?.id;
+            return (
+              <Marker
+                key={`port-${port.id}`}
+                position={[parseFloat(port.lat), parseFloat(port.lng)]}
+                icon={portIcon(port, isSpecial)}
+              >
+                <Popup>
+                  <div className="text-sm space-y-2 max-w-[200px]">
+                    <div className="font-semibold text-base flex items-center">
+                      <Anchor className="h-4 w-4 mr-1.5 text-green-600" />
+                      {port.name}
+                    </div>
+                    <div className="space-y-1 text-xs">
+                      <div>Country: {port.country}</div>
+                      {port.type && <div>Type: {port.type}</div>}
+                      {port.capacity && <div>Capacity: {port.capacity.toLocaleString()} TEU</div>}
+                      {port.region && <div>Region: {port.region}</div>}
+                      <div>Distance: {calculateDistance(
+                        vesselPosition[0], vesselPosition[1],
+                        parseFloat(port.lat), parseFloat(port.lng)
+                      ).toFixed(1)} km</div>
+                    </div>
+                    {isSpecial && (
+                      <Badge variant="outline" className="text-xs">
+                        {port.id === departurePort?.id ? 'Departure' : 'Destination'}
+                      </Badge>
+                    )}
                   </div>
-                  <div className="space-y-1 text-xs">
-                    <div>Country: {port.country}</div>
-                    {port.type && <div>Type: {port.type}</div>}
-                    {port.capacity && <div>Capacity: {port.capacity.toLocaleString()} TEU</div>}
-                    {port.region && <div>Region: {port.region}</div>}
-                    <div>Distance: {calculateDistance(
-                      vesselPosition[0], vesselPosition[1],
-                      parseFloat(port.lat), parseFloat(port.lng)
-                    ).toFixed(1)} km</div>
-                  </div>
-                  {(port.id === departurePort?.id || port.id === destinationPort?.id) && (
-                    <Badge variant="outline" className="text-xs">
-                      {port.id === departurePort?.id ? 'Departure' : 'Destination'}
-                    </Badge>
-                  )}
-                </div>
-              </Popup>
-            </Marker>
-          ))}
+                </Popup>
+              </Marker>
+            );
+          })}
 
           {/* Voyage Route */}
           {voyageRoute.length > 1 && (
