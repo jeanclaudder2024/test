@@ -394,29 +394,142 @@ const EnhancedVesselMap: React.FC<EnhancedVesselMapProps> = ({
     }
   }, [vessel]);
 
+  // Function to generate realistic maritime route avoiding land
+  const generateMaritimeRoute = useCallback((start: [number, number], end: [number, number]): [number, number][] => {
+    // Major shipping lanes and waypoints for realistic maritime routing
+    const waypoints: [number, number][] = [start];
+    
+    const startLat = start[0];
+    const startLng = start[1];
+    const endLat = end[0];
+    const endLng = end[1];
+    
+    // Calculate if route crosses major landmasses and add waypoints accordingly
+    
+    // If crossing from Persian Gulf to Europe/Americas
+    if ((startLng > 40 && startLng < 60) && (endLng < 20 || endLng < -20)) {
+      // Go through Suez Canal route
+      waypoints.push([29.9792, 32.5720]); // Suez Canal
+      waypoints.push([31.2001, 29.9187]); // Mediterranean entrance
+      
+      // If going to Americas, add Gibraltar waypoint
+      if (endLng < -10) {
+        waypoints.push([36.1408, -5.3536]); // Gibraltar Strait
+      }
+    }
+    
+    // If crossing from Asia to Americas via Pacific
+    else if ((startLng > 100) && (endLng < -100)) {
+      // Pacific shipping lane waypoints
+      waypoints.push([35.6762, 139.6503]); // Near Tokyo
+      waypoints.push([37.7749, -122.4194]); // San Francisco area
+    }
+    
+    // If crossing from Europe/Africa to Americas via Atlantic
+    else if ((startLng > -10 && startLng < 30) && (endLng < -30)) {
+      // Atlantic shipping lane
+      waypoints.push([36.1408, -5.3536]); // Gibraltar (if from Mediterranean)
+      waypoints.push([28.2916, -16.6291]); // Canary Islands area
+    }
+    
+    // If crossing from Asia to Europe
+    else if ((startLng > 90) && (endLng < 30 && endLng > -10)) {
+      // Via Suez Canal
+      waypoints.push([1.3521, 103.8198]); // Singapore Strait
+      waypoints.push([12.7840, 45.0189]); // Bab el-Mandeb Strait
+      waypoints.push([29.9792, 32.5720]); // Suez Canal
+    }
+    
+    // If going around Cape of Good Hope (Africa)
+    else if ((startLng > 30 && startLat < 0) || (endLng > 30 && endLat < 0)) {
+      waypoints.push([-34.3587, 18.4773]); // Cape of Good Hope
+    }
+    
+    // Add intermediate waypoints to avoid sharp turns over long distances
+    const totalDistance = Math.sqrt(Math.pow(endLat - startLat, 2) + Math.pow(endLng - startLng, 2));
+    if (totalDistance > 20) { // If distance is significant
+      const lastPoint = waypoints[waypoints.length - 1];
+      const midLat = (lastPoint[0] + endLat) / 2;
+      const midLng = (lastPoint[1] + endLng) / 2;
+      
+      // Adjust midpoint to follow shipping lanes (stay in deep water)
+      let adjustedMidLat = midLat;
+      let adjustedMidLng = midLng;
+      
+      // Avoid crossing major landmasses
+      if (midLat > 40 && midLat < 70 && midLng > -10 && midLng < 60) {
+        // Avoid crossing Europe/Asia land - go around via sea
+        adjustedMidLat = Math.min(midLat, 40);
+      }
+      
+      waypoints.push([adjustedMidLat, adjustedMidLng]);
+    }
+    
+    waypoints.push(end);
+    return waypoints;
+  }, []);
+
   // Function to generate voyage line from departure to destination
   const generateVoyageLine = useCallback(() => {
     if (!realTimePosition) return;
     
-    const waypoints: [number, number][] = [];
+    let waypoints: [number, number][] = [];
     
-    // Add departure port if available
-    if (departurePort && departurePort.lat && departurePort.lng) {
-      waypoints.push([parseFloat(departurePort.lat), parseFloat(departurePort.lng)]);
-    }
-    
-    // Add current vessel position
-    waypoints.push(realTimePosition);
-    
-    // Add destination port if available
-    if (destinationPortMarker && destinationPortMarker.lat && destinationPortMarker.lng) {
-      waypoints.push([parseFloat(destinationPortMarker.lat), parseFloat(destinationPortMarker.lng)]);
-    } else if (destinationRefineryMarker && destinationRefineryMarker.lat && destinationRefineryMarker.lng) {
-      waypoints.push([parseFloat(destinationRefineryMarker.lat), parseFloat(destinationRefineryMarker.lng)]);
+    // If we have both departure and destination, generate full maritime route
+    if (departurePort && departurePort.lat && departurePort.lng && 
+        (destinationPortMarker || destinationRefineryMarker)) {
+      
+      const start: [number, number] = [parseFloat(departurePort.lat), parseFloat(departurePort.lng)];
+      const end: [number, number] = destinationPortMarker 
+        ? [parseFloat(destinationPortMarker.lat), parseFloat(destinationPortMarker.lng)]
+        : [parseFloat(destinationRefineryMarker.lat), parseFloat(destinationRefineryMarker.lng)];
+      
+      // Generate full maritime route
+      const fullRoute = generateMaritimeRoute(start, end);
+      
+      // Find the closest point on the route to current vessel position
+      let closestIndex = 0;
+      let minDistance = Infinity;
+      
+      fullRoute.forEach((point, index) => {
+        const distance = Math.sqrt(
+          Math.pow(point[0] - realTimePosition[0], 2) + 
+          Math.pow(point[1] - realTimePosition[1], 2)
+        );
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestIndex = index;
+        }
+      });
+      
+      // Use route from start to current position, then current position to end
+      waypoints = [
+        ...fullRoute.slice(0, closestIndex + 1),
+        realTimePosition,
+        ...fullRoute.slice(closestIndex + 1)
+      ];
+    } else {
+      // Fallback to simple waypoints if we don't have complete route info
+      if (departurePort && departurePort.lat && departurePort.lng) {
+        const start: [number, number] = [parseFloat(departurePort.lat), parseFloat(departurePort.lng)];
+        waypoints = generateMaritimeRoute(start, realTimePosition);
+      } else {
+        waypoints.push(realTimePosition);
+      }
+      
+      if (destinationPortMarker && destinationPortMarker.lat && destinationPortMarker.lng) {
+        const end: [number, number] = [parseFloat(destinationPortMarker.lat), parseFloat(destinationPortMarker.lng)];
+        const routeToDestination = generateMaritimeRoute(realTimePosition, end);
+        waypoints = [...waypoints, ...routeToDestination.slice(1)]; // Skip duplicate current position
+      } else if (destinationRefineryMarker && destinationRefineryMarker.lat && destinationRefineryMarker.lng) {
+        const end: [number, number] = [parseFloat(destinationRefineryMarker.lat), parseFloat(destinationRefineryMarker.lng)];
+        const routeToDestination = generateMaritimeRoute(realTimePosition, end);
+        waypoints = [...waypoints, ...routeToDestination.slice(1)]; // Skip duplicate current position
+      }
     }
     
     setVoyageLine(waypoints);
-  }, [realTimePosition, departurePort, destinationPortMarker, destinationRefineryMarker]);
+  }, [realTimePosition, departurePort, destinationPortMarker, destinationRefineryMarker, generateMaritimeRoute]);
 
   // Function to find connected ports (ports the vessel has visited or will visit)
   const findConnectedPorts = useCallback(async () => {
