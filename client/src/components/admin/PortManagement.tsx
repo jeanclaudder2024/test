@@ -1053,25 +1053,14 @@ function AddPortDialog() {
         </Form>
       </DialogContent>
 
-      </DialogContent>
-
       {/* Interactive Map Modal */}
-      {showMap && (
-        <Dialog open={showMap} onOpenChange={setShowMap}>
-          <DialogContent className="sm:max-w-[900px] sm:max-h-[700px]">
-            <DialogHeader>
-              <DialogTitle>Select Port Location</DialogTitle>
-            </DialogHeader>
-            <CoordinateMapSelector
-              isOpen={showMap}
-              onCoordinateSelect={handleCoordinateSelect}
-              onClose={() => setShowMap(false)}
-              initialLat={25.276987}
-              initialLng={55.296249}
-            />
-          </DialogContent>
-        </Dialog>
-      )}
+      <CoordinateMapSelector
+        isOpen={showMap}
+        onCoordinateSelect={handleCoordinateSelect}
+        onClose={() => setShowMap(false)}
+        initialLat={25.276987}
+        initialLng={55.296249}
+      />
     </Dialog>
   );
 }
@@ -1405,7 +1394,7 @@ export function PortManagement() {
         <TabsContent value="grid" className="mt-0">
           {paginatedPorts.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {paginatedPorts.map((port) => (
+              {paginatedPorts.map((port: Port) => (
                 <PortCard key={port.id} port={port} />
               ))}
             </div>
@@ -1443,7 +1432,7 @@ export function PortManagement() {
             <CardContent className="p-0">
               {paginatedPorts.length > 0 ? (
                 <div className="divide-y divide-border">
-                  {paginatedPorts.map((port) => (
+                  {paginatedPorts.map((port: Port) => (
                     <div key={port.id} className="p-6 hover:bg-muted/50 transition-colors">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-4">
