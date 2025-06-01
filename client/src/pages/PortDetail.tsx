@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRoute, Link } from 'wouter';
-import { ArrowLeft, Anchor, Phone, MapPin, Info, LocateFixed, Network, Ship, Gauge, Activity, Calendar, Globe, Truck, Waves } from 'lucide-react';
+import { ArrowLeft, Anchor, Phone, MapPin, Info, LocateFixed, Network, Ship, Gauge, Activity, Calendar, Globe, Truck, Waves, Edit3, Settings, FileText, Mail, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { useDataStream } from '@/hooks/useDataStream';
+import { PortDetailForm } from '@/components/ports/PortDetailForm';
 import PortMap from '@/components/map/PortMap';
 
 // Types
@@ -78,6 +79,7 @@ function PortDetail() {
   const [showFullVesselList, setShowFullVesselList] = useState(false);
   const [showFullRefineryList, setShowFullRefineryList] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
+  const [isEditing, setIsEditing] = useState(false);
   
   // Find the port from our stream data
   const port = ports.find(p => p.id === portId);
