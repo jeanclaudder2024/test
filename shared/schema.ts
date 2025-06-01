@@ -310,33 +310,7 @@ export const ports = pgTable("ports", {
   status: text("status").default("active"),
   description: text("description"),
   
-  // Contact Information
-  portAuthority: text("port_authority"),
-  email: text("email"),
-  phone: text("phone"),
-  website: text("website"),
-  address: text("address"),
-  
-  // Technical Specifications
-  maxVesselLength: text("max_vessel_length"), // in meters
-  maxVesselBeam: text("max_vessel_beam"), // in meters
-  maxDraught: text("max_draught"), // in meters
-  berthCount: text("berth_count"),
-  
-  // Operations
-  operatingHours: text("operating_hours"),
-  timezone: text("timezone"),
-  pilotageRequired: boolean("pilotage_required"),
-  tugAssistance: boolean("tug_assistance"),
-  
-  // Additional Features
-  wasteReception: boolean("waste_reception"),
-  bunkeringAvailable: boolean("bunkering_available"),
-  storageCapacity: text("storage_capacity"), // in cubic meters
-  craneCapacity: text("crane_capacity"), // in tonnes
-  iceClass: text("ice_class"),
-  yearEstablished: text("year_established"),
-  notes: text("notes"),
+
   
   lastUpdated: timestamp("last_updated").defaultNow(),
 });
