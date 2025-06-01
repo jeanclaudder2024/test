@@ -38,9 +38,8 @@ export const refineryService = {
       if (existingRefineries.length > 0) {
         console.log(`Database already contains ${existingRefineries.length} refineries.`);
         
-        // Update stats
+        // Skip stats update - no stats table in current schema
         const activeRefineries = existingRefineries.filter(r => r.status === 'operational').length;
-        await storage.updateStats({ activeRefineries });
         
         return {
           refineries: existingRefineries.length,
@@ -77,9 +76,8 @@ export const refineryService = {
 
       console.log(`Created ${createdRefineries.length} new refineries in database.`);
 
-      // Update stats
+      // Skip stats update - no stats table in current schema
       const activeRefineries = createdRefineries.filter(r => r.status === 'operational').length;
-      await storage.updateStats({ activeRefineries });
 
       return {
         refineries: createdRefineries.length,
