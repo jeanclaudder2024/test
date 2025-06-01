@@ -162,6 +162,25 @@ function PortDetail() {
   const displayVessels = showFullVesselList ? associatedVessels : associatedVessels.slice(0, 3);
   const displayRefineries = showFullRefineryList ? connectedRefineries : connectedRefineries.slice(0, 3);
 
+  // Show edit form if in editing mode
+  if (isEditing && port) {
+    return (
+      <div className="container mx-auto p-4 pb-16">
+        <Link href="/ports">
+          <Button variant="ghost" className="mb-4">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Ports
+          </Button>
+        </Link>
+        
+        <PortDetailForm 
+          port={port} 
+          onCancel={() => setIsEditing(false)}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto p-4 pb-16">
       <Link href="/ports">
@@ -198,6 +217,14 @@ function PortDetail() {
             
             <div className="flex items-center gap-4 mt-4 md:mt-0">
               <StatusBadge status={port.status || 'Unknown'} />
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setIsEditing(!isEditing)}
+              >
+                <Edit3 className="h-4 w-4 mr-2" />
+                {isEditing ? 'Cancel Edit' : 'Edit Port'}
+              </Button>
               <Button variant="outline" size="sm">
                 <Phone className="h-4 w-4 mr-2" />
                 Contact
