@@ -882,9 +882,10 @@ export default function VesselManagement() {
             
             <form onSubmit={handleSubmit} className="space-y-6">
               <Tabs defaultValue="basic" className="w-full">
-                <TabsList className="grid w-full grid-cols-5">
+                <TabsList className="grid w-full grid-cols-6">
                   <TabsTrigger value="basic">Basic Info</TabsTrigger>
                   <TabsTrigger value="voyage">Voyage</TabsTrigger>
+                  <TabsTrigger value="ports">Port Connections</TabsTrigger>
                   <TabsTrigger value="technical">Technical</TabsTrigger>
                   <TabsTrigger value="deal">Deal Info</TabsTrigger>
                   <TabsTrigger value="commercial">Commercial</TabsTrigger>
@@ -1150,6 +1151,91 @@ export default function VesselManagement() {
                           value={formData.eta}
                           onChange={(e) => setFormData(prev => ({ ...prev, eta: e.target.value }))}
                         />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="ports" className="space-y-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <Anchor className="h-5 w-5" />
+                        Port Connections
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="departurePort">Departure Port</Label>
+                          <Select value={formData.departurePort} onValueChange={(value) => setFormData(prev => ({ ...prev, departurePort: value }))}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select departure port" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {ports?.map(port => (
+                                <SelectItem key={port.id} value={port.name}>
+                                  {port.name} - {port.country}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label htmlFor="destinationPort">Destination Port</Label>
+                          <Select value={formData.destinationPort} onValueChange={(value) => setFormData(prev => ({ ...prev, destinationPort: value }))}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select destination port" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {ports?.map(port => (
+                                <SelectItem key={port.id} value={port.name}>
+                                  {port.name} - {port.country}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      
+                      <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                        <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2 flex items-center gap-2">
+                          <Anchor className="h-4 w-4" />
+                          Port Connection Benefits
+                        </h4>
+                        <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+                          <li>• Automatic position updates when vessel reaches ports</li>
+                          <li>• Real-time port availability and status tracking</li>
+                          <li>• Integrated voyage planning with port schedules</li>
+                          <li>• Enhanced logistics coordination</li>
+                        </ul>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="loadingPort">Loading Port (if different)</Label>
+                          <Select value={formData.loadingPort} onValueChange={(value) => setFormData(prev => ({ ...prev, loadingPort: value }))}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select loading port" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {ports?.map(port => (
+                                <SelectItem key={port.id} value={port.name}>
+                                  {port.name} - {port.country}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label htmlFor="targetRefinery">Target Refinery</Label>
+                          <Input
+                            id="targetRefinery"
+                            value={formData.targetRefinery}
+                            onChange={(e) => setFormData(prev => ({ ...prev, targetRefinery: e.target.value }))}
+                            placeholder="Refinery name or facility"
+                          />
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
