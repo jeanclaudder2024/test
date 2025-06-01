@@ -5116,6 +5116,71 @@ Only use authentic, real-world data for existing refineries.`;
     }
   });
 
+  // Auto-fill port data using AI
+  apiRouter.post("/ports/auto-fill", async (req, res) => {
+    try {
+      const { name, country, lat, lng } = req.body;
+      
+      if (!name && (!lat || !lng)) {
+        return res.status(400).json({ 
+          message: "Port name or coordinates are required for auto-fill" 
+        });
+      }
+
+      // Use OpenAI to generate comprehensive port data
+      const OpenAI = require('openai');
+      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+      
+      const locationInfo = name ? `Port name: ${name}` : `Coordinates: ${lat}, ${lng}`;
+      const countryInfo = country ? `, Country: ${country}` : '';
+      
+      const prompt = `Generate realistic and comprehensive port information for a maritime port. 
+      ${locationInfo}${countryInfo}
+      
+      Please provide detailed information in JSON format with these fields:
+      - portAuthority: Official port authority name
+      - email: Professional contact email
+      - phone: International phone number
+      - website: Official website URL
+      - address: Full postal address
+      - maxVesselLength: Maximum vessel length in meters
+      - maxVesselBeam: Maximum vessel beam width in meters
+      - maxDraught: Maximum vessel draught in meters
+      - berthCount: Number of berths
+      - operatingHours: Operating schedule
+      - timezone: Local timezone
+      - pilotageRequired: true/false
+      - tugAssistance: true/false
+      - wasteReception: true/false
+      - bunkeringAvailable: true/false
+      - storageCapacity: Storage capacity in cubic meters
+      - craneCapacity: Crane lifting capacity in tonnes
+      - iceClass: Ice class rating if applicable
+      - yearEstablished: Year established
+      - description: Detailed description of the port
+      - notes: Additional operational notes
+      
+      Make all data realistic and consistent with modern port operations. Use actual maritime industry standards.`;
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+        messages: [{ role: "user", content: prompt }],
+        response_format: { type: "json_object" },
+        temperature: 0.7
+      });
+
+      const generatedData = JSON.parse(response.choices[0].message.content || '{}');
+      
+      res.json(generatedData);
+    } catch (error) {
+      console.error("Error generating port data:", error);
+      res.status(500).json({ 
+        message: "Failed to generate port data. Please ensure OpenAI API is configured.",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   // Get port analytics
   apiRouter.get("/ports/:portId/analytics", async (req, res) => {
     try {

@@ -393,6 +393,36 @@ function AddPortDialog() {
     }
   });
 
+  // Auto-fill mutation for AI-generated port data
+  const autoFillMutation = useMutation({
+    mutationFn: async (location: { name?: string; country?: string; lat?: string; lng?: string }) => {
+      return apiRequest('/api/ports/auto-fill', {
+        method: 'POST',
+        body: JSON.stringify(location)
+      });
+    },
+    onSuccess: (generatedData) => {
+      // Fill the form with AI-generated data
+      Object.keys(generatedData).forEach((key) => {
+        if (generatedData[key] !== null && generatedData[key] !== undefined) {
+          form.setValue(key as keyof PortFormData, generatedData[key]);
+        }
+      });
+      
+      toast({
+        title: "Auto-Fill Complete",
+        description: "Port details have been generated using AI. Please review and adjust as needed.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Auto-Fill Failed",
+        description: error.message || "Could not generate port data. Please fill manually.",
+        variant: "destructive",
+      });
+    }
+  });
+
   // Generate AI-powered port description
   const generatePortDescription = async (portId: number) => {
     try {
@@ -412,6 +442,29 @@ function AddPortDialog() {
     setShowMap(false);
   };
 
+  // Handle auto-fill with AI-generated data
+  const handleAutoFill = () => {
+    const currentValues = form.getValues();
+    const location = {
+      name: currentValues.name || undefined,
+      country: currentValues.country || undefined,
+      lat: currentValues.lat || undefined,
+      lng: currentValues.lng || undefined
+    };
+    
+    // Need at least name or coordinates to generate meaningful data
+    if (!location.name && (!location.lat || !location.lng)) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter at least a port name or coordinates before using auto-fill.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    autoFillMutation.mutate(location);
+  };
+
   const onSubmit = (data: PortFormData) => {
     addPortMutation.mutate(data);
   };
@@ -426,7 +479,29 @@ function AddPortDialog() {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add New Port - Comprehensive Details</DialogTitle>
+          <DialogTitle className="flex items-center justify-between">
+            <span>Add New Port - Comprehensive Details</span>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleAutoFill}
+              disabled={autoFillMutation.isPending}
+              className="ml-4"
+            >
+              {autoFillMutation.isPending ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Database className="h-4 w-4 mr-2" />
+                  Auto Fill
+                </>
+              )}
+            </Button>
+          </DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
