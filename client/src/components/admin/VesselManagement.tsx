@@ -261,7 +261,7 @@ export default function VesselManagement() {
   // Create vessel mutation
   const createVesselMutation = useMutation({
     mutationFn: async (vesselData: VesselFormData) => {
-      const processedData = {
+      const processedData: any = {
         name: vesselData.name?.trim() || "",
         imo: vesselData.imo?.trim() || "",
         mmsi: vesselData.mmsi?.trim() || "",
@@ -292,28 +292,35 @@ export default function VesselManagement() {
         
         // Deal Information
         oilType: vesselData.oilType?.trim() || null,
-        quantity: vesselData.quantity ? parseFloat(vesselData.quantity) : null,
-        dealValue: vesselData.dealValue ? parseFloat(vesselData.dealValue) : null,
+        quantity: vesselData.quantity ? vesselData.quantity.toString() : null,
+        dealValue: vesselData.dealValue ? vesselData.dealValue.toString() : null,
         loadingPort: vesselData.loadingPort?.trim() || null,
-        price: vesselData.price ? parseFloat(vesselData.price) : null,
-        marketPrice: vesselData.marketPrice ? parseFloat(vesselData.marketPrice) : null,
+        price: vesselData.price ? vesselData.price.toString() : null,
+        marketPrice: vesselData.marketPrice ? vesselData.marketPrice.toString() : null,
         sourceCompany: vesselData.sourceCompany?.trim() || null,
         targetRefinery: vesselData.targetRefinery?.trim() || null,
         shippingType: vesselData.shippingType?.trim() || null,
-        routeDistance: vesselData.routeDistance ? parseFloat(vesselData.routeDistance) : null,
+        routeDistance: vesselData.routeDistance ? vesselData.routeDistance.toString() : null,
         
         // Technical Specifications
         callsign: vesselData.callsign?.trim() || null,
         course: vesselData.course ? parseInt(vesselData.course) : null,
         navStatus: vesselData.navStatus?.trim() || null,
-        draught: vesselData.draught ? parseFloat(vesselData.draught) : null,
-        length: vesselData.length ? parseFloat(vesselData.length) : null,
-        width: vesselData.width ? parseFloat(vesselData.width) : null,
+        draught: vesselData.draught ? vesselData.draught.toString() : null,
+        length: vesselData.length ? vesselData.length.toString() : null,
+        width: vesselData.width ? vesselData.width.toString() : null,
         enginePower: vesselData.enginePower ? parseInt(vesselData.enginePower) : null,
-        fuelConsumption: vesselData.fuelConsumption ? parseFloat(vesselData.fuelConsumption) : null,
+        fuelConsumption: vesselData.fuelConsumption ? vesselData.fuelConsumption.toString() : null,
         crewSize: vesselData.crewSize ? parseInt(vesselData.crewSize) : null,
         grossTonnage: vesselData.grossTonnage ? parseInt(vesselData.grossTonnage) : null
       };
+
+      // Remove undefined values to prevent database errors
+      Object.keys(processedData).forEach(key => {
+        if (processedData[key] === undefined) {
+          delete processedData[key];
+        }
+      });
 
       const response = await fetch("/api/admin/vessels", {
         method: "POST",
@@ -341,7 +348,8 @@ export default function VesselManagement() {
   // Update vessel mutation
   const updateVesselMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: VesselFormData }) => {
-      const processedData = {
+      // Only include fields that exist in the database schema
+      const processedData: any = {
         name: data.name?.trim() || "",
         imo: data.imo?.trim() || "",
         mmsi: data.mmsi?.trim() || "",
@@ -372,28 +380,35 @@ export default function VesselManagement() {
         
         // Deal Information
         oilType: data.oilType?.trim() || null,
-        quantity: data.quantity ? parseFloat(data.quantity) : null,
-        dealValue: data.dealValue ? parseFloat(data.dealValue) : null,
+        quantity: data.quantity ? data.quantity.toString() : null,
+        dealValue: data.dealValue ? data.dealValue.toString() : null,
         loadingPort: data.loadingPort?.trim() || null,
-        price: data.price ? parseFloat(data.price) : null,
-        marketPrice: data.marketPrice ? parseFloat(data.marketPrice) : null,
+        price: data.price ? data.price.toString() : null,
+        marketPrice: data.marketPrice ? data.marketPrice.toString() : null,
         sourceCompany: data.sourceCompany?.trim() || null,
         targetRefinery: data.targetRefinery?.trim() || null,
         shippingType: data.shippingType?.trim() || null,
-        routeDistance: data.routeDistance ? parseFloat(data.routeDistance) : null,
+        routeDistance: data.routeDistance ? data.routeDistance.toString() : null,
         
         // Technical Specifications
         callsign: data.callsign?.trim() || null,
         course: data.course ? parseInt(data.course) : null,
         navStatus: data.navStatus?.trim() || null,
-        draught: data.draught ? parseFloat(data.draught) : null,
-        length: data.length ? parseFloat(data.length) : null,
-        width: data.width ? parseFloat(data.width) : null,
+        draught: data.draught ? data.draught.toString() : null,
+        length: data.length ? data.length.toString() : null,
+        width: data.width ? data.width.toString() : null,
         enginePower: data.enginePower ? parseInt(data.enginePower) : null,
-        fuelConsumption: data.fuelConsumption ? parseFloat(data.fuelConsumption) : null,
+        fuelConsumption: data.fuelConsumption ? data.fuelConsumption.toString() : null,
         crewSize: data.crewSize ? parseInt(data.crewSize) : null,
         grossTonnage: data.grossTonnage ? parseInt(data.grossTonnage) : null
       };
+
+      // Remove undefined values to prevent database errors
+      Object.keys(processedData).forEach(key => {
+        if (processedData[key] === undefined) {
+          delete processedData[key];
+        }
+      });
 
       const response = await fetch(`/api/admin/vessels/${id}`, {
         method: "PUT",
