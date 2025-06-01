@@ -52,17 +52,60 @@ import {
 import { apiRequest } from '@/lib/queryClient';
 import { CoordinateMapSelector } from '@/components/map/CoordinateMapSelector';
 
-// Form validation schema
+// Enhanced form validation schema with comprehensive port details
 const portFormSchema = z.object({
+  // Basic Information
   name: z.string().min(1, 'Port name is required'),
   country: z.string().min(1, 'Country is required'),
   region: z.string().min(1, 'Region is required'),
   lat: z.string().min(1, 'Latitude is required'),
   lng: z.string().min(1, 'Longitude is required'),
+  
+  // Port Classification
   type: z.string().optional(),
   status: z.string().optional(),
+  
+  // Operational Details
   capacity: z.string().optional(),
-  description: z.string().optional()
+  description: z.string().optional(),
+  
+  // Contact Information
+  portAuthority: z.string().optional(),
+  email: z.string().email('Invalid email format').optional().or(z.literal('')),
+  phone: z.string().optional(),
+  website: z.string().url('Invalid website URL').optional().or(z.literal('')),
+  address: z.string().optional(),
+  
+  // Technical Specifications
+  maxVesselLength: z.string().optional(),
+  maxVesselBeam: z.string().optional(),
+  maxDraught: z.string().optional(),
+  berthCount: z.string().optional(),
+  
+  // Facilities and Services
+  facilities: z.array(z.string()).optional(),
+  services: z.array(z.string()).optional(),
+  
+  // Operating Information
+  operatingHours: z.string().optional(),
+  timezone: z.string().optional(),
+  pilotageRequired: z.boolean().optional(),
+  tugAssistance: z.boolean().optional(),
+  
+  // Cargo Handling
+  cargoTypes: z.array(z.string()).optional(),
+  storageCapacity: z.string().optional(),
+  craneCapacity: z.string().optional(),
+  
+  // Environmental and Safety
+  iceClass: z.string().optional(),
+  wasteReception: z.boolean().optional(),
+  bunkeringAvailable: z.boolean().optional(),
+  
+  // Additional Information
+  yearEstablished: z.string().optional(),
+  lastMaintenance: z.string().optional(),
+  notes: z.string().optional()
 });
 
 type PortFormData = z.infer<typeof portFormSchema>;
@@ -258,15 +301,58 @@ function AddPortDialog() {
   const form = useForm<PortFormData>({
     resolver: zodResolver(portFormSchema),
     defaultValues: {
+      // Basic Information
       name: '',
       country: '',
       region: '',
       lat: '',
       lng: '',
+      
+      // Port Classification
       type: 'commercial',
       status: 'operational',
+      
+      // Operational Details
       capacity: '',
-      description: ''
+      description: '',
+      
+      // Contact Information
+      portAuthority: '',
+      email: '',
+      phone: '',
+      website: '',
+      address: '',
+      
+      // Technical Specifications
+      maxVesselLength: '',
+      maxVesselBeam: '',
+      maxDraught: '',
+      berthCount: '',
+      
+      // Facilities and Services
+      facilities: [],
+      services: [],
+      
+      // Operating Information
+      operatingHours: '24/7',
+      timezone: '',
+      pilotageRequired: false,
+      tugAssistance: false,
+      
+      // Cargo Handling
+      cargoTypes: [],
+      storageCapacity: '',
+      craneCapacity: '',
+      
+      // Environmental and Safety
+      iceClass: '',
+      wasteReception: false,
+      bunkeringAvailable: false,
+      
+      // Additional Information
+      yearEstablished: '',
+      lastMaintenance: '',
+      notes: ''
     }
   });
 
@@ -338,239 +424,614 @@ function AddPortDialog() {
           Add New Port
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add New Port</DialogTitle>
+          <DialogTitle>Add New Port - Comprehensive Details</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Port Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Port of Rotterdam" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="country"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Country</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Netherlands" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <Tabs defaultValue="basic" className="w-full">
+              <TabsList className="grid w-full grid-cols-5">
+                <TabsTrigger value="basic">Basic Info</TabsTrigger>
+                <TabsTrigger value="contact">Contact</TabsTrigger>
+                <TabsTrigger value="technical">Technical</TabsTrigger>
+                <TabsTrigger value="operations">Operations</TabsTrigger>
+                <TabsTrigger value="additional">Additional</TabsTrigger>
+              </TabsList>
 
-            {/* Map Selection Section */}
-            <div className="col-span-full">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h4 className="text-sm font-medium">Port Location</h4>
-                  <p className="text-xs text-muted-foreground">Select coordinates on map or enter manually</p>
+              {/* Basic Information Tab */}
+              <TabsContent value="basic" className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Port Name *</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Port of Rotterdam" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="country"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Country *</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Netherlands" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowMap(true)}
-                  className="flex items-center gap-2"
-                >
-                  <MapIcon className="h-4 w-4" />
-                  Select on Map
-                </Button>
-              </div>
-              
-              {selectedCoordinates && (
-                <div className="p-3 bg-green-50 border border-green-200 rounded-lg mb-4">
+
+                {/* Map Selection Section */}
+                <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-600" />
-                      <span className="text-sm font-medium text-green-800">
-                        Coordinates Selected from Map
-                      </span>
+                    <div>
+                      <h4 className="text-sm font-medium">Port Location</h4>
+                      <p className="text-xs text-muted-foreground">Select coordinates on map or enter manually</p>
                     </div>
-                    <span className="text-sm text-green-700">
-                      {selectedCoordinates.lat.toFixed(6)}, {selectedCoordinates.lng.toFixed(6)}
-                    </span>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowMap(true)}
+                      className="flex items-center gap-2"
+                    >
+                      <MapIcon className="h-4 w-4" />
+                      Select on Map
+                    </Button>
+                  </div>
+                  
+                  {selectedCoordinates && (
+                    <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                          <span className="text-sm font-medium text-green-800">
+                            Coordinates Selected from Map
+                          </span>
+                        </div>
+                        <span className="text-sm text-green-700">
+                          {selectedCoordinates.lat.toFixed(6)}, {selectedCoordinates.lng.toFixed(6)}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="region"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Region *</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select region" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Europe">Europe</SelectItem>
+                            <SelectItem value="Asia-Pacific">Asia-Pacific</SelectItem>
+                            <SelectItem value="North America">North America</SelectItem>
+                            <SelectItem value="Latin America">Latin America</SelectItem>
+                            <SelectItem value="Middle East">Middle East</SelectItem>
+                            <SelectItem value="Africa">Africa</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="lat"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Latitude *</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input 
+                              placeholder="51.9225" 
+                              {...field}
+                              className={selectedCoordinates ? 'bg-green-50 border-green-300' : ''}
+                            />
+                            {selectedCoordinates && (
+                              <CheckCircle className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-green-600" />
+                            )}
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="lng"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Longitude *</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input 
+                              placeholder="4.47917" 
+                              {...field}
+                              className={selectedCoordinates ? 'bg-green-50 border-green-300' : ''}
+                            />
+                            {selectedCoordinates && (
+                              <CheckCircle className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-green-600" />
+                            )}
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="type"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Port Type</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="commercial">Commercial</SelectItem>
+                            <SelectItem value="oil">Oil Terminal</SelectItem>
+                            <SelectItem value="container">Container Port</SelectItem>
+                            <SelectItem value="bulk_cargo">Bulk Cargo</SelectItem>
+                            <SelectItem value="passenger">Passenger Port</SelectItem>
+                            <SelectItem value="fishing">Fishing Port</SelectItem>
+                            <SelectItem value="naval">Naval Base</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Status</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="operational">Operational</SelectItem>
+                            <SelectItem value="maintenance">Under Maintenance</SelectItem>
+                            <SelectItem value="construction">Under Construction</SelectItem>
+                            <SelectItem value="planned">Planned</SelectItem>
+                            <SelectItem value="closed">Closed</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="capacity"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Capacity (TEU)</FormLabel>
+                        <FormControl>
+                          <Input placeholder="14000000" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Enter port description..." 
+                          className="min-h-[80px]"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </TabsContent>
+
+              {/* Contact Information Tab */}
+              <TabsContent value="contact" className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="portAuthority"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Port Authority</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Port of Rotterdam Authority" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input placeholder="info@portofrotterdam.com" type="email" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Phone</FormLabel>
+                        <FormControl>
+                          <Input placeholder="+31 (0)10 252 1010" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="website"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Website</FormLabel>
+                        <FormControl>
+                          <Input placeholder="https://www.portofrotterdam.com" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="address"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Address</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Wilhelminakade 909, 3072 AP Rotterdam, Netherlands" 
+                          className="min-h-[80px]"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </TabsContent>
+
+              {/* Technical Specifications Tab */}
+              <TabsContent value="technical" className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="maxVesselLength"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Max Vessel Length (m)</FormLabel>
+                        <FormControl>
+                          <Input placeholder="400" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="maxVesselBeam"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Max Vessel Beam (m)</FormLabel>
+                        <FormControl>
+                          <Input placeholder="59" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="maxDraught"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Max Draught (m)</FormLabel>
+                        <FormControl>
+                          <Input placeholder="24.0" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="berthCount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Number of Berths</FormLabel>
+                        <FormControl>
+                          <Input placeholder="15" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="storageCapacity"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Storage Capacity (m³)</FormLabel>
+                        <FormControl>
+                          <Input placeholder="500000" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="craneCapacity"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Crane Capacity (tonnes)</FormLabel>
+                        <FormControl>
+                          <Input placeholder="100" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </TabsContent>
+
+              {/* Operations Tab */}
+              <TabsContent value="operations" className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="operatingHours"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Operating Hours</FormLabel>
+                        <FormControl>
+                          <Input placeholder="24/7" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="timezone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Timezone</FormLabel>
+                        <FormControl>
+                          <Input placeholder="UTC+1" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <FormField
+                      control={form.control}
+                      name="pilotageRequired"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              className="mt-1"
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel>Pilotage Required</FormLabel>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <FormField
+                      control={form.control}
+                      name="tugAssistance"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              className="mt-1"
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel>Tug Assistance Available</FormLabel>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <FormField
+                      control={form.control}
+                      name="wasteReception"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              className="mt-1"
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel>Waste Reception Facilities</FormLabel>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <FormField
+                      control={form.control}
+                      name="bunkeringAvailable"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              className="mt-1"
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel>Bunkering Services Available</FormLabel>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
                   </div>
                 </div>
-              )}
-            </div>
+              </TabsContent>
 
-            <div className="grid grid-cols-3 gap-4">
-              <FormField
-                control={form.control}
-                name="region"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Region</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+              {/* Additional Information Tab */}
+              <TabsContent value="additional" className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="yearEstablished"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Year Established</FormLabel>
+                        <FormControl>
+                          <Input placeholder="1872" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="iceClass"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Ice Class</FormLabel>
+                        <FormControl>
+                          <Input placeholder="None / IA / IB / IC" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="lastMaintenance"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Last Maintenance Date</FormLabel>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select region" />
-                        </SelectTrigger>
+                        <Input placeholder="2024-01-15" type="date" {...field} />
                       </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Europe">Europe</SelectItem>
-                        <SelectItem value="Asia-Pacific">Asia-Pacific</SelectItem>
-                        <SelectItem value="North America">North America</SelectItem>
-                        <SelectItem value="Latin America">Latin America</SelectItem>
-                        <SelectItem value="Middle East">Middle East</SelectItem>
-                        <SelectItem value="Africa">Africa</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={form.control}
-                name="lat"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Latitude</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Input 
-                          placeholder="51.9225" 
-                          {...field}
-                          className={selectedCoordinates ? 'bg-green-50 border-green-300' : ''}
+                <FormField
+                  control={form.control}
+                  name="notes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Additional Notes</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Any additional information about the port..." 
+                          className="min-h-[120px]"
+                          {...field} 
                         />
-                        {selectedCoordinates && (
-                          <CheckCircle className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-green-600" />
-                        )}
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="lng"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Longitude</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Input 
-                          placeholder="4.47917" 
-                          {...field}
-                          className={selectedCoordinates ? 'bg-green-50 border-green-300' : ''}
-                        />
-                        {selectedCoordinates && (
-                          <CheckCircle className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-green-600" />
-                        )}
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="grid grid-cols-3 gap-4">
-              <FormField
-                control={form.control}
-                name="type"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Port Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
-                        <SelectItem value="commercial">Commercial</SelectItem>
-                        <SelectItem value="oil_terminal">Oil Terminal</SelectItem>
-                        <SelectItem value="container">Container Port</SelectItem>
-                        <SelectItem value="bulk_cargo">Bulk Cargo</SelectItem>
-                        <SelectItem value="passenger">Passenger Port</SelectItem>
-                        <SelectItem value="fishing">Fishing Port</SelectItem>
-                        <SelectItem value="naval">Naval Base</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </TabsContent>
+            </Tabs>
 
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="operational">Operational</SelectItem>
-                        <SelectItem value="maintenance">Under Maintenance</SelectItem>
-                        <SelectItem value="construction">Under Construction</SelectItem>
-                        <SelectItem value="planned">Planned</SelectItem>
-                        <SelectItem value="closed">Closed</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="capacity"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Capacity (TEU)</FormLabel>
-                    <FormControl>
-                      <Input placeholder="14000000" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Enter port description..." 
-                      className="min-h-[80px]"
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="flex justify-end space-x-2 pt-4">
+            <div className="flex justify-end space-x-2 pt-4 border-t">
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                 Cancel
               </Button>
@@ -592,6 +1053,8 @@ function AddPortDialog() {
         </Form>
       </DialogContent>
 
+      </DialogContent>
+
       {/* Interactive Map Modal */}
       {showMap && (
         <Dialog open={showMap} onOpenChange={setShowMap}>
@@ -600,6 +1063,7 @@ function AddPortDialog() {
               <DialogTitle>Select Port Location</DialogTitle>
             </DialogHeader>
             <CoordinateMapSelector
+              isOpen={showMap}
               onCoordinateSelect={handleCoordinateSelect}
               onClose={() => setShowMap(false)}
               initialLat={25.276987}
