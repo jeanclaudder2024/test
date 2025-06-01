@@ -28,9 +28,10 @@ import {
   setCachedVesselsByRegion 
 } from "./utils/cacheManager";
 import { WebSocketServer, WebSocket } from "ws";
+import { and, eq, isNotNull, sql } from "drizzle-orm";
+import { vessels, ports } from "@shared/schema";
 import { db } from "./db";
 import { VoyageProgressService } from "./services/voyageProgressService.js";
-import { eq } from "drizzle-orm";
 import { 
   insertVesselSchema, 
   insertRefinerySchema, 

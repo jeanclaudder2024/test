@@ -1274,7 +1274,7 @@ export const portService = {
         // Apply formatting function to ensure data consistency
         const portData = ensurePortDataHasRequiredFields(portDataRaw);
         
-        // Create a new port with the standardized data
+        // Create a new port with the standardized data - only include fields that exist in schema
         const newPort: InsertPort = {
           name: portData.name,
           country: portData.country,
@@ -1283,8 +1283,7 @@ export const portService = {
           lng: portData.lng,
           capacity: portData.capacity,
           status: portData.status,
-          description: portData.description,
-          type: portData.type
+          description: portData.description
         };
         await storage.createPort(newPort);
       }
