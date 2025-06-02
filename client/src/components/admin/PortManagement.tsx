@@ -51,6 +51,9 @@ import {
 } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import { CoordinateMapSelector } from '@/components/map/CoordinateMapSelector';
+import { PortAnalyticsDashboard } from '@/components/ports/PortAnalyticsDashboard';
+import { AdvancedPortSearch } from '@/components/ports/AdvancedPortSearch';
+import { PortRecommendationEngine } from '@/components/ports/PortRecommendationEngine';
 
 // Enhanced form validation schema with comprehensive port details
 const portFormSchema = z.object({
@@ -1229,6 +1232,9 @@ export function PortManagement() {
   const [selectedType, setSelectedType] = useState('all');
   const [viewMode, setViewMode] = useState('grid');
   const [currentPage, setCurrentPage] = useState(1);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [selectedPortForAnalytics, setSelectedPortForAnalytics] = useState<number | null>(null);
+  const [advancedSearchResults, setAdvancedSearchResults] = useState<any[]>([]);
 
   const pageSize = 12;
 
@@ -1335,9 +1341,9 @@ export function PortManagement() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Ports Management</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Advanced Ports Management</h1>
           <p className="text-muted-foreground mt-1">
-            Comprehensive port management with real-time vessel tracking and analytics
+            Comprehensive port management with AI-powered analytics, advanced search, and route planning
           </p>
         </div>
         <div className="flex gap-2 mt-4 md:mt-0">
