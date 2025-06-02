@@ -304,6 +304,162 @@ function PowerfulAddPortDialog() {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(1);
   const { toast } = useToast();
+  
+  // Auto-fill data templates
+  const portTemplates = {
+    'Port of Rotterdam': {
+      country: 'Netherlands',
+      region: 'North Sea',
+      city: 'Rotterdam',
+      lat: '51.9225',
+      lng: '4.4792',
+      timezone: 'Europe/Amsterdam',
+      type: 'Commercial',
+      status: 'Operational',
+      portAuthority: 'Port of Rotterdam Authority',
+      operator: 'Rotterdam Port Services',
+      owner: 'Government',
+      email: 'info@portofrotterdam.com',
+      phone: '+31 10 252 1010',
+      website: 'https://www.portofrotterdam.com',
+      maxVesselLength: '400',
+      maxVesselBeam: '60',
+      maxDraught: '23',
+      maxDeadweight: '300000',
+      berthCount: '84',
+      terminalCount: '12',
+      channelDepth: '23',
+      berthDepth: '22',
+      anchorageDepth: '20',
+      operatingHours: '24/7',
+      annualThroughput: '470000000',
+      averageWaitTime: '2.5',
+      currency: 'EUR',
+      securityLevel: '1',
+      pilotageRequired: true,
+      tugAssistance: true,
+      quarantineStation: true,
+      railConnection: true,
+      roadConnection: true,
+      customsOffice: true,
+      freeTradeZone: true,
+      airportDistance: '25',
+      established: '1872',
+      tidalRange: '2.1'
+    },
+    'Port of Singapore': {
+      country: 'Singapore',
+      region: 'Southeast Asia',
+      city: 'Singapore',
+      lat: '1.2966',
+      lng: '103.7764',
+      timezone: 'Asia/Singapore',
+      type: 'Commercial',
+      status: 'Operational',
+      portAuthority: 'Maritime and Port Authority of Singapore',
+      operator: 'PSA Corporation',
+      owner: 'Government',
+      email: 'info@mpa.gov.sg',
+      phone: '+65 6325 2222',
+      website: 'https://www.mpa.gov.sg',
+      maxVesselLength: '400',
+      maxVesselBeam: '60',
+      maxDraught: '22',
+      maxDeadweight: '300000',
+      berthCount: '200',
+      terminalCount: '8',
+      channelDepth: '22',
+      berthDepth: '21',
+      anchorageDepth: '20',
+      operatingHours: '24/7',
+      annualThroughput: '37200000',
+      averageWaitTime: '1.5',
+      currency: 'SGD',
+      securityLevel: '1',
+      pilotageRequired: true,
+      tugAssistance: true,
+      quarantineStation: true,
+      railConnection: false,
+      roadConnection: true,
+      customsOffice: true,
+      freeTradeZone: true,
+      airportDistance: '20',
+      established: '1819',
+      tidalRange: '3.2'
+    },
+    'Port of Houston': {
+      country: 'United States',
+      region: 'Gulf of Mexico',
+      city: 'Houston',
+      lat: '29.7604',
+      lng: '-95.3698',
+      timezone: 'America/Chicago',
+      type: 'Commercial',
+      status: 'Operational',
+      portAuthority: 'Port of Houston Authority',
+      operator: 'Port Houston',
+      owner: 'Government',
+      email: 'info@porthouston.com',
+      phone: '+1 713 670 2400',
+      website: 'https://www.porthouston.com',
+      maxVesselLength: '366',
+      maxVesselBeam: '55',
+      maxDraught: '14',
+      maxDeadweight: '200000',
+      berthCount: '150',
+      terminalCount: '8',
+      channelDepth: '14',
+      berthDepth: '13',
+      anchorageDepth: '12',
+      operatingHours: '24/7',
+      annualThroughput: '285000000',
+      averageWaitTime: '3',
+      currency: 'USD',
+      securityLevel: '1',
+      pilotageRequired: true,
+      tugAssistance: true,
+      quarantineStation: true,
+      railConnection: true,
+      roadConnection: true,
+      customsOffice: true,
+      freeTradeZone: true,
+      airportDistance: '35',
+      established: '1914',
+      tidalRange: '0.6'
+    }
+  };
+  
+
+  
+  const autoFillRandomData = () => {
+    const templates = Object.keys(portTemplates);
+    const randomTemplate = templates[Math.floor(Math.random() * templates.length)];
+    const template = portTemplates[randomTemplate as keyof typeof portTemplates];
+    
+    // Generate random variations
+    const randomData = {
+      ...template,
+      name: `${randomTemplate} Terminal ${Math.floor(Math.random() * 999) + 1}`,
+      lat: (parseFloat(template.lat) + (Math.random() - 0.5) * 0.1).toFixed(4),
+      lng: (parseFloat(template.lng) + (Math.random() - 0.5) * 0.1).toFixed(4),
+      maxVesselLength: (parseInt(template.maxVesselLength) + Math.floor(Math.random() * 100)).toString(),
+      berthCount: (parseInt(template.berthCount) + Math.floor(Math.random() * 20)).toString(),
+      annualThroughput: (parseInt(template.annualThroughput) + Math.floor(Math.random() * 10000000)).toString(),
+    };
+    
+    Object.entries(randomData).forEach(([key, value]) => {
+      if (typeof value === 'boolean') {
+        form.setValue(key as keyof PortFormData, value);
+      } else {
+        form.setValue(key as keyof PortFormData, value);
+      }
+    });
+    
+    toast({
+      title: 'Auto-filled',
+      description: 'Random port data has been generated',
+    });
+  };
 
   const form = useForm<PortFormData>({
     resolver: zodResolver(portFormSchema),
@@ -431,30 +587,7 @@ function PowerfulAddPortDialog() {
   const nextStep = () => setStep(step + 1);
   const prevStep = () => setStep(step - 1);
 
-  const autoFillLocation = async (portName: string) => {
-    if (portName.length > 3) {
-      // Here you could integrate with a geocoding service
-      // For now, we'll provide some smart defaults
-      const commonPorts = {
-        'rotterdam': { country: 'Netherlands', region: 'Europe', lat: '51.9244', lng: '4.4777' },
-        'singapore': { country: 'Singapore', region: 'Asia-Pacific', lat: '1.2966', lng: '103.7764' },
-        'shanghai': { country: 'China', region: 'Asia-Pacific', lat: '31.2304', lng: '121.4737' },
-        'houston': { country: 'United States', region: 'North America', lat: '29.7604', lng: '-95.3698' },
-        'dubai': { country: 'UAE', region: 'Middle East', lat: '25.2048', lng: '55.2708' },
-      };
-      
-      const portKey = portName.toLowerCase();
-      const match = Object.keys(commonPorts).find(key => portKey.includes(key));
-      
-      if (match) {
-        const portData = commonPorts[match as keyof typeof commonPorts];
-        form.setValue('country', portData.country);
-        form.setValue('region', portData.region);
-        form.setValue('lat', portData.lat);
-        form.setValue('lng', portData.lng);
-      }
-    }
-  };
+
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -510,6 +643,18 @@ function PowerfulAddPortDialog() {
                   <p className="text-sm text-muted-foreground">
                     Start by providing the essential details about the port
                   </p>
+                  <div className="flex justify-center space-x-2 mt-4">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={autoFillRandomData}
+                      className="bg-green-50 border-green-200 hover:bg-green-100"
+                    >
+                      <Star className="h-4 w-4 mr-2" />
+                      Auto-Fill Sample Data
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -526,7 +671,16 @@ function PowerfulAddPortDialog() {
                             {...field}
                             onChange={(e) => {
                               field.onChange(e);
-                              autoFillLocation(e.target.value);
+                              const template = portTemplates[e.target.value as keyof typeof portTemplates];
+                              if (template) {
+                                Object.entries(template).forEach(([key, value]) => {
+                                  form.setValue(key as keyof PortFormData, value);
+                                });
+                                toast({
+                                  title: 'Auto-filled',
+                                  description: `Port data has been auto-filled for ${e.target.value}`,
+                                });
+                              }
                             }}
                           />
                         </FormControl>
