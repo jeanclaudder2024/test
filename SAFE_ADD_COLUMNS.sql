@@ -1,0 +1,80 @@
+-- Safe column additions with IF NOT EXISTS for Supabase
+-- Run this in your Supabase SQL Editor
+
+-- Basic Information
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS city TEXT;
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS timezone TEXT;
+
+-- Port Authority & Management
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS port_authority TEXT;
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS operator TEXT;
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS owner TEXT;
+
+-- Contact Information
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS email TEXT;
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS phone TEXT;
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS website TEXT;
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS address TEXT;
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS postal_code TEXT;
+
+-- Operational Information
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS annual_throughput INTEGER;
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS operating_hours TEXT;
+
+-- Technical Specifications
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS max_vessel_length DECIMAL(8,2);
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS max_vessel_beam DECIMAL(6,2);
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS max_draught DECIMAL(5,2);
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS max_deadweight INTEGER;
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS berth_count INTEGER;
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS terminal_count INTEGER;
+
+-- Water Depth & Navigation
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS channel_depth DECIMAL(5,2);
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS berth_depth DECIMAL(5,2);
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS anchorage_depth DECIMAL(5,2);
+
+-- Services & Facilities
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS services TEXT;
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS facilities TEXT;
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS cargo_types TEXT;
+
+-- Safety & Security
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS security_level TEXT;
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS pilotage_required BOOLEAN DEFAULT false;
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS tug_assistance BOOLEAN DEFAULT false;
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS quarantine_station BOOLEAN DEFAULT false;
+
+-- Environmental & Regulatory
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS environmental_certifications TEXT;
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS customs_office BOOLEAN DEFAULT false;
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS free_trade_zone BOOLEAN DEFAULT false;
+
+-- Infrastructure
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS rail_connection BOOLEAN DEFAULT false;
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS road_connection BOOLEAN DEFAULT true;
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS airport_distance DECIMAL(8,2);
+
+-- Weather & Conditions
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS average_wait_time DECIMAL(5,2);
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS weather_restrictions TEXT;
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS tidal_range DECIMAL(4,2);
+
+-- Economic Information
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS port_charges TEXT;
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS currency TEXT DEFAULT 'USD';
+
+-- Connectivity
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS connected_refineries INTEGER DEFAULT 0;
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS nearby_ports TEXT;
+
+-- Statistics
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS vessel_count INTEGER DEFAULT 0;
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS total_cargo DECIMAL(15,2) DEFAULT 0;
+
+-- Metadata
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS established INTEGER;
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS last_inspection TIMESTAMP;
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS next_inspection TIMESTAMP;
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS photo TEXT;
+ALTER TABLE ports ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW();
