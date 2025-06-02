@@ -549,15 +549,44 @@ function PowerfulAddPortDialog() {
 
   const addPortMutation = useMutation({
     mutationFn: async (data: PortFormData) => {
+      // Convert string fields to proper types
+      const processedData = {
+        ...data,
+        // Convert numeric fields
+        capacity: data.capacity ? parseInt(data.capacity) : null,
+        maxVesselLength: data.maxVesselLength ? parseFloat(data.maxVesselLength) : null,
+        maxVesselBeam: data.maxVesselBeam ? parseFloat(data.maxVesselBeam) : null,
+        maxDraught: data.maxDraught ? parseFloat(data.maxDraught) : null,
+        maxDeadweight: data.maxDeadweight ? parseInt(data.maxDeadweight) : null,
+        berthCount: data.berthCount ? parseInt(data.berthCount) : null,
+        terminalCount: data.terminalCount ? parseInt(data.terminalCount) : null,
+        channelDepth: data.channelDepth ? parseFloat(data.channelDepth) : null,
+        berthDepth: data.berthDepth ? parseFloat(data.berthDepth) : null,
+        anchorageDepth: data.anchorageDepth ? parseFloat(data.anchorageDepth) : null,
+        annualThroughput: data.annualThroughput ? parseInt(data.annualThroughput) : null,
+        averageWaitTime: data.averageWaitTime ? parseFloat(data.averageWaitTime) : null,
+        airportDistance: data.airportDistance ? parseFloat(data.airportDistance) : null,
+        established: data.established ? parseInt(data.established) : null,
+        tidalRange: data.tidalRange ? parseFloat(data.tidalRange) : null,
+        // Ensure booleans are properly set
+        pilotageRequired: data.pilotageRequired || false,
+        tugAssistance: data.tugAssistance || false,
+        quarantineStation: data.quarantineStation || false,
+        railConnection: data.railConnection || false,
+        roadConnection: data.roadConnection || false,
+        customsOffice: data.customsOffice || false,
+        freeTradeZone: data.freeTradeZone || false,
+      };
+
       const response = await fetch('/api/admin/ports', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...data,
-          capacity: data.capacity ? parseInt(data.capacity) : null,
-        }),
+        body: JSON.stringify(processedData),
       });
-      if (!response.ok) throw new Error('Failed to add port');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to add port');
+      }
       return response.json();
     },
     onSuccess: () => {
