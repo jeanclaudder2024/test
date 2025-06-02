@@ -297,29 +297,119 @@ export type Document = typeof documents.$inferSelect;
 export type InsertBroker = z.infer<typeof insertBrokerSchema>;
 export type Broker = typeof brokers.$inferSelect;
 
-// Ports
+// Ports - Complete comprehensive table structure
 export const ports = pgTable("ports", {
   id: serial("id").primaryKey(),
+  
+  // Basic Information
   name: text("name").notNull(),
   country: text("country").notNull(),
   region: text("region").notNull(),
+  city: text("city"),
+  timezone: text("timezone"),
+  
+  // Geographic Coordinates
   lat: decimal("lat", { precision: 10, scale: 6 }).notNull(),
   lng: decimal("lng", { precision: 10, scale: 6 }).notNull(),
-  type: text("type").default("commercial"), // commercial, oil, container, bulk, etc.
+  
+  // Port Classification
+  type: text("type").default("commercial"), // commercial, oil_terminal, container, bulk, fishing, naval, cruise, industrial
+  status: text("status").default("operational"), // operational, maintenance, limited, closed, under_construction
+  
+  // Operational Information
   capacity: integer("capacity"), // handling capacity in TEU or tons per day
-  status: text("status").default("active"),
+  annualThroughput: integer("annual_throughput"), // annual cargo throughput
+  operatingHours: text("operating_hours"), // "24/7" or specific hours
   description: text("description"),
   
-
+  // Port Authority & Management
+  portAuthority: text("port_authority"),
+  operator: text("operator"),
+  owner: text("owner"),
   
+  // Contact Information
+  email: text("email"),
+  phone: text("phone"),
+  website: text("website"),
+  address: text("address"),
+  postalCode: text("postal_code"),
+  
+  // Technical Specifications
+  maxVesselLength: decimal("max_vessel_length", { precision: 8, scale: 2 }), // in meters
+  maxVesselBeam: decimal("max_vessel_beam", { precision: 6, scale: 2 }), // in meters
+  maxDraught: decimal("max_draught", { precision: 5, scale: 2 }), // in meters
+  maxDeadweight: integer("max_deadweight"), // maximum deadweight tonnage
+  berthCount: integer("berth_count"), // number of berths
+  terminalCount: integer("terminal_count"), // number of terminals
+  
+  // Water Depth & Navigation
+  channelDepth: decimal("channel_depth", { precision: 5, scale: 2 }), // in meters
+  berthDepth: decimal("berth_depth", { precision: 5, scale: 2 }), // in meters
+  anchorageDepth: decimal("anchorage_depth", { precision: 5, scale: 2 }), // in meters
+  
+  // Services & Facilities
+  services: text("services"), // JSON array: ["pilotage", "tugboats", "bunker", "repair", "waste_disposal"]
+  facilities: text("facilities"), // JSON array: ["crane", "warehouse", "cold_storage", "oil_terminal"]
+  cargoTypes: text("cargo_types"), // JSON array: ["container", "bulk", "oil", "gas", "general"]
+  
+  // Safety & Security
+  securityLevel: text("security_level"), // ISPS security level: 1, 2, or 3
+  pilotageRequired: boolean("pilotage_required").default(false),
+  tugAssistance: boolean("tug_assistance").default(false),
+  quarantineStation: boolean("quarantine_station").default(false),
+  
+  // Environmental & Regulatory
+  environmentalCertifications: text("environmental_certifications"), // JSON array
+  customsOffice: boolean("customs_office").default(false),
+  freeTradeZone: boolean("free_trade_zone").default(false),
+  
+  // Infrastructure
+  railConnection: boolean("rail_connection").default(false),
+  roadConnection: boolean("road_connection").default(true),
+  airportDistance: decimal("airport_distance", { precision: 8, scale: 2 }), // distance to nearest airport in km
+  
+  // Weather & Conditions
+  averageWaitTime: decimal("average_wait_time", { precision: 5, scale: 2 }), // in hours
+  weatherRestrictions: text("weather_restrictions"),
+  tidalRange: decimal("tidal_range", { precision: 4, scale: 2 }), // in meters
+  
+  // Economic Information
+  portCharges: text("port_charges"), // JSON object with fee structure
+  currency: text("currency").default("USD"),
+  
+  // Connectivity
+  connectedRefineries: integer("connected_refineries").default(0),
+  nearbyPorts: text("nearby_ports"), // JSON array of port IDs within proximity
+  
+  // Statistics
+  vesselCount: integer("vessel_count").default(0), // current vessels at port
+  totalCargo: decimal("total_cargo", { precision: 15, scale: 2 }).default("0"), // current cargo volume
+  
+  // Metadata
+  established: integer("established"), // year established
+  lastInspection: timestamp("last_inspection"),
+  nextInspection: timestamp("next_inspection"),
+  photo: text("photo"), // URL to port photo
+  
+  // System fields
+  createdAt: timestamp("created_at").defaultNow(),
   lastUpdated: timestamp("last_updated").defaultNow(),
 });
 
 export const insertPortSchema = createInsertSchema(ports).omit({
   id: true,
   lastUpdated: true,
+  createdAt: true,
+  vesselCount: true,
+  totalCargo: true,
+  connectedRefineries: true,
 }).extend({
-  // Accept string inputs and convert to proper types
+  // Required fields with proper validation
+  name: z.string().min(1, "Port name is required"),
+  country: z.string().min(1, "Country is required"),
+  region: z.string().min(1, "Region is required"),
+  
+  // Geographic coordinates with transformation
   lat: z.union([z.string(), z.number()]).transform(val => {
     if (val === "" || val === null || val === undefined) return undefined;
     const num = typeof val === "string" ? parseFloat(val) : val;
@@ -330,11 +420,130 @@ export const insertPortSchema = createInsertSchema(ports).omit({
     const num = typeof val === "string" ? parseFloat(val) : val;
     return isNaN(num) ? undefined : String(num);
   }),
+  
+  // Optional string fields
+  city: z.string().optional(),
+  timezone: z.string().optional(),
+  description: z.string().optional(),
+  portAuthority: z.string().optional(),
+  operator: z.string().optional(),
+  owner: z.string().optional(),
+  email: z.string().email().optional().or(z.literal("")),
+  phone: z.string().optional(),
+  website: z.string().url().optional().or(z.literal("")),
+  address: z.string().optional(),
+  postalCode: z.string().optional(),
+  operatingHours: z.string().optional(),
+  weatherRestrictions: z.string().optional(),
+  
+  // Numeric fields with transformation
   capacity: z.union([z.number(), z.string(), z.undefined()]).optional().transform(val => {
     if (val === "" || val === null || val === undefined) return null;
     const num = typeof val === "string" ? parseInt(val) : val;
     return isNaN(num) ? null : num;
-  })
+  }),
+  annualThroughput: z.union([z.number(), z.string(), z.undefined()]).optional().transform(val => {
+    if (val === "" || val === null || val === undefined) return null;
+    const num = typeof val === "string" ? parseInt(val) : val;
+    return isNaN(num) ? null : num;
+  }),
+  maxDeadweight: z.union([z.number(), z.string(), z.undefined()]).optional().transform(val => {
+    if (val === "" || val === null || val === undefined) return null;
+    const num = typeof val === "string" ? parseInt(val) : val;
+    return isNaN(num) ? null : num;
+  }),
+  berthCount: z.union([z.number(), z.string(), z.undefined()]).optional().transform(val => {
+    if (val === "" || val === null || val === undefined) return null;
+    const num = typeof val === "string" ? parseInt(val) : val;
+    return isNaN(num) ? null : num;
+  }),
+  terminalCount: z.union([z.number(), z.string(), z.undefined()]).optional().transform(val => {
+    if (val === "" || val === null || val === undefined) return null;
+    const num = typeof val === "string" ? parseInt(val) : val;
+    return isNaN(num) ? null : num;
+  }),
+  established: z.union([z.number(), z.string(), z.undefined()]).optional().transform(val => {
+    if (val === "" || val === null || val === undefined) return null;
+    const num = typeof val === "string" ? parseInt(val) : val;
+    return isNaN(num) ? null : num;
+  }),
+  
+  // Decimal fields with transformation
+  maxVesselLength: z.union([z.number(), z.string(), z.undefined()]).optional().transform(val => {
+    if (val === "" || val === null || val === undefined) return null;
+    const num = typeof val === "string" ? parseFloat(val) : val;
+    return isNaN(num) ? null : String(num);
+  }),
+  maxVesselBeam: z.union([z.number(), z.string(), z.undefined()]).optional().transform(val => {
+    if (val === "" || val === null || val === undefined) return null;
+    const num = typeof val === "string" ? parseFloat(val) : val;
+    return isNaN(num) ? null : String(num);
+  }),
+  maxDraught: z.union([z.number(), z.string(), z.undefined()]).optional().transform(val => {
+    if (val === "" || val === null || val === undefined) return null;
+    const num = typeof val === "string" ? parseFloat(val) : val;
+    return isNaN(num) ? null : String(num);
+  }),
+  channelDepth: z.union([z.number(), z.string(), z.undefined()]).optional().transform(val => {
+    if (val === "" || val === null || val === undefined) return null;
+    const num = typeof val === "string" ? parseFloat(val) : val;
+    return isNaN(num) ? null : String(num);
+  }),
+  berthDepth: z.union([z.number(), z.string(), z.undefined()]).optional().transform(val => {
+    if (val === "" || val === null || val === undefined) return null;
+    const num = typeof val === "string" ? parseFloat(val) : val;
+    return isNaN(num) ? null : String(num);
+  }),
+  anchorageDepth: z.union([z.number(), z.string(), z.undefined()]).optional().transform(val => {
+    if (val === "" || val === null || val === undefined) return null;
+    const num = typeof val === "string" ? parseFloat(val) : val;
+    return isNaN(num) ? null : String(num);
+  }),
+  airportDistance: z.union([z.number(), z.string(), z.undefined()]).optional().transform(val => {
+    if (val === "" || val === null || val === undefined) return null;
+    const num = typeof val === "string" ? parseFloat(val) : val;
+    return isNaN(num) ? null : String(num);
+  }),
+  averageWaitTime: z.union([z.number(), z.string(), z.undefined()]).optional().transform(val => {
+    if (val === "" || val === null || val === undefined) return null;
+    const num = typeof val === "string" ? parseFloat(val) : val;
+    return isNaN(num) ? null : String(num);
+  }),
+  tidalRange: z.union([z.number(), z.string(), z.undefined()]).optional().transform(val => {
+    if (val === "" || val === null || val === undefined) return null;
+    const num = typeof val === "string" ? parseFloat(val) : val;
+    return isNaN(num) ? null : String(num);
+  }),
+  
+  // Boolean fields
+  pilotageRequired: z.boolean().optional(),
+  tugAssistance: z.boolean().optional(),
+  quarantineStation: z.boolean().optional(),
+  customsOffice: z.boolean().optional(),
+  freeTradeZone: z.boolean().optional(),
+  railConnection: z.boolean().optional(),
+  roadConnection: z.boolean().optional(),
+  
+  // JSON array fields (stored as text)
+  services: z.array(z.string()).optional().transform(val => 
+    val ? JSON.stringify(val) : null
+  ),
+  facilities: z.array(z.string()).optional().transform(val => 
+    val ? JSON.stringify(val) : null
+  ),
+  cargoTypes: z.array(z.string()).optional().transform(val => 
+    val ? JSON.stringify(val) : null
+  ),
+  environmentalCertifications: z.array(z.string()).optional().transform(val => 
+    val ? JSON.stringify(val) : null
+  ),
+  nearbyPorts: z.array(z.string()).optional().transform(val => 
+    val ? JSON.stringify(val) : null
+  ),
+  
+  // Optional date fields
+  lastInspection: z.string().optional(),
+  nextInspection: z.string().optional(),
 });
 
 export type InsertStats = z.infer<typeof insertStatsSchema>;
