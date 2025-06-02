@@ -1590,6 +1590,7 @@ export function PortManagement() {
             </CardContent>
           </Card>
         </TabsContent>
+        </TabsContent>
 
         <TabsContent value="map" className="mt-0">
           <Card>
@@ -1793,7 +1794,6 @@ export function PortManagement() {
           </div>
         </TabsContent>
       </Tabs>
-      </Tabs>
 
       {/* Pagination */}
       {totalPages > 1 && (
@@ -1823,6 +1823,7 @@ export function PortManagement() {
           </div>
         </div>
       )}
+    </div>
     </div>
   );
 }
