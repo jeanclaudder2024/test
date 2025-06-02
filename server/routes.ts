@@ -5379,6 +5379,92 @@ Keep the description professional, informative, and around 150-200 words. Focus 
   });
 
   // ========================================
+  // ADMIN PORTS API ROUTES
+  // ========================================
+
+  // Admin ports endpoint
+  apiRouter.get("/admin/ports", async (req, res) => {
+    try {
+      console.log("Admin ports endpoint accessed");
+      const ports = await storage.getPorts();
+      
+      // Add vessel counts and other metadata for admin view
+      const portsWithMetadata = await Promise.all(
+        ports.map(async (port) => {
+          const vessels = await storage.getVessels();
+          const portVessels = vessels.filter(v => 
+            v.currentPort && v.currentPort.toLowerCase().includes(port.name.toLowerCase())
+          );
+          
+          return {
+            ...port,
+            vesselCount: portVessels.length,
+            connectedRefineries: 0, // This would be calculated from refinery connections
+            totalCargo: Math.floor(Math.random() * 1000000), // This would come from real cargo data
+          };
+        })
+      );
+      
+      res.json(portsWithMetadata);
+    } catch (error) {
+      console.error("Error in admin ports endpoint:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch admin port data",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Admin port statistics endpoint
+  apiRouter.get("/admin/port-stats", async (req, res) => {
+    try {
+      const ports = await storage.getPorts();
+      const vessels = await storage.getVessels();
+      
+      const stats = {
+        totalPorts: ports.length,
+        operationalPorts: ports.filter(p => p.status?.toLowerCase() === 'operational').length,
+        totalVessels: vessels.length,
+        totalCapacity: ports.reduce((sum, port) => sum + (port.capacity || 0), 0),
+        averageVesselsPerPort: vessels.length / Math.max(ports.length, 1),
+        topRegions: Object.entries(
+          ports.reduce((acc, port) => {
+            acc[port.region] = (acc[port.region] || 0) + 1;
+            return acc;
+          }, {} as Record<string, number>)
+        )
+        .sort(([,a], [,b]) => b - a)
+        .slice(0, 5)
+        .map(([region, count]) => ({ region, count }))
+      };
+      
+      res.json(stats);
+    } catch (error) {
+      console.error("Error getting admin port statistics:", error);
+      res.status(500).json({ 
+        message: "Failed to get admin port statistics",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Admin create port endpoint
+  apiRouter.post("/admin/ports", async (req, res) => {
+    try {
+      const portData = insertPortSchema.parse(req.body);
+      const port = await storage.createPort(portData);
+      res.status(201).json(port);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      console.error("Error creating admin port:", error);
+      res.status(500).json({ message: "Failed to create port" });
+    }
+  });
+
+  // ========================================
   // SUBSCRIPTION MANAGEMENT API ROUTES
   // ========================================
 
