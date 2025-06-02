@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
+import { Label } from '@/components/ui/label';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -47,7 +48,9 @@ import {
   CheckCircle,
   Clock,
   Users,
-  Gauge
+  Gauge,
+  Lightbulb,
+  Route
 } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import { CoordinateMapSelector } from '@/components/map/CoordinateMapSelector';
@@ -1359,15 +1362,42 @@ export function PortManagement() {
         </div>
       </div>
 
-      {/* Statistics */}
-      <PortStatistics stats={stats} />
+      {/* Enhanced Tab Navigation */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="overview">
+            <Database className="h-4 w-4 mr-2" />
+            Overview
+          </TabsTrigger>
+          <TabsTrigger value="advanced-search">
+            <Search className="h-4 w-4 mr-2" />
+            Advanced Search
+          </TabsTrigger>
+          <TabsTrigger value="analytics">
+            <BarChart3 className="h-4 w-4 mr-2" />
+            Analytics
+          </TabsTrigger>
+          <TabsTrigger value="recommendations">
+            <Lightbulb className="h-4 w-4 mr-2" />
+            AI Recommendations
+          </TabsTrigger>
+          <TabsTrigger value="management">
+            <Settings className="h-4 w-4 mr-2" />
+            Management
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Filters and Search */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Filters & Search</CardTitle>
-        </CardHeader>
-        <CardContent>
+        {/* Overview Tab - Traditional Port Management */}
+        <TabsContent value="overview" className="space-y-6">
+          {/* Statistics */}
+          <PortStatistics stats={stats} />
+
+          {/* Filters and Search */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Quick Filters & Search</CardTitle>
+            </CardHeader>
+            <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -1571,14 +1601,198 @@ export function PortManagement() {
                   <p className="text-muted-foreground">
                     Map view will show all ports with real-time vessel data
                   </p>
-                  <Button className="mt-4">
-                    Open Full Map
-                  </Button>
                 </div>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Advanced Search Tab */}
+        <TabsContent value="advanced-search" className="space-y-6">
+          <AdvancedPortSearch onResults={setAdvancedSearchResults} />
+          
+          {advancedSearchResults.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Search Results</CardTitle>
+                <CardDescription>
+                  Found {advancedSearchResults.length} ports matching your criteria
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {advancedSearchResults.map((result: any) => (
+                    <Card key={result.port.id} className="border-l-4 border-l-blue-500">
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-lg">{result.port.name}</CardTitle>
+                          <Badge variant="secondary">
+                            {result.matchScore}% match
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {result.port.country}, {result.port.region}
+                        </p>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2">
+                          <div className="text-sm">
+                            <strong>Match Reasons:</strong>
+                            <ul className="list-disc list-inside mt-1 text-muted-foreground">
+                              {result.matchReasons.map((reason: string, idx: number) => (
+                                <li key={idx}>{reason}</li>
+                              ))}
+                            </ul>
+                          </div>
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {result.recommendationTags.map((tag: string, idx: number) => (
+                              <Badge key={idx} variant="outline" className="text-xs">
+                                {tag}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* Analytics Tab */}
+        <TabsContent value="analytics" className="space-y-6">
+          {selectedPortForAnalytics ? (
+            <PortAnalyticsDashboard portId={selectedPortForAnalytics} />
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle>Port Analytics Dashboard</CardTitle>
+                <CardDescription>
+                  Select a port to view detailed analytics and performance metrics
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <Label>Select Port for Analytics</Label>
+                    <Select value={selectedPortForAnalytics?.toString() || ''} onValueChange={(value) => setSelectedPortForAnalytics(parseInt(value))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose a port to analyze" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ports.map((port: Port) => (
+                          <SelectItem key={port.id} value={port.id.toString()}>
+                            {port.name} - {port.country}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                    <Card className="border-blue-200 bg-blue-50">
+                      <CardContent className="p-4 text-center">
+                        <BarChart3 className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+                        <h3 className="font-semibold">Real-time Traffic</h3>
+                        <p className="text-sm text-muted-foreground">Monitor vessel movements</p>
+                      </CardContent>
+                    </Card>
+                    <Card className="border-green-200 bg-green-50">
+                      <CardContent className="p-4 text-center">
+                        <TrendingUp className="h-8 w-8 text-green-600 mx-auto mb-2" />
+                        <h3 className="font-semibold">Performance Metrics</h3>
+                        <p className="text-sm text-muted-foreground">Benchmark against industry</p>
+                      </CardContent>
+                    </Card>
+                    <Card className="border-purple-200 bg-purple-50">
+                      <CardContent className="p-4 text-center">
+                        <Route className="h-8 w-8 text-purple-600 mx-auto mb-2" />
+                        <h3 className="font-semibold">Route Planning</h3>
+                        <p className="text-sm text-muted-foreground">Optimize shipping routes</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* AI Recommendations Tab */}
+        <TabsContent value="recommendations" className="space-y-6">
+          <PortRecommendationEngine />
+        </TabsContent>
+
+        {/* Management Tab */}
+        <TabsContent value="management" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Bulk Operations</CardTitle>
+                <CardDescription>
+                  Perform operations on multiple ports at once
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Button className="w-full" variant="outline">
+                  <Upload className="h-4 w-4 mr-2" />
+                  Import Ports from CSV
+                </Button>
+                <Button className="w-full" variant="outline">
+                  <Download className="h-4 w-4 mr-2" />
+                  Export All Ports Data
+                </Button>
+                <Button className="w-full" variant="outline">
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Update Port Coordinates
+                </Button>
+                <Button className="w-full" variant="outline">
+                  <Building2 className="h-4 w-4 mr-2" />
+                  Sync with External APIs
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Port Data Quality</CardTitle>
+                <CardDescription>
+                  Monitor and improve data completeness
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Complete Profiles</span>
+                    <span>78%</span>
+                  </div>
+                  <Progress value={78} className="h-2" />
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Missing Coordinates</span>
+                    <span>12%</span>
+                  </div>
+                  <Progress value={12} className="h-2" />
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Outdated Information</span>
+                    <span>5%</span>
+                  </div>
+                  <Progress value={5} className="h-2" />
+                </div>
+                <Button className="w-full mt-4">
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Run Data Quality Check
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
       </Tabs>
 
       {/* Pagination */}
