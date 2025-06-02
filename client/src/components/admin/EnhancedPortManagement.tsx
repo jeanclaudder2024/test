@@ -83,17 +83,88 @@ import {
   Compass,
 } from 'lucide-react';
 
-// Enhanced form validation schema
+// Comprehensive form validation schema with ALL port detail fields
 const portFormSchema = z.object({
+  // Basic Information
   name: z.string().min(1, 'Port name is required'),
   country: z.string().min(1, 'Country is required'),
   region: z.string().min(1, 'Region is required'),
+  city: z.string().optional(),
+  timezone: z.string().optional(),
+  
+  // Geographic Coordinates
   lat: z.string().min(1, 'Latitude is required'),
   lng: z.string().min(1, 'Longitude is required'),
+  
+  // Port Classification
   type: z.string().optional(),
   status: z.string().optional(),
+  
+  // Operational Information
   capacity: z.string().optional(),
+  annualThroughput: z.string().optional(),
+  operatingHours: z.string().optional(),
   description: z.string().optional(),
+  
+  // Port Authority & Management
+  portAuthority: z.string().optional(),
+  operator: z.string().optional(),
+  owner: z.string().optional(),
+  
+  // Contact Information
+  email: z.string().email('Invalid email format').optional().or(z.literal('')),
+  phone: z.string().optional(),
+  website: z.string().url('Invalid website URL').optional().or(z.literal('')),
+  address: z.string().optional(),
+  postalCode: z.string().optional(),
+  
+  // Technical Specifications
+  maxVesselLength: z.string().optional(),
+  maxVesselBeam: z.string().optional(),
+  maxDraught: z.string().optional(),
+  maxDeadweight: z.string().optional(),
+  berthCount: z.string().optional(),
+  terminalCount: z.string().optional(),
+  
+  // Water Depth & Navigation
+  channelDepth: z.string().optional(),
+  berthDepth: z.string().optional(),
+  anchorageDepth: z.string().optional(),
+  
+  // Services & Facilities
+  services: z.array(z.string()).optional(),
+  facilities: z.array(z.string()).optional(),
+  cargoTypes: z.array(z.string()).optional(),
+  
+  // Safety & Security
+  securityLevel: z.string().optional(),
+  pilotageRequired: z.boolean().optional(),
+  tugAssistance: z.boolean().optional(),
+  quarantineStation: z.boolean().optional(),
+  
+  // Environmental & Regulatory
+  environmentalCertifications: z.array(z.string()).optional(),
+  customsOffice: z.boolean().optional(),
+  freeTradeZone: z.boolean().optional(),
+  
+  // Infrastructure
+  railConnection: z.boolean().optional(),
+  roadConnection: z.boolean().optional(),
+  airportDistance: z.string().optional(),
+  
+  // Weather & Conditions
+  averageWaitTime: z.string().optional(),
+  weatherRestrictions: z.string().optional(),
+  tidalRange: z.string().optional(),
+  
+  // Economic Information
+  currency: z.string().optional(),
+  
+  // Metadata
+  established: z.string().optional(),
+  lastInspection: z.string().optional(),
+  nextInspection: z.string().optional(),
+  photo: z.string().optional(),
 });
 
 type PortFormData = z.infer<typeof portFormSchema>;
@@ -237,15 +308,86 @@ function PowerfulAddPortDialog() {
   const form = useForm<PortFormData>({
     resolver: zodResolver(portFormSchema),
     defaultValues: {
+      // Basic Information
       name: '',
       country: '',
       region: '',
+      city: '',
+      timezone: '',
+      
+      // Geographic Coordinates
       lat: '',
       lng: '',
+      
+      // Port Classification
       type: '',
       status: 'operational',
+      
+      // Operational Information
       capacity: '',
+      annualThroughput: '',
+      operatingHours: '24/7',
       description: '',
+      
+      // Port Authority & Management
+      portAuthority: '',
+      operator: '',
+      owner: '',
+      
+      // Contact Information
+      email: '',
+      phone: '',
+      website: '',
+      address: '',
+      postalCode: '',
+      
+      // Technical Specifications
+      maxVesselLength: '',
+      maxVesselBeam: '',
+      maxDraught: '',
+      maxDeadweight: '',
+      berthCount: '',
+      terminalCount: '',
+      
+      // Water Depth & Navigation
+      channelDepth: '',
+      berthDepth: '',
+      anchorageDepth: '',
+      
+      // Services & Facilities
+      services: [],
+      facilities: [],
+      cargoTypes: [],
+      
+      // Safety & Security
+      securityLevel: '1',
+      pilotageRequired: false,
+      tugAssistance: false,
+      quarantineStation: false,
+      
+      // Environmental & Regulatory
+      environmentalCertifications: [],
+      customsOffice: false,
+      freeTradeZone: false,
+      
+      // Infrastructure
+      railConnection: false,
+      roadConnection: true,
+      airportDistance: '',
+      
+      // Weather & Conditions
+      averageWaitTime: '',
+      weatherRestrictions: '',
+      tidalRange: '',
+      
+      // Economic Information
+      currency: 'USD',
+      
+      // Metadata
+      established: '',
+      lastInspection: '',
+      nextInspection: '',
+      photo: '',
     },
   });
 
@@ -334,27 +476,27 @@ function PowerfulAddPortDialog() {
         </DialogHeader>
 
         <div className="mb-6">
-          <div className="flex items-center space-x-4">
-            <div className={`flex items-center space-x-2 ${step >= 1 ? 'text-blue-600' : 'text-gray-400'}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}>
-                1
+          <div className="flex items-center space-x-2 overflow-x-auto">
+            {[
+              { num: 1, label: 'Basic Info' },
+              { num: 2, label: 'Location' },
+              { num: 3, label: 'Contact' },
+              { num: 4, label: 'Technical' },
+              { num: 5, label: 'Operations' },
+              { num: 6, label: 'Services' },
+              { num: 7, label: 'Safety' },
+              { num: 8, label: 'Infrastructure' }
+            ].map((stepInfo, index) => (
+              <div key={stepInfo.num} className="flex items-center">
+                <div className={`flex items-center space-x-2 ${step >= stepInfo.num ? 'text-blue-600' : 'text-gray-400'}`}>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs ${step >= stepInfo.num ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}>
+                    {stepInfo.num}
+                  </div>
+                  <span className="font-medium text-sm whitespace-nowrap">{stepInfo.label}</span>
+                </div>
+                {index < 7 && <div className={`h-1 w-8 mx-2 ${step > stepInfo.num ? 'bg-blue-600' : 'bg-gray-200'}`} />}
               </div>
-              <span className="font-medium">Basic Info</span>
-            </div>
-            <div className={`h-1 flex-1 ${step >= 2 ? 'bg-blue-600' : 'bg-gray-200'}`} />
-            <div className={`flex items-center space-x-2 ${step >= 2 ? 'text-blue-600' : 'text-gray-400'}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 2 ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}>
-                2
-              </div>
-              <span className="font-medium">Location</span>
-            </div>
-            <div className={`h-1 flex-1 ${step >= 3 ? 'bg-blue-600' : 'bg-gray-200'}`} />
-            <div className={`flex items-center space-x-2 ${step >= 3 ? 'text-blue-600' : 'text-gray-400'}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 3 ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}>
-                3
-              </div>
-              <span className="font-medium">Details</span>
-            </div>
+            ))}
           </div>
         </div>
 
