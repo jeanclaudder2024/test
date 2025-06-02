@@ -1792,7 +1792,6 @@ export function PortManagement() {
             </Card>
           </div>
         </TabsContent>
-        </TabsContent>
       </Tabs>
 
       {/* Pagination */}
@@ -1823,6 +1822,7 @@ export function PortManagement() {
           </div>
         </div>
       )}
+    </div>
     </div>
   );
 }
