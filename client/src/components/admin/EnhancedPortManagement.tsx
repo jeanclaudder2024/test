@@ -576,6 +576,9 @@ function PowerfulAddPortDialog() {
         roadConnection: data.roadConnection || false,
         customsOffice: data.customsOffice || false,
         freeTradeZone: data.freeTradeZone || false,
+        // Remove timestamp fields - let backend handle them
+        lastInspection: undefined,
+        nextInspection: undefined,
       };
 
       const response = await fetch('/api/admin/ports', {
@@ -626,7 +629,7 @@ function PowerfulAddPortDialog() {
           Add New Port
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto w-full">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold flex items-center">
             <Anchor className="h-6 w-6 mr-2 text-blue-600" />
