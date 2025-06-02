@@ -714,12 +714,726 @@ function PowerfulAddPortDialog() {
 
             {step === 3 && (
               <div className="space-y-6">
-                <div className="text-center p-6 bg-purple-50 rounded-lg">
-                  <Settings className="h-12 w-12 text-purple-600 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Additional Details</h3>
+                <div className="text-center p-6 bg-orange-50 rounded-lg">
+                  <Users className="h-12 w-12 text-orange-600 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Contact & Management</h3>
                   <p className="text-sm text-muted-foreground">
-                    Add description and finalizing details for the port profile
+                    Port authority and contact information
                   </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="portAuthority"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Port Authority</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="e.g., Port of Rotterdam Authority" 
+                            className="h-11"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="operator"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Port Operator</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="e.g., Rotterdam Port Services" 
+                            className="h-11"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="owner"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Port Owner</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="e.g., Government/Private Entity" 
+                            className="h-11"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Contact Email</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="email"
+                            placeholder="e.g., info@port.com" 
+                            className="h-11"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Phone Number</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="e.g., +31 10 252 1010" 
+                            className="h-11"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="website"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Website</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="e.g., https://www.port.com" 
+                            className="h-11"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="address"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Full Address</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Complete port address..."
+                            className="min-h-[80px]"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="postalCode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Postal Code</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="e.g., 3072 AP" 
+                            className="h-11"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+            )}
+
+            {step === 4 && (
+              <div className="space-y-6">
+                <div className="text-center p-6 bg-purple-50 rounded-lg">
+                  <Package className="h-12 w-12 text-purple-600 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Technical Specifications</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Vessel limits, berths, and technical capabilities
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="maxVesselLength"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Max Vessel Length (m)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number"
+                            placeholder="e.g., 400" 
+                            className="h-11"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="maxVesselBeam"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Max Vessel Beam (m)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number"
+                            placeholder="e.g., 60" 
+                            className="h-11"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="maxDraught"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Max Draught (m)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number"
+                            placeholder="e.g., 23" 
+                            className="h-11"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="maxDeadweight"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Max Deadweight (MT)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number"
+                            placeholder="e.g., 300000" 
+                            className="h-11"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="berthCount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Number of Berths</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number"
+                            placeholder="e.g., 84" 
+                            className="h-11"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="terminalCount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Number of Terminals</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number"
+                            placeholder="e.g., 12" 
+                            className="h-11"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h4 className="font-semibold mb-4">Water Depth Information</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="channelDepth"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Channel Depth (m)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number"
+                              placeholder="e.g., 23" 
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="berthDepth"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Berth Depth (m)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number"
+                              placeholder="e.g., 22" 
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="anchorageDepth"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Anchorage Depth (m)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number"
+                              placeholder="e.g., 20" 
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {step === 5 && (
+              <div className="space-y-6">
+                <div className="text-center p-6 bg-indigo-50 rounded-lg">
+                  <Clock className="h-12 w-12 text-indigo-600 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Operations & Services</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Operating hours, throughput, and available services
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="operatingHours"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Operating Hours</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="e.g., 24/7" 
+                            className="h-11"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="annualThroughput"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Annual Throughput (MT)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number"
+                            placeholder="e.g., 470000000" 
+                            className="h-11"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="averageWaitTime"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Average Wait Time (hours)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number"
+                            placeholder="e.g., 2.5" 
+                            className="h-11"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="currency"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Currency</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="h-11">
+                              <SelectValue placeholder="Select currency" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="USD">USD - US Dollar</SelectItem>
+                            <SelectItem value="EUR">EUR - Euro</SelectItem>
+                            <SelectItem value="GBP">GBP - British Pound</SelectItem>
+                            <SelectItem value="SAR">SAR - Saudi Riyal</SelectItem>
+                            <SelectItem value="AUD">AUD - Australian Dollar</SelectItem>
+                            <SelectItem value="CAD">CAD - Canadian Dollar</SelectItem>
+                            <SelectItem value="JPY">JPY - Japanese Yen</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="weatherRestrictions"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-base font-semibold">Weather Restrictions</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Describe any weather-related operational restrictions..."
+                          className="min-h-[80px]"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
+
+            {step === 6 && (
+              <div className="space-y-6">
+                <div className="text-center p-6 bg-green-50 rounded-lg">
+                  <Shield className="h-12 w-12 text-green-600 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Safety & Security</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Security levels, certifications, and safety requirements
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="securityLevel"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">ISPS Security Level</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="h-11">
+                              <SelectValue placeholder="Select security level" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="1">Level 1 - Normal</SelectItem>
+                            <SelectItem value="2">Level 2 - Heightened</SelectItem>
+                            <SelectItem value="3">Level 3 - Exceptional</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="pilotageRequired"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-base">Pilotage Required</FormLabel>
+                            <div className="text-sm text-muted-foreground">
+                              Is pilotage mandatory for vessels
+                            </div>
+                          </div>
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              className="h-4 w-4"
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="tugAssistance"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-base">Tug Assistance</FormLabel>
+                            <div className="text-sm text-muted-foreground">
+                              Tug assistance available
+                            </div>
+                          </div>
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              className="h-4 w-4"
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="quarantineStation"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-base">Quarantine Station</FormLabel>
+                            <div className="text-sm text-muted-foreground">
+                              Quarantine facilities available
+                            </div>
+                          </div>
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              className="h-4 w-4"
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {step === 7 && (
+              <div className="space-y-6">
+                <div className="text-center p-6 bg-teal-50 rounded-lg">
+                  <Building2 className="h-12 w-12 text-teal-600 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Infrastructure & Environment</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Transportation connections and environmental compliance
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="railConnection"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-base">Rail Connection</FormLabel>
+                            <div className="text-sm text-muted-foreground">
+                              Direct railway connection available
+                            </div>
+                          </div>
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              className="h-4 w-4"
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="roadConnection"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-base">Road Connection</FormLabel>
+                            <div className="text-sm text-muted-foreground">
+                              Highway/road access available
+                            </div>
+                          </div>
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              className="h-4 w-4"
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="customsOffice"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-base">Customs Office</FormLabel>
+                            <div className="text-sm text-muted-foreground">
+                              On-site customs facilities
+                            </div>
+                          </div>
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              className="h-4 w-4"
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="freeTradeZone"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-base">Free Trade Zone</FormLabel>
+                            <div className="text-sm text-muted-foreground">
+                              Free trade zone designation
+                            </div>
+                          </div>
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              className="h-4 w-4"
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <FormField
+                    control={form.control}
+                    name="airportDistance"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Airport Distance (km)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number"
+                            placeholder="e.g., 25" 
+                            className="h-11"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+            )}
+
+            {step === 8 && (
+              <div className="space-y-6">
+                <div className="text-center p-6 bg-purple-50 rounded-lg">
+                  <Star className="h-12 w-12 text-purple-600 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Final Details & Review</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Complete the port profile with additional details
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="established"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Year Established</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number"
+                            placeholder="e.g., 1872" 
+                            className="h-11"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="tidalRange"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-base font-semibold">Tidal Range (m)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number"
+                            placeholder="e.g., 2.1" 
+                            className="h-11"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
 
                 <FormField
