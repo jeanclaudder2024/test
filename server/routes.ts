@@ -5387,23 +5387,23 @@ Keep the description professional, informative, and around 150-200 words. Focus 
     try {
       console.log("Admin ports endpoint accessed");
       const ports = await storage.getPorts();
+      const vessels = await storage.getVessels();
       
       // Add vessel counts and other metadata for admin view
-      const portsWithMetadata = await Promise.all(
-        ports.map(async (port) => {
-          const vessels = await storage.getVessels();
-          const portVessels = vessels.filter(v => 
-            v.currentPort && v.currentPort.toLowerCase().includes(port.name.toLowerCase())
-          );
-          
-          return {
-            ...port,
-            vesselCount: portVessels.length,
-            connectedRefineries: 0, // This would be calculated from refinery connections
-            totalCargo: Math.floor(Math.random() * 1000000), // This would come from real cargo data
-          };
-        })
-      );
+      const portsWithMetadata = ports.map((port) => {
+        const portVessels = vessels.filter(v => 
+          v.currentPort && v.currentPort.toLowerCase().includes(port.name.toLowerCase())
+        );
+        
+        return {
+          ...port,
+          vesselCount: portVessels.length,
+          connectedRefineries: 0,
+          totalCargo: portVessels.reduce((sum, vessel) => {
+            return sum + (vessel.cargoCapacity || 0);
+          }, 0),
+        };
+      });
       
       res.json(portsWithMetadata);
     } catch (error) {
