@@ -468,7 +468,7 @@ function PowerfulAddPortDialog() {
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold flex items-center">
             <Anchor className="h-6 w-6 mr-2 text-blue-600" />
-            Add New Port - Step {step} of 3
+            Add New Port - Step {step} of 8
           </DialogTitle>
           <DialogDescription>
             Create a comprehensive port profile with detailed information and capabilities.
@@ -780,7 +780,7 @@ function PowerfulAddPortDialog() {
                 >
                   Cancel
                 </Button>
-                {step < 3 ? (
+                {step < 8 ? (
                   <Button
                     type="button"
                     onClick={nextStep}
