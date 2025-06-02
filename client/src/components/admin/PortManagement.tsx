@@ -1057,7 +1057,6 @@ export function PortManagement() {
           </div>
         </TabsContent>
       </Tabs>
-      </Tabs>
 
       {/* Pagination */}
       {totalPages > 1 && (
