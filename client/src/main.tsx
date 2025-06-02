@@ -2,9 +2,6 @@ import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
 import "./styles/animations.css";
-import { ThemeProvider } from "./hooks/use-theme";
-import { QueryClientProvider } from "@tanstack/react-query";
-import { queryClient } from "./lib/queryClient";
 
 // Add Leaflet CSS for maps
 const leafletCss = document.createElement("link");
@@ -37,10 +34,4 @@ metaDescription.name = "description";
 metaDescription.content = "Advanced maritime intelligence platform for tracking vessels, refineries, and ports with real-time geospatial insights.";
 document.head.appendChild(metaDescription);
 
-createRoot(document.getElementById("root")!).render(
-  <ThemeProvider defaultTheme="system">
-    <QueryClientProvider client={queryClient}>
-      <App />
-    </QueryClientProvider>
-  </ThemeProvider>
-);
+createRoot(document.getElementById("root")!).render(<App />);
