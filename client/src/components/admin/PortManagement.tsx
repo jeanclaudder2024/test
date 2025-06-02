@@ -1,59 +1,75 @@
 import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Textarea } from '@/components/ui/textarea';
-import { Progress } from '@/components/ui/progress';
-import { Label } from '@/components/ui/label';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { queryClient } from '@/lib/queryClient';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  Anchor, 
-  Ship, 
-  MapPin, 
-  Building2, 
-  Search, 
-  Filter, 
-  Grid3x3, 
-  List, 
-  Map as MapIcon, 
-  Plus, 
-  Activity,
+import {
+  Plus,
+  Search,
+  MapPin,
+  Anchor,
+  Filter,
+  Grid3x3,
+  List,
+  Map,
+  Users,
+  Ship,
   TrendingUp,
-  BarChart3,
+  Activity,
   Globe,
-  Truck,
-  Waves,
-  Calendar,
-  ChevronRight,
   ChevronLeft,
-  MoreVertical,
-  Edit,
-  Trash2,
-  Eye,
-  RefreshCw,
+  ChevronRight,
   Download,
   Upload,
-  Settings,
+  RefreshCw,
   Database,
-  AlertTriangle,
+  BarChart3,
+  Zap,
+  Settings,
   CheckCircle,
-  Clock,
-  Users,
-  Gauge,
-  Lightbulb,
-  Route
 } from 'lucide-react';
-import { apiRequest } from '@/lib/queryClient';
-import { CoordinateMapSelector } from '@/components/map/CoordinateMapSelector';
 import { PortAnalyticsDashboard } from '@/components/ports/PortAnalyticsDashboard';
 import { AdvancedPortSearch } from '@/components/ports/AdvancedPortSearch';
 import { PortRecommendationEngine } from '@/components/ports/PortRecommendationEngine';
@@ -80,7 +96,6 @@ const portFormSchema = z.object({
   email: z.string().email('Invalid email format').optional().or(z.literal('')),
   phone: z.string().optional(),
   website: z.string().url('Invalid website URL').optional().or(z.literal('')),
-  address: z.string().optional(),
   
   // Technical Specifications
   maxVesselLength: z.string().optional(),
@@ -88,35 +103,22 @@ const portFormSchema = z.object({
   maxDraught: z.string().optional(),
   berthCount: z.string().optional(),
   
-  // Facilities and Services
-  facilities: z.array(z.string()).optional(),
+  // Services and Facilities
   services: z.array(z.string()).optional(),
+  facilities: z.array(z.string()).optional(),
   
-  // Operating Information
+  // Operating Hours
   operatingHours: z.string().optional(),
   timezone: z.string().optional(),
+  
+  // Safety and Security
+  securityLevel: z.string().optional(),
   pilotageRequired: z.boolean().optional(),
   tugAssistance: z.boolean().optional(),
-  
-  // Cargo Handling
-  cargoTypes: z.array(z.string()).optional(),
-  storageCapacity: z.string().optional(),
-  craneCapacity: z.string().optional(),
-  
-  // Environmental and Safety
-  iceClass: z.string().optional(),
-  wasteReception: z.boolean().optional(),
-  bunkeringAvailable: z.boolean().optional(),
-  
-  // Additional Information
-  yearEstablished: z.string().optional(),
-  lastMaintenance: z.string().optional(),
-  notes: z.string().optional()
 });
 
 type PortFormData = z.infer<typeof portFormSchema>;
 
-// Types
 interface Port {
   id: number;
   name: string;
@@ -143,333 +145,147 @@ interface PortStats {
   topRegions: Array<{ region: string; count: number }>;
 }
 
-// Port Status Badge Component
 function PortStatusBadge({ status }: { status: string | null }) {
-  const getStatusStyle = (status: string | null) => {
-    const s = status?.toLowerCase() || 'unknown';
-    if (s.includes('operational') || s.includes('active')) {
-      return 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-400';
+  const getStatusColor = (status: string | null) => {
+    switch (status?.toLowerCase()) {
+      case 'operational':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'maintenance':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'closed':
+        return 'bg-red-100 text-red-800 border-red-200';
+      case 'limited':
+        return 'bg-orange-100 text-orange-800 border-orange-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
-    if (s.includes('maintenance') || s.includes('repair')) {
-      return 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400';
-    }
-    if (s.includes('construction') || s.includes('planned')) {
-      return 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400';
-    }
-    if (s.includes('closed') || s.includes('inactive')) {
-      return 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/20 dark:text-red-400';
-    }
-    return 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800 dark:text-gray-400';
   };
 
   return (
-    <Badge variant="outline" className={getStatusStyle(status)}>
+    <Badge variant="secondary" className={`${getStatusColor(status)} border`}>
       {status || 'Unknown'}
     </Badge>
   );
 }
 
-// Port Card Component
 function PortCard({ port }: { port: Port }) {
-  const getStatusIcon = (status: string | null) => {
-    const s = status?.toLowerCase() || 'unknown';
-    if (s.includes('operational') || s.includes('active')) {
-      return <CheckCircle className="h-4 w-4 text-green-600" />;
-    }
-    if (s.includes('maintenance') || s.includes('repair')) {
-      return <Clock className="h-4 w-4 text-orange-600" />;
-    }
-    if (s.includes('construction') || s.includes('planned')) {
-      return <Activity className="h-4 w-4 text-blue-600" />;
-    }
-    if (s.includes('closed') || s.includes('inactive')) {
-      return <AlertTriangle className="h-4 w-4 text-red-600" />;
-    }
-    return <Activity className="h-4 w-4 text-gray-600" />;
-  };
-
   return (
-    <Card className="group cursor-pointer hover:shadow-lg transition-all duration-200 border-border hover:border-primary/30">
+    <Card className="hover:shadow-lg transition-shadow duration-200 border-l-4 border-l-blue-500">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center">
-              <Anchor className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-            </div>
-            <div>
-              <CardTitle className="text-lg group-hover:text-primary transition-colors">
-                {port.name}
-              </CardTitle>
-              <p className="text-sm text-muted-foreground flex items-center mt-1">
-                <MapPin className="h-3 w-3 mr-1" />
-                {port.country}, {port.region}
-              </p>
+          <div className="space-y-1">
+            <CardTitle className="text-lg font-semibold line-clamp-1">
+              {port.name}
+            </CardTitle>
+            <div className="flex items-center text-sm text-muted-foreground">
+              <MapPin className="h-4 w-4 mr-1" />
+              {port.country}, {port.region}
             </div>
           </div>
-          <div className="flex items-center space-x-2">
-            {getStatusIcon(port.status)}
-            <PortStatusBadge status={port.status} />
-          </div>
+          <PortStatusBadge status={port.status} />
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {/* Port Details */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Type:</span>
-                <span className="font-medium capitalize">{port.type || 'Commercial'}</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Vessels:</span>
-                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                  {port.vesselCount || 0}
-                </Badge>
-              </div>
+      <CardContent className="pt-0">
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="space-y-2">
+            <div className="flex items-center">
+              <Ship className="h-4 w-4 mr-2 text-blue-600" />
+              <span className="font-medium">{port.vesselCount}</span>
+              <span className="text-muted-foreground ml-1">vessels</span>
             </div>
-            
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Capacity:</span>
-                <span className="font-medium">
-                  {port.capacity ? (port.capacity / 1000000).toFixed(1) + 'M TEU' : 'N/A'}
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Refineries:</span>
-                <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
-                  {port.connectedRefineries || 0}
-                </Badge>
-              </div>
+            <div className="flex items-center">
+              <Anchor className="h-4 w-4 mr-2 text-green-600" />
+              <span className="font-medium">{port.connectedRefineries}</span>
+              <span className="text-muted-foreground ml-1">refineries</span>
             </div>
           </div>
-
-          {/* Port Statistics */}
-          <div className="pt-3 border-t border-border">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4 text-sm">
-                <div className="flex items-center space-x-1">
-                  <Activity className="h-3 w-3 text-green-600" />
-                  <span className="text-muted-foreground">Active</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <Gauge className="h-3 w-3 text-blue-600" />
-                  <span className="text-muted-foreground">{port.capacity ? Math.round((port.vesselCount || 0) / (port.capacity / 1000000) * 100) + '%' : 'N/A'}</span>
-                </div>
+          <div className="space-y-2">
+            <div className="flex items-center">
+              <Activity className="h-4 w-4 mr-2 text-purple-600" />
+              <span className="font-medium">{port.totalCargo.toLocaleString()}</span>
+              <span className="text-muted-foreground ml-1">MT</span>
+            </div>
+            {port.capacity && (
+              <div className="flex items-center">
+                <Database className="h-4 w-4 mr-2 text-orange-600" />
+                <span className="font-medium">{port.capacity.toLocaleString()}</span>
+                <span className="text-muted-foreground ml-1">MT cap</span>
               </div>
-              
-              <Button 
-                variant="ghost" 
-                size="sm"
-                className="group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
-              >
-                View Details
-                <ChevronRight className="h-4 w-4 ml-1" />
-              </Button>
-            </div>
+            )}
           </div>
-
-          {/* Quick Actions */}
-          <div className="flex justify-between items-center pt-2 border-t border-border">
-            <div className="flex space-x-1">
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                <Eye className="h-3 w-3" />
-              </Button>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                <Edit className="h-3 w-3" />
-              </Button>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                <MapIcon className="h-3 w-3" />
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {port.lastUpdated ? new Date(port.lastUpdated).toLocaleDateString() : 'No data'}
-            </p>
+        </div>
+        {port.description && (
+          <p className="text-sm text-muted-foreground mt-3 line-clamp-2">
+            {port.description}
+          </p>
+        )}
+        <div className="flex items-center justify-between mt-4">
+          <div className="text-xs text-muted-foreground">
+            {port.type && (
+              <Badge variant="outline" className="text-xs">
+                {port.type}
+              </Badge>
+            )}
           </div>
+          <Button variant="outline" size="sm">
+            View Details
+          </Button>
         </div>
       </CardContent>
     </Card>
   );
 }
 
-// Add Port Dialog Component
 function AddPortDialog() {
   const [open, setOpen] = useState(false);
-  const [showMap, setShowMap] = useState(false);
-  const [showConnectionDialog, setShowConnectionDialog] = useState(false);
-  const [selectedCoordinates, setSelectedCoordinates] = useState<{ lat: number; lng: number } | null>(null);
-  const [newPortId, setNewPortId] = useState<number | null>(null);
-  const [newPortName, setNewPortName] = useState<string>('');
   const { toast } = useToast();
-  const queryClient = useQueryClient();
 
   const form = useForm<PortFormData>({
     resolver: zodResolver(portFormSchema),
     defaultValues: {
-      // Basic Information
       name: '',
       country: '',
       region: '',
       lat: '',
       lng: '',
-      
-      // Port Classification
-      type: 'commercial',
+      type: '',
       status: 'operational',
-      
-      // Operational Details
       capacity: '',
       description: '',
-      
-      // Contact Information
-      portAuthority: '',
-      email: '',
-      phone: '',
-      website: '',
-      address: '',
-      
-      // Technical Specifications
-      maxVesselLength: '',
-      maxVesselBeam: '',
-      maxDraught: '',
-      berthCount: '',
-      
-      // Facilities and Services
-      facilities: [],
-      services: [],
-      
-      // Operating Information
-      operatingHours: '24/7',
-      timezone: '',
-      pilotageRequired: false,
-      tugAssistance: false,
-      
-      // Cargo Handling
-      cargoTypes: [],
-      storageCapacity: '',
-      craneCapacity: '',
-      
-      // Environmental and Safety
-      iceClass: '',
-      wasteReception: false,
-      bunkeringAvailable: false,
-      
-      // Additional Information
-      yearEstablished: '',
-      lastMaintenance: '',
-      notes: ''
-    }
+    },
   });
 
   const addPortMutation = useMutation({
     mutationFn: async (data: PortFormData) => {
-      const portData = {
-        ...data,
-        capacity: data.capacity ? parseInt(data.capacity) : null
-      };
-      return apiRequest('/api/ports', {
+      const response = await fetch('/api/admin/ports', {
         method: 'POST',
-        body: JSON.stringify(portData)
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...data,
+          capacity: data.capacity ? parseInt(data.capacity) : null,
+        }),
       });
+      if (!response.ok) throw new Error('Failed to add port');
+      return response.json();
     },
-    onSuccess: async (response) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/ports'] });
-      
-      // Generate AI-powered port description if needed
-      if (response.id && (!response.description || response.description === '')) {
-        await generatePortDescription(response.id);
-      }
-      
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/ports'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/port-stats'] });
+      toast({
+        title: 'Success',
+        description: 'Port has been added successfully.',
+      });
       setOpen(false);
       form.reset();
-      setSelectedCoordinates(null);
-      setShowMap(false);
+    },
+    onError: (error) => {
       toast({
-        title: "Port Added Successfully",
-        description: "The new port has been added with AI-generated details.",
+        title: 'Error',
+        description: 'Failed to add port. Please try again.',
+        variant: 'destructive',
       });
     },
-    onError: (error: any) => {
-      toast({
-        title: "Error Adding Port",
-        description: error.message || "Failed to add port",
-        variant: "destructive",
-      });
-    }
   });
-
-  // Auto-fill mutation for AI-generated port data
-  const autoFillMutation = useMutation({
-    mutationFn: async (location: { name?: string; country?: string; lat?: string; lng?: string }) => {
-      return apiRequest('/api/ports/auto-fill', {
-        method: 'POST',
-        body: JSON.stringify(location)
-      });
-    },
-    onSuccess: (generatedData) => {
-      // Fill the form with AI-generated data
-      Object.keys(generatedData).forEach((key) => {
-        if (generatedData[key] !== null && generatedData[key] !== undefined) {
-          form.setValue(key as keyof PortFormData, generatedData[key]);
-        }
-      });
-      
-      toast({
-        title: "Auto-Fill Complete",
-        description: "Port details have been generated using AI. Please review and adjust as needed.",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Auto-Fill Failed",
-        description: error.message || "Could not generate port data. Please fill manually.",
-        variant: "destructive",
-      });
-    }
-  });
-
-  // Generate AI-powered port description
-  const generatePortDescription = async (portId: number) => {
-    try {
-      await apiRequest(`/api/ports/${portId}/generate-description`, {
-        method: 'POST'
-      });
-    } catch (error) {
-      console.log('Could not generate AI description for port');
-    }
-  };
-
-  // Handle map coordinate selection
-  const handleCoordinateSelect = (lat: number, lng: number) => {
-    setSelectedCoordinates({ lat, lng });
-    form.setValue('lat', lat.toFixed(6));
-    form.setValue('lng', lng.toFixed(6));
-    setShowMap(false);
-  };
-
-  // Handle auto-fill with AI-generated data
-  const handleAutoFill = () => {
-    const currentValues = form.getValues();
-    const location = {
-      name: currentValues.name || undefined,
-      country: currentValues.country || undefined,
-      lat: currentValues.lat || undefined,
-      lng: currentValues.lng || undefined
-    };
-    
-    // Need at least name or coordinates to generate meaningful data
-    if (!location.name && (!location.lat || !location.lng)) {
-      toast({
-        title: "Missing Information",
-        description: "Please enter at least a port name or coordinates before using auto-fill.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    autoFillMutation.mutate(location);
-  };
 
   const onSubmit = (data: PortFormData) => {
     addPortMutation.mutate(data);
@@ -478,745 +294,268 @@ function AddPortDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <Button className="bg-blue-600 hover:bg-blue-700">
           <Plus className="h-4 w-4 mr-2" />
           Add New Port
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span>Add New Port - Comprehensive Details</span>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleAutoFill}
-              disabled={autoFillMutation.isPending}
-              className="ml-4"
-            >
-              {autoFillMutation.isPending ? (
-                <>
-                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <Database className="h-4 w-4 mr-2" />
-                  Auto Fill
-                </>
-              )}
-            </Button>
-          </DialogTitle>
+          <DialogTitle>Add New Port</DialogTitle>
+          <DialogDescription>
+            Create a comprehensive port profile with detailed information and capabilities.
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <Tabs defaultValue="basic" className="w-full">
-              <TabsList className="grid w-full grid-cols-5">
-                <TabsTrigger value="basic">Basic Info</TabsTrigger>
-                <TabsTrigger value="contact">Contact</TabsTrigger>
-                <TabsTrigger value="technical">Technical</TabsTrigger>
-                <TabsTrigger value="operations">Operations</TabsTrigger>
-                <TabsTrigger value="additional">Additional</TabsTrigger>
-              </TabsList>
-
-              {/* Basic Information Tab */}
-              <TabsContent value="basic" className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Port Name *</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Port of Rotterdam" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="country"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Country *</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Netherlands" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                {/* Map Selection Section */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="text-sm font-medium">Port Location</h4>
-                      <p className="text-xs text-muted-foreground">Select coordinates on map or enter manually</p>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowMap(true)}
-                      className="flex items-center gap-2"
-                    >
-                      <MapIcon className="h-4 w-4" />
-                      Select on Map
-                    </Button>
-                  </div>
-                  
-                  {selectedCoordinates && (
-                    <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <CheckCircle className="h-4 w-4 text-green-600" />
-                          <span className="text-sm font-medium text-green-800">
-                            Coordinates Selected from Map
-                          </span>
-                        </div>
-                        <span className="text-sm text-green-700">
-                          {selectedCoordinates.lat.toFixed(6)}, {selectedCoordinates.lng.toFixed(6)}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-3 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="region"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Region *</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select region" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="Europe">Europe</SelectItem>
-                            <SelectItem value="Asia-Pacific">Asia-Pacific</SelectItem>
-                            <SelectItem value="North America">North America</SelectItem>
-                            <SelectItem value="Latin America">Latin America</SelectItem>
-                            <SelectItem value="Middle East">Middle East</SelectItem>
-                            <SelectItem value="Africa">Africa</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="lat"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Latitude *</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Input 
-                              placeholder="51.9225" 
-                              {...field}
-                              className={selectedCoordinates ? 'bg-green-50 border-green-300' : ''}
-                            />
-                            {selectedCoordinates && (
-                              <CheckCircle className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-green-600" />
-                            )}
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="lng"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Longitude *</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Input 
-                              placeholder="4.47917" 
-                              {...field}
-                              className={selectedCoordinates ? 'bg-green-50 border-green-300' : ''}
-                            />
-                            {selectedCoordinates && (
-                              <CheckCircle className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-green-600" />
-                            )}
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="grid grid-cols-3 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="type"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Port Type</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="commercial">Commercial</SelectItem>
-                            <SelectItem value="oil">Oil Terminal</SelectItem>
-                            <SelectItem value="container">Container Port</SelectItem>
-                            <SelectItem value="bulk_cargo">Bulk Cargo</SelectItem>
-                            <SelectItem value="passenger">Passenger Port</SelectItem>
-                            <SelectItem value="fishing">Fishing Port</SelectItem>
-                            <SelectItem value="naval">Naval Base</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="status"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Status</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select status" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="operational">Operational</SelectItem>
-                            <SelectItem value="maintenance">Under Maintenance</SelectItem>
-                            <SelectItem value="construction">Under Construction</SelectItem>
-                            <SelectItem value="planned">Planned</SelectItem>
-                            <SelectItem value="closed">Closed</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="capacity"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Capacity (TEU)</FormLabel>
-                        <FormControl>
-                          <Input placeholder="14000000" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
+            {/* Basic Information Section */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium border-b pb-2">Basic Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="description"
+                  name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Description</FormLabel>
+                      <FormLabel>Port Name *</FormLabel>
                       <FormControl>
-                        <Textarea 
-                          placeholder="Enter port description..." 
-                          className="min-h-[80px]"
-                          {...field} 
-                        />
+                        <Input placeholder="Port of Rotterdam" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-              </TabsContent>
-
-              {/* Contact Information Tab */}
-              <TabsContent value="contact" className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="portAuthority"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Port Authority</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Port of Rotterdam Authority" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input placeholder="info@portofrotterdam.com" type="email" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="phone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Phone</FormLabel>
-                        <FormControl>
-                          <Input placeholder="+31 (0)10 252 1010" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="website"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Website</FormLabel>
-                        <FormControl>
-                          <Input placeholder="https://www.portofrotterdam.com" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
                 <FormField
                   control={form.control}
-                  name="address"
+                  name="country"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Address</FormLabel>
+                      <FormLabel>Country *</FormLabel>
                       <FormControl>
-                        <Textarea 
-                          placeholder="Wilhelminakade 909, 3072 AP Rotterdam, Netherlands" 
-                          className="min-h-[80px]"
-                          {...field} 
-                        />
+                        <Input placeholder="Netherlands" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-              </TabsContent>
-
-              {/* Technical Specifications Tab */}
-              <TabsContent value="technical" className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="maxVesselLength"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Max Vessel Length (m)</FormLabel>
-                        <FormControl>
-                          <Input placeholder="400" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="maxVesselBeam"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Max Vessel Beam (m)</FormLabel>
-                        <FormControl>
-                          <Input placeholder="59" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="maxDraught"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Max Draught (m)</FormLabel>
-                        <FormControl>
-                          <Input placeholder="24.0" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="berthCount"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Number of Berths</FormLabel>
-                        <FormControl>
-                          <Input placeholder="15" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="storageCapacity"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Storage Capacity (m³)</FormLabel>
-                        <FormControl>
-                          <Input placeholder="500000" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="craneCapacity"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Crane Capacity (tonnes)</FormLabel>
-                        <FormControl>
-                          <Input placeholder="100" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </TabsContent>
-
-              {/* Operations Tab */}
-              <TabsContent value="operations" className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="operatingHours"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Operating Hours</FormLabel>
-                        <FormControl>
-                          <Input placeholder="24/7" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="timezone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Timezone</FormLabel>
-                        <FormControl>
-                          <Input placeholder="UTC+1" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-2">
-                    <FormField
-                      control={form.control}
-                      name="pilotageRequired"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                          <FormControl>
-                            <input
-                              type="checkbox"
-                              checked={field.value}
-                              onChange={field.onChange}
-                              className="mt-1"
-                            />
-                          </FormControl>
-                          <div className="space-y-1 leading-none">
-                            <FormLabel>Pilotage Required</FormLabel>
-                          </div>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <FormField
-                      control={form.control}
-                      name="tugAssistance"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                          <FormControl>
-                            <input
-                              type="checkbox"
-                              checked={field.value}
-                              onChange={field.onChange}
-                              className="mt-1"
-                            />
-                          </FormControl>
-                          <div className="space-y-1 leading-none">
-                            <FormLabel>Tug Assistance Available</FormLabel>
-                          </div>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <FormField
-                      control={form.control}
-                      name="wasteReception"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                          <FormControl>
-                            <input
-                              type="checkbox"
-                              checked={field.value}
-                              onChange={field.onChange}
-                              className="mt-1"
-                            />
-                          </FormControl>
-                          <div className="space-y-1 leading-none">
-                            <FormLabel>Waste Reception Facilities</FormLabel>
-                          </div>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <FormField
-                      control={form.control}
-                      name="bunkeringAvailable"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                          <FormControl>
-                            <input
-                              type="checkbox"
-                              checked={field.value}
-                              onChange={field.onChange}
-                              className="mt-1"
-                            />
-                          </FormControl>
-                          <div className="space-y-1 leading-none">
-                            <FormLabel>Bunkering Services Available</FormLabel>
-                          </div>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-              </TabsContent>
-
-              {/* Additional Information Tab */}
-              <TabsContent value="additional" className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="yearEstablished"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Year Established</FormLabel>
-                        <FormControl>
-                          <Input placeholder="1872" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="iceClass"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Ice Class</FormLabel>
-                        <FormControl>
-                          <Input placeholder="None / IA / IB / IC" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
                 <FormField
                   control={form.control}
-                  name="lastMaintenance"
+                  name="region"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Last Maintenance Date</FormLabel>
+                      <FormLabel>Region *</FormLabel>
                       <FormControl>
-                        <Input placeholder="2024-01-15" type="date" {...field} />
+                        <Input placeholder="Europe" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-
                 <FormField
                   control={form.control}
-                  name="notes"
+                  name="type"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Additional Notes</FormLabel>
+                      <FormLabel>Port Type</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select port type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="commercial">Commercial</SelectItem>
+                          <SelectItem value="industrial">Industrial</SelectItem>
+                          <SelectItem value="oil_terminal">Oil Terminal</SelectItem>
+                          <SelectItem value="container">Container</SelectItem>
+                          <SelectItem value="bulk">Bulk Cargo</SelectItem>
+                          <SelectItem value="naval">Naval</SelectItem>
+                          <SelectItem value="fishing">Fishing</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            {/* Location Section */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium border-b pb-2">Geographic Location</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="lat"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Latitude *</FormLabel>
                       <FormControl>
-                        <Textarea 
-                          placeholder="Any additional information about the port..." 
-                          className="min-h-[120px]"
-                          {...field} 
-                        />
+                        <Input placeholder="51.9244" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-              </TabsContent>
-            </Tabs>
+                <FormField
+                  control={form.control}
+                  name="lng"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Longitude *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="4.4777" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            {/* Operational Details Section */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium border-b pb-2">Operational Details</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="operational">Operational</SelectItem>
+                          <SelectItem value="maintenance">Maintenance</SelectItem>
+                          <SelectItem value="limited">Limited Operations</SelectItem>
+                          <SelectItem value="closed">Closed</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="capacity"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Storage Capacity (MT)</FormLabel>
+                      <FormControl>
+                        <Input type="number" placeholder="500000" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Brief description of the port's capabilities and services..."
+                        className="min-h-[100px]"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <div className="flex justify-end space-x-2 pt-4 border-t">
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setOpen(false)}
+              >
                 Cancel
               </Button>
-              <Button type="submit" disabled={addPortMutation.isPending}>
+              <Button
+                type="submit"
+                disabled={addPortMutation.isPending}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
                 {addPortMutation.isPending ? (
-                  <>
-                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                    Adding...
-                  </>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
                 ) : (
-                  <>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Port
-                  </>
+                  <Plus className="h-4 w-4 mr-2" />
                 )}
+                Add Port
               </Button>
             </div>
           </form>
         </Form>
       </DialogContent>
-
-      {/* Interactive Map Modal */}
-      <CoordinateMapSelector
-        isOpen={showMap}
-        onCoordinateSelect={handleCoordinateSelect}
-        onClose={() => setShowMap(false)}
-        initialLat={25.276987}
-        initialLng={55.296249}
-      />
     </Dialog>
   );
 }
 
-// Statistics Cards Component
 function PortStatistics({ stats }: { stats: PortStats | undefined }) {
-  if (!stats) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        {[1, 2, 3, 4].map((i) => (
-          <Card key={i} className="animate-pulse">
-            <CardHeader className="pb-2">
-              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-            </CardHeader>
-            <CardContent>
-              <div className="h-8 bg-gray-200 rounded w-3/4 mb-2"></div>
-              <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
-  }
+  if (!stats) return null;
 
-  const statCards = [
+  const statisticsCards = [
     {
-      title: "Total Ports",
+      title: 'Total Ports',
       value: stats.totalPorts.toLocaleString(),
       icon: Anchor,
-      color: "blue",
-      description: `${stats.operationalPorts} operational`,
-      trend: "+12% from last month"
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50',
+      trend: '+12%',
     },
     {
-      title: "Active Vessels",
+      title: 'Operational',
+      value: stats.operationalPorts.toLocaleString(),
+      icon: CheckCircle,
+      color: 'text-green-600',
+      bgColor: 'bg-green-50',
+      trend: '+8%',
+    },
+    {
+      title: 'Total Vessels',
       value: stats.totalVessels.toLocaleString(),
       icon: Ship,
-      color: "green",
-      description: `${stats.averageVesselsPerPort.toFixed(1)} per port`,
-      trend: "+8% from last week"
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-50',
+      trend: '+15%',
     },
     {
-      title: "Total Capacity",
-      value: `${(stats.totalCapacity / 1000000).toFixed(1)}M TEU`,
-      icon: Building2,
-      color: "purple",
-      description: "Combined port capacity",
-      trend: "+5% from last quarter"
+      title: 'Avg Vessels/Port',
+      value: stats.averageVesselsPerPort.toFixed(1),
+      icon: Activity,
+      color: 'text-orange-600',
+      bgColor: 'bg-orange-50',
+      trend: '+5%',
     },
-    {
-      title: "Top Region",
-      value: stats.topRegions[0]?.region || "N/A",
-      icon: Globe,
-      color: "orange",
-      description: `${stats.topRegions[0]?.count || 0} ports`,
-      trend: "Leading region"
-    }
   ];
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-      {statCards.map((stat, index) => (
-        <Card key={index} className="border-border hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              {stat.title}
-            </CardTitle>
-            <stat.icon className={`h-4 w-4 text-${stat.color}-600`} />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold mb-1">{stat.value}</div>
-            <p className="text-xs text-muted-foreground mb-1">
-              {stat.description}
-            </p>
-            <div className="flex items-center space-x-1">
+      {statisticsCards.map((stat, index) => (
+        <Card key={index} className="border-l-4 border-l-blue-500">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground mb-1">
+                  {stat.title}
+                </p>
+                <p className="text-2xl font-bold">{stat.value}</p>
+              </div>
+              <div className={`${stat.bgColor} p-3 rounded-lg`}>
+                <stat.icon className={`h-6 w-6 ${stat.color}`} />
+              </div>
+            </div>
+            <div className="flex items-center mt-4">
               <TrendingUp className="h-3 w-3 text-green-600" />
               <span className="text-xs text-green-600">{stat.trend}</span>
             </div>
@@ -1238,55 +577,29 @@ export function PortManagement() {
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedPortForAnalytics, setSelectedPortForAnalytics] = useState<number | null>(null);
   const [advancedSearchResults, setAdvancedSearchResults] = useState<any[]>([]);
-
   const pageSize = 12;
 
-  // Fetch ports data
-  const { 
-    data: ports = [], 
-    isLoading: portsLoading,
-    error: portsError,
-    refetch: refetchPorts
-  } = useQuery({
-    queryKey: ['/api/ports'],
-    queryFn: async () => {
-      const response = await fetch('/api/ports');
-      if (!response.ok) {
-        throw new Error('Failed to fetch ports');
-      }
-      return response.json();
-    }
+  const { data: ports = [], isLoading: portsLoading, error: portsError } = useQuery<Port[]>({
+    queryKey: ['/api/admin/ports'],
   });
 
-  // Fetch port statistics
-  const { 
-    data: stats,
-    isLoading: statsLoading 
-  } = useQuery({
-    queryKey: ['/api/ports/statistics'],
-    queryFn: async () => {
-      const response = await fetch('/api/ports/statistics');
-      if (!response.ok) {
-        throw new Error('Failed to fetch statistics');
-      }
-      return response.json();
-    }
+  const { data: stats } = useQuery<PortStats>({
+    queryKey: ['/api/admin/port-stats'],
   });
 
-  // Filter ports based on search and filters
+  // Advanced filtering logic
   const filteredPorts = ports.filter((port: Port) => {
-    const matchesSearch = !searchTerm || 
-      port.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      port.country.toLowerCase().includes(searchTerm.toLowerCase());
-    
+    const matchesSearch = port.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         port.country.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         port.region.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRegion = selectedRegion === 'all' || port.region === selectedRegion;
     const matchesStatus = selectedStatus === 'all' || port.status === selectedStatus;
     const matchesType = selectedType === 'all' || port.type === selectedType;
-
+    
     return matchesSearch && matchesRegion && matchesStatus && matchesType;
   });
 
-  // Pagination
+  // Pagination logic
   const totalPages = Math.ceil(filteredPorts.length / pageSize);
   const startIndex = (currentPage - 1) * pageSize;
   const paginatedPorts = filteredPorts.slice(startIndex, startIndex + pageSize);
@@ -1318,23 +631,15 @@ export function PortManagement() {
 
   if (portsError) {
     return (
-      <div className="space-y-6">
-        <Card className="border-destructive">
-          <CardHeader>
-            <CardTitle className="text-destructive">Error Loading Ports</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p>There was a problem loading the ports data.</p>
-            <Button 
-              variant="outline" 
-              className="mt-4" 
-              onClick={() => refetchPorts()}
-            >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Try Again
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            Unable to load ports
+          </h3>
+          <p className="text-gray-500">
+            There was an error loading the ports data. Please try again.
+          </p>
+        </div>
       </div>
     );
   }
@@ -1349,14 +654,14 @@ export function PortManagement() {
             Comprehensive port management with AI-powered analytics, advanced search, and route planning
           </p>
         </div>
-        <div className="flex gap-2 mt-4 md:mt-0">
-          <Button variant="outline">
-            <Upload className="h-4 w-4 mr-2" />
-            Import Ports
+        <div className="flex items-center space-x-2 mt-4 md:mt-0">
+          <Button variant="outline" size="sm">
+            <Download className="h-4 w-4 mr-2" />
+            Export
           </Button>
-          <Button variant="outline">
-            <BarChart3 className="h-4 w-4 mr-2" />
-            Analytics
+          <Button variant="outline" size="sm">
+            <Upload className="h-4 w-4 mr-2" />
+            Import
           </Button>
           <AddPortDialog />
         </div>
@@ -1369,16 +674,16 @@ export function PortManagement() {
             <Database className="h-4 w-4 mr-2" />
             Overview
           </TabsTrigger>
-          <TabsTrigger value="advanced-search">
-            <Search className="h-4 w-4 mr-2" />
-            Advanced Search
-          </TabsTrigger>
           <TabsTrigger value="analytics">
             <BarChart3 className="h-4 w-4 mr-2" />
             Analytics
           </TabsTrigger>
+          <TabsTrigger value="search">
+            <Search className="h-4 w-4 mr-2" />
+            Advanced Search
+          </TabsTrigger>
           <TabsTrigger value="recommendations">
-            <Lightbulb className="h-4 w-4 mr-2" />
+            <Zap className="h-4 w-4 mr-2" />
             AI Recommendations
           </TabsTrigger>
           <TabsTrigger value="management">
@@ -1396,395 +701,354 @@ export function PortManagement() {
           <Card>
             <CardHeader>
               <CardTitle>Quick Filters & Search</CardTitle>
+              <CardDescription>
+                Filter and search through all registered ports
+              </CardDescription>
             </CardHeader>
             <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Search ports..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-
-            <Select value={selectedRegion} onValueChange={setSelectedRegion}>
-              <SelectTrigger>
-                <SelectValue placeholder="All Regions" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Regions</SelectItem>
-                <SelectItem value="Europe">Europe</SelectItem>
-                <SelectItem value="Asia-Pacific">Asia-Pacific</SelectItem>
-                <SelectItem value="North America">North America</SelectItem>
-                <SelectItem value="Latin America">Latin America</SelectItem>
-                <SelectItem value="Middle East">Middle East</SelectItem>
-                <SelectItem value="Africa">Africa</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-              <SelectTrigger>
-                <SelectValue placeholder="All Statuses" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="operational">Operational</SelectItem>
-                <SelectItem value="maintenance">Under Maintenance</SelectItem>
-                <SelectItem value="construction">Under Construction</SelectItem>
-                <SelectItem value="planned">Planned</SelectItem>
-                <SelectItem value="closed">Closed</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={selectedType} onValueChange={setSelectedType}>
-              <SelectTrigger>
-                <SelectValue placeholder="All Types" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="commercial">Commercial</SelectItem>
-                <SelectItem value="oil_terminal">Oil Terminal</SelectItem>
-                <SelectItem value="container">Container Port</SelectItem>
-                <SelectItem value="bulk_cargo">Bulk Cargo</SelectItem>
-                <SelectItem value="passenger">Passenger Port</SelectItem>
-                <SelectItem value="fishing">Fishing Port</SelectItem>
-                <SelectItem value="naval">Naval Base</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => {
-                  setSearchTerm('');
-                  setSelectedRegion('all');
-                  setSelectedStatus('all');
-                  setSelectedType('all');
-                }}
-              >
-                Clear
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => refetchPorts()}
-              >
-                <RefreshCw className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* View Mode Tabs */}
-      <Tabs value={viewMode} onValueChange={setViewMode}>
-        <div className="flex justify-between items-center mb-4">
-          <TabsList>
-            <TabsTrigger value="grid">
-              <Grid3x3 className="h-4 w-4 mr-2" />
-              Grid View
-            </TabsTrigger>
-            <TabsTrigger value="list">
-              <List className="h-4 w-4 mr-2" />
-              List View
-            </TabsTrigger>
-            <TabsTrigger value="map">
-              <MapIcon className="h-4 w-4 mr-2" />
-              Map View
-            </TabsTrigger>
-          </TabsList>
-
-          <div className="text-sm text-muted-foreground">
-            Showing {startIndex + 1}-{Math.min(startIndex + pageSize, filteredPorts.length)} of {filteredPorts.length} ports
-          </div>
-        </div>
-
-        <TabsContent value="grid" className="mt-0">
-          {paginatedPorts.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {paginatedPorts.map((port: Port) => (
-                <PortCard key={port.id} port={port} />
-              ))}
-            </div>
-          ) : (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <Anchor className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No Ports Found</h3>
-                <p className="text-muted-foreground text-center mb-4">
-                  {searchTerm || selectedRegion !== 'all' || selectedStatus !== 'all' || selectedType !== 'all'
-                    ? "No ports match your current filters."
-                    : "No ports have been added to the system yet."
-                  }
-                </p>
-                <div className="flex gap-2">
-                  {(searchTerm || selectedRegion !== 'all' || selectedStatus !== 'all' || selectedType !== 'all') && (
-                    <Button variant="outline" onClick={() => {
-                      setSearchTerm('');
-                      setSelectedRegion('all');
-                      setSelectedStatus('all');
-                      setSelectedType('all');
-                    }}>
-                      Clear Filters
-                    </Button>
-                  )}
-                  <AddPortDialog />
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Input
+                    placeholder="Search ports..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
                 </div>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
+                <Select value={selectedRegion} onValueChange={setSelectedRegion}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Regions" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Regions</SelectItem>
+                    <SelectItem value="Europe">Europe</SelectItem>
+                    <SelectItem value="Asia">Asia</SelectItem>
+                    <SelectItem value="Americas">Americas</SelectItem>
+                    <SelectItem value="Africa">Africa</SelectItem>
+                    <SelectItem value="Oceania">Oceania</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Statuses" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="operational">Operational</SelectItem>
+                    <SelectItem value="maintenance">Maintenance</SelectItem>
+                    <SelectItem value="limited">Limited</SelectItem>
+                    <SelectItem value="closed">Closed</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={selectedType} onValueChange={setSelectedType}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Types" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    <SelectItem value="commercial">Commercial</SelectItem>
+                    <SelectItem value="industrial">Industrial</SelectItem>
+                    <SelectItem value="oil_terminal">Oil Terminal</SelectItem>
+                    <SelectItem value="container">Container</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
 
-        <TabsContent value="list" className="mt-0">
-          <Card>
-            <CardContent className="p-0">
-              {paginatedPorts.length > 0 ? (
-                <div className="divide-y divide-border">
-                  {paginatedPorts.map((port: Port) => (
-                    <div key={port.id} className="p-6 hover:bg-muted/50 transition-colors">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
-                          <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center">
-                            <Anchor className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                          </div>
-                          <div>
-                            <h3 className="font-semibold">{port.name}</h3>
-                            <p className="text-sm text-muted-foreground">
-                              {port.country}, {port.region}
-                            </p>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center space-x-4">
-                          <div className="text-right">
-                            <div className="text-sm font-medium">
-                              {port.vesselCount || 0} vessels
-                            </div>
-                            <div className="text-sm text-muted-foreground">
-                              {port.type || 'Commercial'}
-                            </div>
-                          </div>
-                          
-                          <PortStatusBadge status={port.status} />
-                          
-                          <Button variant="ghost" size="sm">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-12">
-                  <Anchor className="h-12 w-12 text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No Ports Found</h3>
-                  <p className="text-muted-foreground text-center">
+          {/* View Mode Tabs */}
+          <Tabs value={viewMode} onValueChange={setViewMode}>
+            <div className="flex justify-between items-center mb-4">
+              <TabsList>
+                <TabsTrigger value="grid">
+                  <Grid3x3 className="h-4 w-4 mr-2" />
+                  Grid View
+                </TabsTrigger>
+                <TabsTrigger value="list">
+                  <List className="h-4 w-4 mr-2" />
+                  List View
+                </TabsTrigger>
+                <TabsTrigger value="map">
+                  <Map className="h-4 w-4 mr-2" />
+                  Map View
+                </TabsTrigger>
+              </TabsList>
+              <div className="text-sm text-muted-foreground">
+                Showing {paginatedPorts.length} of {filteredPorts.length} ports
+              </div>
+            </div>
+
+            <TabsContent value="grid" className="mt-0">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {paginatedPorts.map((port: Port) => (
+                  <PortCard key={port.id} port={port} />
+                ))}
+              </div>
+              {filteredPorts.length === 0 && (
+                <div className="text-center py-12">
+                  <Globe className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    No ports found
+                  </h3>
+                  <p className="text-gray-500">
                     No ports match your current filters.
                   </p>
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="list" className="mt-0">
+              <Card>
+                <CardContent className="p-0">
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="border-b bg-muted/50">
+                        <tr>
+                          <th className="text-left p-4 font-medium">Port Name</th>
+                          <th className="text-left p-4 font-medium">Location</th>
+                          <th className="text-left p-4 font-medium">Status</th>
+                          <th className="text-left p-4 font-medium">Type</th>
+                          <th className="text-left p-4 font-medium">Vessels</th>
+                          <th className="text-left p-4 font-medium">Capacity</th>
+                          <th className="text-left p-4 font-medium">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {paginatedPorts.map((port: Port) => (
+                          <tr key={port.id} className="border-b hover:bg-muted/30">
+                            <td className="p-4 font-medium">{port.name}</td>
+                            <td className="p-4">{port.country}, {port.region}</td>
+                            <td className="p-4">
+                              <PortStatusBadge status={port.status} />
+                            </td>
+                            <td className="p-4">
+                              {port.type && (
+                                <Badge variant="outline">{port.type}</Badge>
+                              )}
+                            </td>
+                            <td className="p-4">{port.vesselCount}</td>
+                            <td className="p-4">
+                              {port.capacity ? `${port.capacity.toLocaleString()} MT` : 'N/A'}
+                            </td>
+                            <td className="p-4">
+                              <Button variant="outline" size="sm">
+                                Edit
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {filteredPorts.length === 0 && (
+                    <div className="text-center py-12">
+                      <p className="text-muted-foreground">
+                        No ports match your current filters.
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="map" className="mt-0">
+              <Card>
+                <CardContent className="p-6">
+                  <div className="h-[600px] bg-muted rounded-lg flex items-center justify-center">
+                    <div className="text-center">
+                      <Map className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">
+                        Interactive Map View
+                      </h3>
+                      <p className="text-gray-500">
+                        Map view will be implemented with port locations and vessel tracking
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </TabsContent>
+
+        {/* Analytics Tab */}
+        <TabsContent value="analytics" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Port Analytics Dashboard</CardTitle>
+              <CardDescription>
+                Advanced analytics and performance metrics for port operations
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {selectedPortForAnalytics ? (
+                <PortAnalyticsDashboard portId={selectedPortForAnalytics} />
+              ) : (
+                <div className="text-center py-12">
+                  <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    Select a Port for Analytics
+                  </h3>
+                  <p className="text-gray-500 mb-6">
+                    Choose a port from the list below to view detailed analytics
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
+                    {ports.slice(0, 6).map((port: Port) => (
+                      <Button
+                        key={port.id}
+                        variant="outline"
+                        className="h-auto p-4 text-left"
+                        onClick={() => setSelectedPortForAnalytics(port.id)}
+                      >
+                        <div>
+                          <div className="font-medium">{port.name}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {port.country}, {port.region}
+                          </div>
+                        </div>
+                      </Button>
+                    ))}
+                  </div>
                 </div>
               )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="map" className="mt-0">
+        {/* Advanced Search Tab */}
+        <TabsContent value="search" className="space-y-6">
           <Card>
-            <CardContent className="p-6">
-              <div className="h-[600px] bg-muted rounded-lg flex items-center justify-center">
-                <div className="text-center">
-                  <MapIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Interactive Map</h3>
-                  <p className="text-muted-foreground">
-                    Map view will show all ports with real-time vessel data
-                  </p>
+            <CardHeader>
+              <CardTitle>Advanced Port Search</CardTitle>
+              <CardDescription>
+                Sophisticated search with multiple criteria and AI-powered matching
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <AdvancedPortSearch onResults={setAdvancedSearchResults} />
+              
+              {advancedSearchResults.length > 0 && (
+                <div className="mt-8">
+                  <h3 className="text-lg font-medium mb-4">Search Results</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {advancedSearchResults.map((result, index) => (
+                      <Card key={index} className="border-l-4 border-l-green-500">
+                        <CardHeader className="pb-2">
+                          <div className="flex items-center justify-between">
+                            <CardTitle className="text-base">{result.port.name}</CardTitle>
+                            <Badge variant="secondary">
+                              {Math.round(result.matchScore * 100)}% match
+                            </Badge>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-2 text-sm">
+                            <div>
+                              <strong>Match Reasons:</strong>
+                              <ul className="list-disc list-inside text-muted-foreground mt-1">
+                                {result.matchReasons.map((reason: string, i: number) => (
+                                  <li key={i}>{reason}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Advanced Search Tab */}
-        <TabsContent value="advanced-search" className="space-y-6">
-          <AdvancedPortSearch onResults={setAdvancedSearchResults} />
-          
-          {advancedSearchResults.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Search Results</CardTitle>
-                <CardDescription>
-                  Found {advancedSearchResults.length} ports matching your criteria
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {advancedSearchResults.map((result: any) => (
-                    <Card key={result.port.id} className="border-l-4 border-l-blue-500">
-                      <CardHeader className="pb-2">
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="text-lg">{result.port.name}</CardTitle>
-                          <Badge variant="secondary">
-                            {result.matchScore}% match
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          {result.port.country}, {result.port.region}
-                        </p>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-2">
-                          <div className="text-sm">
-                            <strong>Match Reasons:</strong>
-                            <ul className="list-disc list-inside mt-1 text-muted-foreground">
-                              {result.matchReasons.map((reason: string, idx: number) => (
-                                <li key={idx}>{reason}</li>
-                              ))}
-                            </ul>
-                          </div>
-                          <div className="flex flex-wrap gap-1 mt-2">
-                            {result.recommendationTags.map((tag: string, idx: number) => (
-                              <Badge key={idx} variant="outline" className="text-xs">
-                                {tag}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-
-        {/* Analytics Tab */}
-        <TabsContent value="analytics" className="space-y-6">
-          {selectedPortForAnalytics ? (
-            <PortAnalyticsDashboard portId={selectedPortForAnalytics} />
-          ) : (
-            <Card>
-              <CardHeader>
-                <CardTitle>Port Analytics Dashboard</CardTitle>
-                <CardDescription>
-                  Select a port to view detailed analytics and performance metrics
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div>
-                    <Label>Select Port for Analytics</Label>
-                    <Select value={selectedPortForAnalytics?.toString() || ''} onValueChange={(value) => setSelectedPortForAnalytics(parseInt(value))}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Choose a port to analyze" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {ports.map((port: Port) => (
-                          <SelectItem key={port.id} value={port.id.toString()}>
-                            {port.name} - {port.country}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-                    <Card className="border-blue-200 bg-blue-50">
-                      <CardContent className="p-4 text-center">
-                        <BarChart3 className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-                        <h3 className="font-semibold">Real-time Traffic</h3>
-                        <p className="text-sm text-muted-foreground">Monitor vessel movements</p>
-                      </CardContent>
-                    </Card>
-                    <Card className="border-green-200 bg-green-50">
-                      <CardContent className="p-4 text-center">
-                        <TrendingUp className="h-8 w-8 text-green-600 mx-auto mb-2" />
-                        <h3 className="font-semibold">Performance Metrics</h3>
-                        <p className="text-sm text-muted-foreground">Benchmark against industry</p>
-                      </CardContent>
-                    </Card>
-                    <Card className="border-purple-200 bg-purple-50">
-                      <CardContent className="p-4 text-center">
-                        <Route className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-                        <h3 className="font-semibold">Route Planning</h3>
-                        <p className="text-sm text-muted-foreground">Optimize shipping routes</p>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-
         {/* AI Recommendations Tab */}
         <TabsContent value="recommendations" className="space-y-6">
-          <PortRecommendationEngine />
+          <Card>
+            <CardHeader>
+              <CardTitle>AI-Powered Port Recommendations</CardTitle>
+              <CardDescription>
+                Get intelligent port recommendations based on vessel requirements and cargo specifications
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <PortRecommendationEngine />
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Management Tab */}
         <TabsContent value="management" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle>Bulk Operations</CardTitle>
-                <CardDescription>
-                  Perform operations on multiple ports at once
-                </CardDescription>
+                <CardTitle className="flex items-center">
+                  <Database className="h-5 w-5 mr-2" />
+                  Data Management
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <Button className="w-full" variant="outline">
-                  <Upload className="h-4 w-4 mr-2" />
-                  Import Ports from CSV
-                </Button>
-                <Button className="w-full" variant="outline">
-                  <Download className="h-4 w-4 mr-2" />
-                  Export All Ports Data
-                </Button>
-                <Button className="w-full" variant="outline">
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Update Port Coordinates
-                </Button>
-                <Button className="w-full" variant="outline">
-                  <Building2 className="h-4 w-4 mr-2" />
-                  Sync with External APIs
-                </Button>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Manage port data, import/export, and synchronization
+                </p>
+                <div className="space-y-2">
+                  <Button variant="outline" className="w-full justify-start">
+                    <Upload className="h-4 w-4 mr-2" />
+                    Bulk Import Ports
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start">
+                    <Download className="h-4 w-4 mr-2" />
+                    Export Port Data
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start">
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Sync with External APIs
+                  </Button>
+                </div>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>Port Data Quality</CardTitle>
-                <CardDescription>
-                  Monitor and improve data completeness
-                </CardDescription>
+                <CardTitle className="flex items-center">
+                  <Settings className="h-5 w-5 mr-2" />
+                  System Configuration
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Configure system settings and preferences
+                </p>
                 <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Complete Profiles</span>
-                    <span>78%</span>
-                  </div>
-                  <Progress value={78} className="h-2" />
+                  <Button variant="outline" className="w-full justify-start">
+                    <Globe className="h-4 w-4 mr-2" />
+                    Regional Settings
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start">
+                    <Users className="h-4 w-4 mr-2" />
+                    User Permissions
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start">
+                    <Activity className="h-4 w-4 mr-2" />
+                    Performance Monitoring
+                  </Button>
                 </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Missing Coordinates</span>
-                    <span>12%</span>
-                  </div>
-                  <Progress value={12} className="h-2" />
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Outdated Information</span>
-                    <span>5%</span>
-                  </div>
-                  <Progress value={5} className="h-2" />
-                </div>
-                <Button className="w-full mt-4">
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <CheckCircle className="h-5 w-5 mr-2" />
+                  Quality Assurance
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Data validation and quality control tools
+                </p>
+                <Button variant="outline" className="w-full justify-start">
                   <CheckCircle className="h-4 w-4 mr-2" />
                   Run Data Quality Check
                 </Button>
@@ -1793,6 +1057,7 @@ export function PortManagement() {
           </div>
         </TabsContent>
       </Tabs>
+      </Tabs>
 
       {/* Pagination */}
       {totalPages > 1 && (
@@ -1800,7 +1065,7 @@ export function PortManagement() {
           <div className="text-sm text-muted-foreground">
             Page {currentPage} of {totalPages}
           </div>
-          <div className="flex gap-2">
+          <div className="flex items-center space-x-2">
             <Button
               variant="outline"
               size="sm"
@@ -1822,7 +1087,6 @@ export function PortManagement() {
           </div>
         </div>
       )}
-    </div>
     </div>
   );
 }
