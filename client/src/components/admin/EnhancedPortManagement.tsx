@@ -345,7 +345,11 @@ function PowerfulAddPortDialog() {
       freeTradeZone: true,
       airportDistance: '25',
       established: '1872',
-      tidalRange: '2.1'
+      tidalRange: '2.1',
+      services: '["pilotage", "tugboats", "bunker", "repair", "waste_disposal"]',
+      facilities: '["crane", "warehouse", "oil_terminal", "container_yard"]',
+      cargoTypes: '["container", "bulk", "oil", "general"]',
+      environmentalCertifications: '["ISO14001", "Green_Marine"]'
     },
     'Port of Singapore': {
       country: 'Singapore',
@@ -385,7 +389,11 @@ function PowerfulAddPortDialog() {
       freeTradeZone: true,
       airportDistance: '20',
       established: '1819',
-      tidalRange: '3.2'
+      tidalRange: '3.2',
+      services: '["pilotage", "tugboats", "bunker", "repair", "container_handling"]',
+      facilities: '["crane", "warehouse", "container_yard", "oil_terminal"]',
+      cargoTypes: '["container", "bulk", "oil", "general"]',
+      environmentalCertifications: '["ISO14001", "MARPOL"]'
     },
     'Port of Houston': {
       country: 'United States',
@@ -425,7 +433,13 @@ function PowerfulAddPortDialog() {
       freeTradeZone: true,
       airportDistance: '35',
       established: '1914',
-      tidalRange: '0.6'
+      tidalRange: '0.6',
+      services: '["pilotage", "tugboats", "bunker", "repair", "waste_disposal"]',
+      facilities: '["crane", "warehouse", "oil_terminal", "container_yard"]',
+      cargoTypes: '["container", "bulk", "oil", "general"]',
+      environmentalCertifications: '["ISO14001", "Green_Marine"]',
+      nearbyPorts: '[]',
+      portCharges: '{"pilotage": 300, "berthing": 180, "cargo_handling": 18}'
     }
   };
   
@@ -576,6 +590,11 @@ function PowerfulAddPortDialog() {
         roadConnection: data.roadConnection || false,
         customsOffice: data.customsOffice || false,
         freeTradeZone: data.freeTradeZone || false,
+        // Handle array fields properly
+        services: data.services || '[]',
+        facilities: data.facilities || '[]',
+        cargoTypes: data.cargoTypes || '[]',
+        environmentalCertifications: data.environmentalCertifications || '[]',
         // Remove timestamp fields - let backend handle them
         lastInspection: undefined,
         nextInspection: undefined,
