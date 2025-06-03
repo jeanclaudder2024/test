@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -29,8 +29,19 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Loader2, MapPin, Navigation } from 'lucide-react';
+import { Plus, Loader2, MapPin, Navigation, Map } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+// Fix Leaflet default marker icons
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
 
 // Simple schema for port creation
 const addPortSchema = z.object({
@@ -53,8 +64,32 @@ const addPortSchema = z.object({
 
 type AddPortFormData = z.infer<typeof addPortSchema>;
 
+// Map click handler component
+function LocationSelector({ 
+  onLocationSelect 
+}: { 
+  onLocationSelect: (lat: number, lng: number) => void 
+}) {
+  const [position, setPosition] = useState<[number, number] | null>(null);
+
+  useMapEvents({
+    click(e) {
+      const { lat, lng } = e.latlng;
+      setPosition([lat, lng]);
+      onLocationSelect(lat, lng);
+    },
+  });
+
+  return position === null ? null : (
+    <Marker position={position} />
+  );
+}
+
 export function AddPortDialog() {
   const [open, setOpen] = useState(false);
+  const [showMap, setShowMap] = useState(false);
+  const [mapCenter, setMapCenter] = useState<[number, number]>([25.2854, 51.5310]); // Default to Qatar
+  const [selectedPosition, setSelectedPosition] = useState<[number, number] | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -124,12 +159,24 @@ export function AddPortDialog() {
     addPortMutation.mutate(data);
   };
 
+  const handleLocationSelect = (lat: number, lng: number) => {
+    setSelectedPosition([lat, lng]);
+    form.setValue('lat', lat.toFixed(6));
+    form.setValue('lng', lng.toFixed(6));
+    toast({
+      title: 'Location Selected',
+      description: `Coordinates: ${lat.toFixed(6)}, ${lng.toFixed(6)}`,
+    });
+  };
+
   const getCurrentLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const lat = position.coords.latitude;
           const lng = position.coords.longitude;
+          setMapCenter([lat, lng]);
+          setSelectedPosition([lat, lng]);
           form.setValue('lat', lat.toFixed(6));
           form.setValue('lng', lng.toFixed(6));
           toast({
@@ -198,6 +245,15 @@ export function AddPortDialog() {
                 <Button
                   type="button"
                   variant="outline"
+                  onClick={() => setShowMap(!showMap)}
+                  className="text-sm"
+                >
+                  <Map className="h-4 w-4 mr-2" />
+                  {showMap ? 'Hide Map' : 'Show Map'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
                   onClick={fillSampleData}
                   className="text-sm"
                 >
@@ -206,10 +262,100 @@ export function AddPortDialog() {
               </div>
             </div>
 
+            {showMap && (
+              <div className="mb-6 p-4 bg-blue-50 rounded-lg border">
+                <h3 className="text-lg font-semibold mb-3 flex items-center">
+                  <MapPin className="h-5 w-5 mr-2" />
+                  Click on Map to Select Location
+                </h3>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                  <div className="lg:col-span-2">
+                    <div className="h-[400px] w-full rounded-lg overflow-hidden border">
+                      <MapContainer
+                        center={mapCenter}
+                        zoom={6}
+                        style={{ height: '100%', width: '100%' }}
+                        key={`${mapCenter[0]}-${mapCenter[1]}`}
+                      >
+                        <TileLayer
+                          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        />
+                        <LocationSelector onLocationSelect={handleLocationSelect} />
+                        {selectedPosition && (
+                          <Marker position={selectedPosition} />
+                        )}
+                      </MapContainer>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 gap-3">
+                      <FormField
+                        control={form.control}
+                        name="lat"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Latitude</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="Click map to select" 
+                                {...field}
+                                readOnly
+                                className="bg-gray-50"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="lng"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Longitude</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="Click map to select" 
+                                {...field}
+                                readOnly
+                                className="bg-gray-50"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    {selectedPosition && (
+                      <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+                        <p className="text-sm text-green-800">
+                          <strong>Selected Location:</strong><br />
+                          Lat: {selectedPosition[0].toFixed(6)}<br />
+                          Lng: {selectedPosition[1].toFixed(6)}
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <h4 className="font-semibold text-blue-900 mb-2">Instructions:</h4>
+                      <ul className="text-sm text-blue-800 space-y-1">
+                        <li>• Click anywhere on the map</li>
+                        <li>• Coordinates auto-fill below</li>
+                        <li>• Zoom in for precision</li>
+                        <li>• Pan to find exact location</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <Tabs defaultValue="details" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-1">
                 <TabsTrigger value="details">Port Details</TabsTrigger>
-                <TabsTrigger value="coordinates">Coordinates & Location</TabsTrigger>
               </TabsList>
 
               <TabsContent value="details" className="space-y-4">
@@ -426,65 +572,7 @@ export function AddPortDialog() {
                 </div>
               </TabsContent>
 
-              <TabsContent value="coordinates" className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">Location Coordinates</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="lat"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Latitude *</FormLabel>
-                            <FormControl>
-                              <Input placeholder="e.g., 51.9244" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
 
-                      <FormField
-                        control={form.control}
-                        name="lng"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Longitude *</FormLabel>
-                            <FormControl>
-                              <Input placeholder="e.g., 4.4777" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    <div className="p-4 bg-blue-50 rounded-lg">
-                      <h4 className="font-semibold text-blue-900 mb-2">Location Tips:</h4>
-                      <ul className="text-sm text-blue-800 space-y-1">
-                        <li>• Use "Current Location" to get your GPS coordinates</li>
-                        <li>• Enter precise decimal coordinates (e.g., 51.924419)</li>
-                        <li>• Use online maps to find exact port coordinates</li>
-                        <li>• Check that coordinates are in the correct ocean/sea</li>
-                      </ul>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">Map Integration</h3>
-                    <div className="p-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 text-center">
-                      <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-600 mb-4">
-                        Interactive map selection coming soon!
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        For now, use the coordinate fields or "Current Location" button to set the port position.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </TabsContent>
             </Tabs>
 
             <div className="flex justify-end space-x-2 pt-4 border-t">
