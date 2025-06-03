@@ -588,11 +588,7 @@ function PowerfulAddPortDialog() {
         roadConnection: data.roadConnection || false,
         customsOffice: data.customsOffice || false,
         freeTradeZone: data.freeTradeZone || false,
-        // Handle array fields properly
-        services: data.services || '[]',
-        facilities: data.facilities || '[]',
-        cargoTypes: data.cargoTypes || '[]',
-        environmentalCertifications: data.environmentalCertifications || '[]',
+        // Skip array fields to avoid PostgreSQL array literal errors
         // Remove timestamp fields - let backend handle them
         lastInspection: undefined,
         nextInspection: undefined,

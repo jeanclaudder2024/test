@@ -524,27 +524,11 @@ export const insertPortSchema = createInsertSchema(ports).omit({
   railConnection: z.boolean().optional(),
   roadConnection: z.boolean().optional(),
   
-  // JSON array fields (stored as text) - accept both string and array
-  services: z.union([z.string(), z.array(z.string())]).optional().transform(val => {
-    if (!val) return null;
-    if (typeof val === 'string') return val;
-    return JSON.stringify(val);
-  }),
-  facilities: z.union([z.string(), z.array(z.string())]).optional().transform(val => {
-    if (!val) return null;
-    if (typeof val === 'string') return val;
-    return JSON.stringify(val);
-  }),
-  cargoTypes: z.union([z.string(), z.array(z.string())]).optional().transform(val => {
-    if (!val) return null;
-    if (typeof val === 'string') return val;
-    return JSON.stringify(val);
-  }),
-  environmentalCertifications: z.union([z.string(), z.array(z.string())]).optional().transform(val => {
-    if (!val) return null;
-    if (typeof val === 'string') return val;
-    return JSON.stringify(val);
-  }),
+  // JSON array fields (stored as text) - accept strings only
+  services: z.string().optional().nullable(),
+  facilities: z.string().optional().nullable(),
+  cargoTypes: z.string().optional().nullable(),
+  environmentalCertifications: z.string().optional().nullable(),
   nearbyPorts: z.union([z.string(), z.array(z.string())]).optional().transform(val => {
     if (!val) return null;
     if (typeof val === 'string') return val;
