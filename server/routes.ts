@@ -310,9 +310,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         console.log("Adding destination coordinates to vessels...");
         
-        const vessels = await storage.getVessels();
-        const ports = await storage.getPorts();
-        
+        const vesselList = await storage.getVessels();
         let updatedCount = 0;
         
         // Sample destination coordinates for different regions
@@ -327,18 +325,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
           { lat: '37.9755', lng: '23.7348', name: 'Piraeus' }
         ];
         
-        for (const vessel of vessels) {
-          if (!vessel.destinationLat || !vessel.destinationLng) {
-            // Assign a random destination
-            const destination = destinations[Math.floor(Math.random() * destinations.length)];
-            
+        // Use direct database update for each vessel
+        for (let i = 0; i < vesselList.length; i++) {
+          const vessel = vesselList[i];
+          const destination = destinations[i % destinations.length];
+          
+          try {
+            // Use storage service to update vessel
             await storage.updateVessel(vessel.id, {
               destinationLat: destination.lat,
               destinationLng: destination.lng
             });
             
             updatedCount++;
-            console.log(`Added destination ${destination.name} to vessel ${vessel.name}`);
+            console.log(`Updated vessel ${vessel.name} with destination ${destination.name}`);
+          } catch (updateError) {
+            console.error(`Error updating vessel ${vessel.id}:`, updateError);
           }
         }
         
