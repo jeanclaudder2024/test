@@ -42,6 +42,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useTheme } from "@/hooks/use-theme";
+import { useLanguage } from "@/hooks/use-language";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ShipBoatAssistant } from "@/components/ShipBoatAssistant";
 
@@ -52,6 +53,7 @@ interface LayoutProps {
 export function Layout({ children }: LayoutProps) {
   const [location, setLocation] = useLocation();
   const { theme, setTheme } = useTheme();
+  const { language, setLanguage, t } = useLanguage();
   const [isMobileNavOpen, setIsMobileNavOpen] = React.useState(false);
 
   const navigation = [
@@ -96,6 +98,28 @@ export function Layout({ children }: LayoutProps) {
 
   const handleHelpSupport = () => {
     window.open("https://support.myshiptracking.com", "_blank");
+  };
+
+  const handleLanguageChange = (newLanguage: "en" | "ar") => {
+    if (newLanguage !== language) {
+      setLanguage(newLanguage);
+    }
+  };
+
+  const getLanguageDisplayName = (lang: "en" | "ar") => {
+    switch (lang) {
+      case "en": return "English";
+      case "ar": return "العربية";
+      default: return "English";
+    }
+  };
+
+  const getCurrentLanguageFlag = () => {
+    switch (language) {
+      case "en": return "🇺🇸";
+      case "ar": return "🇸🇦";
+      default: return "🇺🇸";
+    }
   };
 
   return (
@@ -342,31 +366,30 @@ export function Layout({ children }: LayoutProps) {
             </div>
 
             <div className="flex items-center gap-2">
-              {/* Translation Dropdown */}
+              {/* Language Selection Dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="h-8 gap-1 px-2">
                     <Globe className="h-4 w-4" />
                     <span className="hidden sm:inline-block text-sm">
-                      English
+                      {getCurrentLanguageFlag()} {getLanguageDisplayName(language)}
                     </span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-40">
-                  <DropdownMenuItem className="cursor-pointer">
-                    English
+                  <DropdownMenuItem 
+                    className="cursor-pointer"
+                    onClick={() => handleLanguageChange("en")}
+                  >
+                    <span className="mr-2">🇺🇸</span>
+                    <span className={language === "en" ? "font-bold" : ""}>English</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="cursor-pointer">
-                    French
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="cursor-pointer">
-                    Spanish
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="cursor-pointer">
-                    Arabic
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="cursor-pointer">
-                    Chinese
+                  <DropdownMenuItem 
+                    className="cursor-pointer"
+                    onClick={() => handleLanguageChange("ar")}
+                  >
+                    <span className="mr-2">🇸🇦</span>
+                    <span className={language === "ar" ? "font-bold" : ""}>العربية</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
