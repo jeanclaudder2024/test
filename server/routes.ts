@@ -6469,9 +6469,126 @@ Ensure the report is comprehensive, data-driven, and suitable for maritime indus
     }
   });
 
+  // Voyage Simulation API Endpoints - Realistic Vessel Movement System
+  
+  // Start voyage simulation for a vessel
+  app.post("/api/vessels/:id/start-voyage", async (req: Request, res: Response) => {
+    try {
+      const vesselId = parseInt(req.params.id);
+      const { departurePortId, destinationPortId, vesselSpeed = 15 } = req.body;
+
+      if (isNaN(vesselId) || !departurePortId || !destinationPortId) {
+        return res.status(400).json({ 
+          message: "Invalid vessel ID or missing port information" 
+        });
+      }
+
+      await voyageSimulationService.startVoyageSimulation(
+        vesselId, 
+        departurePortId, 
+        destinationPortId, 
+        vesselSpeed
+      );
+
+      res.json({ 
+        message: "Voyage simulation started - vessel will move daily between ports",
+        vesselId,
+        departurePortId,
+        destinationPortId,
+        vesselSpeed
+      });
+    } catch (error) {
+      console.error("Error starting voyage simulation:", error);
+      res.status(500).json({ message: "Failed to start voyage simulation" });
+    }
+  });
+
+  // Stop voyage simulation for a vessel
+  app.post("/api/vessels/:id/stop-voyage", async (req: Request, res: Response) => {
+    try {
+      const vesselId = parseInt(req.params.id);
+      if (isNaN(vesselId)) {
+        return res.status(400).json({ message: "Invalid vessel ID" });
+      }
+
+      voyageSimulationService.stopVoyageSimulation(vesselId);
+      res.json({ message: "Voyage simulation stopped", vesselId });
+    } catch (error) {
+      console.error("Error stopping voyage simulation:", error);
+      res.status(500).json({ message: "Failed to stop voyage simulation" });
+    }
+  });
+
+  // Get voyage information for a vessel
+  app.get("/api/vessels/:id/voyage-info", async (req: Request, res: Response) => {
+    try {
+      const vesselId = parseInt(req.params.id);
+      if (isNaN(vesselId)) {
+        return res.status(400).json({ message: "Invalid vessel ID" });
+      }
+
+      const voyageInfo = voyageSimulationService.getVoyageInfo(vesselId);
+      if (!voyageInfo) {
+        return res.status(404).json({ message: "No voyage simulation found for this vessel" });
+      }
+
+      res.json(voyageInfo);
+    } catch (error) {
+      console.error("Error getting voyage info:", error);
+      res.status(500).json({ message: "Failed to get voyage information" });
+    }
+  });
+
+  // Update all voyage simulations (daily position updates)
+  app.post("/api/admin/update-voyage-simulations", async (req: Request, res: Response) => {
+    try {
+      await voyageSimulationService.updateAllVoyages();
+      res.json({ 
+        message: "All voyage simulations updated - vessels moved to next daily positions",
+        activeVoyages: voyageSimulationService.getAllActiveVoyages().length
+      });
+    } catch (error) {
+      console.error("Error updating voyage simulations:", error);
+      res.status(500).json({ message: "Failed to update voyage simulations" });
+    }
+  });
+
+  // Get all active voyage simulations
+  app.get("/api/admin/active-voyages", async (req: Request, res: Response) => {
+    try {
+      const activeVoyages = voyageSimulationService.getAllActiveVoyages();
+      res.json({
+        count: activeVoyages.length,
+        voyages: activeVoyages.map(voyage => ({
+          vesselId: voyage.vesselId,
+          departurePortId: voyage.departurePortId,
+          destinationPortId: voyage.destinationPortId,
+          currentDay: voyage.currentDay,
+          totalDays: voyage.totalDays,
+          direction: voyage.direction,
+          lastUpdate: voyage.lastUpdate
+        }))
+      });
+    } catch (error) {
+      console.error("Error getting active voyages:", error);
+      res.status(500).json({ message: "Failed to get active voyages" });
+    }
+  });
+
   // Start the automatic voyage progress scheduler
   console.log('🚢 Starting voyage progress scheduler...');
   VoyageProgressService.startProgressUpdateScheduler();
+
+  // Start the voyage simulation scheduler (daily updates)
+  console.log('🚢 Starting voyage simulation scheduler...');
+  setInterval(async () => {
+    try {
+      await voyageSimulationService.updateAllVoyages();
+      console.log('Daily voyage simulation update completed');
+    } catch (error) {
+      console.error('Error in daily voyage simulation update:', error);
+    }
+  }, 24 * 60 * 60 * 1000); // Run every 24 hours
 
   return httpServer;
 }
