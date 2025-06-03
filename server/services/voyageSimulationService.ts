@@ -76,15 +76,29 @@ class VoyageSimulationService {
         lng: depLng + (destLng - depLng) * (day / sailingDays)
       };
 
+      // Determine status based on voyage progress and proximity to destination
+      let status: 'sailing' | 'approaching' | 'in_port' = 'sailing';
+      
+      // Check if vessel is within 100km of destination (anchored/approaching)
+      const distanceToDestination = this.calculateDistance(
+        routePoint.lat, routePoint.lng, destLat, destLng
+      );
+      
+      if (distanceToDestination < 100) {
+        status = 'approaching'; // Within 100km - vessel anchored near destination
+      } else if (day >= sailingDays - 2) {
+        status = 'approaching'; // Last 2 sailing days - vessel approaching
+      }
+
       waypoints.push({
         lat: routePoint.lat,
         lng: routePoint.lng,
         day: day,
-        status: day === sailingDays ? 'approaching' : 'sailing'
+        status: status
       });
     }
 
-    // Add destination port (stay 5 days)
+    // Add destination port arrival and stay (5 days)
     for (let portDay = 0; portDay < 5; portDay++) {
       waypoints.push({
         lat: destLat,
@@ -273,13 +287,42 @@ class VoyageSimulationService {
     const currentPoint = route.routePoints[route.currentDay % route.totalDays];
     if (!currentPoint) return;
 
-    // Update vessel position in database
+    // Determine vessel status based on position and voyage state
+    let vesselStatus = 'underway';
+    let vesselSpeed = '15.0';
+    
+    if (currentPoint.status === 'in_port') {
+      vesselStatus = 'in port';
+      vesselSpeed = '0';
+    } else if (currentPoint.status === 'approaching') {
+      vesselStatus = 'anchored';
+      vesselSpeed = '2.0';
+    } else if (currentPoint.status === 'sailing') {
+      // Check if vessel is near destination (within 50km)
+      const destinationPoint = route.routePoints.find(p => p.status === 'in_port' && p.day > route.currentDay);
+      if (destinationPoint) {
+        const distanceToDestination = this.calculateDistance(
+          currentPoint.lat, currentPoint.lng,
+          destinationPoint.lat, destinationPoint.lng
+        );
+        
+        if (distanceToDestination < 50) {
+          vesselStatus = 'anchored';
+          vesselSpeed = '2.0';
+        } else {
+          vesselStatus = 'underway';
+          vesselSpeed = '15.0';
+        }
+      }
+    }
+
+    // Update vessel position and status in database
     await db.update(vessels)
       .set({
         currentLat: currentPoint.lat.toString(),
         currentLng: currentPoint.lng.toString(),
-        status: currentPoint.status === 'in_port' ? 'moored' : 'underway',
-        speed: currentPoint.status === 'in_port' ? '0' : '15.0'
+        status: vesselStatus,
+        speed: vesselSpeed
       })
       .where(eq(vessels.id, vesselId));
 
@@ -287,7 +330,7 @@ class VoyageSimulationService {
     route.currentDay = (route.currentDay + 1) % route.totalDays;
     route.lastUpdate = new Date();
 
-    console.log(`Updated vessel ${vesselId} position: ${currentPoint.lat.toFixed(4)}, ${currentPoint.lng.toFixed(4)} - Status: ${currentPoint.status}`);
+    console.log(`Updated vessel ${vesselId} position: ${currentPoint.lat.toFixed(4)}, ${currentPoint.lng.toFixed(4)} - Status: ${vesselStatus}`);
   }
 
   // Update all active vessel simulations
