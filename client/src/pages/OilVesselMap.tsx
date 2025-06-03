@@ -116,6 +116,7 @@ export default function OilVesselMap() {
   const [showTrafficDensity, setShowTrafficDensity] = useState(false);
   const [showPortZones, setShowPortZones] = useState(false);
   const [showDestinationLines, setShowDestinationLines] = useState(false);
+  const [selectedVesselLines, setSelectedVesselLines] = useState<Set<number>>(new Set());
   const [portRadius, setPortRadius] = useState(20);
   const [mapCenter, setMapCenter] = useState<[number, number]>([25.0, 55.0]);
   const { toast } = useToast();
@@ -484,7 +485,26 @@ export default function OilVesselMap() {
                       </div>
                     </div>
                     
-                    <div className="mt-3 pt-2 border-t">
+                    <div className="mt-3 pt-2 border-t space-y-2">
+                      {vessel.destinationLat && vessel.destinationLng && (
+                        <Button 
+                          size="sm" 
+                          variant={selectedVesselLines.has(vessel.id) ? "default" : "outline"}
+                          className="w-full"
+                          onClick={() => {
+                            const newSelected = new Set(selectedVesselLines);
+                            if (selectedVesselLines.has(vessel.id)) {
+                              newSelected.delete(vessel.id);
+                            } else {
+                              newSelected.add(vessel.id);
+                            }
+                            setSelectedVesselLines(newSelected);
+                          }}
+                        >
+                          <ArrowRight className="h-4 w-4 mr-2" />
+                          {selectedVesselLines.has(vessel.id) ? 'Hide Route' : 'Show Route'}
+                        </Button>
+                      )}
                       <Button 
                         size="sm" 
                         className="w-full"
@@ -546,14 +566,16 @@ export default function OilVesselMap() {
           })}
           
           {/* Vessel Destination Lines */}
-          {showDestinationLines && vessels.map((vessel: any) => {
+          {(showDestinationLines || selectedVesselLines.size > 0) && vessels.map((vessel: any) => {
+            // Show line if global toggle is on OR if this specific vessel is selected
+            const shouldShowLine = showDestinationLines || selectedVesselLines.has(vessel.id);
             const vesselLat = parseFloat(vessel.currentLat?.toString() || '0');
             const vesselLng = parseFloat(vessel.currentLng?.toString() || '0');
             const destLat = parseFloat(vessel.destinationLat?.toString() || '0');
             const destLng = parseFloat(vessel.destinationLng?.toString() || '0');
             
-            // Only show line if both vessel and destination positions are valid
-            if (isNaN(vesselLat) || isNaN(vesselLng) || isNaN(destLat) || isNaN(destLng) || 
+            // Only show line if both vessel and destination positions are valid AND should be shown
+            if (!shouldShowLine || isNaN(vesselLat) || isNaN(vesselLng) || isNaN(destLat) || isNaN(destLng) || 
                 (destLat === 0 && destLng === 0)) {
               return null;
             }
