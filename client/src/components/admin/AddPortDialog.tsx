@@ -31,7 +31,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Loader2, MapPin, Navigation, Map } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMapEvents, Circle, Popup, LayersControl } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -41,6 +41,18 @@ L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+
+// Custom port marker icon
+const portIcon = new L.Icon({
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+  className: 'port-marker'
 });
 
 // Simple schema for port creation
@@ -90,6 +102,10 @@ export function AddPortDialog() {
   const [showMap, setShowMap] = useState(false);
   const [mapCenter, setMapCenter] = useState<[number, number]>([25.2854, 51.5310]); // Default to Qatar
   const [selectedPosition, setSelectedPosition] = useState<[number, number] | null>(null);
+  const [searchLocation, setSearchLocation] = useState('');
+  const [showDepthCircle, setShowDepthCircle] = useState(false);
+  const [portRadius, setPortRadius] = useState(10); // km
+  const [mapStyle, setMapStyle] = useState('street');
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -167,6 +183,43 @@ export function AddPortDialog() {
       title: 'Location Selected',
       description: `Coordinates: ${lat.toFixed(6)}, ${lng.toFixed(6)}`,
     });
+  };
+
+  const searchForLocation = async () => {
+    if (!searchLocation.trim()) return;
+    
+    try {
+      // Using Nominatim (OpenStreetMap) free geocoding service
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchLocation)}&limit=1`
+      );
+      const data = await response.json();
+      
+      if (data && data.length > 0) {
+        const { lat, lon } = data[0];
+        const newCenter: [number, number] = [parseFloat(lat), parseFloat(lon)];
+        setMapCenter(newCenter);
+        setSelectedPosition(newCenter);
+        form.setValue('lat', parseFloat(lat).toFixed(6));
+        form.setValue('lng', parseFloat(lon).toFixed(6));
+        toast({
+          title: 'Location Found',
+          description: `Found: ${data[0].display_name}`,
+        });
+      } else {
+        toast({
+          title: 'Location Not Found',
+          description: 'Try searching for a city, country, or landmark',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Search Error',
+        description: 'Unable to search for location',
+        variant: 'destructive',
+      });
+    }
   };
 
   const getCurrentLocation = () => {
@@ -266,29 +319,154 @@ export function AddPortDialog() {
               <div className="mb-6 p-4 bg-blue-50 rounded-lg border">
                 <h3 className="text-lg font-semibold mb-3 flex items-center">
                   <MapPin className="h-5 w-5 mr-2" />
-                  Click on Map to Select Location
+                  Advanced Map Tools - Click to Select Location
                 </h3>
+                
+                {/* Map Controls */}
+                <div className="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Location Search */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold">Search Location</label>
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Search city, port, or landmark..."
+                        value={searchLocation}
+                        onChange={(e) => setSearchLocation(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && searchForLocation()}
+                        className="text-sm"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={searchForLocation}
+                      >
+                        Search
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Map Style Selector */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold">Map Style</label>
+                    <Select value={mapStyle} onValueChange={setMapStyle}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="street">Street Map</SelectItem>
+                        <SelectItem value="satellite">Satellite</SelectItem>
+                        <SelectItem value="terrain">Terrain</SelectItem>
+                        <SelectItem value="maritime">Maritime</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Port Radius Controls */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold">Port Radius (km)</label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        min="1"
+                        max="100"
+                        value={portRadius}
+                        onChange={(e) => setPortRadius(Number(e.target.value))}
+                        className="text-sm"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowDepthCircle(!showDepthCircle)}
+                      >
+                        {showDepthCircle ? 'Hide' : 'Show'} Area
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                   <div className="lg:col-span-2">
-                    <div className="h-[400px] w-full rounded-lg overflow-hidden border">
+                    <div className="h-[500px] w-full rounded-lg overflow-hidden border">
                       <MapContainer
                         center={mapCenter}
                         zoom={6}
                         style={{ height: '100%', width: '100%' }}
                         key={`${mapCenter[0]}-${mapCenter[1]}`}
                       >
-                        <TileLayer
-                          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                        />
+                        <LayersControl position="topright">
+                          <LayersControl.BaseLayer checked={mapStyle === 'street'} name="Street Map">
+                            <TileLayer
+                              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                            />
+                          </LayersControl.BaseLayer>
+                          
+                          <LayersControl.BaseLayer checked={mapStyle === 'satellite'} name="Satellite">
+                            <TileLayer
+                              attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
+                              url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                            />
+                          </LayersControl.BaseLayer>
+                          
+                          <LayersControl.BaseLayer checked={mapStyle === 'terrain'} name="Terrain">
+                            <TileLayer
+                              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                              url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
+                            />
+                          </LayersControl.BaseLayer>
+                          
+                          <LayersControl.BaseLayer checked={mapStyle === 'maritime'} name="Maritime">
+                            <TileLayer
+                              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                              url="https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png"
+                            />
+                            <TileLayer
+                              attribution='&copy; OpenStreetMap contributors'
+                              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                            />
+                          </LayersControl.BaseLayer>
+                        </LayersControl>
+
                         <LocationSelector onLocationSelect={handleLocationSelect} />
+                        
                         {selectedPosition && (
-                          <Marker position={selectedPosition} />
+                          <>
+                            <Marker position={selectedPosition} icon={portIcon}>
+                              <Popup>
+                                <div className="text-center">
+                                  <strong>Selected Port Location</strong><br />
+                                  Lat: {selectedPosition[0].toFixed(6)}<br />
+                                  Lng: {selectedPosition[1].toFixed(6)}<br />
+                                  <small>Click elsewhere to change</small>
+                                </div>
+                              </Popup>
+                            </Marker>
+                            
+                            {showDepthCircle && (
+                              <Circle
+                                center={selectedPosition}
+                                radius={portRadius * 1000} // Convert km to meters
+                                pathOptions={{
+                                  color: 'blue',
+                                  fillColor: 'lightblue',
+                                  fillOpacity: 0.3,
+                                  weight: 2
+                                }}
+                              >
+                                <Popup>
+                                  Port operational area: {portRadius} km radius
+                                </Popup>
+                              </Circle>
+                            )}
+                          </>
                         )}
                       </MapContainer>
                     </div>
                   </div>
                   <div className="space-y-4">
+                    {/* Coordinate Display */}
                     <div className="grid grid-cols-1 gap-3">
                       <FormField
                         control={form.control}
@@ -329,24 +507,106 @@ export function AddPortDialog() {
                       />
                     </div>
 
+                    {/* Quick Location Buttons */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold">Quick Locations</label>
+                      <div className="grid grid-cols-1 gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setMapCenter([25.2854, 51.5310]); // Qatar
+                            setSelectedPosition([25.2854, 51.5310]);
+                            form.setValue('lat', '25.285400');
+                            form.setValue('lng', '51.531000');
+                          }}
+                        >
+                          Qatar Ports
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setMapCenter([26.2041, 50.0933]); // Bahrain
+                            setSelectedPosition([26.2041, 50.0933]);
+                            form.setValue('lat', '26.204100');
+                            form.setValue('lng', '50.093300');
+                          }}
+                        >
+                          Bahrain Ports
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setMapCenter([24.4539, 54.3773]); // UAE
+                            setSelectedPosition([24.4539, 54.3773]);
+                            form.setValue('lat', '24.453900');
+                            form.setValue('lng', '54.377300');
+                          }}
+                        >
+                          UAE Ports
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setMapCenter([29.3117, 47.4818]); // Kuwait
+                            setSelectedPosition([29.3117, 47.4818]);
+                            form.setValue('lat', '29.311700');
+                            form.setValue('lng', '47.481800');
+                          }}
+                        >
+                          Kuwait Ports
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Selected Location Info */}
                     {selectedPosition && (
                       <div className="p-3 bg-green-50 rounded-lg border border-green-200">
                         <p className="text-sm text-green-800">
                           <strong>Selected Location:</strong><br />
                           Lat: {selectedPosition[0].toFixed(6)}<br />
-                          Lng: {selectedPosition[1].toFixed(6)}
+                          Lng: {selectedPosition[1].toFixed(6)}<br />
+                          {showDepthCircle && (
+                            <>Operational Radius: {portRadius} km</>
+                          )}
                         </p>
                       </div>
                     )}
 
+                    {/* Map Features Info */}
                     <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                      <h4 className="font-semibold text-blue-900 mb-2">Instructions:</h4>
+                      <h4 className="font-semibold text-blue-900 mb-2">Map Features:</h4>
                       <ul className="text-sm text-blue-800 space-y-1">
-                        <li>• Click anywhere on the map</li>
-                        <li>• Coordinates auto-fill below</li>
-                        <li>• Zoom in for precision</li>
-                        <li>• Pan to find exact location</li>
+                        <li>• Click map to select coordinates</li>
+                        <li>• Search for locations by name</li>
+                        <li>• Switch between map styles</li>
+                        <li>• Show port operational area</li>
+                        <li>• Use layer controls (top-right)</li>
+                        <li>• Zoom and pan for precision</li>
                       </ul>
+                    </div>
+
+                    {/* Distance Calculator */}
+                    <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                      <h4 className="font-semibold text-yellow-900 mb-2">Distance Info:</h4>
+                      {selectedPosition && (
+                        <div className="text-sm text-yellow-800 space-y-1">
+                          <p>From Qatar (Doha):</p>
+                          <p>~{Math.round(
+                            Math.sqrt(
+                              Math.pow((selectedPosition[0] - 25.2854) * 111.32, 2) +
+                              Math.pow((selectedPosition[1] - 51.5310) * 111.32 * Math.cos(selectedPosition[0] * Math.PI / 180), 2)
+                            )
+                          )} km</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
