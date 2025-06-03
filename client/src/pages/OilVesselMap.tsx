@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Circle, LayersControl } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Circle, LayersControl, Polyline } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Ship, Anchor, RefreshCw, MapIcon, Factory, Map, Search, Filter, Layers } from 'lucide-react';
+import { Ship, Anchor, RefreshCw, MapIcon, Factory, Map, Search, Filter, Layers, ArrowRight } from 'lucide-react';
 import { useVesselWebSocket } from '@/hooks/useVesselWebSocket';
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
@@ -115,6 +115,7 @@ export default function OilVesselMap() {
   const [vesselFilter, setVesselFilter] = useState('all');
   const [showTrafficDensity, setShowTrafficDensity] = useState(false);
   const [showPortZones, setShowPortZones] = useState(false);
+  const [showDestinationLines, setShowDestinationLines] = useState(false);
   const [portRadius, setPortRadius] = useState(20);
   const [mapCenter, setMapCenter] = useState<[number, number]>([25.0, 55.0]);
   const { toast } = useToast();
@@ -358,6 +359,16 @@ export default function OilVesselMap() {
                 <Layers className="h-4 w-4 mr-2" />
                 {showTrafficDensity ? 'Hide' : 'Show'} Traffic
               </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowDestinationLines(!showDestinationLines)}
+                className="justify-start"
+              >
+                <ArrowRight className="h-4 w-4 mr-2" />
+                {showDestinationLines ? 'Hide' : 'Show'} Destinations
+              </Button>
             </div>
           </div>
         </div>
@@ -534,6 +545,66 @@ export default function OilVesselMap() {
             );
           })}
           
+          {/* Vessel Destination Lines */}
+          {showDestinationLines && vessels.map((vessel: any) => {
+            const vesselLat = parseFloat(vessel.currentLat?.toString() || '0');
+            const vesselLng = parseFloat(vessel.currentLng?.toString() || '0');
+            const destLat = parseFloat(vessel.destinationLat?.toString() || '0');
+            const destLng = parseFloat(vessel.destinationLng?.toString() || '0');
+            
+            // Only show line if both vessel and destination positions are valid
+            if (isNaN(vesselLat) || isNaN(vesselLng) || isNaN(destLat) || isNaN(destLng) || 
+                (destLat === 0 && destLng === 0)) {
+              return null;
+            }
+            
+            // Different colors for different vessel types
+            const getLineColor = (type: string) => {
+              switch (type.toLowerCase()) {
+                case 'crude oil tanker': return '#ef4444'; // red
+                case 'product tanker': return '#3b82f6'; // blue  
+                case 'lng tanker': return '#10b981'; // green
+                case 'lpg tanker': return '#f59e0b'; // amber
+                default: return '#6b7280'; // gray
+              }
+            };
+            
+            return (
+              <Polyline
+                key={`route-${vessel.id}`}
+                positions={[[vesselLat, vesselLng], [destLat, destLng]]}
+                color={getLineColor(vessel.vesselType)}
+                weight={2}
+                opacity={0.7}
+                dashArray="5, 10"
+              >
+                <Popup>
+                  <div className="p-2 min-w-[200px]">
+                    <div className="font-semibold text-lg mb-2">Route: {vessel.name}</div>
+                    <div className="space-y-1 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">From:</span>
+                        <span className="font-medium">{vessel.departurePort || 'Current Position'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">To:</span>
+                        <span className="font-medium">{vessel.destinationPort || 'Destination'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Type:</span>
+                        <span className="font-medium">{vessel.vesselType}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Status:</span>
+                        <span className="font-medium capitalize">{vessel.status}</span>
+                      </div>
+                    </div>
+                  </div>
+                </Popup>
+              </Polyline>
+            );
+          })}
+
           {/* Refinery Markers */}
           {refineries.map((refinery: any) => {
             const lat = parseFloat(refinery.latitude?.toString() || '0');
