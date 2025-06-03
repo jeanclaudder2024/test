@@ -486,25 +486,24 @@ export default function OilVesselMap() {
                     </div>
                     
                     <div className="mt-3 pt-2 border-t space-y-2">
-                      {vessel.destinationLat && vessel.destinationLng && (
-                        <Button 
-                          size="sm" 
-                          variant={selectedVesselLines.has(vessel.id) ? "default" : "outline"}
-                          className="w-full"
-                          onClick={() => {
-                            const newSelected = new Set(selectedVesselLines);
-                            if (selectedVesselLines.has(vessel.id)) {
-                              newSelected.delete(vessel.id);
-                            } else {
-                              newSelected.add(vessel.id);
-                            }
-                            setSelectedVesselLines(newSelected);
-                          }}
-                        >
-                          <ArrowRight className="h-4 w-4 mr-2" />
-                          {selectedVesselLines.has(vessel.id) ? 'Hide Route' : 'Show Route'}
-                        </Button>
-                      )}
+                      {/* Show route button for all vessels - will add destination if missing */}
+                      <Button 
+                        size="sm" 
+                        variant={selectedVesselLines.has(vessel.id) ? "default" : "outline"}
+                        className="w-full"
+                        onClick={() => {
+                          const newSelected = new Set(selectedVesselLines);
+                          if (selectedVesselLines.has(vessel.id)) {
+                            newSelected.delete(vessel.id);
+                          } else {
+                            newSelected.add(vessel.id);
+                          }
+                          setSelectedVesselLines(newSelected);
+                        }}
+                      >
+                        <ArrowRight className="h-4 w-4 mr-2" />
+                        {selectedVesselLines.has(vessel.id) ? 'Hide Route' : 'Show Route'}
+                      </Button>
                       <Button 
                         size="sm" 
                         className="w-full"
