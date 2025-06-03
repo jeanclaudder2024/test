@@ -34,7 +34,7 @@ import { useEffect } from "react";
 import { apiRequest, queryClient } from "./lib/queryClient";
 import { Layout } from "@/components/ui/layout";
 import { AuthProvider, useProfessionalAuth } from "@/hooks/use-professional-auth";
-import { TranslationProvider } from "@/hooks/useTranslation.tsx";
+import { TranslationProvider } from "@/hooks/useTranslation";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { motion, AnimatePresence } from "framer-motion";
