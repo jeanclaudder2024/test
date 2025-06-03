@@ -235,6 +235,108 @@ export default function OilVesselMap() {
     return destination ? destination.name : 'Unknown Port';
   };
 
+  // Custom hook to fetch voyage progress data
+  const useVoyageProgress = (vesselId: number) => {
+    return useQuery({
+      queryKey: ['voyage-info', vesselId],
+      queryFn: async () => {
+        const response = await fetch(`/api/vessels/${vesselId}/voyage-info`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch voyage info');
+        }
+        return response.json();
+      },
+      refetchInterval: 30000, // Refetch every 30 seconds for real-time updates
+      enabled: !!vesselId,
+    });
+  };
+
+  // Real-time Voyage Progress Component
+  const VoyageProgressBar: React.FC<{ vesselId: number; vessel: any }> = ({ vesselId, vessel }) => {
+    const { data: voyageInfo, isLoading, error } = useVoyageProgress(vesselId);
+    
+    if (!vessel.destinationLat || !vessel.destinationLng) {
+      return null;
+    }
+
+    const progressPercentage = voyageInfo?.progressPercentage || 0;
+    const currentDay = voyageInfo?.currentDay || 0;
+    const totalDays = voyageInfo?.totalDays || 0;
+    const direction = voyageInfo?.direction || 'outbound';
+    const status = voyageInfo?.status || 'sailing';
+
+    return (
+      <div className="mt-4 space-y-2">
+        <div className="flex justify-between text-xs text-gray-600">
+          <span className="flex items-center gap-1">
+            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+            {vessel.departurePort || 'Departure Port'}
+          </span>
+          <span className="flex items-center gap-1">
+            <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+            {getDestinationName(vessel.destinationLat, vessel.destinationLng)}
+          </span>
+        </div>
+        
+        {/* Animated Progress Container */}
+        <div className="relative h-3 bg-gray-200 rounded-full overflow-hidden">
+          {/* Base progress fill with vessel type color */}
+          <div 
+            className={`absolute inset-y-0 left-0 rounded-full transition-all duration-1000 ease-out ${
+              vessel.vesselType?.toLowerCase().includes('crude') ? 'bg-gradient-to-r from-red-500 to-red-600' :
+              vessel.vesselType?.toLowerCase().includes('product') ? 'bg-gradient-to-r from-blue-500 to-blue-600' :
+              vessel.vesselType?.toLowerCase().includes('lng') ? 'bg-gradient-to-r from-green-500 to-green-600' :
+              vessel.vesselType?.toLowerCase().includes('lpg') ? 'bg-gradient-to-r from-amber-500 to-amber-600' :
+              'bg-gradient-to-r from-gray-500 to-gray-600'
+            }`}
+            style={{ width: `${Math.min(progressPercentage, 100)}%` }}
+          />
+          
+          {/* Animated flowing dots */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-transparent via-white to-transparent opacity-30 animate-pulse"
+              style={{ 
+                width: '30%',
+                animation: 'flowingDots 3s linear infinite',
+                transform: `translateX(${Math.min(progressPercentage * 2.5, 250)}%)`
+              }}
+            />
+          </div>
+          
+          {/* Vessel position indicator */}
+          {progressPercentage > 5 && (
+            <div 
+              className="absolute top-0 w-1 h-full bg-white shadow-lg transition-all duration-1000 ease-out"
+              style={{ left: `${Math.min(progressPercentage, 95)}%` }}
+            >
+              <div className="absolute -top-1 -left-1 w-3 h-3 bg-blue-600 rounded-full border-2 border-white shadow-md animate-bounce" />
+            </div>
+          )}
+        </div>
+        
+        {/* Real-time progress information */}
+        <div className="flex justify-between text-xs">
+          <span className="text-gray-500">
+            {isLoading ? 'Loading...' : error ? 'Static data' : `Day ${currentDay}/${totalDays}`}
+          </span>
+          <span className="text-gray-500 font-medium">
+            {progressPercentage}% Complete
+          </span>
+          <span className="text-gray-500">
+            {direction === 'outbound' ? '→' : '←'} {status}
+          </span>
+        </div>
+        
+        {voyageInfo && (
+          <div className="text-xs text-blue-600 text-center">
+            Real-time simulation active
+          </div>
+        )}
+      </div>
+    );
+  };
+
   if (error) {
     return (
       <div className="p-8">

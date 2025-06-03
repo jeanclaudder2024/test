@@ -6583,7 +6583,29 @@ Ensure the report is comprehensive, data-driven, and suitable for maritime indus
         return res.status(404).json({ message: "No voyage simulation found for this vessel" });
       }
 
-      res.json(voyageInfo);
+      // Calculate progress percentage based on current position in voyage
+      const progressPercentage = Math.min(Math.round((voyageInfo.currentDay / voyageInfo.totalDays) * 100), 100);
+      
+      // Get current position
+      const currentPosition = voyageInfo.routePoints[voyageInfo.currentDay % voyageInfo.totalDays];
+      
+      // Calculate estimated completion time
+      const remainingDays = voyageInfo.totalDays - voyageInfo.currentDay;
+      const estimatedCompletion = new Date(Date.now() + remainingDays * 24 * 60 * 60 * 1000);
+
+      res.json({
+        vesselId: voyageInfo.vesselId,
+        departurePortId: voyageInfo.departurePortId,
+        destinationPortId: voyageInfo.destinationPortId,
+        totalDays: voyageInfo.totalDays,
+        currentDay: voyageInfo.currentDay,
+        direction: voyageInfo.direction,
+        lastUpdate: voyageInfo.lastUpdate,
+        progressPercentage: progressPercentage,
+        currentPosition: currentPosition,
+        estimatedCompletion: estimatedCompletion,
+        status: currentPosition?.status || 'sailing'
+      });
     } catch (error) {
       console.error("Error getting voyage info:", error);
       res.status(500).json({ message: "Failed to get voyage information" });
