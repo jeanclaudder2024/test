@@ -437,9 +437,7 @@ function PowerfulAddPortDialog() {
       services: '["pilotage", "tugboats", "bunker", "repair", "waste_disposal"]',
       facilities: '["crane", "warehouse", "oil_terminal", "container_yard"]',
       cargoTypes: '["container", "bulk", "oil", "general"]',
-      environmentalCertifications: '["ISO14001", "Green_Marine"]',
-      nearbyPorts: '[]',
-      portCharges: '{"pilotage": 300, "berthing": 180, "cargo_handling": 18}'
+      environmentalCertifications: '["ISO14001", "Green_Marine"]'
     }
   };
   
