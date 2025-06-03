@@ -381,35 +381,35 @@ export function Layout({ children }: LayoutProps) {
                     onClick={() => handleLanguageChange("en")}
                   >
                     <span className="mr-2">🇺🇸</span>
-                    <span className={currentLanguage === "en" ? "font-bold" : ""}>English</span>
+                    <span className={language === "en" ? "font-bold" : ""}>English</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     className="cursor-pointer"
                     onClick={() => handleLanguageChange("ar")}
                   >
                     <span className="mr-2">🇸🇦</span>
-                    <span className={currentLanguage === "ar" ? "font-bold" : ""}>العربية</span>
+                    <span className={language === "ar" ? "font-bold" : ""}>العربية</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     className="cursor-pointer"
                     onClick={() => handleLanguageChange("fr")}
                   >
                     <span className="mr-2">🇫🇷</span>
-                    <span className={currentLanguage === "fr" ? "font-bold" : ""}>Français</span>
+                    <span className={language === "fr" ? "font-bold" : ""}>Français</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     className="cursor-pointer"
                     onClick={() => handleLanguageChange("es")}
                   >
                     <span className="mr-2">🇪🇸</span>
-                    <span className={currentLanguage === "es" ? "font-bold" : ""}>Español</span>
+                    <span className={language === "es" ? "font-bold" : ""}>Español</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     className="cursor-pointer"
                     onClick={() => handleLanguageChange("zh")}
                   >
                     <span className="mr-2">🇨🇳</span>
-                    <span className={currentLanguage === "zh" ? "font-bold" : ""}>中文</span>
+                    <span className={language === "zh" ? "font-bold" : ""}>中文</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

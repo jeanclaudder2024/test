@@ -34,7 +34,7 @@ import { useEffect } from "react";
 import { apiRequest, queryClient } from "./lib/queryClient";
 import { Layout } from "@/components/ui/layout";
 import { AuthProvider, useProfessionalAuth } from "@/hooks/use-professional-auth";
-import { LanguageProvider } from "@/hooks/use-language";
+import { TranslationProvider } from "@/hooks/useTranslation";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { motion, AnimatePresence } from "framer-motion";
@@ -157,10 +157,10 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="system">
         <AuthProvider>
-          <LanguageProvider>
+          <TranslationProvider>
             <Router />
             <Toaster />
-          </LanguageProvider>
+          </TranslationProvider>
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>
