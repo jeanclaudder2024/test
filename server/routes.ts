@@ -305,7 +305,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     });
     
-    // Add a new endpoint to update ports with 2025 data
+    // Add destination coordinates to vessels for route functionality
+    apiRouter.post("/vessels/add-destinations", async (req, res) => {
+      try {
+        console.log("Adding destination coordinates to vessels...");
+        
+        const vessels = await storage.getVessels();
+        const ports = await storage.getPorts();
+        
+        let updatedCount = 0;
+        
+        // Sample destination coordinates for different regions
+        const destinations = [
+          { lat: '25.2048', lng: '55.2708', name: 'Dubai' },
+          { lat: '29.3117', lng: '47.4818', name: 'Kuwait City' },
+          { lat: '26.2235', lng: '50.5876', name: 'Manama' },
+          { lat: '24.4539', lng: '54.3773', name: 'Abu Dhabi' },
+          { lat: '26.8206', lng: '30.8025', name: 'Suez' },
+          { lat: '36.8969', lng: '30.7133', name: 'Antalya' },
+          { lat: '40.9633', lng: '29.0058', name: 'Istanbul' },
+          { lat: '37.9755', lng: '23.7348', name: 'Piraeus' }
+        ];
+        
+        for (const vessel of vessels) {
+          if (!vessel.destinationLat || !vessel.destinationLng) {
+            // Assign a random destination
+            const destination = destinations[Math.floor(Math.random() * destinations.length)];
+            
+            await storage.updateVessel(vessel.id, {
+              destinationLat: destination.lat,
+              destinationLng: destination.lng
+            });
+            
+            updatedCount++;
+            console.log(`Added destination ${destination.name} to vessel ${vessel.name}`);
+          }
+        }
+        
+        res.json({
+          success: true,
+          message: `Added destination coordinates to ${updatedCount} vessels`,
+          data: { updatedVessels: updatedCount }
+        });
+        
+      } catch (error) {
+        console.error("Error adding vessel destinations:", error);
+        res.status(500).json({ message: "Failed to add vessel destinations" });
+      }
+    });
+
+  // Add a new endpoint to update ports with 2025 data
     apiRouter.post("/ports/update-to-2025", async (req, res) => {
       try {
         console.log("Starting port update to 2025 data...");
