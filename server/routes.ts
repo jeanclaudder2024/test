@@ -6650,6 +6650,74 @@ Ensure the report is comprehensive, data-driven, and suitable for maritime indus
     }
   });
 
+  // Initialize voyage simulations for all vessels with destinations
+  app.post("/api/admin/initialize-voyage-simulations", async (req: Request, res: Response) => {
+    try {
+      let initiatedCount = 0;
+      const allVessels = await storage.getVessels();
+      const allPorts = await storage.getPorts();
+      
+      for (const vessel of allVessels) {
+        if (vessel.destinationLat && vessel.destinationLng && 
+            vessel.departureLat && vessel.departureLng) {
+          
+          // Find closest departure and destination ports
+          const departurePort = findClosestPort(allPorts, 
+            parseFloat(vessel.departureLat), parseFloat(vessel.departureLng));
+          const destinationPort = findClosestPort(allPorts, 
+            parseFloat(vessel.destinationLat), parseFloat(vessel.destinationLng));
+          
+          if (departurePort && destinationPort && departurePort.id !== destinationPort.id) {
+            // Check if voyage simulation already exists
+            const existingVoyage = voyageSimulationService.getVoyageInfo(vessel.id);
+            if (!existingVoyage) {
+              console.log(`Starting voyage simulation for vessel ${vessel.name} (${vessel.id})`);
+              await voyageSimulationService.startVoyageSimulation(
+                vessel.id,
+                departurePort.id,
+                destinationPort.id,
+                parseFloat(vessel.speed || '12')
+              );
+              initiatedCount++;
+            }
+          }
+        }
+      }
+      
+      res.json({ 
+        message: `Voyage simulations initialized for ${initiatedCount} vessels`,
+        initiatedCount
+      });
+    } catch (error) {
+      console.error("Error initializing voyage simulations:", error);
+      res.status(500).json({ message: "Failed to initialize voyage simulations" });
+    }
+  });
+
+  // Helper function to find closest port
+  function findClosestPort(ports: any[], lat: number, lng: number) {
+    let closestPort = null;
+    let minDistance = Infinity;
+    
+    for (const port of ports) {
+      const portLat = parseFloat(port.lat);
+      const portLng = parseFloat(port.lng);
+      
+      if (!isNaN(portLat) && !isNaN(portLng)) {
+        const distance = Math.sqrt(
+          Math.pow(portLat - lat, 2) + Math.pow(portLng - lng, 2)
+        );
+        
+        if (distance < minDistance && distance < 5.0) { // Within reasonable distance
+          minDistance = distance;
+          closestPort = port;
+        }
+      }
+    }
+    
+    return closestPort;
+  }
+
   // Start the automatic voyage progress scheduler
   console.log('🚢 Starting voyage progress scheduler...');
   VoyageProgressService.startProgressUpdateScheduler();
