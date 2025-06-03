@@ -226,7 +226,7 @@ export function EnhancedPortManagement() {
   });
 
   // Filter and search logic
-  const filteredPorts = (ports as Port[] || []).filter((port: Port) => {
+  const filteredPorts = Array.isArray(ports) ? ports.filter((port: Port) => {
     const matchesSearch = port.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          port.country.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          port.region.toLowerCase().includes(searchTerm.toLowerCase());
@@ -236,7 +236,7 @@ export function EnhancedPortManagement() {
     const matchesRegion = filterRegion === 'all' || port.region === filterRegion;
 
     return matchesSearch && matchesType && matchesStatus && matchesRegion;
-  }) || [];
+  }) : [];
 
   // Sort logic
   const sortedPorts = [...filteredPorts].sort((a: Port, b: Port) => {
@@ -290,7 +290,7 @@ export function EnhancedPortManagement() {
       </div>
 
       {/* Statistics */}
-      <PortStatistics stats={stats} />
+      <PortStatistics stats={stats as PortStats | undefined} />
 
       {/* Filters and Search */}
       <Card className="shadow-sm">
