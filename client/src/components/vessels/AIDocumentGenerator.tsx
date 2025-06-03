@@ -39,6 +39,110 @@ interface DocumentSection {
   type: 'header' | 'paragraph' | 'list' | 'table' | 'footer';
 }
 
+// Oil deal document types based on industry standards
+const DOCUMENT_TYPES = {
+  'Bill of Lading': {
+    icon: FileText,
+    description: 'Legal document between shipper and carrier detailing cargo',
+    category: 'Shipping Documents'
+  },
+  'Commercial Invoice': {
+    icon: FileCheck,
+    description: 'Invoice for payment and customs clearance',
+    category: 'Commercial Documents'
+  },
+  'Certificate of Origin': {
+    icon: Shield,
+    description: 'Document certifying country of origin for customs',
+    category: 'Certificates'
+  },
+  'Quality Certificate': {
+    icon: BarChart,
+    description: 'Analysis certificate showing oil quality specifications',
+    category: 'Certificates'
+  },
+  'Quantity Certificate': {
+    icon: Package,
+    description: 'Document certifying exact quantity of oil loaded',
+    category: 'Certificates'
+  },
+  'Charter Party Agreement': {
+    icon: Clipboard,
+    description: 'Contract between ship owner and charterer',
+    category: 'Legal Documents'
+  },
+  'Marine Insurance Certificate': {
+    icon: Shield,
+    description: 'Proof of marine cargo insurance coverage',
+    category: 'Insurance Documents'
+  },
+  'Cargo Manifest': {
+    icon: Package,
+    description: 'Detailed list of all cargo aboard the vessel',
+    category: 'Shipping Documents'
+  },
+  'Port Health Certificate': {
+    icon: Shield,
+    description: 'Health clearance from port authorities',
+    category: 'Certificates'
+  },
+  'Bunker Delivery Note': {
+    icon: Fuel,
+    description: 'Documentation of fuel delivered to vessel',
+    category: 'Operations Documents'
+  },
+  'Statement of Facts': {
+    icon: FileText,
+    description: 'Chronological record of vessel operations',
+    category: 'Operations Documents'
+  },
+  'Notice of Readiness': {
+    icon: Anchor,
+    description: 'Vessel notification of readiness to load/discharge',
+    category: 'Operations Documents'
+  },
+  'Loading/Discharge Report': {
+    icon: BarChart,
+    description: 'Detailed report of cargo operations',
+    category: 'Operations Documents'
+  },
+  'Tank Inspection Report': {
+    icon: Factory,
+    description: 'Pre-loading tank cleanliness and condition report',
+    category: 'Technical Documents'
+  },
+  'Ullage Report': {
+    icon: BarChart,
+    description: 'Tank measurement and capacity verification',
+    category: 'Technical Documents'
+  },
+  'Weather Routing Certificate': {
+    icon: Globe,
+    description: 'Optimal route planning based on weather conditions',
+    category: 'Navigation Documents'
+  },
+  'Pump Room Inspection': {
+    icon: Factory,
+    description: 'Safety inspection of vessel pump room systems',
+    category: 'Safety Documents'
+  },
+  'ISPS Security Declaration': {
+    icon: Shield,
+    description: 'International Ship and Port Facility Security Declaration',
+    category: 'Security Documents'
+  },
+  'Crew List and Effects': {
+    icon: FileText,
+    description: 'Official crew manifest and personal effects declaration',
+    category: 'Crew Documents'
+  },
+  'Vessel Sanitation Certificate': {
+    icon: Shield,
+    description: 'Health certification for vessel sanitation standards',
+    category: 'Health Documents'
+  }
+};
+
 export default function AIDocumentGenerator({ vessel }: AIDocumentGeneratorProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedDocument, setGeneratedDocument] = useState<DocumentSection[] | null>(null);
@@ -111,88 +215,86 @@ export default function AIDocumentGenerator({ vessel }: AIDocumentGeneratorProps
     URL.revokeObjectURL(url);
   };
 
-  const documentTypes = [
-    {
-      type: 'Vessel Technical Report',
-      description: 'Comprehensive technical analysis and specifications',
-      icon: Ship,
-      color: 'bg-blue-500'
-    },
-    {
-      type: 'Cargo Manifest',
-      description: 'Detailed cargo documentation and inventory',
-      icon: Package,
-      color: 'bg-green-500'
-    },
-    {
-      type: 'Voyage Analysis',
-      description: 'Route optimization and operational analysis',
-      icon: MapPin,
-      color: 'bg-purple-500'
-    },
-    {
-      type: 'Compliance Report',
-      description: 'Safety and regulatory compliance assessment',
-      icon: Shield,
-      color: 'bg-orange-500'
-    },
-    {
-      type: 'Market Analysis',
-      description: 'Commercial and market intelligence report',
-      icon: BarChart,
-      color: 'bg-indigo-500'
-    },
-    {
-      type: 'Environmental Impact',
-      description: 'Environmental assessment and sustainability metrics',
-      icon: Globe,
-      color: 'bg-emerald-500'
+  // Group documents by category
+  const documentCategories = Object.keys(DOCUMENT_TYPES).reduce((acc, docType) => {
+    const doc = DOCUMENT_TYPES[docType as keyof typeof DOCUMENT_TYPES];
+    if (!acc[doc.category]) {
+      acc[doc.category] = [];
     }
-  ];
+    acc[doc.category].push({
+      type: docType,
+      description: doc.description,
+      icon: doc.icon,
+      category: doc.category
+    });
+    return acc;
+  }, {} as Record<string, Array<{type: string, description: string, icon: any, category: string}>>);
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {documentTypes.map((doc) => {
-          const IconComponent = doc.icon;
-          return (
-            <Card key={doc.type} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-4">
-                <div className="flex items-start mb-3">
-                  <div className={`${doc.color} p-2 rounded-md mr-3`}>
-                    <IconComponent className="h-5 w-5 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-medium text-sm">{doc.type}</h3>
-                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                      {doc.description}
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                  onClick={() => generateComprehensiveReport(doc.type)}
-                  disabled={isGenerating}
-                >
-                  {isGenerating && documentType === doc.type ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Generating...
-                    </>
-                  ) : (
-                    <>
-                      <FileText className="h-4 w-4 mr-2" />
-                      Generate Report
-                    </>
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
-          );
-        })}
+      <div className="mb-4">
+        <h3 className="text-lg font-semibold mb-2">Oil Deal Document Generator</h3>
+        <p className="text-sm text-muted-foreground">
+          Generate professional maritime and oil industry documents for vessel {vessel.name}
+        </p>
       </div>
+
+      {Object.entries(documentCategories).map(([category, docs]) => (
+        <div key={category} className="space-y-3">
+          <div className="flex items-center">
+            <h4 className="font-medium text-md">{category}</h4>
+            <Badge variant="outline" className="ml-2 text-xs">
+              {docs.length} documents
+            </Badge>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {docs.map((doc) => {
+              const IconComponent = doc.icon;
+              return (
+                <Card key={doc.type} className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-3">
+                    <div className="flex items-start mb-3">
+                      <div className="bg-blue-100 dark:bg-blue-900 p-2 rounded-md mr-3">
+                        <IconComponent className="h-4 w-4 text-blue-600 dark:text-blue-300" />
+                      </div>
+                      <div className="flex-1">
+                        <h5 className="font-medium text-sm">{doc.type}</h5>
+                        <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                          {doc.description}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full text-xs"
+                      onClick={() => generateComprehensiveReport(doc.type)}
+                      disabled={isGenerating}
+                    >
+                      {isGenerating && documentType === doc.type ? (
+                        <>
+                          <Loader2 className="h-3 w-3 mr-2 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <FileText className="h-3 w-3 mr-2" />
+                          Generate
+                        </>
+                      )}
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+          
+          {category !== Object.keys(documentCategories)[Object.keys(documentCategories).length - 1] && (
+            <Separator className="my-4" />
+          )}
+        </div>
+      ))}
 
       {generatedDocument && (
         <Card className="mt-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-blue-200 dark:border-blue-800 shadow-xl">
