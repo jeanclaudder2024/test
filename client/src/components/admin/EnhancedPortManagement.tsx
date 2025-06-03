@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 
 import { AddPortDialog } from './AddPortDialog';
+import { VesselGeneratorDialog } from './VesselGeneratorDialog';
 
 interface Port {
   id: number;
@@ -285,6 +286,7 @@ export function EnhancedPortManagement() {
             <Upload className="h-4 w-4 mr-2" />
             Import Bulk
           </Button>
+          <VesselGeneratorDialog />
           <AddPortDialog />
         </div>
       </div>
