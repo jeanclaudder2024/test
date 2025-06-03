@@ -18,6 +18,7 @@ import { seedAllData, regenerateGlobalVessels } from "./services/seedService";
 import { portService } from "./services/portService";
 import { vesselPositionService } from "./services/vesselPositionService";
 import { redistributeVesselsRealistically, getVesselDistributionStats } from "./services/realisticVesselPositioning";
+import { voyageSimulationService } from "./services/voyageSimulationService";
 // Simplified authentication - using supabase-simple-auth only
 // Removed old MySQL auth imports to prevent conflicts
 import { REGIONS } from "@shared/constants";
