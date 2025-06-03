@@ -524,22 +524,32 @@ export const insertPortSchema = createInsertSchema(ports).omit({
   railConnection: z.boolean().optional(),
   roadConnection: z.boolean().optional(),
   
-  // JSON array fields (stored as text)
-  services: z.array(z.string()).optional().transform(val => 
-    val ? JSON.stringify(val) : null
-  ),
-  facilities: z.array(z.string()).optional().transform(val => 
-    val ? JSON.stringify(val) : null
-  ),
-  cargoTypes: z.array(z.string()).optional().transform(val => 
-    val ? JSON.stringify(val) : null
-  ),
-  environmentalCertifications: z.array(z.string()).optional().transform(val => 
-    val ? JSON.stringify(val) : null
-  ),
-  nearbyPorts: z.array(z.string()).optional().transform(val => 
-    val ? JSON.stringify(val) : null
-  ),
+  // JSON array fields (stored as text) - accept both string and array
+  services: z.union([z.string(), z.array(z.string())]).optional().transform(val => {
+    if (!val) return null;
+    if (typeof val === 'string') return val;
+    return JSON.stringify(val);
+  }),
+  facilities: z.union([z.string(), z.array(z.string())]).optional().transform(val => {
+    if (!val) return null;
+    if (typeof val === 'string') return val;
+    return JSON.stringify(val);
+  }),
+  cargoTypes: z.union([z.string(), z.array(z.string())]).optional().transform(val => {
+    if (!val) return null;
+    if (typeof val === 'string') return val;
+    return JSON.stringify(val);
+  }),
+  environmentalCertifications: z.union([z.string(), z.array(z.string())]).optional().transform(val => {
+    if (!val) return null;
+    if (typeof val === 'string') return val;
+    return JSON.stringify(val);
+  }),
+  nearbyPorts: z.union([z.string(), z.array(z.string())]).optional().transform(val => {
+    if (!val) return null;
+    if (typeof val === 'string') return val;
+    return JSON.stringify(val);
+  }),
   
   // Optional date fields
   lastInspection: z.string().optional(),
