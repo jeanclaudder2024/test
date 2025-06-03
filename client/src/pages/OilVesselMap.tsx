@@ -214,6 +214,27 @@ export default function OilVesselMap() {
   const defaultCenter: [number, number] = [25.0, 55.0]; // Dubai area
   const defaultZoom = 4;
 
+  // Function to get destination name from coordinates
+  const getDestinationName = (lat: string, lng: string): string => {
+    const destinations = [
+      { lat: '25.2048', lng: '55.2708', name: 'Dubai, UAE' },
+      { lat: '29.3117', lng: '47.4818', name: 'Kuwait City, Kuwait' },
+      { lat: '26.2235', lng: '50.5876', name: 'Manama, Bahrain' },
+      { lat: '24.4539', lng: '54.3773', name: 'Abu Dhabi, UAE' },
+      { lat: '26.8206', lng: '30.8025', name: 'Suez, Egypt' },
+      { lat: '36.8969', lng: '30.7133', name: 'Antalya, Turkey' },
+      { lat: '40.9633', lng: '29.0058', name: 'Istanbul, Turkey' },
+      { lat: '37.9755', lng: '23.7348', name: 'Piraeus, Greece' }
+    ];
+    
+    const destination = destinations.find(d => 
+      Math.abs(parseFloat(d.lat) - parseFloat(lat)) < 0.1 && 
+      Math.abs(parseFloat(d.lng) - parseFloat(lng)) < 0.1
+    );
+    
+    return destination ? destination.name : 'Unknown Port';
+  };
+
   if (error) {
     return (
       <div className="p-8">
@@ -476,12 +497,56 @@ export default function OilVesselMap() {
                           </Badge>
                         </div>
                       )}
-                      
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Position:</span>
-                        <span className="font-mono text-xs">
-                          {lat.toFixed(4)}, {lng.toFixed(4)}
-                        </span>
+                    </div>
+
+                    {/* Voyage Information Section */}
+                    <div className="mt-3 pt-2 border-t">
+                      <div className="font-medium text-sm mb-2 text-blue-700">Voyage Information</div>
+                      <div className="space-y-1 text-sm">
+                        {vessel.departurePort && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">From:</span>
+                            <span className="font-medium text-green-700">{vessel.departurePort}</span>
+                          </div>
+                        )}
+                        
+                        {vessel.destinationPort && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">To:</span>
+                            <span className="font-medium text-red-700">{vessel.destinationPort}</span>
+                          </div>
+                        )}
+                        
+                        {vessel.destinationLat && vessel.destinationLng && (
+                          <div className="space-y-1">
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">Destination:</span>
+                              <span className="font-medium text-blue-700">
+                                {getDestinationName(vessel.destinationLat, vessel.destinationLng)}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-600 text-xs">Coordinates:</span>
+                              <span className="font-mono text-xs">
+                                {parseFloat(vessel.destinationLat).toFixed(4)}, {parseFloat(vessel.destinationLng).toFixed(4)}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {vessel.eta && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">ETA:</span>
+                            <span className="text-xs">{new Date(vessel.eta).toLocaleDateString()}</span>
+                          </div>
+                        )}
+                        
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Position:</span>
+                          <span className="font-mono text-xs">
+                            {lat.toFixed(4)}, {lng.toFixed(4)}
+                          </span>
+                        </div>
                       </div>
                     </div>
                     
