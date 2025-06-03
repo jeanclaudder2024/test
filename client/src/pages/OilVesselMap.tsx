@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Circle, LayersControl } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Ship, Anchor, RefreshCw, MapIcon, Factory } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Ship, Anchor, RefreshCw, MapIcon, Factory, Map, Search, Filter, Layers } from 'lucide-react';
 import { useVesselWebSocket } from '@/hooks/useVesselWebSocket';
 import { useQuery } from '@tanstack/react-query';
+import { useToast } from '@/hooks/use-toast';
 
 // Fix leaflet default icon issue
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -107,6 +110,15 @@ const createRefineryIcon = () => {
 };
 
 export default function OilVesselMap() {
+  const [mapStyle, setMapStyle] = useState('street');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [vesselFilter, setVesselFilter] = useState('all');
+  const [showTrafficDensity, setShowTrafficDensity] = useState(false);
+  const [showPortZones, setShowPortZones] = useState(false);
+  const [portRadius, setPortRadius] = useState(20);
+  const [mapCenter, setMapCenter] = useState<[number, number]>([25.0, 55.0]);
+  const { toast } = useToast();
+
   const { vessels, loading, error, connectionStatus, refetch } = useVesselWebSocket({
     region: 'global',
     loadAllVessels: true,
@@ -125,15 +137,68 @@ export default function OilVesselMap() {
     enabled: true
   });
 
+  // Location search function
+  const searchForLocation = async () => {
+    if (!searchTerm.trim()) return;
+    
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchTerm)}&limit=1`
+      );
+      const data = await response.json();
+      
+      if (data && data.length > 0) {
+        const { lat, lon } = data[0];
+        const newCenter: [number, number] = [parseFloat(lat), parseFloat(lon)];
+        setMapCenter(newCenter);
+        toast({
+          title: 'Location Found',
+          description: `Found: ${data[0].display_name}`,
+        });
+      } else {
+        toast({
+          title: 'Location Not Found',
+          description: 'Try searching for a port, city, or landmark',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Search Error',
+        description: 'Unable to search for location',
+        variant: 'destructive',
+      });
+    }
+  };
+
   // Filter for oil vessels only
   const oilVessels = vessels.filter(vessel => {
     const vesselType = vessel.vesselType?.toLowerCase() || '';
-    return vesselType.includes('tanker') || 
+    const isOilVessel = vesselType.includes('tanker') || 
            vesselType.includes('oil') || 
            vesselType.includes('crude') || 
            vesselType.includes('lng') || 
            vesselType.includes('lpg') || 
            vesselType.includes('chemical');
+    
+    // Apply vessel filter
+    if (vesselFilter !== 'all') {
+      if (vesselFilter === 'tanker' && !vesselType.includes('tanker')) return false;
+      if (vesselFilter === 'crude' && !vesselType.includes('crude')) return false;
+      if (vesselFilter === 'lng' && !vesselType.includes('lng')) return false;
+      if (vesselFilter === 'lpg' && !vesselType.includes('lpg')) return false;
+    }
+    
+    // Apply search filter
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      const matchesSearch = vessel.name?.toLowerCase().includes(searchLower) ||
+                           vessel.flag?.toLowerCase().includes(searchLower) ||
+                           vessel.destination?.toLowerCase().includes(searchLower);
+      return isOilVessel && matchesSearch;
+    }
+    
+    return isOilVessel;
   });
 
   // Filter vessels with valid coordinates
@@ -211,6 +276,93 @@ export default function OilVesselMap() {
         </div>
       </div>
 
+      {/* Advanced Map Controls */}
+      <div className="mb-4 p-4 bg-gray-50 rounded-lg border">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {/* Location Search */}
+          <div className="space-y-2">
+            <label className="text-sm font-semibold">Search Location</label>
+            <div className="flex gap-2">
+              <Input
+                placeholder="Search vessels, ports..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && searchForLocation()}
+                className="text-sm"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={searchForLocation}
+              >
+                <Search className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Vessel Filter */}
+          <div className="space-y-2">
+            <label className="text-sm font-semibold">Vessel Type</label>
+            <Select value={vesselFilter} onValueChange={setVesselFilter}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Oil Vessels</SelectItem>
+                <SelectItem value="tanker">Oil Tankers</SelectItem>
+                <SelectItem value="crude">Crude Carriers</SelectItem>
+                <SelectItem value="lng">LNG Carriers</SelectItem>
+                <SelectItem value="lpg">LPG Carriers</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Map Style */}
+          <div className="space-y-2">
+            <label className="text-sm font-semibold">Map Style</label>
+            <Select value={mapStyle} onValueChange={setMapStyle}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="street">Street Map</SelectItem>
+                <SelectItem value="satellite">Satellite</SelectItem>
+                <SelectItem value="terrain">Terrain</SelectItem>
+                <SelectItem value="maritime">Maritime</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Map Features */}
+          <div className="space-y-2">
+            <label className="text-sm font-semibold">Map Features</label>
+            <div className="flex flex-col gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowPortZones(!showPortZones)}
+                className="justify-start"
+              >
+                <Anchor className="h-4 w-4 mr-2" />
+                {showPortZones ? 'Hide' : 'Show'} Port Zones
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowTrafficDensity(!showTrafficDensity)}
+                className="justify-start"
+              >
+                <Layers className="h-4 w-4 mr-2" />
+                {showTrafficDensity ? 'Hide' : 'Show'} Traffic
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Map Container */}
       <div className="flex-1 relative">
         {loading && (
@@ -223,16 +375,46 @@ export default function OilVesselMap() {
         )}
         
         <MapContainer
-          center={defaultCenter}
+          center={mapCenter}
           zoom={defaultZoom}
           style={{ height: '100%', width: '100%' }}
           maxZoom={18}
           minZoom={2}
+          key={`${mapCenter[0]}-${mapCenter[1]}`}
         >
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
+          <LayersControl position="topright">
+            <LayersControl.BaseLayer checked={mapStyle === 'street'} name="Street Map">
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+            </LayersControl.BaseLayer>
+            
+            <LayersControl.BaseLayer checked={mapStyle === 'satellite'} name="Satellite">
+              <TileLayer
+                attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
+                url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+              />
+            </LayersControl.BaseLayer>
+            
+            <LayersControl.BaseLayer checked={mapStyle === 'terrain'} name="Terrain">
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
+              />
+            </LayersControl.BaseLayer>
+            
+            <LayersControl.BaseLayer checked={mapStyle === 'maritime'} name="Maritime">
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                url="https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png"
+              />
+              <TileLayer
+                attribution='&copy; OpenStreetMap contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+            </LayersControl.BaseLayer>
+          </LayersControl>
           
           {/* Vessel Markers */}
           {mappableVessels.map((vessel) => {
@@ -397,6 +579,79 @@ export default function OilVesselMap() {
               </Marker>
             );
           })}
+
+          {/* Port Zones */}
+          {showPortZones && (ports as any[]).map((port: any) => {
+            const lat = parseFloat(port.latitude?.toString() || port.lat?.toString() || '0');
+            const lng = parseFloat(port.longitude?.toString() || port.lng?.toString() || '0');
+            
+            if (isNaN(lat) || isNaN(lng)) return null;
+            
+            return (
+              <Circle
+                key={`port-zone-${port.id}`}
+                center={[lat, lng]}
+                radius={portRadius * 1000}
+                pathOptions={{
+                  color: '#10b981',
+                  fillColor: '#10b981',
+                  fillOpacity: 0.1,
+                  weight: 2,
+                  dashArray: '5,5'
+                }}
+              >
+                <Popup>
+                  <div className="text-center">
+                    <strong>{port.name}</strong><br />
+                    Port operational zone: {portRadius} km
+                  </div>
+                </Popup>
+              </Circle>
+            );
+          })}
+
+          {/* Traffic Density Visualization */}
+          {showTrafficDensity && mappableVessels.length > 0 && (() => {
+            const clusters = new Map();
+            const gridSize = 2; // degrees
+            
+            mappableVessels.forEach(vessel => {
+              const lat = parseFloat(vessel.currentLat?.toString() || '0');
+              const lng = parseFloat(vessel.currentLng?.toString() || '0');
+              const gridLat = Math.floor(lat / gridSize) * gridSize;
+              const gridLng = Math.floor(lng / gridSize) * gridSize;
+              const key = `${gridLat}-${gridLng}`;
+              
+              if (!clusters.has(key)) {
+                clusters.set(key, { lat: gridLat + gridSize/2, lng: gridLng + gridSize/2, count: 0 });
+              }
+              clusters.get(key).count++;
+            });
+            
+            return Array.from(clusters.values())
+              .filter(cluster => cluster.count >= 3)
+              .map((cluster, index) => (
+                <Circle
+                  key={`traffic-${index}`}
+                  center={[cluster.lat, cluster.lng]}
+                  radius={Math.min(cluster.count * 5000, 50000)}
+                  pathOptions={{
+                    color: cluster.count > 10 ? '#dc2626' : cluster.count > 5 ? '#f59e0b' : '#10b981',
+                    fillColor: cluster.count > 10 ? '#dc2626' : cluster.count > 5 ? '#f59e0b' : '#10b981',
+                    fillOpacity: 0.2,
+                    weight: 2
+                  }}
+                >
+                  <Popup>
+                    <div className="text-center">
+                      <strong>Traffic Density</strong><br />
+                      {cluster.count} vessels in area<br />
+                      Density: {cluster.count > 10 ? 'High' : cluster.count > 5 ? 'Medium' : 'Low'}
+                    </div>
+                  </Popup>
+                </Circle>
+              ));
+          })()}
         </MapContainer>
 
         {/* Legend */}
