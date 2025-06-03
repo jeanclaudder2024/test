@@ -31,7 +31,7 @@ import {
   Flag, Droplet, Package, AlertCircle, Truck, Gauge, BarChart, History,
   Users, Clock, Compass, ArrowRight, FileText, FileCheck, Clipboard, Download, Globe,
   ZoomIn, ZoomOut, Fuel, Activity, Layers, Filter, Tag, Check, RotateCw,
-  MapPin, ExternalLink, Factory
+  MapPin, ExternalLink, Factory, AlertTriangle, RefreshCw, Route
 } from 'lucide-react';
 
 // Define oil product categories for filtering
@@ -787,16 +787,18 @@ export default function VesselDetail() {
                             </div>
                           </div>
                           
-                          {voyageInfo.currentPosition && (
+                          {voyageInfo.currentPosition && voyageInfo.currentPosition.lat && voyageInfo.currentPosition.lng && (
                             <div className="mt-4 pt-4 border-t border-blue-200 dark:border-blue-800">
                               <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">Current Position</p>
                               <p className="text-sm">
                                 <span className="font-medium">Lat:</span> {parseFloat(voyageInfo.currentPosition.lat).toFixed(4)}°, 
                                 <span className="font-medium ml-2">Lng:</span> {parseFloat(voyageInfo.currentPosition.lng).toFixed(4)}°
                               </p>
-                              <p className="text-xs text-gray-500 mt-1">
-                                Last updated: {new Date(voyageInfo.lastUpdate).toLocaleString()}
-                              </p>
+                              {voyageInfo.lastUpdate && (
+                                <p className="text-xs text-gray-500 mt-1">
+                                  Last updated: {new Date(voyageInfo.lastUpdate).toLocaleString()}
+                                </p>
+                              )}
                             </div>
                           )}
                         </div>
