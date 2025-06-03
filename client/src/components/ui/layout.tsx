@@ -42,7 +42,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useTheme } from "@/hooks/use-theme";
-import { useLanguage } from "@/hooks/use-language";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ShipBoatAssistant } from "@/components/ShipBoatAssistant";
 
@@ -53,7 +52,7 @@ interface LayoutProps {
 export function Layout({ children }: LayoutProps) {
   const [location, setLocation] = useLocation();
   const { theme, setTheme } = useTheme();
-  const { language, setLanguage, t } = useLanguage();
+  const [currentLanguage, setCurrentLanguage] = React.useState<"en" | "ar" | "fr" | "es" | "zh">("en");
   const [isMobileNavOpen, setIsMobileNavOpen] = React.useState(false);
 
   const navigation = [
@@ -100,24 +99,29 @@ export function Layout({ children }: LayoutProps) {
     window.open("https://support.myshiptracking.com", "_blank");
   };
 
-  const handleLanguageChange = (newLanguage: "en" | "ar") => {
-    if (newLanguage !== language) {
-      setLanguage(newLanguage);
-    }
+  const handleLanguageChange = (newLanguage: "en" | "ar" | "fr" | "es" | "zh") => {
+    setCurrentLanguage(newLanguage);
+    console.log("Language changed to:", newLanguage);
   };
 
-  const getLanguageDisplayName = (lang: "en" | "ar") => {
+  const getLanguageDisplayName = (lang: "en" | "ar" | "fr" | "es" | "zh") => {
     switch (lang) {
       case "en": return "English";
       case "ar": return "العربية";
+      case "fr": return "Français";
+      case "es": return "Español";
+      case "zh": return "中文";
       default: return "English";
     }
   };
 
   const getCurrentLanguageFlag = () => {
-    switch (language) {
+    switch (currentLanguage) {
       case "en": return "🇺🇸";
       case "ar": return "🇸🇦";
+      case "fr": return "🇫🇷";
+      case "es": return "🇪🇸";
+      case "zh": return "🇨🇳";
       default: return "🇺🇸";
     }
   };
@@ -372,24 +376,45 @@ export function Layout({ children }: LayoutProps) {
                   <Button variant="ghost" size="sm" className="h-8 gap-1 px-2">
                     <Globe className="h-4 w-4" />
                     <span className="hidden sm:inline-block text-sm">
-                      {getCurrentLanguageFlag()} {getLanguageDisplayName(language)}
+                      {getCurrentLanguageFlag()} {getLanguageDisplayName(currentLanguage)}
                     </span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-40">
+                <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuItem 
                     className="cursor-pointer"
                     onClick={() => handleLanguageChange("en")}
                   >
                     <span className="mr-2">🇺🇸</span>
-                    <span className={language === "en" ? "font-bold" : ""}>English</span>
+                    <span className={currentLanguage === "en" ? "font-bold" : ""}>English</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     className="cursor-pointer"
                     onClick={() => handleLanguageChange("ar")}
                   >
                     <span className="mr-2">🇸🇦</span>
-                    <span className={language === "ar" ? "font-bold" : ""}>العربية</span>
+                    <span className={currentLanguage === "ar" ? "font-bold" : ""}>العربية</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="cursor-pointer"
+                    onClick={() => handleLanguageChange("fr")}
+                  >
+                    <span className="mr-2">🇫🇷</span>
+                    <span className={currentLanguage === "fr" ? "font-bold" : ""}>Français</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="cursor-pointer"
+                    onClick={() => handleLanguageChange("es")}
+                  >
+                    <span className="mr-2">🇪🇸</span>
+                    <span className={currentLanguage === "es" ? "font-bold" : ""}>Español</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="cursor-pointer"
+                    onClick={() => handleLanguageChange("zh")}
+                  >
+                    <span className="mr-2">🇨🇳</span>
+                    <span className={currentLanguage === "zh" ? "font-bold" : ""}>中文</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
