@@ -299,6 +299,8 @@ export default function VesselDetail() {
   const [isLoadingVoyage, setIsLoadingVoyage] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<any>(null);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const [voyageInfo, setVoyageInfo] = useState<any>(null);
+  const [isLoadingVoyageInfo, setIsLoadingVoyageInfo] = useState(false);
   const [isGeneratingManifest, setIsGeneratingManifest] = useState(false);
   const [refineries, setRefineries] = useState<any[]>([]);
   const [ports, setPorts] = useState<any[]>([]);
@@ -377,6 +379,27 @@ export default function VesselDetail() {
     fetchPorts();
   }, []);
   
+  // Fetch voyage info from voyage simulation system
+  const fetchVoyageInfo = async () => {
+    if (!vesselId) return;
+    
+    setIsLoadingVoyageInfo(true);
+    try {
+      const response = await fetch(`/api/vessels/${vesselId}/voyage-info`);
+      if (response.ok) {
+        const data = await response.json();
+        setVoyageInfo(data);
+      } else {
+        setVoyageInfo(null);
+      }
+    } catch (error) {
+      console.error('Error fetching voyage info:', error);
+      setVoyageInfo(null);
+    } finally {
+      setIsLoadingVoyageInfo(false);
+    }
+  };
+
   useEffect(() => {
     const fetchVessel = async () => {
       setLoading(true);
@@ -387,6 +410,9 @@ export default function VesselDetail() {
         }
         const data = await response.json();
         setVessel(data);
+        
+        // Fetch voyage info after vessel data is loaded
+        fetchVoyageInfo();
       } catch (error) {
         console.error('Error fetching vessel:', error);
         toast({
@@ -403,6 +429,17 @@ export default function VesselDetail() {
       fetchVessel();
     }
   }, [vesselId, toast]);
+
+  // Set up interval to refresh voyage info every 30 seconds
+  useEffect(() => {
+    if (!vesselId) return;
+    
+    const interval = setInterval(() => {
+      fetchVoyageInfo();
+    }, 30000); // Update every 30 seconds
+    
+    return () => clearInterval(interval);
+  }, [vesselId]);
 
   const handleLocationUpdateSuccess = () => {
     // Refetch vessel
@@ -700,10 +737,89 @@ export default function VesselDetail() {
                         Current Voyage
                       </CardTitle>
                       <CardDescription>
-                        Tracking information and progress - معلومات التتبع والتقدم
+                        Real-time voyage tracking with simulation data - معلومات التتبع والتقدم في الوقت الفعلي
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
+                      {/* Real-time voyage simulation display */}
+                      {voyageInfo && (
+                        <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center">
+                              <Ship className="h-5 w-5 mr-2 text-blue-600" />
+                              <h3 className="font-semibold text-blue-900 dark:text-blue-100">Live Voyage Simulation</h3>
+                            </div>
+                            <Badge 
+                              variant={voyageInfo.status === 'in_port' ? 'default' : 
+                                      voyageInfo.status === 'approaching' ? 'secondary' : 'outline'}
+                              className="capitalize"
+                            >
+                              {voyageInfo.status?.replace('_', ' ') || 'Underway'}
+                            </Badge>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div>
+                              <p className="text-xs text-gray-600 dark:text-gray-400">Voyage Progress</p>
+                              <div className="flex items-center mt-1">
+                                <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2 mr-3">
+                                  <div 
+                                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                    style={{ width: `${voyageInfo.progressPercentage || 0}%` }}
+                                  ></div>
+                                </div>
+                                <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                                  {Math.round(voyageInfo.progressPercentage || 0)}%
+                                </span>
+                              </div>
+                            </div>
+                            
+                            <div>
+                              <p className="text-xs text-gray-600 dark:text-gray-400">Current Day</p>
+                              <p className="font-medium">{voyageInfo.currentDay}/{voyageInfo.totalDays} days</p>
+                            </div>
+                            
+                            <div>
+                              <p className="text-xs text-gray-600 dark:text-gray-400">Route Distance</p>
+                              <p className="font-medium">
+                                {voyageInfo.routeDistance > 0 ? `${voyageInfo.routeDistance.toLocaleString()} km` : 'Calculating...'}
+                              </p>
+                            </div>
+                          </div>
+                          
+                          {voyageInfo.currentPosition && (
+                            <div className="mt-4 pt-4 border-t border-blue-200 dark:border-blue-800">
+                              <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">Current Position</p>
+                              <p className="text-sm">
+                                <span className="font-medium">Lat:</span> {parseFloat(voyageInfo.currentPosition.lat).toFixed(4)}°, 
+                                <span className="font-medium ml-2">Lng:</span> {parseFloat(voyageInfo.currentPosition.lng).toFixed(4)}°
+                              </p>
+                              <p className="text-xs text-gray-500 mt-1">
+                                Last updated: {new Date(voyageInfo.lastUpdate).toLocaleString()}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      {isLoadingVoyageInfo && (
+                        <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg text-center">
+                          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary mx-auto mb-2"></div>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">Loading voyage simulation data...</p>
+                        </div>
+                      )}
+                      
+                      {!voyageInfo && !isLoadingVoyageInfo && (
+                        <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+                          <div className="flex items-center">
+                            <AlertTriangle className="h-5 w-5 mr-2 text-amber-600" />
+                            <p className="text-sm text-amber-800 dark:text-amber-200">
+                              No active voyage simulation found. The vessel may not be on a tracked voyage.
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      
                       <SimpleVoyageDetails 
                         vessel={vessel} 
                         voyageProgress={{ 
