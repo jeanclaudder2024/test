@@ -6604,7 +6604,9 @@ Ensure the report is comprehensive, data-driven, and suitable for maritime indus
         progressPercentage: progressPercentage,
         currentPosition: currentPosition,
         estimatedCompletion: estimatedCompletion,
-        status: currentPosition?.status || 'sailing'
+        status: currentPosition?.status || 'sailing',
+        routeDistance: voyageInfo.routePoints ? 
+          voyageSimulationService.calculateRouteDistance(voyageInfo.routePoints) : 0
       });
     } catch (error) {
       console.error("Error getting voyage info:", error);
