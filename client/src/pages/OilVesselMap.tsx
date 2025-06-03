@@ -499,50 +499,80 @@ export default function OilVesselMap() {
                       )}
                     </div>
 
-                    {/* Voyage Information Section */}
+                    {/* Voyage Progress Section */}
                     <div className="mt-3 pt-2 border-t">
-                      <div className="font-medium text-sm mb-2 text-blue-700">Voyage Information</div>
-                      <div className="space-y-1 text-sm">
-                        {vessel.departurePort && (
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">From:</span>
-                            <span className="font-medium text-green-700">{vessel.departurePort}</span>
-                          </div>
-                        )}
+                      <div className="font-medium text-sm mb-3 text-blue-700">Voyage Progress</div>
+                      
+                      {/* Animated Progress Bar */}
+                      <div className="relative mb-4">
+                        <div className="flex items-center justify-between text-xs mb-1">
+                          <span className="text-green-600 font-medium">
+                            {vessel.departurePort || 'Departure'}
+                          </span>
+                          <span className="text-red-600 font-medium">
+                            {vessel.destinationLat && vessel.destinationLng 
+                              ? getDestinationName(vessel.destinationLat, vessel.destinationLng)
+                              : vessel.destinationPort || 'Destination'
+                            }
+                          </span>
+                        </div>
                         
-                        {vessel.destinationPort && (
+                        {/* Progress Bar Container */}
+                        <div className="relative h-6 bg-gray-200 rounded-full overflow-hidden">
+                          {/* Progress Fill */}
+                          <div 
+                            className="absolute left-0 top-0 h-full bg-gradient-to-r from-blue-400 to-blue-600 rounded-full transition-all duration-1000"
+                            style={{ width: `${vessel.voyageProgress || 45}%` }}
+                          />
+                          
+                          {/* Animated Flow Arrows */}
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="flex space-x-2 animate-pulse">
+                              <div className="w-1 h-1 bg-white rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
+                              <div className="w-1 h-1 bg-white rounded-full animate-bounce" style={{animationDelay: '200ms'}}></div>
+                              <div className="w-1 h-1 bg-white rounded-full animate-bounce" style={{animationDelay: '400ms'}}></div>
+                            </div>
+                          </div>
+                          
+                          {/* Vessel Icon on Progress Bar */}
+                          <div 
+                            className="absolute top-1/2 transform -translate-y-1/2 -translate-x-1/2 transition-all duration-1000"
+                            style={{ left: `${vessel.voyageProgress || 45}%` }}
+                          >
+                            <div className="w-4 h-4 bg-yellow-500 rounded-full border-2 border-white shadow-lg flex items-center justify-center">
+                              <div className="w-2 h-2 bg-yellow-600 rounded-full"></div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Progress Percentage */}
+                        <div className="text-center mt-2">
+                          <span className="text-xs font-medium text-gray-700">
+                            {vessel.voyageProgress || 45}% Complete
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Voyage Details */}
+                      <div className="space-y-1 text-xs">
+                        {vessel.eta && (
                           <div className="flex justify-between">
-                            <span className="text-gray-600">To:</span>
-                            <span className="font-medium text-red-700">{vessel.destinationPort}</span>
+                            <span className="text-gray-600">ETA:</span>
+                            <span className="font-medium">{new Date(vessel.eta).toLocaleDateString()}</span>
                           </div>
                         )}
                         
                         {vessel.destinationLat && vessel.destinationLng && (
-                          <div className="space-y-1">
-                            <div className="flex justify-between">
-                              <span className="text-gray-600">Destination:</span>
-                              <span className="font-medium text-blue-700">
-                                {getDestinationName(vessel.destinationLat, vessel.destinationLng)}
-                              </span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-600 text-xs">Coordinates:</span>
-                              <span className="font-mono text-xs">
-                                {parseFloat(vessel.destinationLat).toFixed(4)}, {parseFloat(vessel.destinationLng).toFixed(4)}
-                              </span>
-                            </div>
-                          </div>
-                        )}
-                        
-                        {vessel.eta && (
                           <div className="flex justify-between">
-                            <span className="text-gray-600">ETA:</span>
-                            <span className="text-xs">{new Date(vessel.eta).toLocaleDateString()}</span>
+                            <span className="text-gray-600">Coordinates:</span>
+                            <span className="font-mono text-xs">
+                              {parseFloat(vessel.destinationLat).toFixed(4)}, {parseFloat(vessel.destinationLng).toFixed(4)}
+                            </span>
                           </div>
                         )}
                         
                         <div className="flex justify-between">
-                          <span className="text-gray-600">Position:</span>
+                          <span className="text-gray-600">Current Position:</span>
                           <span className="font-mono text-xs">
                             {lat.toFixed(4)}, {lng.toFixed(4)}
                           </span>
