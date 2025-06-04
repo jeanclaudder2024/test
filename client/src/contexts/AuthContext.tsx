@@ -1,12 +1,12 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { supabase, UserProfile } from '@/lib/supabase';
+import { UserProfile, AuthUser, AuthSession } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
 
 interface AuthContextType {
-  user: User | null;
+  user: AuthUser | null;
   profile: UserProfile | null;
-  session: Session | null;
+  session: AuthSession | null;
   loading: boolean;
   signUp: (email: string, password: string, userData: Partial<UserProfile>) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
