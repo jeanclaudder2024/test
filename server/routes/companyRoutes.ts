@@ -29,13 +29,9 @@ companyRouter.get('/', async (req: Request, res: Response) => {
     const limitNum = parseInt(limit);
     const offset = (pageNum - 1) * limitNum;
 
-    // Use raw SQL to avoid schema mismatches
+    // Simplified query using only basic columns
     let baseQuery = `
-      SELECT id, name, country, region, website, description,
-             company_type, linked_company_id, is_visible_to_brokers,
-             publicly_traded, stock_symbol, revenue, employees,
-             founded_year, ceo, fleet_size, specialization, logo,
-             created_at, last_updated
+      SELECT id, name, country, region, website, description
       FROM companies
       WHERE 1=1
     `;
@@ -43,28 +39,20 @@ companyRouter.get('/', async (req: Request, res: Response) => {
     const queryParams: any[] = [];
     let paramIndex = 1;
     
-    // Add search functionality
+    // Add search functionality (only search existing columns)
     if (search) {
       baseQuery += ` AND (
         name ILIKE $${paramIndex} OR 
         country ILIKE $${paramIndex} OR 
-        region ILIKE $${paramIndex} OR 
-        specialization ILIKE $${paramIndex}
+        region ILIKE $${paramIndex}
       )`;
       queryParams.push(`%${search}%`);
       paramIndex++;
     }
     
-    // Add company type filter
-    if (companyType !== 'all') {
-      baseQuery += ` AND company_type = $${paramIndex}`;
-      queryParams.push(companyType);
-      paramIndex++;
-    }
-    
     // Add sorting
     const orderDirection = sortOrder === 'desc' ? 'DESC' : 'ASC';
-    const allowedSortColumns = ['name', 'country', 'region', 'company_type', 'created_at'];
+    const allowedSortColumns = ['name', 'country', 'region'];
     const sortColumn = allowedSortColumns.includes(sortBy) ? sortBy : 'name';
     baseQuery += ` ORDER BY ${sortColumn} ${orderDirection}`;
     
@@ -83,23 +71,17 @@ companyRouter.get('/', async (req: Request, res: Response) => {
       countQuery += ` AND (
         name ILIKE $${countParamIndex} OR 
         country ILIKE $${countParamIndex} OR 
-        region ILIKE $${countParamIndex} OR 
-        specialization ILIKE $${countParamIndex}
+        region ILIKE $${countParamIndex}
       )`;
       countParams.push(`%${search}%`);
       countParamIndex++;
-    }
-    
-    if (companyType !== 'all') {
-      countQuery += ` AND company_type = $${countParamIndex}`;
-      countParams.push(companyType);
     }
     
     const countResult = await db.execute(sql.raw(countQuery, countParams));
     const totalCount = Number(countResult.rows[0]?.count || 0);
 
     res.json({
-      companies: result.rows,
+      companies: result.rows || [],
       pagination: {
         page: pageNum,
         limit: limitNum,
