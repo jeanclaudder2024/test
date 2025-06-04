@@ -287,11 +287,7 @@ export function CompanyManagement() {
     updateCompanyMutation.mutate({ id: selectedCompany.id, data: companyData });
   };
 
-  const filteredCompanies = companies.filter((company: Company) => {
-    const matchesSearch = company.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterType === 'all' || company.companyType === filterType;
-    return matchesSearch && matchesFilter;
-  });
+
 
   return (
     <div className="space-y-6">
