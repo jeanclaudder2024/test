@@ -168,12 +168,12 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="system">
-        <AuthProvider>
-          <TranslationProvider>
+        <TranslationProvider>
+          <AuthProvider>
             <Router />
             <Toaster />
-          </TranslationProvider>
-        </AuthProvider>
+          </AuthProvider>
+        </TranslationProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );
