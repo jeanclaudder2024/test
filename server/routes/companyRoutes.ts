@@ -119,19 +119,17 @@ companyRouter.get('/', async (req: Request, res: Response) => {
 
     console.log('Executing query:', baseQuery);
     
-    // Try a simple test query first
+    let result;
     try {
-      const testResult = await db.execute(sql.raw('SELECT COUNT(*) as count FROM companies'));
-      console.log('Total companies in database:', testResult.rows[0]?.count);
-    } catch (testError) {
-      console.log('Test query failed:', testError);
-    }
-    
-    const result = await db.execute(sql.raw(baseQuery));
-    console.log('Query result:', result?.rows?.length, 'rows found');
-    
-    if (result?.rows?.length > 0) {
-      console.log('First company:', result.rows[0]);
+      result = await db.execute(sql.raw(baseQuery));
+      console.log('Query result:', result?.length || 0, 'rows found');
+      
+      if (result && result.length > 0) {
+        console.log('First company:', result[0]);
+      }
+    } catch (queryError) {
+      console.log('Main query failed:', queryError);
+      result = [];
     }
 
     // Get total count with proper error handling
@@ -145,17 +143,17 @@ companyRouter.get('/', async (req: Request, res: Response) => {
       }
       
       const countResult = await db.execute(sql.raw(countQuery));
-      if (countResult && countResult.rows && countResult.rows.length > 0) {
-        totalCount = Number(countResult.rows[0].count || 0);
+      if (countResult && countResult.length > 0) {
+        totalCount = Number(countResult[0].count || 0);
       }
       console.log('Total count:', totalCount);
     } catch (countError) {
       console.log('Count query failed, using default:', countError);
-      totalCount = result?.rows?.length || 0;
+      totalCount = result?.length || 0;
     }
 
     res.json({
-      companies: result?.rows || [],
+      companies: result || [],
       pagination: {
         page: pageNum,
         limit: limitNum,
