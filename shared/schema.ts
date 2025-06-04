@@ -623,7 +623,6 @@ export const companies = pgTable("companies", {
   name: text("name").notNull(),
   country: text("country"),
   region: text("region"),
-  headquarters: text("headquarters"),
   foundedYear: integer("founded_year"),
   ceo: text("ceo"),
   fleetSize: integer("fleet_size"),
