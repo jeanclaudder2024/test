@@ -22,7 +22,7 @@ import LandingPage from "@/pages/LandingPage";
 import AuthPage from "@/pages/AuthPage";
 import TradingDashboard from "@/pages/TradingDashboard";
 import Companies from "@/pages/Companies";
-import CompanyManagement from "@/pages/CompanyManagement";
+
 import ApiTest from "@/pages/ApiTest";
 import TranslationPage from "@/pages/TranslationPage";
 import TrafficInsights from "@/pages/TrafficInsights";
@@ -130,7 +130,7 @@ function Router() {
             <Route path="/brokers" component={Brokers} />
             <Route path="/broker-dashboard" component={BrokerDashboard} />
             <Route path="/companies" component={Companies} />
-            <Route path="/company-management" component={CompanyManagement} />
+
             <Route path="/documents" component={Documents} />
             <Route path="/ai-assistant" component={AIAssistantPage} />
             <Route path="/admin" component={AdminPanel} />
