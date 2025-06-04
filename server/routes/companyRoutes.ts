@@ -117,7 +117,22 @@ companyRouter.get('/', async (req: Request, res: Response) => {
     // Add pagination
     baseQuery += ` LIMIT ${limitNum} OFFSET ${offset}`;
 
+    console.log('Executing query:', baseQuery);
+    
+    // Try a simple test query first
+    try {
+      const testResult = await db.execute(sql.raw('SELECT COUNT(*) as count FROM companies'));
+      console.log('Total companies in database:', testResult.rows[0]?.count);
+    } catch (testError) {
+      console.log('Test query failed:', testError);
+    }
+    
     const result = await db.execute(sql.raw(baseQuery));
+    console.log('Query result:', result?.rows?.length, 'rows found');
+    
+    if (result?.rows?.length > 0) {
+      console.log('First company:', result.rows[0]);
+    }
 
     // Get total count with proper error handling
     let totalCount = 0;
@@ -133,6 +148,7 @@ companyRouter.get('/', async (req: Request, res: Response) => {
       if (countResult && countResult.rows && countResult.rows.length > 0) {
         totalCount = Number(countResult.rows[0].count || 0);
       }
+      console.log('Total count:', totalCount);
     } catch (countError) {
       console.log('Count query failed, using default:', countError);
       totalCount = result?.rows?.length || 0;
