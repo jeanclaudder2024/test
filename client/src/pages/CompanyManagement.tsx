@@ -1,686 +1,227 @@
 import { useState } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  Plus, 
-  Search, 
-  Edit, 
-  Trash2, 
-  Building2, 
-  Globe, 
-  Users, 
-  DollarSign,
-  TrendingUp,
-  Eye,
-  MoreVertical,
-  Download,
-  Upload
-} from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { queryClient, apiRequest } from '@/lib/queryClient';
-import { z } from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Checkbox } from '@/components/ui/checkbox';
-
-// Company type definition based on schema
-interface Company {
-  id: number;
-  name: string;
-  country?: string;
-  region?: string;
-  headquarters?: string;
-  foundedYear?: number;
-  ceo?: string;
-  fleetSize?: number;
-  specialization?: string;
-  website?: string;
-  logo?: string;
-  description?: string;
-  revenue?: number;
-  employees?: number;
-  publiclyTraded?: boolean;
-  stockSymbol?: string;
-  status?: string;
-  createdAt?: string;
-  lastUpdated?: string;
-}
-
-// Form validation schema
-const companyFormSchema = z.object({
-  name: z.string().min(1, 'Company name is required'),
-  country: z.string().optional(),
-  region: z.string().optional(),
-  headquarters: z.string().optional(),
-  foundedYear: z.number().min(1800).max(new Date().getFullYear()).optional(),
-  ceo: z.string().optional(),
-  fleetSize: z.number().min(0).optional(),
-  specialization: z.string().optional(),
-  website: z.string().url().optional().or(z.literal('')),
-  logo: z.string().url().optional().or(z.literal('')),
-  description: z.string().optional(),
-  revenue: z.number().min(0).optional(),
-  employees: z.number().min(0).optional(),
-  publiclyTraded: z.boolean().optional(),
-  stockSymbol: z.string().optional(),
-  status: z.enum(['active', 'inactive', 'pending']).default('active'),
-});
-
-type CompanyFormData = z.infer<typeof companyFormSchema>;
+import { apiRequest } from '@/lib/queryClient';
+import { Plus, Search, MoreHorizontal, Edit, Trash2, Building2, Users, TrendingUp, Globe, Eye, Link, Shield, Clock } from 'lucide-react';
+import { Company } from '../../shared/schema';
+import { CompanyForm } from '@/components/ui/company-form';
 
 export default function CompanyManagement() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [editingCompany, setEditingCompany] = useState<Company | null>(null);
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-  const [viewingCompany, setViewingCompany] = useState<Company | null>(null);
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [companyTypeFilter, setCompanyTypeFilter] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  // Fetch companies
-  const { data: companies = [], isLoading: isLoadingCompanies, refetch } = useQuery<Company[]>({
-    queryKey: ['/api/admin/companies'],
+  // Fetch companies with filters
+  const { data: companiesData, isLoading: isLoadingCompanies } = useQuery({
+    queryKey: ['/api/companies', { 
+      search: searchTerm, 
+      page: currentPage, 
+      limit: pageSize,
+      companyType: companyTypeFilter 
+    }],
+    queryFn: () => apiRequest(`/api/companies?search=${searchTerm}&page=${currentPage}&limit=${pageSize}&companyType=${companyTypeFilter}`),
   });
 
-  // Create form
-  const createForm = useForm<CompanyFormData>({
-    resolver: zodResolver(companyFormSchema),
-    defaultValues: {
-      name: '',
-      country: '',
-      region: '',
-      headquarters: '',
-      ceo: '',
-      specialization: '',
-      website: '',
-      logo: '',
-      description: '',
-      publiclyTraded: false,
-      stockSymbol: '',
-      status: 'active',
-    },
+  // Fetch company statistics
+  const { data: stats } = useQuery({
+    queryKey: ['/api/companies/stats/summary'],
+    queryFn: () => apiRequest('/api/companies/stats/summary'),
   });
 
-  // Edit form
-  const editForm = useForm<CompanyFormData>({
-    resolver: zodResolver(companyFormSchema),
+  // Fetch deals
+  const { data: deals } = useQuery({
+    queryKey: ['/api/companies/deals'],
+    queryFn: () => apiRequest('/api/companies/deals'),
   });
 
-  // Create company mutation
-  const createCompanyMutation = useMutation({
-    mutationFn: async (data: CompanyFormData) => {
-      return apiRequest('/api/admin/companies', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      });
-    },
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => apiRequest(`/api/companies/${id}`, { method: 'DELETE' }),
     onSuccess: () => {
-      toast({
-        title: 'Success',
-        description: 'Company created successfully',
-      });
-      setIsCreateDialogOpen(false);
-      createForm.reset();
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/companies'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/companies'] });
+      toast({ title: 'Success', description: 'Company deleted successfully' });
     },
-    onError: (error) => {
-      toast({
-        title: 'Error',
-        description: 'Failed to create company',
-        variant: 'destructive',
+    onError: (error: any) => {
+      toast({ 
+        title: 'Error', 
+        description: error.message || 'Failed to delete company',
+        variant: 'destructive' 
       });
     },
   });
 
-  // Update company mutation
-  const updateCompanyMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: CompanyFormData }) => {
-      return apiRequest(`/api/admin/companies/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify(data),
-      });
-    },
-    onSuccess: () => {
-      toast({
-        title: 'Success',
-        description: 'Company updated successfully',
-      });
-      setIsEditDialogOpen(false);
-      setEditingCompany(null);
-      editForm.reset();
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/companies'] });
-    },
-    onError: (error) => {
-      toast({
-        title: 'Error',
-        description: 'Failed to update company',
-        variant: 'destructive',
-      });
-    },
-  });
+  const companies = companiesData?.companies || [];
+  const pagination = companiesData?.pagination;
 
-  // Delete company mutation
-  const deleteCompanyMutation = useMutation({
-    mutationFn: async (id: number) => {
-      return apiRequest(`/api/admin/companies/${id}`, {
-        method: 'DELETE',
-      });
-    },
-    onSuccess: () => {
-      toast({
-        title: 'Success',
-        description: 'Company deleted successfully',
-      });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/companies'] });
-    },
-    onError: (error) => {
-      toast({
-        title: 'Error',
-        description: 'Failed to delete company',
-        variant: 'destructive',
-      });
-    },
-  });
-
-  // Filter companies
-  const filteredCompanies = companies.filter(company => {
-    const matchesSearch = company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      company.country?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      company.specialization?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === 'all' || company.status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
-  });
+  const filteredCompanies = companies.filter((company: Company) =>
+    company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (company.country && company.country.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (company.specialization && company.specialization.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
 
   const handleEdit = (company: Company) => {
-    setEditingCompany(company);
-    editForm.reset({
-      name: company.name,
-      country: company.country || '',
-      region: company.region || '',
-      headquarters: company.headquarters || '',
-      foundedYear: company.foundedYear,
-      ceo: company.ceo || '',
-      fleetSize: company.fleetSize,
-      specialization: company.specialization || '',
-      website: company.website || '',
-      logo: company.logo || '',
-      description: company.description || '',
-      revenue: company.revenue,
-      employees: company.employees,
-      publiclyTraded: company.publiclyTraded || false,
-      stockSymbol: company.stockSymbol || '',
-      status: company.status as 'active' | 'inactive' | 'pending' || 'active',
-    });
-    setIsEditDialogOpen(true);
+    setSelectedCompany(company);
+    setIsDialogOpen(true);
   };
 
-  const handleView = (company: Company) => {
-    setViewingCompany(company);
-    setIsViewDialogOpen(true);
-  };
-
-  const handleDelete = (id: number) => {
-    if (confirm('Are you sure you want to delete this company?')) {
-      deleteCompanyMutation.mutate(id);
+  const handleDelete = (company: Company) => {
+    if (confirm(`Are you sure you want to delete ${company.name}?`)) {
+      deleteMutation.mutate(company.id);
     }
   };
 
-  const onCreateSubmit = (data: CompanyFormData) => {
-    createCompanyMutation.mutate(data);
+  const handleDialogClose = () => {
+    setIsDialogOpen(false);
+    setSelectedCompany(null);
   };
 
-  const onEditSubmit = (data: CompanyFormData) => {
-    if (editingCompany) {
-      updateCompanyMutation.mutate({ id: editingCompany.id, data });
+  const getCompanyTypeBadge = (type: string) => {
+    if (type === 'real') {
+      return <Badge variant="default" className="bg-green-100 text-green-800"><Shield className="w-3 h-3 mr-1" />Real</Badge>;
     }
+    return <Badge variant="secondary" className="bg-orange-100 text-orange-800"><Eye className="w-3 h-3 mr-1" />Fake</Badge>;
   };
 
-  const getStatusBadge = (status?: string) => {
-    switch (status) {
-      case 'active':
-        return <Badge className="bg-green-100 text-green-800">Active</Badge>;
-      case 'inactive':
-        return <Badge className="bg-red-100 text-red-800">Inactive</Badge>;
-      case 'pending':
-        return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>;
-      default:
-        return <Badge className="bg-gray-100 text-gray-800">Unknown</Badge>;
-    }
+  const getStatusBadge = (status: string) => {
+    const statusColors = {
+      active: 'bg-green-100 text-green-800',
+      inactive: 'bg-red-100 text-red-800',
+      pending: 'bg-yellow-100 text-yellow-800',
+    };
+    return (
+      <Badge className={statusColors[status as keyof typeof statusColors] || 'bg-gray-100 text-gray-800'}>
+        {status}
+      </Badge>
+    );
   };
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Company Management</h1>
-          <p className="text-muted-foreground">
-            Manage oil and shipping companies in the system
-          </p>
+          <p className="text-muted-foreground">Manage real and fake companies with deal tracking</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
-          <Button variant="outline" size="sm">
-            <Upload className="h-4 w-4 mr-2" />
-            Import
-          </Button>
-        </div>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={() => setSelectedCompany(null)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add Company
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                {selectedCompany ? 'Edit Company' : 'Create New Company'}
+              </DialogTitle>
+              <DialogDescription>
+                {selectedCompany ? 'Update company information' : 'Add a new company to the system'}
+              </DialogDescription>
+            </DialogHeader>
+            <CompanyForm
+              company={selectedCompany || undefined}
+              onSuccess={handleDialogClose}
+              onCancel={handleDialogClose}
+            />
+          </DialogContent>
+        </Dialog>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Companies</CardTitle>
-            <Building2 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{companies.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Companies</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {companies.filter(c => c.status === 'active').length}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Employees</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {companies.reduce((sum, c) => sum + (c.employees || 0), 0).toLocaleString()}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Fleet</CardTitle>
-            <Globe className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {companies.reduce((sum, c) => sum + (c.fleetSize || 0), 0).toLocaleString()}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Statistics Cards */}
+      {stats && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Companies</CardTitle>
+              <Building2 className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.total}</div>
+              <p className="text-xs text-muted-foreground">
+                {stats.realCompanies} real, {stats.fakeCompanies} fake
+              </p>
+            </CardContent>
+          </Card>
 
-      {/* Filters and Search */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Company Directory</CardTitle>
-          <CardDescription>Search and filter companies</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col md:flex-row gap-4 mb-6">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search companies..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Average Fleet Size</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{Math.round(stats.averageFleetSize)}</div>
+              <p className="text-xs text-muted-foreground">vessels per company</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Public Companies</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.publiclyTraded}</div>
+              <p className="text-xs text-muted-foreground">listed on exchanges</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Active Deals</CardTitle>
+              <Clock className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{deals?.filter((d: any) => d.deal.status === 'pending').length || 0}</div>
+              <p className="text-xs text-muted-foreground">pending approval</p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Main Content */}
+      <Tabs defaultValue="companies" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="companies">Companies</TabsTrigger>
+          <TabsTrigger value="deals">Deal Management</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="companies" className="space-y-4">
+          {/* Filters */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input
+                placeholder="Search companies..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <Select value={companyTypeFilter} onValueChange={setCompanyTypeFilter}>
               <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by status" />
+                <SelectValue placeholder="Filter by type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="all">All Companies</SelectItem>
+                <SelectItem value="real">Real Companies</SelectItem>
+                <SelectItem value="fake">Fake Companies</SelectItem>
               </SelectContent>
             </Select>
-            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Company
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>Create New Company</DialogTitle>
-                  <DialogDescription>
-                    Add a new oil or shipping company to the system
-                  </DialogDescription>
-                </DialogHeader>
-                <Form {...createForm}>
-                  <form onSubmit={createForm.handleSubmit(onCreateSubmit)} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={createForm.control}
-                        name="name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Company Name *</FormLabel>
-                            <FormControl>
-                              <Input {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={createForm.control}
-                        name="country"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Country</FormLabel>
-                            <FormControl>
-                              <Input {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={createForm.control}
-                        name="region"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Region</FormLabel>
-                            <FormControl>
-                              <Input {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={createForm.control}
-                        name="headquarters"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Headquarters</FormLabel>
-                            <FormControl>
-                              <Input {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={createForm.control}
-                        name="foundedYear"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Founded Year</FormLabel>
-                            <FormControl>
-                              <Input 
-                                type="number" 
-                                {...field} 
-                                onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={createForm.control}
-                        name="ceo"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>CEO</FormLabel>
-                            <FormControl>
-                              <Input {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={createForm.control}
-                        name="fleetSize"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Fleet Size</FormLabel>
-                            <FormControl>
-                              <Input 
-                                type="number" 
-                                {...field} 
-                                onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={createForm.control}
-                        name="specialization"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Specialization</FormLabel>
-                            <FormControl>
-                              <Select onValueChange={field.onChange} value={field.value}>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select specialization" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="Crude Oil">Crude Oil</SelectItem>
-                                  <SelectItem value="Refined Products">Refined Products</SelectItem>
-                                  <SelectItem value="LNG">LNG</SelectItem>
-                                  <SelectItem value="Petrochemicals">Petrochemicals</SelectItem>
-                                  <SelectItem value="Tanker Operations">Tanker Operations</SelectItem>
-                                  <SelectItem value="Oil Trading">Oil Trading</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={createForm.control}
-                        name="website"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Website</FormLabel>
-                            <FormControl>
-                              <Input {...field} placeholder="https://..." />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={createForm.control}
-                        name="employees"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Employees</FormLabel>
-                            <FormControl>
-                              <Input 
-                                type="number" 
-                                {...field} 
-                                onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={createForm.control}
-                        name="revenue"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Revenue (Millions USD)</FormLabel>
-                            <FormControl>
-                              <Input 
-                                type="number" 
-                                step="0.01"
-                                {...field} 
-                                onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={createForm.control}
-                        name="status"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Status</FormLabel>
-                            <FormControl>
-                              <Select onValueChange={field.onChange} value={field.value}>
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="active">Active</SelectItem>
-                                  <SelectItem value="inactive">Inactive</SelectItem>
-                                  <SelectItem value="pending">Pending</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={createForm.control}
-                        name="publiclyTraded"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                            <FormControl>
-                              <Checkbox
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                              />
-                            </FormControl>
-                            <div className="space-y-1 leading-none">
-                              <FormLabel>Publicly Traded</FormLabel>
-                            </div>
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={createForm.control}
-                        name="stockSymbol"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Stock Symbol</FormLabel>
-                            <FormControl>
-                              <Input {...field} placeholder="e.g., AAPL" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    <FormField
-                      control={createForm.control}
-                      name="description"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Description</FormLabel>
-                          <FormControl>
-                            <Textarea {...field} rows={3} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <DialogFooter>
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        onClick={() => setIsCreateDialogOpen(false)}
-                      >
-                        Cancel
-                      </Button>
-                      <Button 
-                        type="submit" 
-                        disabled={createCompanyMutation.isPending}
-                      >
-                        {createCompanyMutation.isPending ? 'Creating...' : 'Create Company'}
-                      </Button>
-                    </DialogFooter>
-                  </form>
-                </Form>
-              </DialogContent>
-            </Dialog>
           </div>
 
           {/* Companies Table */}
@@ -689,6 +230,7 @@ export default function CompanyManagement() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Company</TableHead>
+                  <TableHead>Type</TableHead>
                   <TableHead>Country</TableHead>
                   <TableHead>Specialization</TableHead>
                   <TableHead>Fleet Size</TableHead>
@@ -700,13 +242,13 @@ export default function CompanyManagement() {
               <TableBody>
                 {isLoadingCompanies ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8">
+                    <TableCell colSpan={8} className="text-center py-8">
                       Loading companies...
                     </TableCell>
                   </TableRow>
                 ) : filteredCompanies.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                       No companies found
                     </TableCell>
                   </TableRow>
@@ -717,35 +259,32 @@ export default function CompanyManagement() {
                         <div>
                           <div className="font-medium">{company.name}</div>
                           <div className="text-sm text-muted-foreground">
-                            {company.headquarters}
+                            {company.headquarters || 'No headquarters'}
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>{company.country}</TableCell>
-                      <TableCell>{company.specialization}</TableCell>
-                      <TableCell>{company.fleetSize?.toLocaleString()}</TableCell>
-                      <TableCell>{company.employees?.toLocaleString()}</TableCell>
-                      <TableCell>{getStatusBadge(company.status)}</TableCell>
+                      <TableCell>{getCompanyTypeBadge(company.companyType || 'real')}</TableCell>
+                      <TableCell>{company.country || 'N/A'}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{company.specialization || 'N/A'}</Badge>
+                      </TableCell>
+                      <TableCell>{company.fleetSize || 0}</TableCell>
+                      <TableCell>{company.employees || 0}</TableCell>
+                      <TableCell>{getStatusBadge(company.status || 'active')}</TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" className="h-8 w-8 p-0">
-                              <MoreVertical className="h-4 w-4" />
+                              <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => handleView(company)}>
-                              <Eye className="mr-2 h-4 w-4" />
-                              View Details
-                            </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleEdit(company)}>
                               <Edit className="mr-2 h-4 w-4" />
                               Edit
                             </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem 
-                              onClick={() => handleDelete(company.id)}
+                            <DropdownMenuItem
+                              onClick={() => handleDelete(company)}
                               className="text-red-600"
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
@@ -760,192 +299,111 @@ export default function CompanyManagement() {
               </TableBody>
             </Table>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Edit Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit Company</DialogTitle>
-            <DialogDescription>
-              Update company information
-            </DialogDescription>
-          </DialogHeader>
-          <Form {...editForm}>
-            <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
-              {/* Similar form fields as create dialog */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={editForm.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Company Name *</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={editForm.control}
-                  name="country"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Country</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={editForm.control}
-                  name="specialization"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Specialization</FormLabel>
-                      <FormControl>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select specialization" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Crude Oil">Crude Oil</SelectItem>
-                            <SelectItem value="Refined Products">Refined Products</SelectItem>
-                            <SelectItem value="LNG">LNG</SelectItem>
-                            <SelectItem value="Petrochemicals">Petrochemicals</SelectItem>
-                            <SelectItem value="Tanker Operations">Tanker Operations</SelectItem>
-                            <SelectItem value="Oil Trading">Oil Trading</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={editForm.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <FormControl>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="active">Active</SelectItem>
-                            <SelectItem value="inactive">Inactive</SelectItem>
-                            <SelectItem value="pending">Pending</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+          {/* Pagination */}
+          {pagination && (
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-muted-foreground">
+                Showing {Math.min(pagination.page * pagination.limit - pagination.limit + 1, pagination.total)} to{' '}
+                {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} companies
               </div>
-
-              <DialogFooter>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setIsEditDialogOpen(false)}
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  disabled={!pagination.hasPrev}
                 >
-                  Cancel
+                  Previous
                 </Button>
-                <Button 
-                  type="submit" 
-                  disabled={updateCompanyMutation.isPending}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  disabled={!pagination.hasNext}
                 >
-                  {updateCompanyMutation.isPending ? 'Updating...' : 'Update Company'}
+                  Next
                 </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
-
-      {/* View Dialog */}
-      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Company Details</DialogTitle>
-          </DialogHeader>
-          {viewingCompany && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Company Name</Label>
-                  <p className="text-sm">{viewingCompany.name}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Country</Label>
-                  <p className="text-sm">{viewingCompany.country || 'N/A'}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Headquarters</Label>
-                  <p className="text-sm">{viewingCompany.headquarters || 'N/A'}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Founded</Label>
-                  <p className="text-sm">{viewingCompany.foundedYear || 'N/A'}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">CEO</Label>
-                  <p className="text-sm">{viewingCompany.ceo || 'N/A'}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Specialization</Label>
-                  <p className="text-sm">{viewingCompany.specialization || 'N/A'}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Fleet Size</Label>
-                  <p className="text-sm">{viewingCompany.fleetSize?.toLocaleString() || 'N/A'}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Employees</Label>
-                  <p className="text-sm">{viewingCompany.employees?.toLocaleString() || 'N/A'}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Revenue (M USD)</Label>
-                  <p className="text-sm">{viewingCompany.revenue?.toLocaleString() || 'N/A'}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Status</Label>
-                  <div className="text-sm">{getStatusBadge(viewingCompany.status)}</div>
-                </div>
               </div>
-              {viewingCompany.description && (
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Description</Label>
-                  <p className="text-sm mt-1">{viewingCompany.description}</p>
-                </div>
-              )}
-              {viewingCompany.website && (
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground">Website</Label>
-                  <p className="text-sm">
-                    <a 
-                      href={viewingCompany.website} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline"
-                    >
-                      {viewingCompany.website}
-                    </a>
-                  </p>
-                </div>
-              )}
             </div>
           )}
-        </DialogContent>
-      </Dialog>
+        </TabsContent>
+
+        <TabsContent value="deals" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Deal Management</CardTitle>
+              <CardDescription>
+                Manage deal requests between brokers and fake companies
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {deals && deals.length > 0 ? (
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Deal Title</TableHead>
+                        <TableHead>Fake Company</TableHead>
+                        <TableHead>Deal Type</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Created</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {deals.map((dealItem: any) => (
+                        <TableRow key={dealItem.deal.id}>
+                          <TableCell className="font-medium">{dealItem.deal.title}</TableCell>
+                          <TableCell>{dealItem.fakeCompany?.name || 'N/A'}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{dealItem.deal.dealType}</Badge>
+                          </TableCell>
+                          <TableCell>{getStatusBadge(dealItem.deal.status)}</TableCell>
+                          <TableCell>
+                            {new Date(dealItem.deal.createdAt).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem>
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  View Details
+                                </DropdownMenuItem>
+                                {dealItem.deal.status === 'pending' && (
+                                  <>
+                                    <DropdownMenuItem className="text-green-600">
+                                      <Link className="mr-2 h-4 w-4" />
+                                      Approve
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem className="text-red-600">
+                                      <Trash2 className="mr-2 h-4 w-4" />
+                                      Reject
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  No deals found
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
