@@ -363,7 +363,7 @@ companyRouter.get('/deals/:id', async (req: Request, res: Response) => {
 });
 
 // Approve a deal (admin only)
-companyRouter.patch('/deals/:id/approve', async (req: Request, res: Response) => {
+companyRouter.post('/deals/:id/approve', async (req: Request, res: Response) => {
   try {
     const dealId = parseInt(req.params.id);
     const { adminNotes, approvedBy } = req.body;
@@ -401,7 +401,7 @@ companyRouter.patch('/deals/:id/approve', async (req: Request, res: Response) =>
 });
 
 // Reject a deal (admin only)
-companyRouter.patch('/deals/:id/reject', async (req: Request, res: Response) => {
+companyRouter.post('/deals/:id/reject', async (req: Request, res: Response) => {
   try {
     const dealId = parseInt(req.params.id);
     const { adminNotes, approvedBy } = req.body;

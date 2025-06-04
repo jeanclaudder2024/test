@@ -294,27 +294,7 @@ export default function AdminPanel() {
         </TabsContent>
 
         <TabsContent value="companies" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Company Management</CardTitle>
-              <CardDescription>
-                Manage oil and shipping companies in the system
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <Building2 className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                <p className="text-gray-500 mb-4">Company management interface will be displayed here.</p>
-                <Button 
-                  onClick={() => window.open('/admin/companies', '_blank')}
-                  className="bg-purple-600 hover:bg-purple-700"
-                >
-                  <Building2 className="h-4 w-4 mr-2" />
-                  Open Company Management
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <CompanyManagement />
         </TabsContent>
 
         <TabsContent value="vessels" className="space-y-4">
