@@ -1,23 +1,10 @@
 import express, { type Request, Response, NextFunction } from "express";
-import session from "express-session";
 import { setupSupabaseAuth } from "./supabase-simple-auth";
 import { log } from "./vite";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-
-// Session configuration
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'petrodeal-secret-key',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: false, // Set to true in production with HTTPS
-    httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
-  }
-}));
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -58,10 +45,6 @@ app.use((req, res, next) => {
   
   // Setup Supabase authentication system
   setupSupabaseAuth(app);
-  
-  // Import and register authentication routes
-  const authRoutes = await import("./routes/authRoutes");
-  app.use('/api/auth', authRoutes.default);
   
   // Import and register API routes
   const { registerRoutes } = await import("./routes");
