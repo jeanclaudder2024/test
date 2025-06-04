@@ -109,6 +109,18 @@ export function CompanyManagement() {
   const deals = (dealsData as any)?.deals || [];
   const stats = statsData as CompanyStats || { total: 0, realCompanies: 0, fakeCompanies: 0, pendingDeals: 0, totalCompanies: 0 };
 
+  // Filter companies based on search term and type filter
+  const filteredCompanies = companies.filter((company: Company) => {
+    const matchesSearch = searchTerm === '' || 
+      company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (company.country && company.country.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (company.specialization && company.specialization.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    const matchesType = filterType === 'all' || company.companyType === filterType;
+    
+    return matchesSearch && matchesType;
+  });
+
   // Create company mutation
   const createCompanyMutation = useMutation({
     mutationFn: async (companyData: Partial<Company>) => {
