@@ -20,6 +20,8 @@ import AccountSubscription from "@/pages/AccountSubscription";
 import SubscriptionSuccess from "@/pages/SubscriptionSuccess";
 import LandingPage from "@/pages/LandingPage";
 import AuthPage from "@/pages/AuthPage";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
 import TradingDashboard from "@/pages/TradingDashboard";
 import Companies from "@/pages/Companies";
 
@@ -89,8 +91,8 @@ function Router() {
     seedData();
   }, []);
 
-  // For landing page and auth page, don't use Layout (no sidebar/header)
-  if (location === "/" || location === "/auth") {
+  // For landing page and auth pages, don't use Layout (no sidebar/header)
+  if (location === "/" || location === "/auth" || location === "/login" || location === "/register") {
     return (
       <AnimatePresence mode="wait">
         <Switch>
@@ -99,6 +101,12 @@ function Router() {
           </Route>
           <Route path="/auth">
             <AuthWrapper />
+          </Route>
+          <Route path="/login">
+            <Login />
+          </Route>
+          <Route path="/register">
+            <Register />
           </Route>
         </Switch>
       </AnimatePresence>

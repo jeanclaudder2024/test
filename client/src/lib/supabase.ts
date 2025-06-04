@@ -1,13 +1,18 @@
-import { createClient } from '@supabase/supabase-js';
+// Using direct API calls instead of Supabase client
+// This integrates with the existing authentication system
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables');
+export interface AuthUser {
+  id: string;
+  email: string;
+  created_at: string;
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export interface AuthSession {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  user: AuthUser;
+}
 
 // Auth types
 export interface UserProfile {
