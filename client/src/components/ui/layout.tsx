@@ -42,6 +42,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useTheme } from "@/hooks/use-theme";
+import { useTranslation } from "@/hooks/useTranslation";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ShipBoatAssistant } from "@/components/ShipBoatAssistant";
 
@@ -52,27 +53,21 @@ interface LayoutProps {
 export function Layout({ children }: LayoutProps) {
   const [location, setLocation] = useLocation();
   const { theme, setTheme } = useTheme();
-  const [currentLanguage, setCurrentLanguage] = React.useState<"en" | "ar" | "fr" | "es" | "zh">("en");
+  const { language, setLanguage, t } = useTranslation();
   const [isMobileNavOpen, setIsMobileNavOpen] = React.useState(false);
 
   const navigation = [
-    // Dashboard removed as requested
-    { name: "Vessels", href: "/vessels", icon: Ship },
-    // Vessel Dashboard removed as requested
-    // Vessel Lookup removed as requested
-    // Maritime Map removed as requested
-    { name: "Oil Vessel Map", href: "/oil-vessel-map", icon: Ship },
-    // Maritime Tracking removed as requested
-    { name: "Refineries", href: "/refineries", icon: Database },
-    { name: "Ports", href: "/ports", icon: Anchor },
-
-    { name: "Documents", href: "/documents", icon: FileText },
-    { name: "Companies", href: "/companies", icon: Briefcase },
-    { name: "Brokers", href: "/brokers", icon: UserPlus },
-    { name: "AI Assistant", href: "/ai-assistant", icon: MessageSquare },
-    { name: "Admin Panel", href: "/admin", icon: AlertCircle },
-    { name: "Pricing", href: "/pricing", icon: ShoppingBag },
-    { name: "Settings", href: "/settings", icon: Settings },
+    { name: t("nav.vessels"), href: "/vessels", icon: Ship },
+    { name: t("nav.oil_vessel_map"), href: "/oil-vessel-map", icon: Ship },
+    { name: t("nav.refineries"), href: "/refineries", icon: Database },
+    { name: t("nav.ports"), href: "/ports", icon: Anchor },
+    { name: t("nav.documents"), href: "/documents", icon: FileText },
+    { name: t("nav.companies"), href: "/companies", icon: Briefcase },
+    { name: t("nav.brokers"), href: "/brokers", icon: UserPlus },
+    { name: t("nav.ai_assistant"), href: "/ai-assistant", icon: MessageSquare },
+    { name: t("nav.admin_panel"), href: "/admin", icon: AlertCircle },
+    { name: t("nav.pricing"), href: "/pricing", icon: ShoppingBag },
+    { name: t("nav.settings"), href: "/settings", icon: Settings },
   ];
 
   const handleProfile = () => {
@@ -100,7 +95,7 @@ export function Layout({ children }: LayoutProps) {
   };
 
   const handleLanguageChange = (newLanguage: "en" | "ar" | "fr" | "es" | "zh") => {
-    setCurrentLanguage(newLanguage);
+    setLanguage(newLanguage);
     console.log("Language changed to:", newLanguage);
   };
 
@@ -116,7 +111,7 @@ export function Layout({ children }: LayoutProps) {
   };
 
   const getCurrentLanguageFlag = () => {
-    switch (currentLanguage) {
+    switch (language) {
       case "en": return "🇺🇸";
       case "ar": return "🇸🇦";
       case "fr": return "🇫🇷";
@@ -376,7 +371,7 @@ export function Layout({ children }: LayoutProps) {
                   <Button variant="ghost" size="sm" className="h-8 gap-1 px-2">
                     <Globe className="h-4 w-4" />
                     <span className="hidden sm:inline-block text-sm">
-                      {getCurrentLanguageFlag()} {getLanguageDisplayName(currentLanguage)}
+                      {getCurrentLanguageFlag()} {getLanguageDisplayName(language)}
                     </span>
                   </Button>
                 </DropdownMenuTrigger>
@@ -386,35 +381,35 @@ export function Layout({ children }: LayoutProps) {
                     onClick={() => handleLanguageChange("en")}
                   >
                     <span className="mr-2">🇺🇸</span>
-                    <span className={currentLanguage === "en" ? "font-bold" : ""}>English</span>
+                    <span className={language === "en" ? "font-bold" : ""}>English</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     className="cursor-pointer"
                     onClick={() => handleLanguageChange("ar")}
                   >
                     <span className="mr-2">🇸🇦</span>
-                    <span className={currentLanguage === "ar" ? "font-bold" : ""}>العربية</span>
+                    <span className={language === "ar" ? "font-bold" : ""}>العربية</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     className="cursor-pointer"
                     onClick={() => handleLanguageChange("fr")}
                   >
                     <span className="mr-2">🇫🇷</span>
-                    <span className={currentLanguage === "fr" ? "font-bold" : ""}>Français</span>
+                    <span className={language === "fr" ? "font-bold" : ""}>Français</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     className="cursor-pointer"
                     onClick={() => handleLanguageChange("es")}
                   >
                     <span className="mr-2">🇪🇸</span>
-                    <span className={currentLanguage === "es" ? "font-bold" : ""}>Español</span>
+                    <span className={language === "es" ? "font-bold" : ""}>Español</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     className="cursor-pointer"
                     onClick={() => handleLanguageChange("zh")}
                   >
                     <span className="mr-2">🇨🇳</span>
-                    <span className={currentLanguage === "zh" ? "font-bold" : ""}>中文</span>
+                    <span className={language === "zh" ? "font-bold" : ""}>中文</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
