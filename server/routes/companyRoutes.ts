@@ -9,6 +9,50 @@ export const companyRouter = express.Router();
 // Get all companies with optional search and pagination
 companyRouter.get('/', async (req: Request, res: Response) => {
   try {
+    // First, ensure the companies table exists
+    const createTableQuery = `
+      CREATE TABLE IF NOT EXISTS companies (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        country TEXT,
+        region TEXT,
+        website TEXT,
+        description TEXT,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `;
+    
+    await db.execute(sql.raw(createTableQuery));
+
+    // Check if table is empty and insert sample data
+    try {
+      const checkDataQuery = 'SELECT COUNT(*) as count FROM companies';
+      const checkResult = await db.execute(sql.raw(checkDataQuery));
+      
+      let existingCount = 0;
+      if (checkResult && checkResult.rows && checkResult.rows.length > 0) {
+        existingCount = Number(checkResult.rows[0].count || 0);
+      }
+      
+      if (existingCount === 0) {
+        const sampleCompanies = [
+          "('Shell Global', 'Netherlands', 'Europe', 'https://www.shell.com', 'Major international oil company')",
+          "('ExxonMobil', 'United States', 'North America', 'https://www.exxonmobil.com', 'American multinational oil and gas corporation')",
+          "('BP', 'United Kingdom', 'Europe', 'https://www.bp.com', 'British multinational oil and gas company')",
+          "('TotalEnergies', 'France', 'Europe', 'https://www.totalenergies.com', 'French multinational integrated oil and gas company')",
+          "('Chevron', 'United States', 'North America', 'https://www.chevron.com', 'American multinational energy corporation')"
+        ];
+        
+        const insertQuery = `
+          INSERT INTO companies (name, country, region, website, description) 
+          VALUES ${sampleCompanies.join(', ')}
+        `;
+        await db.execute(sql.raw(insertQuery));
+      }
+    } catch (seedError) {
+      console.log('Data seeding skipped:', seedError);
+    }
+
     const { 
       search = '', 
       page = '1', 
@@ -49,19 +93,27 @@ companyRouter.get('/', async (req: Request, res: Response) => {
 
     const result = await db.execute(sql.raw(baseQuery));
 
-    // Get total count
-    let countQuery = 'SELECT COUNT(*) as count FROM companies WHERE 1=1';
-    
-    if (search) {
-      const searchTerm = search.replace(/'/g, "''");
-      countQuery += ` AND (name ILIKE '%${searchTerm}%' OR country ILIKE '%${searchTerm}%' OR region ILIKE '%${searchTerm}%')`;
+    // Get total count with proper error handling
+    let totalCount = 0;
+    try {
+      let countQuery = 'SELECT COUNT(*) as count FROM companies WHERE 1=1';
+      
+      if (search) {
+        const searchTerm = search.replace(/'/g, "''");
+        countQuery += ` AND (name ILIKE '%${searchTerm}%' OR country ILIKE '%${searchTerm}%' OR region ILIKE '%${searchTerm}%')`;
+      }
+      
+      const countResult = await db.execute(sql.raw(countQuery));
+      if (countResult && countResult.rows && countResult.rows.length > 0) {
+        totalCount = Number(countResult.rows[0].count || 0);
+      }
+    } catch (countError) {
+      console.log('Count query failed, using default:', countError);
+      totalCount = result?.rows?.length || 0;
     }
-    
-    const countResult = await db.execute(sql.raw(countQuery));
-    const totalCount = Number(countResult.rows[0]?.count || 0);
 
     res.json({
-      companies: result.rows || [],
+      companies: result?.rows || [],
       pagination: {
         page: pageNum,
         limit: limitNum,
