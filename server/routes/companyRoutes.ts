@@ -29,25 +29,13 @@ companyRouter.get('/', async (req: Request, res: Response) => {
     const limitNum = parseInt(limit);
     const offset = (pageNum - 1) * limitNum;
 
-    // Simplified query using only basic columns
-    let baseQuery = `
-      SELECT id, name, country, region, website, description
-      FROM companies
-      WHERE 1=1
-    `;
+    // Use basic query without parameters to avoid mismatch
+    let baseQuery = 'SELECT id, name, country, region, website, description FROM companies WHERE 1=1';
     
-    const queryParams: any[] = [];
-    let paramIndex = 1;
-    
-    // Add search functionality (only search existing columns)
+    // Add search if provided (using string interpolation for now)
     if (search) {
-      baseQuery += ` AND (
-        name ILIKE $${paramIndex} OR 
-        country ILIKE $${paramIndex} OR 
-        region ILIKE $${paramIndex}
-      )`;
-      queryParams.push(`%${search}%`);
-      paramIndex++;
+      const searchTerm = search.replace(/'/g, "''"); // Escape single quotes
+      baseQuery += ` AND (name ILIKE '%${searchTerm}%' OR country ILIKE '%${searchTerm}%' OR region ILIKE '%${searchTerm}%')`;
     }
     
     // Add sorting
@@ -57,27 +45,19 @@ companyRouter.get('/', async (req: Request, res: Response) => {
     baseQuery += ` ORDER BY ${sortColumn} ${orderDirection}`;
     
     // Add pagination
-    baseQuery += ` LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
-    queryParams.push(limitNum, offset);
+    baseQuery += ` LIMIT ${limitNum} OFFSET ${offset}`;
 
-    const result = await db.execute(sql.raw(baseQuery, queryParams));
+    const result = await db.execute(sql.raw(baseQuery));
 
     // Get total count
-    let countQuery = `SELECT COUNT(*) as count FROM companies WHERE 1=1`;
-    const countParams: any[] = [];
-    let countParamIndex = 1;
+    let countQuery = 'SELECT COUNT(*) as count FROM companies WHERE 1=1';
     
     if (search) {
-      countQuery += ` AND (
-        name ILIKE $${countParamIndex} OR 
-        country ILIKE $${countParamIndex} OR 
-        region ILIKE $${countParamIndex}
-      )`;
-      countParams.push(`%${search}%`);
-      countParamIndex++;
+      const searchTerm = search.replace(/'/g, "''");
+      countQuery += ` AND (name ILIKE '%${searchTerm}%' OR country ILIKE '%${searchTerm}%' OR region ILIKE '%${searchTerm}%')`;
     }
     
-    const countResult = await db.execute(sql.raw(countQuery, countParams));
+    const countResult = await db.execute(sql.raw(countQuery));
     const totalCount = Number(countResult.rows[0]?.count || 0);
 
     res.json({
