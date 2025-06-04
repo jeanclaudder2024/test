@@ -617,33 +617,31 @@ export const insertVesselRefineryConnectionSchema = createInsertSchema(vesselRef
 export type InsertVesselRefineryConnection = z.infer<typeof insertVesselRefineryConnectionSchema>;
 export type VesselRefineryConnection = typeof vesselRefineryConnections.$inferSelect;
 
-// Shipping Companies
+// Shipping Companies - simplified to match existing database
 export const companies = pgTable("companies", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   country: text("country"),
   region: text("region"),
+  website: text("website"),
+  description: text("description"),
+  
+  // New fields for Real/Fake company system that will be added via SQL
+  companyType: text("company_type"),
+  linkedCompanyId: integer("linked_company_id"),
+  isVisibleToBrokers: boolean("is_visible_to_brokers"),
+  publiclyTraded: boolean("publicly_traded"),
+  stockSymbol: text("stock_symbol"),
+  revenue: decimal("revenue", { precision: 15, scale: 2 }),
+  employees: integer("employees"),
   foundedYear: integer("founded_year"),
   ceo: text("ceo"),
   fleetSize: integer("fleet_size"),
-  specialization: text("specialization"), // e.g., Crude Oil, LNG, Products
-  website: text("website"),
-  logo: text("logo"), // URL to company logo
-  description: text("description"),
-  revenue: decimal("revenue", { precision: 15, scale: 2 }), // Revenue in millions
-  employees: integer("employees"),
-  publiclyTraded: boolean("publicly_traded").default(false),
-  stockSymbol: text("stock_symbol"),
-  status: text("status").default("active"),
+  specialization: text("specialization"),
+  logo: text("logo"),
   
-  // New fields for Real/Fake company system
-  companyType: text("company_type").notNull().default("real"), // "real" or "fake"
-  linkedCompanyId: integer("linked_company_id"), // References real company for fake companies
-  isVisibleToBrokers: boolean("is_visible_to_brokers").default(true),
-  dealCount: integer("deal_count").default(0),
-  
-  createdAt: timestamp("created_at").defaultNow(),
-  lastUpdated: timestamp("last_updated").defaultNow(),
+  createdAt: timestamp("created_at"),
+  lastUpdated: timestamp("last_updated"),
 });
 
 // Company relations

@@ -29,53 +29,77 @@ companyRouter.get('/', async (req: Request, res: Response) => {
     const limitNum = parseInt(limit);
     const offset = (pageNum - 1) * limitNum;
 
-    let query = db.select().from(companies);
-
-    // Build filter conditions
-    const conditions = [];
+    // Use raw SQL to avoid schema mismatches
+    let baseQuery = `
+      SELECT id, name, country, region, website, description,
+             company_type, linked_company_id, is_visible_to_brokers,
+             publicly_traded, stock_symbol, revenue, employees,
+             founded_year, ceo, fleet_size, specialization, logo,
+             created_at, last_updated
+      FROM companies
+      WHERE 1=1
+    `;
+    
+    const queryParams: any[] = [];
+    let paramIndex = 1;
     
     // Add search functionality
     if (search) {
-      conditions.push(
-        or(
-          ilike(companies.name, `%${search}%`),
-          ilike(companies.country, `%${search}%`),
-          ilike(companies.region, `%${search}%`),
-          ilike(companies.specialization, `%${search}%`)
-        )
-      );
+      baseQuery += ` AND (
+        name ILIKE $${paramIndex} OR 
+        country ILIKE $${paramIndex} OR 
+        region ILIKE $${paramIndex} OR 
+        specialization ILIKE $${paramIndex}
+      )`;
+      queryParams.push(`%${search}%`);
+      paramIndex++;
     }
     
     // Add company type filter
     if (companyType !== 'all') {
-      conditions.push(eq(companies.companyType, companyType));
+      baseQuery += ` AND company_type = $${paramIndex}`;
+      queryParams.push(companyType);
+      paramIndex++;
     }
     
-    // Apply conditions
-    if (conditions.length > 0) {
-      query = query.where(and(...conditions));
-    }
-
     // Add sorting
-    const orderDirection = sortOrder === 'desc' ? desc : asc;
-    const sortColumn = (companies as any)[sortBy] || companies.name;
-    query = query.orderBy(orderDirection(sortColumn));
-
+    const orderDirection = sortOrder === 'desc' ? 'DESC' : 'ASC';
+    const allowedSortColumns = ['name', 'country', 'region', 'company_type', 'created_at'];
+    const sortColumn = allowedSortColumns.includes(sortBy) ? sortBy : 'name';
+    baseQuery += ` ORDER BY ${sortColumn} ${orderDirection}`;
+    
     // Add pagination
-    query = query.limit(limitNum).offset(offset);
+    baseQuery += ` LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+    queryParams.push(limitNum, offset);
 
-    const result = await query;
+    const result = await db.execute(sql.raw(baseQuery, queryParams));
 
-    // Get total count for pagination with same filters
-    let countQuery = db.select({ count: sql`count(*)` }).from(companies);
-    if (conditions.length > 0) {
-      countQuery = countQuery.where(and(...conditions));
+    // Get total count
+    let countQuery = `SELECT COUNT(*) as count FROM companies WHERE 1=1`;
+    const countParams: any[] = [];
+    let countParamIndex = 1;
+    
+    if (search) {
+      countQuery += ` AND (
+        name ILIKE $${countParamIndex} OR 
+        country ILIKE $${countParamIndex} OR 
+        region ILIKE $${countParamIndex} OR 
+        specialization ILIKE $${countParamIndex}
+      )`;
+      countParams.push(`%${search}%`);
+      countParamIndex++;
     }
-    const totalCountResult = await countQuery;
-    const totalCount = Number(totalCountResult[0]?.count || 0);
+    
+    if (companyType !== 'all') {
+      countQuery += ` AND company_type = $${countParamIndex}`;
+      countParams.push(companyType);
+    }
+    
+    const countResult = await db.execute(sql.raw(countQuery, countParams));
+    const totalCount = Number(countResult.rows[0]?.count || 0);
 
     res.json({
-      companies: result,
+      companies: result.rows,
       pagination: {
         page: pageNum,
         limit: limitNum,
