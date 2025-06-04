@@ -153,23 +153,24 @@ companyRouter.get('/:id', async (req: Request, res: Response) => {
 // Create new company
 companyRouter.post('/', async (req: Request, res: Response) => {
   try {
-    const validatedData = insertCompanySchema.parse(req.body);
+    // Simple validation for basic company data
+    const { name, country, region, website, description } = req.body;
     
-    const [newCompany] = await db
-      .insert(companies)
-      .values({
-        ...validatedData,
-        createdAt: new Date(),
-        lastUpdated: new Date()
-      })
-      .returning();
+    if (!name) {
+      return res.status(400).json({ error: 'Company name is required' });
+    }
+    
+    const insertQuery = `
+      INSERT INTO companies (name, country, region, website, description) 
+      VALUES ('${name.replace(/'/g, "''")}', '${(country || '').replace(/'/g, "''")}', '${(region || '').replace(/'/g, "''")}', '${(website || '').replace(/'/g, "''")}', '${(description || '').replace(/'/g, "''")}') 
+      RETURNING *
+    `;
+    
+    const result = await db.execute(sql.raw(insertQuery));
 
-    res.status(201).json(newCompany);
+    res.status(201).json(result.rows[0]);
   } catch (error) {
     console.error('Error creating company:', error);
-    if (error instanceof Error && error.name === 'ZodError') {
-      return res.status(400).json({ error: 'Invalid company data', details: error });
-    }
     res.status(500).json({ error: 'Failed to create company' });
   }
 });
