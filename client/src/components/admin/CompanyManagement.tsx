@@ -99,15 +99,12 @@ export function CompanyManagement() {
     retry: false,
   });
 
-  // Fetch real companies for linking
-  const { data: realCompanies } = useQuery({
-    queryKey: ['/api/companies/real-companies'],
-    retry: false,
-  });
-
   const companies = (companiesData as any)?.companies || [];
   const deals = (dealsData as any)?.deals || [];
   const stats = statsData as CompanyStats || { total: 0, realCompanies: 0, fakeCompanies: 0, pendingDeals: 0, totalCompanies: 0 };
+  
+  // Filter real companies for linking
+  const realCompanies = companies.filter((company: Company) => company.companyType === 'real');
 
   // Filter companies based on search term and type filter
   const filteredCompanies = companies.filter((company: Company) => {

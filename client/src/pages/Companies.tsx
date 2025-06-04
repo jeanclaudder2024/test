@@ -27,10 +27,13 @@ export default function Companies() {
   const queryClient = useQueryClient();
   
   // Fetch companies data
-  const { data: companies, isLoading, error } = useQuery({
+  const { data: companiesData, isLoading, error } = useQuery({
     queryKey: ['/api/companies'],
     staleTime: 60000, // 1 minute
   });
+  
+  // Extract companies array from response
+  const companies = (companiesData as any)?.companies || [];
   
   // Handle import success
   const handleImportSuccess = (count: number) => {
@@ -44,8 +47,8 @@ export default function Companies() {
   };
   
   // Filter companies based on search term and selected region
-  const filteredCompanies = companies ? 
-    (companies as Company[]).filter((company: Company) => {
+  const filteredCompanies = companies.length > 0 ? 
+    companies.filter((company: Company) => {
       const matchesSearch = searchTerm === '' || 
         company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (company.specialization && company.specialization.toLowerCase().includes(searchTerm.toLowerCase())) ||
