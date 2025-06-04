@@ -56,6 +56,7 @@ export function Layout({ children }: LayoutProps) {
   const [isMobileNavOpen, setIsMobileNavOpen] = React.useState(false);
   
   // Use simple fallback translation for now
+  const language = "en"; // Default to English
   const t = (key: string) => {
     const translations: Record<string, string> = {
       "nav.vessels": "Vessels",
@@ -113,7 +114,7 @@ export function Layout({ children }: LayoutProps) {
   };
 
   const handleLanguageChange = (newLanguage: "en" | "ar" | "fr" | "es" | "zh") => {
-    setLanguage(newLanguage);
+    // For now, just log the language change
     console.log("Language changed to:", newLanguage);
   };
 
@@ -129,14 +130,7 @@ export function Layout({ children }: LayoutProps) {
   };
 
   const getCurrentLanguageFlag = () => {
-    switch (language) {
-      case "en": return "🇺🇸";
-      case "ar": return "🇸🇦";
-      case "fr": return "🇫🇷";
-      case "es": return "🇪🇸";
-      case "zh": return "🇨🇳";
-      default: return "🇺🇸";
-    }
+    return "🇺🇸"; // Default to US flag for now
   };
 
   return (
@@ -389,7 +383,7 @@ export function Layout({ children }: LayoutProps) {
                   <Button variant="ghost" size="sm" className="h-8 gap-1 px-2">
                     <Globe className="h-4 w-4" />
                     <span className="hidden sm:inline-block text-sm">
-                      {getCurrentLanguageFlag()} {getLanguageDisplayName(language)}
+                      {getCurrentLanguageFlag()} {getLanguageDisplayName("en")}
                     </span>
                   </Button>
                 </DropdownMenuTrigger>
@@ -399,35 +393,35 @@ export function Layout({ children }: LayoutProps) {
                     onClick={() => handleLanguageChange("en")}
                   >
                     <span className="mr-2">🇺🇸</span>
-                    <span className={language === "en" ? "font-bold" : ""}>English</span>
+                    <span className="font-bold">English</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     className="cursor-pointer"
                     onClick={() => handleLanguageChange("ar")}
                   >
                     <span className="mr-2">🇸🇦</span>
-                    <span className={language === "ar" ? "font-bold" : ""}>العربية</span>
+                    <span>العربية</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     className="cursor-pointer"
                     onClick={() => handleLanguageChange("fr")}
                   >
                     <span className="mr-2">🇫🇷</span>
-                    <span className={language === "fr" ? "font-bold" : ""}>Français</span>
+                    <span>Français</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     className="cursor-pointer"
                     onClick={() => handleLanguageChange("es")}
                   >
                     <span className="mr-2">🇪🇸</span>
-                    <span className={language === "es" ? "font-bold" : ""}>Español</span>
+                    <span>Español</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     className="cursor-pointer"
                     onClick={() => handleLanguageChange("zh")}
                   >
                     <span className="mr-2">🇨🇳</span>
-                    <span className={language === "zh" ? "font-bold" : ""}>中文</span>
+                    <span>中文</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
