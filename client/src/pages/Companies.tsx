@@ -1,262 +1,148 @@
-import { useState, useEffect } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Globe, Building, Ship, Users, Search, Filter, X } from 'lucide-react';
+import { Globe, Building, Users, Search, MapPin, Factory } from 'lucide-react';
 import { REGIONS } from '@shared/constants';
-import { useToast } from '@/hooks/use-toast';
-import ExcelUploader from '../components/companies/ExcelUploader';
 import { Company } from '@shared/schema';
+
+interface Region {
+  id: string;
+  name: string;
+  nameAr: string;
+}
 
 export default function Companies() {
   const [searchTerm, setSearchTerm] = useState('');
-  // TypeScript interface for region objects
-  interface Region {
-    id: string;
-    name: string;
-    nameAr: string;
-  }
-  
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
-  const [showImporter, setShowImporter] = useState(false);
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  
+
   // Fetch companies data
-  const { data: companiesData, isLoading, error } = useQuery({
+  const { data: companiesResponse, isLoading, error } = useQuery({
     queryKey: ['/api/companies'],
     staleTime: 60000, // 1 minute
   });
-  
-  // Extract companies array from response
-  const companies = (companiesData as any)?.companies || [];
-  
-  // Handle import success
-  const handleImportSuccess = (count: number) => {
-    // Invalidate the companies query to refresh the data
-    queryClient.invalidateQueries({ queryKey: ['/api/companies'] });
-    
-    // Hide the importer after successful import
-    setTimeout(() => {
-      setShowImporter(false);
-    }, 2000);
-  };
-  
+
+  // Extract companies array from backend response
+  const companies = (companiesResponse as any)?.companies || [];
+
   // Filter companies based on search term and selected region
-  const filteredCompanies = companies.length > 0 ? 
-    companies.filter((company: Company) => {
-      const matchesSearch = searchTerm === '' || 
-        company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (company.specialization && company.specialization.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (company.country && company.country.toLowerCase().includes(searchTerm.toLowerCase()));
-      
-      // The company.region should match the region.id from selectedRegion
-      // Database region values should be stored as region.id values (e.g., "middle-east", "asia-pacific")
-      const matchesRegion = !selectedRegion || (company.region && company.region.toLowerCase() === selectedRegion.toLowerCase());
-      
-      return matchesSearch && matchesRegion;
-    }) : [];
-  
-  // Generate statistics for the dashboard
-  const stats = {
-    totalCompanies: companies ? (companies as Company[]).length : 0,
-    totalFleetSize: companies ? 
-      (companies as Company[]).reduce((total, company) => total + (company.fleetSize || 0), 0) : 0,
-    regionsCount: companies ? 
-      new Set((companies as Company[]).map(company => company.region).filter(Boolean)).size : 0,
-    specializations: companies ? 
-      [...new Set((companies as Company[]).map(company => company.specialization).filter(Boolean))] : []
-  };
-  
+  const filteredCompanies = companies.filter((company: Company) => {
+    const matchesSearch = searchTerm === '' || 
+      company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (company.specialization && company.specialization.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (company.country && company.country.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    const matchesRegion = !selectedRegion || company.region === selectedRegion;
+    
+    return matchesSearch && matchesRegion;
+  });
+
   if (error) {
     return (
-      <div className="container mx-auto py-10">
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4 rounded-md text-red-800 dark:text-red-300">
-          <h3 className="text-lg font-medium">Error loading companies</h3>
-          <p>There was a problem loading the companies data. Please try again later.</p>
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">Error Loading Companies</h1>
+          <p className="text-gray-600">Unable to load company data. Please try again later.</p>
         </div>
       </div>
     );
   }
-  
+
   return (
-    <div className="container mx-auto py-6 space-y-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <Ship className="h-8 w-8 text-primary" />
-            Oil Shipping Companies
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Browse specialized oil tanker and petroleum product shipping companies worldwide
-          </p>
-        </div>
-        
-        <div className="flex flex-col sm:flex-row gap-2">
-          <Button
-            variant={showImporter ? "outline" : "default"}
-            onClick={() => setShowImporter(!showImporter)}
-          >
-            {showImporter ? "Cancel Import" : "Import Oil Companies"}
-          </Button>
-        </div>
+    <div className="container mx-auto px-4 py-8">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold text-gray-900 mb-4">Oil Companies Directory</h1>
+        <p className="text-lg text-gray-600">
+          Discover leading oil companies worldwide, from major corporations to specialized operators.
+        </p>
       </div>
-      
-      {showImporter && (
-        <div className="mb-8 animate-in fade-in-50 slide-in-from-top-3 duration-300">
-          <ExcelUploader onImportSuccess={handleImportSuccess} />
-        </div>
-      )}
-      
-      {/* Dashboard */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-primary/5 border-primary/20">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Ship className="h-4 w-4 text-primary" />
-              Oil Carriers
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {isLoading ? <Skeleton className="h-8 w-20" /> : stats.totalCompanies}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">Active oil shipping companies</p>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-primary/5 border-primary/20">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Ship className="h-4 w-4 text-primary" />
-              Tanker Fleet
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {isLoading ? <Skeleton className="h-8 w-20" /> : (stats.totalFleetSize > 0 ? stats.totalFleetSize : "1,250+")}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">Oil tankers in global fleet</p>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-primary/5 border-primary/20">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Globe className="h-4 w-4 text-primary" />
-              Global Reach
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {isLoading ? <Skeleton className="h-8 w-20" /> : stats.regionsCount}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">Operational regions worldwide</p>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-primary/5 border-primary/20">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Building className="h-4 w-4 text-primary" />
-              Market Leaders
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {isLoading ? <Skeleton className="h-8 w-20" /> : "25+"}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">Major global oil shipping entities</p>
-          </CardContent>
-        </Card>
-      </div>
-      
-      {/* Filters and Search */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search companies..."
-            className="pl-10"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          {searchTerm && (
+
+      {/* Search and Filter Controls */}
+      <div className="mb-8 space-y-4">
+        <div className="flex flex-col md:flex-row gap-4">
+          {/* Search */}
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              type="text"
+              placeholder="Search companies by name, specialization, or country..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+
+          {/* Region Filter */}
+          <div className="flex flex-wrap gap-2">
             <Button
-              variant="ghost"
-              size="icon"
-              className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7"
-              onClick={() => setSearchTerm('')}
+              variant={selectedRegion === null ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSelectedRegion(null)}
             >
-              <X className="h-4 w-4" />
+              All Regions
             </Button>
+            {REGIONS.map((region: Region) => (
+              <Button
+                key={region.id}
+                variant={selectedRegion === region.id ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedRegion(region.id)}
+              >
+                {region.name}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        {/* Results Summary */}
+        <div className="text-sm text-gray-600">
+          {isLoading ? (
+            <span>Loading companies...</span>
+          ) : (
+            <span>
+              Showing {filteredCompanies.length} of {companies.length} companies
+              {searchTerm && ` matching "${searchTerm}"`}
+              {selectedRegion && ` in ${REGIONS.find(r => r.id === selectedRegion)?.name}`}
+            </span>
           )}
         </div>
-        
-        <div className="flex gap-2 overflow-x-auto pb-2 md:col-span-2">
-          <Badge 
-            variant={selectedRegion === null ? "default" : "outline"}
-            className="cursor-pointer"
-            onClick={() => setSelectedRegion(null)}
-          >
-            All Regions
-          </Badge>
-          
-          {REGIONS.map((region: Region) => (
-            <Badge
-              key={region.id}
-              variant={selectedRegion === region.id ? "default" : "outline"}
-              className="cursor-pointer whitespace-nowrap"
-              onClick={() => setSelectedRegion(region.id)}
-            >
-              {region.name}
-            </Badge>
-          ))}
-        </div>
       </div>
-      
-      {/* Company List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+      {/* Companies Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {isLoading ? (
-          Array(6).fill(0).map((_, i) => (
-            <Card key={i} className="overflow-hidden">
-              <CardHeader className="pb-2">
-                <Skeleton className="h-5 w-3/4 mb-1" />
+          // Loading skeletons
+          Array.from({ length: 6 }).map((_, index) => (
+            <Card key={index} className="h-64">
+              <CardHeader>
+                <Skeleton className="h-6 w-3/4" />
                 <Skeleton className="h-4 w-1/2" />
               </CardHeader>
-              <CardContent className="py-2">
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-5/6" />
-                  <Skeleton className="h-4 w-4/6" />
+              <CardContent>
+                <Skeleton className="h-4 w-full mb-2" />
+                <Skeleton className="h-4 w-2/3 mb-4" />
+                <div className="flex gap-2">
+                  <Skeleton className="h-6 w-16" />
+                  <Skeleton className="h-6 w-20" />
                 </div>
               </CardContent>
-              <CardFooter className="flex justify-between py-2">
-                <Skeleton className="h-9 w-20" />
-                <Skeleton className="h-9 w-20" />
-              </CardFooter>
             </Card>
           ))
         ) : filteredCompanies.length === 0 ? (
-          <div className="col-span-3 py-10 text-center">
-            <Ship className="h-10 w-10 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium mb-2">No oil shipping companies found</h3>
-            <p className="text-muted-foreground mb-4">
-              {searchTerm || selectedRegion
-                ? "Try adjusting your search or filter criteria"
-                : "No oil shipping companies have been added yet"}
+          // No results
+          <div className="col-span-full text-center py-12">
+            <Building className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No companies found</h3>
+            <p className="text-gray-600">
+              Try adjusting your search terms or filters to find more companies.
             </p>
-            {!showImporter && (
-              <Button onClick={() => setShowImporter(true)}>
-                Import Oil Companies
-              </Button>
-            )}
           </div>
         ) : (
+          // Company cards
           filteredCompanies.map((company: Company) => (
             <CompanyCard key={company.id} company={company} />
           ))
@@ -266,114 +152,82 @@ export default function Companies() {
   );
 }
 
-// Helper function inside CompanyCard component to get user-friendly region display names
-const getRegionDisplayName = (regionId: string | null | undefined): string | null => {
-  if (!regionId) return null;
-  
-  // Find the region object with matching ID
-  const region = REGIONS.find((r: any) => r.id && r.id.toLowerCase() === regionId.toLowerCase());
-  
-  // Return the display name if found, otherwise return the original regionId with proper formatting
-  if (region) {
-    return region.name;
-  } else {
-    // Format the region ID for display (e.g., "middle-east" -> "Middle East")
-    return regionId.split('-')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
-  }
-};
-
+// Company Card Component
 const CompanyCard = ({ company }: { company: Company }) => {
   return (
-    <Card className="overflow-hidden h-full flex flex-col border-l-4 border-l-primary/80">
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-start">
-          <CardTitle className="text-lg">{company.name}</CardTitle>
-          {company.country && (
-            <Badge variant="secondary" className="ml-2">
+    <Card className="hover:shadow-lg transition-shadow duration-200 h-full">
+      <CardHeader className="pb-4">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <CardTitle className="text-lg font-semibold text-gray-900 mb-1">
+              {company.name}
+            </CardTitle>
+            <CardDescription className="text-sm text-gray-600 flex items-center gap-1">
+              <MapPin className="h-3 w-3" />
               {company.country}
-            </Badge>
-          )}
+              {company.region && ` • ${company.region}`}
+            </CardDescription>
+          </div>
+          <Badge 
+            variant={company.companyType === 'real' ? 'default' : 'secondary'}
+            className="ml-2"
+          >
+            {company.companyType === 'real' ? 'Verified' : 'Listed'}
+          </Badge>
         </div>
-        <CardDescription className="flex items-center gap-1">
-          <Globe className="h-3.5 w-3.5" />
-          {getRegionDisplayName(company.region) || "International"}
-        </CardDescription>
       </CardHeader>
-      <CardContent className="py-2 flex-grow">
-        <div className="mb-3">
-          <p className="text-sm text-muted-foreground italic line-clamp-2">
-            {company.description ? company.description.substring(0, 120) + (company.description.length > 120 ? '...' : '') : 'Oil shipping company specializing in maritime transportation of petroleum products.'}
-          </p>
-        </div>
-        <div className="space-y-2 text-sm">
+
+      <CardContent className="pt-0">
+        <div className="space-y-3">
+          {/* Description */}
+          {company.description && (
+            <p className="text-sm text-gray-600 line-clamp-2">
+              {company.description}
+            </p>
+          )}
+
+          {/* Specialization */}
           {company.specialization && (
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Specialization:</span>
-              <Badge variant="outline" className="font-medium bg-primary/5">{company.specialization}</Badge>
+            <div className="flex items-center gap-2 text-sm">
+              <Factory className="h-4 w-4 text-gray-400" />
+              <span className="text-gray-600">{company.specialization}</span>
             </div>
           )}
-          
-          {company.fleetSize !== null && company.fleetSize !== undefined ? (
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Fleet Size:</span>
-              <span className="font-medium">{company.fleetSize} vessels</span>
-            </div>
-          ) : (
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Fleet Size:</span>
-              <span className="font-medium">Multiple vessels</span>
-            </div>
-          )}
-          
-          {company.headquarters && (
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Headquarters:</span>
-              <span className="font-medium">{company.headquarters}</span>
-            </div>
-          )}
-          
-          {company.foundedYear && (
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Founded:</span>
-              <span className="font-medium">{company.foundedYear}</span>
+
+          {/* Company Details */}
+          <div className="flex flex-wrap gap-2 text-xs">
+            {company.foundedYear && (
+              <Badge variant="outline">Est. {company.foundedYear}</Badge>
+            )}
+            {company.fleetSize && (
+              <Badge variant="outline">
+                <Users className="h-3 w-3 mr-1" />
+                {company.fleetSize} vessels
+              </Badge>
+            )}
+            {company.publiclyTraded && (
+              <Badge variant="outline">
+                {company.stockSymbol || 'Public'}
+              </Badge>
+            )}
+          </div>
+
+          {/* Website Link */}
+          {company.website && (
+            <div className="pt-2 border-t">
+              <a
+                href={company.website}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 transition-colors"
+              >
+                <Globe className="h-3 w-3" />
+                Visit Website
+              </a>
             </div>
           )}
         </div>
       </CardContent>
-      <CardFooter className="flex justify-between pt-2 gap-2">
-        {company.website ? (
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="text-xs flex-1"
-            onClick={() => company.website ? window.open(company.website, '_blank') : null}
-          >
-            <Globe className="h-3.5 w-3.5 mr-1" />
-            Website
-          </Button>
-        ) : (
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="text-xs flex-1"
-            disabled
-          >
-            <Globe className="h-3.5 w-3.5 mr-1" />
-            No Website
-          </Button>
-        )}
-        
-        <Button 
-          variant="default" 
-          size="sm" 
-          className="text-xs flex-1"
-        >
-          <Ship className="h-3.5 w-3.5 mr-1" />
-          View Fleet
-        </Button>
-      </CardFooter>
     </Card>
   );
 };
