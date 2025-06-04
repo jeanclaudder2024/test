@@ -1,116 +1,212 @@
-import { Router, Request, Response } from 'express';
-import { storage } from '../storage';
-import { oilCompanies } from './companyData';
-import { z } from 'zod';
-import { fromZodError } from 'zod-validation-error';
+import express, { Request, Response } from 'express';
+import { db } from '../db';
+import { companies } from '../../shared/schema';
+import { eq, ilike, or, desc, asc } from 'drizzle-orm';
+import { insertCompanySchema } from '../../shared/schema';
 
-export const companyRouter = Router();
+export const companyRouter = express.Router();
 
-// Get all companies
-companyRouter.get('/', async (req: Request, res: Response) => {
+// Get all companies with optional search and pagination
+export async function getCompanies(req: Request, res: Response) {
   try {
-    // For the demo, return the preloaded oil company data
-    res.json(oilCompanies);
-  } catch (error) {
-    console.error('Error getting companies:', error);
-    res.status(500).json({ message: 'Error fetching companies' });
-  }
-});
+    const { 
+      search = '', 
+      page = '1', 
+      pageSize = '10',
+      sortBy = 'name',
+      sortOrder = 'asc'
+    } = req.query;
 
-// Get recommended companies
-companyRouter.get('/recommended', async (req: Request, res: Response) => {
-  try {
-    // For the demo, return the top 5 oil companies as recommended
-    // In a real app, this would use the broker's preferences or machine learning
-    res.json(oilCompanies.slice(0, 5));
+    const pageNum = parseInt(page as string);
+    const size = parseInt(pageSize as string);
+    const offset = (pageNum - 1) * size;
+
+    let query = db.select().from(companies);
+
+    // Apply search filter
+    if (search && search.toString().trim()) {
+      const searchTerm = `%${search.toString().trim()}%`;
+      query = query.where(
+        or(
+          ilike(companies.name, searchTerm),
+          ilike(companies.country, searchTerm),
+          ilike(companies.region, searchTerm),
+          ilike(companies.specialization, searchTerm),
+          ilike(companies.ceo, searchTerm)
+        )
+      );
+    }
+
+    // Apply sorting
+    if (sortBy === 'name') {
+      query = sortOrder === 'desc' 
+        ? query.orderBy(desc(companies.name))
+        : query.orderBy(asc(companies.name));
+    } else if (sortBy === 'foundedYear') {
+      query = sortOrder === 'desc'
+        ? query.orderBy(desc(companies.foundedYear))
+        : query.orderBy(asc(companies.foundedYear));
+    }
+
+    // Get total count for pagination
+    let totalQuery = db.select().from(companies);
+    if (search && search.toString().trim()) {
+      const searchTerm = `%${search.toString().trim()}%`;
+      totalQuery = totalQuery.where(
+        or(
+          ilike(companies.name, searchTerm),
+          ilike(companies.country, searchTerm),
+          ilike(companies.region, searchTerm),
+          ilike(companies.specialization, searchTerm),
+          ilike(companies.ceo, searchTerm)
+        )
+      );
+    }
+
+    const [companiesData, totalData] = await Promise.all([
+      query.limit(size).offset(offset),
+      totalQuery
+    ]);
+
+    const total = totalData.length;
+    const totalPages = Math.ceil(total / size);
+
+    res.json({
+      companies: companiesData,
+      pagination: {
+        page: pageNum,
+        pageSize: size,
+        total,
+        totalPages,
+        hasNext: pageNum < totalPages,
+        hasPrev: pageNum > 1
+      }
+    });
   } catch (error) {
-    console.error('Error getting recommended companies:', error);
-    res.status(500).json({ message: 'Error fetching recommended companies' });
+    console.error('Error fetching companies:', error);
+    res.status(500).json({ error: 'Failed to fetch companies' });
   }
-});
+}
 
 // Get company by ID
-companyRouter.get('/:id', async (req: Request, res: Response) => {
+export async function getCompanyById(req: Request, res: Response) {
   try {
-    const id = parseInt(req.params.id);
-    if (isNaN(id)) {
-      return res.status(400).json({ message: 'Invalid company ID' });
-    }
-    
-    const company = oilCompanies.find(company => company.id === id);
-    if (!company) {
-      return res.status(404).json({ message: 'Company not found' });
-    }
-    
-    res.json(company);
-  } catch (error) {
-    console.error('Error getting company by ID:', error);
-    res.status(500).json({ message: 'Error fetching company' });
-  }
-});
+    const { id } = req.params;
+    const company = await db
+      .select()
+      .from(companies)
+      .where(eq(companies.id, parseInt(id)))
+      .limit(1);
 
-// Get company by region
-companyRouter.get('/region/:region', async (req: Request, res: Response) => {
-  try {
-    const region = req.params.region;
-    if (!region) {
-      return res.status(400).json({ message: 'Region is required' });
+    if (company.length === 0) {
+      return res.status(404).json({ error: 'Company not found' });
     }
-    
-    const filteredCompanies = oilCompanies.filter(
-      company => company.region && company.region.toLowerCase() === region.toLowerCase()
-    );
-    
-    res.json(filteredCompanies);
-  } catch (error) {
-    console.error('Error getting companies by region:', error);
-    res.status(500).json({ message: 'Error fetching companies by region' });
-  }
-});
 
-// Get vessels for a company
-companyRouter.get('/:id/vessels', async (req: Request, res: Response) => {
-  try {
-    const id = parseInt(req.params.id);
-    if (isNaN(id)) {
-      return res.status(400).json({ message: 'Invalid company ID' });
-    }
-    
-    const company = oilCompanies.find(company => company.id === id);
-    if (!company) {
-      return res.status(404).json({ message: 'Company not found' });
-    }
-    
-    // Generate some sample vessels for the company based on their fleet size
-    const fleetSize = company.fleetSize || 10;
-    const vessels = [];
-    
-    for (let i = 1; i <= Math.min(fleetSize, 15); i++) {
-      const vesselTypes = ['Oil Tanker', 'LNG Carrier', 'Chemical Tanker', 'Product Carrier', 'VLCC'];
-      const vesselType = vesselTypes[Math.floor(Math.random() * vesselTypes.length)];
-      
-      const flags = [company.country, 'Panama', 'Liberia', 'Marshall Islands', 'Singapore'];
-      const flag = flags[Math.floor(Math.random() * flags.length)];
-      
-      const statuses = ['active', 'in port', 'maintenance', 'loading', 'unloading'];
-      const status = statuses[Math.floor(Math.random() * statuses.length)];
-      
-      vessels.push({
-        id: id * 1000 + i,
-        name: `${company.name.split(' ')[0]} ${['Voyager', 'Explorer', 'Pioneer', 'Champion', 'Navigator', 'Fortune'][Math.floor(Math.random() * 6)]} ${i}`,
-        mmsi: Math.floor(Math.random() * 900000000) + 100000000,
-        imo: Math.floor(Math.random() * 9000000) + 1000000,
-        type: vesselType,
-        flag: flag,
-        status: status,
-        lat: (Math.random() * 140) - 70,
-        lng: (Math.random() * 340) - 170,
-      });
-    }
-    
-    res.json(vessels);
+    res.json(company[0]);
   } catch (error) {
-    console.error('Error getting company vessels:', error);
-    res.status(500).json({ message: 'Error fetching company vessels' });
+    console.error('Error fetching company:', error);
+    res.status(500).json({ error: 'Failed to fetch company' });
   }
-});
+}
+
+// Create new company
+export async function createCompany(req: Request, res: Response) {
+  try {
+    const validatedData = insertCompanySchema.parse(req.body);
+    
+    const [newCompany] = await db
+      .insert(companies)
+      .values({
+        ...validatedData,
+        createdAt: new Date(),
+        lastUpdated: new Date()
+      })
+      .returning();
+
+    res.status(201).json(newCompany);
+  } catch (error) {
+    console.error('Error creating company:', error);
+    if (error instanceof Error && error.name === 'ZodError') {
+      return res.status(400).json({ error: 'Invalid company data', details: error });
+    }
+    res.status(500).json({ error: 'Failed to create company' });
+  }
+}
+
+// Update company
+export async function updateCompany(req: Request, res: Response) {
+  try {
+    const { id } = req.params;
+    const validatedData = insertCompanySchema.partial().parse(req.body);
+
+    const [updatedCompany] = await db
+      .update(companies)
+      .set({
+        ...validatedData,
+        lastUpdated: new Date()
+      })
+      .where(eq(companies.id, parseInt(id)))
+      .returning();
+
+    if (!updatedCompany) {
+      return res.status(404).json({ error: 'Company not found' });
+    }
+
+    res.json(updatedCompany);
+  } catch (error) {
+    console.error('Error updating company:', error);
+    if (error instanceof Error && error.name === 'ZodError') {
+      return res.status(400).json({ error: 'Invalid company data', details: error });
+    }
+    res.status(500).json({ error: 'Failed to update company' });
+  }
+}
+
+// Delete company
+export async function deleteCompany(req: Request, res: Response) {
+  try {
+    const { id } = req.params;
+    
+    const [deletedCompany] = await db
+      .delete(companies)
+      .where(eq(companies.id, parseInt(id)))
+      .returning();
+
+    if (!deletedCompany) {
+      return res.status(404).json({ error: 'Company not found' });
+    }
+
+    res.json({ message: 'Company deleted successfully', company: deletedCompany });
+  } catch (error) {
+    console.error('Error deleting company:', error);
+    res.status(500).json({ error: 'Failed to delete company' });
+  }
+}
+
+// Get company statistics
+export async function getCompanyStats(req: Request, res: Response) {
+  try {
+    const totalCompanies = await db.select().from(companies);
+    
+    const stats = {
+      total: totalCompanies.length,
+      byRegion: totalCompanies.reduce((acc: any, company) => {
+        const region = company.region || 'Unknown';
+        acc[region] = (acc[region] || 0) + 1;
+        return acc;
+      }, {}),
+      bySpecialization: totalCompanies.reduce((acc: any, company) => {
+        const spec = company.specialization || 'Unknown';
+        acc[spec] = (acc[spec] || 0) + 1;
+        return acc;
+      }, {}),
+      publiclyTraded: totalCompanies.filter(c => c.publiclyTraded).length,
+      averageFleetSize: totalCompanies.reduce((sum, c) => sum + (c.fleetSize || 0), 0) / totalCompanies.length || 0
+    };
+
+    res.json(stats);
+  } catch (error) {
+    console.error('Error fetching company statistics:', error);
+    res.status(500).json({ error: 'Failed to fetch company statistics' });
+  }
+}

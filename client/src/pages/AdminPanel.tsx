@@ -91,10 +91,11 @@ export default function AdminPanel() {
               <option value="overview">📊 System Overview</option>
               <option value="users">👥 User Management</option>
               <option value="subscriptions">💳 Subscriptions</option>
+              <option value="companies">🏢 Company Management</option>
               <option value="vessels">🚢 Vessel Management</option>
               <option value="ports">⚓ Ports Management</option>
               <option value="refineries">🏭 Refinery Management</option>
-              <option value="brokers">🏢 Broker Network</option>
+              <option value="brokers">🤝 Broker Network</option>
               <option value="data">💾 Data Management</option>
               <option value="migration">🔄 Database Migration</option>
               <option value="landing">🌐 Landing Page</option>
@@ -103,7 +104,7 @@ export default function AdminPanel() {
           </div>
 
           {/* Desktop Tab Navigation */}
-          <TabsList className="hidden lg:grid lg:grid-cols-11 w-full bg-white/60 backdrop-blur-sm border border-slate-200/60 p-1 rounded-xl shadow-sm">
+          <TabsList className="hidden lg:grid lg:grid-cols-12 w-full bg-white/60 backdrop-blur-sm border border-slate-200/60 p-1 rounded-xl shadow-sm">
             <TabsTrigger 
               value="overview" 
               className="flex items-center gap-2 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-200 hover:bg-blue-50 rounded-lg"
@@ -127,6 +128,14 @@ export default function AdminPanel() {
               <CreditCard className="h-4 w-4" />
               <span className="hidden xl:inline font-medium">Billing</span>
               <span className="xl:hidden">Bills</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="companies" 
+              className="flex items-center gap-2 data-[state=active]:bg-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-200 hover:bg-purple-50 rounded-lg"
+            >
+              <Building2 className="h-4 w-4" />
+              <span className="hidden xl:inline font-medium">Companies</span>
+              <span className="xl:hidden">Cos</span>
             </TabsTrigger>
             <TabsTrigger 
               value="vessels" 
@@ -281,6 +290,30 @@ export default function AdminPanel() {
 
         <TabsContent value="subscriptions" className="space-y-4">
           <SubscriptionAdmin />
+        </TabsContent>
+
+        <TabsContent value="companies" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Company Management</CardTitle>
+              <CardDescription>
+                Manage oil and shipping companies in the system
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8">
+                <Building2 className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                <p className="text-gray-500 mb-4">Company management interface will be displayed here.</p>
+                <Button 
+                  onClick={() => window.open('/admin/companies', '_blank')}
+                  className="bg-purple-600 hover:bg-purple-700"
+                >
+                  <Building2 className="h-4 w-4 mr-2" />
+                  Open Company Management
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="vessels" className="space-y-4">
