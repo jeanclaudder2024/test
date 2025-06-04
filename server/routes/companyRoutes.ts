@@ -40,7 +40,12 @@ companyRouter.get('/', async (req: Request, res: Response) => {
           "('ExxonMobil', 'United States', 'North America', 'https://www.exxonmobil.com', 'American multinational oil and gas corporation')",
           "('BP', 'United Kingdom', 'Europe', 'https://www.bp.com', 'British multinational oil and gas company')",
           "('TotalEnergies', 'France', 'Europe', 'https://www.totalenergies.com', 'French multinational integrated oil and gas company')",
-          "('Chevron', 'United States', 'North America', 'https://www.chevron.com', 'American multinational energy corporation')"
+          "('Chevron', 'United States', 'North America', 'https://www.chevron.com', 'American multinational energy corporation')",
+          "('Saudi Aramco', 'Saudi Arabia', 'Middle East', 'https://www.aramco.com', 'Saudi Arabian national petroleum and natural gas company')",
+          "('Petrobras', 'Brazil', 'South America', 'https://www.petrobras.com.br', 'Brazilian multinational petroleum corporation')",
+          "('Eni', 'Italy', 'Europe', 'https://www.eni.com', 'Italian multinational oil and gas company')",
+          "('ConocoPhillips', 'United States', 'North America', 'https://www.conocophillips.com', 'American multinational energy corporation')",
+          "('Equinor', 'Norway', 'Europe', 'https://www.equinor.com', 'Norwegian multinational energy company')"
         ];
         
         const insertQuery = `
@@ -168,7 +173,7 @@ companyRouter.post('/', async (req: Request, res: Response) => {
     
     const result = await db.execute(sql.raw(insertQuery));
 
-    res.status(201).json(result.rows[0]);
+    res.status(201).json(result?.rows?.[0] || { message: "Company created successfully" });
   } catch (error) {
     console.error('Error creating company:', error);
     res.status(500).json({ error: 'Failed to create company' });
