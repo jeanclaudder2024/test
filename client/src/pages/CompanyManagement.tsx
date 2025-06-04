@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { Plus, Search, MoreHorizontal, Edit, Trash2, Building2, Users, TrendingUp, Globe, Eye, Link, Shield, Clock } from 'lucide-react';
-import { Company } from '../../shared/schema';
+import { Company } from '../../../shared/schema';
 import { CompanyForm } from '@/components/ui/company-form';
 
 export default function CompanyManagement() {
