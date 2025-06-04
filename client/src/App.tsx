@@ -20,8 +20,6 @@ import AccountSubscription from "@/pages/AccountSubscription";
 import SubscriptionSuccess from "@/pages/SubscriptionSuccess";
 import LandingPage from "@/pages/LandingPage";
 import AuthPage from "@/pages/AuthPage";
-import Login from "@/pages/Login";
-import Register from "@/pages/Register";
 import TradingDashboard from "@/pages/TradingDashboard";
 import Companies from "@/pages/Companies";
 
@@ -37,7 +35,7 @@ import SubscriptionAdmin from "@/pages/SubscriptionAdmin";
 import { useEffect } from "react";
 import { apiRequest, queryClient } from "./lib/queryClient";
 import { Layout } from "@/components/ui/layout";
-import { AuthProvider, useAuth } from "@/hooks/use-simple-auth.tsx";
+import { AuthProvider, useProfessionalAuth } from "@/hooks/use-professional-auth";
 import { TranslationProvider } from "@/hooks/useTranslation.tsx";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ThemeProvider } from "@/hooks/use-theme";
@@ -53,9 +51,9 @@ function AuthWrapper() {
 
 // Component to check auth status and redirect if logged in
 function LandingPageRedirect() {
-  const { user, loading } = useAuth();
+  const { user, isLoading } = useProfessionalAuth();
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -91,8 +89,8 @@ function Router() {
     seedData();
   }, []);
 
-  // For landing page and auth pages, don't use Layout (no sidebar/header)
-  if (location === "/" || location === "/auth" || location === "/login" || location === "/register") {
+  // For landing page and auth page, don't use Layout (no sidebar/header)
+  if (location === "/" || location === "/auth") {
     return (
       <AnimatePresence mode="wait">
         <Switch>
@@ -101,12 +99,6 @@ function Router() {
           </Route>
           <Route path="/auth">
             <AuthWrapper />
-          </Route>
-          <Route path="/login">
-            <Login />
-          </Route>
-          <Route path="/register">
-            <Register />
           </Route>
         </Switch>
       </AnimatePresence>
@@ -168,12 +160,12 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="system">
-        <TranslationProvider>
-          <AuthProvider>
+        <AuthProvider>
+          <TranslationProvider>
             <Router />
             <Toaster />
-          </AuthProvider>
-        </TranslationProvider>
+          </TranslationProvider>
+        </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );
