@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'wouter';
-import { useProfessionalAuth } from '@/hooks/use-professional-auth';
+import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,7 +12,7 @@ import { SUBSCRIPTION_PLANS } from '@/lib/supabase';
 
 export default function Login() {
   const [, setLocation] = useLocation();
-  const { login, isLoading } = useProfessionalAuth();
+  const { signIn, loading } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -43,13 +43,13 @@ export default function Login() {
     setError('');
 
     try {
-      const success = await login(formData.email, formData.password);
+      const { error } = await signIn(formData.email, formData.password);
       
-      if (success) {
+      if (error) {
+        setError(error.message || 'Login failed');
+      } else {
         // Redirect to broker dashboard on successful login
         setLocation('/broker-dashboard');
-      } else {
-        setError('Invalid email or password');
       }
     } catch (err: any) {
       setError(err.message || 'An unexpected error occurred');
@@ -58,7 +58,7 @@ export default function Login() {
     }
   };
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="flex items-center space-x-2">

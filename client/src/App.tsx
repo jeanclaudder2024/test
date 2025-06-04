@@ -37,7 +37,7 @@ import SubscriptionAdmin from "@/pages/SubscriptionAdmin";
 import { useEffect } from "react";
 import { apiRequest, queryClient } from "./lib/queryClient";
 import { Layout } from "@/components/ui/layout";
-import { AuthProvider, useProfessionalAuth } from "@/hooks/use-professional-auth";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { TranslationProvider } from "@/hooks/useTranslation.tsx";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ThemeProvider } from "@/hooks/use-theme";
@@ -53,9 +53,9 @@ function AuthWrapper() {
 
 // Component to check auth status and redirect if logged in
 function LandingPageRedirect() {
-  const { user, isLoading } = useProfessionalAuth();
+  const { user, loading } = useAuth();
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
