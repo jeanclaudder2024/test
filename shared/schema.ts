@@ -636,18 +636,120 @@ export const companies = pgTable("companies", {
   publiclyTraded: boolean("publicly_traded").default(false),
   stockSymbol: text("stock_symbol"),
   status: text("status").default("active"),
+  
+  // New fields for Real/Fake company system
+  companyType: text("company_type").notNull().default("real"), // "real" or "fake"
+  linkedCompanyId: integer("linked_company_id"), // References real company for fake companies
+  isVisibleToBrokers: boolean("is_visible_to_brokers").default(true),
+  dealCount: integer("deal_count").default(0),
+  
   createdAt: timestamp("created_at").defaultNow(),
   lastUpdated: timestamp("last_updated").defaultNow(),
+});
+
+// Company relations
+export const companyRelations = relations(companies, ({ one, many }) => ({
+  linkedCompany: one(companies, {
+    fields: [companies.linkedCompanyId],
+    references: [companies.id],
+  }),
+  fakeCompanies: many(companies),
+  deals: many(deals),
+}));
+
+// Deal requests between brokers and fake companies
+export const deals = pgTable("deals", {
+  id: serial("id").primaryKey(),
+  brokerId: integer("broker_id").references(() => users.id),
+  fakeCompanyId: integer("fake_company_id").references(() => companies.id),
+  realCompanyId: integer("real_company_id").references(() => companies.id),
+  dealType: text("deal_type").notNull(), // "negotiation", "contract", "information_request"
+  status: text("status").default("pending"), // "pending", "approved", "rejected", "completed"
+  title: text("title").notNull(),
+  description: text("description"),
+  requestedVolume: decimal("requested_volume", { precision: 15, scale: 2 }),
+  requestedPrice: decimal("requested_price", { precision: 15, scale: 2 }),
+  dealValue: decimal("deal_value", { precision: 15, scale: 2 }),
+  notes: text("notes"),
+  adminNotes: text("admin_notes"), // Internal admin notes
+  approvedBy: integer("approved_by").references(() => users.id),
+  approvedAt: timestamp("approved_at"),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  lastUpdated: timestamp("last_updated").defaultNow(),
+});
+
+// Documents sent to brokers after deal approval
+export const dealDocuments = pgTable("deal_documents", {
+  id: serial("id").primaryKey(),
+  dealId: integer("deal_id").references(() => deals.id),
+  fileName: text("file_name").notNull(),
+  originalFileName: text("original_file_name").notNull(),
+  fileSize: integer("file_size"),
+  fileType: text("file_type"),
+  filePath: text("file_path").notNull(),
+  documentType: text("document_type"), // "contract", "info_sheet", "agreement", "specification"
+  uploadedBy: integer("uploaded_by").references(() => users.id),
+  sentToBroker: boolean("sent_to_broker").default(false),
+  sentAt: timestamp("sent_at"),
+  downloadedBy: integer("downloaded_by").references(() => users.id),
+  downloadedAt: timestamp("downloaded_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Broker notifications
+export const brokerNotifications = pgTable("broker_notifications", {
+  id: serial("id").primaryKey(),
+  brokerId: integer("broker_id").references(() => users.id),
+  dealId: integer("deal_id").references(() => deals.id),
+  documentId: integer("document_id").references(() => dealDocuments.id),
+  type: text("type").notNull(), // "deal_approved", "deal_rejected", "document_received"
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  isRead: boolean("is_read").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const insertCompanySchema = createInsertSchema(companies).omit({
   id: true,
   createdAt: true,
   lastUpdated: true,
+  dealCount: true,
+}).extend({
+  companyType: z.enum(["real", "fake"]),
+  linkedCompanyId: z.number().optional(),
+});
+
+export const insertDealSchema = createInsertSchema(deals).omit({
+  id: true,
+  createdAt: true,
+  lastUpdated: true,
+  approvedAt: true,
+  completedAt: true,
+  realCompanyId: true,
+  approvedBy: true,
+});
+
+export const insertDealDocumentSchema = createInsertSchema(dealDocuments).omit({
+  id: true,
+  createdAt: true,
+  sentAt: true,
+  downloadedAt: true,
+});
+
+export const insertBrokerNotificationSchema = createInsertSchema(brokerNotifications).omit({
+  id: true,
+  createdAt: true,
 });
 
 export type InsertCompany = z.infer<typeof insertCompanySchema>;
 export type Company = typeof companies.$inferSelect;
+export type Deal = typeof deals.$inferSelect;
+export type InsertDeal = z.infer<typeof insertDealSchema>;
+export type DealDocument = typeof dealDocuments.$inferSelect;
+export type InsertDealDocument = z.infer<typeof insertDealDocumentSchema>;
+export type BrokerNotification = typeof brokerNotifications.$inferSelect;
+export type InsertBrokerNotification = z.infer<typeof insertBrokerNotificationSchema>;
 
 // Broker Companies (intermediary companies users connect to)
 export const brokerCompanies = pgTable("broker_companies", {

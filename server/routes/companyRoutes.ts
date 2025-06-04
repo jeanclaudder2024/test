@@ -1,8 +1,8 @@
 import express, { Request, Response } from 'express';
 import { db } from '../db';
-import { companies } from '../../shared/schema';
-import { eq, ilike, or, desc, asc } from 'drizzle-orm';
-import { insertCompanySchema } from '../../shared/schema';
+import { companies, deals, dealDocuments, brokerNotifications } from '../../shared/schema';
+import { eq, ilike, or, desc, asc, and, sql } from 'drizzle-orm';
+import { insertCompanySchema, insertDealSchema, insertDealDocumentSchema } from '../../shared/schema';
 
 export const companyRouter = express.Router();
 
