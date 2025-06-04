@@ -7,7 +7,7 @@ import { insertCompanySchema } from '../../shared/schema';
 export const companyRouter = express.Router();
 
 // Get all companies with optional search and pagination
-export async function getCompanies(req: Request, res: Response) {
+companyRouter.get('/', async (req: Request, res: Response) => {
   try {
     const { 
       search = '', 
@@ -86,10 +86,11 @@ export async function getCompanies(req: Request, res: Response) {
     console.error('Error fetching companies:', error);
     res.status(500).json({ error: 'Failed to fetch companies' });
   }
-}
+});
 
 // Get company by ID
-export async function getCompanyById(req: Request, res: Response) {
+companyRouter.get('/:id', async (req: Request, res: Response) => {
+
   try {
     const { id } = req.params;
     const company = await db
@@ -107,10 +108,11 @@ export async function getCompanyById(req: Request, res: Response) {
     console.error('Error fetching company:', error);
     res.status(500).json({ error: 'Failed to fetch company' });
   }
-}
+});
 
 // Create new company
-export async function createCompany(req: Request, res: Response) {
+companyRouter.post('/', async (req: Request, res: Response) => {
+
   try {
     const validatedData = insertCompanySchema.parse(req.body);
     
@@ -131,10 +133,11 @@ export async function createCompany(req: Request, res: Response) {
     }
     res.status(500).json({ error: 'Failed to create company' });
   }
-}
+});
 
 // Update company
-export async function updateCompany(req: Request, res: Response) {
+companyRouter.put('/:id', async (req: Request, res: Response) => {
+
   try {
     const { id } = req.params;
     const validatedData = insertCompanySchema.partial().parse(req.body);
@@ -160,10 +163,11 @@ export async function updateCompany(req: Request, res: Response) {
     }
     res.status(500).json({ error: 'Failed to update company' });
   }
-}
+});
 
 // Delete company
-export async function deleteCompany(req: Request, res: Response) {
+companyRouter.delete('/:id', async (req: Request, res: Response) => {
+
   try {
     const { id } = req.params;
     
@@ -181,10 +185,11 @@ export async function deleteCompany(req: Request, res: Response) {
     console.error('Error deleting company:', error);
     res.status(500).json({ error: 'Failed to delete company' });
   }
-}
+});
 
 // Get company statistics
-export async function getCompanyStats(req: Request, res: Response) {
+companyRouter.get('/stats/summary', async (req: Request, res: Response) => {
+
   try {
     const totalCompanies = await db.select().from(companies);
     
@@ -209,4 +214,4 @@ export async function getCompanyStats(req: Request, res: Response) {
     console.error('Error fetching company statistics:', error);
     res.status(500).json({ error: 'Failed to fetch company statistics' });
   }
-}
+});
