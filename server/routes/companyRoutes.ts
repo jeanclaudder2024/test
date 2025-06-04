@@ -93,8 +93,14 @@ companyRouter.get('/', async (req: Request, res: Response) => {
     const limitNum = parseInt(limit);
     const offset = (pageNum - 1) * limitNum;
 
-    // Use basic query without parameters to avoid mismatch
-    let baseQuery = 'SELECT id, name, country, region, website, description FROM companies WHERE 1=1';
+    // Use full query to get all company fields
+    let baseQuery = `SELECT 
+      id, name, country, region, website, description, 
+      company_type, linked_company_id, is_visible_to_brokers, 
+      publicly_traded, stock_symbol, revenue, employees, 
+      founded_year, ceo, fleet_size, specialization, 
+      headquarters, logo, created_at, last_updated 
+    FROM companies WHERE 1=1`;
     
     // Add search if provided (using string interpolation for now)
     if (search) {
