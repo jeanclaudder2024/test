@@ -29,7 +29,7 @@ import FixedFullPageMap from "@/pages/FixedFullPageMap";
 import OilVesselMap from "@/pages/OilVesselMap";
 import AdminPanel from "@/pages/AdminPanel";
 import SubscriptionAdmin from "@/pages/SubscriptionAdmin";
-import CompanyManagement from "@/pages/CompanyManagement";
+
 // Maritime tracking and vessel lookup pages removed as requested
 import { useEffect } from "react";
 import { apiRequest, queryClient } from "./lib/queryClient";
@@ -133,7 +133,7 @@ function Router() {
             <Route path="/ai-assistant" component={AIAssistantPage} />
             <Route path="/admin" component={AdminPanel} />
             <Route path="/admin/subscriptions" component={SubscriptionAdmin} />
-            <Route path="/admin/companies" component={CompanyManagement} />
+
             <Route path="/trading" component={TradingDashboard} />
             <Route path="/translation" component={TranslationPage} />
             <Route path="/traffic-insights" component={TrafficInsights} />

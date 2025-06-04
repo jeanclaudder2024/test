@@ -21,6 +21,7 @@ import { BrokerNetworkHub } from "@/components/broker/BrokerNetworkHub";
 import { useLocation } from "wouter";
 import SubscriptionAdmin from "@/pages/SubscriptionAdmin";
 import ProfessionalRefineryManagement from "@/components/admin/ProfessionalRefineryManagement";
+import { CompanyManagement } from "@/components/admin/CompanyManagement";
 
 export default function AdminPanel() {
   const [_, navigate] = useLocation();
