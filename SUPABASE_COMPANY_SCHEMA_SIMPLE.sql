@@ -1,10 +1,10 @@
--- Enhanced Company Management System for Supabase
--- This creates all the tables needed for Real/Fake companies with deal tracking
+-- Simplified Company Management System for Supabase
+-- This creates essential tables for Real/Fake companies with deal tracking
 
--- First, update the existing companies table with new columns
+-- Update existing companies table with new columns for company types
 ALTER TABLE companies 
 ADD COLUMN IF NOT EXISTS company_type TEXT DEFAULT 'real' CHECK (company_type IN ('real', 'fake')),
-ADD COLUMN IF NOT EXISTS linked_company_id INTEGER REFERENCES companies(id),
+ADD COLUMN IF NOT EXISTS linked_company_id INTEGER,
 ADD COLUMN IF NOT EXISTS is_visible_to_brokers BOOLEAN DEFAULT true,
 ADD COLUMN IF NOT EXISTS publicly_traded BOOLEAN DEFAULT false,
 ADD COLUMN IF NOT EXISTS stock_symbol TEXT,
@@ -14,15 +14,13 @@ ADD COLUMN IF NOT EXISTS founded_year INTEGER,
 ADD COLUMN IF NOT EXISTS ceo TEXT,
 ADD COLUMN IF NOT EXISTS fleet_size INTEGER,
 ADD COLUMN IF NOT EXISTS specialization TEXT,
-ADD COLUMN IF NOT EXISTS logo TEXT,
-ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+ADD COLUMN IF NOT EXISTS logo TEXT;
 
--- Create deals table for tracking broker requests
+-- Create deals table for tracking broker requests (simplified without foreign keys initially)
 CREATE TABLE IF NOT EXISTS deals (
     id SERIAL PRIMARY KEY,
-    broker_id INTEGER NOT NULL REFERENCES brokers(id),
-    fake_company_id INTEGER NOT NULL REFERENCES companies(id),
+    broker_id INTEGER NOT NULL,
+    fake_company_id INTEGER NOT NULL,
     deal_type TEXT NOT NULL CHECK (deal_type IN ('negotiation', 'contract', 'information_request')),
     title TEXT NOT NULL,
     description TEXT,
@@ -33,27 +31,27 @@ CREATE TABLE IF NOT EXISTS deals (
     notes TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    approved_by TEXT REFERENCES auth.users(id),
+    approved_by TEXT,
     approved_at TIMESTAMP WITH TIME ZONE
 );
 
 -- Create deal documents table for storing generated documents
 CREATE TABLE IF NOT EXISTS deal_documents (
     id SERIAL PRIMARY KEY,
-    deal_id INTEGER NOT NULL REFERENCES deals(id) ON DELETE CASCADE,
+    deal_id INTEGER NOT NULL,
     document_type TEXT NOT NULL,
     file_name TEXT NOT NULL,
     file_path TEXT,
     file_size INTEGER,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    created_by TEXT REFERENCES auth.users(id)
+    created_by TEXT
 );
 
 -- Create broker notifications table
 CREATE TABLE IF NOT EXISTS broker_notifications (
     id SERIAL PRIMARY KEY,
-    broker_id INTEGER NOT NULL REFERENCES brokers(id),
-    deal_id INTEGER REFERENCES deals(id),
+    broker_id INTEGER NOT NULL,
+    deal_id INTEGER,
     notification_type TEXT NOT NULL CHECK (notification_type IN ('deal_approved', 'deal_rejected', 'document_ready', 'general')),
     title TEXT NOT NULL,
     message TEXT NOT NULL,
@@ -65,8 +63,8 @@ CREATE TABLE IF NOT EXISTS broker_notifications (
 -- Create broker companies junction table (many-to-many relationship)
 CREATE TABLE IF NOT EXISTS broker_companies (
     id SERIAL PRIMARY KEY,
-    broker_id INTEGER NOT NULL REFERENCES brokers(id),
-    company_id INTEGER NOT NULL REFERENCES companies(id),
+    broker_id INTEGER NOT NULL,
+    company_id INTEGER NOT NULL,
     relationship_type TEXT DEFAULT 'authorized' CHECK (relationship_type IN ('authorized', 'restricted', 'preferred')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     UNIQUE(broker_id, company_id)
@@ -75,24 +73,14 @@ CREATE TABLE IF NOT EXISTS broker_companies (
 -- Create company partnerships table
 CREATE TABLE IF NOT EXISTS company_partnerships (
     id SERIAL PRIMARY KEY,
-    real_company_id INTEGER NOT NULL REFERENCES companies(id),
-    fake_company_id INTEGER NOT NULL REFERENCES companies(id),
+    real_company_id INTEGER NOT NULL,
+    fake_company_id INTEGER NOT NULL,
     partnership_type TEXT DEFAULT 'subsidiary' CHECK (partnership_type IN ('subsidiary', 'joint_venture', 'strategic_alliance')),
     start_date DATE,
     end_date DATE,
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     UNIQUE(real_company_id, fake_company_id)
-);
-
--- Create user broker connections table
-CREATE TABLE IF NOT EXISTS user_broker_connections (
-    id SERIAL PRIMARY KEY,
-    user_id TEXT NOT NULL REFERENCES auth.users(id),
-    broker_id INTEGER NOT NULL REFERENCES brokers(id),
-    role TEXT DEFAULT 'agent' CHECK (role IN ('agent', 'manager', 'admin')),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    UNIQUE(user_id, broker_id)
 );
 
 -- Create indexes for better performance
@@ -106,14 +94,6 @@ CREATE INDEX IF NOT EXISTS idx_broker_notifications_broker_id ON broker_notifica
 CREATE INDEX IF NOT EXISTS idx_broker_notifications_is_read ON broker_notifications(is_read);
 CREATE INDEX IF NOT EXISTS idx_broker_companies_broker_id ON broker_companies(broker_id);
 CREATE INDEX IF NOT EXISTS idx_broker_companies_company_id ON broker_companies(company_id);
-
--- Add constraint to ensure fake companies are linked to real companies
-ALTER TABLE companies 
-ADD CONSTRAINT check_fake_company_linked 
-CHECK (
-    (company_type = 'real') OR 
-    (company_type = 'fake' AND linked_company_id IS NOT NULL)
-);
 
 -- Create updated_at trigger function if it doesn't exist
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -165,19 +145,8 @@ SELECT
 FROM companies WHERE name = 'BP plc' AND company_type = 'real'
 ON CONFLICT (name) DO NOTHING;
 
--- Grant necessary permissions (adjust as needed for your setup)
+-- Grant necessary permissions
 GRANT ALL ON ALL TABLES IN SCHEMA public TO authenticated;
 GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO authenticated;
-GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO authenticated;
-
--- Enable Row Level Security (optional - uncomment if needed)
--- ALTER TABLE deals ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE deal_documents ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE broker_notifications ENABLE ROW LEVEL SECURITY;
-
--- Create policies (optional - uncomment and modify as needed)
--- CREATE POLICY "Brokers can view their own deals" ON deals FOR SELECT USING (broker_id = auth.uid());
--- CREATE POLICY "Brokers can create deals" ON deals FOR INSERT WITH CHECK (broker_id = auth.uid());
--- CREATE POLICY "Brokers can view their notifications" ON broker_notifications FOR SELECT USING (broker_id = auth.uid());
 
 COMMIT;
