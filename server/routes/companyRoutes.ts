@@ -9,20 +9,26 @@ export const companyRouter = express.Router();
 // Get all companies with optional search and pagination
 companyRouter.get('/', async (req: Request, res: Response) => {
   try {
-    // First, ensure the companies table exists
-    const createTableQuery = `
-      CREATE TABLE IF NOT EXISTS companies (
-        id SERIAL PRIMARY KEY,
-        name TEXT NOT NULL,
-        country TEXT,
-        region TEXT,
-        website TEXT,
-        description TEXT,
-        created_at TIMESTAMP DEFAULT NOW()
-      )
+    // First, ensure the companies table has all required columns
+    const updateTableQuery = `
+      ALTER TABLE companies 
+      ADD COLUMN IF NOT EXISTS company_type TEXT DEFAULT 'real' CHECK (company_type IN ('real', 'fake')),
+      ADD COLUMN IF NOT EXISTS linked_company_id INTEGER REFERENCES companies(id),
+      ADD COLUMN IF NOT EXISTS is_visible_to_brokers BOOLEAN DEFAULT true,
+      ADD COLUMN IF NOT EXISTS publicly_traded BOOLEAN DEFAULT false,
+      ADD COLUMN IF NOT EXISTS stock_symbol TEXT,
+      ADD COLUMN IF NOT EXISTS revenue DECIMAL(15,2),
+      ADD COLUMN IF NOT EXISTS employees INTEGER,
+      ADD COLUMN IF NOT EXISTS founded_year INTEGER,
+      ADD COLUMN IF NOT EXISTS ceo TEXT,
+      ADD COLUMN IF NOT EXISTS fleet_size INTEGER,
+      ADD COLUMN IF NOT EXISTS specialization TEXT,
+      ADD COLUMN IF NOT EXISTS headquarters TEXT,
+      ADD COLUMN IF NOT EXISTS logo TEXT,
+      ADD COLUMN IF NOT EXISTS last_updated TIMESTAMP DEFAULT NOW()
     `;
     
-    await db.execute(sql.raw(createTableQuery));
+    await db.execute(sql.raw(updateTableQuery));
 
     // Check if table is empty and insert sample data
     try {
@@ -35,24 +41,33 @@ companyRouter.get('/', async (req: Request, res: Response) => {
       }
       
       if (existingCount === 0) {
-        const sampleCompanies = [
-          "('Shell Global', 'Netherlands', 'Europe', 'https://www.shell.com', 'Major international oil company')",
-          "('ExxonMobil', 'United States', 'North America', 'https://www.exxonmobil.com', 'American multinational oil and gas corporation')",
-          "('BP', 'United Kingdom', 'Europe', 'https://www.bp.com', 'British multinational oil and gas company')",
-          "('TotalEnergies', 'France', 'Europe', 'https://www.totalenergies.com', 'French multinational integrated oil and gas company')",
-          "('Chevron', 'United States', 'North America', 'https://www.chevron.com', 'American multinational energy corporation')",
-          "('Saudi Aramco', 'Saudi Arabia', 'Middle East', 'https://www.aramco.com', 'Saudi Arabian national petroleum and natural gas company')",
-          "('Petrobras', 'Brazil', 'South America', 'https://www.petrobras.com.br', 'Brazilian multinational petroleum corporation')",
-          "('Eni', 'Italy', 'Europe', 'https://www.eni.com', 'Italian multinational oil and gas company')",
-          "('ConocoPhillips', 'United States', 'North America', 'https://www.conocophillips.com', 'American multinational energy corporation')",
-          "('Equinor', 'Norway', 'Europe', 'https://www.equinor.com', 'Norwegian multinational energy company')"
+        // Insert real companies first
+        const realCompanies = [
+          "('ExxonMobil Corporation', 'United States', 'North America', 'https://www.exxonmobil.com', 'American multinational oil and gas corporation', 'real', NULL, true, true, 'XOM', 413680000000, 62000, 1999, 'Darren Woods', 45, 'Integrated Oil & Gas', 'Irving, Texas', NULL)",
+          "('Shell plc', 'Netherlands', 'Europe', 'https://www.shell.com', 'British-Dutch multinational oil and gas company', 'real', NULL, true, true, 'SHEL', 386201000000, 82000, 1907, 'Wael Sawan', 38, 'Integrated Oil & Gas', 'London, UK', NULL)",
+          "('Saudi Aramco', 'Saudi Arabia', 'Middle East', 'https://www.aramco.com', 'Saudi Arabian national petroleum and natural gas company', 'real', NULL, true, true, '2222.SR', 535200000000, 70000, 1933, 'Amin H. Nasser', 280, 'Crude Oil Production', 'Dhahran, Saudi Arabia', NULL)",
+          "('Chevron Corporation', 'United States', 'North America', 'https://www.chevron.com', 'American multinational energy corporation', 'real', NULL, true, true, 'CVX', 162465000000, 45600, 1879, 'Mike Wirth', 33, 'Integrated Oil & Gas', 'San Ramon, California', NULL)",
+          "('TotalEnergies SE', 'France', 'Europe', 'https://www.totalenergies.com', 'French multinational integrated oil and gas company', 'real', NULL, true, true, 'TTE', 200318000000, 105000, 1924, 'Patrick Pouyanné', 35, 'Integrated Oil & Gas', 'Courbevoie, France', NULL)"
         ];
         
-        const insertQuery = `
-          INSERT INTO companies (name, country, region, website, description) 
-          VALUES ${sampleCompanies.join(', ')}
-        `;
-        await db.execute(sql.raw(insertQuery));
+        await db.execute(sql.raw(`
+          INSERT INTO companies (name, country, region, website, description, company_type, linked_company_id, is_visible_to_brokers, publicly_traded, stock_symbol, revenue, employees, founded_year, ceo, fleet_size, specialization, headquarters, logo) 
+          VALUES ${realCompanies.join(', ')}
+        `));
+
+        // Now insert fake companies linked to real ones
+        const fakeCompanies = [
+          "('Global Energy Solutions Ltd', 'United Kingdom', 'Europe', 'https://www.globalenergysolutions.com', 'International energy trading and logistics company', 'fake', 1, true, false, NULL, NULL, 150, 2015, 'James Morrison', 8, 'Energy Trading', 'London, UK', NULL)",
+          "('Atlantic Oil Partners', 'United States', 'North America', 'https://www.atlanticoilpartners.com', 'Premium oil trading and distribution services', 'fake', 2, true, false, NULL, NULL, 85, 2018, 'Sarah Johnson', 5, 'Oil Trading', 'Houston, Texas', NULL)",
+          "('Middle East Energy Corp', 'UAE', 'Middle East', 'https://www.meeenergy.com', 'Regional energy solutions and crude oil trading', 'fake', 3, true, false, NULL, NULL, 200, 2012, 'Ahmed Al-Rashid', 12, 'Crude Oil Trading', 'Dubai, UAE', NULL)",
+          "('Pacific Energy Holdings', 'Singapore', 'Asia-Pacific', 'https://www.pacificenergyholdings.com', 'Asian market energy trading specialist', 'fake', 4, true, false, NULL, NULL, 120, 2020, 'Li Wei Chen', 7, 'Regional Trading', 'Singapore', NULL)",
+          "('European Oil Consortium', 'Switzerland', 'Europe', 'https://www.europeanoilconsortium.com', 'European market oil and gas trading platform', 'fake', 5, true, false, NULL, NULL, 95, 2017, 'Hans Mueller', 6, 'Market Trading', 'Zurich, Switzerland', NULL)"
+        ];
+
+        await db.execute(sql.raw(`
+          INSERT INTO companies (name, country, region, website, description, company_type, linked_company_id, is_visible_to_brokers, publicly_traded, stock_symbol, revenue, employees, founded_year, ceo, fleet_size, specialization, headquarters, logo) 
+          VALUES ${fakeCompanies.join(', ')}
+        `));
       }
     } catch (seedError) {
       console.log('Data seeding skipped:', seedError);
