@@ -412,7 +412,7 @@ export default function BrokerManagement() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {brokers
+                    {(brokers || [])
                       .sort((a, b) => b.totalValue - a.totalValue)
                       .slice(0, 5)
                       .map((broker) => (

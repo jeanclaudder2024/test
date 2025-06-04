@@ -11,6 +11,7 @@ import Ports from "@/pages/Ports";
 import PortDetail from "@/pages/PortDetail";
 import Brokers from "@/pages/Brokers";
 import BrokerDashboard from "@/pages/BrokerDashboard";
+import BrokerManagement from "@/pages/BrokerManagement";
 import Documents from "@/pages/Documents";
 import AIAssistantPage from "@/pages/AIAssistant";
 import Settings from "@/pages/Settings";
@@ -34,7 +35,7 @@ import { useEffect } from "react";
 import { apiRequest, queryClient } from "./lib/queryClient";
 import { Layout } from "@/components/ui/layout";
 import { AuthProvider, useProfessionalAuth } from "@/hooks/use-professional-auth";
-import { LanguageProvider } from "@/hooks/use-language";
+// Language provider temporarily removed to fix import errors
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { motion, AnimatePresence } from "framer-motion";
@@ -127,6 +128,7 @@ function Router() {
             <Route path="/ports/:id" component={PortDetail} />
             <Route path="/brokers" component={Brokers} />
             <Route path="/broker-dashboard" component={BrokerDashboard} />
+            <Route path="/broker-management" component={BrokerManagement} />
             <Route path="/companies" component={Companies} />
             <Route path="/documents" component={Documents} />
             <Route path="/ai-assistant" component={AIAssistantPage} />
@@ -157,10 +159,8 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="system">
         <AuthProvider>
-          <LanguageProvider>
-            <Router />
-            <Toaster />
-          </LanguageProvider>
+          <Router />
+          <Toaster />
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>
