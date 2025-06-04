@@ -124,16 +124,16 @@ export default function BrokerManagement() {
     },
   });
 
-  const filteredBrokers = brokers.filter(broker =>
+  const filteredBrokers = (brokers || []).filter(broker =>
     broker.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     broker.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
     broker.country?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const totalBrokers = brokers.length;
-  const activeBrokers = brokers.filter(b => b.active).length;
-  const totalDeals = deals.length;
-  const totalValue = deals.reduce((sum, deal) => sum + deal.totalValue, 0);
+  const totalBrokers = (brokers || []).length;
+  const activeBrokers = (brokers || []).filter(b => b.active).length;
+  const totalDeals = (deals || []).length;
+  const totalValue = (deals || []).reduce((sum, deal) => sum + deal.totalValue, 0);
 
   const AddDealForm = () => {
     const [formData, setFormData] = useState({
@@ -447,7 +447,7 @@ export default function BrokerManagement() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {deals
+                    {(deals || [])
                       .sort((a, b) => new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime())
                       .slice(0, 5)
                       .map((deal) => (
@@ -601,14 +601,14 @@ export default function BrokerManagement() {
                     </div>
 
                     <div className="flex flex-wrap gap-1 mb-4">
-                      {company.specialties.slice(0, 2).map((specialty) => (
+                      {(company.specialties || []).slice(0, 2).map((specialty) => (
                         <Badge key={specialty} variant="secondary" className="text-xs">
                           {specialty}
                         </Badge>
                       ))}
-                      {company.specialties.length > 2 && (
+                      {(company.specialties || []).length > 2 && (
                         <Badge variant="secondary" className="text-xs">
-                          +{company.specialties.length - 2}
+                          +{(company.specialties || []).length - 2}
                         </Badge>
                       )}
                     </div>
@@ -634,7 +634,7 @@ export default function BrokerManagement() {
           {/* Deals Tab */}
           <TabsContent value="deals" className="space-y-6">
             <div className="grid gap-6">
-              {deals.map((deal) => (
+              {(deals || []).map((deal) => (
                 <Card key={deal.id}>
                   <CardContent className="p-6">
                     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
