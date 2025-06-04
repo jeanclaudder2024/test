@@ -102,6 +102,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register admin vessel management routes
   app.use("/api/admin/vessels", vesselRouter);
+  
+  // Register company management routes
+  app.use("/api/companies", companyRouter);
 
   // Endpoint to clear all vessel and refinery data from the database
   if (app.get("env") === "development") {

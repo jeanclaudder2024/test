@@ -12,73 +12,67 @@ companyRouter.get('/', async (req: Request, res: Response) => {
     const { 
       search = '', 
       page = '1', 
-      pageSize = '10',
-      sortBy = 'name',
-      sortOrder = 'asc'
-    } = req.query;
+      limit = '10', 
+      sortBy = 'name', 
+      sortOrder = 'asc' 
+    } = req.query as { 
+      search?: string; 
+      page?: string; 
+      limit?: string; 
+      sortBy?: string; 
+      sortOrder?: string; 
+    };
 
-    const pageNum = parseInt(page as string);
-    const size = parseInt(pageSize as string);
-    const offset = (pageNum - 1) * size;
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const offset = (pageNum - 1) * limitNum;
 
     let query = db.select().from(companies);
 
-    // Apply search filter
-    if (search && search.toString().trim()) {
-      const searchTerm = `%${search.toString().trim()}%`;
+    // Add search functionality
+    if (search) {
       query = query.where(
         or(
-          ilike(companies.name, searchTerm),
-          ilike(companies.country, searchTerm),
-          ilike(companies.region, searchTerm),
-          ilike(companies.specialization, searchTerm),
-          ilike(companies.ceo, searchTerm)
+          ilike(companies.name, `%${search}%`),
+          ilike(companies.country, `%${search}%`),
+          ilike(companies.region, `%${search}%`),
+          ilike(companies.specialization, `%${search}%`)
         )
       );
     }
 
-    // Apply sorting
-    if (sortBy === 'name') {
-      query = sortOrder === 'desc' 
-        ? query.orderBy(desc(companies.name))
-        : query.orderBy(asc(companies.name));
-    } else if (sortBy === 'foundedYear') {
-      query = sortOrder === 'desc'
-        ? query.orderBy(desc(companies.foundedYear))
-        : query.orderBy(asc(companies.foundedYear));
-    }
+    // Add sorting
+    const orderDirection = sortOrder === 'desc' ? desc : asc;
+    const sortColumn = (companies as any)[sortBy] || companies.name;
+    query = query.orderBy(orderDirection(sortColumn));
+
+    // Add pagination
+    query = query.limit(limitNum).offset(offset);
+
+    const result = await query;
 
     // Get total count for pagination
-    let totalQuery = db.select().from(companies);
-    if (search && search.toString().trim()) {
-      const searchTerm = `%${search.toString().trim()}%`;
-      totalQuery = totalQuery.where(
+    let countQuery = db.select().from(companies);
+    if (search) {
+      countQuery = countQuery.where(
         or(
-          ilike(companies.name, searchTerm),
-          ilike(companies.country, searchTerm),
-          ilike(companies.region, searchTerm),
-          ilike(companies.specialization, searchTerm),
-          ilike(companies.ceo, searchTerm)
+          ilike(companies.name, `%${search}%`),
+          ilike(companies.country, `%${search}%`),
+          ilike(companies.region, `%${search}%`),
+          ilike(companies.specialization, `%${search}%`)
         )
       );
     }
-
-    const [companiesData, totalData] = await Promise.all([
-      query.limit(size).offset(offset),
-      totalQuery
-    ]);
-
-    const total = totalData.length;
-    const totalPages = Math.ceil(total / size);
+    const totalCount = (await countQuery).length;
 
     res.json({
-      companies: companiesData,
+      companies: result,
       pagination: {
         page: pageNum,
-        pageSize: size,
-        total,
-        totalPages,
-        hasNext: pageNum < totalPages,
+        limit: limitNum,
+        total: totalCount,
+        totalPages: Math.ceil(totalCount / limitNum),
+        hasNext: pageNum < Math.ceil(totalCount / limitNum),
         hasPrev: pageNum > 1
       }
     });
@@ -90,7 +84,6 @@ companyRouter.get('/', async (req: Request, res: Response) => {
 
 // Get company by ID
 companyRouter.get('/:id', async (req: Request, res: Response) => {
-
   try {
     const { id } = req.params;
     const company = await db
@@ -112,7 +105,6 @@ companyRouter.get('/:id', async (req: Request, res: Response) => {
 
 // Create new company
 companyRouter.post('/', async (req: Request, res: Response) => {
-
   try {
     const validatedData = insertCompanySchema.parse(req.body);
     
@@ -137,7 +129,6 @@ companyRouter.post('/', async (req: Request, res: Response) => {
 
 // Update company
 companyRouter.put('/:id', async (req: Request, res: Response) => {
-
   try {
     const { id } = req.params;
     const validatedData = insertCompanySchema.partial().parse(req.body);
@@ -167,7 +158,6 @@ companyRouter.put('/:id', async (req: Request, res: Response) => {
 
 // Delete company
 companyRouter.delete('/:id', async (req: Request, res: Response) => {
-
   try {
     const { id } = req.params;
     
@@ -189,7 +179,6 @@ companyRouter.delete('/:id', async (req: Request, res: Response) => {
 
 // Get company statistics
 companyRouter.get('/stats/summary', async (req: Request, res: Response) => {
-
   try {
     const totalCompanies = await db.select().from(companies);
     

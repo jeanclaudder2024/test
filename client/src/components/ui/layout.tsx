@@ -53,22 +53,40 @@ interface LayoutProps {
 export function Layout({ children }: LayoutProps) {
   const [location, setLocation] = useLocation();
   const { theme, setTheme } = useTheme();
-  const { language, setLanguage, t } = useTranslation();
   const [isMobileNavOpen, setIsMobileNavOpen] = React.useState(false);
+  
+  // Use simple fallback translation for now
+  const t = (key: string) => {
+    const translations: Record<string, string> = {
+      "nav.vessels": "Vessels",
+      "nav.oil_vessel_map": "Oil Vessel Map", 
+      "nav.refineries": "Refineries",
+      "nav.ports": "Ports",
+      "nav.documents": "Documents",
+      "nav.companies": "Companies",
+      "nav.brokers": "Brokers",
+      "nav.ai_assistant": "AI Assistant",
+      "nav.admin_panel": "Admin Panel",
+      "nav.pricing": "Pricing",
+      "nav.settings": "Settings"
+    };
+    return translations[key] || key;
+  };
 
-  const navigation = [
-    { name: t("nav.vessels"), href: "/vessels", icon: Ship },
-    { name: t("nav.oil_vessel_map"), href: "/oil-vessel-map", icon: Ship },
-    { name: t("nav.refineries"), href: "/refineries", icon: Database },
-    { name: t("nav.ports"), href: "/ports", icon: Anchor },
-    { name: t("nav.documents"), href: "/documents", icon: FileText },
-    { name: t("nav.companies"), href: "/companies", icon: Briefcase },
-    { name: t("nav.brokers"), href: "/brokers", icon: UserPlus },
-    { name: t("nav.ai_assistant"), href: "/ai-assistant", icon: MessageSquare },
-    { name: t("nav.admin_panel"), href: "/admin", icon: AlertCircle },
-    { name: t("nav.pricing"), href: "/pricing", icon: ShoppingBag },
-    { name: t("nav.settings"), href: "/settings", icon: Settings },
-  ];
+  // Use fallback navigation if translation is not available yet
+  const navigation = React.useMemo(() => [
+    { name: t ? t("nav.vessels") : "Vessels", href: "/vessels", icon: Ship },
+    { name: t ? t("nav.oil_vessel_map") : "Oil Vessel Map", href: "/oil-vessel-map", icon: Ship },
+    { name: t ? t("nav.refineries") : "Refineries", href: "/refineries", icon: Database },
+    { name: t ? t("nav.ports") : "Ports", href: "/ports", icon: Anchor },
+    { name: t ? t("nav.documents") : "Documents", href: "/documents", icon: FileText },
+    { name: t ? t("nav.companies") : "Companies", href: "/companies", icon: Briefcase },
+    { name: t ? t("nav.brokers") : "Brokers", href: "/brokers", icon: UserPlus },
+    { name: t ? t("nav.ai_assistant") : "AI Assistant", href: "/ai-assistant", icon: MessageSquare },
+    { name: t ? t("nav.admin_panel") : "Admin Panel", href: "/admin", icon: AlertCircle },
+    { name: t ? t("nav.pricing") : "Pricing", href: "/pricing", icon: ShoppingBag },
+    { name: t ? t("nav.settings") : "Settings", href: "/settings", icon: Settings },
+  ], [t]);
 
   const handleProfile = () => {
     window.location.href = "/settings/profile";
