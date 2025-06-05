@@ -1081,3 +1081,70 @@ export const gatesRelations = relations(gates, ({ many, one }) => ({
     references: [ports.id],
   }),
 }));
+
+// Oil Types Management
+export const oilTypes = pgTable("oil_types", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  displayName: text("display_name").notNull(),
+  category: text("category").notNull(), // crude, refined, lng, lpg, petrochemical
+  apiGravity: decimal("api_gravity", { precision: 5, scale: 2 }),
+  sulfurContent: decimal("sulfur_content", { precision: 5, scale: 3 }),
+  viscosity: decimal("viscosity", { precision: 8, scale: 2 }),
+  density: decimal("density", { precision: 8, scale: 4 }),
+  flashPoint: integer("flash_point"), // temperature in celsius
+  pourPoint: integer("pour_point"), // temperature in celsius
+  marketPrice: decimal("market_price", { precision: 10, scale: 2 }), // USD per barrel/ton
+  priceUnit: text("price_unit").default("barrel"), // barrel, ton, gallon
+  description: text("description"),
+  commonUses: text("common_uses"), // JSON array of uses
+  majorProducers: text("major_producers"), // JSON array of countries/companies
+  tradingSymbol: text("trading_symbol"), // WTI, Brent, etc.
+  hsCode: text("hs_code"), // Harmonized System code for customs
+  unClass: text("un_class"), // UN classification for hazardous materials
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  lastUpdated: timestamp("last_updated").defaultNow(),
+});
+
+export const insertOilTypeSchema = createInsertSchema(oilTypes).omit({
+  id: true,
+  createdAt: true,
+  lastUpdated: true,
+});
+
+export type InsertOilType = z.infer<typeof insertOilTypeSchema>;
+export type OilType = typeof oilTypes.$inferSelect;
+
+// Regions Management
+export const regions = pgTable("regions", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  displayName: text("display_name").notNull(),
+  code: text("code").notNull().unique(), // APAC, EMEA, AMERICAS, etc.
+  parentRegion: text("parent_region"), // For sub-regions
+  countries: text("countries").notNull(), // JSON array of country codes
+  majorPorts: text("major_ports"), // JSON array of port names
+  majorRefineries: text("major_refineries"), // JSON array of refinery names
+  timeZones: text("time_zones"), // JSON array of time zones
+  primaryLanguages: text("primary_languages"), // JSON array of languages
+  currencies: text("currencies"), // JSON array of currency codes
+  tradingHours: text("trading_hours"), // JSON object with trading hours
+  description: text("description"),
+  economicProfile: text("economic_profile"), // GDP, oil consumption, etc.
+  regulatoryFramework: text("regulatory_framework"), // Key regulations
+  marketCharacteristics: text("market_characteristics"), // Spot vs contract markets
+  isActive: boolean("is_active").default(true),
+  sortOrder: integer("sort_order").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  lastUpdated: timestamp("last_updated").defaultNow(),
+});
+
+export const insertRegionSchema = createInsertSchema(regions).omit({
+  id: true,
+  createdAt: true,
+  lastUpdated: true,
+});
+
+export type InsertRegion = z.infer<typeof insertRegionSchema>;
+export type Region = typeof regions.$inferSelect;
