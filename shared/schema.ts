@@ -711,7 +711,6 @@ export const insertCompanySchema = createInsertSchema(companies).omit({
   id: true,
   createdAt: true,
   lastUpdated: true,
-  dealCount: true,
 }).extend({
   companyType: z.enum(["real", "fake"]),
   linkedCompanyId: z.number().optional(),

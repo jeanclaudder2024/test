@@ -172,7 +172,7 @@ export default function AdminPanel() {
               value="oil-types" 
               className="flex items-center gap-2 data-[state=active]:bg-orange-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-200 hover:bg-orange-50 rounded-lg"
             >
-              <Fuel className="h-4 w-4" />
+              <Droplets className="h-4 w-4" />
               <span className="hidden xl:inline font-medium">Oil Types</span>
               <span className="xl:hidden">Oil</span>
             </TabsTrigger>
@@ -371,6 +371,40 @@ export default function AdminPanel() {
             </CardHeader>
             <CardContent>
               <LandingPageManagement />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="oil-types" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Droplets className="h-5 w-5 text-orange-500" />
+                Oil Type Management
+              </CardTitle>
+              <CardDescription>
+                Manage petroleum product types and specifications for global trading
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <OilTypeManagement />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="regions" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Globe className="h-5 w-5 text-emerald-500" />
+                Region Management
+              </CardTitle>
+              <CardDescription>
+                Manage trading regions and geographic markets for the platform
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <RegionManagement />
             </CardContent>
           </Card>
         </TabsContent>
