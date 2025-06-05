@@ -105,6 +105,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register company management routes
   app.use("/api/companies", companyRouter);
+  
+  // Register oil type management routes
+  const { default: oilTypeRoutes } = await import("./routes/oilTypeRoutes.js");
+  app.use("/api/oil-types", oilTypeRoutes);
+  
+  // Register region management routes
+  const { default: regionRoutes } = await import("./routes/regionRoutes.js");
+  app.use("/api/regions", regionRoutes);
 
   // Endpoint to clear all vessel and refinery data from the database
   if (app.get("env") === "development") {

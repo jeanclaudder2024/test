@@ -16,12 +16,14 @@ import { DatabaseMigration } from "@/components/admin/DatabaseMigration";
 import { LandingPageManagement } from "@/components/admin/LandingPageManagement";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Shield, Database, Users, Settings as SettingsIcon, ChevronLeft, Factory, Anchor, Ship, CreditCard, HardDrive, Globe, Building2, BarChart3, Activity } from "lucide-react";
+import { Shield, Database, Users, Settings as SettingsIcon, ChevronLeft, Factory, Anchor, Ship, CreditCard, HardDrive, Globe, Building2, BarChart3, Activity, Droplets } from "lucide-react";
 import { BrokerNetworkHub } from "@/components/broker/BrokerNetworkHub";
 import { useLocation } from "wouter";
 import SubscriptionAdmin from "@/pages/SubscriptionAdmin";
 import ProfessionalRefineryManagement from "@/components/admin/ProfessionalRefineryManagement";
 import { CompanyManagement } from "@/components/admin/CompanyManagement";
+import OilTypeManagement from "@/components/admin/OilTypeManagement";
+import RegionManagement from "@/components/admin/RegionManagement";
 
 export default function AdminPanel() {
   const [_, navigate] = useLocation();
@@ -96,6 +98,8 @@ export default function AdminPanel() {
               <option value="vessels">🚢 Vessel Management</option>
               <option value="ports">⚓ Ports Management</option>
               <option value="refineries">🏭 Refinery Management</option>
+              <option value="oil-types">⛽ Oil Type Management</option>
+              <option value="regions">🌍 Region Management</option>
               <option value="brokers">🤝 Broker Network</option>
               <option value="data">💾 Data Management</option>
               <option value="migration">🔄 Database Migration</option>
@@ -164,6 +168,22 @@ export default function AdminPanel() {
               <span className="xl:hidden">Plants</span>
             </TabsTrigger>
 
+            <TabsTrigger 
+              value="oil-types" 
+              className="flex items-center gap-2 data-[state=active]:bg-orange-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-200 hover:bg-orange-50 rounded-lg"
+            >
+              <Fuel className="h-4 w-4" />
+              <span className="hidden xl:inline font-medium">Oil Types</span>
+              <span className="xl:hidden">Oil</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="regions" 
+              className="flex items-center gap-2 data-[state=active]:bg-emerald-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-200 hover:bg-emerald-50 rounded-lg"
+            >
+              <Globe className="h-4 w-4" />
+              <span className="hidden xl:inline font-medium">Regions</span>
+              <span className="xl:hidden">Regions</span>
+            </TabsTrigger>
             <TabsTrigger 
               value="brokers" 
               className="flex items-center gap-2 data-[state=active]:bg-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-200 hover:bg-purple-50 rounded-lg"
