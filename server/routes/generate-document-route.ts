@@ -48,13 +48,10 @@ generateDocumentRouter.post('/api/generate-document', async (req, res) => {
     // Save the document to the database
     const [savedDoc] = await db.insert(vesselDocuments).values({
       vesselId: vessel.id,
-      type: documentType,
+      documentType: documentType,
       title: generatedDoc.title,
       content: generatedDoc.content,
-      status: 'generated',
-      createdAt: new Date(),
-      lastModified: new Date(),
-      language: 'en'
+      status: 'generated'
     }).returning();
     
     // Return success response with document data
@@ -63,10 +60,9 @@ generateDocumentRouter.post('/api/generate-document', async (req, res) => {
       document: {
         id: savedDoc.id,
         vesselId: savedDoc.vesselId,
-        type: savedDoc.type,
+        documentType: savedDoc.documentType,
         title: savedDoc.title,
-        status: savedDoc.status,
-        language: savedDoc.language
+        status: savedDoc.status
       }
     });
   } catch (error) {

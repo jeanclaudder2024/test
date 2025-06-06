@@ -36,7 +36,7 @@ import {
   insertVesselSchema, 
   insertRefinerySchema, 
   insertProgressEventSchema,
-  insertDocumentSchema,
+  insertVesselDocumentSchema,
   insertBrokerSchema,
   insertPortSchema,
   insertCompanySchema,
@@ -44,9 +44,10 @@ import {
   Refinery,
   Port,
   Company,
+  vessels,
   refineries,
   progressEvents,
-  documents,
+  vesselDocuments,
   stats,
   companies,
   ports,
@@ -141,7 +142,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Delete all documents related to vessels
         console.log("Deleting all vessel documents...");
-        const documentsDeleted = await db.delete(documents).returning();
+        const documentsDeleted = await db.delete(vesselDocuments).returning();
         console.log(`Deleted ${documentsDeleted.length} documents.`);
         
         // Reset stats

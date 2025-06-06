@@ -1,5 +1,5 @@
 import { db } from "../db";
-import { progressEvents, vessels, refineries, brokers, documents } from "@shared/schema";
+import { progressEvents, vessels, refineries, brokers, vesselDocuments } from "@shared/schema";
 import { generateLargeVesselDataset, determineRegionFromCoordinates } from "./vesselGenerator";
 import { getAccurateRefineries } from "./refineryCoordinates";
 import { isCoordinateAtSea } from "./vesselGenerator";
