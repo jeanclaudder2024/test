@@ -20,8 +20,7 @@ import { portService } from "./services/portService";
 import { vesselPositionService } from "./services/vesselPositionService";
 import { redistributeVesselsRealistically, getVesselDistributionStats } from "./services/realisticVesselPositioning";
 import { voyageSimulationService } from "./services/voyageSimulationService";
-// Simplified authentication - using supabase-simple-auth only
-// Removed old MySQL auth imports to prevent conflicts
+// OAuth authentication system
 import { REGIONS } from "@shared/constants";
 import { 
   getCachedVessels, 
@@ -640,8 +639,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Vessel counts by region endpoint - requires authentication, trial access allowed
-  apiRouter.get("/stats/vessels-by-region", authenticateToken, checkBasicAccess, async (req: AuthRequest, res) => {
+  // Vessel counts by region endpoint - OAuth protected
+  apiRouter.get("/stats/vessels-by-region", isAuthenticated, async (req: any, res) => {
     try {
       // Try to get counts from vesselService first
       let result;
@@ -736,8 +735,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Ports endpoints - requires authentication, trial access allowed
-  apiRouter.get("/ports", authenticateToken, checkBasicAccess, async (req: AuthRequest, res) => {
+  // Ports endpoints - Public access for now
+  apiRouter.get("/ports", async (req: any, res) => {
     try {
       console.log("API request for ports received");
       
@@ -783,8 +782,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Port detail endpoint - requires authentication, trial access allowed
-  apiRouter.get("/ports/:id", authenticateToken, checkBasicAccess, async (req: AuthRequest, res) => {
+  // Port detail endpoint - Public access for now
+  apiRouter.get("/ports/:id", async (req: any, res) => {
     try {
       const portId = parseInt(req.params.id);
       if (isNaN(portId)) {
@@ -1540,8 +1539,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Vessel detail endpoint - requires authentication, trial access allowed
-  apiRouter.get("/vessels/:id", authenticateToken, checkBasicAccess, async (req: AuthRequest, res) => {
+  // Vessel detail endpoint - Public access for now
+  apiRouter.get("/vessels/:id", async (req: any, res) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
