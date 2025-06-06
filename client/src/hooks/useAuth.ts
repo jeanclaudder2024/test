@@ -16,10 +16,33 @@ interface RegisterData {
 export function useAuth() {
   const queryClient = useQueryClient();
 
-  const { data: user, isLoading } = useQuery<User>({
-    queryKey: ["/api/auth/me"],
+  const { data: user, isLoading } = useQuery<User | null>({
+    queryKey: ["auth", "user"],
     retry: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchInterval: false,
+    enabled: true,
+    queryFn: async () => {
+      const response = await fetch("/api/auth/me", {
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      
+      if (response.status === 401) {
+        return null;
+      }
+      
+      if (!response.ok) {
+        throw new Error(`Authentication check failed: ${response.status}`);
+      }
+      
+      return response.json();
+    },
   });
 
   const loginMutation = useMutation({
@@ -30,7 +53,7 @@ export function useAuth() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+      queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
     },
   });
 
@@ -42,7 +65,7 @@ export function useAuth() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+      queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
     },
   });
 
@@ -53,7 +76,7 @@ export function useAuth() {
       });
     },
     onSuccess: () => {
-      queryClient.setQueryData(["/api/auth/me"], null);
+      queryClient.setQueryData(["auth", "me"], null);
       queryClient.clear();
     },
   });
