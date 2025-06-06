@@ -19,29 +19,35 @@ export function useAuth() {
   const { data: user, isLoading } = useQuery<User | null>({
     queryKey: ["auth", "user"],
     retry: false,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 30 * 60 * 1000, // 30 minutes - longer cache for OAuth
+    gcTime: 60 * 60 * 1000, // 1 hour
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchInterval: false,
     enabled: true,
     queryFn: async () => {
-      const response = await fetch("/api/auth/me", {
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      
-      if (response.status === 401) {
+      try {
+        const response = await fetch("/api/auth/me", {
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        
+        if (response.status === 401) {
+          return null;
+        }
+        
+        if (!response.ok) {
+          return null;
+        }
+        
+        const userData = await response.json();
+        return userData;
+      } catch (error) {
+        console.error("Auth check failed:", error);
         return null;
       }
-      
-      if (!response.ok) {
-        throw new Error(`Authentication check failed: ${response.status}`);
-      }
-      
-      return response.json();
     },
   });
 

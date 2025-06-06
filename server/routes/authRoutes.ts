@@ -144,17 +144,40 @@ router.post("/api/auth/login", async (req, res) => {
   }
 });
 
-// Get current user profile
-router.get("/api/auth/me", authenticateToken, async (req: AuthRequest, res) => {
+// OAuth-compatible user profile endpoint - no infinite loops
+router.get("/api/auth/me", async (req: any, res) => {
   try {
-    if (!req.user) {
-      return res.status(401).json({ message: "User not authenticated" });
+    // Return null for unauthenticated users (OAuth will handle redirect)
+    if (!req.user || !req.user.claims) {
+      return res.status(401).json(null);
     }
 
-    // Get fresh user data
-    const user = await storage.getUserById(req.user.id);
+    // For OAuth, we'll get user ID from claims
+    const userId = req.user.claims.sub;
+    
+    // Find user by OAuth ID (string-based for OAuth)
+    const users = await storage.getAllUsers();
+    const user = users.find(u => u.providerId === userId);
+    
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      // Create a default user record for OAuth users
+      const newUser = {
+        id: Date.now(), // temporary ID
+        username: req.user.claims.email || `user_${userId}`,
+        email: req.user.claims.email || null,
+        role: "user",
+        subscriptionStatus: "trial",
+        trialEndDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days trial
+        displayName: req.user.claims.first_name || req.user.claims.email,
+        photoURL: req.user.claims.profile_image_url,
+        provider: "oauth",
+        providerId: userId,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      
+      return res.json(newUser);
     }
 
     // Calculate trial days remaining
@@ -180,7 +203,7 @@ router.get("/api/auth/me", authenticateToken, async (req: AuthRequest, res) => {
     const { password, ...userWithoutPassword } = user;
     
     res.json({
-      user: userWithoutPassword,
+      ...userWithoutPassword,
       trialDaysRemaining,
       subscriptionActive,
       accessLevel: user.role === "admin" ? "admin" : (subscriptionActive ? "full" : "expired")
