@@ -2074,7 +2074,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin vessel management endpoints - requires admin access
-  apiRouter.get("/admin/vessels", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+  apiRouter.get("/admin/vessels", isAuthenticated, async (req: any, res) => {
     try {
       console.log("Admin vessels endpoint called");
       const vessels = await storage.getVessels();
@@ -2086,7 +2086,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  apiRouter.post("/admin/vessels", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+  apiRouter.post("/admin/vessels", isAuthenticated, async (req: any, res) => {
     try {
       console.log("Creating new vessel via admin:", req.body);
       
@@ -2115,7 +2115,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  apiRouter.put("/admin/vessels/:id", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+  apiRouter.put("/admin/vessels/:id", isAuthenticated, async (req: any, res) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -2146,7 +2146,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  apiRouter.delete("/admin/vessels/:id", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+  apiRouter.delete("/admin/vessels/:id", isAuthenticated, async (req: any, res) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -2168,7 +2168,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Generate AI vessel data endpoint for admin
-  apiRouter.post("/admin/vessels/generate-ai", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
+  apiRouter.post("/admin/vessels/generate-ai", isAuthenticated, async (req: any, res) => {
     try {
       const { generateRealisticVesselData } = await import("./services/aiVesselGenerator");
       const vesselData = await generateRealisticVesselData();
