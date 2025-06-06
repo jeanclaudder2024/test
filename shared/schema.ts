@@ -9,8 +9,15 @@ export const users = pgTable("users", {
   password: text("password"), // Now nullable to support OAuth providers
   email: text("email").notNull(),
   phone: text("phone"), // Add phone number field
-  isSubscribed: boolean("is_subscribed"),
+  role: text("role").notNull().default("user"), // 'admin' or 'user'
+  subscriptionStatus: text("subscription_status").default("trial"), // 'trial', 'active', 'expired', 'cancelled'
   subscriptionTier: text("subscription_tier").default("free"),
+  trialStartDate: timestamp("trial_start_date").defaultNow(),
+  trialEndDate: timestamp("trial_end_date"),
+  subscriptionStartDate: timestamp("subscription_start_date"),
+  subscriptionEndDate: timestamp("subscription_end_date"),
+  lastLoginAt: timestamp("last_login_at"),
+  isSubscribed: boolean("is_subscribed"),
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
   // OAuth provider fields
@@ -18,7 +25,9 @@ export const users = pgTable("users", {
   providerId: text("provider_id"), // ID from the provider
   photoURL: text("photo_url"), // Profile photo URL from provider
   displayName: text("display_name"), // Full name from provider
+  isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
