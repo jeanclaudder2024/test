@@ -1,6 +1,8 @@
 import express, { type Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { authRouter } from "./routes/authRoutes";
+import { authenticateToken, checkSubscriptionAccess, checkBasicAccess, AuthRequest } from "./auth";
 import { vesselService } from "./services/vesselService";
 import { refineryService } from "./services/refineryService";
 import { openaiService } from "./services/openaiService";
@@ -118,6 +120,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register document management routes
   const { default: documentRoutes } = await import("./routes/documentRoutes.js");
   app.use("/api/documents", documentRoutes);
+  
+  // Register authentication routes
+  app.use("/api/auth", authRouter);
 
   // Endpoint to clear all vessel and refinery data from the database
   if (app.get("env") === "development") {
