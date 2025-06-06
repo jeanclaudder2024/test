@@ -1,15 +1,15 @@
 import { eq, and } from "drizzle-orm";
 import { db, getActiveDb } from "./db";
 import {
-  users, vessels, refineries, progressEvents, documents, brokers, stats as statsTable, ports, 
+  users, vessels, refineries, progressEvents, brokers, stats as statsTable, ports, 
   refineryPortConnections, vesselPortConnections, companies, vesselRefineryConnections,
   brokerCompanies, companyPartnerships, userBrokerConnections,
   subscriptionPlans, subscriptions, paymentMethods, invoices, landingPageContent,
+  vesselDocuments,
   User, InsertUser, 
   Vessel, InsertVessel,
   Refinery, InsertRefinery,
   ProgressEvent, InsertProgressEvent,
-  Document, InsertDocument,
   Broker, InsertBroker,
   Stats, InsertStats,
   Port, InsertPort,
@@ -24,7 +24,8 @@ import {
   Subscription, InsertSubscription,
   PaymentMethod, InsertPaymentMethod,
   Invoice, InsertInvoice,
-  LandingPageContent, InsertLandingPageContent
+  LandingPageContent, InsertLandingPageContent,
+  InsertVesselDocument, SelectVesselDocument
 } from "@shared/schema";
 
 // Storage interface with CRUD methods
@@ -111,12 +112,12 @@ export interface IStorage {
   createProgressEvent(event: InsertProgressEvent): Promise<ProgressEvent>;
   deleteProgressEvent(id: number): Promise<boolean>;
 
-  // Document methods
-  getDocuments(): Promise<Document[]>;
-  getDocumentsByVesselId(vesselId: number): Promise<Document[]>;
-  createDocument(document: InsertDocument): Promise<Document>;
-  updateDocument(id: number, document: Partial<InsertDocument>): Promise<Document | undefined>;
-  deleteDocument(id: number): Promise<boolean>;
+  // Vessel Document methods
+  getVesselDocuments(): Promise<SelectVesselDocument[]>;
+  getVesselDocumentsByVesselId(vesselId: number): Promise<SelectVesselDocument[]>;
+  createVesselDocument(document: InsertVesselDocument): Promise<SelectVesselDocument>;
+  updateVesselDocument(id: number, document: Partial<InsertVesselDocument>): Promise<SelectVesselDocument | undefined>;
+  deleteVesselDocument(id: number): Promise<boolean>;
 
   // Broker methods
   getBrokers(): Promise<Broker[]>;

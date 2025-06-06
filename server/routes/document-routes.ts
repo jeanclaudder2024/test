@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { db } from '../db';
-import { documents, vessels } from '@shared/schema';
+import { vesselDocuments, vessels } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 
 export const documentRouter = Router();

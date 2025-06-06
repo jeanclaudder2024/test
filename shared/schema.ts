@@ -208,34 +208,7 @@ export const insertProgressEventSchema = createInsertSchema(progressEvents).omit
   id: true,
 });
 
-// Documents
-export const documents = pgTable("documents", {
-  id: serial("id").primaryKey(),
-  vesselId: integer("vessel_id").notNull(),
-  type: text("type").notNull(), // e.g., SDS, LOI, BL
-  title: text("title").notNull(),
-  content: text("content").notNull(),
-  status: text("status").default("active"), // active, expired, pending, revoked
-  issueDate: timestamp("issue_date").defaultNow(),
-  expiryDate: timestamp("expiry_date"),
-  reference: text("reference"), // Document reference number
-  issuer: text("issuer"), // Organization that issued document
-  recipientName: text("recipient_name"),
-  recipientOrg: text("recipient_org"),
-  lastModified: timestamp("last_modified").defaultNow(),
-  language: text("language").default("en"),
-  createdAt: timestamp("created_at").defaultNow(),
-});
 
-export const insertDocumentSchema = createInsertSchema(documents).omit({
-  id: true,
-  createdAt: true,
-  lastModified: true,
-}).extend({
-  // Allow string input for dates
-  issueDate: z.string().optional(),
-  expiryDate: z.string().optional()
-});
 
 // Brokers
 export const brokers = pgTable("brokers", {
@@ -291,8 +264,7 @@ export type Refinery = typeof refineries.$inferSelect;
 export type InsertProgressEvent = z.infer<typeof insertProgressEventSchema>;
 export type ProgressEvent = typeof progressEvents.$inferSelect;
 
-export type InsertDocument = z.infer<typeof insertDocumentSchema>;
-export type Document = typeof documents.$inferSelect;
+
 
 export type InsertBroker = z.infer<typeof insertBrokerSchema>;
 export type Broker = typeof brokers.$inferSelect;
