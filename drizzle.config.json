@@ -3,6 +3,6 @@
   "schema": "./shared/schema.ts",
   "out": "./drizzle",
   "dbCredentials": {
-    "connectionString": "$DATABASE_URL"
+    "url": "$DATABASE_URL"
   }
 }
