@@ -2148,7 +2148,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  apiRouter.delete("/admin/vessels/:id", async (req, res) => {
+  apiRouter.delete("/admin/vessels/:id", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -2170,7 +2170,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Generate AI vessel data endpoint for admin
-  apiRouter.post("/admin/vessels/generate-ai", async (req, res) => {
+  apiRouter.post("/admin/vessels/generate-ai", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
     try {
       const { generateRealisticVesselData } = await import("./services/aiVesselGenerator");
       const vesselData = await generateRealisticVesselData();
