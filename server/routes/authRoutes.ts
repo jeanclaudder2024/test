@@ -144,76 +144,7 @@ router.post("/api/auth/login", async (req, res) => {
   }
 });
 
-// OAuth-compatible user profile endpoint - no infinite loops
-router.get("/api/auth/me", async (req: any, res) => {
-  try {
-    // Return null for unauthenticated users (OAuth will handle redirect)
-    if (!req.user || !req.user.claims) {
-      return res.status(401).json(null);
-    }
-
-    // For OAuth, we'll get user ID from claims
-    const userId = req.user.claims.sub;
-    
-    // Find user by OAuth ID (string-based for OAuth)
-    const users = await storage.getAllUsers();
-    const user = users.find(u => u.providerId === userId);
-    
-    if (!user) {
-      // Create a default user record for OAuth users
-      const newUser = {
-        id: Date.now(), // temporary ID
-        username: req.user.claims.email || `user_${userId}`,
-        email: req.user.claims.email || null,
-        role: "user",
-        subscriptionStatus: "trial",
-        trialEndDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days trial
-        displayName: req.user.claims.first_name || req.user.claims.email,
-        photoURL: req.user.claims.profile_image_url,
-        provider: "oauth",
-        providerId: userId,
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
-      
-      return res.json(newUser);
-    }
-
-    // Calculate trial days remaining
-    let trialDaysRemaining = 0;
-    if (user.subscriptionStatus === "trial" && user.trialEndDate) {
-      const now = new Date();
-      const timeRemaining = user.trialEndDate.getTime() - now.getTime();
-      trialDaysRemaining = Math.max(0, Math.ceil(timeRemaining / (1000 * 60 * 60 * 24)));
-    }
-
-    // Check subscription status
-    const now = new Date();
-    let subscriptionActive = false;
-    
-    if (user.role === "admin") {
-      subscriptionActive = true;
-    } else if (user.subscriptionStatus === "trial" && user.trialEndDate && now <= user.trialEndDate) {
-      subscriptionActive = true;
-    } else if (user.subscriptionStatus === "active" && user.subscriptionEndDate && now <= user.subscriptionEndDate) {
-      subscriptionActive = true;
-    }
-
-    const { password, ...userWithoutPassword } = user;
-    
-    res.json({
-      ...userWithoutPassword,
-      trialDaysRemaining,
-      subscriptionActive,
-      accessLevel: user.role === "admin" ? "admin" : (subscriptionActive ? "full" : "expired")
-    });
-
-  } catch (error) {
-    console.error("Get profile error:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-});
+// REMOVED - OAuth handles authentication differently
 
 // Logout endpoint
 router.post("/api/auth/logout", authenticateToken, async (req: AuthRequest, res) => {

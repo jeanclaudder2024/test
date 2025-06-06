@@ -51,7 +51,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     error,
     isLoading,
   } = useQuery<User | null, Error>({
-    queryKey: ['/api/auth/me'],
+    queryKey: ['/api/auth/user'],
+    enabled: false, // Disable automatic requests for now
     queryFn: async ({ queryKey }) => {
       try {
         const res = await fetch(queryKey[0] as string, {
@@ -67,9 +68,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         
         const userData = await res.json();
-        return userData.success ? userData.user : null;
+        return userData;
       } catch (err) {
-        console.error("Auth error:", err);
+        console.error("OAuth auth error:", err);
         return null;
       }
     }

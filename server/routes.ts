@@ -1,8 +1,7 @@
 import express, { type Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { authRouter } from "./routes/authRoutes";
-import { authenticateToken, checkSubscriptionAccess, checkBasicAccess, requireAdmin, AuthRequest } from "./auth";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 import { vesselService } from "./services/vesselService";
 import { refineryService } from "./services/refineryService";
 import { openaiService } from "./services/openaiService";
@@ -121,8 +120,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const { default: documentRoutes } = await import("./routes/documentRoutes.js");
   app.use("/api/documents", documentRoutes);
   
-  // Register authentication routes
-  app.use("/api/auth", authRouter);
+  // Setup OAuth authentication system
+  await setupAuth(app);
 
   // Endpoint to clear all vessel and refinery data from the database
   if (app.get("env") === "development") {
@@ -615,8 +614,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   }
 
-  // Stats endpoint - requires authentication, trial access allowed
-  apiRouter.get("/stats", authenticateToken, checkBasicAccess, async (req: AuthRequest, res) => {
+  // Stats endpoint - OAuth protected
+  apiRouter.get("/stats", isAuthenticated, async (req: any, res) => {
     try {
       const stats = await storage.getStats();
       
