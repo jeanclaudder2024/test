@@ -16,7 +16,7 @@ import { DatabaseMigration } from "@/components/admin/DatabaseMigration";
 import { LandingPageManagement } from "@/components/admin/LandingPageManagement";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Shield, Database, Users, Settings as SettingsIcon, ChevronLeft, Factory, Anchor, Ship, CreditCard, HardDrive, Globe, Building2, BarChart3, Activity, Droplets } from "lucide-react";
+import { Shield, Database, Users, Settings as SettingsIcon, ChevronLeft, Factory, Anchor, Ship, CreditCard, HardDrive, Globe, Building2, BarChart3, Activity, Droplets, FileText } from "lucide-react";
 import { BrokerNetworkHub } from "@/components/broker/BrokerNetworkHub";
 import { useLocation } from "wouter";
 import SubscriptionAdmin from "@/pages/SubscriptionAdmin";
@@ -24,6 +24,7 @@ import ProfessionalRefineryManagement from "@/components/admin/ProfessionalRefin
 import { CompanyManagement } from "@/components/admin/CompanyManagement";
 import OilTypeManagement from "@/components/admin/OilTypeManagement";
 import RegionManagement from "@/components/admin/RegionManagement";
+import DocumentManagement from "@/components/admin/DocumentManagement";
 
 export default function AdminPanel() {
   const [_, navigate] = useLocation();
@@ -100,6 +101,7 @@ export default function AdminPanel() {
               <option value="refineries">🏭 Refinery Management</option>
               <option value="oil-types">⛽ Oil Type Management</option>
               <option value="regions">🌍 Region Management</option>
+              <option value="documents">📄 Document Management</option>
               <option value="brokers">🤝 Broker Network</option>
               <option value="data">💾 Data Management</option>
               <option value="migration">🔄 Database Migration</option>
@@ -183,6 +185,14 @@ export default function AdminPanel() {
               <Globe className="h-4 w-4" />
               <span className="hidden xl:inline font-medium">Regions</span>
               <span className="xl:hidden">Regions</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="documents" 
+              className="flex items-center gap-2 data-[state=active]:bg-indigo-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-200 hover:bg-indigo-50 rounded-lg"
+            >
+              <FileText className="h-4 w-4" />
+              <span className="hidden xl:inline font-medium">Documents</span>
+              <span className="xl:hidden">Docs</span>
             </TabsTrigger>
             <TabsTrigger 
               value="brokers" 
@@ -405,6 +415,23 @@ export default function AdminPanel() {
             </CardHeader>
             <CardContent>
               <RegionManagement />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="documents" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5 text-indigo-500" />
+                Document Management
+              </CardTitle>
+              <CardDescription>
+                Manage vessel documents, certificates, and maritime paperwork for the platform
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <DocumentManagement />
             </CardContent>
           </Card>
         </TabsContent>
