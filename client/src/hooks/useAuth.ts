@@ -53,7 +53,7 @@ export function useAuth() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
+      queryClient.invalidateQueries({ queryKey: ["auth", "user"] });
     },
   });
 
@@ -65,7 +65,7 @@ export function useAuth() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
+      queryClient.invalidateQueries({ queryKey: ["auth", "user"] });
     },
   });
 
@@ -76,7 +76,7 @@ export function useAuth() {
       });
     },
     onSuccess: () => {
-      queryClient.setQueryData(["auth", "me"], null);
+      queryClient.setQueryData(["auth", "user"], null);
       queryClient.clear();
     },
   });
