@@ -2,7 +2,7 @@ import express, { type Express, Request, Response, NextFunction } from "express"
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { authRouter } from "./routes/authRoutes";
-import { authenticateToken, checkSubscriptionAccess, checkBasicAccess, AuthRequest } from "./auth";
+import { authenticateToken, checkSubscriptionAccess, checkBasicAccess, requireAdmin, AuthRequest } from "./auth";
 import { vesselService } from "./services/vesselService";
 import { refineryService } from "./services/refineryService";
 import { openaiService } from "./services/openaiService";
@@ -615,8 +615,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   }
 
-  // Stats endpoint
-  apiRouter.get("/stats", async (req, res) => {
+  // Stats endpoint - requires authentication, trial access allowed
+  apiRouter.get("/stats", authenticateToken, checkBasicAccess, async (req: AuthRequest, res) => {
     try {
       const stats = await storage.getStats();
       
@@ -641,8 +641,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Vessel counts by region endpoint
-  apiRouter.get("/stats/vessels-by-region", async (req, res) => {
+  // Vessel counts by region endpoint - requires authentication, trial access allowed
+  apiRouter.get("/stats/vessels-by-region", authenticateToken, checkBasicAccess, async (req: AuthRequest, res) => {
     try {
       // Try to get counts from vesselService first
       let result;
@@ -737,8 +737,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Ports endpoints
-  apiRouter.get("/ports", async (req, res) => {
+  // Ports endpoints - requires authentication, trial access allowed
+  apiRouter.get("/ports", authenticateToken, checkBasicAccess, async (req: AuthRequest, res) => {
     try {
       console.log("API request for ports received");
       
@@ -784,8 +784,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Port detail endpoint
-  apiRouter.get("/ports/:id", async (req, res) => {
+  // Port detail endpoint - requires authentication, trial access allowed
+  apiRouter.get("/ports/:id", authenticateToken, checkBasicAccess, async (req: AuthRequest, res) => {
     try {
       const portId = parseInt(req.params.id);
       if (isNaN(portId)) {
@@ -1541,7 +1541,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  apiRouter.get("/vessels/:id", async (req, res) => {
+  // Vessel detail endpoint - requires authentication, trial access allowed
+  apiRouter.get("/vessels/:id", authenticateToken, checkBasicAccess, async (req: AuthRequest, res) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -2074,8 +2075,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Admin vessel management endpoints
-  apiRouter.get("/admin/vessels", async (req, res) => {
+  // Admin vessel management endpoints - requires admin access
+  apiRouter.get("/admin/vessels", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
     try {
       console.log("Admin vessels endpoint called");
       const vessels = await storage.getVessels();
@@ -2087,7 +2088,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  apiRouter.post("/admin/vessels", async (req, res) => {
+  apiRouter.post("/admin/vessels", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
     try {
       console.log("Creating new vessel via admin:", req.body);
       
@@ -2116,7 +2117,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  apiRouter.put("/admin/vessels/:id", async (req, res) => {
+  apiRouter.put("/admin/vessels/:id", authenticateToken, requireAdmin, async (req: AuthRequest, res) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
