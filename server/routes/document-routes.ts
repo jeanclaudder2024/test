@@ -10,7 +10,7 @@ export const documentRouter = Router();
  */
 documentRouter.get('/api/documents', async (req, res) => {
   try {
-    const allDocs = await db.select().from(documents);
+    const allDocs = await db.select().from(vesselDocuments);
     res.json(allDocs);
   } catch (error) {
     console.error('Error fetching documents:', error);
@@ -24,7 +24,7 @@ documentRouter.get('/api/documents', async (req, res) => {
 documentRouter.get('/api/documents/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const doc = await db.select().from(documents).where(eq(documents.id, parseInt(id)));
+    const doc = await db.select().from(vesselDocuments).where(eq(vesselDocuments.id, parseInt(id)));
     
     if (doc.length === 0) {
       return res.status(404).json({ error: 'Document not found' });
@@ -52,7 +52,7 @@ documentRouter.get('/api/vessels/:vesselId/documents', async (req, res) => {
     }
     
     // Fetch all documents for this vessel
-    const vesselDocs = await db.select().from(documents).where(eq(documents.vesselId, parseInt(vesselId)));
+    const vesselDocs = await db.select().from(vesselDocuments).where(eq(vesselDocuments.vesselId, parseInt(vesselId)));
     
     res.json(vesselDocs);
   } catch (error) {
@@ -91,7 +91,7 @@ documentRouter.post('/api/vessels/:vesselId/documents', async (req, res) => {
       language: documentData.language || 'en'
     };
     
-    const [createdDoc] = await db.insert(documents).values(newDocument).returning();
+    const [createdDoc] = await db.insert(vesselDocuments).values(newDocument).returning();
     
     res.status(201).json(createdDoc);
   } catch (error) {
@@ -109,7 +109,7 @@ documentRouter.put('/api/documents/:id', async (req, res) => {
     const documentData = req.body;
     
     // First check if the document exists
-    const document = await db.select().from(documents).where(eq(documents.id, parseInt(id)));
+    const document = await db.select().from(vesselDocuments).where(eq(vesselDocuments.id, parseInt(id)));
     
     if (document.length === 0) {
       return res.status(404).json({ error: 'Document not found' });
@@ -125,9 +125,9 @@ documentRouter.put('/api/documents/:id', async (req, res) => {
     }
     
     // Update document
-    const [updatedDoc] = await db.update(documents)
+    const [updatedDoc] = await db.update(vesselDocuments)
       .set(documentData)
-      .where(eq(documents.id, parseInt(id)))
+      .where(eq(vesselDocuments.id, parseInt(id)))
       .returning();
     
     res.json(updatedDoc);

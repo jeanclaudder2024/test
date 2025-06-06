@@ -4,7 +4,7 @@
 import { Router } from 'express';
 import { eq } from 'drizzle-orm';
 import { db } from '../db';
-import { vessels, documents } from '@shared/schema';
+import { vessels, vesselDocuments } from '@shared/schema';
 import { OpenAIService } from '../services/openaiService';
 
 // Initialize router
@@ -46,7 +46,7 @@ generateDocumentRouter.post('/api/generate-document', async (req, res) => {
     const generatedDoc = await openaiService.generateShippingDocument(vessel, documentType);
     
     // Save the document to the database
-    const [savedDoc] = await db.insert(documents).values({
+    const [savedDoc] = await db.insert(vesselDocuments).values({
       vesselId: vessel.id,
       type: documentType,
       title: generatedDoc.title,

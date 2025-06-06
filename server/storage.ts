@@ -593,49 +593,33 @@ export class DatabaseStorage implements IStorage {
     return true;
   }
 
-  async getDocuments(): Promise<Document[]> {
-    return await db.select().from(documents);
+  async getVesselDocuments(): Promise<SelectVesselDocument[]> {
+    return await db.select().from(vesselDocuments);
   }
 
-  async getDocumentsByVesselId(vesselId: number): Promise<Document[]> {
+  async getVesselDocumentsByVesselId(vesselId: number): Promise<SelectVesselDocument[]> {
     return await db
       .select()
-      .from(documents)
-      .where(eq(documents.vesselId, vesselId));
+      .from(vesselDocuments)
+      .where(eq(vesselDocuments.vesselId, vesselId));
   }
 
-  async createDocument(insertDocument: InsertDocument): Promise<Document> {
-    // Convert string dates to Date objects if present
-    const documentValues = {
-      ...insertDocument,
-      // Convert string dates to Date objects if provided
-      issueDate: insertDocument.issueDate ? new Date(insertDocument.issueDate) : undefined,
-      expiryDate: insertDocument.expiryDate ? new Date(insertDocument.expiryDate) : undefined
-    };
-    
-    const [document] = await db.insert(documents).values(documentValues).returning();
+  async createVesselDocument(insertDocument: InsertVesselDocument): Promise<SelectVesselDocument> {
+    const [document] = await db.insert(vesselDocuments).values(insertDocument).returning();
     return document;
   }
 
-  async updateDocument(id: number, documentUpdate: Partial<InsertDocument>): Promise<Document | undefined> {
-    // Convert string dates to Date objects if present
-    const updateValues = {
-      ...documentUpdate,
-      // Convert string dates to Date objects if provided
-      issueDate: documentUpdate.issueDate ? new Date(documentUpdate.issueDate) : undefined,
-      expiryDate: documentUpdate.expiryDate ? new Date(documentUpdate.expiryDate) : undefined
-    };
-    
+  async updateVesselDocument(id: number, documentUpdate: Partial<InsertVesselDocument>): Promise<SelectVesselDocument | undefined> {
     const [updatedDocument] = await db
-      .update(documents)
-      .set(updateValues)
-      .where(eq(documents.id, id))
+      .update(vesselDocuments)
+      .set(documentUpdate)
+      .where(eq(vesselDocuments.id, id))
       .returning();
     return updatedDocument || undefined;
   }
 
-  async deleteDocument(id: number): Promise<boolean> {
-    const result = await db.delete(documents).where(eq(documents.id, id));
+  async deleteVesselDocument(id: number): Promise<boolean> {
+    const result = await db.delete(vesselDocuments).where(eq(vesselDocuments.id, id));
     return true;
   }
 
