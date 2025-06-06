@@ -707,6 +707,30 @@ export const brokerNotifications = pgTable("broker_notifications", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const vesselDocuments = pgTable("vessel_documents", {
+  id: serial("id").primaryKey(),
+  vesselId: integer("vessel_id").references(() => vessels.id),
+  documentType: text("document_type").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  content: text("content"),
+  filePath: text("file_path"),
+  fileSize: integer("file_size"),
+  mimeType: text("mime_type"),
+  version: text("version").default("1.0"),
+  status: text("status").default("draft"), // 'draft', 'active', 'archived'
+  isRequired: boolean("is_required").default(false),
+  expiryDate: timestamp("expiry_date"),
+  createdBy: text("created_by"),
+  approvedBy: text("approved_by"),
+  approvedAt: timestamp("approved_at"),
+  tags: text("tags"),
+  metadata: text("metadata"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  lastUpdated: timestamp("last_updated").defaultNow(),
+});
+
 export const insertCompanySchema = createInsertSchema(companies).omit({
   id: true,
   createdAt: true,
@@ -737,6 +761,16 @@ export const insertBrokerNotificationSchema = createInsertSchema(brokerNotificat
   id: true,
   createdAt: true,
 });
+
+export const insertVesselDocumentSchema = createInsertSchema(vesselDocuments).omit({
+  id: true,
+  createdAt: true,
+  lastUpdated: true,
+  approvedAt: true,
+});
+
+export type InsertVesselDocument = z.infer<typeof insertVesselDocumentSchema>;
+export type SelectVesselDocument = typeof vesselDocuments.$inferSelect;
 
 export type InsertCompany = z.infer<typeof insertCompanySchema>;
 export type Company = typeof companies.$inferSelect;
