@@ -1,4 +1,4 @@
-import { Switch, Route, useLocation } from "wouter";
+import { Switch, Route } from "wouter";
 import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import Vessels from "@/pages/Vessels";
@@ -18,8 +18,6 @@ import Pricing from "@/pages/Pricing";
 import AccountSubscription from "@/pages/AccountSubscription";
 import SubscriptionSuccess from "@/pages/SubscriptionSuccess";
 import LandingPage from "@/pages/LandingPage";
-import Login from "@/pages/Login";
-import Register from "@/pages/Register";
 import SubscriptionUpgrade from "@/pages/SubscriptionUpgrade";
 import TradingDashboard from "@/pages/TradingDashboard";
 import Companies from "@/pages/Companies";
@@ -34,46 +32,19 @@ import SubscriptionAdmin from "@/pages/SubscriptionAdmin";
 import { useEffect } from "react";
 import { apiRequest, queryClient } from "./lib/queryClient";
 import { Layout } from "@/components/ui/layout";
-import { useAuth, AuthProvider } from "@/hooks/use-auth";
 import { TranslationProvider } from "@/hooks/useTranslation.tsx";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { motion, AnimatePresence } from "framer-motion";
-import { Redirect } from "wouter";
-import { Loader2 } from "lucide-react";
 import { QueryClientProvider } from "@tanstack/react-query";
 
-// Component to handle authentication states and redirects
-function AuthenticatedApp() {
-  const { user, isLoading, isAuthenticated } = useAuth();
-  const [location] = useLocation();
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  // If not authenticated, show login/register pages or landing
-  if (!isAuthenticated) {
-    if (location === "/login") return <Login />;
-    if (location === "/register") return <Register />;
-    if (location === "/") return <LandingPage />;
-    // For protected routes, redirect to login
-    return <Login />;
-  }
-
-  return <AppRoutes />;
-}
-
-// App routes component
+// App routes component - no authentication required
 function AppRoutes() {
   return (
     <Layout>
       <AnimatePresence mode="wait">
         <Switch>
-          <Route path="/" component={BrokerDashboard} />
+          <Route path="/" component={LandingPage} />
+          <Route path="/dashboard" component={BrokerDashboard} />
           <Route path="/broker-dashboard" component={BrokerDashboard} />
           <Route path="/vessels" component={Vessels} />
           <Route path="/vessels/:id/documents" component={VesselDocuments} />
@@ -124,20 +95,18 @@ function Router() {
     seedData();
   }, []);
 
-  return <AuthenticatedApp />;
+  return <AppRoutes />;
 }
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <ThemeProvider defaultTheme="system">
-          <TranslationProvider>
-            <Router />
-            <Toaster />
-          </TranslationProvider>
-        </ThemeProvider>
-      </AuthProvider>
+      <ThemeProvider defaultTheme="system">
+        <TranslationProvider>
+          <Router />
+          <Toaster />
+        </TranslationProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

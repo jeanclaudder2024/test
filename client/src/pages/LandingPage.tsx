@@ -226,14 +226,14 @@ export default function LandingPage() {
         </nav>
         
         <div className="hidden lg:flex items-center gap-4">
-          <Link href="/login">
+          <Link href="/dashboard">
             <Button variant="ghost" className="text-white hover:text-white hover:bg-white/10">
-              Log In
+              Dashboard
             </Button>
           </Link>
-          <Link href="/register">
+          <Link href="/vessels">
             <Button size="default" className="bg-orange-500 hover:bg-orange-600 text-white">
-              Get Started
+              View Vessels
               <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           </Link>
@@ -279,11 +279,11 @@ export default function LandingPage() {
             </Link>
           </nav>
           <div className="mt-auto flex flex-col gap-3 pt-6">
-            <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="outline" className="w-full border-slate-700 text-white">Log In</Button>
+            <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
+              <Button variant="outline" className="w-full border-slate-700 text-white">Dashboard</Button>
             </Link>
-            <Link href="/register" onClick={() => setMobileMenuOpen(false)}>
-              <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white">Get Started</Button>
+            <Link href="/vessels" onClick={() => setMobileMenuOpen(false)}>
+              <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white">View Vessels</Button>
             </Link>
           </div>
         </div>
@@ -339,9 +339,9 @@ export default function LandingPage() {
                 </p>
                 
                 <div className="flex flex-wrap gap-4 mb-12">
-                  <Link href="/register">
+                  <Link href="/dashboard">
                     <Button size="lg" className="bg-orange-500 hover:bg-orange-600 text-white font-medium px-8 py-6 rounded-md shadow-lg shadow-orange-500/20 hover:translate-y-[-2px] transition-all duration-200">
-                      Start Free Trial
+                      Explore Platform
                       <ChevronRight className="h-5 w-5 ml-1" />
                     </Button>
                   </Link>
