@@ -18,7 +18,8 @@ import Pricing from "@/pages/Pricing";
 import AccountSubscription from "@/pages/AccountSubscription";
 import SubscriptionSuccess from "@/pages/SubscriptionSuccess";
 import LandingPage from "@/pages/LandingPage";
-// Login and Register pages removed - using OAuth authentication
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
 import SubscriptionUpgrade from "@/pages/SubscriptionUpgrade";
 import TradingDashboard from "@/pages/TradingDashboard";
 import Companies from "@/pages/Companies";
@@ -54,11 +55,13 @@ function AuthenticatedApp() {
     );
   }
 
-  // If not authenticated, show landing page or login button
+  // If not authenticated, show login/register pages or landing
   if (!isAuthenticated) {
+    if (location === "/login") return <Login />;
+    if (location === "/register") return <Register />;
     if (location === "/") return <LandingPage />;
-    // Redirect to OAuth login for protected routes
-    return <LandingPage />;
+    // For protected routes, redirect to login
+    return <Login />;
   }
 
   return <AppRoutes />;
