@@ -18,8 +18,7 @@ import Pricing from "@/pages/Pricing";
 import AccountSubscription from "@/pages/AccountSubscription";
 import SubscriptionSuccess from "@/pages/SubscriptionSuccess";
 import LandingPage from "@/pages/LandingPage";
-import Login from "@/pages/Login";
-import Register from "@/pages/Register";
+// Login and Register pages removed - using OAuth authentication
 import SubscriptionUpgrade from "@/pages/SubscriptionUpgrade";
 import TradingDashboard from "@/pages/TradingDashboard";
 import Companies from "@/pages/Companies";
@@ -34,7 +33,7 @@ import SubscriptionAdmin from "@/pages/SubscriptionAdmin";
 import { useEffect } from "react";
 import { apiRequest, queryClient } from "./lib/queryClient";
 import { Layout } from "@/components/ui/layout";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, AuthProvider } from "@/hooks/use-auth";
 import { TranslationProvider } from "@/hooks/useTranslation.tsx";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { motion, AnimatePresence } from "framer-motion";
@@ -44,7 +43,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 
 // Component to handle authentication states and redirects
 function AuthenticatedApp() {
-  const { user, isLoading, isAuthenticated, isTrialExpired, hasActiveSubscription, isAdmin } = useAuth();
+  const { user, isLoading, isAuthenticated } = useAuth();
   const [location] = useLocation();
 
   if (isLoading) {
@@ -55,37 +54,11 @@ function AuthenticatedApp() {
     );
   }
 
-  // If not authenticated, show login/register pages or redirect to login
+  // If not authenticated, show landing page or login button
   if (!isAuthenticated) {
-    if (location === "/register") return <Register />;
-    if (location === "/login") return <Login />;
     if (location === "/") return <LandingPage />;
-    return <Redirect to="/login" />;
-  }
-
-  // If trial expired and no active subscription, redirect to upgrade
-  if (isTrialExpired && !hasActiveSubscription) {
-    if (location === "/upgrade" || location === "/pricing") {
-      return location === "/upgrade" ? <SubscriptionUpgrade /> : <Pricing />;
-    }
-    return <Redirect to="/upgrade" />;
-  }
-
-  // Define trial-allowed pages (map, vessels, ports, refineries)
-  const trialPages = ["/map", "/oil-vessel-map", "/vessels", "/ports", "/refineries"];
-  const isTrialPage = trialPages.some(page => location.startsWith(page));
-
-  // If in trial period without subscription, limit access to trial pages
-  if (!hasActiveSubscription && !isTrialPage && location !== "/upgrade" && location !== "/pricing") {
-    return <Redirect to="/upgrade" />;
-  }
-
-  // Admin-only pages
-  const adminPages = ["/admin", "/admin/subscriptions"];
-  const isAdminPage = adminPages.some(page => location.startsWith(page));
-  
-  if (isAdminPage && !isAdmin) {
-    return <Redirect to="/broker-dashboard" />;
+    // Redirect to OAuth login for protected routes
+    return <LandingPage />;
   }
 
   return <AppRoutes />;
@@ -154,12 +127,14 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="system">
-        <TranslationProvider>
-          <Router />
-          <Toaster />
-        </TranslationProvider>
-      </ThemeProvider>
+      <AuthProvider>
+        <ThemeProvider defaultTheme="system">
+          <TranslationProvider>
+            <Router />
+            <Toaster />
+          </TranslationProvider>
+        </ThemeProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

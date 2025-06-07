@@ -226,17 +226,17 @@ export default function LandingPage() {
         </nav>
         
         <div className="hidden lg:flex items-center gap-4">
-          <Link href="/auth">
+          <a href="/api/login">
             <Button variant="ghost" className="text-white hover:text-white hover:bg-white/10">
               Log In
             </Button>
-          </Link>
-          <Link href="/auth">
+          </a>
+          <a href="/api/login">
             <Button size="default" className="bg-orange-500 hover:bg-orange-600 text-white">
               Get Started
               <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
-          </Link>
+          </a>
         </div>
         
         {/* Mobile Menu Toggle */}
@@ -279,12 +279,12 @@ export default function LandingPage() {
             </Link>
           </nav>
           <div className="mt-auto flex flex-col gap-3 pt-6">
-            <Link href="/auth" onClick={() => setMobileMenuOpen(false)}>
+            <a href="/api/login" onClick={() => setMobileMenuOpen(false)}>
               <Button variant="outline" className="w-full border-slate-700 text-white">Log In</Button>
-            </Link>
-            <Link href="/auth" onClick={() => setMobileMenuOpen(false)}>
+            </a>
+            <a href="/api/login" onClick={() => setMobileMenuOpen(false)}>
               <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white">Get Started</Button>
-            </Link>
+            </a>
           </div>
         </div>
       )}
