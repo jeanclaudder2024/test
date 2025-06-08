@@ -297,8 +297,6 @@ export const insertStatsSchema = createInsertSchema(stats).omit({
 });
 
 // Type Exports
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export type User = typeof users.$inferSelect;
 
 export type InsertVessel = z.infer<typeof insertVesselSchema>;
 export type Vessel = typeof vessels.$inferSelect;

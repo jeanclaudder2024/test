@@ -84,11 +84,11 @@ function ProtectedRoutes() {
 }
 
 function AuthenticatedApp() {
-  const { user, loading, isTrialExpired } = useAuth();
+  const { user, isLoading, trialExpired } = useAuth();
   const [location] = useLocation();
 
   // Show loading state
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center">
         <div className="text-center">
@@ -109,7 +109,7 @@ function AuthenticatedApp() {
   }
 
   // If trial is expired, show trial expired page
-  if (isTrialExpired) {
+  if (trialExpired) {
     return <TrialExpired />;
   }
 

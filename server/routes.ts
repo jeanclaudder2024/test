@@ -89,6 +89,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   const apiRouter = express.Router();
 
+  // Register authentication routes
+  app.use("/api/auth", authRoutes);
+  
   // Register routes
   app.use("/api/translate", translationRouter);
   app.use("/api/subscriptions", subscriptionRouter);
