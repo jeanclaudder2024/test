@@ -1,5 +1,4 @@
 import express, { type Request, Response, NextFunction } from "express";
-import { setupSupabaseAuth } from "./supabase-simple-auth";
 import { log } from "./vite";
 
 const app = express();
@@ -43,8 +42,7 @@ app.use((req, res, next) => {
   // Server setup for Render deployment
   const port = parseInt(process.env.PORT || "5000", 10);
   
-  // Setup Supabase authentication system
-  setupSupabaseAuth(app);
+  // Note: Authentication will be handled on the frontend with Supabase
   
   // Import and register API routes
   const { registerRoutes } = await import("./routes");
