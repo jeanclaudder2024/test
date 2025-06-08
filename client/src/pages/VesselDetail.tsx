@@ -4,7 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { SimpleVoyageDetails } from '@/components/vessels/SimpleVoyageDetails';
 import SimpleVesselMap from '@/components/map/SimpleVesselMap';
 
-import { ProfessionalDocumentViewer } from '@/components/vessels/ProfessionalDocumentViewer';
+import { SimpleDocumentViewer } from '@/components/vessels/SimpleDocumentViewer';
 import axios from 'axios';
 import {
   Card,
@@ -841,7 +841,7 @@ export default function VesselDetail() {
 
                 
                 <TabsContent value="articles">
-                  <ProfessionalDocumentViewer vessel={vessel} />
+                  <SimpleDocumentViewer vessel={vessel} />
                 </TabsContent>
               </Tabs>
             </div>
