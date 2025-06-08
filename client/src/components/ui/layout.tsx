@@ -54,7 +54,7 @@ interface LayoutProps {
 export function Layout({ children }: LayoutProps) {
   const [location, setLocation] = useLocation();
   const { theme, setTheme } = useTheme();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [isMobileNavOpen, setIsMobileNavOpen] = React.useState(false);
   
   // Use simple fallback translation for now
@@ -107,10 +107,15 @@ export function Layout({ children }: LayoutProps) {
     window.location.href = "/settings";
   };
 
-  const handleLogout = () => {
-    // In a real app, you'd call your logout API here
-    console.log("User logged out");
-    window.location.href = "/auth";
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Force logout anyway
+      localStorage.clear();
+      window.location.replace('/');
+    }
   };
 
   const handleRefreshData = () => {

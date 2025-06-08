@@ -148,8 +148,25 @@ export const useAuth = () => {
   };
 
   const logout = async () => {
-    // Clear token and state first
+    setAuthState(prev => ({ ...prev, isLoading: true }));
+    
+    try {
+      // Call logout endpoint first
+      await fetch('/api/auth/logout', { 
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        }
+      });
+    } catch (error) {
+      console.log('Logout endpoint error (ignored):', error);
+    }
+    
+    // Clear everything locally
     localStorage.removeItem('auth_token');
+    localStorage.clear(); // Clear all localStorage
+    
+    // Reset auth state
     setAuthState({
       user: null,
       subscription: null,
@@ -158,15 +175,8 @@ export const useAuth = () => {
       isLoading: false,
     });
     
-    // Call logout endpoint to inform server
-    try {
-      await fetch('/api/auth/logout', { method: 'POST' });
-    } catch (error) {
-      // Ignore errors on logout
-    }
-    
-    // Force a complete page reload to ensure clean state
-    window.location.href = '/';
+    // Redirect to home page
+    window.location.replace('/');
   };
 
   return {
