@@ -5,7 +5,7 @@ import {
   refineryPortConnections, vesselPortConnections, companies, vesselRefineryConnections,
   brokerCompanies, companyPartnerships, userBrokerConnections,
   subscriptionPlans, subscriptions, paymentMethods, invoices, landingPageContent,
-  vesselDocuments,
+  vesselDocuments, vesselArticles,
   User, InsertUser, 
   Vessel, InsertVessel,
   Refinery, InsertRefinery,
@@ -25,7 +25,8 @@ import {
   PaymentMethod, InsertPaymentMethod,
   Invoice, InsertInvoice,
   LandingPageContent, InsertLandingPageContent,
-  InsertVesselDocument, SelectVesselDocument
+  InsertVesselDocument, SelectVesselDocument,
+  VesselArticle, InsertVesselArticle
 } from "@shared/schema";
 
 // Storage interface with CRUD methods
@@ -157,6 +158,13 @@ export interface IStorage {
   createCompaniesBulk(companies: InsertCompany[]): Promise<Company[]>;
   updateCompany(id: number, company: Partial<InsertCompany>): Promise<Company | undefined>;
   deleteCompany(id: number): Promise<boolean>;
+  
+  // Vessel Articles methods
+  getVesselArticles(vesselId: number): Promise<VesselArticle[]>;
+  getVesselArticleById(id: number): Promise<VesselArticle | undefined>;
+  createVesselArticle(article: InsertVesselArticle): Promise<VesselArticle>;
+  updateVesselArticle(id: number, article: Partial<InsertVesselArticle>): Promise<VesselArticle | undefined>;
+  deleteVesselArticle(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {

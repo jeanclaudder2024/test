@@ -895,6 +895,29 @@ export const subscriptionPlans = pgTable("subscription_plans", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Professional Articles for Vessels
+export const vesselArticles = pgTable("vessel_articles", {
+  id: serial("id").primaryKey(),
+  vesselId: integer("vessel_id").notNull().references(() => vessels.id),
+  authorId: integer("author_id").notNull().references(() => users.id),
+  title: text("title").notNull(),
+  type: text("type").notNull(), // commercial_analysis, technical_certificate, inspection_report, cargo_manifest
+  content: text("content").notNull(),
+  pdfUrl: text("pdf_url"), // Path to generated PDF file
+  isPublished: boolean("is_published").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertVesselArticleSchema = createInsertSchema(vesselArticles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type VesselArticle = typeof vesselArticles.$inferSelect;
+export type InsertVesselArticle = z.infer<typeof insertVesselArticleSchema>;
+
 export const insertSubscriptionPlanSchema = createInsertSchema(subscriptionPlans).omit({
   id: true,
   createdAt: true,
