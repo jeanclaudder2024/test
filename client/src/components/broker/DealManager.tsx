@@ -302,8 +302,8 @@ export function DealManager({ brokerId }: DealManagerProps) {
 
   return (
     <div className="space-y-6">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
             <h3 className="text-lg font-medium flex items-center">
               <Handshake className="h-5 w-5 mr-2 text-primary" />
               Oil Shipment Deals
