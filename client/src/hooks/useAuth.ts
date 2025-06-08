@@ -148,6 +148,7 @@ export const useAuth = () => {
   };
 
   const logout = async () => {
+    // Clear token and state first
     localStorage.removeItem('auth_token');
     setAuthState({
       user: null,
@@ -164,8 +165,8 @@ export const useAuth = () => {
       // Ignore errors on logout
     }
     
-    // Force navigation to login page
-    window.location.href = '/login';
+    // Force a complete page reload to ensure clean state
+    window.location.href = '/';
   };
 
   return {
