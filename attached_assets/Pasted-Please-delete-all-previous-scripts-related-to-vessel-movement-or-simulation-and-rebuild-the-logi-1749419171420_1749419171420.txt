@@ -1,0 +1,49 @@
+Please **delete all previous scripts related to vessel movement or simulation** and rebuild the logic from scratch with the following professional requirements:
+
+This is an AI-based Oil Vessel Tracking Application.
+
+I am NOT using a live AIS API due to cost constraints. Instead, I want to simulate vessel movement on a map using manually provided voyage data.
+
+Each vessel has:
+- start_port (lat/lng)
+- end_port (lat/lng)
+- direction (optional – can be calculated)
+- start_date (timestamp)
+- end_date (timestamp)
+
+---
+
+### What I need:
+
+1. **Simulated Real-Time Movement**:
+   - Based on current time, calculate the percentage of time passed between `start_date` and `end_date`.
+   - Move the vessel smoothly along the path from `start_port` to `end_port` based on that percentage.
+   - Update the vessel’s position every 30 minutes on the map.
+   - Position updates should be reflected on:
+     - Main map (`oil vessel map`)
+     - Vessel details page map
+
+2. **Avoid Land**:
+   - If the straight line intersects land, automatically apply a smooth curve or alternative path (just assume sea-only travel).
+   - Basic logic to "go around land" is enough – no need for full marine pathfinding, just avoid showing it over land tiles.
+
+3. **Status Handling**:
+   - During movement, vessel status = `"Sailing"`
+   - If current time < `start_date`, status = `"Not Started"`
+   - If current time > `end_date`, status = `"Arrived"` or `"Complete"`
+
+4. **Progress Bar**:
+   - Use the percentage of time passed to update a progress bar (0% to 100%)
+   - On reaching 100%, mark voyage as complete.
+   - The voyage progress should work accurately. Fix any issue where it remains at zero.
+
+5. **Implementation Notes**:
+   - Use a timer or interval that updates vessel positions every 30 minutes.
+   - Use linear interpolation for movement between coordinates.
+   - Keep track of vessel ID so each vessel updates independently.
+
+6. **Performance**:
+   - Efficient code, avoid over-rendering or unnecessary reloads.
+   - Use JavaScript and mapping library (like Leaflet or Mapbox) to animate the vessel movement.
+
+Make sure the result is clean, optimized, and visually smooth. This system must work even if we have dozens of vessels running simulations.

@@ -20,7 +20,7 @@ import { seedAllData, regenerateGlobalVessels } from "./services/seedService";
 import { portService } from "./services/portService";
 import { vesselPositionService } from "./services/vesselPositionService";
 import { redistributeVesselsRealistically, getVesselDistributionStats } from "./services/realisticVesselPositioning";
-import { voyageSimulationService } from "./services/voyageSimulationService";
+import { vesselTrackingService } from "./services/vesselTrackingService";
 // OAuth authentication system
 import { REGIONS } from "@shared/constants";
 import { 
@@ -32,7 +32,7 @@ import {
 import { WebSocketServer, WebSocket } from "ws";
 import { and, eq, isNotNull, sql } from "drizzle-orm";
 import { db } from "./db";
-import { VoyageProgressService } from "./services/voyageProgressService.js";
+// Removed old voyage progress service
 import { 
   insertVesselSchema, 
   insertRefinerySchema, 
@@ -7191,9 +7191,9 @@ Note: This document contains real vessel operational data and should be treated 
     return closestPort;
   }
 
-  // Start the automatic voyage progress scheduler
-  console.log('🚢 Starting voyage progress scheduler...');
-  VoyageProgressService.startProgressUpdateScheduler();
+  // Start the vessel tracking system
+  console.log('🚢 Starting vessel tracking system...');
+  vesselTrackingService.forceUpdate(); // Initialize with current data
 
   // Start the voyage simulation scheduler (daily updates)
   console.log('🚢 Starting voyage simulation scheduler...');
