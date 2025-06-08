@@ -76,6 +76,11 @@ function ProtectedRoutes() {
               <SubscriptionAdmin />
             </AdminRoute>
           </Route>
+          <Route path="/admin/documents">
+            <AdminRoute>
+              <AdminDocuments />
+            </AdminRoute>
+          </Route>
           <Route path="/trading" component={TradingDashboard} />
           <Route path="/translation" component={TranslationPage} />
           <Route path="/traffic-insights" component={TrafficInsights} />
