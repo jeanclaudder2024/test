@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Check, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/useAuth';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLocation } from 'wouter';
 import { cn } from '@/lib/utils';

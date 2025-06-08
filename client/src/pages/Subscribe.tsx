@@ -4,7 +4,7 @@ import { Elements } from '@stripe/react-stripe-js';
 import SubscriptionForm from '@/components/subscription/SubscriptionForm';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/useAuth';
 import { Redirect } from 'wouter';
 import { Loader2, ShieldCheck } from 'lucide-react';
 

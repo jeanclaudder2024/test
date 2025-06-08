@@ -10,7 +10,7 @@ import { useLocation } from 'wouter';
 import { cn } from '@/lib/utils';
 import { AlertCircle, Check, Clock, CreditCard, Calendar, ExternalLink } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/useAuth';
 import {
   Dialog,
   DialogContent,
