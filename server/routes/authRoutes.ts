@@ -169,8 +169,7 @@ router.get('/me', authenticateToken, async (req: AuthenticatedRequest, res) => {
         email: req.user.email,
         firstName: req.user.firstName,
         lastName: req.user.lastName,
-        role: req.user.role,
-        createdAt: req.user.createdAt
+        role: req.user.role
       },
       subscription: userSubscription,
       trialExpired
