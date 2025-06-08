@@ -14,6 +14,17 @@ export const sessions = pgTable(
   (table) => [index("IDX_session_expire").on(table.expire)],
 );
 
+// User profiles table for Supabase authentication
+export const userProfiles = pgTable("user_profiles", {
+  id: text("id").primaryKey().notNull(), // Supabase user ID
+  email: text("email").notNull().unique(),
+  trialStartDate: timestamp("trial_start_date").notNull(),
+  trialEndDate: timestamp("trial_end_date").notNull(),
+  subscriptionStatus: text("subscription_status", { enum: ["trial", "active", "expired"] }).notNull().default("trial"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
@@ -41,6 +52,7 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const insertUserProfileSchema = createInsertSchema(userProfiles);
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -51,6 +63,9 @@ export const insertUserSchema = createInsertSchema(users).pick({
   photoURL: true,
   displayName: true,
 });
+
+export type UserProfile = typeof userProfiles.$inferSelect;
+export type InsertUserProfile = typeof userProfiles.$inferInsert;
 
 // Vessels
 export const vessels = pgTable("vessels", {

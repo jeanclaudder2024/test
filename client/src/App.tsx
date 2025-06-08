@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import Vessels from "@/pages/Vessels";
@@ -18,6 +18,9 @@ import Pricing from "@/pages/Pricing";
 import AccountSubscription from "@/pages/AccountSubscription";
 import SubscriptionSuccess from "@/pages/SubscriptionSuccess";
 import LandingPage from "@/pages/LandingPage";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
+import TrialExpired from "@/pages/TrialExpired";
 import SubscriptionUpgrade from "@/pages/SubscriptionUpgrade";
 import TradingDashboard from "@/pages/TradingDashboard";
 import Companies from "@/pages/Companies";
@@ -32,18 +35,20 @@ import SubscriptionAdmin from "@/pages/SubscriptionAdmin";
 import { useEffect } from "react";
 import { apiRequest, queryClient } from "./lib/queryClient";
 import { Layout } from "@/components/ui/layout";
+import { AuthProvider } from "@/components/AuthProvider";
+import { useAuth } from "@/hooks/useAuth";
 import { TranslationProvider } from "@/hooks/useTranslation.tsx";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { motion, AnimatePresence } from "framer-motion";
 import { QueryClientProvider } from "@tanstack/react-query";
 
-// App routes component - no authentication required
-function AppRoutes() {
+// Protected routes that require authentication
+function ProtectedRoutes() {
   return (
     <Layout>
       <AnimatePresence mode="wait">
         <Switch>
-          <Route path="/" component={LandingPage} />
+          <Route path="/" component={BrokerDashboard} />
           <Route path="/dashboard" component={BrokerDashboard} />
           <Route path="/broker-dashboard" component={BrokerDashboard} />
           <Route path="/vessels" component={Vessels} />
@@ -78,6 +83,40 @@ function AppRoutes() {
   );
 }
 
+function AuthenticatedApp() {
+  const { user, loading, isTrialExpired } = useAuth();
+  const [location] = useLocation();
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-white text-lg">Loading PetroDealHub...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If not authenticated, show public pages or auth pages
+  if (!user) {
+    if (location === "/login") return <Login />;
+    if (location === "/register") return <Register />;
+    if (location === "/") return <LandingPage />;
+    // Redirect to login for protected routes
+    return <Login />;
+  }
+
+  // If trial is expired, show trial expired page
+  if (isTrialExpired) {
+    return <TrialExpired />;
+  }
+
+  // User is authenticated and trial is valid, show protected routes
+  return <ProtectedRoutes />;
+}
+
 function Router() {
   // Seed data on development
   useEffect(() => {
@@ -95,18 +134,20 @@ function Router() {
     seedData();
   }, []);
 
-  return <AppRoutes />;
+  return <AuthenticatedApp />;
 }
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="system">
-        <TranslationProvider>
-          <Router />
-          <Toaster />
-        </TranslationProvider>
-      </ThemeProvider>
+      <AuthProvider>
+        <ThemeProvider defaultTheme="system">
+          <TranslationProvider>
+            <Router />
+            <Toaster />
+          </TranslationProvider>
+        </ThemeProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

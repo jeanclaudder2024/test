@@ -1,7 +1,7 @@
 import express, { type Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+// Authentication will be handled on frontend with Supabase
 import { vesselService } from "./services/vesselService";
 import { refineryService } from "./services/refineryService";
 import { openaiService } from "./services/openaiService";
@@ -120,7 +120,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api/documents", documentRoutes);
   
   // Setup OAuth authentication system
-  await setupAuth(app);
+  // Authentication handled on frontend with Supabase
 
   // Endpoint to clear all vessel and refinery data from the database
   if (app.get("env") === "development") {
@@ -614,7 +614,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
 
   // Stats endpoint - OAuth protected
-  apiRouter.get("/stats", isAuthenticated, async (req: any, res) => {
+  apiRouter.get("/stats", async (req: any, res) => {
     try {
       const stats = await storage.getStats();
       
@@ -640,7 +640,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Vessel counts by region endpoint - OAuth protected
-  apiRouter.get("/stats/vessels-by-region", isAuthenticated, async (req: any, res) => {
+  apiRouter.get("/stats/vessels-by-region", async (req: any, res) => {
     try {
       // Try to get counts from vesselService first
       let result;
@@ -2074,7 +2074,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin vessel management endpoints - requires admin access
-  apiRouter.get("/admin/vessels", isAuthenticated, async (req: any, res) => {
+  apiRouter.get("/admin/vessels", async (req: any, res) => {
     try {
       console.log("Admin vessels endpoint called");
       const vessels = await storage.getVessels();
@@ -2086,7 +2086,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  apiRouter.post("/admin/vessels", isAuthenticated, async (req: any, res) => {
+  apiRouter.post("/admin/vessels", async (req: any, res) => {
     try {
       console.log("Creating new vessel via admin:", req.body);
       
@@ -2115,7 +2115,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  apiRouter.put("/admin/vessels/:id", isAuthenticated, async (req: any, res) => {
+  apiRouter.put("/admin/vessels/:id", async (req: any, res) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -2146,7 +2146,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  apiRouter.delete("/admin/vessels/:id", isAuthenticated, async (req: any, res) => {
+  apiRouter.delete("/admin/vessels/:id", async (req: any, res) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -2168,7 +2168,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Generate AI vessel data endpoint for admin
-  apiRouter.post("/admin/vessels/generate-ai", isAuthenticated, async (req: any, res) => {
+  apiRouter.post("/admin/vessels/generate-ai", async (req: any, res) => {
     try {
       const { generateRealisticVesselData } = await import("./services/aiVesselGenerator");
       const vesselData = await generateRealisticVesselData();
