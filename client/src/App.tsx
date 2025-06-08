@@ -35,7 +35,7 @@ import SubscriptionAdmin from "@/pages/SubscriptionAdmin";
 
 import { useEffect } from "react";
 import { apiRequest, queryClient } from "./lib/queryClient";
-import { Layout } from "@/components/ui/layout";
+import { MobileLayout } from "@/components/ui/mobile-layout";
 
 import { useAuth } from "@/hooks/useAuth";
 import { TranslationProvider } from "@/hooks/useTranslation.tsx";
@@ -46,7 +46,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 // Protected routes that require authentication
 function ProtectedRoutes() {
   return (
-    <Layout>
+    <MobileLayout>
       <AnimatePresence mode="wait">
         <Switch>
           <Route path="/" component={BrokerDashboard} />
@@ -88,7 +88,7 @@ function ProtectedRoutes() {
           <Route component={NotFound} />
         </Switch>
       </AnimatePresence>
-    </Layout>
+    </MobileLayout>
   );
 }
 
