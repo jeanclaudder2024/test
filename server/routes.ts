@@ -21,6 +21,7 @@ import { portService } from "./services/portService";
 import { vesselPositionService } from "./services/vesselPositionService";
 import { redistributeVesselsRealistically, getVesselDistributionStats } from "./services/realisticVesselPositioning";
 import { vesselTrackingService } from "./services/vesselTrackingService";
+import { professionalArticleService } from "./services/professionalArticleService";
 // OAuth authentication system
 import { REGIONS } from "@shared/constants";
 import { 
@@ -4583,6 +4584,196 @@ Only use authentic, real-world data for existing refineries.`;
       res.status(500).json({
         success: false,
         error: 'Force recovery failed'
+      });
+    }
+  });
+
+  // Professional Article Generation API Routes
+  
+  // Get vessel articles
+  apiRouter.get("/vessels/:vesselId/articles", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const vesselId = parseInt(req.params.vesselId);
+      if (isNaN(vesselId)) {
+        return res.status(400).json({ message: "Invalid vessel ID" });
+      }
+
+      const articles = await storage.getVesselArticles(vesselId);
+      res.json(articles);
+    } catch (error) {
+      console.error("Error fetching vessel articles:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch articles",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Generate new article for vessel
+  apiRouter.post("/vessels/:vesselId/generate-article", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const vesselId = parseInt(req.params.vesselId);
+      if (isNaN(vesselId)) {
+        return res.status(400).json({ message: "Invalid vessel ID" });
+      }
+
+      const { articleType, vesselName } = req.body;
+      
+      if (!articleType || !vesselName) {
+        return res.status(400).json({ message: "Article type and vessel name are required" });
+      }
+
+      if (!req.user) {
+        return res.status(401).json({ message: "User authentication required" });
+      }
+
+      // Check if vessel exists
+      const vessel = await storage.getVesselById(vesselId);
+      if (!vessel) {
+        return res.status(404).json({ message: "Vessel not found" });
+      }
+
+      // Generate the article using AI
+      const generatedArticle = await professionalArticleService.generateArticle({
+        vesselId,
+        vesselName,
+        articleType,
+        authorId: req.user.id
+      });
+
+      // Save article to database
+      const savedArticle = await storage.createVesselArticle({
+        vesselId,
+        authorId: req.user.id,
+        title: generatedArticle.title,
+        type: generatedArticle.type,
+        content: generatedArticle.content,
+        isPublished: true
+      });
+
+      // Generate PDF
+      try {
+        const pdfUrl = await professionalArticleService.generatePDF(
+          generatedArticle,
+          vesselName,
+          savedArticle.id
+        );
+        
+        // Update article with PDF URL
+        await storage.updateVesselArticle(savedArticle.id, { pdfUrl });
+        
+        res.json({
+          success: true,
+          article: {
+            ...savedArticle,
+            pdfUrl
+          }
+        });
+      } catch (pdfError) {
+        console.error("PDF generation failed:", pdfError);
+        // Return article without PDF
+        res.json({
+          success: true,
+          article: savedArticle,
+          warning: "Article generated successfully but PDF creation failed"
+        });
+      }
+
+    } catch (error) {
+      console.error("Error generating article:", error);
+      res.status(500).json({ 
+        message: "Failed to generate article",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Download article PDF
+  apiRouter.get("/vessels/:vesselId/articles/:articleId/pdf", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const vesselId = parseInt(req.params.vesselId);
+      const articleId = parseInt(req.params.articleId);
+      
+      if (isNaN(vesselId) || isNaN(articleId)) {
+        return res.status(400).json({ message: "Invalid vessel ID or article ID" });
+      }
+
+      const article = await storage.getVesselArticleById(articleId);
+      
+      if (!article || article.vesselId !== vesselId) {
+        return res.status(404).json({ message: "Article not found" });
+      }
+
+      if (!article.pdfUrl) {
+        return res.status(404).json({ message: "PDF not available for this article" });
+      }
+
+      // Serve the PDF file
+      const path = require('path');
+      const fs = require('fs');
+      const fullPath = path.join(process.cwd(), article.pdfUrl);
+      
+      if (!fs.existsSync(fullPath)) {
+        return res.status(404).json({ message: "PDF file not found" });
+      }
+
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="vessel-article-${articleId}.pdf"`);
+      
+      const fileStream = fs.createReadStream(fullPath);
+      fileStream.pipe(res);
+      
+    } catch (error) {
+      console.error("Error downloading PDF:", error);
+      res.status(500).json({ 
+        message: "Failed to download PDF",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Delete article
+  apiRouter.delete("/vessels/:vesselId/articles/:articleId", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const vesselId = parseInt(req.params.vesselId);
+      const articleId = parseInt(req.params.articleId);
+      
+      if (isNaN(vesselId) || isNaN(articleId)) {
+        return res.status(400).json({ message: "Invalid vessel ID or article ID" });
+      }
+
+      const article = await storage.getVesselArticleById(articleId);
+      
+      if (!article || article.vesselId !== vesselId) {
+        return res.status(404).json({ message: "Article not found" });
+      }
+
+      // Check if user is the author or admin
+      if (!req.user || (article.authorId !== req.user.id && req.user.role !== 'admin')) {
+        return res.status(403).json({ message: "Permission denied" });
+      }
+
+      // Delete PDF file if exists
+      if (article.pdfUrl) {
+        const path = require('path');
+        const fs = require('fs');
+        const fullPath = path.join(process.cwd(), article.pdfUrl);
+        
+        if (fs.existsSync(fullPath)) {
+          fs.unlinkSync(fullPath);
+        }
+      }
+
+      // Delete article from database
+      await storage.deleteVesselArticle(articleId);
+      
+      res.json({ success: true, message: "Article deleted successfully" });
+      
+    } catch (error) {
+      console.error("Error deleting article:", error);
+      res.status(500).json({ 
+        message: "Failed to delete article",
+        error: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });

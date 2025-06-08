@@ -1,4 +1,4 @@
-import { openai } from './openai-service';
+import OpenAI from 'openai';
 import PDFDocument from 'pdfkit';
 import fs from 'fs';
 import path from 'path';
@@ -83,6 +83,13 @@ Write in formal maritime documentation language with precise technical details. 
 };
 
 export class ProfessionalArticleService {
+  private openai: OpenAI;
+
+  constructor() {
+    this.openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY
+    });
+  }
   
   async generateArticle(request: ArticleGenerationRequest): Promise<GeneratedArticle> {
     const template = ARTICLE_TEMPLATES[request.articleType as keyof typeof ARTICLE_TEMPLATES];
@@ -94,7 +101,7 @@ export class ProfessionalArticleService {
     const prompt = template.prompt.replace(/{vesselName}/g, request.vesselName);
 
     try {
-      const completion = await openai.chat.completions.create({
+      const completion = await this.openai.chat.completions.create({
         model: "gpt-4",
         messages: [
           {

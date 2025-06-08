@@ -1013,6 +1013,42 @@ export class DatabaseStorage implements IStorage {
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     return R * c; // Distance in km
   }
+
+  // Vessel Articles methods
+  async getVesselArticles(vesselId: number): Promise<VesselArticle[]> {
+    return await db.select()
+      .from(vesselArticles)
+      .where(eq(vesselArticles.vesselId, vesselId))
+      .orderBy(vesselArticles.createdAt);
+  }
+
+  async getVesselArticleById(id: number): Promise<VesselArticle | undefined> {
+    const [article] = await db.select()
+      .from(vesselArticles)
+      .where(eq(vesselArticles.id, id));
+    return article || undefined;
+  }
+
+  async createVesselArticle(article: InsertVesselArticle): Promise<VesselArticle> {
+    const [newArticle] = await db.insert(vesselArticles)
+      .values(article)
+      .returning();
+    return newArticle;
+  }
+
+  async updateVesselArticle(id: number, article: Partial<InsertVesselArticle>): Promise<VesselArticle | undefined> {
+    const [updatedArticle] = await db.update(vesselArticles)
+      .set({ ...article, updatedAt: new Date() })
+      .where(eq(vesselArticles.id, id))
+      .returning();
+    return updatedArticle || undefined;
+  }
+
+  async deleteVesselArticle(id: number): Promise<boolean> {
+    const result = await db.delete(vesselArticles)
+      .where(eq(vesselArticles.id, id));
+    return result.rowCount > 0;
+  }
 }
 
 // Use database storage

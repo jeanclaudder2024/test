@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { SimpleVoyageDetails } from '@/components/vessels/SimpleVoyageDetails';
 import SimpleVesselMap from '@/components/map/SimpleVesselMap';
 import AIDocumentGenerator from '@/components/vessels/AIDocumentGenerator';
+import ProfessionalArticleGenerator from '@/components/vessels/ProfessionalArticleGenerator';
 import axios from 'axios';
 import {
   Card,
