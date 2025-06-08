@@ -3,8 +3,8 @@ import { Vessel } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { SimpleVoyageDetails } from '@/components/vessels/SimpleVoyageDetails';
 import SimpleVesselMap from '@/components/map/SimpleVesselMap';
-import AIDocumentGenerator from '@/components/vessels/AIDocumentGenerator';
-import ProfessionalArticleGenerator from '@/components/vessels/ProfessionalArticleGenerator';
+
+import { ProfessionalDocumentViewer } from '@/components/vessels/ProfessionalDocumentViewer';
 import axios from 'axios';
 import {
   Card,
@@ -841,23 +841,7 @@ export default function VesselDetail() {
 
                 
                 <TabsContent value="articles">
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-lg flex items-center">
-                        <FileCheck className="h-5 w-5 mr-2 text-primary" />
-                        Professional Maritime Articles
-                      </CardTitle>
-                      <CardDescription>
-                        AI-powered professional articles for maritime operations and documentation
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <ProfessionalArticleGenerator 
-                        vesselId={vessel.id} 
-                        vesselName={vessel.name}
-                      />
-                    </CardContent>
-                  </Card>
+                  <ProfessionalDocumentViewer vessel={vessel} />
                 </TabsContent>
               </Tabs>
             </div>

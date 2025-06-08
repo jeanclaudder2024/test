@@ -32,6 +32,7 @@ import FixedFullPageMap from "@/pages/FixedFullPageMap";
 import OilVesselMap from "@/pages/OilVesselMap";
 import AdminPanel from "@/pages/AdminPanel";
 import SubscriptionAdmin from "@/pages/SubscriptionAdmin";
+import AdminDocuments from "@/pages/AdminDocuments";
 
 import { useEffect } from "react";
 import { apiRequest, queryClient } from "./lib/queryClient";

@@ -4677,6 +4677,10 @@ Only use authentic, real-world data for existing refineries.`;
       const { professionalDocumentService } = await import('../services/professionalDocumentService');
       const pdfPath = await professionalDocumentService.generatePDF(documentId, vessel);
 
+      // Import required modules
+      const path = await import('path');
+      const fs = await import('fs');
+
       // Serve the PDF file
       const fullPath = path.join(process.cwd(), pdfPath);
       if (!fs.existsSync(fullPath)) {

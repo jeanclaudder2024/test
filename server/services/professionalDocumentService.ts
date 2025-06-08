@@ -185,7 +185,7 @@ Generate professional content that appears to be prepared by maritime experts wi
     });
   }
 
-  private addHeader(doc: PDFDocument): void {
+  private addHeader(doc: typeof PDFDocument.prototype): void {
     // Company logo placeholder - you can replace with actual logo
     doc.fontSize(24)
        .font('Helvetica-Bold')
