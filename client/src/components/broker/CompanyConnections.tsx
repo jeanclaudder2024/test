@@ -103,9 +103,11 @@ export function CompanyConnections({ brokerId }: CompanyConnectionsProps) {
   const { toast } = useToast();
 
   // Query to get all companies
-  const { data: companies = [], isLoading: isLoadingCompanies } = useQuery<Company[]>({
+  const { data: companiesResponse, isLoading: isLoadingCompanies } = useQuery({
     queryKey: ['/api/companies'],
   });
+  
+  const companies = companiesResponse?.companies || [];
 
   // Query to get broker's connections
   const { data: connections = [], isLoading: isLoadingConnections } = useQuery<BrokerCompanyConnection[]>({

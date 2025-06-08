@@ -138,9 +138,11 @@ export function DealManager({ brokerId }: DealManagerProps) {
   });
 
   // Query to get all companies (potential buyers and sellers)
-  const { data: companies = [], isLoading: isLoadingCompanies } = useQuery<Company[]>({
+  const { data: companiesResponse, isLoading: isLoadingCompanies } = useQuery({
     queryKey: ['/api/companies'],
   });
+  
+  const companies = companiesResponse?.companies || [];
 
   // Mutation for creating a new deal
   const createDealMutation = useMutation({
