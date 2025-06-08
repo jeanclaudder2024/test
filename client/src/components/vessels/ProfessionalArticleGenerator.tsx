@@ -66,7 +66,7 @@ const ARTICLE_TYPES = [
 ];
 
 export default function ProfessionalArticleGenerator({ vesselId, vesselName }: ProfessionalArticleGeneratorProps) {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedArticleType, setSelectedArticleType] = useState<string | null>(null);
@@ -113,7 +113,9 @@ export default function ProfessionalArticleGenerator({ vesselId, vesselName }: P
   // Download PDF mutation
   const downloadPdfMutation = useMutation({
     mutationFn: async (articleId: number) => {
-      const response = await fetch(`/api/vessels/${vesselId}/articles/${articleId}/pdf`);
+      const response = await fetch(`/api/vessels/${vesselId}/articles/${articleId}/pdf`, {
+        credentials: 'include'
+      });
       if (!response.ok) throw new Error('Failed to download PDF');
       
       const blob = await response.blob();
