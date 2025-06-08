@@ -1,7 +1,8 @@
 import express, { type Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-// Authentication will be handled on frontend with Supabase
+import authRoutes from "./routes/authRoutes";
+import { authenticateToken, requireAdmin, AuthenticatedRequest } from "./auth";
 import { vesselService } from "./services/vesselService";
 import { refineryService } from "./services/refineryService";
 import { openaiService } from "./services/openaiService";

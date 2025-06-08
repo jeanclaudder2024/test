@@ -3,69 +3,79 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
 
-// Session storage table for OAuth authentication
-export const sessions = pgTable(
-  "sessions",
-  {
-    sid: varchar("sid").primaryKey(),
-    sess: jsonb("sess").notNull(),
-    expire: timestamp("expire").notNull(),
-  },
-  (table) => [index("IDX_session_expire").on(table.expire)],
-);
-
-// User profiles table for Supabase authentication
-export const userProfiles = pgTable("user_profiles", {
-  id: text("id").primaryKey().notNull(), // Supabase user ID
-  email: text("email").notNull().unique(),
-  trialStartDate: timestamp("trial_start_date").notNull(),
-  trialEndDate: timestamp("trial_end_date").notNull(),
-  subscriptionStatus: text("subscription_status", { enum: ["trial", "active", "expired"] }).notNull().default("trial"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
+// Custom users table
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
-  username: text("username").notNull().unique(),
-  password: text("password"), // Now nullable to support OAuth providers
-  email: text("email").notNull(),
-  phone: text("phone"), // Add phone number field
+  email: text("email").notNull().unique(),
+  password: text("password").notNull(), // Hashed password
+  firstName: text("first_name"),
+  lastName: text("last_name"),
   role: text("role").notNull().default("user"), // 'admin' or 'user'
-  subscriptionStatus: text("subscription_status").default("trial"), // 'trial', 'active', 'expired', 'cancelled'
-  subscriptionTier: text("subscription_tier").default("free"),
-  trialStartDate: timestamp("trial_start_date").defaultNow(),
-  trialEndDate: timestamp("trial_end_date"),
-  subscriptionStartDate: timestamp("subscription_start_date"),
-  subscriptionEndDate: timestamp("subscription_end_date"),
-  lastLoginAt: timestamp("last_login_at"),
-  isSubscribed: boolean("is_subscribed"),
-  stripeCustomerId: text("stripe_customer_id"),
-  stripeSubscriptionId: text("stripe_subscription_id"),
-  // OAuth provider fields
-  provider: text("provider"), // 'google', 'local', etc.
-  providerId: text("provider_id"), // ID from the provider
-  photoURL: text("photo_url"), // Profile photo URL from provider
-  displayName: text("display_name"), // Full name from provider
-  isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-export const insertUserProfileSchema = createInsertSchema(userProfiles);
+// User subscriptions table
+export const userSubscriptions = pgTable("user_subscriptions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  trialStartDate: timestamp("trial_start_date").notNull(),
+  trialEndDate: timestamp("trial_end_date").notNull(),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Define relations
+export const usersRelations = relations(users, ({ one }) => ({
+  subscription: one(userSubscriptions, {
+    fields: [users.id],
+    references: [userSubscriptions.userId],
+  }),
+}));
+
+export const userSubscriptionsRelations = relations(userSubscriptions, ({ one }) => ({
+  user: one(users, {
+    fields: [userSubscriptions.userId],
+    references: [users.id],
+  }),
+}));
+
+// Insert schemas
 export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
   email: true,
-  phone: true,
-  provider: true,
-  providerId: true,
-  photoURL: true,
-  displayName: true,
+  password: true,
+  firstName: true,
+  lastName: true,
+  role: true,
 });
 
-export type UserProfile = typeof userProfiles.$inferSelect;
-export type InsertUserProfile = typeof userProfiles.$inferInsert;
+export const insertUserSubscriptionSchema = createInsertSchema(userSubscriptions).pick({
+  userId: true,
+  trialStartDate: true,
+  trialEndDate: true,
+  isActive: true,
+});
+
+// Register schema with validation
+export const registerSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+});
+
+// Login schema
+export const loginSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(1, "Password is required"),
+});
+
+// Types
+export type User = typeof users.$inferSelect;
+export type InsertUser = typeof users.$inferInsert;
+export type UserSubscription = typeof userSubscriptions.$inferSelect;
+export type InsertUserSubscription = typeof userSubscriptions.$inferInsert;
+export type RegisterInput = z.infer<typeof registerSchema>;
+export type LoginInput = z.infer<typeof loginSchema>;
 
 // Vessels
 export const vessels = pgTable("vessels", {

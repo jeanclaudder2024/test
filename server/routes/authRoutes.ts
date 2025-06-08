@@ -1,197 +1,179 @@
-import express from "express";
-import { z } from "zod";
-import { storage } from "../storage";
+import { Router } from 'express';
+import { db } from '../db';
+import { users, userSubscriptions, registerSchema, loginSchema } from '@shared/schema';
+import { eq } from 'drizzle-orm';
 import { 
   hashPassword, 
   comparePassword, 
   generateToken, 
-  authenticateToken, 
   calculateTrialEndDate,
-  AuthRequest 
-} from "../auth";
+  authenticateToken,
+  AuthenticatedRequest 
+} from '../auth';
 
-const router = express.Router();
-
-// Validation schemas
-const registerSchema = z.object({
-  username: z.string().min(3).max(50),
-  email: z.string().email(),
-  password: z.string().min(8),
-  phone: z.string().optional(),
-});
-
-const loginSchema = z.object({
-  username: z.string(),
-  password: z.string(),
-});
+const router = Router();
 
 // Register endpoint
-router.post("/api/auth/register", async (req, res) => {
+router.post('/register', async (req, res) => {
   try {
     const validatedData = registerSchema.parse(req.body);
     
     // Check if user already exists
-    const existingUser = await storage.getUserByUsername(validatedData.username);
-    if (existingUser) {
-      return res.status(400).json({ message: "Username already exists" });
-    }
+    const existingUser = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, validatedData.email))
+      .limit(1);
 
-    const existingEmail = await storage.getUserByEmail(validatedData.email);
-    if (existingEmail) {
-      return res.status(400).json({ message: "Email already exists" });
+    if (existingUser.length > 0) {
+      return res.status(400).json({ message: 'User already exists with this email' });
     }
 
     // Hash password
     const hashedPassword = await hashPassword(validatedData.password);
-    
-    // Calculate trial end date (3 days from now)
+
+    // Create user
+    const [newUser] = await db
+      .insert(users)
+      .values({
+        email: validatedData.email,
+        password: hashedPassword,
+        firstName: validatedData.firstName,
+        lastName: validatedData.lastName,
+        role: 'user'
+      })
+      .returning();
+
+    // Create subscription with 3-day trial
+    const trialStartDate = new Date();
     const trialEndDate = calculateTrialEndDate();
 
-    // Create user with trial subscription
-    const newUser = await storage.createUser({
-      username: validatedData.username,
-      email: validatedData.email,
-      password: hashedPassword,
-      phone: validatedData.phone || null,
-      role: "user",
-      subscriptionStatus: "trial",
-      trialStartDate: new Date(),
-      trialEndDate,
-      isActive: true,
-    });
+    await db
+      .insert(userSubscriptions)
+      .values({
+        userId: newUser.id,
+        trialStartDate,
+        trialEndDate,
+        isActive: true
+      });
 
     // Generate token
     const token = generateToken(newUser);
 
     // Return user data without password
     const { password, ...userWithoutPassword } = newUser;
-    
+
     res.status(201).json({
-      message: "User registered successfully",
+      message: 'User registered successfully',
       user: userWithoutPassword,
       token,
-      trialDaysRemaining: 3
+      trialEndDate: trialEndDate.toISOString()
     });
 
-  } catch (error) {
-    if (error instanceof z.ZodError) {
+  } catch (error: any) {
+    console.error('Registration error:', error);
+    if (error.name === 'ZodError') {
       return res.status(400).json({ 
-        message: "Validation error", 
+        message: 'Validation error', 
         errors: error.errors 
       });
     }
-    
-    console.error("Registration error:", error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
 // Login endpoint
-router.post("/api/auth/login", async (req, res) => {
+router.post('/login', async (req, res) => {
   try {
     const validatedData = loginSchema.parse(req.body);
-    
-    // Find user by username
-    const user = await storage.getUserByUsername(validatedData.username);
-    if (!user || !user.isActive) {
-      return res.status(401).json({ message: "Invalid credentials" });
+
+    // Find user by email
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, validatedData.email))
+      .limit(1);
+
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid email or password' });
     }
 
-    // Check password
-    if (!user.password) {
-      return res.status(401).json({ message: "Invalid credentials" });
-    }
-
+    // Verify password
     const isPasswordValid = await comparePassword(validatedData.password, user.password);
+    
     if (!isPasswordValid) {
-      return res.status(401).json({ message: "Invalid credentials" });
+      return res.status(401).json({ message: 'Invalid email or password' });
     }
 
-    // Update last login
-    await storage.updateUser(user.id, { lastLoginAt: new Date() });
+    // Get user subscription
+    const [subscription] = await db
+      .select()
+      .from(userSubscriptions)
+      .where(eq(userSubscriptions.userId, user.id))
+      .limit(1);
+
+    // Check trial status
+    const now = new Date();
+    const trialExpired = subscription ? now > new Date(subscription.trialEndDate) : true;
 
     // Generate token
     const token = generateToken(user);
 
-    // Calculate trial days remaining
-    let trialDaysRemaining = 0;
-    if (user.subscriptionStatus === "trial" && user.trialEndDate) {
-      const now = new Date();
-      const timeRemaining = user.trialEndDate.getTime() - now.getTime();
-      trialDaysRemaining = Math.max(0, Math.ceil(timeRemaining / (1000 * 60 * 60 * 24)));
-    }
-
     // Return user data without password
     const { password, ...userWithoutPassword } = user;
-    
+
     res.json({
-      message: "Login successful",
+      message: 'Login successful',
       user: userWithoutPassword,
       token,
-      trialDaysRemaining
+      subscription,
+      trialExpired
     });
 
-  } catch (error) {
-    if (error instanceof z.ZodError) {
+  } catch (error: any) {
+    console.error('Login error:', error);
+    if (error.name === 'ZodError') {
       return res.status(400).json({ 
-        message: "Validation error", 
+        message: 'Validation error', 
         errors: error.errors 
       });
     }
-    
-    console.error("Login error:", error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
-// REMOVED - OAuth handles authentication differently
-
-// Logout endpoint
-router.post("/api/auth/logout", authenticateToken, async (req: AuthRequest, res) => {
-  // Since we're using JWT, we can't invalidate the token server-side
-  // In a production app, you might want to maintain a blacklist of tokens
-  res.json({ message: "Logout successful" });
-});
-
-// Check subscription status
-router.get("/api/auth/subscription-status", authenticateToken, async (req: AuthRequest, res) => {
+// Get current user endpoint
+router.get('/me', authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ message: "User not authenticated" });
-    }
-
-    const user = await storage.getUserById(req.user.id);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(401).json({ message: 'User not found' });
     }
 
     const now = new Date();
-    let trialDaysRemaining = 0;
-    let subscriptionActive = false;
-
-    // Admin always has access
-    if (user.role === "admin") {
-      subscriptionActive = true;
-    } else if (user.subscriptionStatus === "trial" && user.trialEndDate) {
-      const timeRemaining = user.trialEndDate.getTime() - now.getTime();
-      trialDaysRemaining = Math.max(0, Math.ceil(timeRemaining / (1000 * 60 * 60 * 24)));
-      subscriptionActive = now <= user.trialEndDate;
-    } else if (user.subscriptionStatus === "active" && user.subscriptionEndDate) {
-      subscriptionActive = now <= user.subscriptionEndDate;
-    }
+    const trialExpired = req.user.subscription ? 
+      now > new Date(req.user.subscription.trialEndDate) : true;
 
     res.json({
-      subscriptionStatus: user.subscriptionStatus,
-      trialDaysRemaining,
-      subscriptionActive,
-      role: user.role,
-      trialExpired: user.subscriptionStatus === "trial" && user.trialEndDate && now > user.trialEndDate
+      user: {
+        id: req.user.id,
+        email: req.user.email,
+        firstName: req.user.firstName,
+        lastName: req.user.lastName,
+        role: req.user.role
+      },
+      subscription: req.user.subscription,
+      trialExpired
     });
 
   } catch (error) {
-    console.error("Subscription status error:", error);
-    res.status(500).json({ message: "Internal server error" });
+    console.error('Get user error:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
-export { router as authRouter };
+// Logout endpoint (client-side token removal)
+router.post('/logout', (req, res) => {
+  res.json({ message: 'Logged out successfully' });
+});
+
+export default router;
