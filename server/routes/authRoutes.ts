@@ -149,9 +149,19 @@ router.get('/me', authenticateToken, async (req: AuthenticatedRequest, res) => {
       return res.status(401).json({ message: 'User not found' });
     }
 
-    const now = new Date();
-    const trialExpired = req.user.subscription ? 
-      now > new Date(req.user.subscription.trialEndDate) : true;
+    // Get user subscription from database
+    const subscription = await db
+      .select()
+      .from(userSubscriptions)
+      .where(eq(userSubscriptions.userId, req.user.id))
+      .limit(1);
+
+    const userSubscription = subscription[0] || null;
+    
+    // Check if trial is expired
+    const trialExpired = userSubscription 
+      ? new Date() > new Date(userSubscription.trialEndDate)
+      : false;
 
     res.json({
       user: {
@@ -159,9 +169,10 @@ router.get('/me', authenticateToken, async (req: AuthenticatedRequest, res) => {
         email: req.user.email,
         firstName: req.user.firstName,
         lastName: req.user.lastName,
-        role: req.user.role
+        role: req.user.role,
+        createdAt: req.user.createdAt
       },
-      subscription: req.user.subscription,
+      subscription: userSubscription,
       trialExpired
     });
 

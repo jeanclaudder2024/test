@@ -32,7 +32,8 @@ export default function LoginPage() {
         title: "Login successful",
         description: "Welcome back to PetroDealHub!",
       });
-      // Navigation will be handled by the app routing
+      // Force a page refresh to trigger authentication state change
+      window.location.reload();
     } catch (error: any) {
       toast({
         title: "Login failed",
