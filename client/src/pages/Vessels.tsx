@@ -640,17 +640,19 @@ export default function Vessels() {
 
   return (
     <div className="container mx-auto px-4 py-6">
-      {/* Professional header with navigation and statistics */}
-      <div className="bg-white rounded-xl shadow-lg dark:bg-gray-800 mb-8">
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center">
-            <div>
-              <h1 className="text-3xl font-bold flex items-center text-gray-900 dark:text-white">
-                <Ship className="h-7 w-7 mr-3 text-primary" />
-                Vessel Management
+      {/* Mobile-First Responsive Header */}
+      <div className="bg-white rounded-xl shadow-lg dark:bg-gray-800 mb-6">
+        <div className="p-4 lg:p-6 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex flex-col space-y-4 lg:flex-row lg:justify-between lg:items-center lg:space-y-0">
+            <div className="flex-1">
+              <h1 className="text-2xl lg:text-3xl font-bold flex items-center text-gray-900 dark:text-white">
+                <Ship className="h-6 w-6 lg:h-7 lg:w-7 mr-2 lg:mr-3 text-primary" />
+                <span className="hidden sm:inline">Vessel Management</span>
+                <span className="sm:hidden">Vessels</span>
               </h1>
-              <p className="text-gray-600 dark:text-gray-300 mt-2 max-w-2xl text-sm">
-                Professional vessel tracking and fleet monitoring platform for oil shipping operations
+              <p className="text-gray-600 dark:text-gray-300 mt-2 text-sm lg:max-w-2xl">
+                <span className="hidden lg:inline">Professional vessel tracking and fleet monitoring platform for oil shipping operations</span>
+                <span className="lg:hidden">Track and monitor oil vessels</span>
               </p>
             </div>
             
@@ -1023,17 +1025,52 @@ export default function Vessels() {
         </div>
       ) : (
         <div className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-md">
+          {/* Header with View Toggle */}
           <div className="border-b border-gray-200 dark:border-gray-700 p-3 px-5 bg-gray-50 dark:bg-gray-750">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2 text-gray-500 dark:text-gray-400 text-sm">
                 <Ship className="w-4 h-4" />
                 <span className="font-medium">Vessel Database</span>
               </div>
-              <span className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded-full">
-                {loading ? 'Loading...' : `Showing ${(currentPage - 1) * vesselsPerPage + 1}-${Math.min((currentPage) * vesselsPerPage, filteredVessels.length)} of ${filteredVessels.length.toLocaleString()}`}
-              </span>
+              <div className="flex items-center gap-3">
+                <span className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded-full">
+                  {loading ? 'Loading...' : `Showing ${(currentPage - 1) * vesselsPerPage + 1}-${Math.min((currentPage) * vesselsPerPage, filteredVessels.length)} of ${filteredVessels.length.toLocaleString()}`}
+                </span>
+                {/* View Toggle - Desktop Only */}
+                <div className="hidden lg:flex items-center gap-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 w-7 p-0"
+                  >
+                    <List className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 w-7 p-0"
+                  >
+                    <Grid className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
+
+          {/* Mobile Card View */}
+          <div className="lg:hidden">
+            <div className="p-4 space-y-4">
+              {currentVessels.map((vessel, index) => (
+                <MobileVesselCard
+                  key={`${vessel.id}-${index}`}
+                  vessel={vessel}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="hidden lg:block">
           
           <Table>
             <TableHeader>
@@ -1168,6 +1205,7 @@ export default function Vessels() {
               ))}
             </TableBody>
           </Table>
+          </div>
           
           {/* Professional Pagination */}
           {totalPages > 1 && (
