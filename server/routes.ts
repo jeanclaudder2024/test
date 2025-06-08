@@ -3,7 +3,6 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import authRoutes from "./routes/authRoutes";
 import { authenticateToken, requireAdmin, AuthenticatedRequest } from "./auth";
-import { isAuthenticated } from "./replitAuth";
 import { vesselService } from "./services/vesselService";
 import { refineryService } from "./services/refineryService";
 import { openaiService } from "./services/openaiService";
@@ -4592,7 +4591,7 @@ Only use authentic, real-world data for existing refineries.`;
   // Professional Article Generation API Routes
   
   // Get vessel articles
-  apiRouter.get("/vessels/:vesselId/articles", isAuthenticated, async (req: any, res) => {
+  apiRouter.get("/vessels/:vesselId/articles", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
       const vesselId = parseInt(req.params.vesselId);
       if (isNaN(vesselId)) {
@@ -4611,7 +4610,7 @@ Only use authentic, real-world data for existing refineries.`;
   });
 
   // Generate new article for vessel
-  apiRouter.post("/vessels/:vesselId/generate-article", isAuthenticated, async (req: any, res) => {
+  apiRouter.post("/vessels/:vesselId/generate-article", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
       const vesselId = parseInt(req.params.vesselId);
       if (isNaN(vesselId)) {
