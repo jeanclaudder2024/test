@@ -32,8 +32,8 @@ export default function LoginPage() {
         title: "Login successful",
         description: "Welcome back to PetroDealHub!",
       });
-      // Force a page refresh to trigger authentication state change
-      window.location.reload();
+      // Redirect to home page after successful login
+      window.location.href = '/';
     } catch (error: any) {
       toast({
         title: "Login failed",
