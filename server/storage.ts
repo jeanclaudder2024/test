@@ -27,7 +27,11 @@ import {
   LandingPageContent, InsertLandingPageContent,
   InsertVesselDocument, SelectVesselDocument,
   ProfessionalDocument, InsertProfessionalDocument,
-  VesselDocumentAssociation, InsertVesselDocumentAssociation
+  VesselDocumentAssociation, InsertVesselDocumentAssociation,
+  landingPageSections, landingPageImages, landingPageBlocks,
+  LandingPageSection, InsertLandingPageSection,
+  LandingPageImage, InsertLandingPageImage,
+  LandingPageBlock, InsertLandingPageBlock
 } from "@shared/schema";
 
 // Storage interface with CRUD methods

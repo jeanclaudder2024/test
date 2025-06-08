@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, jsonb, varchar, decimal, primaryKey, index } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, jsonb, varchar, decimal, primaryKey, index, unique } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
@@ -967,32 +967,7 @@ export const insertSubscriptionSchema = createInsertSchema(subscriptions).omit({
 export type InsertSubscription = z.infer<typeof insertSubscriptionSchema>;
 export type Subscription = typeof subscriptions.$inferSelect;
 
-// Landing Page Content Management
-export const landingPageContent = pgTable("landing_page_content", {
-  id: serial("id").primaryKey(),
-  section: text("section").notNull(), // hero, features, why-us, how-it-works, etc.
-  title: text("title"),
-  subtitle: text("subtitle"),
-  description: text("description"),
-  buttonText: text("button_text"),
-  buttonLink: text("button_link"),
-  imageUrl: text("image_url"),
-  videoUrl: text("video_url"),
-  content: text("content"), // JSON string for flexible content
-  isActive: boolean("is_active").default(true),
-  sortOrder: integer("sort_order").default(0),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-export const insertLandingPageContentSchema = createInsertSchema(landingPageContent).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export type InsertLandingPageContent = z.infer<typeof insertLandingPageContentSchema>;
-export type LandingPageContent = typeof landingPageContent.$inferSelect;
+// Removed old landing page content schema - replaced with comprehensive system below
 
 // Customer payment methods
 export const paymentMethods = pgTable("payment_methods", {
@@ -1201,6 +1176,92 @@ export const insertOilTypeSchema = createInsertSchema(oilTypes).omit({
 
 export type InsertOilType = z.infer<typeof insertOilTypeSchema>;
 export type OilType = typeof oilTypes.$inferSelect;
+
+// Landing Page Management Tables
+export const landingPageSections = pgTable("landing_page_sections", {
+  id: serial("id").primaryKey(),
+  sectionKey: varchar("section_key", { length: 100 }).notNull().unique(),
+  sectionName: varchar("section_name", { length: 255 }).notNull(),
+  isEnabled: boolean("is_enabled").default(true),
+  displayOrder: integer("display_order").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const landingPageContent = pgTable("landing_page_content", {
+  id: serial("id").primaryKey(),
+  sectionId: integer("section_id").references(() => landingPageSections.id).notNull(),
+  contentKey: varchar("content_key", { length: 100 }).notNull(),
+  contentType: varchar("content_type", { length: 50 }).default("text"),
+  contentValue: text("content_value"),
+  placeholderText: varchar("placeholder_text", { length: 255 }),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  uniqueContent: unique("unique_section_content").on(table.sectionId, table.contentKey),
+}));
+
+export const landingPageImages = pgTable("landing_page_images", {
+  id: serial("id").primaryKey(),
+  sectionId: integer("section_id").references(() => landingPageSections.id).notNull(),
+  imageKey: varchar("image_key", { length: 100 }).notNull(),
+  imageUrl: text("image_url"),
+  altText: varchar("alt_text", { length: 255 }),
+  displayOrder: integer("display_order").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  uniqueImage: unique("unique_section_image").on(table.sectionId, table.imageKey),
+}));
+
+export const landingPageBlocks = pgTable("landing_page_blocks", {
+  id: serial("id").primaryKey(),
+  sectionId: integer("section_id").references(() => landingPageSections.id).notNull(),
+  blockType: varchar("block_type", { length: 100 }).notNull(),
+  title: varchar("title", { length: 255 }),
+  description: text("description"),
+  imageUrl: text("image_url"),
+  linkUrl: text("link_url"),
+  linkText: varchar("link_text", { length: 100 }),
+  metadata: text("metadata"), // JSON string for additional data
+  displayOrder: integer("display_order").default(0),
+  isEnabled: boolean("is_enabled").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertLandingPageSectionSchema = createInsertSchema(landingPageSections).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertLandingPageContentSchema = createInsertSchema(landingPageContent).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertLandingPageImageSchema = createInsertSchema(landingPageImages).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertLandingPageBlockSchema = createInsertSchema(landingPageBlocks).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type LandingPageSection = typeof landingPageSections.$inferSelect;
+export type LandingPageContent = typeof landingPageContent.$inferSelect;
+export type LandingPageImage = typeof landingPageImages.$inferSelect;
+export type LandingPageBlock = typeof landingPageBlocks.$inferSelect;
+export type InsertLandingPageSection = z.infer<typeof insertLandingPageSectionSchema>;
+export type InsertLandingPageContent = z.infer<typeof insertLandingPageContentSchema>;
+export type InsertLandingPageImage = z.infer<typeof insertLandingPageImageSchema>;
+export type InsertLandingPageBlock = z.infer<typeof insertLandingPageBlockSchema>;
 
 // Regions Management
 export const regions = pgTable("regions", {
