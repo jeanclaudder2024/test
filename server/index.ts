@@ -44,6 +44,14 @@ app.use((req, res, next) => {
   
   // Note: Authentication will be handled on the frontend with Supabase
   
+  // Initialize custom authentication tables
+  try {
+    const { initializeCustomAuthTables } = await import("./database-init");
+    await initializeCustomAuthTables();
+  } catch (error) {
+    console.error("Failed to initialize auth tables:", error);
+  }
+
   // Import and register API routes
   const { registerRoutes } = await import("./routes");
   const server = await registerRoutes(app);
