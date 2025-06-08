@@ -5,7 +5,7 @@ import {
   refineryPortConnections, vesselPortConnections, companies, vesselRefineryConnections,
   brokerCompanies, companyPartnerships, userBrokerConnections,
   subscriptionPlans, subscriptions, paymentMethods, invoices, landingPageContent,
-  vesselDocuments, professionalDocuments, vesselDocumentAssociations,
+  vesselDocuments, professionalDocuments, oilTypes,
   User, InsertUser, 
   Vessel, InsertVessel,
   Refinery, InsertRefinery,
