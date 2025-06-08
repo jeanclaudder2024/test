@@ -18,11 +18,13 @@ import {
   Database,
   Anchor,
   Globe,
-  Briefcase
+  Briefcase,
+  Shield
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/hooks/use-language";
+import { useAuth } from "@/hooks/useAuth";
 
 interface SidebarProps {
   mobile?: boolean;
@@ -33,6 +35,7 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
   const [location] = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const { t } = useLanguage();
+  const { user } = useAuth();
 
   const toggleSidebar = () => {
     setCollapsed(!collapsed);
@@ -104,35 +107,51 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
     }
   ];
 
-  const getUserItems = (): NavItem[] => [
-    {
-      title: t("nav.profile"),
-      path: "/profile",
-      icon: <User className="h-5 w-5 mr-3" />,
-    },
-    {
-      title: t("nav.ai_assistant"),
-      path: "/ai-assistant",
-      icon: <Brain className="h-5 w-5 mr-3" />,
-    },
-    {
-      title: "Translation",
-      path: "/translation",
-      icon: <Globe className="h-5 w-5 mr-3" />,
-      badge: "NEW",
-    },
-    {
-      title: "Traffic Insights",
-      path: "/traffic-insights",
-      icon: <Map className="h-5 w-5 mr-3" />,
-      badge: "NEW",
-    },
-    {
-      title: t("nav.settings"),
-      path: "/settings",
-      icon: <Settings className="h-5 w-5 mr-3" />,
-    }
-  ];
+  const getUserItems = (): NavItem[] => {
+    const baseItems = [
+      {
+        title: t("nav.profile"),
+        path: "/profile",
+        icon: <User className="h-5 w-5 mr-3" />,
+      },
+      {
+        title: t("nav.ai_assistant"),
+        path: "/ai-assistant",
+        icon: <Brain className="h-5 w-5 mr-3" />,
+      },
+      {
+        title: "Translation",
+        path: "/translation",
+        icon: <Globe className="h-5 w-5 mr-3" />,
+        badge: "NEW",
+      },
+      {
+        title: "Traffic Insights",
+        path: "/traffic-insights",
+        icon: <Map className="h-5 w-5 mr-3" />,
+        badge: "NEW",
+      }
+    ];
+
+    // Only add admin-only items for admin users
+    const adminItems = user?.role === 'admin' ? [
+      {
+        title: "Admin Panel",
+        path: "/admin",
+        icon: <Settings className="h-5 w-5 mr-3" />,
+        badge: "ADMIN",
+      },
+      {
+        title: t("nav.settings"),
+        path: "/settings",
+        icon: <Settings className="h-5 w-5 mr-3" />,
+      }
+    ] : [
+      // Regular users don't see admin panel or settings
+    ];
+
+    return [...baseItems, ...adminItems];
+  };
   
   const navItems = getNavItems();
   const userItems = getUserItems();

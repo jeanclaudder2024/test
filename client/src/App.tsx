@@ -1,6 +1,7 @@
 import { Switch, Route, useLocation } from "wouter";
 import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
+import AdminRoute from "@/components/AdminRoute";
 import Vessels from "@/pages/Vessels";
 import VesselDetail from "@/pages/VesselDetail";
 import VesselDocuments from "@/pages/VesselDocuments";
@@ -64,8 +65,16 @@ function ProtectedRoutes() {
           <Route path="/companies" component={Companies} />
           <Route path="/documents" component={Documents} />
           <Route path="/ai-assistant" component={AIAssistantPage} />
-          <Route path="/admin" component={AdminPanel} />
-          <Route path="/admin/subscriptions" component={SubscriptionAdmin} />
+          <Route path="/admin">
+            <AdminRoute>
+              <AdminPanel />
+            </AdminRoute>
+          </Route>
+          <Route path="/admin/subscriptions">
+            <AdminRoute>
+              <SubscriptionAdmin />
+            </AdminRoute>
+          </Route>
           <Route path="/trading" component={TradingDashboard} />
           <Route path="/translation" component={TranslationPage} />
           <Route path="/traffic-insights" component={TrafficInsights} />
