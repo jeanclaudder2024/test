@@ -5,7 +5,7 @@ import { useLanguage } from "@/hooks/use-language";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import Sidebar from "./Sidebar";
 import {
@@ -18,7 +18,8 @@ import {
 export default function Header() {
   const [location, navigate] = useLocation();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const { logoutMutation } = useAuth();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const { logout } = useAuth();
   const { toast } = useToast();
   const { t } = useLanguage();
 
@@ -31,9 +32,9 @@ export default function Header() {
   };
 
   const handleLogout = async () => {
+    setIsLoggingOut(true);
     try {
-      await logoutMutation.mutateAsync();
-      navigate('/');
+      await logout();
       toast({
         title: "Logged out successfully",
         description: "You have been logged out",
@@ -45,6 +46,8 @@ export default function Header() {
         description: "There was an error logging out. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsLoggingOut(false);
     }
   };
 
@@ -182,9 +185,9 @@ export default function Header() {
               size="icon" 
               className="h-9 w-9 rounded-full bg-orange-500/10 hover:bg-orange-500/20 transition-colors"
               onClick={handleLogout}
-              disabled={logoutMutation.isPending}
+              disabled={isLoggingOut}
             >
-              {logoutMutation.isPending ? (
+              {isLoggingOut ? (
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-orange-500 border-t-transparent" />
               ) : (
                 <LogOut className="h-4 w-4 text-orange-500" />

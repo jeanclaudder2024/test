@@ -147,7 +147,7 @@ export const useAuth = () => {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
     localStorage.removeItem('auth_token');
     setAuthState({
       user: null,
@@ -158,9 +158,14 @@ export const useAuth = () => {
     });
     
     // Call logout endpoint to inform server
-    fetch('/api/auth/logout', { method: 'POST' }).catch(() => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch (error) {
       // Ignore errors on logout
-    });
+    }
+    
+    // Force navigation to login page
+    window.location.href = '/login';
   };
 
   return {
