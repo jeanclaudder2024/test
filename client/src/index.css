@@ -2,6 +2,55 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Mobile-First Responsive Design Enhancements */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+  }
+  
+  body {
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    touch-action: manipulation;
+  }
+  
+  /* Touch-optimized interactions */
+  button, [role="button"], input[type="submit"], input[type="button"] {
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  
+  /* Ensure proper scrolling on mobile */
+  .mobile-scroll {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+  }
+  
+  /* Mobile-optimized map container */
+  .leaflet-container {
+    touch-action: pan-x pan-y;
+  }
+  
+  .leaflet-control-container {
+    pointer-events: auto;
+  }
+  
+  /* Mobile-friendly popup sizing */
+  .leaflet-popup-content-wrapper {
+    max-width: calc(100vw - 40px) !important;
+  }
+  
+  @media (max-width: 640px) {
+    .leaflet-popup-content-wrapper {
+      max-width: calc(100vw - 20px) !important;
+    }
+  }
+}
+
 /* Auth page animations */
 @keyframes fade-in {
   from {

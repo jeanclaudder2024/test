@@ -1,0 +1,53 @@
+Please review and completely fix the current mobile responsive design implementation.
+
+There are several serious issues that must be addressed:
+
+---
+
+🚨 CURRENT PROBLEMS:
+
+1. **Scroll Not Working on Mobile:**  
+   - On certain views like the map page, vertical scrolling is blocked.
+   - This prevents users from accessing hidden content.
+   - You must **ensure all pages allow smooth vertical scrolling** unless intentionally locked.
+
+2. **Logo Size Issue:**  
+   - The logo size has been reduced significantly in the mobile view.
+   - Do not change the original logo dimensions unless requested.
+   - It should scale **proportionally** for mobile, not shrink excessively.
+
+3. **Map Display Issues:**  
+   - The map takes over the screen and prevents proper content interaction.
+   - Ensure the map is properly **contained**, scrollable where needed, and doesn't block UI elements or interfere with gestures.
+
+4. **Content Visibility:**  
+   - Parts of the UI/content are getting cut off or hidden on mobile.
+   - Use correct responsive layout techniques (Flex/Grid, overflow rules) to make sure **all sections remain accessible** and legible.
+
+---
+
+✅ WHAT YOU MUST DO:
+
+1. **Fix scrolling issues**:
+   - Ensure mobile screens allow vertical scroll.
+   - Use `overflow-y: auto` or appropriate containers.
+
+2. **Fix Logo scaling**:
+   - Restore original logo size or scale it proportionally for mobile.
+   - Don’t override its dimensions unless absolutely necessary.
+
+3. **Fix Map rendering**:
+   - Map should resize properly and **not block scrolling**.
+   - You may wrap it in a scrollable container or use touch gesture controls properly.
+
+4. **Audit all pages for mobile responsiveness**:
+   - All sections (login, dashboard, vessel detail, admin) must behave responsively.
+   - Use breakpoints and layout changes based on viewport sizes.
+
+5. **Test on actual devices**, not just resized browser.
+
+6. Ensure there’s **no element covering another**, no UI overlapping, and **every action (click/scroll/zoom)** works smoothly.
+
+---
+
+This should be a professional, mobile-first experience that **feels like a real app**, not a broken layout. Please do not guess changes – test everything thoroughly before pushing.

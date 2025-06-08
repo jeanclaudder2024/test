@@ -358,52 +358,57 @@ export default function OilVesselMap() {
   }
 
   return (
-    <div className="h-screen flex flex-col">
-      {/* Header */}
-      <div className="bg-white border-b p-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <MapIcon className="h-6 w-6 text-primary" />
-          <div>
-            <h1 className="text-xl font-bold">Oil Vessel Map</h1>
-            <p className="text-sm text-gray-600">
-              Showing {mappableVessels.length} oil vessels on map
-            </p>
+    <div className="min-h-screen flex flex-col bg-gray-50">
+      {/* Mobile-First Responsive Header */}
+      <div className="bg-white border-b p-4 lg:p-6 shadow-sm">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <MapIcon className="h-7 w-7 lg:h-8 lg:w-8 text-primary" />
+            <div>
+              <h1 className="text-xl lg:text-2xl font-bold">Oil Vessel Map</h1>
+              <p className="text-sm text-gray-600">
+                <span className="hidden sm:inline">Showing {mappableVessels.length} oil vessels on map</span>
+                <span className="sm:hidden">{mappableVessels.length} vessels</span>
+              </p>
+            </div>
           </div>
-        </div>
-        
-        <div className="flex items-center gap-4">
-          <Badge variant={connectionStatus === 'connected' ? 'default' : 'destructive'}>
-            {connectionStatus === 'connected' ? 'Live Data' : 'Disconnected'}
-          </Badge>
           
-          <Badge variant="outline" className="bg-blue-50 text-blue-700">
-            {mappableVessels.length} Vessels
-          </Badge>
-          
-          <Badge variant="outline" className="bg-green-50 text-green-700">
-            {ports.length} Ports
-          </Badge>
-          
-          <Badge variant="outline" className="bg-orange-50 text-orange-700">
-            {refineries.length} Refineries
-          </Badge>
-          
-          <Button
-            onClick={refetch}
-            disabled={loading}
-            size="sm"
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
+          {/* Mobile-optimized status badges */}
+          <div className="flex flex-wrap items-center gap-2 lg:gap-4">
+            <Badge variant={connectionStatus === 'connected' ? 'default' : 'destructive'} className="text-xs">
+              {connectionStatus === 'connected' ? 'Live Data' : 'Disconnected'}
+            </Badge>
+            
+            <Badge variant="outline" className="bg-blue-50 text-blue-700 text-xs">
+              {mappableVessels.length} Vessels
+            </Badge>
+            
+            <Badge variant="outline" className="bg-green-50 text-green-700 text-xs hidden sm:inline-flex">
+              {ports.length} Ports
+            </Badge>
+            
+            <Badge variant="outline" className="bg-orange-50 text-orange-700 text-xs hidden sm:inline-flex">
+              {refineries.length} Refineries
+            </Badge>
+            
+            <Button
+              onClick={refetch}
+              disabled={loading}
+              size="sm"
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">Refresh</span>
+            </Button>
+          </div>
         </div>
       </div>
 
-      {/* Advanced Map Controls */}
-      <div className="mb-4 p-4 bg-gray-50 rounded-lg border">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* Mobile-First Map Controls */}
+      <div className="p-4 bg-white border-b shadow-sm overflow-y-auto">
+        {/* Mobile-First Responsive Controls */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Location Search */}
           <div className="space-y-2">
             <label className="text-sm font-semibold">Search Location</label>
@@ -420,6 +425,7 @@ export default function OilVesselMap() {
                 variant="outline"
                 size="sm"
                 onClick={searchForLocation}
+                className="shrink-0"
               >
                 <Search className="h-4 w-4" />
               </Button>
@@ -459,47 +465,50 @@ export default function OilVesselMap() {
             </Select>
           </div>
 
-          {/* Map Features */}
-          <div className="space-y-2">
+          {/* Map Features - Mobile Optimized */}
+          <div className="space-y-2 sm:col-span-2 lg:col-span-1">
             <label className="text-sm font-semibold">Map Features</label>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-wrap sm:flex-col gap-2">
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={() => setShowPortZones(!showPortZones)}
-                className="justify-start"
+                className="justify-start flex-1 sm:flex-none"
               >
                 <Anchor className="h-4 w-4 mr-2" />
-                {showPortZones ? 'Hide' : 'Show'} Port Zones
+                <span className="hidden sm:inline">{showPortZones ? 'Hide' : 'Show'} Port Zones</span>
+                <span className="sm:hidden">Ports</span>
               </Button>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={() => setShowTrafficDensity(!showTrafficDensity)}
-                className="justify-start"
+                className="justify-start flex-1 sm:flex-none"
               >
                 <Layers className="h-4 w-4 mr-2" />
-                {showTrafficDensity ? 'Hide' : 'Show'} Traffic
+                <span className="hidden sm:inline">{showTrafficDensity ? 'Hide' : 'Show'} Traffic</span>
+                <span className="sm:hidden">Traffic</span>
               </Button>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={() => setShowDestinationLines(!showDestinationLines)}
-                className="justify-start"
+                className="justify-start flex-1 sm:flex-none"
               >
                 <ArrowRight className="h-4 w-4 mr-2" />
-                {showDestinationLines ? 'Hide' : 'Show'} Destinations
+                <span className="hidden sm:inline">{showDestinationLines ? 'Hide' : 'Show'} Destinations</span>
+                <span className="sm:hidden">Routes</span>
               </Button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Map Container */}
-      <div className="flex-1 relative">
+      {/* Mobile-First Map Container - Fixed Height with Touch Support */}
+      <div className="relative w-full h-[60vh] sm:h-[70vh] lg:h-[75vh] xl:h-[80vh] bg-gray-100 rounded-lg overflow-hidden shadow-sm">
         {loading && (
           <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
             <div className="flex items-center gap-2">
@@ -512,10 +521,19 @@ export default function OilVesselMap() {
         <MapContainer
           center={mapCenter}
           zoom={defaultZoom}
-          style={{ height: '100%', width: '100%' }}
+          style={{ 
+            height: '100%', 
+            width: '100%',
+            touchAction: 'pan-x pan-y',
+            zIndex: 1
+          }}
           maxZoom={18}
           minZoom={2}
           key={`${mapCenter[0]}-${mapCenter[1]}`}
+          touchZoom={true}
+          scrollWheelZoom={true}
+          doubleClickZoom={true}
+          dragging={true}
         >
           <LayersControl position="topright">
             <LayersControl.BaseLayer checked={mapStyle === 'street'} name="Street Map">
@@ -896,24 +914,137 @@ export default function OilVesselMap() {
           })()}
         </MapContainer>
 
-        {/* Legend */}
-        <div className="absolute bottom-4 right-4 bg-white rounded-lg shadow-lg p-3 z-[1000]">
-          <div className="text-sm font-semibold mb-2">Map Legend</div>
+        {/* Mobile-Optimized Legend */}
+        <div className="absolute bottom-2 right-2 sm:bottom-4 sm:right-4 bg-white rounded-lg shadow-lg p-2 sm:p-3 z-[1000] max-w-[140px] sm:max-w-none">
+          <div className="text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Legend</div>
           <div className="space-y-1 text-xs">
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-red-400 rounded-full border border-white shadow"></div>
-              <span>{mappableVessels.length} Oil Vessels</span>
+              <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-red-400 rounded-full border border-white shadow shrink-0"></div>
+              <span className="truncate">{mappableVessels.length} Vessels</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 bg-green-500 rounded-full border border-white shadow"></div>
-              <span>{(ports as any[]).length} Ports</span>
+              <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-green-500 rounded-full border border-white shadow shrink-0"></div>
+              <span className="truncate">{(ports as any[]).length} Ports</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 bg-orange-500 rounded-full border border-white shadow"></div>
-              <span>{(refineries as any[]).length} Refineries</span>
+              <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-orange-500 rounded-full border border-white shadow shrink-0"></div>
+              <span className="truncate">{(refineries as any[]).length} Refineries</span>
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Mobile-First Content Sections Below Map */}
+      <div className="p-4 space-y-6">
+        {/* Quick Stats Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <Card className="p-4">
+            <div className="flex items-center gap-3">
+              <Ship className="h-8 w-8 text-blue-600" />
+              <div>
+                <div className="text-2xl font-bold">{mappableVessels.length}</div>
+                <div className="text-sm text-gray-600">Active Vessels</div>
+              </div>
+            </div>
+          </Card>
+          
+          <Card className="p-4">
+            <div className="flex items-center gap-3">
+              <Anchor className="h-8 w-8 text-green-600" />
+              <div>
+                <div className="text-2xl font-bold">{(ports as any[]).length}</div>
+                <div className="text-sm text-gray-600">Ports</div>
+              </div>
+            </div>
+          </Card>
+          
+          <Card className="p-4">
+            <div className="flex items-center gap-3">
+              <Factory className="h-8 w-8 text-orange-600" />
+              <div>
+                <div className="text-2xl font-bold">{(refineries as any[]).length}</div>
+                <div className="text-sm text-gray-600">Refineries</div>
+              </div>
+            </div>
+          </Card>
+          
+          <Card className="p-4">
+            <div className="flex items-center gap-3">
+              <Map className="h-8 w-8 text-purple-600" />
+              <div>
+                <div className="text-2xl font-bold">{mappableVessels.filter(v => v.voyageProgress && v.voyageProgress > 0).length}</div>
+                <div className="text-sm text-gray-600">Active Voyages</div>
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* Active Vessels List - Mobile Optimized */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Ship className="h-5 w-5" />
+              Active Oil Vessels
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {mappableVessels.slice(0, 10).map((vessel) => (
+                <div key={vessel.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium truncate">{vessel.name}</div>
+                    <div className="text-sm text-gray-600 truncate">{vessel.vesselType}</div>
+                    <div className="text-xs text-gray-500">IMO: {vessel.imo}</div>
+                  </div>
+                  <div className="text-right shrink-0 ml-4">
+                    <Badge variant="outline" className="text-xs">
+                      {vessel.flag}
+                    </Badge>
+                    {vessel.voyageProgress && vessel.voyageProgress > 0 && (
+                      <div className="text-xs text-green-600 mt-1">
+                        {vessel.voyageProgress}% Complete
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {mappableVessels.length > 10 && (
+                <div className="text-center text-sm text-gray-500 py-2">
+                  And {mappableVessels.length - 10} more vessels...
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Vessel Progress Tracking */}
+        {mappableVessels.filter(v => v.voyageProgress && v.voyageProgress > 0).length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ArrowRight className="h-5 w-5" />
+                Active Voyage Progress
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {mappableVessels
+                  .filter(v => v.voyageProgress && v.voyageProgress > 0)
+                  .slice(0, 5)
+                  .map((vessel) => (
+                    <div key={vessel.id}>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-medium truncate flex-1">{vessel.name}</span>
+                        <span className="text-sm text-gray-600 ml-2">{vessel.voyageProgress}%</span>
+                      </div>
+                      <VoyageProgressBar vesselId={vessel.id} vessel={vessel} />
+                    </div>
+                  ))
+                }
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
