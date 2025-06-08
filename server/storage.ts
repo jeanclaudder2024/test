@@ -5,7 +5,7 @@ import {
   refineryPortConnections, vesselPortConnections, companies, vesselRefineryConnections,
   brokerCompanies, companyPartnerships, userBrokerConnections,
   subscriptionPlans, subscriptions, paymentMethods, invoices, landingPageContent,
-  vesselDocuments, vesselArticles,
+  vesselDocuments, professionalDocuments, vesselDocumentAssociations,
   User, InsertUser, 
   Vessel, InsertVessel,
   Refinery, InsertRefinery,
@@ -26,7 +26,8 @@ import {
   Invoice, InsertInvoice,
   LandingPageContent, InsertLandingPageContent,
   InsertVesselDocument, SelectVesselDocument,
-  VesselArticle, InsertVesselArticle
+  ProfessionalDocument, InsertProfessionalDocument,
+  VesselDocumentAssociation, InsertVesselDocumentAssociation
 } from "@shared/schema";
 
 // Storage interface with CRUD methods
@@ -159,12 +160,17 @@ export interface IStorage {
   updateCompany(id: number, company: Partial<InsertCompany>): Promise<Company | undefined>;
   deleteCompany(id: number): Promise<boolean>;
   
-  // Vessel Articles methods
-  getVesselArticles(vesselId: number): Promise<VesselArticle[]>;
-  getVesselArticleById(id: number): Promise<VesselArticle | undefined>;
-  createVesselArticle(article: InsertVesselArticle): Promise<VesselArticle>;
-  updateVesselArticle(id: number, article: Partial<InsertVesselArticle>): Promise<VesselArticle | undefined>;
-  deleteVesselArticle(id: number): Promise<boolean>;
+  // Professional Document Management methods
+  getProfessionalDocuments(): Promise<ProfessionalDocument[]>;
+  getProfessionalDocumentById(id: number): Promise<ProfessionalDocument | undefined>;
+  createProfessionalDocument(document: InsertProfessionalDocument): Promise<ProfessionalDocument>;
+  updateProfessionalDocument(id: number, document: Partial<InsertProfessionalDocument>): Promise<ProfessionalDocument | undefined>;
+  deleteProfessionalDocument(id: number): Promise<boolean>;
+  
+  // Vessel Document Association methods
+  getVesselDocuments(vesselId: number): Promise<ProfessionalDocument[]>;
+  associateDocumentWithVessel(vesselId: number, documentId: number): Promise<VesselDocumentAssociation>;
+  removeDocumentFromVessel(vesselId: number, documentId: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {

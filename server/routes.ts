@@ -4588,22 +4588,131 @@ Only use authentic, real-world data for existing refineries.`;
     }
   });
 
-  // Professional Article Generation API Routes
+  // Professional Document Management API Routes
   
-  // Get vessel articles
-  apiRouter.get("/vessels/:vesselId/articles", authenticateToken, async (req: AuthenticatedRequest, res) => {
+  // Get documents for a vessel
+  apiRouter.get("/vessels/:vesselId/documents", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
       const vesselId = parseInt(req.params.vesselId);
       if (isNaN(vesselId)) {
         return res.status(400).json({ message: "Invalid vessel ID" });
       }
 
-      const articles = await storage.getVesselArticles(vesselId);
-      res.json(articles);
+      const documents = await storage.getVesselDocuments(vesselId);
+      res.json(documents);
     } catch (error) {
-      console.error("Error fetching vessel articles:", error);
+      console.error("Error fetching vessel documents:", error);
       res.status(500).json({ 
-        message: "Failed to fetch articles",
+        message: "Failed to fetch documents",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Admin: Get all professional documents
+  apiRouter.get("/admin/documents", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const documents = await storage.getProfessionalDocuments();
+      res.json(documents);
+    } catch (error) {
+      console.error("Error fetching professional documents:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch documents",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Admin: Create new professional document
+  apiRouter.post("/admin/documents", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const { title, description } = req.body;
+      
+      if (!title || !description) {
+        return res.status(400).json({ message: "Title and description are required" });
+      }
+
+      if (!req.user) {
+        return res.status(401).json({ message: "User authentication required" });
+      }
+
+      // Generate content using AI
+      const { professionalDocumentService } = await import('../services/professionalDocumentService');
+      const content = await professionalDocumentService.generateDocumentContent(title, description);
+
+      const document = await storage.createProfessionalDocument({
+        title,
+        description,
+        content,
+        createdBy: req.user.id
+      });
+
+      res.status(201).json(document);
+    } catch (error) {
+      console.error("Error creating professional document:", error);
+      res.status(500).json({ 
+        message: "Failed to create document",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Download PDF for a document
+  apiRouter.get("/vessels/:vesselId/documents/:documentId/pdf", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const vesselId = parseInt(req.params.vesselId);
+      const documentId = parseInt(req.params.documentId);
+      
+      if (isNaN(vesselId) || isNaN(documentId)) {
+        return res.status(400).json({ message: "Invalid vessel or document ID" });
+      }
+
+      // Get vessel data for PDF generation
+      const vessel = await storage.getVesselById(vesselId);
+      if (!vessel) {
+        return res.status(404).json({ message: "Vessel not found" });
+      }
+
+      // Generate or get existing PDF
+      const { professionalDocumentService } = await import('../services/professionalDocumentService');
+      const pdfPath = await professionalDocumentService.generatePDF(documentId, vessel);
+
+      // Serve the PDF file
+      const fullPath = path.join(process.cwd(), pdfPath);
+      if (!fs.existsSync(fullPath)) {
+        return res.status(404).json({ message: "PDF not found" });
+      }
+
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', 'attachment; filename="document.pdf"');
+      
+      const fileStream = fs.createReadStream(fullPath);
+      fileStream.pipe(res);
+    } catch (error) {
+      console.error("Error downloading PDF:", error);
+      res.status(500).json({ 
+        message: "Failed to download PDF",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Admin: Associate document with vessel
+  apiRouter.post("/admin/vessels/:vesselId/documents/:documentId", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const vesselId = parseInt(req.params.vesselId);
+      const documentId = parseInt(req.params.documentId);
+      
+      if (isNaN(vesselId) || isNaN(documentId)) {
+        return res.status(400).json({ message: "Invalid vessel or document ID" });
+      }
+
+      const association = await storage.associateDocumentWithVessel(vesselId, documentId);
+      res.status(201).json(association);
+    } catch (error) {
+      console.error("Error associating document with vessel:", error);
+      res.status(500).json({ 
+        message: "Failed to associate document",
         error: error instanceof Error ? error.message : "Unknown error"
       });
     }
