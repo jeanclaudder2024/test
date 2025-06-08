@@ -258,8 +258,8 @@ export class VesselTrackingService {
       await db
         .update(vessels)
         .set({
-          departurePort: startPortId,
-          destinationPort: endPortId,
+          departurePort: startPortId.toString(),
+          destinationPort: endPortId.toString(),
           departureDate: startDate,
           eta: endDate,
           currentLat: voyageData.currentPosition.lat.toString(),

@@ -6995,11 +6995,11 @@ Note: This document contains real vessel operational data and should be treated 
 
   // Voyage Simulation API Endpoints - Realistic Vessel Movement System
   
-  // Start voyage simulation for a vessel
+  // Start voyage tracking for a vessel
   app.post("/api/vessels/:id/start-voyage", async (req: Request, res: Response) => {
     try {
       const vesselId = parseInt(req.params.id);
-      const { departurePortId, destinationPortId, vesselSpeed = 15 } = req.body;
+      const { departurePortId, destinationPortId, departureDate, eta } = req.body;
 
       if (isNaN(vesselId) || !departurePortId || !destinationPortId) {
         return res.status(400).json({ 
@@ -7007,27 +7007,27 @@ Note: This document contains real vessel operational data and should be treated 
         });
       }
 
-      await voyageSimulationService.startVoyageSimulation(
+      await vesselTrackingService.addVoyage(
         vesselId, 
         departurePortId, 
         destinationPortId, 
-        vesselSpeed
+        new Date(departureDate || Date.now()),
+        new Date(eta || Date.now() + 7 * 24 * 60 * 60 * 1000) // Default 7 days
       );
 
       res.json({ 
-        message: "Voyage simulation started - vessel will move daily between ports",
+        message: "Voyage tracking started",
         vesselId,
         departurePortId,
-        destinationPortId,
-        vesselSpeed
+        destinationPortId
       });
     } catch (error) {
-      console.error("Error starting voyage simulation:", error);
-      res.status(500).json({ message: "Failed to start voyage simulation" });
+      console.error("Error starting voyage tracking:", error);
+      res.status(500).json({ message: "Failed to start voyage tracking" });
     }
   });
 
-  // Stop voyage simulation for a vessel
+  // Stop voyage tracking for a vessel
   app.post("/api/vessels/:id/stop-voyage", async (req: Request, res: Response) => {
     try {
       const vesselId = parseInt(req.params.id);
@@ -7035,11 +7035,11 @@ Note: This document contains real vessel operational data and should be treated 
         return res.status(400).json({ message: "Invalid vessel ID" });
       }
 
-      voyageSimulationService.stopVoyageSimulation(vesselId);
-      res.json({ message: "Voyage simulation stopped", vesselId });
+      vesselTrackingService.removeVoyage(vesselId);
+      res.json({ message: "Voyage tracking stopped", vesselId });
     } catch (error) {
-      console.error("Error stopping voyage simulation:", error);
-      res.status(500).json({ message: "Failed to stop voyage simulation" });
+      console.error("Error stopping voyage tracking:", error);
+      res.status(500).json({ message: "Failed to stop voyage tracking" });
     }
   });
 
@@ -7051,35 +7051,20 @@ Note: This document contains real vessel operational data and should be treated 
         return res.status(400).json({ message: "Invalid vessel ID" });
       }
 
-      const voyageInfo = voyageSimulationService.getVoyageInfo(vesselId);
+      const voyageInfo = vesselTrackingService.getVoyageData(vesselId);
       if (!voyageInfo) {
-        return res.status(404).json({ message: "No voyage simulation found for this vessel" });
+        return res.status(404).json({ message: "No voyage tracking found for this vessel" });
       }
-
-      // Calculate progress percentage based on current position in voyage
-      const progressPercentage = Math.min(Math.round((voyageInfo.currentDay / voyageInfo.totalDays) * 100), 100);
-      
-      // Get current position
-      const currentPosition = voyageInfo.routePoints[voyageInfo.currentDay % voyageInfo.totalDays];
-      
-      // Calculate estimated completion time
-      const remainingDays = voyageInfo.totalDays - voyageInfo.currentDay;
-      const estimatedCompletion = new Date(Date.now() + remainingDays * 24 * 60 * 60 * 1000);
 
       res.json({
         vesselId: voyageInfo.vesselId,
-        departurePortId: voyageInfo.departurePortId,
-        destinationPortId: voyageInfo.destinationPortId,
-        totalDays: voyageInfo.totalDays,
-        currentDay: voyageInfo.currentDay,
-        direction: voyageInfo.direction,
-        lastUpdate: voyageInfo.lastUpdate,
-        progressPercentage: progressPercentage,
-        currentPosition: currentPosition,
-        estimatedCompletion: estimatedCompletion,
-        status: currentPosition?.status || 'sailing',
-        routeDistance: voyageInfo.routePoints ? 
-          voyageSimulationService.calculateRouteDistance(voyageInfo.routePoints) : 0
+        startPort: voyageInfo.startPort,
+        endPort: voyageInfo.endPort,
+        startDate: voyageInfo.startDate,
+        endDate: voyageInfo.endDate,
+        currentPosition: voyageInfo.currentPosition,
+        status: voyageInfo.status,
+        progressPercent: voyageInfo.progressPercent
       });
     } catch (error) {
       console.error("Error getting voyage info:", error);
@@ -7087,17 +7072,17 @@ Note: This document contains real vessel operational data and should be treated 
     }
   });
 
-  // Update all voyage simulations (daily position updates)
+  // Force update all vessel positions
   app.post("/api/admin/update-voyage-simulations", async (req: Request, res: Response) => {
     try {
-      await voyageSimulationService.updateAllVoyages();
+      await vesselTrackingService.forceUpdate();
       res.json({ 
-        message: "All voyage simulations updated - vessels moved to next daily positions",
-        activeVoyages: voyageSimulationService.getAllActiveVoyages().length
+        message: "All vessel positions updated",
+        activeVoyages: vesselTrackingService.getAllActiveVoyages().length
       });
     } catch (error) {
-      console.error("Error updating voyage simulations:", error);
-      res.status(500).json({ message: "Failed to update voyage simulations" });
+      console.error("Error updating vessel positions:", error);
+      res.status(500).json({ message: "Failed to update vessel positions" });
     }
   });
 
