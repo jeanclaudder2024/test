@@ -1,0 +1,49 @@
+Please redesign the "AI Article Generation" feature into a **Professional Document Management System** for the "Vessel Detail Page", with the following critical requirements:
+
+---
+
+🔵 **Rename & Concept Change:**
+- Replace all mentions of "Professional Article" with **"Document"**.
+- The system must not show anything labeled as "Generated" or "AI Generated" to the end users.  
+  The final user must **only see a list of clean, professional documents**.
+
+---
+
+🔵 **Admin Panel: Document Management Module:**
+- Add a new section in the admin panel named **"Document Management"**.
+- I should be able to:
+  - Manually create new documents by inputting:
+    - Document Title
+    - Document Description
+  - Once created, your backend will automatically use AI to **generate the content** based on the title and description.
+  - Your backend should **generate a downloadable PDF** for each document.
+- PDF Requirements:
+  - Must include our company logo at the top.
+  - Must have a watermark with our logo in the background.
+  - The design and structure should be clean, highly professional, and print-friendly.
+
+---
+
+🔵 **Vessel Detail Page (Client View):**
+- Users will only see the **list of document titles and their descriptions**.
+- No buttons or labels should mention "Generate".
+- Each document should have a **"Download PDF"** button.
+- Once clicked, the backend silently fetches or generates the PDF, then serves it to the user.
+
+---
+
+🔵 **Database Updates Policy:**
+- **Do not make direct changes to the database.**
+- For any changes you need to make to tables, **send me the exact SQL queries**, and I will apply them manually.
+- Avoid using migrations or automatic schema modifications.
+
+---
+
+🔵 **Professionalism is Key:**
+- The entire system (Admin + Client view + PDFs) must look and behave in a highly professional, polished way.
+- The layout, spacing, and fonts should be clean and modern.
+- PDF documents must look like they were prepared manually by experts.
+
+---
+
+Please clean up any previous script/code related to old article generation and start fresh with this more refined, document-centric system.

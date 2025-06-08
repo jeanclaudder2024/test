@@ -895,28 +895,41 @@ export const subscriptionPlans = pgTable("subscription_plans", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Professional Articles for Vessels
-export const vesselArticles = pgTable("vessel_articles", {
+// Professional Document Management System
+export const professionalDocuments = pgTable("professional_documents", {
   id: serial("id").primaryKey(),
-  vesselId: integer("vessel_id").notNull().references(() => vessels.id),
-  authorId: integer("author_id").notNull().references(() => users.id),
   title: text("title").notNull(),
-  type: text("type").notNull(), // commercial_analysis, technical_certificate, inspection_report, cargo_manifest
-  content: text("content").notNull(),
-  pdfUrl: text("pdf_url"), // Path to generated PDF file
-  isPublished: boolean("is_published").default(true),
+  description: text("description").notNull(),
+  content: text("content"), // AI-generated content
+  pdfPath: text("pdf_path"), // Path to generated PDF file
+  isActive: boolean("is_active").default(true),
+  createdBy: integer("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-export const insertVesselArticleSchema = createInsertSchema(vesselArticles).omit({
+export const vesselDocumentAssociations = pgTable("vessel_document_associations", {
+  id: serial("id").primaryKey(),
+  vesselId: integer("vessel_id").notNull().references(() => vessels.id),
+  documentId: integer("document_id").notNull().references(() => professionalDocuments.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertProfessionalDocumentSchema = createInsertSchema(professionalDocuments).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
 });
 
-export type VesselArticle = typeof vesselArticles.$inferSelect;
-export type InsertVesselArticle = z.infer<typeof insertVesselArticleSchema>;
+export const insertVesselDocumentAssociationSchema = createInsertSchema(vesselDocumentAssociations).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type ProfessionalDocument = typeof professionalDocuments.$inferSelect;
+export type InsertProfessionalDocument = z.infer<typeof insertProfessionalDocumentSchema>;
+export type VesselDocumentAssociation = typeof vesselDocumentAssociations.$inferSelect;
+export type InsertVesselDocumentAssociation = z.infer<typeof insertVesselDocumentAssociationSchema>;
 
 export const insertSubscriptionPlanSchema = createInsertSchema(subscriptionPlans).omit({
   id: true,

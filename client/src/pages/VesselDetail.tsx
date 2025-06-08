@@ -585,10 +585,6 @@ export default function VesselDetail() {
                     <Compass className="h-4 w-4 mr-2" />
                     Voyage
                   </TabsTrigger>
-                  <TabsTrigger value="documents" className="flex items-center">
-                    <FileText className="h-4 w-4 mr-2" />
-                    Documents
-                  </TabsTrigger>
                   <TabsTrigger value="articles" className="flex items-center">
                     <FileCheck className="h-4 w-4 mr-2" />
                     Professional Articles
@@ -842,22 +838,7 @@ export default function VesselDetail() {
                   </Card>
                 </TabsContent>
                 
-                <TabsContent value="documents">
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="flex items-center">
-                        <FileText className="h-5 w-5 mr-2 text-primary" />
-                        AI-Generated Vessel Documents
-                      </CardTitle>
-                      <CardDescription>
-                        Comprehensive maritime documentation powered by AI analysis
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <AIDocumentGenerator vessel={vessel} />
-                    </CardContent>
-                  </Card>
-                </TabsContent>
+
                 
                 <TabsContent value="articles">
                   <Card>

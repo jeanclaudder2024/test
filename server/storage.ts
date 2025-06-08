@@ -1014,39 +1014,81 @@ export class DatabaseStorage implements IStorage {
     return R * c; // Distance in km
   }
 
-  // Vessel Articles methods
-  async getVesselArticles(vesselId: number): Promise<VesselArticle[]> {
+  // Professional Document Management methods
+  async getProfessionalDocuments(): Promise<ProfessionalDocument[]> {
     return await db.select()
-      .from(vesselArticles)
-      .where(eq(vesselArticles.vesselId, vesselId))
-      .orderBy(vesselArticles.createdAt);
+      .from(professionalDocuments)
+      .where(eq(professionalDocuments.isActive, true))
+      .orderBy(professionalDocuments.createdAt);
   }
 
-  async getVesselArticleById(id: number): Promise<VesselArticle | undefined> {
-    const [article] = await db.select()
-      .from(vesselArticles)
-      .where(eq(vesselArticles.id, id));
-    return article || undefined;
+  async getProfessionalDocumentById(id: number): Promise<ProfessionalDocument | undefined> {
+    const [document] = await db.select()
+      .from(professionalDocuments)
+      .where(eq(professionalDocuments.id, id));
+    return document || undefined;
   }
 
-  async createVesselArticle(article: InsertVesselArticle): Promise<VesselArticle> {
-    const [newArticle] = await db.insert(vesselArticles)
-      .values(article)
+  async createProfessionalDocument(document: InsertProfessionalDocument): Promise<ProfessionalDocument> {
+    const [newDocument] = await db.insert(professionalDocuments)
+      .values(document)
       .returning();
-    return newArticle;
+    return newDocument;
   }
 
-  async updateVesselArticle(id: number, article: Partial<InsertVesselArticle>): Promise<VesselArticle | undefined> {
-    const [updatedArticle] = await db.update(vesselArticles)
-      .set({ ...article, updatedAt: new Date() })
-      .where(eq(vesselArticles.id, id))
+  async updateProfessionalDocument(id: number, document: Partial<InsertProfessionalDocument>): Promise<ProfessionalDocument | undefined> {
+    const [updatedDocument] = await db.update(professionalDocuments)
+      .set({ ...document, updatedAt: new Date() })
+      .where(eq(professionalDocuments.id, id))
       .returning();
-    return updatedArticle || undefined;
+    return updatedDocument || undefined;
   }
 
-  async deleteVesselArticle(id: number): Promise<boolean> {
-    const result = await db.delete(vesselArticles)
-      .where(eq(vesselArticles.id, id));
+  async deleteProfessionalDocument(id: number): Promise<boolean> {
+    const result = await db.update(professionalDocuments)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(eq(professionalDocuments.id, id));
+    return result.rowCount > 0;
+  }
+
+  async getVesselDocuments(vesselId: number): Promise<ProfessionalDocument[]> {
+    return await db.select({
+      id: professionalDocuments.id,
+      title: professionalDocuments.title,
+      description: professionalDocuments.description,
+      content: professionalDocuments.content,
+      pdfPath: professionalDocuments.pdfPath,
+      isActive: professionalDocuments.isActive,
+      createdBy: professionalDocuments.createdBy,
+      createdAt: professionalDocuments.createdAt,
+      updatedAt: professionalDocuments.updatedAt,
+    })
+    .from(professionalDocuments)
+    .innerJoin(vesselDocumentAssociations, eq(professionalDocuments.id, vesselDocumentAssociations.documentId))
+    .where(
+      and(
+        eq(vesselDocumentAssociations.vesselId, vesselId),
+        eq(professionalDocuments.isActive, true)
+      )
+    )
+    .orderBy(professionalDocuments.createdAt);
+  }
+
+  async associateDocumentWithVessel(vesselId: number, documentId: number): Promise<VesselDocumentAssociation> {
+    const [association] = await db.insert(vesselDocumentAssociations)
+      .values({ vesselId, documentId })
+      .returning();
+    return association;
+  }
+
+  async removeDocumentFromVessel(vesselId: number, documentId: number): Promise<boolean> {
+    const result = await db.delete(vesselDocumentAssociations)
+      .where(
+        and(
+          eq(vesselDocumentAssociations.vesselId, vesselId),
+          eq(vesselDocumentAssociations.documentId, documentId)
+        )
+      );
     return result.rowCount > 0;
   }
 }
