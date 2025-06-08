@@ -7086,20 +7086,21 @@ Note: This document contains real vessel operational data and should be treated 
     }
   });
 
-  // Get all active voyage simulations
+  // Get all active voyages
   app.get("/api/admin/active-voyages", async (req: Request, res: Response) => {
     try {
-      const activeVoyages = voyageSimulationService.getAllActiveVoyages();
+      const activeVoyages = vesselTrackingService.getAllActiveVoyages();
       res.json({
         count: activeVoyages.length,
         voyages: activeVoyages.map(voyage => ({
           vesselId: voyage.vesselId,
-          departurePortId: voyage.departurePortId,
-          destinationPortId: voyage.destinationPortId,
-          currentDay: voyage.currentDay,
-          totalDays: voyage.totalDays,
-          direction: voyage.direction,
-          lastUpdate: voyage.lastUpdate
+          startPort: voyage.startPort,
+          endPort: voyage.endPort,
+          startDate: voyage.startDate,
+          endDate: voyage.endDate,
+          currentPosition: voyage.currentPosition,
+          status: voyage.status,
+          progressPercent: voyage.progressPercent
         }))
       });
     } catch (error) {
@@ -7108,7 +7109,7 @@ Note: This document contains real vessel operational data and should be treated 
     }
   });
 
-  // Initialize voyage simulations for all vessels with destinations
+  // Initialize vessel tracking for all vessels with destinations
   app.post("/api/admin/initialize-voyage-simulations", async (req: Request, res: Response) => {
     try {
       let initiatedCount = 0;
@@ -7126,15 +7127,16 @@ Note: This document contains real vessel operational data and should be treated 
             parseFloat(vessel.destinationLat), parseFloat(vessel.destinationLng));
           
           if (departurePort && destinationPort && departurePort.id !== destinationPort.id) {
-            // Check if voyage simulation already exists
-            const existingVoyage = voyageSimulationService.getVoyageInfo(vessel.id);
+            // Check if voyage tracking already exists
+            const existingVoyage = vesselTrackingService.getVoyageData(vessel.id);
             if (!existingVoyage) {
-              console.log(`Starting voyage simulation for vessel ${vessel.name} (${vessel.id})`);
-              await voyageSimulationService.startVoyageSimulation(
+              console.log(`Starting voyage tracking for vessel ${vessel.name} (${vessel.id})`);
+              await vesselTrackingService.addVoyage(
                 vessel.id,
                 departurePort.id,
                 destinationPort.id,
-                parseFloat(vessel.speed || '12')
+                new Date(vessel.departureDate || Date.now()),
+                new Date(vessel.eta || Date.now() + 7 * 24 * 60 * 60 * 1000)
               );
               initiatedCount++;
             }
@@ -7143,12 +7145,12 @@ Note: This document contains real vessel operational data and should be treated 
       }
       
       res.json({ 
-        message: `Voyage simulations initialized for ${initiatedCount} vessels`,
+        message: `Vessel tracking initialized for ${initiatedCount} vessels`,
         initiatedCount
       });
     } catch (error) {
-      console.error("Error initializing voyage simulations:", error);
-      res.status(500).json({ message: "Failed to initialize voyage simulations" });
+      console.error("Error initializing vessel tracking:", error);
+      res.status(500).json({ message: "Failed to initialize vessel tracking" });
     }
   });
 
@@ -7180,16 +7182,8 @@ Note: This document contains real vessel operational data and should be treated 
   console.log('🚢 Starting vessel tracking system...');
   vesselTrackingService.forceUpdate(); // Initialize with current data
 
-  // Start the voyage simulation scheduler (daily updates)
-  console.log('🚢 Starting voyage simulation scheduler...');
-  setInterval(async () => {
-    try {
-      await voyageSimulationService.updateAllVoyages();
-      console.log('Daily voyage simulation update completed');
-    } catch (error) {
-      console.error('Error in daily voyage simulation update:', error);
-    }
-  }, 24 * 60 * 60 * 1000); // Run every 24 hours
+  // The vessel tracking system automatically updates positions every 30 minutes
+  console.log('🚢 Vessel tracking system is now fully operational');
 
   return httpServer;
 }
