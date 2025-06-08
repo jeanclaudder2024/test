@@ -42,7 +42,7 @@ export async function initializeCustomAuthTables() {
     console.log('Custom authentication tables created successfully');
     
     // Insert test admin user (password: "admin123")
-    const adminPasswordHash = '$2b$10$rQ8Z9J8Z8Z8Z8Z8Z8Z8Z8Z8Z8Z8Z8Z8Z8Z8Z8Z8Z8Z8Z8Z8Z8Z8Z8Z8u';
+    const adminPasswordHash = '$2b$10$ebkZSUL1mgyDtDQLr4Zr6OOoYsMtY8sNGnInRutSPTwgZfFhBeCyK';
     
     await db.execute(sql`
       INSERT INTO users (email, password, first_name, last_name, role) 
