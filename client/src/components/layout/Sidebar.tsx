@@ -138,7 +138,7 @@ export default function Sidebar({ mobile = false, onClose }: SidebarProps) {
       {
         title: "Admin Panel",
         path: "/admin",
-        icon: <Settings className="h-5 w-5 mr-3" />,
+        icon: <Shield className="h-5 w-5 mr-3" />,
         badge: "ADMIN",
       },
       {

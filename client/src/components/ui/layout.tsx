@@ -43,6 +43,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useTheme } from "@/hooks/use-theme";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useAuth } from "@/hooks/useAuth";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ShipBoatAssistant } from "@/components/ShipBoatAssistant";
 
@@ -53,6 +54,7 @@ interface LayoutProps {
 export function Layout({ children }: LayoutProps) {
   const [location, setLocation] = useLocation();
   const { theme, setTheme } = useTheme();
+  const { user } = useAuth();
   const [isMobileNavOpen, setIsMobileNavOpen] = React.useState(false);
   
   // Use simple fallback translation for now
@@ -75,19 +77,27 @@ export function Layout({ children }: LayoutProps) {
   };
 
   // Use fallback navigation if translation is not available yet
-  const navigation = React.useMemo(() => [
-    { name: t ? t("nav.vessels") : "Vessels", href: "/vessels", icon: Ship },
-    { name: t ? t("nav.oil_vessel_map") : "Oil Vessel Map", href: "/oil-vessel-map", icon: Ship },
-    { name: t ? t("nav.refineries") : "Refineries", href: "/refineries", icon: Database },
-    { name: t ? t("nav.ports") : "Ports", href: "/ports", icon: Anchor },
-    { name: t ? t("nav.documents") : "Documents", href: "/documents", icon: FileText },
-    { name: t ? t("nav.companies") : "Companies", href: "/companies", icon: Briefcase },
-    { name: t ? t("nav.brokers") : "Brokers", href: "/brokers", icon: UserPlus },
-    { name: t ? t("nav.ai_assistant") : "AI Assistant", href: "/ai-assistant", icon: MessageSquare },
-    { name: t ? t("nav.admin_panel") : "Admin Panel", href: "/admin", icon: AlertCircle },
-    { name: t ? t("nav.pricing") : "Pricing", href: "/pricing", icon: ShoppingBag },
-    { name: t ? t("nav.settings") : "Settings", href: "/settings", icon: Settings },
-  ], [t]);
+  const navigation = React.useMemo(() => {
+    const baseNavigation = [
+      { name: t ? t("nav.vessels") : "Vessels", href: "/vessels", icon: Ship },
+      { name: t ? t("nav.oil_vessel_map") : "Oil Vessel Map", href: "/oil-vessel-map", icon: Ship },
+      { name: t ? t("nav.refineries") : "Refineries", href: "/refineries", icon: Database },
+      { name: t ? t("nav.ports") : "Ports", href: "/ports", icon: Anchor },
+      { name: t ? t("nav.documents") : "Documents", href: "/documents", icon: FileText },
+      { name: t ? t("nav.companies") : "Companies", href: "/companies", icon: Briefcase },
+      { name: t ? t("nav.brokers") : "Brokers", href: "/brokers", icon: UserPlus },
+      { name: t ? t("nav.ai_assistant") : "AI Assistant", href: "/ai-assistant", icon: MessageSquare },
+      { name: t ? t("nav.pricing") : "Pricing", href: "/pricing", icon: ShoppingBag },
+    ];
+
+    // Only add admin-only items for admin users
+    const adminNavigation = user?.role === 'admin' ? [
+      { name: t ? t("nav.admin_panel") : "Admin Panel", href: "/admin", icon: AlertCircle },
+      { name: t ? t("nav.settings") : "Settings", href: "/settings", icon: Settings },
+    ] : [];
+
+    return [...baseNavigation, ...adminNavigation];
+  }, [t, user]);
 
   const handleProfile = () => {
     window.location.href = "/settings/profile";
