@@ -589,6 +589,10 @@ export default function VesselDetail() {
                     <FileText className="h-4 w-4 mr-2" />
                     Documents
                   </TabsTrigger>
+                  <TabsTrigger value="articles" className="flex items-center">
+                    <FileCheck className="h-4 w-4 mr-2" />
+                    Professional Articles
+                  </TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="details">
@@ -851,6 +855,26 @@ export default function VesselDetail() {
                     </CardHeader>
                     <CardContent>
                       <AIDocumentGenerator vessel={vessel} />
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+                
+                <TabsContent value="articles">
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-lg flex items-center">
+                        <FileCheck className="h-5 w-5 mr-2 text-primary" />
+                        Professional Maritime Articles
+                      </CardTitle>
+                      <CardDescription>
+                        AI-powered professional articles for maritime operations and documentation
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <ProfessionalArticleGenerator 
+                        vesselId={vessel.id} 
+                        vesselName={vessel.name}
+                      />
                     </CardContent>
                   </Card>
                 </TabsContent>
