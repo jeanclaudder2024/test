@@ -35,7 +35,7 @@ import SubscriptionAdmin from "@/pages/SubscriptionAdmin";
 import { useEffect } from "react";
 import { apiRequest, queryClient } from "./lib/queryClient";
 import { Layout } from "@/components/ui/layout";
-import { AuthProvider } from "@/components/AuthProvider";
+
 import { useAuth } from "@/hooks/useAuth";
 import { TranslationProvider } from "@/hooks/useTranslation.tsx";
 import { ThemeProvider } from "@/hooks/use-theme";
@@ -140,14 +140,12 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <ThemeProvider defaultTheme="system">
-          <TranslationProvider>
-            <Router />
-            <Toaster />
-          </TranslationProvider>
-        </ThemeProvider>
-      </AuthProvider>
+      <ThemeProvider defaultTheme="system">
+        <TranslationProvider>
+          <Router />
+          <Toaster />
+        </TranslationProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

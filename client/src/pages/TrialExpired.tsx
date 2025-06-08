@@ -5,10 +5,10 @@ import { Clock, Crown, Star, CheckCircle, ArrowRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function TrialExpired() {
-  const { signOut, profile } = useAuth();
+  const { logout, user } = useAuth();
 
-  const handleSignOut = async () => {
-    await signOut();
+  const handleSignOut = () => {
+    logout();
   };
 
   const formatDate = (dateString: string) => {
@@ -45,10 +45,9 @@ export default function TrialExpired() {
               Your Free Trial Has Ended
             </CardTitle>
             <CardDescription className="text-white/70 text-lg">
-              {profile && (
+              {user && (
                 <>
-                  Your 3-day trial started on {formatDate(profile.trial_start_date)} and 
-                  ended on {formatDate(profile.trial_end_date)}.
+                  Your 3-day trial has ended. Please upgrade to continue using PetroDealHub.
                 </>
               )}
             </CardDescription>
