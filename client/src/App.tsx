@@ -33,6 +33,7 @@ import OilVesselMap from "@/pages/OilVesselMap";
 import AdminPanel from "@/pages/AdminPanel";
 import SubscriptionAdmin from "@/pages/SubscriptionAdmin";
 import AdminDocumentsSimple from "@/pages/AdminDocumentsSimple";
+import LandingPageManager from "@/pages/LandingPageManager";
 
 import { useEffect } from "react";
 import { apiRequest, queryClient } from "./lib/queryClient";
@@ -79,6 +80,11 @@ function ProtectedRoutes() {
           <Route path="/admin/documents">
             <AdminRoute>
               <AdminDocumentsSimple />
+            </AdminRoute>
+          </Route>
+          <Route path="/admin/landing-page">
+            <AdminRoute>
+              <LandingPageManager />
             </AdminRoute>
           </Route>
           <Route path="/trading" component={TradingDashboard} />

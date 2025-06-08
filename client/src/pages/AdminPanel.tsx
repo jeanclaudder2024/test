@@ -303,6 +303,54 @@ export default function AdminPanel() {
                 <SystemStats loading={statsLoading} stats={stats} />
               </CardContent>
             </Card>
+            
+            {/* Quick Management Actions */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+              <Card className="bg-white/80 backdrop-blur-sm border-slate-200/60 shadow-lg hover:shadow-xl transition-all cursor-pointer"
+                    onClick={() => navigate("/admin/landing-page")}>
+                <CardContent className="p-6">
+                  <div className="flex items-center space-x-4">
+                    <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-3 rounded-lg">
+                      <Globe className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-slate-800">Landing Page Content</h3>
+                      <p className="text-sm text-slate-600">Manage all landing page content, images, and sections</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-white/80 backdrop-blur-sm border-slate-200/60 shadow-lg hover:shadow-xl transition-all cursor-pointer"
+                    onClick={() => navigate("/admin/documents")}>
+                <CardContent className="p-6">
+                  <div className="flex items-center space-x-4">
+                    <div className="bg-gradient-to-br from-blue-500 to-cyan-600 p-3 rounded-lg">
+                      <FileText className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-slate-800">Document Management</h3>
+                      <p className="text-sm text-slate-600">Manage professional documents and templates</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-white/80 backdrop-blur-sm border-slate-200/60 shadow-lg hover:shadow-xl transition-all cursor-pointer"
+                    onClick={() => navigate("/admin/subscriptions")}>
+                <CardContent className="p-6">
+                  <div className="flex items-center space-x-4">
+                    <div className="bg-gradient-to-br from-green-500 to-emerald-600 p-3 rounded-lg">
+                      <CreditCard className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-slate-800">Subscription Management</h3>
+                      <p className="text-sm text-slate-600">Manage user subscriptions and billing</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
         <TabsContent value="users" className="space-y-4">
