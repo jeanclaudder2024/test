@@ -106,7 +106,7 @@ export function MobileLayout({ children }: MobileLayoutProps) {
             <img
               src="/assets/petrodealhub-logo.png"
               alt="PetroDealHub"
-              className="h-8 w-auto object-contain"
+              className="h-10 w-auto object-contain"
             />
           </div>
 
@@ -159,7 +159,7 @@ export function MobileLayout({ children }: MobileLayoutProps) {
               <img
                 src="/assets/petrodealhub-logo.png"
                 alt="PetroDealHub"
-                className="h-8 w-auto object-contain"
+                className="h-10 w-auto object-contain"
               />
               <Button
                 variant="ghost"
@@ -332,7 +332,7 @@ export function MobileLayout({ children }: MobileLayoutProps) {
             <img
               src="/assets/petrodealhub-logo.png"
               alt="PetroDealHub"
-              className="h-8 w-auto object-contain"
+              className="h-10 w-auto object-contain"
             />
           </div>
 

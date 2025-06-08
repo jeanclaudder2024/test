@@ -646,7 +646,7 @@ export default function Vessels() {
           <div className="flex flex-col space-y-4 lg:flex-row lg:justify-between lg:items-center lg:space-y-0">
             <div className="flex-1">
               <h1 className="text-2xl lg:text-3xl font-bold flex items-center text-gray-900 dark:text-white">
-                <Ship className="h-6 w-6 lg:h-7 lg:w-7 mr-2 lg:mr-3 text-primary" />
+                <Ship className="h-8 w-8 lg:h-9 lg:w-9 mr-3 lg:mr-4 text-primary" />
                 <span className="hidden sm:inline">Vessel Management</span>
                 <span className="sm:hidden">Vessels</span>
               </h1>
