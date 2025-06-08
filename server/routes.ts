@@ -4526,6 +4526,181 @@ Only use authentic, real-world data for existing refineries.`;
     }
   });
 
+  // Landing Page Content Management API Endpoints
+  
+  // Get all landing page sections
+  app.get("/api/landing-page/sections", async (req, res) => {
+    try {
+      // Return mock data for testing until database tables are created
+      const mockSections = [
+        {
+          id: 1,
+          sectionKey: "hero",
+          sectionName: "Hero Section",
+          isEnabled: true,
+          displayOrder: 1,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
+        {
+          id: 2,
+          sectionKey: "features",
+          sectionName: "Features Section",
+          isEnabled: true,
+          displayOrder: 2,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
+        {
+          id: 3,
+          sectionKey: "how-it-works",
+          sectionName: "How It Works",
+          isEnabled: true,
+          displayOrder: 3,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }
+      ];
+      
+      res.json({ sections: mockSections });
+    } catch (error) {
+      console.error('Error fetching landing page sections:', error);
+      res.status(500).json({ error: 'Failed to fetch sections' });
+    }
+  });
+
+  // Get content for a specific section
+  app.get("/api/landing-page/content/:sectionId", async (req, res) => {
+    try {
+      const sectionId = parseInt(req.params.sectionId);
+      
+      // Return mock content data
+      const mockContent = [
+        {
+          id: 1,
+          sectionId: sectionId,
+          contentKey: "title",
+          contentType: "text",
+          contentValue: "Transform Your Maritime Oil Trading",
+          placeholderText: "Main headline",
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
+        {
+          id: 2,
+          sectionId: sectionId,
+          contentKey: "subtitle",
+          contentType: "text",
+          contentValue: "Connect, track, and manage oil shipments with real-time vessel monitoring",
+          placeholderText: "Subtitle text",
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }
+      ];
+      
+      res.json({ content: mockContent });
+    } catch (error) {
+      console.error('Error fetching section content:', error);
+      res.status(500).json({ error: 'Failed to fetch content' });
+    }
+  });
+
+  // Get images for a specific section
+  app.get("/api/landing-page/images/:sectionId", async (req, res) => {
+    try {
+      const sectionId = parseInt(req.params.sectionId);
+      
+      // Return mock image data
+      const mockImages = [
+        {
+          id: 1,
+          sectionId: sectionId,
+          imageKey: "hero-background",
+          imageUrl: "/api/placeholder/1920/1080",
+          altText: "Oil tanker at sea",
+          displayOrder: 1,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }
+      ];
+      
+      res.json({ images: mockImages });
+    } catch (error) {
+      console.error('Error fetching section images:', error);
+      res.status(500).json({ error: 'Failed to fetch images' });
+    }
+  });
+
+  // Get blocks for a specific section
+  app.get("/api/landing-page/blocks/:sectionId", async (req, res) => {
+    try {
+      const sectionId = parseInt(req.params.sectionId);
+      
+      // Return mock block data
+      const mockBlocks = [
+        {
+          id: 1,
+          sectionId: sectionId,
+          blockType: "feature-card",
+          title: "Real-time Tracking",
+          description: "Monitor vessel locations and cargo status in real-time",
+          imageUrl: "/api/placeholder/400/300",
+          linkUrl: "/features/tracking",
+          linkText: "Learn More",
+          metadata: JSON.stringify({ icon: "map-pin" }),
+          displayOrder: 1,
+          isEnabled: true,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }
+      ];
+      
+      res.json({ blocks: mockBlocks });
+    } catch (error) {
+      console.error('Error fetching section blocks:', error);
+      res.status(500).json({ error: 'Failed to fetch blocks' });
+    }
+  });
+
+  // Update section content
+  app.put("/api/landing-page/content/:id", async (req, res) => {
+    try {
+      const contentId = parseInt(req.params.id);
+      const { contentValue } = req.body;
+      
+      // Mock successful update
+      res.json({ 
+        success: true, 
+        message: "Content updated successfully",
+        id: contentId,
+        contentValue: contentValue
+      });
+    } catch (error) {
+      console.error('Error updating content:', error);
+      res.status(500).json({ error: 'Failed to update content' });
+    }
+  });
+
+  // Update section settings
+  app.put("/api/landing-page/sections/:id", async (req, res) => {
+    try {
+      const sectionId = parseInt(req.params.id);
+      const { isEnabled, displayOrder } = req.body;
+      
+      // Mock successful update
+      res.json({ 
+        success: true, 
+        message: "Section updated successfully",
+        id: sectionId,
+        isEnabled: isEnabled,
+        displayOrder: displayOrder
+      });
+    } catch (error) {
+      console.error('Error updating section:', error);
+      res.status(500).json({ error: 'Failed to update section' });
+    }
+  });
+
   // Database Health Check Status
   app.get("/api/database/status", async (req, res) => {
     try {
