@@ -13,7 +13,7 @@ import VesselManagement from "@/components/admin/VesselManagement";
 
 import { Settings } from "@/components/admin/AdminSettings";
 import { DatabaseMigration } from "@/components/admin/DatabaseMigration";
-import { LandingPageManagement } from "@/components/admin/LandingPageManagement";
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Shield, Database, Users, Settings as SettingsIcon, ChevronLeft, Factory, Anchor, Ship, CreditCard, HardDrive, Globe, Building2, BarChart3, Activity, Droplets, FileText } from "lucide-react";
@@ -419,19 +419,7 @@ export default function AdminPanel() {
           <DatabaseMigration />
         </TabsContent>
 
-        <TabsContent value="landing" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Landing Page Content Management</CardTitle>
-              <CardDescription>
-                Customize and manage your landing page sections, content, and appearance
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <LandingPageManagement />
-            </CardContent>
-          </Card>
-        </TabsContent>
+
 
         <TabsContent value="oil-types" className="space-y-4">
           <Card>
