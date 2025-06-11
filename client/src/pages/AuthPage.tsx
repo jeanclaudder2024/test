@@ -22,7 +22,7 @@ import { Label } from "@/components/ui/label";
 
 // Form schemas
 const loginSchema = z.object({
-  username: z.string().min(1, "Username is required"),
+  email: z.string().email("Invalid email address"),
   password: z.string().min(1, "Password is required"),
 });
 
@@ -45,7 +45,7 @@ export default function AuthPage() {
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      username: "",
+      email: "",
       password: "",
     },
   });
@@ -182,8 +182,8 @@ export default function AuthPage() {
                       type="button" 
                       className="w-full bg-[#FF6F00] hover:bg-[#FF5000] text-white font-bold py-4 rounded-lg transition-colors shadow-lg"
                       onClick={() => {
-                        loginForm.setValue("username", "demo");
-                        loginForm.setValue("password", "password");
+                        loginForm.setValue("email", "admin@petrodealhub.com");
+                        loginForm.setValue("password", "admin123");
                         loginForm.handleSubmit(onLoginSubmit)();
                       }}
                     >
@@ -214,10 +214,10 @@ export default function AuthPage() {
                     <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
                       <FormField
                         control={loginForm.control}
-                        name="username"
+                        name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Username</FormLabel>
+                            <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Email</FormLabel>
                             <FormControl>
                               <div className="relative">
                                 <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
@@ -344,8 +344,8 @@ export default function AuthPage() {
                         
                         // Use setTimeout to allow tab change to complete
                         setTimeout(() => {
-                          loginForm.setValue("username", "demo");
-                          loginForm.setValue("password", "password");
+                          loginForm.setValue("email", "admin@petrodealhub.com");
+                          loginForm.setValue("password", "admin123");
                           loginForm.handleSubmit(onLoginSubmit)();
                         }, 100);
                       }}
