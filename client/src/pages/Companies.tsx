@@ -4,230 +4,304 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Globe, Building, Users, Search, MapPin, Factory } from 'lucide-react';
-import { REGIONS } from '@shared/constants';
-import { Company } from '@shared/schema';
+import { useToast } from '@/hooks/use-toast';
+import { 
+  Building2, 
+  MapPin, 
+  Users, 
+  Globe, 
+  Phone, 
+  Mail, 
+  Calendar, 
+  DollarSign,
+  User,
+  Search,
+  ExternalLink,
+  Factory,
+  Handshake
+} from 'lucide-react';
 
-interface Region {
-  id: string;
-  name: string;
-  nameAr: string;
+interface CompanyWithRealData {
+  id: number;
+  generatedName: string;
+  realCompany: {
+    id: number;
+    name: string;
+    industry: string;
+    address: string;
+    logo?: string;
+    description: string;
+    website?: string;
+    phone?: string;
+    email?: string;
+    founded?: number;
+    employees?: number;
+    revenue?: string;
+    headquarters?: string;
+    ceo?: string;
+  };
 }
 
 export default function Companies() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
+  const { toast } = useToast();
 
-  // Fetch companies data
-  const { data: companiesResponse, isLoading, error } = useQuery({
+  // Fetch fake companies with real company data
+  const { data: companies = [], isLoading } = useQuery({
     queryKey: ['/api/companies'],
-    staleTime: 60000, // 1 minute
+    retry: false,
   });
 
-  // Extract companies array from backend response
-  const companies = (companiesResponse as any)?.companies || [];
+  const filteredCompanies = companies.filter((company: CompanyWithRealData) =>
+    company.generatedName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    company.realCompany.industry.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    company.realCompany.headquarters?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-  // Filter companies based on search term and selected region
-  const filteredCompanies = companies.filter((company: Company) => {
-    const matchesSearch = searchTerm === '' || 
-      company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (company.specialization && company.specialization.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (company.country && company.country.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    const matchesRegion = !selectedRegion || company.region === selectedRegion;
-    
-    return matchesSearch && matchesRegion;
-  });
+  const handleRequestDeal = (companyName: string) => {
+    toast({
+      title: "Deal Request Initiated",
+      description: `Your deal request with ${companyName} has been submitted. We'll contact you soon.`,
+    });
+  };
 
-  if (error) {
+  if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Error Loading Companies</h1>
-          <p className="text-gray-600">Unable to load company data. Please try again later.</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Card key={i} className="animate-pulse">
+              <CardHeader>
+                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="h-3 bg-gray-200 rounded"></div>
+                  <div className="h-3 bg-gray-200 rounded w-5/6"></div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">Oil Companies Directory</h1>
-        <p className="text-lg text-gray-600">
-          Discover leading oil companies worldwide, from major corporations to specialized operators.
-        </p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            Oil Trading Companies
+          </h1>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Connect with leading oil trading companies worldwide. Discover partnerships, 
+            explore opportunities, and initiate deals with industry professionals.
+          </p>
+        </div>
 
-      {/* Search and Filter Controls */}
-      <div className="mb-8 space-y-4">
-        <div className="flex flex-col md:flex-row gap-4">
-          {/* Search */}
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+        {/* Search */}
+        <div className="max-w-md mx-auto mb-8">
+          <div className="relative">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
             <Input
-              type="text"
-              placeholder="Search companies by name, specialization, or country..."
+              placeholder="Search companies, industries, or locations..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
             />
           </div>
-
-          {/* Region Filter */}
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant={selectedRegion === null ? "default" : "outline"}
-              size="sm"
-              onClick={() => setSelectedRegion(null)}
-            >
-              All Regions
-            </Button>
-            {REGIONS.map((region: Region) => (
-              <Button
-                key={region.id}
-                variant={selectedRegion === region.id ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedRegion(region.id)}
-              >
-                {region.name}
-              </Button>
-            ))}
-          </div>
         </div>
 
-        {/* Results Summary */}
-        <div className="text-sm text-gray-600">
-          {isLoading ? (
-            <span>Loading companies...</span>
-          ) : (
-            <span>
-              Showing {filteredCompanies.length} of {companies.length} companies
-              {searchTerm && ` matching "${searchTerm}"`}
-              {selectedRegion && ` in ${REGIONS.find(r => r.id === selectedRegion)?.name}`}
-            </span>
-          )}
-        </div>
-      </div>
+        {/* Statistics */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <Card className="bg-white/80 backdrop-blur-sm">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Active Companies</p>
+                  <p className="text-2xl font-bold text-gray-900">{companies.length}</p>
+                </div>
+                <Building2 className="h-8 w-8 text-blue-600" />
+              </div>
+            </CardContent>
+          </Card>
 
-      {/* Companies Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {isLoading ? (
-          // Loading skeletons
-          Array.from({ length: 6 }).map((_, index) => (
-            <Card key={index} className="h-64">
-              <CardHeader>
-                <Skeleton className="h-6 w-3/4" />
-                <Skeleton className="h-4 w-1/2" />
+          <Card className="bg-white/80 backdrop-blur-sm">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Industries</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {new Set(companies.map((c: CompanyWithRealData) => c.realCompany.industry)).size}
+                  </p>
+                </div>
+                <Factory className="h-8 w-8 text-blue-600" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white/80 backdrop-blur-sm">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Countries</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {new Set(companies.map((c: CompanyWithRealData) => 
+                      c.realCompany.headquarters?.split(',').pop()?.trim() || 'Global'
+                    )).size}
+                  </p>
+                </div>
+                <Globe className="h-8 w-8 text-blue-600" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Companies Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredCompanies.map((company: CompanyWithRealData) => (
+            <Card key={company.id} className="group hover:shadow-xl transition-all duration-300 bg-white/90 backdrop-blur-sm border-0 shadow-lg">
+              <CardHeader className="pb-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-xl flex items-center justify-center">
+                      <Building2 className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg group-hover:text-blue-600 transition-colors">
+                        {company.generatedName}
+                      </CardTitle>
+                      <CardDescription className="flex items-center mt-1">
+                        <Badge variant="outline" className="text-xs">
+                          {company.realCompany.industry}
+                        </Badge>
+                      </CardDescription>
+                    </div>
+                  </div>
+                </div>
               </CardHeader>
-              <CardContent>
-                <Skeleton className="h-4 w-full mb-2" />
-                <Skeleton className="h-4 w-2/3 mb-4" />
-                <div className="flex gap-2">
-                  <Skeleton className="h-6 w-16" />
-                  <Skeleton className="h-6 w-20" />
+
+              <CardContent className="space-y-4">
+                {/* Company Description */}
+                <p className="text-sm text-gray-600 line-clamp-3">
+                  {company.realCompany.description}
+                </p>
+
+                {/* Company Details */}
+                <div className="space-y-2">
+                  {company.realCompany.headquarters && (
+                    <div className="flex items-center text-sm text-gray-600">
+                      <MapPin className="h-4 w-4 mr-2 text-gray-400" />
+                      {company.realCompany.headquarters}
+                    </div>
+                  )}
+
+                  {company.realCompany.ceo && (
+                    <div className="flex items-center text-sm text-gray-600">
+                      <UserTie className="h-4 w-4 mr-2 text-gray-400" />
+                      CEO: {company.realCompany.ceo}
+                    </div>
+                  )}
+
+                  {company.realCompany.founded && (
+                    <div className="flex items-center text-sm text-gray-600">
+                      <Calendar className="h-4 w-4 mr-2 text-gray-400" />
+                      Founded {company.realCompany.founded}
+                    </div>
+                  )}
+
+                  {company.realCompany.employees && (
+                    <div className="flex items-center text-sm text-gray-600">
+                      <Users className="h-4 w-4 mr-2 text-gray-400" />
+                      {company.realCompany.employees.toLocaleString()} employees
+                    </div>
+                  )}
+
+                  {company.realCompany.revenue && (
+                    <div className="flex items-center text-sm text-gray-600">
+                      <DollarSign className="h-4 w-4 mr-2 text-gray-400" />
+                      Revenue: {company.realCompany.revenue}
+                    </div>
+                  )}
+                </div>
+
+                {/* Contact Information */}
+                <div className="pt-4 border-t border-gray-100">
+                  <div className="flex items-center justify-between">
+                    <div className="flex space-x-2">
+                      {company.realCompany.website && (
+                        <Button variant="outline" size="sm" asChild>
+                          <a 
+                            href={company.realCompany.website} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="flex items-center"
+                          >
+                            <Globe className="h-3 w-3 mr-1" />
+                            Website
+                            <ExternalLink className="h-3 w-3 ml-1" />
+                          </a>
+                        </Button>
+                      )}
+
+                      {company.realCompany.email && (
+                        <Button variant="outline" size="sm" asChild>
+                          <a href={`mailto:${company.realCompany.email}`} className="flex items-center">
+                            <Mail className="h-3 w-3 mr-1" />
+                            Email
+                          </a>
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Request Deal Button */}
+                <div className="pt-4">
+                  <Button 
+                    className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white"
+                    onClick={() => handleRequestDeal(company.generatedName)}
+                  >
+                    <Handshake className="h-4 w-4 mr-2" />
+                    Request Deal
+                  </Button>
                 </div>
               </CardContent>
             </Card>
-          ))
-        ) : filteredCompanies.length === 0 ? (
-          // No results
-          <div className="col-span-full text-center py-12">
-            <Building className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No companies found</h3>
+          ))}
+        </div>
+
+        {/* Empty State */}
+        {filteredCompanies.length === 0 && !isLoading && (
+          <div className="text-center py-12">
+            <Building2 className="h-16 w-16 mx-auto text-gray-400 mb-4" />
+            <h3 className="text-xl font-medium text-gray-900 mb-2">No companies found</h3>
             <p className="text-gray-600">
-              Try adjusting your search terms or filters to find more companies.
+              {searchTerm 
+                ? "Try adjusting your search terms to find what you're looking for."
+                : "No companies are currently available."}
             </p>
           </div>
-        ) : (
-          // Company cards
-          filteredCompanies.map((company: Company) => (
-            <CompanyCard key={company.id} company={company} />
-          ))
         )}
+
+        {/* Footer CTA */}
+        <div className="mt-16 text-center">
+          <Card className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white border-0">
+            <CardContent className="p-8">
+              <h2 className="text-2xl font-bold mb-2">Ready to Start Trading?</h2>
+              <p className="text-blue-100 mb-6">
+                Join thousands of oil trading professionals and start building valuable partnerships today.
+              </p>
+              <Button variant="secondary" size="lg">
+                Get Started
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
 }
-
-// Company Card Component
-const CompanyCard = ({ company }: { company: Company }) => {
-  return (
-    <Card className="hover:shadow-lg transition-shadow duration-200 h-full">
-      <CardHeader className="pb-4">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <CardTitle className="text-lg font-semibold text-gray-900 mb-1">
-              {company.name}
-            </CardTitle>
-            <CardDescription className="text-sm text-gray-600 flex items-center gap-1">
-              <MapPin className="h-3 w-3" />
-              {company.country}
-              {company.region && ` • ${company.region}`}
-            </CardDescription>
-          </div>
-          <Badge 
-            variant={company.companyType === 'real' ? 'default' : 'secondary'}
-            className="ml-2"
-          >
-            {company.companyType === 'real' ? 'Verified' : 'Listed'}
-          </Badge>
-        </div>
-      </CardHeader>
-
-      <CardContent className="pt-0">
-        <div className="space-y-3">
-          {/* Description */}
-          {company.description && (
-            <p className="text-sm text-gray-600 line-clamp-2">
-              {company.description}
-            </p>
-          )}
-
-          {/* Specialization */}
-          {company.specialization && (
-            <div className="flex items-center gap-2 text-sm">
-              <Factory className="h-4 w-4 text-gray-400" />
-              <span className="text-gray-600">{company.specialization}</span>
-            </div>
-          )}
-
-          {/* Company Details */}
-          <div className="flex flex-wrap gap-2 text-xs">
-            {company.foundedYear && (
-              <Badge variant="outline">Est. {company.foundedYear}</Badge>
-            )}
-            {company.fleetSize && (
-              <Badge variant="outline">
-                <Users className="h-3 w-3 mr-1" />
-                {company.fleetSize} vessels
-              </Badge>
-            )}
-            {company.publiclyTraded && (
-              <Badge variant="outline">
-                {company.stockSymbol || 'Public'}
-              </Badge>
-            )}
-          </div>
-
-          {/* Website Link */}
-          {company.website && (
-            <div className="pt-2 border-t">
-              <a
-                href={company.website}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 transition-colors"
-              >
-                <Globe className="h-3 w-3" />
-                Visit Website
-              </a>
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
-};

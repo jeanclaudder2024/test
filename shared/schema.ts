@@ -314,6 +314,66 @@ export type ProgressEvent = typeof progressEvents.$inferSelect;
 export type InsertBroker = z.infer<typeof insertBrokerSchema>;
 export type Broker = typeof brokers.$inferSelect;
 
+// Real Companies - Professional data entered by admin
+export const realCompanies = pgTable("real_companies", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  industry: text("industry").notNull().default("Oil"),
+  address: text("address").notNull(),
+  logo: text("logo"), // URL or file path
+  description: text("description").notNull(),
+  website: text("website"),
+  phone: text("phone"),
+  email: text("email"),
+  founded: integer("founded"),
+  employees: integer("employees"),
+  revenue: text("revenue"), // e.g., "$100M - $500M"
+  headquarters: text("headquarters"),
+  ceo: text("ceo"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Fake Companies - Auto-generated and linked to Real Companies
+export const fakeCompanies = pgTable("fake_companies", {
+  id: serial("id").primaryKey(),
+  realCompanyId: integer("real_company_id").notNull().references(() => realCompanies.id),
+  generatedName: text("generated_name").notNull(), // Auto-generated fake name
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Relations
+export const realCompaniesRelations = relations(realCompanies, ({ many }) => ({
+  fakeCompanies: many(fakeCompanies),
+}));
+
+export const fakeCompaniesRelations = relations(fakeCompanies, ({ one }) => ({
+  realCompany: one(realCompanies, {
+    fields: [fakeCompanies.realCompanyId],
+    references: [realCompanies.id],
+  }),
+}));
+
+// Insert schemas
+export const insertRealCompanySchema = createInsertSchema(realCompanies).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertFakeCompanySchema = createInsertSchema(fakeCompanies).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Types
+export type RealCompany = typeof realCompanies.$inferSelect;
+export type InsertRealCompany = z.infer<typeof insertRealCompanySchema>;
+export type FakeCompany = typeof fakeCompanies.$inferSelect;
+export type InsertFakeCompany = z.infer<typeof insertFakeCompanySchema>;
+
 // Ports - Complete comprehensive table structure
 export const ports = pgTable("ports", {
   id: serial("id").primaryKey(),

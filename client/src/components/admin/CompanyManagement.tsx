@@ -1,653 +1,479 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { Building2, Plus, Edit, Trash2, Link, Users, TrendingUp, DollarSign, Globe, Phone, Mail, Calendar, Award, Briefcase, Eye, EyeOff, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
+import { 
+  Building2, 
+  Plus, 
+  Edit, 
+  Trash2, 
+  Upload, 
+  Factory, 
+  Users, 
+  MapPin, 
+  Globe,
+  Phone,
+  Mail,
+  Calendar,
+  DollarSign,
+  User,
+  Link as LinkIcon,
+  Shuffle
+} from 'lucide-react';
+import { insertRealCompanySchema, type RealCompany, type FakeCompany } from '@shared/schema';
 
-interface Company {
-  id: number;
-  name: string;
-  country: string;
-  region: string;
-  website?: string;
-  description?: string;
-  companyType: 'real' | 'fake';
-  linkedCompanyId?: number;
-  isVisibleToBrokers: boolean;
-  publiclyTraded: boolean;
-  stockSymbol?: string;
-  revenue?: number;
-  employees?: number;
-  foundedYear?: number;
-  ceo?: string;
-  fleetSize?: number;
-  specialization?: string;
-  headquarters?: string;
-  logo?: string;
-  createdAt?: Date;
-  lastUpdated?: Date;
-}
+// Real Company form schema
+const realCompanyFormSchema = insertRealCompanySchema.extend({
+  founded: z.coerce.number().optional(),
+  employees: z.coerce.number().optional(),
+});
 
-interface Deal {
-  id: number;
-  brokerId: number;
-  fakeCompanyId: number;
-  realCompanyId?: number;
-  dealType: string;
-  status: 'pending' | 'approved' | 'rejected' | 'completed';
-  title: string;
-  description?: string;
-  requestedVolume?: number;
-  requestedPrice?: number;
-  dealValue?: number;
-  notes?: string;
-  adminNotes?: string;
-  approvedBy?: number;
-  approvedAt?: Date;
-  completedAt?: Date;
-  createdAt: Date;
-  lastUpdated?: Date;
-}
+type RealCompanyFormData = z.infer<typeof realCompanyFormSchema>;
 
-interface CompanyStats {
-  total: number;
-  realCompanies: number;
-  fakeCompanies: number;
-  pendingDeals: number;
-  totalCompanies: number;
+// Fake company names generator
+const generateFakeCompanyName = () => {
+  const prefixes = ['Global', 'International', 'Maritime', 'Ocean', 'Atlantic', 'Pacific', 'Northern', 'Southern', 'Eastern', 'Western'];
+  const cores = ['Petroleum', 'Oil', 'Energy', 'Marine', 'Shipping', 'Trading', 'Transport', 'Logistics', 'Cargo', 'Fleet'];
+  const suffixes = ['Corp', 'Ltd', 'Group', 'Holdings', 'Industries', 'Solutions', 'Services', 'Systems', 'Partners', 'Enterprises'];
+  
+  const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+  const core = cores[Math.floor(Math.random() * cores.length)];
+  const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
+  
+  return `${prefix} ${core} ${suffix}`;
+};
+
+interface CompanyWithRelations extends FakeCompany {
+  realCompany: RealCompany;
 }
 
 export function CompanyManagement() {
   const [activeTab, setActiveTab] = useState('overview');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState<'all' | 'real' | 'fake'>('all');
-  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [companyTypeChoice, setCompanyTypeChoice] = useState<'real' | 'fake' | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedCompany, setSelectedCompany] = useState<RealCompany | null>(null);
+  const [selectedRealCompanyForFake, setSelectedRealCompanyForFake] = useState<string>('');
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch companies
-  const { data: companiesData, isLoading: companiesLoading } = useQuery({
-    queryKey: ['/api/companies', { page: currentPage, limit: itemsPerPage, search: searchTerm, type: filterType }],
+  // Fetch real companies
+  const { data: realCompanies = [], isLoading: realCompaniesLoading } = useQuery({
+    queryKey: ['/api/admin/real-companies'],
     retry: false,
   });
 
-  // Fetch company statistics
-  const { data: statsData, isLoading: statsLoading } = useQuery({
-    queryKey: ['/api/companies/stats/summary'],
+  // Fetch fake companies with relations
+  const { data: fakeCompanies = [], isLoading: fakeCompaniesLoading } = useQuery({
+    queryKey: ['/api/admin/fake-companies'],
     retry: false,
   });
 
-  // Fetch deals
-  const { data: dealsData } = useQuery({
-    queryKey: ['/api/companies/deals'],
-    retry: false,
+  // Real company form
+  const realCompanyForm = useForm<RealCompanyFormData>({
+    resolver: zodResolver(realCompanyFormSchema),
+    defaultValues: {
+      name: '',
+      industry: 'Oil',
+      address: '',
+      description: '',
+      website: '',
+      phone: '',
+      email: '',
+      headquarters: '',
+      ceo: '',
+      revenue: '',
+    },
   });
 
-  const companies = (companiesData as any)?.companies || [];
-  const deals = (dealsData as any)?.deals || [];
-  const stats = statsData as CompanyStats || { total: 0, realCompanies: 0, fakeCompanies: 0, pendingDeals: 0, totalCompanies: 0 };
-  
-  // Filter real companies for linking
-  const realCompanies = companies.filter((company: Company) => company.companyType === 'real');
-
-  // Filter companies based on search term and type filter
-  const filteredCompanies = companies.filter((company: Company) => {
-    const matchesSearch = searchTerm === '' || 
-      company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (company.country && company.country.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (company.specialization && company.specialization.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    const matchesType = filterType === 'all' || company.companyType === filterType;
-    
-    return matchesSearch && matchesType;
-  });
-
-  // Create company mutation
-  const createCompanyMutation = useMutation({
-    mutationFn: async (companyData: Partial<Company>) => {
-      return apiRequest('/api/companies', {
+  // Create real company mutation
+  const createRealCompanyMutation = useMutation({
+    mutationFn: async (data: RealCompanyFormData) => {
+      return apiRequest('/api/admin/real-companies', {
         method: 'POST',
-        body: JSON.stringify(companyData),
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/companies'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/companies/stats/summary'] });
-      setIsCreateDialogOpen(false);
-      toast({
-        title: "Success",
-        description: "Company created successfully",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create company",
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Update company mutation
-  const updateCompanyMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: Partial<Company> }) => {
-      return apiRequest(`/api/companies/${id}`, {
-        method: 'PUT',
         body: JSON.stringify(data),
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/companies'] });
-      setIsEditDialogOpen(false);
-      setSelectedCompany(null);
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/real-companies'] });
       toast({
         title: "Success",
-        description: "Company updated successfully",
+        description: "Real company created successfully",
       });
+      setCreateDialogOpen(false);
+      setCompanyTypeChoice(null);
+      realCompanyForm.reset();
     },
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to update company",
+        description: error.message || "Failed to create real company",
         variant: "destructive",
       });
     },
   });
 
-  // Delete company mutation
-  const deleteCompanyMutation = useMutation({
+  // Create fake company mutation
+  const createFakeCompanyMutation = useMutation({
+    mutationFn: async (realCompanyId: number) => {
+      const generatedName = generateFakeCompanyName();
+      return apiRequest('/api/admin/fake-companies', {
+        method: 'POST',
+        body: JSON.stringify({
+          realCompanyId,
+          generatedName,
+        }),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/fake-companies'] });
+      toast({
+        title: "Success",
+        description: "Fake company created successfully",
+      });
+      setCreateDialogOpen(false);
+      setCompanyTypeChoice(null);
+      setSelectedRealCompanyForFake('');
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create fake company",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete real company mutation
+  const deleteRealCompanyMutation = useMutation({
     mutationFn: async (id: number) => {
-      return apiRequest(`/api/companies/${id}`, {
+      return apiRequest(`/api/admin/real-companies/${id}`, {
         method: 'DELETE',
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/companies'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/companies/stats/summary'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/real-companies'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/fake-companies'] });
       toast({
         title: "Success",
-        description: "Company deleted successfully",
+        description: "Real company deleted successfully",
       });
     },
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to delete company",
+        description: error.message || "Failed to delete real company",
         variant: "destructive",
       });
     },
   });
 
-  // Approve deal mutation
-  const approveDealMutation = useMutation({
-    mutationFn: async ({ dealId, adminNotes }: { dealId: number; adminNotes: string }) => {
-      return apiRequest(`/api/companies/deals/${dealId}/approve`, {
-        method: 'POST',
-        body: JSON.stringify({ adminNotes, approvedBy: 1 }),
+  // Delete fake company mutation
+  const deleteFakeCompanyMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest(`/api/admin/fake-companies/${id}`, {
+        method: 'DELETE',
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/companies/deals'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/fake-companies'] });
       toast({
         title: "Success",
-        description: "Deal approved successfully",
+        description: "Fake company deleted successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete fake company",
+        variant: "destructive",
       });
     },
   });
 
-  // Reject deal mutation
-  const rejectDealMutation = useMutation({
-    mutationFn: async ({ dealId, reason }: { dealId: number; reason: string }) => {
-      return apiRequest(`/api/companies/deals/${dealId}/reject`, {
-        method: 'POST',
-        body: JSON.stringify({ reason }),
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/companies/deals'] });
-      toast({
-        title: "Success",
-        description: "Deal rejected successfully",
-      });
-    },
-  });
-
-  const handleCreateCompany = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    
-    const companyData = {
-      name: formData.get('name') as string,
-      country: formData.get('country') as string,
-      region: formData.get('region') as string,
-      website: formData.get('website') as string,
-      description: formData.get('description') as string,
-      companyType: formData.get('companyType') as 'real' | 'fake',
-      linkedCompanyId: formData.get('linkedCompanyId') ? Number(formData.get('linkedCompanyId')) : null,
-      isVisibleToBrokers: formData.get('isVisibleToBrokers') === 'true',
-      publiclyTraded: formData.get('publiclyTraded') === 'true',
-      stockSymbol: formData.get('stockSymbol') as string,
-      revenue: formData.get('revenue') ? Number(formData.get('revenue')) : null,
-      employees: formData.get('employees') ? Number(formData.get('employees')) : null,
-      foundedYear: formData.get('foundedYear') ? Number(formData.get('foundedYear')) : null,
-      ceo: formData.get('ceo') as string,
-      fleetSize: formData.get('fleetSize') ? Number(formData.get('fleetSize')) : null,
-      specialization: formData.get('specialization') as string,
-      headquarters: formData.get('headquarters') as string,
-    };
-
-    createCompanyMutation.mutate(companyData);
+  const handleCreateCompany = () => {
+    setCreateDialogOpen(true);
+    setCompanyTypeChoice(null);
   };
 
-  const handleUpdateCompany = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!selectedCompany) return;
-
-    const formData = new FormData(e.currentTarget);
-    
-    const companyData = {
-      name: formData.get('name') as string,
-      country: formData.get('country') as string,
-      region: formData.get('region') as string,
-      website: formData.get('website') as string,
-      description: formData.get('description') as string,
-      companyType: formData.get('companyType') as 'real' | 'fake',
-      linkedCompanyId: formData.get('linkedCompanyId') ? Number(formData.get('linkedCompanyId')) : null,
-      isVisibleToBrokers: formData.get('isVisibleToBrokers') === 'true',
-      publiclyTraded: formData.get('publiclyTraded') === 'true',
-      stockSymbol: formData.get('stockSymbol') as string,
-      revenue: formData.get('revenue') ? Number(formData.get('revenue')) : null,
-      employees: formData.get('employees') ? Number(formData.get('employees')) : null,
-      foundedYear: formData.get('foundedYear') ? Number(formData.get('foundedYear')) : null,
-      ceo: formData.get('ceo') as string,
-      fleetSize: formData.get('fleetSize') ? Number(formData.get('fleetSize')) : null,
-      specialization: formData.get('specialization') as string,
-      headquarters: formData.get('headquarters') as string,
-    };
-
-    updateCompanyMutation.mutate({ id: selectedCompany.id, data: companyData });
+  const handleRealCompanySubmit = (data: RealCompanyFormData) => {
+    createRealCompanyMutation.mutate(data);
   };
 
+  const handleCreateFakeCompany = () => {
+    const realCompanyId = parseInt(selectedRealCompanyForFake);
+    if (realCompanyId) {
+      createFakeCompanyMutation.mutate(realCompanyId);
+    }
+  };
 
+  const stats = {
+    totalReal: realCompanies.length,
+    totalFake: fakeCompanies.length,
+    totalCompanies: realCompanies.length + fakeCompanies.length,
+  };
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Company Management</h2>
+          <h1 className="text-2xl font-bold">Company Management</h1>
           <p className="text-muted-foreground">
-            Manage real and fake oil companies with professional deal workflows
+            Manage real companies and their linked fake companies
           </p>
         </div>
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Company
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Create New Company</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleCreateCompany} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Company Name *</Label>
-                  <Input id="name" name="name" required />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="companyType">Company Type *</Label>
-                  <Select name="companyType" defaultValue="real" required>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="real">Real Company</SelectItem>
-                      <SelectItem value="fake">Fake Company</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="country">Country</Label>
-                  <Input id="country" name="country" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="region">Region</Label>
-                  <Input id="region" name="region" />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="website">Website</Label>
-                  <Input id="website" name="website" type="url" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="headquarters">Headquarters</Label>
-                  <Input id="headquarters" name="headquarters" />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea id="description" name="description" rows={3} />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="ceo">CEO</Label>
-                  <Input id="ceo" name="ceo" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="specialization">Specialization</Label>
-                  <Input id="specialization" name="specialization" placeholder="e.g., Crude Oil, Refined Products" />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="employees">Employees</Label>
-                  <Input id="employees" name="employees" type="number" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="foundedYear">Founded Year</Label>
-                  <Input id="foundedYear" name="foundedYear" type="number" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="fleetSize">Fleet Size</Label>
-                  <Input id="fleetSize" name="fleetSize" type="number" />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="revenue">Annual Revenue (USD)</Label>
-                  <Input id="revenue" name="revenue" type="number" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="stockSymbol">Stock Symbol</Label>
-                  <Input id="stockSymbol" name="stockSymbol" />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-4">
-                <div className="flex items-center space-x-2">
-                  <input type="checkbox" id="publiclyTraded" name="publiclyTraded" value="true" />
-                  <Label htmlFor="publiclyTraded">Publicly Traded</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <input type="checkbox" id="isVisibleToBrokers" name="isVisibleToBrokers" value="true" defaultChecked />
-                  <Label htmlFor="isVisibleToBrokers">Visible to Brokers</Label>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="linkedCompanyId">Linked Real Company (for fake companies)</Label>
-                <Select name="linkedCompanyId">
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select real company to link" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {(realCompanies || []).map((company: Company) => (
-                      <SelectItem key={company.id} value={company.id.toString()}>
-                        {company.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={createCompanyMutation.isPending}>
-                  {createCompanyMutation.isPending ? 'Creating...' : 'Create Company'}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <Button onClick={handleCreateCompany}>
+          <Plus className="mr-2 h-4 w-4" />
+          Create Company
+        </Button>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Real Companies</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div className="text-2xl font-bold">{stats.totalReal}</div>
+              <Factory className="h-5 w-5 text-muted-foreground" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Fake Companies</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div className="text-2xl font-bold">{stats.totalFake}</div>
+              <Shuffle className="h-5 w-5 text-muted-foreground" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Companies</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div className="text-2xl font-bold">{stats.totalCompanies}</div>
+              <Building2 className="h-5 w-5 text-muted-foreground" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="companies">Companies</TabsTrigger>
-          <TabsTrigger value="deals">Deal Management</TabsTrigger>
+          <TabsTrigger value="real-companies">Real Companies</TabsTrigger>
+          <TabsTrigger value="fake-companies">Fake Companies</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-4">
-          {/* Statistics Cards */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Companies</CardTitle>
-                <Building2 className="h-4 w-4 text-muted-foreground" />
+              <CardHeader>
+                <CardTitle>Real Companies</CardTitle>
+                <CardDescription>
+                  Professional companies with authentic data
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.totalCompanies || 0}</div>
-                <p className="text-xs text-muted-foreground">
-                  All companies in system
-                </p>
+                <div className="space-y-3">
+                  {realCompanies.slice(0, 5).map((company: RealCompany) => (
+                    <div key={company.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                          <Factory className="h-5 w-5 text-blue-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium">{company.name}</p>
+                          <p className="text-sm text-muted-foreground">{company.industry}</p>
+                        </div>
+                      </div>
+                      <Badge variant="outline">Real</Badge>
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
+
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Real Companies</CardTitle>
-                <Award className="h-4 w-4 text-muted-foreground" />
+              <CardHeader>
+                <CardTitle>Fake Companies</CardTitle>
+                <CardDescription>
+                  Auto-generated companies linked to real companies
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.realCompanies || 0}</div>
-                <p className="text-xs text-muted-foreground">
-                  Authentic oil companies
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Fake Companies</CardTitle>
-                <Link className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.fakeCompanies || 0}</div>
-                <p className="text-xs text-muted-foreground">
-                  Broker negotiation entities
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Pending Deals</CardTitle>
-                <Clock className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.pendingDeals || 0}</div>
-                <p className="text-xs text-muted-foreground">
-                  Awaiting approval
-                </p>
+                <div className="space-y-3">
+                  {fakeCompanies.slice(0, 5).map((company: CompanyWithRelations) => (
+                    <div key={company.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                          <Shuffle className="h-5 w-5 text-orange-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium">{company.generatedName}</p>
+                          <p className="text-sm text-muted-foreground">
+                            Linked to: {company.realCompany?.name}
+                          </p>
+                        </div>
+                      </div>
+                      <Badge variant="secondary">Fake</Badge>
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
           </div>
         </TabsContent>
 
-        <TabsContent value="companies" className="space-y-4">
-          {/* Search and Filter */}
-          <div className="flex items-center space-x-4">
-            <Input
-              placeholder="Search companies..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="max-w-sm"
-            />
-            <Select value={filterType} onValueChange={(value: 'all' | 'real' | 'fake') => setFilterType(value)}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Companies</SelectItem>
-                <SelectItem value="real">Real Companies</SelectItem>
-                <SelectItem value="fake">Fake Companies</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Companies Table */}
+        <TabsContent value="real-companies" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Companies</CardTitle>
+              <CardTitle>Real Companies</CardTitle>
               <CardDescription>
-                Manage your company database and Real/Fake relationships
+                Manage professional companies with authentic data
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Country</TableHead>
-                    <TableHead>Specialization</TableHead>
-                    <TableHead>Fleet Size</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead>Company</TableHead>
+                    <TableHead>Industry</TableHead>
+                    <TableHead>Location</TableHead>
+                    <TableHead>Linked Fake Companies</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredCompanies.map((company: Company) => (
-                    <TableRow key={company.id}>
-                      <TableCell className="font-medium">{company.name}</TableCell>
-                      <TableCell>
-                        <Badge variant={company.companyType === 'real' ? 'default' : 'secondary'}>
-                          {company.companyType}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{company.country}</TableCell>
-                      <TableCell>{company.specialization || 'N/A'}</TableCell>
-                      <TableCell>{company.fleetSize || 'N/A'}</TableCell>
-                      <TableCell>
-                        {company.isVisibleToBrokers ? (
-                          <Badge variant="outline" className="text-green-600">
-                            <Eye className="mr-1 h-3 w-3" />
-                            Visible
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="text-gray-600">
-                            <EyeOff className="mr-1 h-3 w-3" />
-                            Hidden
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedCompany(company);
-                              setIsEditDialogOpen(true);
-                            }}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => deleteCompanyMutation.mutate(company.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {realCompanies.map((company: RealCompany) => {
+                    const linkedFakes = fakeCompanies.filter((fake: CompanyWithRelations) => 
+                      fake.realCompanyId === company.id
+                    );
+                    
+                    return (
+                      <TableRow key={company.id}>
+                        <TableCell>
+                          <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                              <Factory className="h-4 w-4 text-blue-600" />
+                            </div>
+                            <div>
+                              <p className="font-medium">{company.name}</p>
+                              <p className="text-sm text-muted-foreground">{company.ceo}</p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{company.industry}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-1">
+                            <MapPin className="h-3 w-3 text-muted-foreground" />
+                            <span className="text-sm">{company.headquarters || company.address}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary">{linkedFakes.length}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => deleteRealCompanyMutation.mutate(company.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="deals" className="space-y-4">
+        <TabsContent value="fake-companies" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Deal Management</CardTitle>
+              <CardTitle>Fake Companies</CardTitle>
               <CardDescription>
-                Review and manage broker deal requests
+                Auto-generated companies linked to real companies
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Fake Company</TableHead>
-                    <TableHead>Deal Value</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead>Generated Name</TableHead>
+                    <TableHead>Linked Real Company</TableHead>
+                    <TableHead>Industry</TableHead>
                     <TableHead>Created</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {deals.map((deal: any) => (
-                    <TableRow key={deal.id}>
-                      <TableCell className="font-medium">{deal.title}</TableCell>
-                      <TableCell>{deal.fakeCompany?.name || 'N/A'}</TableCell>
-                      <TableCell>${deal.dealValue?.toLocaleString() || 'N/A'}</TableCell>
+                  {fakeCompanies.map((company: CompanyWithRelations) => (
+                    <TableRow key={company.id}>
                       <TableCell>
-                        <Badge 
-                          variant={
-                            deal.status === 'approved' ? 'default' : 
-                            deal.status === 'rejected' ? 'destructive' : 
-                            'secondary'
-                          }
-                        >
-                          {deal.status === 'approved' && <CheckCircle className="mr-1 h-3 w-3" />}
-                          {deal.status === 'rejected' && <XCircle className="mr-1 h-3 w-3" />}
-                          {deal.status === 'pending' && <Clock className="mr-1 h-3 w-3" />}
-                          {deal.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{new Date(deal.createdAt).toLocaleDateString()}</TableCell>
-                      <TableCell>
-                        {deal.status === 'pending' && (
-                          <div className="flex items-center space-x-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => approveDealMutation.mutate({ dealId: deal.id, adminNotes: 'Approved by admin' })}
-                            >
-                              <CheckCircle className="h-4 w-4 text-green-600" />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => rejectDealMutation.mutate({ dealId: deal.id, reason: 'Rejected by admin' })}
-                            >
-                              <XCircle className="h-4 w-4 text-red-600" />
-                            </Button>
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                            <Shuffle className="h-4 w-4 text-orange-600" />
                           </div>
-                        )}
+                          <div>
+                            <p className="font-medium">{company.generatedName}</p>
+                            <p className="text-sm text-muted-foreground">Auto-generated</p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          <LinkIcon className="h-3 w-3 text-muted-foreground" />
+                          <span>{company.realCompany?.name}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{company.realCompany?.industry}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm text-muted-foreground">
+                          {new Date(company.createdAt).toLocaleDateString()}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => deleteFakeCompanyMutation.mutate(company.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -658,146 +484,234 @@ export function CompanyManagement() {
         </TabsContent>
       </Tabs>
 
-      {/* Edit Company Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      {/* Create Company Dialog */}
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Edit Company</DialogTitle>
+            <DialogTitle>Create Company</DialogTitle>
+            <DialogDescription>
+              Choose the type of company you want to create
+            </DialogDescription>
           </DialogHeader>
-          {selectedCompany && (
-            <form onSubmit={handleUpdateCompany} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-name">Company Name *</Label>
-                  <Input id="edit-name" name="name" defaultValue={selectedCompany.name} required />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-companyType">Company Type *</Label>
-                  <Select name="companyType" defaultValue={selectedCompany.companyType} required>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="real">Real Company</SelectItem>
-                      <SelectItem value="fake">Fake Company</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-country">Country</Label>
-                  <Input id="edit-country" name="country" defaultValue={selectedCompany.country} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-region">Region</Label>
-                  <Input id="edit-region" name="region" defaultValue={selectedCompany.region} />
-                </div>
-              </div>
+          {!companyTypeChoice ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card 
+                  className="cursor-pointer hover:shadow-md transition-shadow border-2 hover:border-blue-500"
+                  onClick={() => setCompanyTypeChoice('real')}
+                >
+                  <CardHeader className="text-center">
+                    <Factory className="h-12 w-12 mx-auto text-blue-600" />
+                    <CardTitle>Real Company</CardTitle>
+                    <CardDescription>
+                      Create a professional company with authentic data
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
 
-              <div className="grid grid-cols-2 gap-4">
+                <Card 
+                  className="cursor-pointer hover:shadow-md transition-shadow border-2 hover:border-orange-500"
+                  onClick={() => setCompanyTypeChoice('fake')}
+                >
+                  <CardHeader className="text-center">
+                    <Shuffle className="h-12 w-12 mx-auto text-orange-600" />
+                    <CardTitle>Fake Company</CardTitle>
+                    <CardDescription>
+                      Auto-generate a company linked to a real company
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              </div>
+            </div>
+          ) : companyTypeChoice === 'real' ? (
+            <form onSubmit={realCompanyForm.handleSubmit(handleRealCompanySubmit)} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="edit-website">Website</Label>
-                  <Input id="edit-website" name="website" type="url" defaultValue={selectedCompany.website} />
+                  <Label htmlFor="name">Company Name*</Label>
+                  <Input
+                    id="name"
+                    {...realCompanyForm.register('name')}
+                    placeholder="Enter company name"
+                  />
+                  {realCompanyForm.formState.errors.name && (
+                    <p className="text-sm text-red-600">
+                      {realCompanyForm.formState.errors.name.message}
+                    </p>
+                  )}
                 </div>
+
                 <div className="space-y-2">
-                  <Label htmlFor="edit-headquarters">Headquarters</Label>
-                  <Input id="edit-headquarters" name="headquarters" defaultValue={selectedCompany.headquarters} />
+                  <Label htmlFor="industry">Industry*</Label>
+                  <Input
+                    id="industry"
+                    {...realCompanyForm.register('industry')}
+                    placeholder="e.g., Oil, Shipping"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="headquarters">Headquarters</Label>
+                  <Input
+                    id="headquarters"
+                    {...realCompanyForm.register('headquarters')}
+                    placeholder="e.g., Houston, TX, USA"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="ceo">CEO</Label>
+                  <Input
+                    id="ceo"
+                    {...realCompanyForm.register('ceo')}
+                    placeholder="CEO name"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="founded">Founded Year</Label>
+                  <Input
+                    id="founded"
+                    type="number"
+                    {...realCompanyForm.register('founded')}
+                    placeholder="e.g., 1985"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="employees">Employees</Label>
+                  <Input
+                    id="employees"
+                    type="number"
+                    {...realCompanyForm.register('employees')}
+                    placeholder="Number of employees"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="revenue">Revenue</Label>
+                  <Input
+                    id="revenue"
+                    {...realCompanyForm.register('revenue')}
+                    placeholder="e.g., $100M - $500M"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="website">Website</Label>
+                  <Input
+                    id="website"
+                    {...realCompanyForm.register('website')}
+                    placeholder="https://company.com"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone</Label>
+                  <Input
+                    id="phone"
+                    {...realCompanyForm.register('phone')}
+                    placeholder="+1 (555) 123-4567"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    {...realCompanyForm.register('email')}
+                    placeholder="contact@company.com"
+                  />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-description">Description</Label>
-                <Textarea id="edit-description" name="description" rows={3} defaultValue={selectedCompany.description} />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-ceo">CEO</Label>
-                  <Input id="edit-ceo" name="ceo" defaultValue={selectedCompany.ceo} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-specialization">Specialization</Label>
-                  <Input id="edit-specialization" name="specialization" defaultValue={selectedCompany.specialization} />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-employees">Employees</Label>
-                  <Input id="edit-employees" name="employees" type="number" defaultValue={selectedCompany.employees} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-foundedYear">Founded Year</Label>
-                  <Input id="edit-foundedYear" name="foundedYear" type="number" defaultValue={selectedCompany.foundedYear} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-fleetSize">Fleet Size</Label>
-                  <Input id="edit-fleetSize" name="fleetSize" type="number" defaultValue={selectedCompany.fleetSize} />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-revenue">Annual Revenue (USD)</Label>
-                  <Input id="edit-revenue" name="revenue" type="number" defaultValue={selectedCompany.revenue} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-stockSymbol">Stock Symbol</Label>
-                  <Input id="edit-stockSymbol" name="stockSymbol" defaultValue={selectedCompany.stockSymbol} />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-4">
-                <div className="flex items-center space-x-2">
-                  <input 
-                    type="checkbox" 
-                    id="edit-publiclyTraded" 
-                    name="publiclyTraded" 
-                    value="true" 
-                    defaultChecked={selectedCompany.publiclyTraded}
-                  />
-                  <Label htmlFor="edit-publiclyTraded">Publicly Traded</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <input 
-                    type="checkbox" 
-                    id="edit-isVisibleToBrokers" 
-                    name="isVisibleToBrokers" 
-                    value="true" 
-                    defaultChecked={selectedCompany.isVisibleToBrokers}
-                  />
-                  <Label htmlFor="edit-isVisibleToBrokers">Visible to Brokers</Label>
-                </div>
+                <Label htmlFor="address">Address*</Label>
+                <Input
+                  id="address"
+                  {...realCompanyForm.register('address')}
+                  placeholder="Full company address"
+                />
+                {realCompanyForm.formState.errors.address && (
+                  <p className="text-sm text-red-600">
+                    {realCompanyForm.formState.errors.address.message}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-linkedCompanyId">Linked Real Company</Label>
-                <Select name="linkedCompanyId" defaultValue={selectedCompany.linkedCompanyId?.toString()}>
+                <Label htmlFor="description">Description*</Label>
+                <Textarea
+                  id="description"
+                  {...realCompanyForm.register('description')}
+                  placeholder="Detailed company description"
+                  rows={3}
+                />
+                {realCompanyForm.formState.errors.description && (
+                  <p className="text-sm text-red-600">
+                    {realCompanyForm.formState.errors.description.message}
+                  </p>
+                )}
+              </div>
+
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setCompanyTypeChoice(null)}
+                >
+                  Back
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={createRealCompanyMutation.isPending}
+                >
+                  {createRealCompanyMutation.isPending ? 'Creating...' : 'Create Real Company'}
+                </Button>
+              </DialogFooter>
+            </form>
+          ) : (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Which Real Company do you want to link this Fake Company to?</Label>
+                <Select value={selectedRealCompanyForFake} onValueChange={setSelectedRealCompanyForFake}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select real company to link" />
+                    <SelectValue placeholder="Select a real company" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No linked company</SelectItem>
-                    {(realCompanies || []).map((company: Company) => (
+                    {realCompanies.map((company: RealCompany) => (
                       <SelectItem key={company.id} value={company.id.toString()}>
-                        {company.name}
+                        {company.name} - {company.industry}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
 
-              <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={updateCompanyMutation.isPending}>
-                  {updateCompanyMutation.isPending ? 'Updating...' : 'Update Company'}
-                </Button>
+              <div className="p-4 bg-muted rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  A fake company will be auto-generated with a random name and linked to the selected real company. 
+                  Users will see the fake company name but the real company's information.
+                </p>
               </div>
-            </form>
+
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setCompanyTypeChoice(null)}
+                >
+                  Back
+                </Button>
+                <Button
+                  onClick={handleCreateFakeCompany}
+                  disabled={!selectedRealCompanyForFake || createFakeCompanyMutation.isPending}
+                >
+                  {createFakeCompanyMutation.isPending ? 'Creating...' : 'Create Fake Company'}
+                </Button>
+              </DialogFooter>
+            </div>
           )}
         </DialogContent>
       </Dialog>
