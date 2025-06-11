@@ -22,6 +22,7 @@ import { useLocation } from "wouter";
 import SubscriptionAdmin from "@/pages/SubscriptionAdmin";
 import ProfessionalRefineryManagement from "@/components/admin/ProfessionalRefineryManagement";
 import { CompanyManagement } from "@/components/admin/CompanyManagement";
+import BrokerManagement from "@/components/admin/BrokerManagement";
 import OilTypeManagement from "@/components/admin/OilTypeManagement";
 import RegionManagement from "@/components/admin/RegionManagement";
 import DocumentManagement from "@/components/admin/DocumentManagement";
@@ -451,6 +452,23 @@ export default function AdminPanel() {
             </CardHeader>
             <CardContent>
               <RegionManagement />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="brokers" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="h-5 w-5 text-purple-500" />
+                Broker Management
+              </CardTitle>
+              <CardDescription>
+                Manage broker accounts, deals, documents, and oil market alerts
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <BrokerManagement />
             </CardContent>
           </Card>
         </TabsContent>

@@ -257,31 +257,7 @@ export const insertProgressEventSchema = createInsertSchema(progressEvents).omit
 
 
 
-// Brokers
-export const brokers = pgTable("brokers", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  company: text("company").notNull(),
-  email: text("email").notNull(),
-  phone: text("phone"),
-  country: text("country"),
-  active: boolean("active").default(true),
-  
-  // Elite Membership fields
-  eliteMember: boolean("elite_member").default(false),
-  eliteMemberSince: timestamp("elite_member_since"),
-  eliteMemberExpires: timestamp("elite_member_expires"),
-  membershipId: text("membership_id"),
-  
-  // Additional contact and subscription information
-  shippingAddress: text("shipping_address"),
-  subscriptionPlan: text("subscription_plan"),
-  lastLogin: timestamp("last_login"),
-});
 
-export const insertBrokerSchema = createInsertSchema(brokers).omit({
-  id: true,
-});
 
 // Stats
 export const stats = pgTable("stats", {
@@ -946,6 +922,8 @@ export type DealDocument = typeof dealDocuments.$inferSelect;
 export type InsertDealDocument = z.infer<typeof insertDealDocumentSchema>;
 export type BrokerNotification = typeof brokerNotifications.$inferSelect;
 export type InsertBrokerNotification = z.infer<typeof insertBrokerNotificationSchema>;
+
+
 
 // Broker Companies (intermediary companies users connect to)
 export const brokerCompanies = pgTable("broker_companies", {

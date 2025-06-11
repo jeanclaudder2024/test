@@ -7,6 +7,7 @@ import {
   subscriptionPlans, subscriptions, paymentMethods, invoices, landingPageContent,
   vesselDocuments, professionalDocuments, oilTypes,
   realCompanies, fakeCompanies,
+  brokerDeals, brokerDocuments, oilMarketAlerts,
   User, InsertUser, 
   Vessel, InsertVessel,
   Refinery, InsertRefinery,
@@ -34,7 +35,10 @@ import {
   landingPageSections, landingPageImages, landingPageBlocks,
   LandingPageSection, InsertLandingPageSection,
   LandingPageImage, InsertLandingPageImage,
-  LandingPageBlock, InsertLandingPageBlock
+  LandingPageBlock, InsertLandingPageBlock,
+  BrokerDeal, InsertBrokerDeal,
+  BrokerDocument, InsertBrokerDocument,
+  OilMarketAlert, InsertOilMarketAlert
 } from "@shared/schema";
 
 // Storage interface with CRUD methods
