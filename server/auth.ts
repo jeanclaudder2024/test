@@ -5,7 +5,7 @@ import { db } from './db';
 import { users, userSubscriptions } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET || 'petrodealhub-secret-key-2025';
 const SALT_ROUNDS = 10;
 
 export interface AuthenticatedRequest extends Request {
