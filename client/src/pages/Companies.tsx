@@ -47,10 +47,12 @@ export default function Companies() {
   const { toast } = useToast();
 
   // Fetch fake companies with real company data
-  const { data: companies = [], isLoading } = useQuery({
+  const { data: response, isLoading } = useQuery({
     queryKey: ['/api/companies'],
     retry: false,
   });
+
+  const companies = Array.isArray(response) ? response : [];
 
   const filteredCompanies = companies.filter((company: CompanyWithRealData) =>
     company.generatedName.toLowerCase().includes(searchTerm.toLowerCase()) ||
