@@ -1,16 +1,16 @@
 import { Router } from 'express';
 import { db } from '../db';
-import { vesselDocuments, vessels } from '@shared/schema';
+import { brokerDocuments } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 
 export const documentRouter = Router();
 
 /**
- * Get all documents in the database
+ * Get all broker documents in the database
  */
 documentRouter.get('/api/documents', async (req, res) => {
   try {
-    const allDocs = await db.select().from(vesselDocuments);
+    const allDocs = await db.select().from(brokerDocuments);
     res.json(allDocs);
   } catch (error) {
     console.error('Error fetching documents:', error);
@@ -19,12 +19,12 @@ documentRouter.get('/api/documents', async (req, res) => {
 });
 
 /**
- * Get a document by its ID
+ * Get a broker document by its ID
  */
 documentRouter.get('/api/documents/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const doc = await db.select().from(vesselDocuments).where(eq(vesselDocuments.id, parseInt(id)));
+    const doc = await db.select().from(brokerDocuments).where(eq(brokerDocuments.id, parseInt(id)));
     
     if (doc.length === 0) {
       return res.status(404).json({ error: 'Document not found' });
@@ -38,16 +38,11 @@ documentRouter.get('/api/documents/:id', async (req, res) => {
 });
 
 /**
- * Get all documents for a specific vessel
+ * Get all documents for a specific broker
  */
-documentRouter.get('/api/vessels/:vesselId/documents', async (req, res) => {
+documentRouter.get('/api/brokers/:brokerId/documents', async (req, res) => {
   try {
-    const { vesselId } = req.params;
-    
-    // First check if the vessel exists
-    const vessel = await db.select().from(vessels).where(eq(vessels.id, parseInt(vesselId)));
-    
-    if (vessel.length === 0) {
+    const { brokerId } = req.params;
       return res.status(404).json({ error: 'Vessel not found' });
     }
     

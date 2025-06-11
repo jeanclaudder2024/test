@@ -136,7 +136,7 @@ export default function BrokerManagement() {
     mutationFn: async ({ dealId, status, adminNotes }: { dealId: number; status: string; adminNotes: string }) => {
       return apiRequest(`/api/broker-deals/${dealId}`, {
         method: "PATCH",
-        body: { status, adminNotes },
+        body: JSON.stringify({ status, adminNotes }),
       });
     },
     onSuccess: () => {
