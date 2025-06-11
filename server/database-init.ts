@@ -75,6 +75,37 @@ export async function initializeCustomAuthTables() {
     
     console.log('Test admin user created: admin@petrodealhub.com / admin123');
     
+    // Insert basic subscription plan
+    await db.execute(sql`
+      INSERT INTO subscription_plans (name, price, interval, features, is_active) 
+      VALUES ('Basic Plan', 29.99, 'monthly', ARRAY['Basic features'], true)
+      ON CONFLICT DO NOTHING
+    `);
+    
+    // Create default subscription for admin user
+    await db.execute(sql`
+      INSERT INTO user_subscriptions (
+        user_id, 
+        plan_id, 
+        status, 
+        trial_start_date, 
+        trial_end_date, 
+        is_active
+      ) 
+      SELECT 
+        u.id, 
+        1, 
+        'active', 
+        NOW(), 
+        NOW() + INTERVAL '365 days', 
+        true
+      FROM users u 
+      WHERE u.email = 'admin@petrodealhub.com'
+      ON CONFLICT DO NOTHING
+    `);
+    
+    console.log('Default subscription plan and admin subscription created');
+    
   } catch (error) {
     console.error('Error initializing custom auth tables:', error);
     throw error;
