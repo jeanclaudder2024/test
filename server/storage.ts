@@ -6,6 +6,7 @@ import {
   brokerCompanies, companyPartnerships, userBrokerConnections,
   subscriptionPlans, subscriptions, paymentMethods, invoices, landingPageContent,
   vesselDocuments, professionalDocuments, oilTypes,
+  realCompanies, fakeCompanies,
   User, InsertUser, 
   Vessel, InsertVessel,
   Refinery, InsertRefinery,
@@ -17,6 +18,8 @@ import {
   VesselPortConnection, InsertVesselPortConnection,
   VesselRefineryConnection, InsertVesselRefineryConnection,
   Company, InsertCompany,
+  RealCompany, InsertRealCompany,
+  FakeCompany, InsertFakeCompany,
   BrokerCompany, InsertBrokerCompany,
   CompanyPartnership, InsertCompanyPartnership,
   UserBrokerConnection, InsertUserBrokerConnection,
@@ -163,6 +166,21 @@ export interface IStorage {
   createCompaniesBulk(companies: InsertCompany[]): Promise<Company[]>;
   updateCompany(id: number, company: Partial<InsertCompany>): Promise<Company | undefined>;
   deleteCompany(id: number): Promise<boolean>;
+
+  // Real Company methods
+  getRealCompanies(): Promise<RealCompany[]>;
+  getRealCompanyById(id: number): Promise<RealCompany | undefined>;
+  createRealCompany(company: InsertRealCompany): Promise<RealCompany>;
+  updateRealCompany(id: number, company: Partial<InsertRealCompany>): Promise<RealCompany | undefined>;
+  deleteRealCompany(id: number): Promise<boolean>;
+
+  // Fake Company methods
+  getFakeCompanies(): Promise<FakeCompany[]>;
+  getFakeCompaniesWithRelations(): Promise<(FakeCompany & { realCompany: RealCompany })[]>;
+  getFakeCompanyById(id: number): Promise<FakeCompany | undefined>;
+  createFakeCompany(company: InsertFakeCompany): Promise<FakeCompany>;
+  updateFakeCompany(id: number, company: Partial<InsertFakeCompany>): Promise<FakeCompany | undefined>;
+  deleteFakeCompany(id: number): Promise<boolean>;
   
   // Professional Document Management methods
   getProfessionalDocuments(): Promise<ProfessionalDocument[]>;
@@ -1100,6 +1118,98 @@ export class DatabaseStorage implements IStorage {
         )
       );
     return result.rowCount > 0;
+  }
+
+  // Real Company Methods
+  async getRealCompanies(): Promise<RealCompany[]> {
+    return await db.select().from(realCompanies).orderBy(realCompanies.createdAt);
+  }
+
+  async getRealCompanyById(id: number): Promise<RealCompany | undefined> {
+    const [company] = await db.select().from(realCompanies).where(eq(realCompanies.id, id));
+    return company || undefined;
+  }
+
+  async createRealCompany(company: InsertRealCompany): Promise<RealCompany> {
+    const [newCompany] = await db.insert(realCompanies).values(company).returning();
+    return newCompany;
+  }
+
+  async updateRealCompany(id: number, company: Partial<InsertRealCompany>): Promise<RealCompany | undefined> {
+    const [updatedCompany] = await db
+      .update(realCompanies)
+      .set(company)
+      .where(eq(realCompanies.id, id))
+      .returning();
+    return updatedCompany || undefined;
+  }
+
+  async deleteRealCompany(id: number): Promise<boolean> {
+    await db.delete(realCompanies).where(eq(realCompanies.id, id));
+    return true;
+  }
+
+  // Fake Company Methods
+  async getFakeCompanies(): Promise<FakeCompany[]> {
+    return await db.select().from(fakeCompanies).orderBy(fakeCompanies.createdAt);
+  }
+
+  async getFakeCompaniesWithRelations(): Promise<(FakeCompany & { realCompany: RealCompany })[]> {
+    const results = await db
+      .select({
+        id: fakeCompanies.id,
+        realCompanyId: fakeCompanies.realCompanyId,
+        generatedName: fakeCompanies.generatedName,
+        createdAt: fakeCompanies.createdAt,
+        updatedAt: fakeCompanies.updatedAt,
+        realCompany: {
+          id: realCompanies.id,
+          name: realCompanies.name,
+          industry: realCompanies.industry,
+          address: realCompanies.address,
+          logo: realCompanies.logo,
+          description: realCompanies.description,
+          website: realCompanies.website,
+          phone: realCompanies.phone,
+          email: realCompanies.email,
+          founded: realCompanies.founded,
+          employees: realCompanies.employees,
+          revenue: realCompanies.revenue,
+          headquarters: realCompanies.headquarters,
+          ceo: realCompanies.ceo,
+          createdAt: realCompanies.createdAt,
+          updatedAt: realCompanies.updatedAt,
+        }
+      })
+      .from(fakeCompanies)
+      .leftJoin(realCompanies, eq(fakeCompanies.realCompanyId, realCompanies.id))
+      .orderBy(fakeCompanies.createdAt);
+    
+    return results as (FakeCompany & { realCompany: RealCompany })[];
+  }
+
+  async getFakeCompanyById(id: number): Promise<FakeCompany | undefined> {
+    const [company] = await db.select().from(fakeCompanies).where(eq(fakeCompanies.id, id));
+    return company || undefined;
+  }
+
+  async createFakeCompany(company: InsertFakeCompany): Promise<FakeCompany> {
+    const [newCompany] = await db.insert(fakeCompanies).values(company).returning();
+    return newCompany;
+  }
+
+  async updateFakeCompany(id: number, company: Partial<InsertFakeCompany>): Promise<FakeCompany | undefined> {
+    const [updatedCompany] = await db
+      .update(fakeCompanies)
+      .set(company)
+      .where(eq(fakeCompanies.id, id))
+      .returning();
+    return updatedCompany || undefined;
+  }
+
+  async deleteFakeCompany(id: number): Promise<boolean> {
+    await db.delete(fakeCompanies).where(eq(fakeCompanies.id, id));
+    return true;
   }
 }
 
