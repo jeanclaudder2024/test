@@ -25,6 +25,18 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Subscription Plans table
+export const subscriptionPlans = pgTable("subscription_plans", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  interval: text("interval").notNull().default("monthly"), // monthly, yearly
+  features: text("features").array(),
+  stripePriceId: text("stripe_price_id"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // User Subscriptions table
 export const userSubscriptions = pgTable("user_subscriptions", {
   id: serial("id").primaryKey(),
@@ -450,32 +462,3 @@ export const insertPortSchema = createInsertSchema(ports).omit({
 
 export type InsertPort = z.infer<typeof insertPortSchema>;
 export type Port = typeof ports.$inferSelect;
-
-// Subscription Plans
-export const subscriptionPlans = pgTable("subscription_plans", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  slug: text("slug").notNull().unique(),
-  description: text("description").notNull(),
-  monthlyPriceId: text("monthly_price_id").notNull(), // Stripe price ID for monthly billing
-  yearlyPriceId: text("yearly_price_id").notNull(), // Stripe price ID for yearly billing
-  monthlyPrice: decimal("monthly_price", { precision: 10, scale: 2 }).notNull(),
-  yearlyPrice: decimal("yearly_price", { precision: 10, scale: 2 }).notNull(),
-  currency: text("currency").default("usd"),
-  features: text("features").notNull(), // JSON array of features as a string
-  isPopular: boolean("is_popular").default(false),
-  trialDays: integer("trial_days").default(0),
-  sortOrder: integer("sort_order").default(0),
-  isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-export const insertSubscriptionPlanSchema = createInsertSchema(subscriptionPlans).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export type InsertSubscriptionPlan = z.infer<typeof insertSubscriptionPlanSchema>;
-export type SubscriptionPlan = typeof subscriptionPlans.$inferSelect;
