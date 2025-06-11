@@ -15,6 +15,10 @@ import {
 
 export async function registerRoutes(app: Express): Promise<Server> {
 
+  // Authentication Routes
+  const authRoutes = await import("./routes/authRoutes");
+  app.use("/api/auth", authRoutes.default);
+
   // Real Company Routes
   app.get("/api/admin/real-companies", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res: Response) => {
     try {
