@@ -8,6 +8,7 @@ export async function initializeCustomAuthTables() {
     
     // Drop existing tables if they exist
     await db.execute(sql`DROP TABLE IF EXISTS user_subscriptions CASCADE`);
+    await db.execute(sql`DROP TABLE IF EXISTS subscription_plans CASCADE`);
     await db.execute(sql`DROP TABLE IF EXISTS users CASCADE`);
     
     // Create users table with auto-incrementing ID
@@ -23,11 +24,33 @@ export async function initializeCustomAuthTables() {
       )
     `);
     
+    // Create subscription_plans table first
+    await db.execute(sql`
+      CREATE TABLE subscription_plans (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        price DECIMAL(10,2) NOT NULL,
+        interval TEXT NOT NULL DEFAULT 'monthly',
+        features TEXT[],
+        stripe_price_id TEXT,
+        is_active BOOLEAN NOT NULL DEFAULT true,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    
     // Create user_subscriptions table
     await db.execute(sql`
       CREATE TABLE user_subscriptions (
         id SERIAL PRIMARY KEY,
         user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        plan_id INTEGER NOT NULL REFERENCES subscription_plans(id),
+        status TEXT NOT NULL DEFAULT 'trial',
+        stripe_customer_id TEXT,
+        stripe_subscription_id TEXT,
+        current_period_start TIMESTAMP,
+        current_period_end TIMESTAMP,
+        cancel_at_period_end BOOLEAN DEFAULT false,
+        billing_interval TEXT DEFAULT 'monthly',
         trial_start_date TIMESTAMP NOT NULL,
         trial_end_date TIMESTAMP NOT NULL,
         is_active BOOLEAN NOT NULL DEFAULT true,
