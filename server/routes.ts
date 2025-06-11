@@ -96,6 +96,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register authentication routes
   app.use("/api/auth", authRoutes);
   
+  // Company Management API Routes
+  app.get("/api/admin/real-companies", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const companies = await storage.getRealCompanies();
+      res.json(companies);
+    } catch (error) {
+      console.error("Error fetching real companies:", error);
+      res.status(500).json({ message: "Failed to fetch real companies" });
+    }
+  });
+
+  app.post("/api/admin/real-companies", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const validatedData = insertRealCompanySchema.parse(req.body);
+      const company = await storage.createRealCompany(validatedData);
+      res.json(company);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: fromZodError(error).toString() });
+      }
+      console.error("Error creating real company:", error);
+      res.status(500).json({ message: "Failed to create real company" });
+    }
+  });
+
+  app.get("/api/admin/fake-companies", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const companies = await storage.getFakeCompaniesWithRelations();
+      res.json(companies);
+    } catch (error) {
+      console.error("Error fetching fake companies:", error);
+      res.status(500).json({ message: "Failed to fetch fake companies" });
+    }
+  });
+
+  app.post("/api/admin/fake-companies", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const validatedData = insertFakeCompanySchema.parse(req.body);
+      const company = await storage.createFakeCompany(validatedData);
+      res.json(company);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: fromZodError(error).toString() });
+      }
+      console.error("Error creating fake company:", error);
+      res.status(500).json({ message: "Failed to create fake company" });
+    }
+  });
+
+  app.get("/api/companies", async (req: Request, res: Response) => {
+    try {
+      const companies = await storage.getFakeCompaniesWithRelations();
+      res.json(companies);
+    } catch (error) {
+      console.error("Error fetching companies:", error);
+      res.status(500).json({ message: "Failed to fetch companies" });
+    }
+  });
+  
   // Register routes
   app.use("/api/translate", translationRouter);
   app.use("/api/subscriptions", subscriptionRouter);

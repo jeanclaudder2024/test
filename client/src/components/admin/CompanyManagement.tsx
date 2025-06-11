@@ -72,16 +72,19 @@ export function CompanyManagement() {
   const queryClient = useQueryClient();
 
   // Fetch real companies
-  const { data: realCompanies = [], isLoading: realCompaniesLoading } = useQuery({
+  const { data: realCompaniesResponse, isLoading: realCompaniesLoading } = useQuery({
     queryKey: ['/api/admin/real-companies'],
     retry: false,
   });
 
   // Fetch fake companies with relations
-  const { data: fakeCompanies = [], isLoading: fakeCompaniesLoading } = useQuery({
+  const { data: fakeCompaniesResponse, isLoading: fakeCompaniesLoading } = useQuery({
     queryKey: ['/api/admin/fake-companies'],
     retry: false,
   });
+
+  const realCompanies = Array.isArray(realCompaniesResponse) ? realCompaniesResponse as RealCompany[] : [];
+  const fakeCompanies = Array.isArray(fakeCompaniesResponse) ? fakeCompaniesResponse as CompanyWithRelations[] : [];
 
   // Real company form
   const realCompanyForm = useForm<RealCompanyFormData>({
@@ -463,7 +466,7 @@ export function CompanyManagement() {
                       </TableCell>
                       <TableCell>
                         <span className="text-sm text-muted-foreground">
-                          {new Date(company.createdAt).toLocaleDateString()}
+                          {company.createdAt ? new Date(company.createdAt.toString()).toLocaleDateString() : 'N/A'}
                         </span>
                       </TableCell>
                       <TableCell>
