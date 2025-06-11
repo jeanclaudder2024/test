@@ -39,7 +39,7 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 export default function AuthPage() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  const { user, loginMutation, registerMutation } = useAuth();
+  const { user, login, register, isLoading } = useAuth();
 
   // Form definition
   const loginForm = useForm<LoginFormValues>({
@@ -69,19 +69,27 @@ export default function AuthPage() {
 
   const onLoginSubmit = async (data: LoginFormValues) => {
     try {
-      await loginMutation.mutateAsync(data);
+      await login(data);
       navigate("/dashboard");
-    } catch (error) {
-      // Toast handled in auth context
+    } catch (error: any) {
+      toast({
+        title: "Login Failed",
+        description: error.message || "Invalid credentials",
+        variant: "destructive",
+      });
     }
   };
 
   const onRegisterSubmit = async (data: RegisterFormValues) => {
     try {
-      await registerMutation.mutateAsync(data);
+      await register(data);
       navigate("/");
-    } catch (error) {
-      // Toast handled in auth context
+    } catch (error: any) {
+      toast({
+        title: "Registration Failed",
+        description: error.message || "Registration failed",
+        variant: "destructive",
+      });
     }
   };
 
@@ -188,12 +196,12 @@ export default function AuthPage() {
                       }}
                     >
                       <div className="flex items-center justify-center">
-                        {loginMutation.isPending ? (
+                        {isLoading ? (
                           <Loader2 className="animate-spin h-5 w-5 mr-2" />
                         ) : (
                           <Lock className="h-5 w-5 mr-2" />
                         )}
-                        {loginMutation.isPending ? "Authenticating..." : "3-DEAL FREE TRIAL"}
+                        {isLoading ? "Authenticating..." : "3-DEAL FREE TRIAL"}
                       </div>
                     </Button>
                     <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-2">Try the platform with 3 free deals - no credit card required</p>
@@ -273,9 +281,9 @@ export default function AuthPage() {
                       <Button 
                         type="submit" 
                         className="w-full bg-[#003366] hover:bg-[#002244] text-white font-medium py-2.5 h-12 rounded-lg mt-6"
-                        disabled={loginMutation.isPending}
+                        disabled={isLoading}
                       >
-                        {loginMutation.isPending ? (
+                        {isLoading ? (
                           <div className="flex items-center justify-center">
                             <Loader2 className="animate-spin h-4 w-4 mr-2" />
                             Signing in...
@@ -497,9 +505,9 @@ export default function AuthPage() {
                       <Button 
                         type="submit" 
                         className="w-full bg-[#003366] hover:bg-[#002244] text-white font-medium py-2.5 h-12 rounded-lg mt-6"
-                        disabled={registerMutation.isPending}
+                        disabled={isLoading}
                       >
-                        {registerMutation.isPending ? (
+                        {isLoading ? (
                           <div className="flex items-center justify-center">
                             <Loader2 className="animate-spin h-4 w-4 mr-2" />
                             Creating account...
