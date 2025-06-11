@@ -91,14 +91,14 @@ export default function Companies() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-orange-900">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          <h1 className="text-4xl font-bold text-white mb-4">
             Oil Trading Companies
           </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
             Connect with leading oil trading companies worldwide. Discover partnerships, 
             explore opportunities, and initiate deals with industry professionals.
           </p>
@@ -112,51 +112,51 @@ export default function Companies() {
               placeholder="Search companies, industries, or locations..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-10 bg-gray-800 border-gray-600 text-white placeholder:text-gray-400"
             />
           </div>
         </div>
 
         {/* Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card className="bg-white/80 backdrop-blur-sm">
+          <Card className="bg-gray-800/90 border-gray-700 backdrop-blur-sm">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Active Companies</p>
-                  <p className="text-2xl font-bold text-gray-900">{companies.length}</p>
+                  <p className="text-sm font-medium text-gray-300">Active Companies</p>
+                  <p className="text-2xl font-bold text-white">{companies.length}</p>
                 </div>
-                <Building2 className="h-8 w-8 text-blue-600" />
+                <Building2 className="h-8 w-8 text-orange-500" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-white/80 backdrop-blur-sm">
+          <Card className="bg-gray-800/90 border-gray-700 backdrop-blur-sm">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Industries</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-sm font-medium text-gray-300">Industries</p>
+                  <p className="text-2xl font-bold text-white">
                     {new Set(companies.map((c: CompanyWithRealData) => c.realCompany.industry)).size}
                   </p>
                 </div>
-                <Factory className="h-8 w-8 text-blue-600" />
+                <Factory className="h-8 w-8 text-orange-500" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-white/80 backdrop-blur-sm">
+          <Card className="bg-gray-800/90 border-gray-700 backdrop-blur-sm">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Countries</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-sm font-medium text-gray-300">Countries</p>
+                  <p className="text-2xl font-bold text-white">
                     {new Set(companies.map((c: CompanyWithRealData) => 
                       c.realCompany.headquarters?.split(',').pop()?.trim() || 'Global'
                     )).size}
                   </p>
                 </div>
-                <Globe className="h-8 w-8 text-blue-600" />
+                <Globe className="h-8 w-8 text-orange-500" />
               </div>
             </CardContent>
           </Card>
@@ -165,21 +165,35 @@ export default function Companies() {
         {/* Companies Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredCompanies.map((company: CompanyWithRealData) => (
-            <Card key={company.id} className="group hover:shadow-xl transition-all duration-300 bg-white/90 backdrop-blur-sm border-0 shadow-lg">
+            <Card key={company.id} className="group hover:shadow-xl transition-all duration-300 bg-gray-800/90 backdrop-blur-sm border-gray-700 shadow-lg">
               <CardHeader className="pb-4">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-xl flex items-center justify-center">
-                      <Building2 className="h-6 w-6 text-white" />
-                    </div>
+                    {company.realCompany.logo ? (
+                      <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-700 flex items-center justify-center">
+                        <img 
+                          src={company.realCompany.logo} 
+                          alt={`${company.realCompany.name} logo`}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.parentElement!.innerHTML = '<div class="w-12 h-12 bg-gradient-to-br from-orange-600 to-orange-800 rounded-xl flex items-center justify-center"><svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg></div>';
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-12 h-12 bg-gradient-to-br from-orange-600 to-orange-800 rounded-xl flex items-center justify-center">
+                        <Building2 className="h-6 w-6 text-white" />
+                      </div>
+                    )}
                     <div>
-                      <CardTitle className="text-lg group-hover:text-blue-600 transition-colors">
-                        {company.generatedName}
+                      <CardTitle className="text-lg group-hover:text-orange-400 transition-colors text-white">
+                        {company.realCompany.name}
                       </CardTitle>
-                      <CardDescription className="flex items-center mt-1">
-                        <Badge variant="outline" className="text-xs">
+                      <CardDescription className="flex items-center mt-1 text-gray-400">
+                        <span className="text-xs bg-orange-600/20 text-orange-400 px-2 py-1 rounded-full border border-orange-600/30">
                           {company.realCompany.industry}
-                        </Badge>
+                        </span>
                       </CardDescription>
                     </div>
                   </div>
@@ -188,54 +202,54 @@ export default function Companies() {
 
               <CardContent className="space-y-4">
                 {/* Company Description */}
-                <p className="text-sm text-gray-600 line-clamp-3">
+                <p className="text-sm text-gray-300 line-clamp-3">
                   {company.realCompany.description}
                 </p>
 
                 {/* Company Details */}
                 <div className="space-y-2">
                   {company.realCompany.headquarters && (
-                    <div className="flex items-center text-sm text-gray-600">
-                      <MapPin className="h-4 w-4 mr-2 text-gray-400" />
+                    <div className="flex items-center text-sm text-gray-300">
+                      <MapPin className="h-4 w-4 mr-2 text-orange-500" />
                       {company.realCompany.headquarters}
                     </div>
                   )}
 
                   {company.realCompany.ceo && (
-                    <div className="flex items-center text-sm text-gray-600">
-                      <User className="h-4 w-4 mr-2 text-gray-400" />
+                    <div className="flex items-center text-sm text-gray-300">
+                      <User className="h-4 w-4 mr-2 text-orange-500" />
                       CEO: {company.realCompany.ceo}
                     </div>
                   )}
 
                   {company.realCompany.founded && (
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Calendar className="h-4 w-4 mr-2 text-gray-400" />
+                    <div className="flex items-center text-sm text-gray-300">
+                      <Calendar className="h-4 w-4 mr-2 text-orange-500" />
                       Founded {company.realCompany.founded}
                     </div>
                   )}
 
                   {company.realCompany.employees && (
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Users className="h-4 w-4 mr-2 text-gray-400" />
+                    <div className="flex items-center text-sm text-gray-300">
+                      <Users className="h-4 w-4 mr-2 text-orange-500" />
                       {company.realCompany.employees.toLocaleString()} employees
                     </div>
                   )}
 
                   {company.realCompany.revenue && (
-                    <div className="flex items-center text-sm text-gray-600">
-                      <DollarSign className="h-4 w-4 mr-2 text-gray-400" />
+                    <div className="flex items-center text-sm text-gray-300">
+                      <DollarSign className="h-4 w-4 mr-2 text-orange-500" />
                       Revenue: {company.realCompany.revenue}
                     </div>
                   )}
                 </div>
 
                 {/* Contact Information */}
-                <div className="pt-4 border-t border-gray-100">
+                <div className="pt-4 border-t border-gray-700">
                   <div className="flex items-center justify-between">
                     <div className="flex space-x-2">
                       {company.realCompany.website && (
-                        <Button variant="outline" size="sm" asChild>
+                        <Button variant="outline" size="sm" asChild className="border-gray-600 text-gray-300 hover:bg-gray-700">
                           <a 
                             href={company.realCompany.website} 
                             target="_blank" 
@@ -250,7 +264,7 @@ export default function Companies() {
                       )}
 
                       {company.realCompany.email && (
-                        <Button variant="outline" size="sm" asChild>
+                        <Button variant="outline" size="sm" asChild className="border-gray-600 text-gray-300 hover:bg-gray-700">
                           <a href={`mailto:${company.realCompany.email}`} className="flex items-center">
                             <Mail className="h-3 w-3 mr-1" />
                             Email
@@ -264,8 +278,8 @@ export default function Companies() {
                 {/* Request Deal Button */}
                 <div className="pt-4">
                   <Button 
-                    className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white"
-                    onClick={() => handleRequestDeal(company.generatedName)}
+                    className="w-full bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white"
+                    onClick={() => handleRequestDeal(company.realCompany.name)}
                   >
                     <Handshake className="h-4 w-4 mr-2" />
                     Request Deal
