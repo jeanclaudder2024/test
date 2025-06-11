@@ -1,10 +1,14 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
 import { 
   Building2, 
   MapPin, 
@@ -18,7 +22,8 @@ import {
   Search,
   ExternalLink,
   Factory,
-  Handshake
+  Handshake,
+  Package
 } from 'lucide-react';
 
 interface CompanyWithRealData {
@@ -44,7 +49,13 @@ interface CompanyWithRealData {
 
 export default function Companies() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [dealRequest, setDealRequest] = useState({
+    companyId: 0,
+    notes: '',
+    dealValue: '',
+  });
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Fetch fake companies with real company data
   const { data: response, isLoading } = useQuery({
@@ -53,6 +64,30 @@ export default function Companies() {
   });
 
   const companies = Array.isArray(response) ? response : [];
+
+  // Request deal mutation
+  const requestDealMutation = useMutation({
+    mutationFn: async (dealData: any) => {
+      return apiRequest('/api/broker-deals', {
+        method: 'POST',
+        body: dealData,
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Deal Requested',
+        description: 'Your deal request has been submitted successfully.',
+      });
+      setDealRequest({ companyId: 0, notes: '', dealValue: '' });
+    },
+    onError: () => {
+      toast({
+        title: 'Error',
+        description: 'Failed to submit deal request.',
+        variant: 'destructive',
+      });
+    },
+  });
 
   const filteredCompanies = companies.filter((company: CompanyWithRealData) =>
     company.generatedName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -277,13 +312,68 @@ export default function Companies() {
 
                 {/* Request Deal Button */}
                 <div className="pt-4">
-                  <Button 
-                    className="w-full bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white"
-                    onClick={() => handleRequestDeal(company.realCompany.name)}
-                  >
-                    <Handshake className="h-4 w-4 mr-2" />
-                    Request Deal
-                  </Button>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button 
+                        className="w-full bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white"
+                        onClick={() => {
+                          setDealRequest({ 
+                            companyId: company.id, 
+                            notes: '', 
+                            dealValue: '' 
+                          });
+                        }}
+                      >
+                        <Package className="h-4 w-4 mr-2" />
+                        Request Deal
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="bg-gray-800 border-gray-700">
+                      <DialogHeader>
+                        <DialogTitle className="text-white">Request Deal with {company.realCompany.name}</DialogTitle>
+                        <DialogDescription className="text-gray-400">
+                          Submit a deal request to connect with this company for oil trading opportunities.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div>
+                          <Label htmlFor="deal-value" className="text-gray-300">Deal Value (Optional)</Label>
+                          <Input
+                            id="deal-value"
+                            value={dealRequest.dealValue}
+                            onChange={(e) => setDealRequest({ ...dealRequest, dealValue: e.target.value })}
+                            placeholder="e.g., $1,000,000"
+                            className="bg-gray-700 border-gray-600 text-white"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="deal-notes" className="text-gray-300">Notes</Label>
+                          <Textarea
+                            id="deal-notes"
+                            value={dealRequest.notes}
+                            onChange={(e) => setDealRequest({ ...dealRequest, notes: e.target.value })}
+                            placeholder="Add details about your deal request..."
+                            className="bg-gray-700 border-gray-600 text-white"
+                            rows={4}
+                          />
+                        </div>
+                        <Button
+                          onClick={() => {
+                            requestDealMutation.mutate({
+                              brokerId: 1, // Placeholder for development
+                              fakeCompanyId: company.id,
+                              dealValue: dealRequest.dealValue,
+                              notes: dealRequest.notes,
+                            });
+                          }}
+                          className="bg-orange-500 hover:bg-orange-600 text-white w-full"
+                          disabled={requestDealMutation.isPending}
+                        >
+                          {requestDealMutation.isPending ? "Submitting..." : "Submit Deal Request"}
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </CardContent>
             </Card>
