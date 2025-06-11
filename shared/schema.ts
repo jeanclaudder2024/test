@@ -374,6 +374,95 @@ export type InsertRealCompany = z.infer<typeof insertRealCompanySchema>;
 export type FakeCompany = typeof fakeCompanies.$inferSelect;
 export type InsertFakeCompany = z.infer<typeof insertFakeCompanySchema>;
 
+// Broker Deals - When brokers click "Request Deal" on companies
+export const brokerDeals = pgTable("broker_deals", {
+  id: serial("id").primaryKey(),
+  brokerId: integer("broker_id").notNull().references(() => users.id),
+  fakeCompanyId: integer("fake_company_id").notNull().references(() => fakeCompanies.id),
+  status: text("status").notNull().default("pending"), // pending, approved, rejected, completed
+  dealValue: text("deal_value"), // Optional deal value
+  notes: text("notes"), // Broker's notes about the deal
+  adminNotes: text("admin_notes"), // Admin's notes about the deal
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Broker Documents - Files that admin sends to brokers
+export const brokerDocuments = pgTable("broker_documents", {
+  id: serial("id").primaryKey(),
+  brokerId: integer("broker_id").notNull().references(() => users.id),
+  fileName: text("file_name").notNull(),
+  fileUrl: text("file_url").notNull(),
+  fileType: text("file_type").notNull(), // pdf, doc, docx, etc.
+  fileSize: integer("file_size"), // in bytes
+  title: text("title"), // Document title/description
+  uploadedByAdmin: integer("uploaded_by_admin").references(() => users.id),
+  isRead: boolean("is_read").default(false), // Has broker read this document
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Oil Market Alerts - Static alerts for brokers
+export const oilMarketAlerts = pgTable("oil_market_alerts", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  alertType: text("alert_type").notNull().default("info"), // info, warning, success, error
+  priority: text("priority").notNull().default("medium"), // low, medium, high
+  isActive: boolean("is_active").default(true),
+  targetBrokers: text("target_brokers"), // JSON array of broker IDs, null for all brokers
+  createdAt: timestamp("created_at").defaultNow(),
+  expiresAt: timestamp("expires_at"), // Optional expiration date
+});
+
+// Relations for broker deals
+export const brokerDealsRelations = relations(brokerDeals, ({ one }) => ({
+  broker: one(users, {
+    fields: [brokerDeals.brokerId],
+    references: [users.id],
+  }),
+  fakeCompany: one(fakeCompanies, {
+    fields: [brokerDeals.fakeCompanyId],
+    references: [fakeCompanies.id],
+  }),
+}));
+
+// Relations for broker documents
+export const brokerDocumentsRelations = relations(brokerDocuments, ({ one }) => ({
+  broker: one(users, {
+    fields: [brokerDocuments.brokerId],
+    references: [users.id],
+  }),
+  uploadedBy: one(users, {
+    fields: [brokerDocuments.uploadedByAdmin],
+    references: [users.id],
+  }),
+}));
+
+// Insert schemas for broker features
+export const insertBrokerDealSchema = createInsertSchema(brokerDeals).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertBrokerDocumentSchema = createInsertSchema(brokerDocuments).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertOilMarketAlertSchema = createInsertSchema(oilMarketAlerts).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Types for broker features
+export type BrokerDeal = typeof brokerDeals.$inferSelect;
+export type InsertBrokerDeal = z.infer<typeof insertBrokerDealSchema>;
+export type BrokerDocument = typeof brokerDocuments.$inferSelect;
+export type InsertBrokerDocument = z.infer<typeof insertBrokerDocumentSchema>;
+export type OilMarketAlert = typeof oilMarketAlerts.$inferSelect;
+export type InsertOilMarketAlert = z.infer<typeof insertOilMarketAlertSchema>;
+
 // Ports - Complete comprehensive table structure
 export const ports = pgTable("ports", {
   id: serial("id").primaryKey(),

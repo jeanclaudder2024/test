@@ -154,6 +154,154 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch companies" });
     }
   });
+
+  // Broker Deal Routes
+  app.post("/api/broker-deals", async (req: Request, res: Response) => {
+    try {
+      const dealData = req.body;
+      const deal = await storage.createBrokerDeal(dealData);
+      res.json(deal);
+    } catch (error) {
+      console.error("Error creating broker deal:", error);
+      res.status(500).json({ message: "Failed to create broker deal" });
+    }
+  });
+
+  app.get("/api/broker-deals", async (req: Request, res: Response) => {
+    try {
+      const brokerId = req.query.brokerId ? parseInt(req.query.brokerId as string) : undefined;
+      const deals = await storage.getBrokerDeals(brokerId);
+      res.json(deals);
+    } catch (error) {
+      console.error("Error fetching broker deals:", error);
+      res.status(500).json({ message: "Failed to fetch broker deals" });
+    }
+  });
+
+  app.patch("/api/broker-deals/:id", async (req: Request, res: Response) => {
+    try {
+      const dealId = parseInt(req.params.id);
+      const updateData = req.body;
+      const deal = await storage.updateBrokerDeal(dealId, updateData);
+      res.json(deal);
+    } catch (error) {
+      console.error("Error updating broker deal:", error);
+      res.status(500).json({ message: "Failed to update broker deal" });
+    }
+  });
+
+  app.delete("/api/broker-deals/:id", async (req: Request, res: Response) => {
+    try {
+      const dealId = parseInt(req.params.id);
+      await storage.deleteBrokerDeal(dealId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting broker deal:", error);
+      res.status(500).json({ message: "Failed to delete broker deal" });
+    }
+  });
+
+  // Broker Document Routes
+  app.get("/api/broker-documents", async (req: Request, res: Response) => {
+    try {
+      const brokerId = req.query.brokerId ? parseInt(req.query.brokerId as string) : undefined;
+      const documents = await storage.getBrokerDocuments(brokerId);
+      res.json(documents);
+    } catch (error) {
+      console.error("Error fetching broker documents:", error);
+      res.status(500).json({ message: "Failed to fetch broker documents" });
+    }
+  });
+
+  app.post("/api/broker-documents", async (req: Request, res: Response) => {
+    try {
+      const documentData = req.body;
+      const document = await storage.createBrokerDocument(documentData);
+      res.json(document);
+    } catch (error) {
+      console.error("Error creating broker document:", error);
+      res.status(500).json({ message: "Failed to create broker document" });
+    }
+  });
+
+  app.patch("/api/broker-documents/:id/mark-read", async (req: Request, res: Response) => {
+    try {
+      const documentId = parseInt(req.params.id);
+      await storage.markDocumentAsRead(documentId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error marking document as read:", error);
+      res.status(500).json({ message: "Failed to mark document as read" });
+    }
+  });
+
+  app.delete("/api/broker-documents/:id", async (req: Request, res: Response) => {
+    try {
+      const documentId = parseInt(req.params.id);
+      await storage.deleteBrokerDocument(documentId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting broker document:", error);
+      res.status(500).json({ message: "Failed to delete broker document" });
+    }
+  });
+
+  // Oil Market Alerts Routes
+  app.get("/api/oil-market-alerts", async (req: Request, res: Response) => {
+    try {
+      const brokerId = req.query.brokerId ? parseInt(req.query.brokerId as string) : undefined;
+      const alerts = await storage.getOilMarketAlerts(brokerId);
+      res.json(alerts);
+    } catch (error) {
+      console.error("Error fetching oil market alerts:", error);
+      res.status(500).json({ message: "Failed to fetch oil market alerts" });
+    }
+  });
+
+  app.post("/api/oil-market-alerts", async (req: Request, res: Response) => {
+    try {
+      const alertData = req.body;
+      const alert = await storage.createOilMarketAlert(alertData);
+      res.json(alert);
+    } catch (error) {
+      console.error("Error creating oil market alert:", error);
+      res.status(500).json({ message: "Failed to create oil market alert" });
+    }
+  });
+
+  app.patch("/api/oil-market-alerts/:id", async (req: Request, res: Response) => {
+    try {
+      const alertId = parseInt(req.params.id);
+      const updateData = req.body;
+      const alert = await storage.updateOilMarketAlert(alertId, updateData);
+      res.json(alert);
+    } catch (error) {
+      console.error("Error updating oil market alert:", error);
+      res.status(500).json({ message: "Failed to update oil market alert" });
+    }
+  });
+
+  app.delete("/api/oil-market-alerts/:id", async (req: Request, res: Response) => {
+    try {
+      const alertId = parseInt(req.params.id);
+      await storage.deleteOilMarketAlert(alertId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting oil market alert:", error);
+      res.status(500).json({ message: "Failed to delete oil market alert" });
+    }
+  });
+
+  // Get all brokers for admin management
+  app.get("/api/admin/brokers", async (req: Request, res: Response) => {
+    try {
+      const brokers = await storage.getAllBrokers();
+      res.json(brokers);
+    } catch (error) {
+      console.error("Error fetching brokers:", error);
+      res.status(500).json({ message: "Failed to fetch brokers" });
+    }
+  });
   
   // Register routes
   app.use("/api/translate", translationRouter);

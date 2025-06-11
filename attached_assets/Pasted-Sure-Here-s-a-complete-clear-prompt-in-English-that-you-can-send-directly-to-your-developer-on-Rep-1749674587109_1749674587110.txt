@@ -1,0 +1,83 @@
+Sure! Here's a complete, clear prompt in English that you can send directly to your developer on Replit. It covers everything: the new Brokers Page, the admin control, temporary access, and how things are expected to work.
+
+🚀 Full Implementation Prompt – Brokers System
+Hi,
+
+We’re moving to the next step: implementing the Brokers System.
+
+Please follow the full instructions below carefully:
+
+🧑‍💼 Who is a Broker?
+A Broker is a user who subscribes to a special plan called the Broker Plan.
+
+Only after subscribing, they get access to a full Brokers Page.
+
+But for now, during development, this page should be accessible without any login or subscription logic so we can test.
+
+📄 What is the Brokers Page?
+This is a dedicated page for each Broker (user with Broker Plan).
+It includes the following 3 core sections:
+
+1. ✅ Deals Section
+Shows all Deals the broker has created by clicking Request Deal on the Company Page.
+
+These are connections between the Broker and Fake Companies.
+
+Each time a broker clicks “Request Deal,” the deal:
+
+Gets stored and shown here
+
+Gets pushed to the admin's panel (see below)
+
+2. 📁 Documents Section
+Shows all documents (PDF, Word, etc.) that the Admin has sent to this broker.
+
+Broker can download each document.
+
+Broker sees a notification when a new file is added.
+
+3. 🛢️ Oil Market Alerts Section
+This section shows static or placeholder oil market status.
+
+Ex: “Oil prices rising today,” “Market drop expected,” etc.
+
+Can be static for now — later we'll wire it with real data or APIs.
+
+🔁 Relationship with Company Page
+Brokers see only Fake Companies on the Company Page.
+
+When clicking “Request Deal” on any company:
+
+A deal is created
+
+It appears in their Brokers Page
+
+It also appears in the Admin Panel in a page called Broker Management Page
+
+🧑‍💼 Admin Panel – Broker Management Page
+Please create a page inside the Admin Panel called Broker Management Page.
+
+This page should:
+
+Show a list of all Brokers
+
+For each broker, show:
+
+All their created Deals
+
+An upload field to send them documents
+
+When the admin uploads a document:
+
+It should appear in the broker’s Documents Section
+
+The broker gets a simple notification inside the Brokers Page
+
+⚠️ TEMPORARY RULE – FOR DEVELOPMENT ONLY
+✅ For now, all pages (including the Brokers Page) should be accessible from the Admin Panel or directly via URL.
+
+🚫 Do not implement any login or subscription logic yet.
+
+🔒 Later, we’ll hide the Brokers Page and make it visible only for subscribed users. But for now:
+
+Show all pages openly so we can build and test UI and logic.
