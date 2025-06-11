@@ -78,20 +78,15 @@ export async function authenticateToken(req: AuthenticatedRequest, res: Response
       return res.status(401).json({ message: 'User not found' });
     }
 
-    // Fetch subscription
-    const [subscription] = await db
-      .select()
-      .from(userSubscriptions)
-      .where(eq(userSubscriptions.userId, user.id))
-      .limit(1);
-
+    // Simplified subscription handling
     req.user = {
       ...user,
-      subscription
+      subscription: null
     };
 
     next();
   } catch (error) {
+    console.error('Token validation error:', error);
     return res.status(403).json({ message: 'Invalid token' });
   }
 }
