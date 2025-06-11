@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import { storage } from "../storage";
 import { z } from "zod";
-import { InsertRefineryPortConnection, insertRefineryPortConnectionSchema, InsertVessel } from "@shared/schema";
+import { InsertVessel } from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
 import { calculateDistance } from "../utils/geoUtils";
 
