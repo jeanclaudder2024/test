@@ -41,17 +41,20 @@ import {
   insertVesselDocumentSchema,
   insertBrokerSchema,
   insertPortSchema,
-  insertCompanySchema,
+  insertRealCompanySchema,
+  insertFakeCompanySchema,
   Vessel,
   Refinery,
   Port,
-  Company,
+  RealCompany,
+  FakeCompany,
   vessels,
   refineries,
   progressEvents,
   vesselDocuments,
   stats,
-  companies,
+  realCompanies,
+  fakeCompanies,
   ports,
   vesselPortConnections
 } from "@shared/schema";
@@ -5063,6 +5066,155 @@ Only use authentic, real-world data for existing refineries.`;
         message: "Failed to delete article",
         error: error instanceof Error ? error.message : "Unknown error"
       });
+    }
+  });
+
+  // Company Management API Routes
+  // Real Companies
+  apiRouter.get("/admin/real-companies", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const realCompaniesData = await db.select().from(realCompanies);
+      res.json(realCompaniesData);
+    } catch (error) {
+      console.error("Error fetching real companies:", error);
+      res.status(500).json({ message: "Failed to fetch real companies" });
+    }
+  });
+
+  apiRouter.post("/admin/real-companies", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const validatedData = insertRealCompanySchema.parse(req.body);
+      const [newCompany] = await db.insert(realCompanies).values(validatedData).returning();
+      res.status(201).json(newCompany);
+    } catch (error) {
+      console.error("Error creating real company:", error);
+      res.status(500).json({ message: "Failed to create real company" });
+    }
+  });
+
+  apiRouter.delete("/admin/real-companies/:id", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid company ID" });
+      }
+
+      // Delete linked fake companies first
+      await db.delete(fakeCompanies).where(eq(fakeCompanies.realCompanyId, id));
+      
+      // Delete real company
+      const [deletedCompany] = await db.delete(realCompanies).where(eq(realCompanies.id, id)).returning();
+      
+      if (!deletedCompany) {
+        return res.status(404).json({ message: "Company not found" });
+      }
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting real company:", error);
+      res.status(500).json({ message: "Failed to delete real company" });
+    }
+  });
+
+  // Fake Companies
+  apiRouter.get("/admin/fake-companies", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const fakeCompaniesWithReal = await db
+        .select({
+          id: fakeCompanies.id,
+          realCompanyId: fakeCompanies.realCompanyId,
+          generatedName: fakeCompanies.generatedName,
+          createdAt: fakeCompanies.createdAt,
+          updatedAt: fakeCompanies.updatedAt,
+          realCompany: {
+            id: realCompanies.id,
+            name: realCompanies.name,
+            industry: realCompanies.industry,
+            address: realCompanies.address,
+            logo: realCompanies.logo,
+            description: realCompanies.description,
+            website: realCompanies.website,
+            phone: realCompanies.phone,
+            email: realCompanies.email,
+            founded: realCompanies.founded,
+            employees: realCompanies.employees,
+            revenue: realCompanies.revenue,
+            headquarters: realCompanies.headquarters,
+            ceo: realCompanies.ceo,
+          }
+        })
+        .from(fakeCompanies)
+        .innerJoin(realCompanies, eq(fakeCompanies.realCompanyId, realCompanies.id));
+      
+      res.json(fakeCompaniesWithReal);
+    } catch (error) {
+      console.error("Error fetching fake companies:", error);
+      res.status(500).json({ message: "Failed to fetch fake companies" });
+    }
+  });
+
+  apiRouter.post("/admin/fake-companies", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const validatedData = insertFakeCompanySchema.parse(req.body);
+      const [newFakeCompany] = await db.insert(fakeCompanies).values(validatedData).returning();
+      res.status(201).json(newFakeCompany);
+    } catch (error) {
+      console.error("Error creating fake company:", error);
+      res.status(500).json({ message: "Failed to create fake company" });
+    }
+  });
+
+  apiRouter.delete("/admin/fake-companies/:id", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid fake company ID" });
+      }
+
+      const [deletedFakeCompany] = await db.delete(fakeCompanies).where(eq(fakeCompanies.id, id)).returning();
+      
+      if (!deletedFakeCompany) {
+        return res.status(404).json({ message: "Fake company not found" });
+      }
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting fake company:", error);
+      res.status(500).json({ message: "Failed to delete fake company" });
+    }
+  });
+
+  // Public Companies API (shows fake companies with real company data)
+  apiRouter.get("/companies", async (req, res) => {
+    try {
+      const companiesWithRealData = await db
+        .select({
+          id: fakeCompanies.id,
+          generatedName: fakeCompanies.generatedName,
+          realCompany: {
+            id: realCompanies.id,
+            name: realCompanies.name,
+            industry: realCompanies.industry,
+            address: realCompanies.address,
+            logo: realCompanies.logo,
+            description: realCompanies.description,
+            website: realCompanies.website,
+            phone: realCompanies.phone,
+            email: realCompanies.email,
+            founded: realCompanies.founded,
+            employees: realCompanies.employees,
+            revenue: realCompanies.revenue,
+            headquarters: realCompanies.headquarters,
+            ceo: realCompanies.ceo,
+          }
+        })
+        .from(fakeCompanies)
+        .innerJoin(realCompanies, eq(fakeCompanies.realCompanyId, realCompanies.id));
+      
+      res.json(companiesWithRealData);
+    } catch (error) {
+      console.error("Error fetching companies:", error);
+      res.status(500).json({ message: "Failed to fetch companies" });
     }
   });
 

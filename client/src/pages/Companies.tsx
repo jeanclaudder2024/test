@@ -201,7 +201,7 @@ export default function Companies() {
 
                   {company.realCompany.ceo && (
                     <div className="flex items-center text-sm text-gray-600">
-                      <UserTie className="h-4 w-4 mr-2 text-gray-400" />
+                      <User className="h-4 w-4 mr-2 text-gray-400" />
                       CEO: {company.realCompany.ceo}
                     </div>
                   )}
