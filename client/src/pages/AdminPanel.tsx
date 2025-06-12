@@ -26,6 +26,7 @@ import OilTypeManagement from "@/components/admin/OilTypeManagement";
 import RegionManagement from "@/components/admin/RegionManagement";
 import DocumentManagement from "@/components/admin/DocumentManagement";
 import { BrokerManagement } from "@/components/admin/BrokerManagement";
+import { FilterManagement } from "@/components/admin/FilterManagement";
 
 export default function AdminPanel() {
   const [_, navigate] = useLocation();
@@ -104,7 +105,7 @@ export default function AdminPanel() {
               <option value="regions">🌍 Region Management</option>
               <option value="documents">📄 Document Management</option>
               <option value="brokers">🤝 Broker Management</option>
-
+              <option value="filters">🔧 Filter Management</option>
               <option value="data">💾 Data Management</option>
               <option value="migration">🔄 Database Migration</option>
               <option value="landing">🌐 Landing Page</option>
@@ -113,7 +114,7 @@ export default function AdminPanel() {
           </div>
 
           {/* Desktop Tab Navigation */}
-          <TabsList className="hidden lg:grid lg:grid-cols-12 w-full bg-white/60 backdrop-blur-sm border border-slate-200/60 p-1 rounded-xl shadow-sm">
+          <TabsList className="hidden lg:grid lg:grid-cols-12 w-full bg-gradient-to-r from-white/80 to-blue-50/80 backdrop-blur-md border border-slate-200/60 p-1.5 rounded-xl shadow-lg">
             <TabsTrigger 
               value="overview" 
               className="flex items-center gap-2 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-200 hover:bg-blue-50 rounded-lg"
@@ -477,6 +478,10 @@ export default function AdminPanel() {
 
         <TabsContent value="brokers" className="space-y-4">
           <BrokerManagement />
+        </TabsContent>
+
+        <TabsContent value="filters" className="space-y-4">
+          <FilterManagement />
         </TabsContent>
 
         <TabsContent value="settings" className="space-y-4">
