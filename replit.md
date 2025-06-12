@@ -127,6 +127,13 @@ Changelog:
   * Enhanced paragraph formatting with consistent line spacing and proper justification
   * Added automatic page breaks for tables and content sections
   * Professional table styling with borders, alternating row colors, and proper cell padding
+- June 12, 2025. Fixed PDF blank pages and enhanced document downloads:
+  * Eliminated excessive blank pages by optimizing page break logic
+  * Corrected company logo display with professional "P" symbol in white circle
+  * Fixed watermark positioning with proper diagonal rotation and transparency
+  * Added Word document download option alongside PDF downloads
+  * Enhanced header layout with PETRODEALHUB branding and document metadata
+  * Both PDF and Word formats now available with consistent company branding
 
 ## User Preferences
 

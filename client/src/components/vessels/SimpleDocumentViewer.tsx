@@ -342,37 +342,31 @@ All technical systems meet international maritime standards and regulatory requi
           ))}
         </div>
 
-        {/* Document Detail Modal */}
         {selectedDocument && (
-          <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm">
-            <Card className="fixed inset-4 z-50 bg-background border shadow-lg">
-              <CardHeader className="border-b">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>{selectedDocument.title}</CardTitle>
-                    <CardDescription>
-                      {formatDate(selectedDocument.createdAt)} • {getStatusBadge(selectedDocument.status)}
-                    </CardDescription>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setSelectedDocument(null)}
-                  >
-                    Close
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="h-[calc(100vh-200px)] overflow-auto">
-                  <div className="p-6 prose prose-sm max-w-none">
-                    <pre className="whitespace-pre-wrap font-mono text-sm">
-                      {selectedDocument.content}
-                    </pre>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+          <div className="mt-8 p-6 border rounded-lg bg-gray-50">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">{selectedDocument.title}</h3>
+              <div className="flex gap-2 items-center">
+                <span className="text-sm text-muted-foreground">
+                  Created: {formatDate(selectedDocument.createdAt)}
+                </span>
+                {getStatusBadge(selectedDocument.status)}
+              </div>
+            </div>
+            <div className="flex gap-2 mb-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSelectedDocument(null)}
+              >
+                Close Details
+              </Button>
+            </div>
+            <div className="prose max-w-none">
+              <pre className="whitespace-pre-wrap text-sm bg-white p-4 rounded border">
+                {selectedDocument.content}
+              </pre>
+            </div>
           </div>
         )}
       </CardContent>
