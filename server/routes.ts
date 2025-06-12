@@ -5128,27 +5128,80 @@ Only use authentic, real-world data for existing refineries.`;
       doc.pipe(res);
       
       if (includeLogo) {
+        // Add watermark background first (before other content)
+        doc.save();
+        doc.opacity(0.08);
+        
+        // Rotate and add large watermark text in center
+        const centerX = 297.64; // A4 width center
+        const centerY = 420.945; // A4 height center
+        
+        doc.rotate(-45, { origin: [centerX, centerY] });
+        doc.fontSize(80)
+          .fillColor('#1e40af')
+          .font('Helvetica-Bold')
+          .text('PETRODEALHUB', centerX - 200, centerY - 30, {
+            align: 'center',
+            width: 400
+          });
+          
+        doc.fontSize(28)
+          .fillColor('#1e40af')
+          .font('Helvetica')
+          .text('MARITIME SOLUTIONS', centerX - 140, centerY + 30, {
+            align: 'center',
+            width: 280
+          });
+        
+        doc.restore();
+        
         // Add company logo design and header
-        doc.rect(40, 40, 515, 80)
+        doc.rect(40, 40, 515, 90)
           .fillAndStroke('#1e40af', '#1e40af'); // Professional blue header
           
-        // Add PetroDealHub logo text design
-        doc.fontSize(28)
+        // Create professional logo symbol
+        const logoX = 60;
+        const logoY = 55;
+        
+        // Logo background circle
+        doc.circle(logoX + 20, logoY + 20, 15)
+          .fillAndStroke('#ffffff', '#ffffff');
+        
+        // Maritime anchor symbol in logo
+        doc.fontSize(20)
+          .fillColor('#1e40af')
+          .font('Helvetica-Bold')
+          .text('⚓', logoX + 13, logoY + 10);
+          
+        // Company name next to logo
+        doc.fontSize(24)
           .fillColor('#ffffff')
           .font('Helvetica-Bold')
-          .text('PETRODEALHUB', 60, 65);
+          .text('PETRODEALHUB', logoX + 50, logoY + 8);
           
-        doc.fontSize(12)
+        doc.fontSize(11)
           .fillColor('#e0e7ff')
           .font('Helvetica')
-          .text('Maritime Oil Brokerage Platform', 60, 95);
+          .text('Maritime Oil Brokerage & Logistics Platform', logoX + 50, logoY + 35);
           
-        // Add maritime wave design element
-        doc.moveTo(400, 60)
-          .bezierCurveTo(420, 50, 440, 70, 460, 60)
-          .bezierCurveTo(480, 50, 500, 70, 520, 60)
+        // Document info in header right side
+        doc.fontSize(12)
+          .fillColor('#ffffff')
+          .font('Helvetica-Bold')
+          .text(`Document: ${documentType}`, 380, logoY + 8);
+          
+        doc.fontSize(10)
+          .fillColor('#e0e7ff')
+          .font('Helvetica')
+          .text(`Generated: ${new Date().toLocaleDateString()}`, 380, logoY + 25)
+          .text(`Time: ${new Date().toLocaleTimeString()}`, 380, logoY + 40);
+          
+        // Add decorative maritime wave design
+        doc.moveTo(420, 100)
+          .bezierCurveTo(440, 90, 460, 110, 480, 100)
+          .bezierCurveTo(500, 90, 520, 110, 540, 100)
           .strokeColor('#3b82f6')
-          .lineWidth(3)
+          .lineWidth(2)
           .stroke();
       }
       
@@ -5213,11 +5266,40 @@ Only use authentic, real-world data for existing refineries.`;
       // Generate comprehensive professional content based on document type
       const comprehensiveContent = generateComprehensiveMaritimeContent(documentType, vessel, documentContent);
       
+      // Function to add watermark to any page
+      function addPageWatermark() {
+        doc.save();
+        doc.opacity(0.06);
+        
+        const centerX = 297.64;
+        const centerY = 420.945;
+        
+        doc.rotate(-45, { origin: [centerX, centerY] });
+        doc.fontSize(80)
+          .fillColor('#1e40af')
+          .font('Helvetica-Bold')
+          .text('PETRODEALHUB', centerX - 200, centerY - 30, {
+            align: 'center',
+            width: 400
+          });
+          
+        doc.fontSize(28)
+          .fillColor('#1e40af')
+          .font('Helvetica')
+          .text('MARITIME SOLUTIONS', centerX - 140, centerY + 30, {
+            align: 'center',
+            width: 280
+          });
+        
+        doc.restore();
+      }
+
       // Format comprehensive content with enhanced professional styling
       comprehensiveContent.sections.forEach((section: any, sectionIndex: number) => {
         // Add page break for new sections (except first)
         if (sectionIndex > 0 && doc.y > 700) {
           doc.addPage();
+          addPageWatermark(); // Add watermark to new page
         }
         
         // Professional section header with decorative line
