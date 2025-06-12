@@ -8118,6 +8118,110 @@ Note: This document contains real vessel operational data and should be treated 
     }
   });
 
+  // Admin Broker Management API Routes
+  
+  // Get all brokers (users with broker subscription plan)
+  app.get("/api/admin/brokers", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const brokers = await storage.getBrokerUsers();
+      res.json(brokers);
+    } catch (error) {
+      console.error("Error fetching brokers:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch brokers",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Create a new broker account
+  app.post("/api/admin/brokers", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const { email, firstName, lastName, password } = req.body;
+      
+      if (!email || !firstName || !lastName || !password) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(409).json({ message: "User with this email already exists" });
+      }
+
+      // Create broker user with subscription
+      const hashedPassword = await hashPassword(password);
+      const brokerUser = await storage.createBrokerUser({
+        email,
+        firstName,
+        lastName,
+        password: hashedPassword,
+        role: 'user'
+      });
+
+      res.status(201).json(brokerUser);
+    } catch (error) {
+      console.error("Error creating broker:", error);
+      res.status(500).json({ 
+        message: "Failed to create broker",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Get all broker deals
+  app.get("/api/admin/broker-deals", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const deals = await storage.getAllBrokerDeals();
+      res.json(deals);
+    } catch (error) {
+      console.error("Error fetching broker deals:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch broker deals",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Update broker deal status
+  app.patch("/api/admin/broker-deals/:id", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const dealId = parseInt(req.params.id);
+      const { status } = req.body;
+      
+      if (isNaN(dealId)) {
+        return res.status(400).json({ message: "Invalid deal ID" });
+      }
+
+      if (!status || !['pending', 'approved', 'rejected', 'completed'].includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+
+      const updatedDeal = await storage.updateBrokerDealStatus(dealId, status);
+      res.json(updatedDeal);
+    } catch (error) {
+      console.error("Error updating broker deal:", error);
+      res.status(500).json({ 
+        message: "Failed to update broker deal",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Get all admin files sent to brokers
+  app.get("/api/admin/broker-files", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const files = await storage.getAllAdminBrokerFiles();
+      res.json(files);
+    } catch (error) {
+      console.error("Error fetching admin broker files:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch admin broker files",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   // Send admin file to broker (Admin only)
   app.post("/api/admin/broker-files", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
     try {
