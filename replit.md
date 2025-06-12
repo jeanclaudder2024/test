@@ -113,6 +113,14 @@ The schema includes comprehensive tables for vessels, ports, refineries, compani
 
 Changelog:
 - June 12, 2025. Initial setup
+- June 12, 2025. Enhanced Professional Documents with comprehensive maritime content generation including:
+  * Executive Summary with vessel certification details
+  * Complete technical specifications with capacity tables
+  * Safety & regulatory compliance certifications
+  * Current operational status and navigation data
+  * Commercial & market information
+  * Professional certification and authorization sections
+  * Multi-page PDF formatting with PetroDealHub logo design
 
 ## User Preferences
 
