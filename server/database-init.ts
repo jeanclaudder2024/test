@@ -51,10 +51,8 @@ export async function initializeCustomAuthTables() {
         current_period_end TIMESTAMP,
         cancel_at_period_end BOOLEAN DEFAULT false,
         billing_interval TEXT DEFAULT 'monthly',
-        trial_start_date TIMESTAMP NOT NULL,
-        trial_end_date TIMESTAMP NOT NULL,
-        is_active BOOLEAN NOT NULL DEFAULT true,
-        created_at TIMESTAMP DEFAULT NOW()
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
       )
     `);
     
@@ -88,17 +86,15 @@ export async function initializeCustomAuthTables() {
         user_id, 
         plan_id, 
         status, 
-        trial_start_date, 
-        trial_end_date, 
-        is_active
+        current_period_start, 
+        current_period_end
       ) 
       SELECT 
         u.id, 
         1, 
         'active', 
         NOW(), 
-        NOW() + INTERVAL '365 days', 
-        true
+        NOW() + INTERVAL '365 days'
       FROM users u 
       WHERE u.email = 'admin@petrodealhub.com'
       ON CONFLICT DO NOTHING
