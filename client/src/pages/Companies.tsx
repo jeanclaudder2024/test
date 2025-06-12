@@ -293,9 +293,9 @@ export default function Companies() {
         {/* Empty State */}
         {filteredCompanies.length === 0 && !isLoading && (
           <div className="text-center py-12">
-            <Building2 className="h-16 w-16 mx-auto text-orange-500 mb-4" />
-            <h3 className="text-xl font-medium text-white mb-2">No companies found</h3>
-            <p className="text-gray-300">
+            <Building2 className="h-16 w-16 mx-auto text-gray-400 mb-4" />
+            <h3 className="text-xl font-medium text-gray-900 mb-2">No companies found</h3>
+            <p className="text-gray-600">
               {searchTerm 
                 ? "Try adjusting your search terms to find what you're looking for."
                 : "No companies are currently available."}
@@ -305,13 +305,13 @@ export default function Companies() {
 
         {/* Footer CTA */}
         <div className="mt-16 text-center">
-          <Card className="bg-gradient-to-r from-orange-600 to-orange-700 text-white border-0">
+          <Card className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white border-0">
             <CardContent className="p-8">
               <h2 className="text-2xl font-bold mb-2">Ready to Start Trading?</h2>
-              <p className="text-orange-100 mb-6">
+              <p className="text-blue-100 mb-6">
                 Join thousands of oil trading professionals and start building valuable partnerships today.
               </p>
-              <Button variant="secondary" size="lg" className="bg-white text-orange-600 hover:bg-gray-100">
+              <Button variant="secondary" size="lg">
                 Get Started
               </Button>
             </CardContent>
