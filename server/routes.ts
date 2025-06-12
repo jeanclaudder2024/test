@@ -5251,76 +5251,90 @@ Only use authentic, real-world data for existing refineries.`;
               .moveDown(0.4);
               
           } else if (item.type === 'table') {
-            // Enhanced professional table with proper sizing
-            doc.moveDown(0.5);
+            // Professional table with improved layout
+            doc.moveDown(0.8);
             
-            // Calculate proper column widths based on page margins
+            // Table dimensions and positioning
             const pageWidth = 595.28; // A4 width in points
-            const leftMargin = 60;
-            const rightMargin = 60;
-            const availableWidth = pageWidth - leftMargin - rightMargin; // 475 points
+            const leftMargin = 70;
+            const rightMargin = 70;
+            const availableWidth = pageWidth - leftMargin - rightMargin; // 455 points
             
-            // Dynamic column widths based on number of columns
-            const numColumns = item.rows[0] ? item.rows[0].length : 3;
+            // Get table data
+            const tableData = item.rows || [];
+            if (tableData.length === 0) return;
+            
+            const numColumns = tableData[0].length;
             const columnWidth = Math.floor(availableWidth / numColumns);
-            const cellHeight = 20;
+            const cellHeight = 25;
             
-            item.rows.forEach((row: string[], rowIndex: number) => {
-              const currentY = doc.y;
-              
+            // Table header background
+            const tableStartY = doc.y;
+            
+            tableData.forEach((row: string[], rowIndex: number) => {
               // Check for page break
-              if (currentY + cellHeight > 750) {
+              if (doc.y + cellHeight > 750) {
                 doc.addPage();
               }
               
-              // Draw row background for header
+              const rowY = doc.y;
+              
+              // Row background
               if (rowIndex === 0) {
-                doc.rect(leftMargin, doc.y - 3, availableWidth, cellHeight)
+                // Header background - dark blue
+                doc.rect(leftMargin, rowY, availableWidth, cellHeight)
                   .fillAndStroke('#1e40af', '#1e40af');
-              } else if (rowIndex % 2 === 0) {
-                doc.rect(leftMargin, doc.y - 3, availableWidth, cellHeight)
+              } else if (rowIndex % 2 === 1) {
+                // Alternating row background - light gray
+                doc.rect(leftMargin, rowY, availableWidth, cellHeight)
                   .fillAndStroke('#f8fafc', '#e2e8f0');
               }
               
-              // Table cell borders and content
-              let xPosition = leftMargin;
-              row.forEach((cell: string, cellIndex: number) => {
+              // Draw cells and content
+              let xPos = leftMargin;
+              row.forEach((cellContent: string, colIndex: number) => {
                 // Cell border
-                doc.rect(xPosition, doc.y - 3, columnWidth, cellHeight)
+                doc.rect(xPos, rowY, columnWidth, cellHeight)
                   .stroke('#cbd5e1');
                 
-                // Cell text styling
+                // Text styling
                 if (rowIndex === 0) {
-                  doc.fontSize(9)
+                  doc.fontSize(10)
                     .fillColor('#ffffff')
                     .font('Helvetica-Bold');
                 } else {
-                  doc.fontSize(8)
+                  doc.fontSize(9)
                     .fillColor('#374151')
                     .font('Helvetica');
                 }
                 
-                // Truncate text if too long for cell
-                let cellText = cell || '';
-                const maxChars = Math.floor(columnWidth / 6); // Approximate characters per width
-                if (cellText.length > maxChars) {
-                  cellText = cellText.substring(0, maxChars - 3) + '...';
+                // Prepare cell text
+                let displayText = cellContent || '';
+                const maxTextWidth = columnWidth - 12; // Padding
+                
+                // Truncate if necessary
+                const avgCharWidth = 5.5; // Average character width
+                const maxChars = Math.floor(maxTextWidth / avgCharWidth);
+                if (displayText.length > maxChars) {
+                  displayText = displayText.substring(0, maxChars - 3) + '...';
                 }
                 
-                // Center text in cell with proper padding
-                doc.text(cellText, xPosition + 4, doc.y, { 
-                  width: columnWidth - 8,
+                // Center text vertically in cell
+                const textY = rowY + (cellHeight / 2) - 4;
+                
+                doc.text(displayText, xPos + 6, textY, {
+                  width: maxTextWidth,
                   align: rowIndex === 0 ? 'center' : 'left',
-                  height: cellHeight - 6
+                  ellipsis: true
                 });
                 
-                xPosition += columnWidth;
+                xPos += columnWidth;
               });
               
-              doc.y += cellHeight;
+              doc.y = rowY + cellHeight;
             });
             
-            doc.moveDown(0.5);
+            doc.moveDown(0.8);
             
           } else {
             // Clean paragraph formatting with consistent spacing
