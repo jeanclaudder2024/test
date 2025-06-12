@@ -141,19 +141,38 @@ All technical systems meet international maritime standards and regulatory requi
       });
       
       if (!response.ok) {
-        throw new Error('Failed to generate PDF');
+        const errorText = await response.text();
+        throw new Error(`Failed to generate PDF: ${errorText}`);
+      }
+      
+      // Ensure we get the response as a blob
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/pdf')) {
+        throw new Error('Server did not return a PDF file');
       }
       
       // Get the PDF as blob and download
       const blob = await response.blob();
+      
+      // Verify blob has content
+      if (blob.size === 0) {
+        throw new Error('PDF file is empty');
+      }
+      
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
       link.download = `${document.title.replace(/\s+/g, '_')}_${vessel.name.replace(/\s+/g, '_')}.pdf`;
+      
+      // Ensure link is properly configured before clicking
       document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      
+      // Clean up after a short delay
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }, 100);
       
       toast({
         title: "PDF Downloaded",
@@ -163,7 +182,7 @@ All technical systems meet international maritime standards and regulatory requi
       console.error('PDF download error:', error);
       toast({
         title: "Download Failed",
-        description: "Failed to generate PDF document",
+        description: error instanceof Error ? error.message : "Failed to generate PDF document",
         variant: "destructive",
       });
     } finally {
