@@ -122,6 +122,51 @@ All technical systems meet international maritime standards and regulatory requi
     }
   ];
 
+  const handleDownloadWord = async (doc: SimpleDocument) => {
+    setIsDownloading(true);
+    try {
+      const response = await fetch(`/api/vessels/${vessel.id}/professional-document-word`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          documentType: doc.title,
+          documentContent: doc.content,
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to generate Word document');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const filename = `${doc.title.replace(/\s+/g, '_')}_${vessel.name.replace(/\s+/g, '_')}.txt`;
+      
+      const downloadLink = document.createElement('a');
+      downloadLink.href = url;
+      downloadLink.download = filename;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+      window.URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Word Document Downloaded",
+        description: `${doc.title} downloaded successfully`,
+      });
+    } catch (error) {
+      toast({
+        title: "Download Failed",
+        description: "Failed to generate Word document",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   const handleDownloadPDF = async (doc: SimpleDocument) => {
     try {
       setIsDownloading(true);
@@ -270,15 +315,24 @@ All technical systems meet international maritime standards and regulatory requi
                     onClick={() => handleDownloadPDF(document)}
                     disabled={isDownloading}
                   >
+                    <Download className="h-4 w-4 mr-2" />
+                    Download PDF
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDownloadWord(document)}
+                    disabled={isDownloading}
+                  >
                     {isDownloading ? (
                       <>
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
-                        Generating PDF...
+                        Generating...
                       </>
                     ) : (
                       <>
-                        <Download className="h-4 w-4 mr-2" />
-                        Download PDF
+                        <FileText className="h-4 w-4 mr-2" />
+                        Download Word
                       </>
                     )}
                   </Button>

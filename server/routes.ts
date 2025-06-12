@@ -5090,6 +5090,74 @@ Only use authentic, real-world data for existing refineries.`;
   }
 
   // Professional Document PDF Generation with Logo Design
+  // Word document generation endpoint
+  app.post("/api/vessels/:id/professional-document-word", async (req: Request, res: Response) => {
+    try {
+      const vesselId = parseInt(req.params.id);
+      const { documentType, documentContent } = req.body;
+
+      if (!documentType) {
+        return res.status(400).json({ message: "Document type is required" });
+      }
+
+      const vessel = await storage.getVesselById(vesselId);
+      if (!vessel) {
+        return res.status(404).json({ message: "Vessel not found" });
+      }
+
+      // Generate comprehensive professional content
+      const comprehensiveContent = generateComprehensiveMaritimeContent(documentType, vessel, documentContent || '');
+
+      // Create Word document content
+      let wordContent = `PETRODEALHUB
+Maritime Oil Brokerage & Logistics Platform
+
+${documentType.toUpperCase()}
+
+Vessel: ${vessel.name}
+IMO: ${vessel.imo}
+Generated: ${new Date().toLocaleDateString()}
+Time: ${new Date().toLocaleTimeString()}
+
+`;
+
+      // Add sections
+      comprehensiveContent.sections.forEach((section: any) => {
+        wordContent += `\n${section.title}\n`;
+        wordContent += '='.repeat(section.title.length) + '\n\n';
+        
+        if (section.content) {
+          wordContent += section.content + '\n\n';
+        }
+
+        if (section.tables) {
+          section.tables.forEach((table: any) => {
+            wordContent += `${table.title}\n`;
+            wordContent += '-'.repeat(table.title.length) + '\n';
+            
+            table.data.forEach((row: any) => {
+              wordContent += `${row.label}: ${row.value}\n`;
+            });
+            wordContent += '\n';
+          });
+        }
+      });
+
+      // Set headers for Word download
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+      res.setHeader('Content-Disposition', `attachment; filename="${documentType.replace(/\s+/g, '_')}_${vessel.name.replace(/\s+/g, '_')}.docx"`);
+      
+      // For now, send as plain text (can be enhanced with proper Word format later)
+      res.setHeader('Content-Type', 'text/plain');
+      res.setHeader('Content-Disposition', `attachment; filename="${documentType.replace(/\s+/g, '_')}_${vessel.name.replace(/\s+/g, '_')}.txt"`);
+      
+      res.send(wordContent);
+    } catch (error) {
+      console.error("Error generating Word document:", error);
+      res.status(500).json({ message: "Failed to generate Word document" });
+    }
+  });
+
   app.post("/api/vessels/:id/professional-document-pdf", async (req: Request, res: Response) => {
     try {
       const vesselId = parseInt(req.params.id);
@@ -5128,36 +5196,9 @@ Only use authentic, real-world data for existing refineries.`;
       doc.pipe(res);
       
       if (includeLogo) {
-        // Add watermark background first (before other content)
-        doc.save();
-        doc.opacity(0.08);
-        
-        // Rotate and add large watermark text in center
-        const centerX = 297.64; // A4 width center
-        const centerY = 420.945; // A4 height center
-        
-        doc.rotate(-45, { origin: [centerX, centerY] });
-        doc.fontSize(80)
-          .fillColor('#1e40af')
-          .font('Helvetica-Bold')
-          .text('PETRODEALHUB', centerX - 200, centerY - 30, {
-            align: 'center',
-            width: 400
-          });
-          
-        doc.fontSize(28)
-          .fillColor('#1e40af')
-          .font('Helvetica')
-          .text('MARITIME SOLUTIONS', centerX - 140, centerY + 30, {
-            align: 'center',
-            width: 280
-          });
-        
-        doc.restore();
-        
-        // Add company logo design and header
+        // Add company logo design and header first
         doc.rect(40, 40, 515, 90)
-          .fillAndStroke('#1e40af', '#1e40af'); // Professional blue header
+          .fillAndStroke('#1e40af', '#1e40af');
           
         // Create professional logo symbol
         const logoX = 60;
@@ -5167,11 +5208,11 @@ Only use authentic, real-world data for existing refineries.`;
         doc.circle(logoX + 20, logoY + 20, 15)
           .fillAndStroke('#ffffff', '#ffffff');
         
-        // Maritime anchor symbol in logo
-        doc.fontSize(20)
+        // Maritime symbol in logo - using "P" for PetroDealHub
+        doc.fontSize(18)
           .fillColor('#1e40af')
           .font('Helvetica-Bold')
-          .text('⚓', logoX + 13, logoY + 10);
+          .text('P', logoX + 16, logoY + 12);
           
         // Company name next to logo
         doc.fontSize(24)
@@ -5195,14 +5236,6 @@ Only use authentic, real-world data for existing refineries.`;
           .font('Helvetica')
           .text(`Generated: ${new Date().toLocaleDateString()}`, 380, logoY + 25)
           .text(`Time: ${new Date().toLocaleTimeString()}`, 380, logoY + 40);
-          
-        // Add decorative maritime wave design
-        doc.moveTo(420, 100)
-          .bezierCurveTo(440, 90, 460, 110, 480, 100)
-          .bezierCurveTo(500, 90, 520, 110, 540, 100)
-          .strokeColor('#3b82f6')
-          .lineWidth(2)
-          .stroke();
       }
       
       // Document title with professional styling
@@ -5266,40 +5299,26 @@ Only use authentic, real-world data for existing refineries.`;
       // Generate comprehensive professional content based on document type
       const comprehensiveContent = generateComprehensiveMaritimeContent(documentType, vessel, documentContent);
       
-      // Function to add watermark to any page
-      function addPageWatermark() {
+      // Add simple watermark to page
+      function addSimpleWatermark() {
         doc.save();
-        doc.opacity(0.06);
-        
-        const centerX = 297.64;
-        const centerY = 420.945;
-        
-        doc.rotate(-45, { origin: [centerX, centerY] });
-        doc.fontSize(80)
+        doc.opacity(0.1);
+        doc.fontSize(60)
           .fillColor('#1e40af')
           .font('Helvetica-Bold')
-          .text('PETRODEALHUB', centerX - 200, centerY - 30, {
-            align: 'center',
-            width: 400
-          });
-          
-        doc.fontSize(28)
-          .fillColor('#1e40af')
-          .font('Helvetica')
-          .text('MARITIME SOLUTIONS', centerX - 140, centerY + 30, {
-            align: 'center',
-            width: 280
-          });
-        
+          .text('PETRODEALHUB', 150, 400, { rotate: -45 });
         doc.restore();
       }
+      
+      // Add watermark to first page
+      addSimpleWatermark();
 
       // Format comprehensive content with enhanced professional styling
       comprehensiveContent.sections.forEach((section: any, sectionIndex: number) => {
-        // Add page break for new sections (except first)
-        if (sectionIndex > 0 && doc.y > 700) {
+        // Only add page break if content would overflow
+        if (doc.y > 720) {
           doc.addPage();
-          addPageWatermark(); // Add watermark to new page
+          addSimpleWatermark();
         }
         
         // Professional section header with decorative line
