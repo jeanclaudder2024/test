@@ -121,6 +121,12 @@ Changelog:
   * Commercial & market information
   * Professional certification and authorization sections
   * Multi-page PDF formatting with PetroDealHub logo design
+- June 12, 2025. Fixed PDF formatting issues:
+  * Tables now properly sized to fit within page margins using dynamic column widths
+  * Improved text spacing by removing excessive blank spaces and normalizing content
+  * Enhanced paragraph formatting with consistent line spacing and proper justification
+  * Added automatic page breaks for tables and content sections
+  * Professional table styling with borders, alternating row colors, and proper cell padding
 
 ## User Preferences
 

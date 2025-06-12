@@ -5251,85 +5251,109 @@ Only use authentic, real-world data for existing refineries.`;
               .moveDown(0.4);
               
           } else if (item.type === 'table') {
-            // Enhanced professional table with borders
+            // Enhanced professional table with proper sizing
             doc.moveDown(0.5);
             
-            const tableStartY = doc.y;
-            const columnWidths = [150, 150, 150];
-            const cellHeight = 25;
+            // Calculate proper column widths based on page margins
+            const pageWidth = 595.28; // A4 width in points
+            const leftMargin = 60;
+            const rightMargin = 60;
+            const availableWidth = pageWidth - leftMargin - rightMargin; // 475 points
+            
+            // Dynamic column widths based on number of columns
+            const numColumns = item.rows[0] ? item.rows[0].length : 3;
+            const columnWidth = Math.floor(availableWidth / numColumns);
+            const cellHeight = 20;
             
             item.rows.forEach((row: string[], rowIndex: number) => {
               const currentY = doc.y;
               
+              // Check for page break
+              if (currentY + cellHeight > 750) {
+                doc.addPage();
+              }
+              
               // Draw row background for header
               if (rowIndex === 0) {
-                doc.rect(60, currentY - 5, 450, cellHeight)
+                doc.rect(leftMargin, doc.y - 3, availableWidth, cellHeight)
                   .fillAndStroke('#1e40af', '#1e40af');
               } else if (rowIndex % 2 === 0) {
-                doc.rect(60, currentY - 5, 450, cellHeight)
+                doc.rect(leftMargin, doc.y - 3, availableWidth, cellHeight)
                   .fillAndStroke('#f8fafc', '#e2e8f0');
               }
               
-              // Table cell borders
-              let xPosition = 60;
+              // Table cell borders and content
+              let xPosition = leftMargin;
               row.forEach((cell: string, cellIndex: number) => {
-                const cellWidth = columnWidths[cellIndex] || 150;
-                
                 // Cell border
-                doc.rect(xPosition, currentY - 5, cellWidth, cellHeight)
+                doc.rect(xPosition, doc.y - 3, columnWidth, cellHeight)
                   .stroke('#cbd5e1');
                 
                 // Cell text styling
                 if (rowIndex === 0) {
-                  doc.fontSize(11)
+                  doc.fontSize(9)
                     .fillColor('#ffffff')
                     .font('Helvetica-Bold');
                 } else {
-                  doc.fontSize(10)
+                  doc.fontSize(8)
                     .fillColor('#374151')
                     .font('Helvetica');
                 }
                 
-                // Center text in cell
-                doc.text(cell, xPosition + 8, currentY + 2, { 
-                  width: cellWidth - 16,
-                  align: rowIndex === 0 ? 'center' : 'left'
+                // Truncate text if too long for cell
+                let cellText = cell || '';
+                const maxChars = Math.floor(columnWidth / 6); // Approximate characters per width
+                if (cellText.length > maxChars) {
+                  cellText = cellText.substring(0, maxChars - 3) + '...';
+                }
+                
+                // Center text in cell with proper padding
+                doc.text(cellText, xPosition + 4, doc.y, { 
+                  width: columnWidth - 8,
+                  align: rowIndex === 0 ? 'center' : 'left',
+                  height: cellHeight - 6
                 });
                 
-                xPosition += cellWidth;
+                xPosition += columnWidth;
               });
               
-              doc.y = currentY + cellHeight;
+              doc.y += cellHeight;
             });
             
-            doc.moveDown(0.8);
+            doc.moveDown(0.5);
             
           } else {
-            // Enhanced paragraph formatting with better spacing
+            // Clean paragraph formatting with consistent spacing
             const paragraphText = item.text;
             
-            // Split long paragraphs for better readability
-            const sentences = paragraphText.split('. ');
-            let currentParagraph = '';
+            // Clean up the text - remove extra spaces and normalize
+            const cleanText = paragraphText
+              .replace(/\s+/g, ' ')  // Replace multiple spaces with single space
+              .replace(/\n+/g, ' ')  // Replace newlines with space
+              .trim();               // Remove leading/trailing spaces
             
-            sentences.forEach((sentence: string, index: number) => {
-              currentParagraph += sentence + (index < sentences.length - 1 ? '. ' : '');
+            // Calculate proper margins
+            const leftMargin = 70;
+            const rightMargin = 525;
+            const textWidth = rightMargin - leftMargin;
+            
+            // Check for page break
+            if (doc.y > 720) {
+              doc.addPage();
+            }
+            
+            // Format paragraph with proper spacing
+            doc.fontSize(10)
+              .fillColor('#374151')
+              .font('Helvetica')
+              .text(cleanText, leftMargin, doc.y, { 
+                width: textWidth,
+                align: 'justify',
+                lineGap: 2,
+                paragraphGap: 0
+              });
               
-              // If paragraph gets too long, break it
-              if (currentParagraph.length > 400 || index === sentences.length - 1) {
-                doc.fontSize(11)
-                  .fillColor('#374151')
-                  .font('Helvetica')
-                  .text(currentParagraph, { 
-                    align: 'justify',
-                    lineGap: 3,
-                    indent: 20
-                  })
-                  .moveDown(0.6);
-                  
-                currentParagraph = '';
-              }
-            });
+            doc.moveDown(0.5);
           }
         });
         
