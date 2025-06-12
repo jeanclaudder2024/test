@@ -8,7 +8,6 @@ export async function initializeCustomAuthTables() {
     
     // Drop existing tables if they exist
     await db.execute(sql`DROP TABLE IF EXISTS user_subscriptions CASCADE`);
-    await db.execute(sql`DROP TABLE IF EXISTS subscription_plans CASCADE`);
     await db.execute(sql`DROP TABLE IF EXISTS users CASCADE`);
     
     // Create users table with auto-incrementing ID
@@ -24,33 +23,11 @@ export async function initializeCustomAuthTables() {
       )
     `);
     
-    // Create subscription_plans table first
-    await db.execute(sql`
-      CREATE TABLE subscription_plans (
-        id SERIAL PRIMARY KEY,
-        name TEXT NOT NULL,
-        price DECIMAL(10,2) NOT NULL,
-        interval TEXT NOT NULL DEFAULT 'monthly',
-        features TEXT[],
-        stripe_price_id TEXT,
-        is_active BOOLEAN NOT NULL DEFAULT true,
-        created_at TIMESTAMP DEFAULT NOW()
-      )
-    `);
-    
     // Create user_subscriptions table
     await db.execute(sql`
       CREATE TABLE user_subscriptions (
         id SERIAL PRIMARY KEY,
         user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-        plan_id INTEGER NOT NULL REFERENCES subscription_plans(id),
-        status TEXT NOT NULL DEFAULT 'trial',
-        stripe_customer_id TEXT,
-        stripe_subscription_id TEXT,
-        current_period_start TIMESTAMP,
-        current_period_end TIMESTAMP,
-        cancel_at_period_end BOOLEAN DEFAULT false,
-        billing_interval TEXT DEFAULT 'monthly',
         trial_start_date TIMESTAMP NOT NULL,
         trial_end_date TIMESTAMP NOT NULL,
         is_active BOOLEAN NOT NULL DEFAULT true,
@@ -74,37 +51,6 @@ export async function initializeCustomAuthTables() {
     `);
     
     console.log('Test admin user created: admin@petrodealhub.com / admin123');
-    
-    // Insert basic subscription plan
-    await db.execute(sql`
-      INSERT INTO subscription_plans (name, price, interval, features, is_active) 
-      VALUES ('Basic Plan', 29.99, 'monthly', ARRAY['Basic features'], true)
-      ON CONFLICT DO NOTHING
-    `);
-    
-    // Create default subscription for admin user
-    await db.execute(sql`
-      INSERT INTO user_subscriptions (
-        user_id, 
-        plan_id, 
-        status, 
-        trial_start_date, 
-        trial_end_date, 
-        is_active
-      ) 
-      SELECT 
-        u.id, 
-        1, 
-        'active', 
-        NOW(), 
-        NOW() + INTERVAL '365 days', 
-        true
-      FROM users u 
-      WHERE u.email = 'admin@petrodealhub.com'
-      ON CONFLICT DO NOTHING
-    `);
-    
-    console.log('Default subscription plan and admin subscription created');
     
   } catch (error) {
     console.error('Error initializing custom auth tables:', error);

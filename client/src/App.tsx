@@ -87,6 +87,7 @@ function ProtectedRoutes() {
               <LandingPageManager />
             </AdminRoute>
           </Route>
+          <Route path="/brokers" component={Brokers} />
           <Route path="/trading" component={TradingDashboard} />
           <Route path="/translation" component={TranslationPage} />
           <Route path="/traffic-insights" component={TrafficInsights} />

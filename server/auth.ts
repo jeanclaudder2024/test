@@ -5,7 +5,7 @@ import { db } from './db';
 import { users, userSubscriptions } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'petrodealhub-secret-key-2025';
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 const SALT_ROUNDS = 10;
 
 export interface AuthenticatedRequest extends Request {
@@ -78,15 +78,20 @@ export async function authenticateToken(req: AuthenticatedRequest, res: Response
       return res.status(401).json({ message: 'User not found' });
     }
 
-    // Simplified subscription handling
+    // Fetch subscription
+    const [subscription] = await db
+      .select()
+      .from(userSubscriptions)
+      .where(eq(userSubscriptions.userId, user.id))
+      .limit(1);
+
     req.user = {
       ...user,
-      subscription: null
+      subscription
     };
 
     next();
   } catch (error) {
-    console.error('Token validation error:', error);
     return res.status(403).json({ message: 'Invalid token' });
   }
 }

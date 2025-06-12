@@ -107,7 +107,7 @@ export default function Brokers() {
     mutationFn: async ({ dealId, notes }: { dealId: number; notes: string }) => {
       return apiRequest(`/api/broker-deals/${dealId}`, {
         method: "PATCH",
-        body: JSON.stringify({ notes }),
+        body: { notes },
       });
     },
     onSuccess: () => {

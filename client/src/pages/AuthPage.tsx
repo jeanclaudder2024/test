@@ -22,7 +22,7 @@ import { Label } from "@/components/ui/label";
 
 // Form schemas
 const loginSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  username: z.string().min(1, "Username is required"),
   password: z.string().min(1, "Password is required"),
 });
 
@@ -39,13 +39,13 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 export default function AuthPage() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  const { user, login, register, isLoading } = useAuth();
+  const { user, loginMutation, registerMutation } = useAuth();
 
   // Form definition
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "",
+      username: "",
       password: "",
     },
   });
@@ -69,27 +69,19 @@ export default function AuthPage() {
 
   const onLoginSubmit = async (data: LoginFormValues) => {
     try {
-      await login(data);
+      await loginMutation.mutateAsync(data);
       navigate("/dashboard");
-    } catch (error: any) {
-      toast({
-        title: "Login Failed",
-        description: error.message || "Invalid credentials",
-        variant: "destructive",
-      });
+    } catch (error) {
+      // Toast handled in auth context
     }
   };
 
   const onRegisterSubmit = async (data: RegisterFormValues) => {
     try {
-      await register(data);
+      await registerMutation.mutateAsync(data);
       navigate("/");
-    } catch (error: any) {
-      toast({
-        title: "Registration Failed",
-        description: error.message || "Registration failed",
-        variant: "destructive",
-      });
+    } catch (error) {
+      // Toast handled in auth context
     }
   };
 
@@ -190,18 +182,18 @@ export default function AuthPage() {
                       type="button" 
                       className="w-full bg-[#FF6F00] hover:bg-[#FF5000] text-white font-bold py-4 rounded-lg transition-colors shadow-lg"
                       onClick={() => {
-                        loginForm.setValue("email", "admin@petrodealhub.com");
-                        loginForm.setValue("password", "admin123");
+                        loginForm.setValue("username", "demo");
+                        loginForm.setValue("password", "password");
                         loginForm.handleSubmit(onLoginSubmit)();
                       }}
                     >
                       <div className="flex items-center justify-center">
-                        {isLoading ? (
+                        {loginMutation.isPending ? (
                           <Loader2 className="animate-spin h-5 w-5 mr-2" />
                         ) : (
                           <Lock className="h-5 w-5 mr-2" />
                         )}
-                        {isLoading ? "Authenticating..." : "3-DEAL FREE TRIAL"}
+                        {loginMutation.isPending ? "Authenticating..." : "3-DEAL FREE TRIAL"}
                       </div>
                     </Button>
                     <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-2">Try the platform with 3 free deals - no credit card required</p>
@@ -222,10 +214,10 @@ export default function AuthPage() {
                     <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
                       <FormField
                         control={loginForm.control}
-                        name="email"
+                        name="username"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Email</FormLabel>
+                            <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Username</FormLabel>
                             <FormControl>
                               <div className="relative">
                                 <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
@@ -281,9 +273,9 @@ export default function AuthPage() {
                       <Button 
                         type="submit" 
                         className="w-full bg-[#003366] hover:bg-[#002244] text-white font-medium py-2.5 h-12 rounded-lg mt-6"
-                        disabled={isLoading}
+                        disabled={loginMutation.isPending}
                       >
-                        {isLoading ? (
+                        {loginMutation.isPending ? (
                           <div className="flex items-center justify-center">
                             <Loader2 className="animate-spin h-4 w-4 mr-2" />
                             Signing in...
@@ -352,8 +344,8 @@ export default function AuthPage() {
                         
                         // Use setTimeout to allow tab change to complete
                         setTimeout(() => {
-                          loginForm.setValue("email", "admin@petrodealhub.com");
-                          loginForm.setValue("password", "admin123");
+                          loginForm.setValue("username", "demo");
+                          loginForm.setValue("password", "password");
                           loginForm.handleSubmit(onLoginSubmit)();
                         }, 100);
                       }}
@@ -505,9 +497,9 @@ export default function AuthPage() {
                       <Button 
                         type="submit" 
                         className="w-full bg-[#003366] hover:bg-[#002244] text-white font-medium py-2.5 h-12 rounded-lg mt-6"
-                        disabled={isLoading}
+                        disabled={registerMutation.isPending}
                       >
-                        {isLoading ? (
+                        {registerMutation.isPending ? (
                           <div className="flex items-center justify-center">
                             <Loader2 className="animate-spin h-4 w-4 mr-2" />
                             Creating account...

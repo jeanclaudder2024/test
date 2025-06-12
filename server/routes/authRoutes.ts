@@ -105,11 +105,16 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
-    // Get user subscription (simplified)
-    const subscription = null; // Simplified for now
-    
-    // Check trial status (simplified - no trial expiration for admin)
-    const trialExpired = user.role !== 'admin' ? false : false;
+    // Get user subscription
+    const [subscription] = await db
+      .select()
+      .from(userSubscriptions)
+      .where(eq(userSubscriptions.userId, user.id))
+      .limit(1);
+
+    // Check trial status
+    const now = new Date();
+    const trialExpired = subscription ? now > new Date(subscription.trialEndDate) : true;
 
     // Generate token
     const token = generateToken(user);
@@ -144,19 +149,29 @@ router.get('/me', authenticateToken, async (req: AuthenticatedRequest, res) => {
       return res.status(401).json({ message: 'User not found' });
     }
 
-    // Get user subscription from database (simplified)
-    const subscription = null; // Simplified for now
+    // Get user subscription from database
+    const subscription = await db
+      .select()
+      .from(userSubscriptions)
+      .where(eq(userSubscriptions.userId, req.user.id))
+      .limit(1);
+
+    const userSubscription = subscription[0] || null;
     
-    // Check if trial is expired (simplified for admin users)
-    const trialExpired = req.user.role !== 'admin' ? false : false;
+    // Check if trial is expired
+    const trialExpired = userSubscription 
+      ? new Date() > new Date(userSubscription.trialEndDate)
+      : false;
 
     res.json({
-      id: req.user.id,
-      email: req.user.email,
-      firstName: req.user.firstName,
-      lastName: req.user.lastName,
-      role: req.user.role,
-      subscription: subscription,
+      user: {
+        id: req.user.id,
+        email: req.user.email,
+        firstName: req.user.firstName,
+        lastName: req.user.lastName,
+        role: req.user.role
+      },
+      subscription: userSubscription,
       trialExpired
     });
 
