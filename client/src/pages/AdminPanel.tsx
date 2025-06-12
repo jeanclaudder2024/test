@@ -22,8 +22,7 @@ import { useLocation } from "wouter";
 import SubscriptionAdmin from "@/pages/SubscriptionAdmin";
 import ProfessionalRefineryManagement from "@/components/admin/ProfessionalRefineryManagement";
 import { CompanyManagement } from "@/components/admin/CompanyManagement";
-import OilTypeManagement from "@/components/admin/OilTypeManagement";
-import RegionManagement from "@/components/admin/RegionManagement";
+
 import DocumentManagement from "@/components/admin/DocumentManagement";
 import { BrokerManagement } from "@/components/admin/BrokerManagement";
 import { FilterManagement } from "@/components/admin/FilterManagement";
@@ -101,8 +100,7 @@ export default function AdminPanel() {
               <option value="vessels">🚢 Vessel Management</option>
               <option value="ports">⚓ Ports Management</option>
               <option value="refineries">🏭 Refinery Management</option>
-              <option value="oil-types">⛽ Oil Type Management</option>
-              <option value="regions">🌍 Region Management</option>
+
               <option value="documents">📄 Document Management</option>
               <option value="brokers">🤝 Broker Management</option>
               <option value="filters">🔧 Filter Management</option>
@@ -173,22 +171,7 @@ export default function AdminPanel() {
               <span className="xl:hidden">Plants</span>
             </TabsTrigger>
 
-            <TabsTrigger 
-              value="oil-types" 
-              className="flex items-center gap-2 data-[state=active]:bg-orange-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-200 hover:bg-orange-50 rounded-lg"
-            >
-              <Droplets className="h-4 w-4" />
-              <span className="hidden xl:inline font-medium">Oil Types</span>
-              <span className="xl:hidden">Oil</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="regions" 
-              className="flex items-center gap-2 data-[state=active]:bg-emerald-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-200 hover:bg-emerald-50 rounded-lg"
-            >
-              <Globe className="h-4 w-4" />
-              <span className="hidden xl:inline font-medium">Regions</span>
-              <span className="xl:hidden">Regions</span>
-            </TabsTrigger>
+
             <TabsTrigger 
               value="documents" 
               className="flex items-center gap-2 data-[state=active]:bg-indigo-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-200 hover:bg-indigo-50 rounded-lg"
@@ -204,6 +187,15 @@ export default function AdminPanel() {
               <Users className="h-4 w-4" />
               <span className="hidden xl:inline font-medium">Brokers</span>
               <span className="xl:hidden">Brokers</span>
+            </TabsTrigger>
+            
+            <TabsTrigger 
+              value="filters" 
+              className="flex items-center gap-2 data-[state=active]:bg-orange-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-200 hover:bg-orange-50 rounded-lg"
+            >
+              <Settings className="h-4 w-4" />
+              <span className="hidden xl:inline font-medium">Filters</span>
+              <span className="xl:hidden">Filters</span>
             </TabsTrigger>
 
             <TabsTrigger 
@@ -423,41 +415,6 @@ export default function AdminPanel() {
           <DatabaseMigration />
         </TabsContent>
 
-
-
-        <TabsContent value="oil-types" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Droplets className="h-5 w-5 text-orange-500" />
-                Oil Type Management
-              </CardTitle>
-              <CardDescription>
-                Manage petroleum product types and specifications for global trading
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <OilTypeManagement />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="regions" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Globe className="h-5 w-5 text-emerald-500" />
-                Region Management
-              </CardTitle>
-              <CardDescription>
-                Manage trading regions and geographic markets for the platform
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <RegionManagement />
-            </CardContent>
-          </Card>
-        </TabsContent>
 
         <TabsContent value="documents" className="space-y-4">
           <Card>
