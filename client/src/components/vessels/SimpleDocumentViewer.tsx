@@ -142,7 +142,7 @@ All technical systems meet international maritime standards and regulatory requi
       
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const filename = `${doc.title.replace(/\s+/g, '_')}_${vessel.name.replace(/\s+/g, '_')}.txt`;
+      const filename = `${doc.title.replace(/\s+/g, '_')}_${vessel.name.replace(/\s+/g, '_')}.docx`;
       
       const downloadLink = document.createElement('a');
       downloadLink.href = url;

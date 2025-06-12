@@ -5105,53 +5105,212 @@ Only use authentic, real-world data for existing refineries.`;
         return res.status(404).json({ message: "Vessel not found" });
       }
 
+      // Import docx library for proper Word document generation
+      const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } = await import('docx');
+
       // Generate comprehensive professional content
       const comprehensiveContent = generateComprehensiveMaritimeContent(documentType, vessel, documentContent || '');
 
-      // Create Word document content
-      let wordContent = `PETRODEALHUB
-Maritime Oil Brokerage & Logistics Platform
+      // Create Word document with professional formatting
+      const doc = new Document({
+        sections: [{
+          properties: {},
+          children: [
+            // Header with company branding
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: "PETRODEALHUB",
+                  bold: true,
+                  size: 32,
+                  color: "1f4e79",
+                }),
+                new TextRun({
+                  text: " MARITIME DOCUMENTATION",
+                  bold: true,
+                  size: 24,
+                  color: "1f4e79",
+                }),
+              ],
+              alignment: AlignmentType.CENTER,
+              spacing: { after: 400 },
+            }),
 
-${documentType.toUpperCase()}
+            // Document title
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: documentType.toUpperCase(),
+                  bold: true,
+                  size: 28,
+                  color: "2f5597",
+                }),
+              ],
+              heading: HeadingLevel.HEADING_1,
+              alignment: AlignmentType.CENTER,
+              spacing: { after: 300 },
+            }),
 
-Vessel: ${vessel.name}
-IMO: ${vessel.imo}
-Generated: ${new Date().toLocaleDateString()}
-Time: ${new Date().toLocaleTimeString()}
+            // Document metadata
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: `Generated: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}`,
+                  size: 20,
+                }),
+              ],
+              alignment: AlignmentType.CENTER,
+              spacing: { after: 200 },
+            }),
 
-`;
+            // Vessel information section
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: "VESSEL INFORMATION",
+                  bold: true,
+                  size: 24,
+                  color: "1f4e79",
+                }),
+              ],
+              heading: HeadingLevel.HEADING_2,
+              spacing: { before: 400, after: 200 },
+            }),
 
-      // Add sections
-      comprehensiveContent.sections.forEach((section: any) => {
-        wordContent += `\n${section.title}\n`;
-        wordContent += '='.repeat(section.title.length) + '\n\n';
-        
-        if (section.content) {
-          wordContent += section.content + '\n\n';
-        }
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: `Vessel Name: ${vessel.name}`,
+                  size: 22,
+                }),
+              ],
+              spacing: { after: 100 },
+            }),
 
-        if (section.tables) {
-          section.tables.forEach((table: any) => {
-            wordContent += `${table.title}\n`;
-            wordContent += '-'.repeat(table.title.length) + '\n';
-            
-            table.data.forEach((row: any) => {
-              wordContent += `${row.label}: ${row.value}\n`;
-            });
-            wordContent += '\n';
-          });
-        }
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: `IMO Number: ${vessel.imo}`,
+                  size: 22,
+                }),
+              ],
+              spacing: { after: 100 },
+            }),
+
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: `MMSI: ${vessel.mmsi}`,
+                  size: 22,
+                }),
+              ],
+              spacing: { after: 300 },
+            }),
+
+            // Add document sections
+            ...comprehensiveContent.sections.flatMap((section: any) => [
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: section.title,
+                    bold: true,
+                    size: 24,
+                    color: "1f4e79",
+                  }),
+                ],
+                heading: HeadingLevel.HEADING_2,
+                spacing: { before: 400, after: 200 },
+              }),
+              
+              ...(section.content ? [new Paragraph({
+                children: [
+                  new TextRun({
+                    text: section.content,
+                    size: 20,
+                  }),
+                ],
+                spacing: { after: 200 },
+                alignment: AlignmentType.JUSTIFIED,
+              })] : []),
+
+              ...(section.tables ? section.tables.flatMap((table: any) => [
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: table.title,
+                      bold: true,
+                      size: 22,
+                      color: "2f5597",
+                    }),
+                  ],
+                  spacing: { before: 200, after: 100 },
+                }),
+                ...table.data.map((row: any) => 
+                  new Paragraph({
+                    children: [
+                      new TextRun({
+                        text: `${row.label}: ${row.value}`,
+                        size: 20,
+                      }),
+                    ],
+                    spacing: { after: 50 },
+                  })
+                ),
+                new Paragraph({
+                  children: [new TextRun({ text: "", size: 10 })],
+                  spacing: { after: 100 },
+                }),
+              ]) : []),
+            ]),
+
+            // Footer
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: "Document generated by PetroDealHub Maritime Management System",
+                  size: 18,
+                  italics: true,
+                }),
+              ],
+              alignment: AlignmentType.CENTER,
+              spacing: { before: 600, after: 200 },
+            }),
+
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: `© ${new Date().getFullYear()} PetroDealHub. All rights reserved.`,
+                  size: 16,
+                  color: "666666",
+                }),
+              ],
+              alignment: AlignmentType.CENTER,
+              spacing: { after: 100 },
+            }),
+
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: "Contact: support@petrodealhub.com | Web: www.petrodealhub.com",
+                  size: 16,
+                  color: "666666",
+                }),
+              ],
+              alignment: AlignmentType.CENTER,
+            }),
+          ],
+        }],
       });
 
-      // Set headers for Word download
+      // Generate Word document buffer
+      const buffer = await Packer.toBuffer(doc);
+
+      // Set headers for proper Word document download
+      const filename = `${documentType.replace(/\s+/g, '_')}_${vessel.name.replace(/\s+/g, '_')}_${Date.now()}.docx`;
       res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
-      res.setHeader('Content-Disposition', `attachment; filename="${documentType.replace(/\s+/g, '_')}_${vessel.name.replace(/\s+/g, '_')}.docx"`);
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
       
-      // For now, send as plain text (can be enhanced with proper Word format later)
-      res.setHeader('Content-Type', 'text/plain');
-      res.setHeader('Content-Disposition', `attachment; filename="${documentType.replace(/\s+/g, '_')}_${vessel.name.replace(/\s+/g, '_')}.txt"`);
-      
-      res.send(wordContent);
+      res.send(buffer);
     } catch (error) {
       console.error("Error generating Word document:", error);
       res.status(500).json({ message: "Failed to generate Word document" });

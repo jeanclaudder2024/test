@@ -134,6 +134,12 @@ Changelog:
   * Added Word document download option alongside PDF downloads
   * Enhanced header layout with PETRODEALHUB branding and document metadata
   * Both PDF and Word formats now available with consistent company branding
+- June 12, 2025. Enhanced Word document generation with proper .docx format:
+  * Implemented authentic Microsoft Word document generation using docx library
+  * Professional formatting with PETRODEALHUB maritime branding and blue theme colors
+  * Structured headings, vessel information sections, and comprehensive content layout
+  * Proper .docx file downloads that open correctly in Microsoft Word and other processors
+  * Consistent company branding across both PDF and Word document formats
 
 ## User Preferences
 
