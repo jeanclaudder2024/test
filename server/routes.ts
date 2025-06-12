@@ -5213,83 +5213,193 @@ Only use authentic, real-world data for existing refineries.`;
       // Generate comprehensive professional content based on document type
       const comprehensiveContent = generateComprehensiveMaritimeContent(documentType, vessel, documentContent);
       
-      // Format comprehensive content with professional styling
-      comprehensiveContent.sections.forEach((section: any) => {
-        // Section header
-        doc.fontSize(16)
+      // Format comprehensive content with enhanced professional styling
+      comprehensiveContent.sections.forEach((section: any, sectionIndex: number) => {
+        // Add page break for new sections (except first)
+        if (sectionIndex > 0 && doc.y > 700) {
+          doc.addPage();
+        }
+        
+        // Professional section header with decorative line
+        doc.rect(50, doc.y, 495, 35)
+          .fillAndStroke('#f8fafc', '#e2e8f0');
+          
+        doc.fontSize(18)
           .fillColor('#1e40af')
           .font('Helvetica-Bold')
-          .text(section.title, { align: 'left' })
-          .moveDown(0.3);
+          .text(section.title, 70, doc.y - 28, { width: 455 });
           
-        // Section content
-        doc.fontSize(12)
-          .fillColor('#374151')
-          .font('Helvetica');
+        // Decorative accent line
+        doc.rect(50, doc.y - 5, 495, 3)
+          .fillAndStroke('#1e40af', '#1e40af');
           
+        doc.moveDown(1.2);
+        
         section.content.forEach((item: any) => {
+          // Check for page break
+          if (doc.y > 750) {
+            doc.addPage();
+          }
+          
           if (item.type === 'subsection') {
-            doc.moveDown(0.3)
-              .fontSize(14)
+            // Enhanced subsection styling
+            doc.moveDown(0.8)
+              .fontSize(15)
               .fillColor('#1e40af')
               .font('Helvetica-Bold')
-              .text(item.title)
-              .moveDown(0.2)
-              .fontSize(12)
-              .fillColor('#374151')
-              .font('Helvetica');
+              .text(`• ${item.title}`)
+              .moveDown(0.4);
+              
           } else if (item.type === 'table') {
-            // Professional table formatting
-            doc.moveDown(0.3);
-            item.rows.forEach((row: string[], index: number) => {
-              const y = doc.y;
-              if (index === 0) {
-                // Header row
-                doc.fontSize(11)
-                  .fillColor('#1e40af')
-                  .font('Helvetica-Bold');
-              } else {
-                doc.fontSize(11)
-                  .fillColor('#374151')
-                  .font('Helvetica');
+            // Enhanced professional table with borders
+            doc.moveDown(0.5);
+            
+            const tableStartY = doc.y;
+            const columnWidths = [150, 150, 150];
+            const cellHeight = 25;
+            
+            item.rows.forEach((row: string[], rowIndex: number) => {
+              const currentY = doc.y;
+              
+              // Draw row background for header
+              if (rowIndex === 0) {
+                doc.rect(60, currentY - 5, 450, cellHeight)
+                  .fillAndStroke('#1e40af', '#1e40af');
+              } else if (rowIndex % 2 === 0) {
+                doc.rect(60, currentY - 5, 450, cellHeight)
+                  .fillAndStroke('#f8fafc', '#e2e8f0');
               }
               
+              // Table cell borders
+              let xPosition = 60;
               row.forEach((cell: string, cellIndex: number) => {
-                const x = 70 + (cellIndex * 140);
-                doc.text(cell, x, y, { width: 130 });
+                const cellWidth = columnWidths[cellIndex] || 150;
+                
+                // Cell border
+                doc.rect(xPosition, currentY - 5, cellWidth, cellHeight)
+                  .stroke('#cbd5e1');
+                
+                // Cell text styling
+                if (rowIndex === 0) {
+                  doc.fontSize(11)
+                    .fillColor('#ffffff')
+                    .font('Helvetica-Bold');
+                } else {
+                  doc.fontSize(10)
+                    .fillColor('#374151')
+                    .font('Helvetica');
+                }
+                
+                // Center text in cell
+                doc.text(cell, xPosition + 8, currentY + 2, { 
+                  width: cellWidth - 16,
+                  align: rowIndex === 0 ? 'center' : 'left'
+                });
+                
+                xPosition += cellWidth;
               });
-              doc.moveDown(0.8);
+              
+              doc.y = currentY + cellHeight;
             });
-            doc.moveDown(0.3);
+            
+            doc.moveDown(0.8);
+            
           } else {
-            // Regular paragraph
-            doc.text(item.text, { align: 'justify' })
-              .moveDown(0.4);
+            // Enhanced paragraph formatting with better spacing
+            const paragraphText = item.text;
+            
+            // Split long paragraphs for better readability
+            const sentences = paragraphText.split('. ');
+            let currentParagraph = '';
+            
+            sentences.forEach((sentence: string, index: number) => {
+              currentParagraph += sentence + (index < sentences.length - 1 ? '. ' : '');
+              
+              // If paragraph gets too long, break it
+              if (currentParagraph.length > 400 || index === sentences.length - 1) {
+                doc.fontSize(11)
+                  .fillColor('#374151')
+                  .font('Helvetica')
+                  .text(currentParagraph, { 
+                    align: 'justify',
+                    lineGap: 3,
+                    indent: 20
+                  })
+                  .moveDown(0.6);
+                  
+                currentParagraph = '';
+              }
+            });
           }
         });
         
-        doc.moveDown(0.8);
+        // Section separator
+        if (sectionIndex < comprehensiveContent.sections.length - 1) {
+          doc.moveDown(0.5)
+            .moveTo(80, doc.y)
+            .lineTo(515, doc.y)
+            .strokeColor('#cbd5e1')
+            .lineWidth(1)
+            .stroke()
+            .moveDown(1);
+        }
       });
       
-      // Professional footer with company information
-      const footerY = doc.page.height - 80;
+      // Enhanced professional footer with elegant design
+      const footerY = doc.page.height - 100;
       
-      doc.rect(40, footerY, 515, 50)
-        .fillAndStroke('#f1f5f9', '#e2e8f0');
+      // Footer background with gradient effect
+      doc.rect(40, footerY, 515, 70)
+        .fillAndStroke('#f8fafc', '#e2e8f0');
         
-      doc.fontSize(9)
+      // Footer accent line
+      doc.rect(40, footerY, 515, 4)
+        .fillAndStroke('#1e40af', '#1e40af');
+        
+      // Company logo section in footer
+      doc.fontSize(12)
+        .fillColor('#1e40af')
+        .font('Helvetica-Bold')
+        .text('PETRODEALHUB', 60, footerY + 15);
+        
+      doc.fontSize(8)
         .fillColor('#64748b')
         .font('Helvetica')
-        .text('PetroDealHub Maritime Solutions', 60, footerY + 10)
-        .text('Professional Maritime Documentation System', 60, footerY + 25)
-        .text(`Generated on: ${new Date().toLocaleDateString('en-US', { 
+        .text('Maritime Solutions & Professional Documentation', 60, footerY + 30);
+        
+      // Document metadata in elegant format
+      doc.fontSize(8)
+        .fillColor('#64748b')
+        .font('Helvetica')
+        .text(`Document Generated: ${new Date().toLocaleDateString('en-US', { 
           year: 'numeric', 
           month: 'long', 
           day: 'numeric',
           hour: '2-digit',
-          minute: '2-digit'
-        })}`, 350, footerY + 10)
-        .text('Confidential Maritime Document', 350, footerY + 25);
+          minute: '2-digit',
+          timeZoneName: 'short'
+        })}`, 60, footerY + 45);
+        
+      // Right side footer information
+      doc.fontSize(8)
+        .fillColor('#1e40af')
+        .font('Helvetica-Bold')
+        .text('CONFIDENTIAL MARITIME DOCUMENT', 350, footerY + 15);
+        
+      doc.fontSize(8)
+        .fillColor('#64748b')
+        .font('Helvetica')
+        .text('Authorized for Official Maritime Use Only', 350, footerY + 30)
+        .text('Verification Available via PetroDealHub Platform', 350, footerY + 45);
+        
+      // Page numbering (if multiple pages)
+      const pageNumber = doc.bufferedPageRange().count;
+      if (pageNumber > 1) {
+        doc.fontSize(8)
+          .fillColor('#64748b')
+          .font('Helvetica')
+          .text(`Page ${pageNumber}`, 500, footerY + 60, { align: 'center' });
+      }
       
       // Finalize the PDF
       doc.end();
