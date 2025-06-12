@@ -91,14 +91,14 @@ export default function Companies() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-orange-900">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-orange-50">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-white mb-4">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
             Oil Trading Companies
           </h1>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
             Connect with leading oil trading companies worldwide. Discover partnerships, 
             explore opportunities, and initiate deals with industry professionals.
           </p>
@@ -112,31 +112,31 @@ export default function Companies() {
               placeholder="Search companies, industries, or locations..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 bg-gray-800 border-gray-600 text-white placeholder:text-gray-400"
+              className="pl-10 bg-white border-gray-300 text-gray-900 placeholder:text-gray-500"
             />
           </div>
         </div>
 
         {/* Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card className="bg-gray-800/90 border-gray-700 backdrop-blur-sm">
+          <Card className="bg-white/90 border-gray-200 shadow-lg backdrop-blur-sm">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-300">Active Companies</p>
-                  <p className="text-2xl font-bold text-white">{companies.length}</p>
+                  <p className="text-sm font-medium text-gray-600">Active Companies</p>
+                  <p className="text-2xl font-bold text-gray-900">{companies.length}</p>
                 </div>
                 <Building2 className="h-8 w-8 text-orange-500" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gray-800/90 border-gray-700 backdrop-blur-sm">
+          <Card className="bg-white/90 border-gray-200 shadow-lg backdrop-blur-sm">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-300">Industries</p>
-                  <p className="text-2xl font-bold text-white">
+                  <p className="text-sm font-medium text-gray-600">Industries</p>
+                  <p className="text-2xl font-bold text-gray-900">
                     {new Set(companies.map((c: CompanyWithRealData) => c.realCompany.industry)).size}
                   </p>
                 </div>
@@ -145,12 +145,12 @@ export default function Companies() {
             </CardContent>
           </Card>
 
-          <Card className="bg-gray-800/90 border-gray-700 backdrop-blur-sm">
+          <Card className="bg-white/90 border-gray-200 shadow-lg backdrop-blur-sm">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-300">Countries</p>
-                  <p className="text-2xl font-bold text-white">
+                  <p className="text-sm font-medium text-gray-600">Countries</p>
+                  <p className="text-2xl font-bold text-gray-900">
                     {new Set(companies.map((c: CompanyWithRealData) => 
                       c.realCompany.headquarters?.split(',').pop()?.trim() || 'Global'
                     )).size}
@@ -165,12 +165,12 @@ export default function Companies() {
         {/* Companies Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredCompanies.map((company: CompanyWithRealData) => (
-            <Card key={company.id} className="group hover:shadow-xl transition-all duration-300 bg-gray-800/90 backdrop-blur-sm border-gray-700 shadow-lg">
+            <Card key={company.id} className="group hover:shadow-xl transition-all duration-300 bg-white/90 backdrop-blur-sm border-gray-200 shadow-lg">
               <CardHeader className="pb-4">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center space-x-3">
                     {company.realCompany.logo ? (
-                      <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-700 flex items-center justify-center">
+                      <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-100 flex items-center justify-center">
                         <img 
                           src={company.realCompany.logo} 
                           alt={`${company.realCompany.name} logo`}
@@ -187,11 +187,11 @@ export default function Companies() {
                       </div>
                     )}
                     <div>
-                      <CardTitle className="text-lg group-hover:text-orange-400 transition-colors text-white">
+                      <CardTitle className="text-lg group-hover:text-orange-600 transition-colors text-gray-900">
                         {company.realCompany.name}
                       </CardTitle>
-                      <CardDescription className="flex items-center mt-1 text-gray-400">
-                        <span className="text-xs bg-orange-600/20 text-orange-400 px-2 py-1 rounded-full border border-orange-600/30">
+                      <CardDescription className="flex items-center mt-1 text-gray-600">
+                        <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full border border-orange-200">
                           {company.realCompany.industry}
                         </span>
                       </CardDescription>
@@ -202,42 +202,42 @@ export default function Companies() {
 
               <CardContent className="space-y-4">
                 {/* Company Description */}
-                <p className="text-sm text-gray-300 line-clamp-3">
+                <p className="text-sm text-gray-600 line-clamp-3">
                   {company.realCompany.description}
                 </p>
 
                 {/* Company Details */}
                 <div className="space-y-2">
                   {company.realCompany.headquarters && (
-                    <div className="flex items-center text-sm text-gray-300">
+                    <div className="flex items-center text-sm text-gray-600">
                       <MapPin className="h-4 w-4 mr-2 text-orange-500" />
                       {company.realCompany.headquarters}
                     </div>
                   )}
 
                   {company.realCompany.ceo && (
-                    <div className="flex items-center text-sm text-gray-300">
+                    <div className="flex items-center text-sm text-gray-600">
                       <User className="h-4 w-4 mr-2 text-orange-500" />
                       CEO: {company.realCompany.ceo}
                     </div>
                   )}
 
                   {company.realCompany.founded && (
-                    <div className="flex items-center text-sm text-gray-300">
+                    <div className="flex items-center text-sm text-gray-600">
                       <Calendar className="h-4 w-4 mr-2 text-orange-500" />
                       Founded {company.realCompany.founded}
                     </div>
                   )}
 
                   {company.realCompany.employees && (
-                    <div className="flex items-center text-sm text-gray-300">
+                    <div className="flex items-center text-sm text-gray-600">
                       <Users className="h-4 w-4 mr-2 text-orange-500" />
                       {company.realCompany.employees.toLocaleString()} employees
                     </div>
                   )}
 
                   {company.realCompany.revenue && (
-                    <div className="flex items-center text-sm text-gray-300">
+                    <div className="flex items-center text-sm text-gray-600">
                       <DollarSign className="h-4 w-4 mr-2 text-orange-500" />
                       Revenue: {company.realCompany.revenue}
                     </div>
@@ -245,11 +245,11 @@ export default function Companies() {
                 </div>
 
                 {/* Contact Information */}
-                <div className="pt-4 border-t border-gray-700">
+                <div className="pt-4 border-t border-gray-200">
                   <div className="flex items-center justify-between">
                     <div className="flex space-x-2">
                       {company.realCompany.website && (
-                        <Button variant="outline" size="sm" asChild className="border-gray-600 text-gray-300 hover:bg-gray-700">
+                        <Button variant="outline" size="sm" asChild className="border-gray-300 text-gray-600 hover:bg-gray-50">
                           <a 
                             href={company.realCompany.website} 
                             target="_blank" 
@@ -264,7 +264,7 @@ export default function Companies() {
                       )}
 
                       {company.realCompany.email && (
-                        <Button variant="outline" size="sm" asChild className="border-gray-600 text-gray-300 hover:bg-gray-700">
+                        <Button variant="outline" size="sm" asChild className="border-gray-300 text-gray-600 hover:bg-gray-50">
                           <a href={`mailto:${company.realCompany.email}`} className="flex items-center">
                             <Mail className="h-3 w-3 mr-1" />
                             Email
