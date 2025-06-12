@@ -1209,31 +1209,21 @@ export const gatesRelations = relations(gates, ({ many, one }) => ({
 export const oilTypes = pgTable("oil_types", {
   id: serial("id").primaryKey(),
   name: text("name").notNull().unique(),
-  displayName: text("display_name").notNull(),
-  category: text("category").notNull(), // crude, refined, lng, lpg, petrochemical
-  apiGravity: decimal("api_gravity", { precision: 5, scale: 2 }),
-  sulfurContent: decimal("sulfur_content", { precision: 5, scale: 3 }),
-  viscosity: decimal("viscosity", { precision: 8, scale: 2 }),
-  density: decimal("density", { precision: 8, scale: 4 }),
-  flashPoint: integer("flash_point"), // temperature in celsius
-  pourPoint: integer("pour_point"), // temperature in celsius
-  marketPrice: decimal("market_price", { precision: 10, scale: 2 }), // USD per barrel/ton
-  priceUnit: text("price_unit").default("barrel"), // barrel, ton, gallon
   description: text("description"),
-  commonUses: text("common_uses"), // JSON array of uses
-  majorProducers: text("major_producers"), // JSON array of countries/companies
-  tradingSymbol: text("trading_symbol"), // WTI, Brent, etc.
-  hsCode: text("hs_code"), // Harmonized System code for customs
-  unClass: text("un_class"), // UN classification for hazardous materials
+  apiGravity: decimal("api_gravity", { precision: 5, scale: 2 }),
+  sulfurContent: text("sulfur_content"),
+  viscosity: text("viscosity"),
+  color: text("color"),
+  origin: text("origin"),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
-  lastUpdated: timestamp("last_updated").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const insertOilTypeSchema = createInsertSchema(oilTypes).omit({
   id: true,
   createdAt: true,
-  lastUpdated: true,
+  updatedAt: true,
 });
 
 export type InsertOilType = z.infer<typeof insertOilTypeSchema>;
