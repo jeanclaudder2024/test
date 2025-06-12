@@ -25,7 +25,7 @@ import { CompanyManagement } from "@/components/admin/CompanyManagement";
 
 import DocumentManagement from "@/components/admin/DocumentManagement";
 import { BrokerManagement } from "@/components/admin/BrokerManagement";
-import { FilterManagement } from "@/components/admin/FilterManagement";
+import FilterManagement from "@/components/admin/FilterManagement";
 
 export default function AdminPanel() {
   const [_, navigate] = useLocation();
