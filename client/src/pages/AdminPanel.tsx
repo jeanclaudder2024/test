@@ -438,7 +438,20 @@ export default function AdminPanel() {
         </TabsContent>
 
         <TabsContent value="filters" className="space-y-4">
-          <FilterManagement />
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="h-5 w-5 text-orange-500" />
+                Filter Management
+              </CardTitle>
+              <CardDescription>
+                Manage oil types and regions for the platform filtering system
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <FilterManagement />
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="settings" className="space-y-4">
