@@ -17,7 +17,7 @@ import { DatabaseMigration } from "@/components/admin/DatabaseMigration";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Shield, Database, Users, Settings as SettingsIcon, ChevronLeft, Factory, Anchor, Ship, CreditCard, HardDrive, Globe, Building2, BarChart3, Activity, Droplets, FileText } from "lucide-react";
-import { BrokerNetworkHub } from "@/components/broker/BrokerNetworkHub";
+
 import { useLocation } from "wouter";
 import SubscriptionAdmin from "@/pages/SubscriptionAdmin";
 import ProfessionalRefineryManagement from "@/components/admin/ProfessionalRefineryManagement";
@@ -102,7 +102,7 @@ export default function AdminPanel() {
               <option value="oil-types">⛽ Oil Type Management</option>
               <option value="regions">🌍 Region Management</option>
               <option value="documents">📄 Document Management</option>
-              <option value="brokers">🤝 Broker Network</option>
+
               <option value="data">💾 Data Management</option>
               <option value="migration">🔄 Database Migration</option>
               <option value="landing">🌐 Landing Page</option>
@@ -194,14 +194,7 @@ export default function AdminPanel() {
               <span className="hidden xl:inline font-medium">Documents</span>
               <span className="xl:hidden">Docs</span>
             </TabsTrigger>
-            <TabsTrigger 
-              value="brokers" 
-              className="flex items-center gap-2 data-[state=active]:bg-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-200 hover:bg-purple-50 rounded-lg"
-            >
-              <Building2 className="h-4 w-4" />
-              <span className="hidden xl:inline font-medium">Brokers</span>
-              <span className="xl:hidden">Brokers</span>
-            </TabsTrigger>
+
             <TabsTrigger 
               value="data" 
               className="flex items-center gap-2 data-[state=active]:bg-indigo-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-200 hover:bg-indigo-50 rounded-lg"
@@ -472,19 +465,7 @@ export default function AdminPanel() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="brokers" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Professional Broker Network</CardTitle>
-              <CardDescription>
-                Manage broker company connections and partnerships with major oil corporations
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <BrokerNetworkHub />
-            </CardContent>
-          </Card>
-        </TabsContent>
+
 
         <TabsContent value="settings" className="space-y-4">
           <Card>
