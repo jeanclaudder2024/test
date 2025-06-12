@@ -43,11 +43,15 @@ import {
   insertPortSchema,
   insertRealCompanySchema,
   insertFakeCompanySchema,
+  insertOilTypeSchema,
+  insertRegionSchema,
   Vessel,
   Refinery,
   Port,
   RealCompany,
   FakeCompany,
+  OilType,
+  Region,
   vessels,
   refineries,
   progressEvents,
@@ -56,7 +60,9 @@ import {
   realCompanies,
   fakeCompanies,
   ports,
-  vesselPortConnections
+  vesselPortConnections,
+  oilTypes,
+  regions
 } from "@shared/schema";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";

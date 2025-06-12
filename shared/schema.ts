@@ -849,6 +849,8 @@ export const insertVesselDocumentSchema = createInsertSchema(vesselDocuments).om
 export type InsertVesselDocument = z.infer<typeof insertVesselDocumentSchema>;
 export type SelectVesselDocument = typeof vesselDocuments.$inferSelect;
 
+
+
 export type InsertCompany = z.infer<typeof insertCompanySchema>;
 export type Company = typeof companies.$inferSelect;
 export type Deal = typeof deals.$inferSelect;

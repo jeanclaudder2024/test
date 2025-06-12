@@ -40,7 +40,8 @@ import {
   landingPageSections, landingPageImages, landingPageBlocks,
   LandingPageSection, InsertLandingPageSection,
   LandingPageImage, InsertLandingPageImage,
-  LandingPageBlock, InsertLandingPageBlock
+  LandingPageBlock, InsertLandingPageBlock,
+  regions, OilType, InsertOilType, Region, InsertRegion
 } from "@shared/schema";
 
 // Storage interface with CRUD methods
@@ -199,6 +200,20 @@ export interface IStorage {
   getVesselDocuments(vesselId: number): Promise<ProfessionalDocument[]>;
   associateDocumentWithVessel(vesselId: number, documentId: number): Promise<VesselDocumentAssociation>;
   removeDocumentFromVessel(vesselId: number, documentId: number): Promise<boolean>;
+  
+  // Oil Types Filter Management methods
+  getOilTypes(): Promise<OilType[]>;
+  getOilTypeById(id: number): Promise<OilType | undefined>;
+  createOilType(oilType: InsertOilType): Promise<OilType>;
+  updateOilType(id: number, oilType: Partial<InsertOilType>): Promise<OilType | undefined>;
+  deleteOilType(id: number): Promise<boolean>;
+  
+  // Regions Filter Management methods
+  getRegions(): Promise<Region[]>;
+  getRegionById(id: number): Promise<Region | undefined>;
+  createRegion(region: InsertRegion): Promise<Region>;
+  updateRegion(id: number, region: Partial<InsertRegion>): Promise<Region | undefined>;
+  deleteRegion(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1578,6 +1593,114 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error fetching all admin broker files:', error);
       return [];
+    }
+  }
+
+  // Oil Types Filter Management methods
+  async getOilTypes(): Promise<OilType[]> {
+    try {
+      return await db.select().from(oilTypes).orderBy(oilTypes.name);
+    } catch (error) {
+      console.error('Error fetching oil types:', error);
+      return [];
+    }
+  }
+
+  async getOilTypeById(id: number): Promise<OilType | undefined> {
+    try {
+      const [oilType] = await db.select().from(oilTypes).where(eq(oilTypes.id, id));
+      return oilType;
+    } catch (error) {
+      console.error('Error fetching oil type by ID:', error);
+      return undefined;
+    }
+  }
+
+  async createOilType(oilType: InsertOilType): Promise<OilType> {
+    try {
+      const [newOilType] = await db.insert(oilTypes).values(oilType).returning();
+      return newOilType;
+    } catch (error) {
+      console.error('Error creating oil type:', error);
+      throw error;
+    }
+  }
+
+  async updateOilType(id: number, oilType: Partial<InsertOilType>): Promise<OilType | undefined> {
+    try {
+      const [updatedOilType] = await db
+        .update(oilTypes)
+        .set({ ...oilType, updatedAt: new Date() })
+        .where(eq(oilTypes.id, id))
+        .returning();
+      return updatedOilType;
+    } catch (error) {
+      console.error('Error updating oil type:', error);
+      return undefined;
+    }
+  }
+
+  async deleteOilType(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(oilTypes).where(eq(oilTypes.id, id));
+      return result.rowCount > 0;
+    } catch (error) {
+      console.error('Error deleting oil type:', error);
+      return false;
+    }
+  }
+
+  // Regions Filter Management methods
+  async getRegions(): Promise<Region[]> {
+    try {
+      return await db.select().from(regions).orderBy(regions.name);
+    } catch (error) {
+      console.error('Error fetching regions:', error);
+      return [];
+    }
+  }
+
+  async getRegionById(id: number): Promise<Region | undefined> {
+    try {
+      const [region] = await db.select().from(regions).where(eq(regions.id, id));
+      return region;
+    } catch (error) {
+      console.error('Error fetching region by ID:', error);
+      return undefined;
+    }
+  }
+
+  async createRegion(region: InsertRegion): Promise<Region> {
+    try {
+      const [newRegion] = await db.insert(regions).values(region).returning();
+      return newRegion;
+    } catch (error) {
+      console.error('Error creating region:', error);
+      throw error;
+    }
+  }
+
+  async updateRegion(id: number, region: Partial<InsertRegion>): Promise<Region | undefined> {
+    try {
+      const [updatedRegion] = await db
+        .update(regions)
+        .set({ ...region, updatedAt: new Date() })
+        .where(eq(regions.id, id))
+        .returning();
+      return updatedRegion;
+    } catch (error) {
+      console.error('Error updating region:', error);
+      return undefined;
+    }
+  }
+
+  async deleteRegion(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(regions).where(eq(regions.id, id));
+      return result.rowCount > 0;
+    } catch (error) {
+      console.error('Error deleting region:', error);
+      return false;
     }
   }
 }
