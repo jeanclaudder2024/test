@@ -68,13 +68,13 @@ export default function AdminPanel() {
                 <div className="flex items-center space-x-2 bg-blue-50 px-3 py-2 rounded-lg">
                   <Activity className="h-4 w-4 text-blue-600" />
                   <span className="text-sm font-medium text-blue-800">
-                    {stats.totalUsers || 0} Users
+                    {(stats as any)?.totalUsers || 0} Users
                   </span>
                 </div>
                 <div className="flex items-center space-x-2 bg-green-50 px-3 py-2 rounded-lg">
                   <Ship className="h-4 w-4 text-green-600" />
                   <span className="text-sm font-medium text-green-800">
-                    {stats.totalVessels || 0} Vessels
+                    {(stats as any)?.totalVessels || 0} Vessels
                   </span>
                 </div>
               </div>

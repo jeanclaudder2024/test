@@ -333,7 +333,7 @@ export function FilterManagement() {
                 </div>
               ) : (
                 <div className="space-y-2 max-h-96 overflow-y-auto">
-                  {oilTypes.map((oilType: OilType) => (
+                  {(oilTypes as any[])?.map((oilType: any) => (
                     <div
                       key={oilType.id}
                       className="flex items-center justify-between p-3 bg-white border border-slate-200 rounded-lg hover:shadow-md transition-shadow"
@@ -444,14 +444,14 @@ export function FilterManagement() {
                 <div className="flex items-center justify-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
                 </div>
-              ) : regions.length === 0 ? (
+              ) : (regions as any[])?.length === 0 ? (
                 <div className="text-center py-8 text-slate-500">
                   <AlertCircle className="h-8 w-8 mx-auto mb-2" />
                   No regions found. Create your first region above.
                 </div>
               ) : (
                 <div className="space-y-2 max-h-96 overflow-y-auto">
-                  {regions.map((region: Region) => (
+                  {(regions as any[])?.map((region: any) => (
                     <div
                       key={region.id}
                       className="flex items-center justify-between p-3 bg-white border border-slate-200 rounded-lg hover:shadow-md transition-shadow"
