@@ -122,7 +122,7 @@ All technical systems meet international maritime standards and regulatory requi
     }
   ];
 
-  const handleDownloadPDF = async (document: SimpleDocument) => {
+  const handleDownloadPDF = async (doc: SimpleDocument) => {
     try {
       setIsDownloading(true);
       
@@ -133,8 +133,8 @@ All technical systems meet international maritime standards and regulatory requi
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          documentType: document.title,
-          documentContent: document.content,
+          documentType: doc.title,
+          documentContent: doc.content,
           includeVesselDetails: true,
           includeLogo: true
         }),
@@ -159,24 +159,38 @@ All technical systems meet international maritime standards and regulatory requi
         throw new Error('PDF file is empty');
       }
       
+      // Use a more reliable download approach
       const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${document.title.replace(/\s+/g, '_')}_${vessel.name.replace(/\s+/g, '_')}.pdf`;
+      const filename = `${doc.title.replace(/\s+/g, '_')}_${vessel.name.replace(/\s+/g, '_')}.pdf`;
       
-      // Ensure link is properly configured before clicking
-      document.body.appendChild(link);
-      link.click();
+      // Try modern download approach first
+      if (window.navigator && (window.navigator as any).msSaveOrOpenBlob) {
+        // IE fallback
+        (window.navigator as any).msSaveOrOpenBlob(blob, filename);
+      } else {
+        // Create and trigger download link
+        const downloadLink = document.createElement('a');
+        downloadLink.style.display = 'none';
+        downloadLink.href = url;
+        downloadLink.download = filename;
+        downloadLink.target = '_blank';
+        
+        // Append to body, click, and remove
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        
+        // Clean up immediately
+        document.body.removeChild(downloadLink);
+      }
       
-      // Clean up after a short delay
+      // Clean up URL after short delay
       setTimeout(() => {
-        document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
-      }, 100);
+      }, 1000);
       
       toast({
         title: "PDF Downloaded",
-        description: `${document.title} downloaded successfully with company logo`,
+        description: `${doc.title} downloaded successfully with company logo`,
       });
     } catch (error) {
       console.error('PDF download error:', error);
