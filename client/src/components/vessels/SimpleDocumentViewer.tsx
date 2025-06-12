@@ -20,6 +20,7 @@ interface SimpleDocumentViewerProps {
 
 export function SimpleDocumentViewer({ vessel }: SimpleDocumentViewerProps) {
   const [selectedDocument, setSelectedDocument] = useState<SimpleDocument | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
   const { toast } = useToast();
 
   // Sample documents without API dependency
@@ -121,27 +122,52 @@ All technical systems meet international maritime standards and regulatory requi
     }
   ];
 
-  const handleDownloadPDF = (document: SimpleDocument) => {
+  const handleDownloadPDF = async (document: SimpleDocument) => {
     try {
-      // Create a simple text file as PDF alternative
-      const element = window.document.createElement('a');
-      const file = new Blob([document.content], { type: 'text/plain' });
-      element.href = URL.createObjectURL(file);
-      element.download = `${document.title.replace(/\s+/g, '_')}_${vessel.name}.txt`;
-      window.document.body.appendChild(element);
-      element.click();
-      window.document.body.removeChild(element);
+      setIsDownloading(true);
+      
+      // Call the enhanced PDF generation endpoint with logo design
+      const response = await fetch(`/api/vessels/${vessel.id}/professional-document-pdf`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          documentType: document.title,
+          documentContent: document.content,
+          includeVesselDetails: true,
+          includeLogo: true
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to generate PDF');
+      }
+      
+      // Get the PDF as blob and download
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${document.title.replace(/\s+/g, '_')}_${vessel.name.replace(/\s+/g, '_')}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
       
       toast({
-        title: "Download Started",
-        description: "Document downloaded successfully",
+        title: "PDF Downloaded",
+        description: `${document.title} downloaded successfully with company logo`,
       });
     } catch (error) {
+      console.error('PDF download error:', error);
       toast({
-        title: "Error",
-        description: "Failed to download document",
+        title: "Download Failed",
+        description: "Failed to generate PDF document",
         variant: "destructive",
       });
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -209,9 +235,19 @@ All technical systems meet international maritime standards and regulatory requi
                     variant="outline"
                     size="sm"
                     onClick={() => handleDownloadPDF(document)}
+                    disabled={isDownloading}
                   >
-                    <Download className="h-4 w-4 mr-2" />
-                    Download
+                    {isDownloading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                        Generating PDF...
+                      </>
+                    ) : (
+                      <>
+                        <Download className="h-4 w-4 mr-2" />
+                        Download PDF
+                      </>
+                    )}
                   </Button>
                 </div>
               </CardContent>

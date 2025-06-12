@@ -4900,6 +4900,185 @@ Only use authentic, real-world data for existing refineries.`;
     }
   });
 
+  // Professional Document PDF Generation with Logo Design
+  app.post("/api/vessels/:id/professional-document-pdf", async (req: Request, res: Response) => {
+    try {
+      const vesselId = parseInt(req.params.id);
+      const { documentType, documentContent, includeVesselDetails = true, includeLogo = true } = req.body;
+      
+      if (isNaN(vesselId)) {
+        return res.status(400).json({ message: "Invalid vessel ID" });
+      }
+      
+      // Get vessel details from database
+      const vessel = await storage.getVesselById(vesselId);
+      if (!vessel) {
+        return res.status(404).json({ message: "Vessel not found" });
+      }
+      
+      // Import PDFDocument for PDF generation
+      const PDFDocument = (await import('pdfkit')).default;
+      
+      // Create professional PDF document with company branding
+      const doc = new PDFDocument({
+        size: 'A4',
+        margin: 50,
+        info: {
+          Title: `${documentType} - ${vessel.name}`,
+          Author: 'PetroDealHub Maritime Solutions',
+          Subject: 'Professional Maritime Document',
+          Creator: 'PetroDealHub Platform'
+        }
+      });
+      
+      // Set response headers for PDF download
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${documentType.replace(/\s+/g, '_')}_${vessel.name.replace(/\s+/g, '_')}.pdf"`);
+      
+      // Pipe PDF directly to response
+      doc.pipe(res);
+      
+      if (includeLogo) {
+        // Add company logo design and header
+        doc.rect(40, 40, 515, 80)
+          .fillAndStroke('#1e40af', '#1e40af'); // Professional blue header
+          
+        // Add PetroDealHub logo text design
+        doc.fontSize(28)
+          .fillColor('#ffffff')
+          .font('Helvetica-Bold')
+          .text('PETRODEALHUB', 60, 65);
+          
+        doc.fontSize(12)
+          .fillColor('#e0e7ff')
+          .font('Helvetica')
+          .text('Maritime Oil Brokerage Platform', 60, 95);
+          
+        // Add maritime wave design element
+        doc.moveTo(400, 60)
+          .bezierCurveTo(420, 50, 440, 70, 460, 60)
+          .bezierCurveTo(480, 50, 500, 70, 520, 60)
+          .strokeColor('#3b82f6')
+          .lineWidth(3)
+          .stroke();
+      }
+      
+      // Document title with professional styling
+      doc.moveDown(3)
+        .fontSize(24)
+        .fillColor('#1e40af')
+        .font('Helvetica-Bold')
+        .text(documentType.toUpperCase(), { align: 'center' })
+        .moveDown(0.5);
+      
+      if (includeVesselDetails) {
+        // Professional vessel information box
+        const vesselBoxY = doc.y + 20;
+        doc.rect(50, vesselBoxY, 495, 100)
+          .fillAndStroke('#f8fafc', '#e2e8f0');
+          
+        // Vessel name prominently displayed
+        doc.fontSize(18)
+          .fillColor('#1e40af')
+          .font('Helvetica-Bold')
+          .text(`VESSEL: ${vessel.name}`, 70, vesselBoxY + 15);
+          
+        // Technical specifications in organized layout
+        doc.fontSize(11)
+          .fillColor('#374151')
+          .font('Helvetica');
+          
+        const leftCol = 70;
+        const rightCol = 300;
+        let currentY = vesselBoxY + 45;
+        
+        doc.text(`IMO Number: ${vessel.imo || 'Not Available'}`, leftCol, currentY);
+        doc.text(`Flag State: ${vessel.flag || 'Not Available'}`, rightCol, currentY);
+        
+        currentY += 15;
+        doc.text(`Vessel Type: ${vessel.vesselType || 'Oil Tanker'}`, leftCol, currentY);
+        doc.text(`Built Year: ${vessel.built || 'Not Available'}`, rightCol, currentY);
+        
+        currentY += 15;
+        doc.text(`DWT: ${vessel.deadweight ? vessel.deadweight.toLocaleString() + ' MT' : 'Not Available'}`, leftCol, currentY);
+        doc.text(`Cargo Capacity: ${vessel.cargoCapacity ? vessel.cargoCapacity.toLocaleString() + ' BBL' : 'Not Available'}`, rightCol, currentY);
+      }
+      
+      // Document reference number
+      doc.moveDown(2)
+        .fontSize(10)
+        .fillColor('#6b7280')
+        .text(`Document Reference: PD-${new Date().getFullYear()}-${vesselId}-${Date.now()}`, { align: 'right' })
+        .moveDown(1);
+      
+      // Professional separator line
+      doc.moveTo(50, doc.y)
+        .lineTo(545, doc.y)
+        .strokeColor('#1e40af')
+        .lineWidth(2)
+        .stroke();
+      
+      // Document content with professional formatting
+      doc.moveDown(1)
+        .fontSize(12)
+        .fillColor('#374151')
+        .font('Helvetica');
+      
+      // Split content into paragraphs and format professionally
+      const paragraphs = documentContent.split('\n\n');
+      
+      paragraphs.forEach((paragraph: string, index: number) => {
+        if (paragraph.trim()) {
+          // Check if paragraph is a heading (contains ':' or is in caps)
+          if (paragraph.includes(':') && paragraph.length < 100) {
+            doc.moveDown(0.5)
+              .fontSize(14)
+              .fillColor('#1e40af')
+              .font('Helvetica-Bold')
+              .text(paragraph.trim())
+              .moveDown(0.3)
+              .fontSize(12)
+              .fillColor('#374151')
+              .font('Helvetica');
+          } else {
+            doc.text(paragraph.trim(), { align: 'justify' })
+              .moveDown(0.5);
+          }
+        }
+      });
+      
+      // Professional footer with company information
+      const footerY = doc.page.height - 80;
+      
+      doc.rect(40, footerY, 515, 50)
+        .fillAndStroke('#f1f5f9', '#e2e8f0');
+        
+      doc.fontSize(9)
+        .fillColor('#64748b')
+        .font('Helvetica')
+        .text('PetroDealHub Maritime Solutions', 60, footerY + 10)
+        .text('Professional Maritime Documentation System', 60, footerY + 25)
+        .text(`Generated on: ${new Date().toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        })}`, 350, footerY + 10)
+        .text('Confidential Maritime Document', 350, footerY + 25);
+      
+      // Finalize the PDF
+      doc.end();
+      
+    } catch (error) {
+      console.error('PDF Generation Error:', error);
+      res.status(500).json({ 
+        message: "Failed to generate professional PDF document",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   // Download PDF for a document
   apiRouter.get("/vessels/:vesselId/documents/:documentId/pdf", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
