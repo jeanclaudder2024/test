@@ -1445,6 +1445,141 @@ export class DatabaseStorage implements IStorage {
 
     return results as (BrokerDealActivity & { userName: string })[];
   }
+
+  // Admin Broker Management Methods
+  async getBrokerUsers(): Promise<any[]> {
+    try {
+      const brokerUsers = await db
+        .select({
+          id: users.id,
+          email: users.email,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          role: users.role,
+          createdAt: users.createdAt,
+        })
+        .from(users)
+        .leftJoin(userSubscriptions, eq(users.id, userSubscriptions.userId))
+        .leftJoin(subscriptionPlans, eq(userSubscriptions.planId, subscriptionPlans.id))
+        .where(eq(subscriptionPlans.name, 'brokers'));
+
+      return brokerUsers;
+    } catch (error) {
+      console.error('Error fetching broker users:', error);
+      return [];
+    }
+  }
+
+  async createBrokerUser(userData: { email: string; firstName: string; lastName: string; password: string; role: string }): Promise<any> {
+    try {
+      // Create user
+      const [user] = await db.insert(users).values({
+        email: userData.email,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        password: userData.password,
+        role: userData.role,
+      }).returning();
+
+      // Get broker subscription plan
+      const [brokerPlan] = await db
+        .select()
+        .from(subscriptionPlans)
+        .where(eq(subscriptionPlans.name, 'brokers'))
+        .limit(1);
+
+      if (brokerPlan) {
+        // Create subscription for broker
+        await db.insert(userSubscriptions).values({
+          userId: user.id,
+          planId: brokerPlan.id,
+          status: 'active',
+          billingInterval: 'monthly',
+          currentPeriodStart: new Date(),
+          currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+        });
+      }
+
+      return user;
+    } catch (error) {
+      console.error('Error creating broker user:', error);
+      throw error;
+    }
+  }
+
+  async getAllBrokerDeals(): Promise<any[]> {
+    try {
+      const deals = await db
+        .select({
+          id: brokerDeals.id,
+          brokerId: brokerDeals.brokerId,
+          title: brokerDeals.title,
+          description: brokerDeals.description,
+          status: brokerDeals.status,
+          requestedAmount: brokerDeals.requestedAmount,
+          oilType: brokerDeals.oilType,
+          quantity: brokerDeals.quantity,
+          deliveryDate: brokerDeals.deliveryDate,
+          createdAt: brokerDeals.createdAt,
+          brokerName: sql<string>`CONCAT(${users.firstName}, ' ', ${users.lastName})`,
+        })
+        .from(brokerDeals)
+        .leftJoin(users, eq(brokerDeals.brokerId, users.id))
+        .orderBy(desc(brokerDeals.createdAt));
+
+      return deals;
+    } catch (error) {
+      console.error('Error fetching all broker deals:', error);
+      return [];
+    }
+  }
+
+  async updateBrokerDealStatus(dealId: number, status: string): Promise<any> {
+    try {
+      const [updatedDeal] = await db
+        .update(brokerDeals)
+        .set({ 
+          status: status as any,
+          updatedAt: new Date()
+        })
+        .where(eq(brokerDeals.id, dealId))
+        .returning();
+
+      return updatedDeal;
+    } catch (error) {
+      console.error('Error updating broker deal status:', error);
+      throw error;
+    }
+  }
+
+  async getAllAdminBrokerFiles(): Promise<any[]> {
+    try {
+      const files = await db
+        .select({
+          id: adminBrokerFiles.id,
+          brokerId: adminBrokerFiles.brokerId,
+          fileName: adminBrokerFiles.fileName,
+          originalName: adminBrokerFiles.originalName,
+          fileType: adminBrokerFiles.fileType,
+          fileSize: adminBrokerFiles.fileSize,
+          description: adminBrokerFiles.description,
+          category: adminBrokerFiles.category,
+          priority: adminBrokerFiles.priority,
+          isRead: adminBrokerFiles.isRead,
+          readAt: adminBrokerFiles.readAt,
+          createdAt: adminBrokerFiles.createdAt,
+          brokerName: sql<string>`CONCAT(${users.firstName}, ' ', ${users.lastName})`,
+        })
+        .from(adminBrokerFiles)
+        .leftJoin(users, eq(adminBrokerFiles.brokerId, users.id))
+        .orderBy(desc(adminBrokerFiles.createdAt));
+
+      return files;
+    } catch (error) {
+      console.error('Error fetching all admin broker files:', error);
+      return [];
+    }
+  }
 }
 
 // Use database storage

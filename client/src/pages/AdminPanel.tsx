@@ -25,6 +25,7 @@ import { CompanyManagement } from "@/components/admin/CompanyManagement";
 import OilTypeManagement from "@/components/admin/OilTypeManagement";
 import RegionManagement from "@/components/admin/RegionManagement";
 import DocumentManagement from "@/components/admin/DocumentManagement";
+import { BrokerManagement } from "@/components/admin/BrokerManagement";
 
 export default function AdminPanel() {
   const [_, navigate] = useLocation();
@@ -102,6 +103,7 @@ export default function AdminPanel() {
               <option value="oil-types">⛽ Oil Type Management</option>
               <option value="regions">🌍 Region Management</option>
               <option value="documents">📄 Document Management</option>
+              <option value="brokers">🤝 Broker Management</option>
 
               <option value="data">💾 Data Management</option>
               <option value="migration">🔄 Database Migration</option>
@@ -193,6 +195,14 @@ export default function AdminPanel() {
               <FileText className="h-4 w-4" />
               <span className="hidden xl:inline font-medium">Documents</span>
               <span className="xl:hidden">Docs</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="brokers" 
+              className="flex items-center gap-2 data-[state=active]:bg-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-200 hover:bg-purple-50 rounded-lg"
+            >
+              <Users className="h-4 w-4" />
+              <span className="hidden xl:inline font-medium">Brokers</span>
+              <span className="xl:hidden">Brokers</span>
             </TabsTrigger>
 
             <TabsTrigger 
@@ -465,7 +475,9 @@ export default function AdminPanel() {
           </Card>
         </TabsContent>
 
-
+        <TabsContent value="brokers" className="space-y-4">
+          <BrokerManagement />
+        </TabsContent>
 
         <TabsContent value="settings" className="space-y-4">
           <Card>
