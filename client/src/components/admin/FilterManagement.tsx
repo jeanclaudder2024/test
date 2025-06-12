@@ -511,74 +511,106 @@ export default function FilterManagement() {
         <TabsContent value="regions">
           <Card>
             <CardHeader>
-              <CardTitle>Regions Management</CardTitle>
-              <CardDescription>
-                Manage trading regions and geographic markets
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Regions Management</CardTitle>
+                  <CardDescription>
+                    Manage trading regions and geographic markets
+                  </CardDescription>
+                </div>
+                <Dialog open={regionDialogOpen} onOpenChange={setRegionDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Region
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[600px]">
+                    <DialogHeader>
+                      <DialogTitle>Add New Region</DialogTitle>
+                    </DialogHeader>
+                    
+                    <form className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="regionName">Region Name *</Label>
+                          <Input
+                            id="regionName"
+                            value={regionFormData.name}
+                            onChange={(e) => setRegionFormData({ ...regionFormData, name: e.target.value })}
+                            placeholder="e.g., North America"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="regionCode">Region Code *</Label>
+                          <Input
+                            id="regionCode"
+                            value={regionFormData.code}
+                            onChange={(e) => setRegionFormData({ ...regionFormData, code: e.target.value })}
+                            placeholder="e.g., NAMERICA"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="regionCountries">Countries</Label>
+                        <Input
+                          id="regionCountries"
+                          value={regionFormData.countries}
+                          onChange={(e) => setRegionFormData({ ...regionFormData, countries: e.target.value })}
+                          placeholder="e.g., United States, Canada, Mexico"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="regionDescription">Description</Label>
+                        <Textarea
+                          id="regionDescription"
+                          value={regionFormData.description}
+                          onChange={(e) => setRegionFormData({ ...regionFormData, description: e.target.value })}
+                          placeholder="Detailed description of the region..."
+                        />
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="regionActive"
+                          checked={regionFormData.isActive}
+                          onCheckedChange={(checked) => setRegionFormData({ ...regionFormData, isActive: checked })}
+                        />
+                        <Label htmlFor="regionActive">Active</Label>
+                      </div>
+
+                      <div className="flex justify-end space-x-2 pt-4">
+                        <Button type="button" variant="outline" onClick={() => setRegionDialogOpen(false)}>
+                          <X className="h-4 w-4 mr-2" />
+                          Cancel
+                        </Button>
+                        <Button type="submit">
+                          <Save className="h-4 w-4 mr-2" />
+                          Create Region
+                        </Button>
+                      </div>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              </div>
             </CardHeader>
             <CardContent>
-              {regionsLoading ? (
-                <div className="flex justify-center py-8">
-                  <div className="text-muted-foreground">Loading regions...</div>
+              <div className="text-center py-12">
+                <Globe className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
+                <h3 className="text-lg font-semibold mb-2">No Regions to Display</h3>
+                <p className="text-muted-foreground mb-6">
+                  Click "Add Region" above to create your first trading region.
+                </p>
+                <div className="bg-muted/30 rounded-lg p-4 max-w-md mx-auto">
+                  <p className="text-sm text-muted-foreground">
+                    Regions help organize oil trading markets by geographic location and regulatory frameworks.
+                  </p>
                 </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Region</TableHead>
-                        <TableHead>Code</TableHead>
-                        <TableHead>Countries</TableHead>
-                        <TableHead>Description</TableHead>
-                        <TableHead>Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {regionsData?.data?.map((region: Region) => (
-                        <TableRow key={region.id}>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <Globe className="h-4 w-4 text-blue-500" />
-                              <span className="font-medium">{region.name}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className="text-xs">
-                              {region.code}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="max-w-xs">
-                              <p className="text-sm text-muted-foreground truncate" title={region.countries}>
-                                {region.countries}
-                              </p>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="max-w-sm">
-                              <p className="text-sm text-muted-foreground truncate" title={region.description}>
-                                {region.description}
-                              </p>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={region.isActive ? 'default' : 'secondary'}>
-                              {region.isActive ? 'Active' : 'Inactive'}
-                            </Badge>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                      {(!regionsData?.data || regionsData.data.length === 0) && (
-                        <TableRow>
-                          <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                            No regions found.
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
