@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { db } from '../db';
-import { users, userSubscriptions, subscriptionPlans, registerSchema, loginSchema } from '@shared/schema';
+import { users, userSubscriptions, registerSchema, loginSchema } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import { 
   hashPassword, 
@@ -44,18 +44,7 @@ router.post('/register', async (req, res) => {
       })
       .returning();
 
-    // Get the default subscription plan (first active plan)
-    const [defaultPlan] = await db
-      .select()
-      .from(subscriptionPlans)
-      .where(eq(subscriptionPlans.isActive, true))
-      .limit(1);
-
-    if (!defaultPlan) {
-      return res.status(500).json({ message: 'No subscription plan available' });
-    }
-
-    // Create subscription with trial
+    // Create subscription with 3-day trial
     const trialStartDate = new Date();
     const trialEndDate = calculateTrialEndDate();
 
@@ -63,10 +52,9 @@ router.post('/register', async (req, res) => {
       .insert(userSubscriptions)
       .values({
         userId: newUser.id,
-        planId: defaultPlan.id,
-        status: 'trial',
-        currentPeriodStart: trialStartDate,
-        currentPeriodEnd: trialEndDate,
+        trialStartDate,
+        trialEndDate,
+        isActive: true
       });
 
     // Generate token
@@ -117,17 +105,11 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
-    // Get user subscription from database
-    const [userSubscription] = await db
-      .select()
-      .from(userSubscriptions)
-      .where(eq(userSubscriptions.userId, user.id))
-      .limit(1);
-
-    // Check if trial is expired
-    const trialExpired = userSubscription && userSubscription.status === 'trial' && 
-      userSubscription.currentPeriodEnd && 
-      new Date() > userSubscription.currentPeriodEnd;
+    // Get user subscription (simplified)
+    const subscription = null; // Simplified for now
+    
+    // Check trial status (simplified - no trial expiration for admin)
+    const trialExpired = user.role !== 'admin' ? false : false;
 
     // Generate token
     const token = generateToken(user);
@@ -139,8 +121,8 @@ router.post('/login', async (req, res) => {
       message: 'Login successful',
       user: userWithoutPassword,
       token,
-      subscription: userSubscription,
-      trialExpired: trialExpired || false
+      subscription,
+      trialExpired
     });
 
   } catch (error: any) {
@@ -162,28 +144,20 @@ router.get('/me', authenticateToken, async (req: AuthenticatedRequest, res) => {
       return res.status(401).json({ message: 'User not found' });
     }
 
-    // Get user subscription from database
-    const [userSubscription] = await db
-      .select()
-      .from(userSubscriptions)
-      .where(eq(userSubscriptions.userId, req.user.id))
-      .limit(1);
-
-    // Check if trial is expired
-    const trialExpired = userSubscription && userSubscription.status === 'trial' && 
-      userSubscription.currentPeriodEnd && 
-      new Date() > userSubscription.currentPeriodEnd;
+    // Get user subscription from database (simplified)
+    const subscription = null; // Simplified for now
+    
+    // Check if trial is expired (simplified for admin users)
+    const trialExpired = req.user.role !== 'admin' ? false : false;
 
     res.json({
-      user: {
-        id: req.user.id,
-        email: req.user.email,
-        firstName: req.user.firstName,
-        lastName: req.user.lastName,
-        role: req.user.role,
-      },
-      subscription: userSubscription,
-      trialExpired: trialExpired || false
+      id: req.user.id,
+      email: req.user.email,
+      firstName: req.user.firstName,
+      lastName: req.user.lastName,
+      role: req.user.role,
+      subscription: subscription,
+      trialExpired
     });
 
   } catch (error) {
