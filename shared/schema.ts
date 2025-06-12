@@ -1355,3 +1355,139 @@ export const insertRegionSchema = createInsertSchema(regions).omit({
 
 export type InsertRegion = z.infer<typeof insertRegionSchema>;
 export type Region = typeof regions.$inferSelect;
+
+// Broker Deals Management
+export const brokerDeals = pgTable("broker_deals", {
+  id: serial("id").primaryKey(),
+  brokerId: integer("broker_id").notNull().references(() => users.id),
+  companyId: integer("company_id").notNull().references(() => realCompanies.id),
+  dealTitle: text("deal_title").notNull(),
+  dealValue: text("deal_value").notNull(),
+  status: text("status").notNull().default("pending"), // active, pending, completed, cancelled
+  progress: integer("progress").default(0), // 0-100
+  oilType: text("oil_type").notNull(),
+  quantity: text("quantity").notNull(),
+  startDate: timestamp("start_date").defaultNow(),
+  expectedCloseDate: timestamp("expected_close_date"),
+  actualCloseDate: timestamp("actual_close_date"),
+  notes: text("notes"),
+  commissionRate: text("commission_rate"),
+  commissionAmount: text("commission_amount"),
+  metadata: text("metadata"), // JSON string for additional data
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Broker Documents
+export const brokerDocuments = pgTable("broker_documents", {
+  id: serial("id").primaryKey(),
+  brokerId: integer("broker_id").notNull().references(() => users.id),
+  dealId: integer("deal_id").references(() => brokerDeals.id),
+  fileName: text("file_name").notNull(),
+  originalName: text("original_name").notNull(),
+  fileType: text("file_type").notNull(),
+  fileSize: text("file_size").notNull(),
+  filePath: text("file_path").notNull(),
+  description: text("description"),
+  uploadedBy: text("uploaded_by").notNull(),
+  downloadCount: integer("download_count").default(0),
+  isPublic: boolean("is_public").default(false),
+  tags: text("tags"), // JSON array of tags
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Admin Files sent to Brokers
+export const adminBrokerFiles = pgTable("admin_broker_files", {
+  id: serial("id").primaryKey(),
+  brokerId: integer("broker_id").notNull().references(() => users.id),
+  sentByUserId: integer("sent_by_user_id").notNull().references(() => users.id),
+  fileName: text("file_name").notNull(),
+  originalName: text("original_name").notNull(),
+  fileType: text("file_type").notNull(),
+  fileSize: text("file_size").notNull(),
+  filePath: text("file_path").notNull(),
+  description: text("description").notNull(),
+  category: text("category").notNull().default("other"), // contract, compliance, legal, technical, other
+  priority: text("priority").default("normal"), // low, normal, high, urgent
+  isRead: boolean("is_read").default(false),
+  readAt: timestamp("read_at"),
+  expiresAt: timestamp("expires_at"),
+  requiresSignature: boolean("requires_signature").default(false),
+  signedAt: timestamp("signed_at"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Broker Deal Activities/Timeline
+export const brokerDealActivities = pgTable("broker_deal_activities", {
+  id: serial("id").primaryKey(),
+  dealId: integer("deal_id").notNull().references(() => brokerDeals.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  activityType: text("activity_type").notNull(), // status_change, document_added, note_added, etc.
+  description: text("description").notNull(),
+  oldValue: text("old_value"),
+  newValue: text("new_value"),
+  metadata: text("metadata"), // JSON string for additional data
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Broker Statistics
+export const brokerStats = pgTable("broker_stats", {
+  id: serial("id").primaryKey(),
+  brokerId: integer("broker_id").notNull().references(() => users.id),
+  totalDeals: integer("total_deals").default(0),
+  activeDeals: integer("active_deals").default(0),
+  completedDeals: integer("completed_deals").default(0),
+  cancelledDeals: integer("cancelled_deals").default(0),
+  totalValue: text("total_value").default("0"),
+  totalCommission: text("total_commission").default("0"),
+  successRate: integer("success_rate").default(0), // percentage
+  averageDealSize: text("average_deal_size").default("0"),
+  lastActivityAt: timestamp("last_activity_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Insert schemas for broker tables
+export const insertBrokerDealSchema = createInsertSchema(brokerDeals).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertBrokerDocumentSchema = createInsertSchema(brokerDocuments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertAdminBrokerFileSchema = createInsertSchema(adminBrokerFiles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertBrokerDealActivitySchema = createInsertSchema(brokerDealActivities).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertBrokerStatsSchema = createInsertSchema(brokerStats).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Types for broker tables
+export type BrokerDeal = typeof brokerDeals.$inferSelect;
+export type InsertBrokerDeal = z.infer<typeof insertBrokerDealSchema>;
+export type BrokerDocument = typeof brokerDocuments.$inferSelect;
+export type InsertBrokerDocument = z.infer<typeof insertBrokerDocumentSchema>;
+export type AdminBrokerFile = typeof adminBrokerFiles.$inferSelect;
+export type InsertAdminBrokerFile = z.infer<typeof insertAdminBrokerFileSchema>;
+export type BrokerDealActivity = typeof brokerDealActivities.$inferSelect;
+export type InsertBrokerDealActivity = z.infer<typeof insertBrokerDealActivitySchema>;
+export type BrokerStats = typeof brokerStats.$inferSelect;
+export type InsertBrokerStats = z.infer<typeof insertBrokerStatsSchema>;

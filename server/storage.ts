@@ -1,4 +1,4 @@
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { db, getActiveDb } from "./db";
 import {
   users, vessels, refineries, progressEvents, brokers, stats as statsTable, ports, 
@@ -7,6 +7,7 @@ import {
   subscriptionPlans, subscriptions, paymentMethods, invoices, landingPageContent,
   vesselDocuments, professionalDocuments, oilTypes,
   realCompanies, fakeCompanies,
+  brokerDeals, brokerDocuments, adminBrokerFiles, brokerDealActivities, brokerStats,
   User, InsertUser, 
   Vessel, InsertVessel,
   Refinery, InsertRefinery,
@@ -20,6 +21,11 @@ import {
   Company, InsertCompany,
   RealCompany, InsertRealCompany,
   FakeCompany, InsertFakeCompany,
+  BrokerDeal, InsertBrokerDeal,
+  BrokerDocument, InsertBrokerDocument,
+  AdminBrokerFile, InsertAdminBrokerFile,
+  BrokerDealActivity, InsertBrokerDealActivity,
+  BrokerStats, InsertBrokerStats,
   BrokerCompany, InsertBrokerCompany,
   CompanyPartnership, InsertCompanyPartnership,
   UserBrokerConnection, InsertUserBrokerConnection,
@@ -1210,6 +1216,234 @@ export class DatabaseStorage implements IStorage {
   async deleteFakeCompany(id: number): Promise<boolean> {
     await db.delete(fakeCompanies).where(eq(fakeCompanies.id, id));
     return true;
+  }
+
+  // Broker Deals Methods
+  async getBrokerDeals(brokerId: number): Promise<(BrokerDeal & { companyName: string; documentsCount: number })[]> {
+    const results = await db
+      .select({
+        id: brokerDeals.id,
+        brokerId: brokerDeals.brokerId,
+        companyId: brokerDeals.companyId,
+        dealTitle: brokerDeals.dealTitle,
+        dealValue: brokerDeals.dealValue,
+        status: brokerDeals.status,
+        progress: brokerDeals.progress,
+        oilType: brokerDeals.oilType,
+        quantity: brokerDeals.quantity,
+        startDate: brokerDeals.startDate,
+        expectedCloseDate: brokerDeals.expectedCloseDate,
+        actualCloseDate: brokerDeals.actualCloseDate,
+        notes: brokerDeals.notes,
+        commissionRate: brokerDeals.commissionRate,
+        commissionAmount: brokerDeals.commissionAmount,
+        metadata: brokerDeals.metadata,
+        createdAt: brokerDeals.createdAt,
+        updatedAt: brokerDeals.updatedAt,
+        companyName: realCompanies.name,
+        documentsCount: sql<number>`COALESCE(doc_count.count, 0)`,
+      })
+      .from(brokerDeals)
+      .leftJoin(realCompanies, eq(brokerDeals.companyId, realCompanies.id))
+      .leftJoin(
+        db.select({ dealId: brokerDocuments.dealId, count: sql<number>`count(*)` })
+          .from(brokerDocuments)
+          .groupBy(brokerDocuments.dealId)
+          .as('doc_count'),
+        eq(brokerDeals.id, sql`doc_count.deal_id`)
+      )
+      .where(eq(brokerDeals.brokerId, brokerId))
+      .orderBy(brokerDeals.createdAt);
+
+    return results as (BrokerDeal & { companyName: string; documentsCount: number })[];
+  }
+
+  async createBrokerDeal(deal: InsertBrokerDeal): Promise<BrokerDeal> {
+    const [newDeal] = await db.insert(brokerDeals).values(deal).returning();
+    return newDeal;
+  }
+
+  async updateBrokerDeal(id: number, deal: Partial<InsertBrokerDeal>): Promise<BrokerDeal | undefined> {
+    const [updatedDeal] = await db
+      .update(brokerDeals)
+      .set({ ...deal, updatedAt: new Date() })
+      .where(eq(brokerDeals.id, id))
+      .returning();
+    return updatedDeal || undefined;
+  }
+
+  async deleteBrokerDeal(id: number): Promise<boolean> {
+    await db.delete(brokerDeals).where(eq(brokerDeals.id, id));
+    return true;
+  }
+
+  // Broker Documents Methods
+  async getBrokerDocuments(brokerId: number): Promise<BrokerDocument[]> {
+    return await db
+      .select()
+      .from(brokerDocuments)
+      .where(eq(brokerDocuments.brokerId, brokerId))
+      .orderBy(brokerDocuments.createdAt);
+  }
+
+  async getBrokerDocumentsByDeal(dealId: number): Promise<BrokerDocument[]> {
+    return await db
+      .select()
+      .from(brokerDocuments)
+      .where(eq(brokerDocuments.dealId, dealId))
+      .orderBy(brokerDocuments.createdAt);
+  }
+
+  async createBrokerDocument(document: InsertBrokerDocument): Promise<BrokerDocument> {
+    const [newDocument] = await db.insert(brokerDocuments).values(document).returning();
+    return newDocument;
+  }
+
+  async incrementDocumentDownloadCount(id: number): Promise<void> {
+    await db
+      .update(brokerDocuments)
+      .set({ downloadCount: sql`${brokerDocuments.downloadCount} + 1` })
+      .where(eq(brokerDocuments.id, id));
+  }
+
+  async deleteBrokerDocument(id: number): Promise<boolean> {
+    await db.delete(brokerDocuments).where(eq(brokerDocuments.id, id));
+    return true;
+  }
+
+  // Admin Broker Files Methods
+  async getAdminBrokerFiles(brokerId: number): Promise<(AdminBrokerFile & { sentByName: string })[]> {
+    const results = await db
+      .select({
+        id: adminBrokerFiles.id,
+        brokerId: adminBrokerFiles.brokerId,
+        sentByUserId: adminBrokerFiles.sentByUserId,
+        fileName: adminBrokerFiles.fileName,
+        originalName: adminBrokerFiles.originalName,
+        fileType: adminBrokerFiles.fileType,
+        fileSize: adminBrokerFiles.fileSize,
+        filePath: adminBrokerFiles.filePath,
+        description: adminBrokerFiles.description,
+        category: adminBrokerFiles.category,
+        priority: adminBrokerFiles.priority,
+        isRead: adminBrokerFiles.isRead,
+        readAt: adminBrokerFiles.readAt,
+        expiresAt: adminBrokerFiles.expiresAt,
+        requiresSignature: adminBrokerFiles.requiresSignature,
+        signedAt: adminBrokerFiles.signedAt,
+        notes: adminBrokerFiles.notes,
+        createdAt: adminBrokerFiles.createdAt,
+        updatedAt: adminBrokerFiles.updatedAt,
+        sentByName: sql<string>`CONCAT(${users.firstName}, ' ', ${users.lastName})`,
+      })
+      .from(adminBrokerFiles)
+      .leftJoin(users, eq(adminBrokerFiles.sentByUserId, users.id))
+      .where(eq(adminBrokerFiles.brokerId, brokerId))
+      .orderBy(adminBrokerFiles.createdAt);
+
+    return results as (AdminBrokerFile & { sentByName: string })[];
+  }
+
+  async createAdminBrokerFile(file: InsertAdminBrokerFile): Promise<AdminBrokerFile> {
+    const [newFile] = await db.insert(adminBrokerFiles).values(file).returning();
+    return newFile;
+  }
+
+  async markAdminFileAsRead(fileId: number): Promise<void> {
+    await db
+      .update(adminBrokerFiles)
+      .set({ isRead: true, readAt: new Date() })
+      .where(eq(adminBrokerFiles.id, fileId));
+  }
+
+  async deleteAdminBrokerFile(id: number): Promise<boolean> {
+    await db.delete(adminBrokerFiles).where(eq(adminBrokerFiles.id, id));
+    return true;
+  }
+
+  // Broker Statistics Methods
+  async getBrokerStats(brokerId: number): Promise<BrokerStats | undefined> {
+    const [stats] = await db
+      .select()
+      .from(brokerStats)
+      .where(eq(brokerStats.brokerId, brokerId));
+    return stats || undefined;
+  }
+
+  async updateBrokerStats(brokerId: number): Promise<BrokerStats> {
+    // Calculate fresh statistics
+    const deals = await db
+      .select()
+      .from(brokerDeals)
+      .where(eq(brokerDeals.brokerId, brokerId));
+
+    const totalDeals = deals.length;
+    const activeDeals = deals.filter(d => d.status === 'active').length;
+    const completedDeals = deals.filter(d => d.status === 'completed').length;
+    const cancelledDeals = deals.filter(d => d.status === 'cancelled').length;
+    
+    const totalValue = deals.reduce((sum, deal) => {
+      const value = parseFloat(deal.dealValue.replace(/[^0-9.-]+/g, '')) || 0;
+      return sum + value;
+    }, 0).toString();
+
+    const successRate = totalDeals > 0 ? Math.round((completedDeals / totalDeals) * 100) : 0;
+    const averageDealSize = totalDeals > 0 ? (parseFloat(totalValue) / totalDeals).toString() : '0';
+
+    const statsData: Partial<InsertBrokerStats> = {
+      brokerId,
+      totalDeals,
+      activeDeals,
+      completedDeals,
+      cancelledDeals,
+      totalValue,
+      successRate,
+      averageDealSize,
+      lastActivityAt: new Date(),
+    };
+
+    // Upsert statistics
+    const [updatedStats] = await db
+      .insert(brokerStats)
+      .values(statsData as InsertBrokerStats)
+      .onConflictDoUpdate({
+        target: brokerStats.brokerId,
+        set: {
+          ...statsData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+
+    return updatedStats;
+  }
+
+  // Broker Deal Activities Methods
+  async createBrokerDealActivity(activity: InsertBrokerDealActivity): Promise<BrokerDealActivity> {
+    const [newActivity] = await db.insert(brokerDealActivities).values(activity).returning();
+    return newActivity;
+  }
+
+  async getBrokerDealActivities(dealId: number): Promise<(BrokerDealActivity & { userName: string })[]> {
+    const results = await db
+      .select({
+        id: brokerDealActivities.id,
+        dealId: brokerDealActivities.dealId,
+        userId: brokerDealActivities.userId,
+        activityType: brokerDealActivities.activityType,
+        description: brokerDealActivities.description,
+        oldValue: brokerDealActivities.oldValue,
+        newValue: brokerDealActivities.newValue,
+        metadata: brokerDealActivities.metadata,
+        createdAt: brokerDealActivities.createdAt,
+        userName: sql<string>`CONCAT(${users.firstName}, ' ', ${users.lastName})`,
+      })
+      .from(brokerDealActivities)
+      .leftJoin(users, eq(brokerDealActivities.userId, users.id))
+      .where(eq(brokerDealActivities.dealId, dealId))
+      .orderBy(brokerDealActivities.createdAt);
+
+    return results as (BrokerDealActivity & { userName: string })[];
   }
 }
 
