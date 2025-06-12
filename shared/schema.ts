@@ -1319,7 +1319,6 @@ export type InsertLandingPageBlock = z.infer<typeof insertLandingPageBlockSchema
 export const regions = pgTable("regions", {
   id: serial("id").primaryKey(),
   name: text("name").notNull().unique(),
-  displayName: text("display_name").notNull(),
   code: text("code").notNull().unique(), // APAC, EMEA, AMERICAS, etc.
   parentRegion: text("parent_region"), // For sub-regions
   countries: text("countries").notNull(), // JSON array of country codes

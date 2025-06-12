@@ -233,7 +233,7 @@ export default function RegionManagement() {
     setFormData({
       ...formData,
       name: predefined.name.toLowerCase().replace(/[^a-z0-9]/g, '_'),
-      displayName: predefined.name,
+
       code: predefined.code,
       description: predefined.description,
     });
@@ -631,7 +631,7 @@ export default function RegionManagement() {
                         <div>
                           <div className="flex items-center gap-2">
                             <Globe className="h-4 w-4 text-blue-500" />
-                            <span className="font-medium">{region.displayName}</span>
+                            <span className="font-medium">{region.name}</span>
                           </div>
                           <div className="text-sm text-muted-foreground">{region.name}</div>
                           <Badge variant="outline" className="text-xs mt-1">
