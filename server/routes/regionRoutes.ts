@@ -27,7 +27,7 @@ router.get('/', async (req: Request, res: Response) => {
     const conditions = [];
     
     if (search) {
-      conditions.push(like(regions.displayName, `%${search}%`));
+      conditions.push(like(regions.name, `%${search}%`));
     }
     
     if (parentRegion && parentRegion !== 'all') {
