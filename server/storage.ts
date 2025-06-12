@@ -7,7 +7,6 @@ import {
   subscriptionPlans, subscriptions, paymentMethods, invoices, landingPageContent,
   vesselDocuments, professionalDocuments, oilTypes,
   realCompanies, fakeCompanies,
-  brokerDeals, brokerDocuments, oilMarketAlerts,
   User, InsertUser, 
   Vessel, InsertVessel,
   Refinery, InsertRefinery,
@@ -35,10 +34,7 @@ import {
   landingPageSections, landingPageImages, landingPageBlocks,
   LandingPageSection, InsertLandingPageSection,
   LandingPageImage, InsertLandingPageImage,
-  LandingPageBlock, InsertLandingPageBlock,
-  BrokerDeal, InsertBrokerDeal,
-  BrokerDocument, InsertBrokerDocument,
-  OilMarketAlert, InsertOilMarketAlert
+  LandingPageBlock, InsertLandingPageBlock
 } from "@shared/schema";
 
 // Storage interface with CRUD methods
@@ -1214,151 +1210,6 @@ export class DatabaseStorage implements IStorage {
   async deleteFakeCompany(id: number): Promise<boolean> {
     await db.delete(fakeCompanies).where(eq(fakeCompanies.id, id));
     return true;
-  }
-
-  // Broker Deals Methods
-  async getBrokerDeals(brokerId?: number): Promise<(BrokerDeal & { fakeCompany: FakeCompany & { realCompany: RealCompany } })[]> {
-    let query = db
-      .select({
-        id: brokerDeals.id,
-        brokerId: brokerDeals.brokerId,
-        fakeCompanyId: brokerDeals.fakeCompanyId,
-        status: brokerDeals.status,
-        dealValue: brokerDeals.dealValue,
-        notes: brokerDeals.notes,
-        adminNotes: brokerDeals.adminNotes,
-        createdAt: brokerDeals.createdAt,
-        updatedAt: brokerDeals.updatedAt,
-        fakeCompany: {
-          id: fakeCompanies.id,
-          realCompanyId: fakeCompanies.realCompanyId,
-          generatedName: fakeCompanies.generatedName,
-          createdAt: fakeCompanies.createdAt,
-          updatedAt: fakeCompanies.updatedAt,
-          realCompany: {
-            id: realCompanies.id,
-            name: realCompanies.name,
-            industry: realCompanies.industry,
-            address: realCompanies.address,
-            logo: realCompanies.logo,
-            description: realCompanies.description,
-            website: realCompanies.website,
-            phone: realCompanies.phone,
-            email: realCompanies.email,
-            founded: realCompanies.founded,
-            employees: realCompanies.employees,
-            revenue: realCompanies.revenue,
-            headquarters: realCompanies.headquarters,
-            ceo: realCompanies.ceo,
-            createdAt: realCompanies.createdAt,
-            updatedAt: realCompanies.updatedAt,
-          }
-        }
-      })
-      .from(brokerDeals)
-      .leftJoin(fakeCompanies, eq(brokerDeals.fakeCompanyId, fakeCompanies.id))
-      .leftJoin(realCompanies, eq(fakeCompanies.realCompanyId, realCompanies.id));
-
-    if (brokerId) {
-      query = query.where(eq(brokerDeals.brokerId, brokerId));
-    }
-
-    return await query.orderBy(brokerDeals.createdAt);
-  }
-
-  async createBrokerDeal(deal: InsertBrokerDeal): Promise<BrokerDeal> {
-    const [newDeal] = await db.insert(brokerDeals).values(deal).returning();
-    return newDeal;
-  }
-
-  async updateBrokerDeal(id: number, deal: Partial<InsertBrokerDeal>): Promise<BrokerDeal | undefined> {
-    const [updatedDeal] = await db
-      .update(brokerDeals)
-      .set({ ...deal, updatedAt: new Date() })
-      .where(eq(brokerDeals.id, id))
-      .returning();
-    return updatedDeal || undefined;
-  }
-
-  async deleteBrokerDeal(id: number): Promise<boolean> {
-    await db.delete(brokerDeals).where(eq(brokerDeals.id, id));
-    return true;
-  }
-
-  // Broker Documents Methods
-  async getBrokerDocuments(brokerId?: number): Promise<BrokerDocument[]> {
-    let query = db.select().from(brokerDocuments);
-    
-    if (brokerId) {
-      query = query.where(eq(brokerDocuments.brokerId, brokerId));
-    }
-
-    return await query.orderBy(brokerDocuments.createdAt);
-  }
-
-  async createBrokerDocument(document: InsertBrokerDocument): Promise<BrokerDocument> {
-    const [newDocument] = await db.insert(brokerDocuments).values(document).returning();
-    return newDocument;
-  }
-
-  async markDocumentAsRead(documentId: number): Promise<boolean> {
-    await db
-      .update(brokerDocuments)
-      .set({ isRead: true })
-      .where(eq(brokerDocuments.id, documentId));
-    return true;
-  }
-
-  async deleteBrokerDocument(id: number): Promise<boolean> {
-    await db.delete(brokerDocuments).where(eq(brokerDocuments.id, id));
-    return true;
-  }
-
-  // Oil Market Alerts Methods
-  async getOilMarketAlerts(brokerId?: number): Promise<OilMarketAlert[]> {
-    let query = db.select().from(oilMarketAlerts).where(eq(oilMarketAlerts.isActive, true));
-
-    const alerts = await query.orderBy(oilMarketAlerts.createdAt);
-
-    // Filter alerts based on target brokers if brokerId is provided
-    if (brokerId) {
-      return alerts.filter(alert => {
-        if (!alert.targetBrokers) return true; // Show to all brokers if no target specified
-        try {
-          const targetIds = JSON.parse(alert.targetBrokers);
-          return targetIds.includes(brokerId);
-        } catch {
-          return true; // Show if JSON parsing fails
-        }
-      });
-    }
-
-    return alerts;
-  }
-
-  async createOilMarketAlert(alert: InsertOilMarketAlert): Promise<OilMarketAlert> {
-    const [newAlert] = await db.insert(oilMarketAlerts).values(alert).returning();
-    return newAlert;
-  }
-
-  async updateOilMarketAlert(id: number, alert: Partial<InsertOilMarketAlert>): Promise<OilMarketAlert | undefined> {
-    const [updatedAlert] = await db
-      .update(oilMarketAlerts)
-      .set(alert)
-      .where(eq(oilMarketAlerts.id, id))
-      .returning();
-    return updatedAlert || undefined;
-  }
-
-  async deleteOilMarketAlert(id: number): Promise<boolean> {
-    await db.delete(oilMarketAlerts).where(eq(oilMarketAlerts.id, id));
-    return true;
-  }
-
-  // Get all brokers (users with broker role or broker plan)
-  async getAllBrokers(): Promise<User[]> {
-    // For now, return all users since we don't have broker role/plan logic yet
-    return await db.select().from(users).orderBy(users.createdAt);
   }
 }
 
