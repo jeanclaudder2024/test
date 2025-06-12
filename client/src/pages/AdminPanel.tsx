@@ -68,13 +68,13 @@ export default function AdminPanel() {
                 <div className="flex items-center space-x-2 bg-blue-50 px-3 py-2 rounded-lg">
                   <Activity className="h-4 w-4 text-blue-600" />
                   <span className="text-sm font-medium text-blue-800">
-                    {(stats as any).totalUsers || 0} Users
+                    {stats.totalUsers || 0} Users
                   </span>
                 </div>
                 <div className="flex items-center space-x-2 bg-green-50 px-3 py-2 rounded-lg">
                   <Ship className="h-4 w-4 text-green-600" />
                   <span className="text-sm font-medium text-green-800">
-                    {(stats as any).totalVessels || 0} Vessels
+                    {stats.totalVessels || 0} Vessels
                   </span>
                 </div>
               </div>
@@ -193,7 +193,7 @@ export default function AdminPanel() {
               value="filters" 
               className="flex items-center gap-2 data-[state=active]:bg-orange-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-200 hover:bg-orange-50 rounded-lg"
             >
-              <Settings className="h-4 w-4" />
+              <SettingsIcon className="h-4 w-4" />
               <span className="hidden xl:inline font-medium">Filters</span>
               <span className="xl:hidden">Filters</span>
             </TabsTrigger>
@@ -463,7 +463,9 @@ export default function AdminPanel() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Settings />
+              <div className="text-center py-8 text-slate-500">
+                System settings configuration coming soon
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
