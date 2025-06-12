@@ -102,7 +102,14 @@ export default function BrokerDashboard() {
   });
 
   // Fetch broker statistics
-  const { data: stats } = useQuery({
+  const { data: stats } = useQuery<{
+    activeDeals: number;
+    totalValue: string;
+    successRate: number;
+    completionRate: number;
+    averageDealSize: string;
+    totalCommission: string;
+  }>({
     queryKey: ['/api/broker/stats'],
     retry: false,
   });

@@ -10,6 +10,7 @@ import RefineryDetail from "@/pages/RefineryDetail";
 import Ports from "@/pages/Ports";
 import PortDetail from "@/pages/PortDetail";
 import Brokers from "@/pages/Brokers";
+import BrokerDashboard from "@/pages/BrokerDashboard";
 
 import Documents from "@/pages/Documents";
 import AIAssistantPage from "@/pages/AIAssistant";
@@ -53,7 +54,7 @@ function ProtectedRoutes() {
         <Switch>
           <Route path="/" component={Companies} />
           <Route path="/dashboard" component={Companies} />
-          <Route path="/broker-dashboard" component={Companies} />
+          <Route path="/broker-dashboard" component={BrokerDashboard} />
           <Route path="/vessels" component={Vessels} />
           <Route path="/vessels/:id/documents" component={VesselDocuments} />
           <Route path="/vessels/:id" component={VesselDetail} />

@@ -7875,5 +7875,283 @@ Note: This document contains real vessel operational data and should be treated 
   // The vessel tracking system automatically updates positions every 30 minutes
   console.log('🚢 Vessel tracking system is now fully operational');
 
+  // Broker Dashboard API Routes
+  
+  // Get broker deals
+  app.get("/api/broker/deals", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const deals = await storage.getBrokerDeals(userId);
+      res.json(deals);
+    } catch (error) {
+      console.error("Error fetching broker deals:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch broker deals",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Get broker documents
+  app.get("/api/broker/documents", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const documents = await storage.getBrokerDocuments(userId);
+      res.json(documents);
+    } catch (error) {
+      console.error("Error fetching broker documents:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch broker documents",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Get admin files sent to broker
+  app.get("/api/broker/admin-files", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const files = await storage.getAdminBrokerFiles(userId);
+      res.json(files);
+    } catch (error) {
+      console.error("Error fetching admin broker files:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch admin files",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Get broker statistics
+  app.get("/api/broker/stats", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      let stats = await storage.getBrokerStats(userId);
+      if (!stats) {
+        // Create initial stats if they don't exist
+        stats = await storage.updateBrokerStats(userId);
+      }
+      
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching broker stats:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch broker statistics",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Upload broker document
+  app.post("/api/broker/documents/upload", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      // For now, simulate file upload
+      const { dealId, description } = req.body;
+      
+      const document = await storage.createBrokerDocument({
+        brokerId: userId,
+        dealId: dealId ? parseInt(dealId) : undefined,
+        fileName: `document_${Date.now()}.pdf`,
+        originalName: "uploaded_document.pdf",
+        fileType: "application/pdf",
+        fileSize: "2.5 MB",
+        filePath: `/uploads/broker/${userId}/document_${Date.now()}.pdf`,
+        description: description || "Uploaded document",
+        uploadedBy: req.user?.email || "Unknown",
+        downloadCount: 0,
+        isPublic: false,
+        tags: null
+      });
+
+      res.status(201).json(document);
+    } catch (error) {
+      console.error("Error uploading broker document:", error);
+      res.status(500).json({ 
+        message: "Failed to upload document",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Download broker document
+  app.get("/api/broker/documents/:id/download", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      const documentId = parseInt(req.params.id);
+      
+      if (!userId || isNaN(documentId)) {
+        return res.status(400).json({ message: "Invalid parameters" });
+      }
+
+      // Increment download count
+      await storage.incrementDocumentDownloadCount(documentId);
+
+      // For now, return a simple success response
+      res.json({ success: true, message: "Download initiated" });
+    } catch (error) {
+      console.error("Error downloading broker document:", error);
+      res.status(500).json({ 
+        message: "Failed to download document",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Mark admin file as read
+  app.post("/api/broker/admin-files/:id/mark-read", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      const fileId = parseInt(req.params.id);
+      
+      if (!userId || isNaN(fileId)) {
+        return res.status(400).json({ message: "Invalid parameters" });
+      }
+
+      await storage.markAdminFileAsRead(fileId);
+      res.json({ success: true, message: "File marked as read" });
+    } catch (error) {
+      console.error("Error marking admin file as read:", error);
+      res.status(500).json({ 
+        message: "Failed to mark file as read",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Create new broker deal
+  app.post("/api/broker/deals", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const dealData = {
+        brokerId: userId,
+        companyId: req.body.companyId,
+        dealTitle: req.body.dealTitle,
+        dealValue: req.body.dealValue,
+        status: req.body.status || "pending",
+        progress: req.body.progress || 0,
+        oilType: req.body.oilType,
+        quantity: req.body.quantity,
+        expectedCloseDate: req.body.expectedCloseDate ? new Date(req.body.expectedCloseDate) : undefined,
+        notes: req.body.notes,
+        commissionRate: req.body.commissionRate,
+        commissionAmount: req.body.commissionAmount,
+        metadata: req.body.metadata
+      };
+
+      const deal = await storage.createBrokerDeal(dealData);
+      
+      // Update broker statistics
+      await storage.updateBrokerStats(userId);
+      
+      res.status(201).json(deal);
+    } catch (error) {
+      console.error("Error creating broker deal:", error);
+      res.status(500).json({ 
+        message: "Failed to create deal",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Update broker deal
+  app.put("/api/broker/deals/:id", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      const dealId = parseInt(req.params.id);
+      
+      if (!userId || isNaN(dealId)) {
+        return res.status(400).json({ message: "Invalid parameters" });
+      }
+
+      const dealData = {
+        dealTitle: req.body.dealTitle,
+        dealValue: req.body.dealValue,
+        status: req.body.status,
+        progress: req.body.progress,
+        oilType: req.body.oilType,
+        quantity: req.body.quantity,
+        expectedCloseDate: req.body.expectedCloseDate ? new Date(req.body.expectedCloseDate) : undefined,
+        actualCloseDate: req.body.actualCloseDate ? new Date(req.body.actualCloseDate) : undefined,
+        notes: req.body.notes,
+        commissionRate: req.body.commissionRate,
+        commissionAmount: req.body.commissionAmount,
+        metadata: req.body.metadata
+      };
+
+      const deal = await storage.updateBrokerDeal(dealId, dealData);
+      
+      // Update broker statistics
+      await storage.updateBrokerStats(userId);
+      
+      res.json(deal);
+    } catch (error) {
+      console.error("Error updating broker deal:", error);
+      res.status(500).json({ 
+        message: "Failed to update deal",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Send admin file to broker (Admin only)
+  app.post("/api/admin/broker-files", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const adminUserId = req.user?.id;
+      if (!adminUserId) {
+        return res.status(401).json({ message: "Admin not authenticated" });
+      }
+
+      const fileData = {
+        brokerId: req.body.brokerId,
+        sentByUserId: adminUserId,
+        fileName: `admin_file_${Date.now()}.pdf`,
+        originalName: req.body.originalName || "admin_document.pdf",
+        fileType: req.body.fileType || "application/pdf",
+        fileSize: req.body.fileSize || "1.2 MB",
+        filePath: `/uploads/admin/broker/${req.body.brokerId}/file_${Date.now()}.pdf`,
+        description: req.body.description,
+        category: req.body.category || "other",
+        priority: req.body.priority || "normal",
+        requiresSignature: req.body.requiresSignature || false,
+        expiresAt: req.body.expiresAt ? new Date(req.body.expiresAt) : undefined,
+        notes: req.body.notes
+      };
+
+      const file = await storage.createAdminBrokerFile(fileData);
+      res.status(201).json(file);
+    } catch (error) {
+      console.error("Error sending admin file to broker:", error);
+      res.status(500).json({ 
+        message: "Failed to send file to broker",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   return httpServer;
 }
