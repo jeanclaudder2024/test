@@ -8263,5 +8263,255 @@ Note: This document contains real vessel operational data and should be treated 
     }
   });
 
+  // ==========================================
+  // OIL TYPES FILTER MANAGEMENT API ROUTES
+  // ==========================================
+
+  // Get all oil types
+  apiRouter.get("/admin/oil-types", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const oilTypes = await storage.getOilTypes();
+      res.json(oilTypes);
+    } catch (error) {
+      console.error("Error fetching oil types:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch oil types",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Get oil type by ID
+  apiRouter.get("/admin/oil-types/:id", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const oilTypeId = parseInt(req.params.id);
+      
+      if (isNaN(oilTypeId)) {
+        return res.status(400).json({ message: "Invalid oil type ID" });
+      }
+
+      const oilType = await storage.getOilTypeById(oilTypeId);
+      
+      if (!oilType) {
+        return res.status(404).json({ message: "Oil type not found" });
+      }
+
+      res.json(oilType);
+    } catch (error) {
+      console.error("Error fetching oil type:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch oil type",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Create new oil type
+  apiRouter.post("/admin/oil-types", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const validation = insertOilTypeSchema.safeParse(req.body);
+      
+      if (!validation.success) {
+        return res.status(400).json({ 
+          message: "Invalid oil type data",
+          errors: validation.error.errors
+        });
+      }
+
+      const oilType = await storage.createOilType(validation.data);
+      res.status(201).json(oilType);
+    } catch (error) {
+      console.error("Error creating oil type:", error);
+      res.status(500).json({ 
+        message: "Failed to create oil type",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Update oil type
+  apiRouter.put("/admin/oil-types/:id", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const oilTypeId = parseInt(req.params.id);
+      
+      if (isNaN(oilTypeId)) {
+        return res.status(400).json({ message: "Invalid oil type ID" });
+      }
+
+      const validation = insertOilTypeSchema.partial().safeParse(req.body);
+      
+      if (!validation.success) {
+        return res.status(400).json({ 
+          message: "Invalid oil type data",
+          errors: validation.error.errors
+        });
+      }
+
+      const oilType = await storage.updateOilType(oilTypeId, validation.data);
+      
+      if (!oilType) {
+        return res.status(404).json({ message: "Oil type not found" });
+      }
+
+      res.json(oilType);
+    } catch (error) {
+      console.error("Error updating oil type:", error);
+      res.status(500).json({ 
+        message: "Failed to update oil type",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Delete oil type
+  apiRouter.delete("/admin/oil-types/:id", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const oilTypeId = parseInt(req.params.id);
+      
+      if (isNaN(oilTypeId)) {
+        return res.status(400).json({ message: "Invalid oil type ID" });
+      }
+
+      const deleted = await storage.deleteOilType(oilTypeId);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "Oil type not found" });
+      }
+
+      res.json({ message: "Oil type deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting oil type:", error);
+      res.status(500).json({ 
+        message: "Failed to delete oil type",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // ==========================================
+  // REGIONS FILTER MANAGEMENT API ROUTES
+  // ==========================================
+
+  // Get all regions
+  apiRouter.get("/admin/regions", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const regions = await storage.getRegions();
+      res.json(regions);
+    } catch (error) {
+      console.error("Error fetching regions:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch regions",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Get region by ID
+  apiRouter.get("/admin/regions/:id", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const regionId = parseInt(req.params.id);
+      
+      if (isNaN(regionId)) {
+        return res.status(400).json({ message: "Invalid region ID" });
+      }
+
+      const region = await storage.getRegionById(regionId);
+      
+      if (!region) {
+        return res.status(404).json({ message: "Region not found" });
+      }
+
+      res.json(region);
+    } catch (error) {
+      console.error("Error fetching region:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch region",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Create new region
+  apiRouter.post("/admin/regions", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const validation = insertRegionSchema.safeParse(req.body);
+      
+      if (!validation.success) {
+        return res.status(400).json({ 
+          message: "Invalid region data",
+          errors: validation.error.errors
+        });
+      }
+
+      const region = await storage.createRegion(validation.data);
+      res.status(201).json(region);
+    } catch (error) {
+      console.error("Error creating region:", error);
+      res.status(500).json({ 
+        message: "Failed to create region",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Update region
+  apiRouter.put("/admin/regions/:id", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const regionId = parseInt(req.params.id);
+      
+      if (isNaN(regionId)) {
+        return res.status(400).json({ message: "Invalid region ID" });
+      }
+
+      const validation = insertRegionSchema.partial().safeParse(req.body);
+      
+      if (!validation.success) {
+        return res.status(400).json({ 
+          message: "Invalid region data",
+          errors: validation.error.errors
+        });
+      }
+
+      const region = await storage.updateRegion(regionId, validation.data);
+      
+      if (!region) {
+        return res.status(404).json({ message: "Region not found" });
+      }
+
+      res.json(region);
+    } catch (error) {
+      console.error("Error updating region:", error);
+      res.status(500).json({ 
+        message: "Failed to update region",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Delete region
+  apiRouter.delete("/admin/regions/:id", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const regionId = parseInt(req.params.id);
+      
+      if (isNaN(regionId)) {
+        return res.status(400).json({ message: "Invalid region ID" });
+      }
+
+      const deleted = await storage.deleteRegion(regionId);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "Region not found" });
+      }
+
+      res.json({ message: "Region deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting region:", error);
+      res.status(500).json({ 
+        message: "Failed to delete region",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   return httpServer;
 }
