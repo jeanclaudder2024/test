@@ -225,58 +225,58 @@ export default function BrokerDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-orange-900">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-orange-50">
       <div className="container mx-auto p-6">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">Broker Dashboard</h1>
-          <p className="text-gray-300">Manage your deals, documents, and client communications</p>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Broker Dashboard</h1>
+          <p className="text-gray-600">Manage your deals, documents, and client communications</p>
         </div>
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-gray-800/90 border-gray-700">
+          <Card className="bg-white/90 border-gray-200 shadow-lg">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-300">Active Deals</p>
-                  <p className="text-2xl font-bold text-white">{stats?.activeDeals || 0}</p>
+                  <p className="text-sm font-medium text-gray-600">Active Deals</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats?.activeDeals || 0}</p>
                 </div>
                 <Handshake className="h-8 w-8 text-orange-500" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gray-800/90 border-gray-700">
+          <Card className="bg-white/90 border-gray-200 shadow-lg">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-300">Total Value</p>
-                  <p className="text-2xl font-bold text-white">${stats?.totalValue || '0'}</p>
+                  <p className="text-sm font-medium text-gray-600">Total Value</p>
+                  <p className="text-2xl font-bold text-gray-900">${stats?.totalValue || '0'}</p>
                 </div>
                 <DollarSign className="h-8 w-8 text-orange-500" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gray-800/90 border-gray-700">
+          <Card className="bg-white/90 border-gray-200 shadow-lg">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-300">Documents</p>
-                  <p className="text-2xl font-bold text-white">{documents.length}</p>
+                  <p className="text-sm font-medium text-gray-600">Documents</p>
+                  <p className="text-2xl font-bold text-gray-900">{documents.length}</p>
                 </div>
                 <FileText className="h-8 w-8 text-orange-500" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gray-800/90 border-gray-700">
+          <Card className="bg-white/90 border-gray-200 shadow-lg">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-300">Success Rate</p>
-                  <p className="text-2xl font-bold text-white">{stats?.successRate || '0'}%</p>
+                  <p className="text-sm font-medium text-gray-600">Success Rate</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats?.successRate || '0'}%</p>
                 </div>
                 <TrendingUp className="h-8 w-8 text-orange-500" />
               </div>
