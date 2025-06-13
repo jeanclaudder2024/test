@@ -871,6 +871,7 @@ export const documents = pgTable("documents", {
   category: text("category").default("general"),
   tags: text("tags"),
   isTemplate: boolean("is_template").default(false),
+  isActive: boolean("is_active").default(true),
   createdBy: integer("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
