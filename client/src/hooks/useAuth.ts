@@ -20,7 +20,7 @@ export const useAuth = () => {
 
   // Check for existing token on mount
   useEffect(() => {
-    const token = localStorage.getItem('auth_token');
+    const token = localStorage.getItem('authToken');
     if (token) {
       fetchCurrentUser();
     } else {
@@ -30,7 +30,7 @@ export const useAuth = () => {
 
   const fetchCurrentUser = async () => {
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem('authToken');
       if (!token) {
         setAuthState(prev => ({ ...prev, isLoading: false }));
         return;
@@ -53,7 +53,7 @@ export const useAuth = () => {
         });
       } else {
         // Token is invalid, remove it
-        localStorage.removeItem('auth_token');
+        localStorage.removeItem('authToken');
         setAuthState({
           user: null,
           subscription: null,
@@ -64,7 +64,7 @@ export const useAuth = () => {
       }
     } catch (error) {
       console.error('Error fetching current user:', error);
-      localStorage.removeItem('auth_token');
+      localStorage.removeItem('authToken');
       setAuthState({
         user: null,
         subscription: null,
@@ -94,7 +94,7 @@ export const useAuth = () => {
       const data = await response.json();
       
       // Store token
-      localStorage.setItem('auth_token', data.token);
+      localStorage.setItem('authToken', data.token);
       
       // Update state
       setAuthState({
@@ -130,7 +130,7 @@ export const useAuth = () => {
       const data = await response.json();
       
       // Store token
-      localStorage.setItem('auth_token', data.token);
+      localStorage.setItem('authToken', data.token);
       
       // Update state
       setAuthState({
@@ -155,7 +155,7 @@ export const useAuth = () => {
       await fetch('/api/auth/logout', { 
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
         }
       });
     } catch (error) {
@@ -163,7 +163,7 @@ export const useAuth = () => {
     }
     
     // Clear everything locally
-    localStorage.removeItem('auth_token');
+    localStorage.removeItem('authToken');
     localStorage.clear(); // Clear all localStorage
     
     // Reset auth state
