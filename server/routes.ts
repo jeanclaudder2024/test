@@ -3039,86 +3039,9 @@ Only use authentic, real-world data for existing refineries.`;
     }
   });
 
-  // Document endpoints
-  apiRouter.get("/documents", async (req, res) => {
-    try {
-      const vesselId = req.query.vesselId ? parseInt(req.query.vesselId as string) : undefined;
-      
-      if (vesselId) {
-        const documents = await storage.getDocumentsByVesselId(vesselId);
-        res.json(documents);
-      } else {
-        const documents = await storage.getDocuments();
-        res.json(documents);
-      }
-    } catch (error) {
-      console.error("Error fetching documents:", error);
-      res.status(500).json({ message: "Failed to fetch documents" });
-    }
-  });
+  // Old document endpoints removed - replaced with maritime document system
 
-  apiRouter.post("/documents", async (req, res) => {
-    try {
-      const documentData = insertDocumentSchema.parse(req.body);
-      const document = await storage.createDocument(documentData);
-      res.status(201).json(document);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ 
-          message: "Invalid document data", 
-          errors: fromZodError(error).details 
-        });
-      }
-      console.error("Error creating document:", error);
-      res.status(500).json({ message: "Failed to create document" });
-    }
-  });
-
-  // Endpoint to generate a document with Cohere AI
-  apiRouter.post("/documents/generate", async (req, res) => {
-    try {
-      const { vesselId, documentType } = req.body;
-      
-      if (!vesselId || !documentType) {
-        return res.status(400).json({ 
-          message: "Missing required fields: vesselId and documentType are required" 
-        });
-      }
-      
-      // Get the vessel details
-      const vessel = await storage.getVesselById(parseInt(vesselId));
-      
-      if (!vessel) {
-        return res.status(404).json({ message: "Vessel not found" });
-      }
-      
-      // Generate the document using OpenAI
-      const generatedDocument = await openaiService.generateShippingDocument(vessel, documentType);
-      
-      // Save the document to the database
-      const savedDocument = await storage.createDocument({
-        vesselId: vessel.id,
-        title: generatedDocument.title,
-        content: generatedDocument.content,
-        type: documentType,
-        status: 'generated'
-      });
-      
-      res.json({
-        success: true,
-        document: {
-          id: savedDocument.id,
-          ...generatedDocument
-        }
-      });
-    } catch (error) {
-      console.error("Error generating document:", error);
-      res.status(500).json({ 
-        message: "Failed to generate document", 
-        error: error instanceof Error ? error.message : "Unknown error" 
-      });
-    }
-  });
+  // Old document generation endpoint removed - replaced with maritime document system
 
   // Broker endpoints
   apiRouter.get("/brokers", async (req, res) => {
