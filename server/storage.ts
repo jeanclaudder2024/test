@@ -42,7 +42,7 @@ import {
   LandingPageImage, InsertLandingPageImage,
   LandingPageBlock, InsertLandingPageBlock,
   regions, OilType, InsertOilType, Region, InsertRegion,
-  adminDocuments, AdminDocument, InsertAdminDocument
+  documents, Document, InsertDocument
 } from "@shared/schema";
 
 // Storage interface with CRUD methods
@@ -1714,132 +1714,55 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  // Admin Document Management Methods
-  async getAdminDocuments(): Promise<AdminDocument[]> {
+  // Document Management Methods
+  async getDocuments(): Promise<Document[]> {
     try {
-      return await db.select({
-        id: adminDocuments.id,
-        title: adminDocuments.title,
-        description: adminDocuments.description,
-        content: adminDocuments.content,
-        documentType: adminDocuments.documentType,
-        status: adminDocuments.status,
-        category: adminDocuments.category,
-        tags: adminDocuments.tags,
-        isTemplate: adminDocuments.isTemplate,
-        createdBy: adminDocuments.createdBy,
-        createdAt: adminDocuments.createdAt,
-        updatedAt: adminDocuments.updatedAt
-      }).from(adminDocuments)
-        .orderBy(adminDocuments.createdAt);
+      return await db.select().from(documents).orderBy(documents.createdAt);
     } catch (error) {
-      console.error('Error fetching admin documents:', error);
+      console.error('Error fetching documents:', error);
       return [];
     }
   }
 
-  async getAdminDocumentById(id: number): Promise<AdminDocument | undefined> {
+  async getDocumentById(id: number): Promise<Document | undefined> {
     try {
-      const [document] = await db.select({
-        id: adminDocuments.id,
-        title: adminDocuments.title,
-        description: adminDocuments.description,
-        content: adminDocuments.content,
-        documentType: adminDocuments.documentType,
-        status: adminDocuments.status,
-        category: adminDocuments.category,
-        tags: adminDocuments.tags,
-        isTemplate: adminDocuments.isTemplate,
-        createdBy: adminDocuments.createdBy,
-        createdAt: adminDocuments.createdAt,
-        updatedAt: adminDocuments.updatedAt
-      }).from(adminDocuments)
-        .where(eq(adminDocuments.id, id));
+      const [document] = await db.select().from(documents).where(eq(documents.id, id));
       return document;
     } catch (error) {
-      console.error('Error fetching admin document by ID:', error);
+      console.error('Error fetching document by ID:', error);
       return undefined;
     }
   }
 
-  async getAdminDocumentsByCategory(category: string): Promise<AdminDocument[]> {
+  async createDocument(document: InsertDocument): Promise<Document> {
     try {
-      return await db.select({
-        id: adminDocuments.id,
-        title: adminDocuments.title,
-        description: adminDocuments.description,
-        content: adminDocuments.content,
-        documentType: adminDocuments.documentType,
-        status: adminDocuments.status,
-        category: adminDocuments.category,
-        tags: adminDocuments.tags,
-        isTemplate: adminDocuments.isTemplate,
-        createdBy: adminDocuments.createdBy,
-        createdAt: adminDocuments.createdAt,
-        updatedAt: adminDocuments.updatedAt
-      }).from(adminDocuments)
-        .where(eq(adminDocuments.category, category))
-        .orderBy(adminDocuments.createdAt);
-    } catch (error) {
-      console.error('Error fetching admin documents by category:', error);
-      return [];
-    }
-  }
-
-  async getAdminDocumentsByStatus(status: string): Promise<AdminDocument[]> {
-    try {
-      return await db.select({
-        id: adminDocuments.id,
-        title: adminDocuments.title,
-        description: adminDocuments.description,
-        content: adminDocuments.content,
-        documentType: adminDocuments.documentType,
-        status: adminDocuments.status,
-        category: adminDocuments.category,
-        tags: adminDocuments.tags,
-        isTemplate: adminDocuments.isTemplate,
-        createdBy: adminDocuments.createdBy,
-        createdAt: adminDocuments.createdAt,
-        updatedAt: adminDocuments.updatedAt
-      }).from(adminDocuments)
-        .where(eq(adminDocuments.status, status))
-        .orderBy(adminDocuments.createdAt);
-    } catch (error) {
-      console.error('Error fetching admin documents by status:', error);
-      return [];
-    }
-  }
-
-  async createAdminDocument(document: InsertAdminDocument): Promise<AdminDocument> {
-    try {
-      const [newDocument] = await db.insert(adminDocuments).values(document).returning();
+      const [newDocument] = await db.insert(documents).values(document).returning();
       return newDocument;
     } catch (error) {
-      console.error('Error creating admin document:', error);
-      throw error;
+      console.error('Error creating document:', error);
+      throw new Error('Failed to create document');
     }
   }
 
-  async updateAdminDocument(id: number, document: Partial<InsertAdminDocument>): Promise<AdminDocument | undefined> {
+  async updateDocument(id: number, updates: Partial<InsertDocument>): Promise<Document | undefined> {
     try {
-      const [updatedDocument] = await db
-        .update(adminDocuments)
-        .set({ ...document, updatedAt: new Date() })
-        .where(eq(adminDocuments.id, id))
+      const [updatedDocument] = await db.update(documents)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(documents.id, id))
         .returning();
       return updatedDocument;
     } catch (error) {
-      console.error('Error updating admin document:', error);
-      return undefined;
+      console.error('Error updating document:', error);
+      throw new Error('Failed to update document');
     }
   }
 
-  async deleteAdminDocument(id: number): Promise<boolean> {
+  async deleteDocument(id: number): Promise<boolean> {
     try {
-      const result = await db.delete(adminDocuments).where(eq(adminDocuments.id, id));
-      return result.rowCount > 0;
+      const result = await db.delete(documents).where(eq(documents.id, id));
+      return result.rowCount !== undefined && result.rowCount > 0;
     } catch (error) {
-      console.error('Error deleting admin document:', error);
+      console.error('Error deleting document:', error);
       return false;
     }
   }

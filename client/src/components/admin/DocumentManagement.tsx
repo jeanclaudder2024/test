@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { FileText, Plus, Edit, Trash2, Search } from "lucide-react";
 
-interface AdminDocument {
+interface Document {
   id: number;
   title: string;
   description: string | null;
@@ -30,7 +30,7 @@ interface AdminDocument {
   updatedAt: string;
 }
 
-const documentFormSchema = z.object({
+const documentSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
   content: z.string().min(1, "Content is required"),
@@ -41,17 +41,17 @@ const documentFormSchema = z.object({
   isTemplate: z.boolean().default(false),
 });
 
-type DocumentFormData = z.infer<typeof documentFormSchema>;
+type DocumentFormData = z.infer<typeof documentSchema>;
 
 export default function DocumentManagement() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingDocument, setEditingDocument] = useState<AdminDocument | null>(null);
+  const [editingDocument, setEditingDocument] = useState<Document | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const form = useForm<DocumentFormData>({
-    resolver: zodResolver(documentFormSchema),
+    resolver: zodResolver(documentSchema),
     defaultValues: {
       title: "",
       description: "",
@@ -64,22 +64,22 @@ export default function DocumentManagement() {
     },
   });
 
-  // Fetch documents with proper error handling
-  const { data: documents = [], isLoading, error } = useQuery<AdminDocument[]>({
-    queryKey: ["/api/admin/documents"],
+  // Fetch documents
+  const { data: documents = [], isLoading, error } = useQuery<Document[]>({
+    queryKey: ["/api/documents"],
     retry: 1,
   });
 
   // Create document mutation
   const createMutation = useMutation({
     mutationFn: async (data: DocumentFormData) => {
-      return await apiRequest("/api/admin/documents", {
+      return await apiRequest("/api/documents", {
         method: "POST",
         body: JSON.stringify(data),
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/documents"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
       setIsDialogOpen(false);
       form.reset();
       toast({
@@ -99,13 +99,13 @@ export default function DocumentManagement() {
   // Update document mutation
   const updateMutation = useMutation({
     mutationFn: async (data: DocumentFormData & { id: number }) => {
-      return await apiRequest(`/api/admin/documents/${data.id}`, {
+      return await apiRequest(`/api/documents/${data.id}`, {
         method: "PUT",
         body: JSON.stringify(data),
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/documents"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
       setIsDialogOpen(false);
       setEditingDocument(null);
       form.reset();
@@ -126,12 +126,12 @@ export default function DocumentManagement() {
   // Delete document mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      return await apiRequest(`/api/admin/documents/${id}`, {
+      return await apiRequest(`/api/documents/${id}`, {
         method: "DELETE",
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/documents"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
       toast({
         title: "Success",
         description: "Document deleted successfully",
@@ -154,7 +154,7 @@ export default function DocumentManagement() {
     }
   };
 
-  const handleEdit = (document: AdminDocument) => {
+  const handleEdit = (document: Document) => {
     setEditingDocument(document);
     form.reset({
       title: document.title,
@@ -207,7 +207,7 @@ export default function DocumentManagement() {
           <h3 className="text-lg font-medium text-gray-900 mb-2">Unable to load documents</h3>
           <p className="text-gray-500">{error.message}</p>
           <Button 
-            onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/admin/documents"] })}
+            onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/documents"] })}
             className="mt-4"
           >
             Try Again

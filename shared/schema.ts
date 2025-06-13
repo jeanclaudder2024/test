@@ -860,30 +860,30 @@ export type InsertDealDocument = z.infer<typeof insertDealDocumentSchema>;
 export type BrokerNotification = typeof brokerNotifications.$inferSelect;
 export type InsertBrokerNotification = z.infer<typeof insertBrokerNotificationSchema>;
 
-// Admin Document Management
-export const adminDocuments = pgTable("admin_documents", {
+// Document Management System
+export const documents = pgTable("documents", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   description: text("description"),
   content: text("content").notNull(),
-  documentType: text("document_type").notNull(), // 'Maritime Certification', 'Cargo Manifest', etc.
-  status: text("status").notNull().default("active"), // active, inactive, draft
-  category: text("category").default("general"), // general, technical, legal, commercial
-  tags: text("tags"), // comma-separated tags
+  documentType: text("document_type").notNull(),
+  status: text("status").notNull().default("active"),
+  category: text("category").default("general"),
+  tags: text("tags"),
   isTemplate: boolean("is_template").default(false),
   createdBy: integer("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-export const insertAdminDocumentSchema = createInsertSchema(adminDocuments).omit({
+export const insertDocumentSchema = createInsertSchema(documents).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
 });
 
-export type AdminDocument = typeof adminDocuments.$inferSelect;
-export type InsertAdminDocument = z.infer<typeof insertAdminDocumentSchema>;
+export type Document = typeof documents.$inferSelect;
+export type InsertDocument = z.infer<typeof insertDocumentSchema>;
 
 // Broker Companies (intermediary companies users connect to)
 export const brokerCompanies = pgTable("broker_companies", {
