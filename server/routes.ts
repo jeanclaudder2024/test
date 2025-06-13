@@ -7568,6 +7568,78 @@ Keep the description professional, informative, and around 150-200 words. Focus 
     }
   });
 
+  // Admin Document Management Routes
+  app.get("/api/admin/documents", async (req: Request, res: Response) => {
+    try {
+      const documents = await storage.getAdminDocuments();
+      res.json(documents);
+    } catch (error) {
+      console.error("Error fetching admin documents:", error);
+      res.status(500).json({ message: "Failed to fetch documents" });
+    }
+  });
+
+  app.get("/api/admin/documents/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const document = await storage.getAdminDocumentById(id);
+      
+      if (!document) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+      
+      res.json(document);
+    } catch (error) {
+      console.error("Error fetching admin document:", error);
+      res.status(500).json({ message: "Failed to fetch document" });
+    }
+  });
+
+  app.post("/api/admin/documents", async (req: Request, res: Response) => {
+    try {
+      const documentData = req.body;
+      const newDocument = await storage.createAdminDocument(documentData);
+      res.status(201).json(newDocument);
+    } catch (error) {
+      console.error("Error creating admin document:", error);
+      res.status(500).json({ message: "Failed to create document" });
+    }
+  });
+
+  app.put("/api/admin/documents/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updateData = req.body;
+      
+      const updatedDocument = await storage.updateAdminDocument(id, updateData);
+      
+      if (!updatedDocument) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+      
+      res.json(updatedDocument);
+    } catch (error) {
+      console.error("Error updating admin document:", error);
+      res.status(500).json({ message: "Failed to update document" });
+    }
+  });
+
+  app.delete("/api/admin/documents/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const deleted = await storage.deleteAdminDocument(id);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+      
+      res.json({ success: true, message: "Document deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting admin document:", error);
+      res.status(500).json({ message: "Failed to delete document" });
+    }
+  });
+
   // Database Migration API Endpoints
   apiRouter.post("/admin/migrate-to-mysql", async (req, res) => {
     try {

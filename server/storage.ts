@@ -41,7 +41,8 @@ import {
   LandingPageSection, InsertLandingPageSection,
   LandingPageImage, InsertLandingPageImage,
   LandingPageBlock, InsertLandingPageBlock,
-  regions, OilType, InsertOilType, Region, InsertRegion
+  regions, OilType, InsertOilType, Region, InsertRegion,
+  adminDocuments, AdminDocument, InsertAdminDocument
 } from "@shared/schema";
 
 // Storage interface with CRUD methods
@@ -214,6 +215,15 @@ export interface IStorage {
   createRegion(region: InsertRegion): Promise<Region>;
   updateRegion(id: number, region: Partial<InsertRegion>): Promise<Region | undefined>;
   deleteRegion(id: number): Promise<boolean>;
+
+  // Admin Document Management Methods
+  getAdminDocuments(): Promise<AdminDocument[]>;
+  getAdminDocumentById(id: number): Promise<AdminDocument | undefined>;
+  getAdminDocumentsByCategory(category: string): Promise<AdminDocument[]>;
+  getAdminDocumentsByStatus(status: string): Promise<AdminDocument[]>;
+  createAdminDocument(document: InsertAdminDocument): Promise<AdminDocument>;
+  updateAdminDocument(id: number, document: Partial<InsertAdminDocument>): Promise<AdminDocument | undefined>;
+  deleteAdminDocument(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1700,6 +1710,84 @@ export class DatabaseStorage implements IStorage {
       return result.rowCount > 0;
     } catch (error) {
       console.error('Error deleting region:', error);
+      return false;
+    }
+  }
+
+  // Admin Document Management Methods
+  async getAdminDocuments(): Promise<AdminDocument[]> {
+    try {
+      return await db.select().from(adminDocuments)
+        .orderBy(adminDocuments.createdAt);
+    } catch (error) {
+      console.error('Error fetching admin documents:', error);
+      return [];
+    }
+  }
+
+  async getAdminDocumentById(id: number): Promise<AdminDocument | undefined> {
+    try {
+      const [document] = await db.select().from(adminDocuments)
+        .where(eq(adminDocuments.id, id));
+      return document;
+    } catch (error) {
+      console.error('Error fetching admin document by ID:', error);
+      return undefined;
+    }
+  }
+
+  async getAdminDocumentsByCategory(category: string): Promise<AdminDocument[]> {
+    try {
+      return await db.select().from(adminDocuments)
+        .where(eq(adminDocuments.category, category))
+        .orderBy(adminDocuments.createdAt);
+    } catch (error) {
+      console.error('Error fetching admin documents by category:', error);
+      return [];
+    }
+  }
+
+  async getAdminDocumentsByStatus(status: string): Promise<AdminDocument[]> {
+    try {
+      return await db.select().from(adminDocuments)
+        .where(eq(adminDocuments.status, status))
+        .orderBy(adminDocuments.createdAt);
+    } catch (error) {
+      console.error('Error fetching admin documents by status:', error);
+      return [];
+    }
+  }
+
+  async createAdminDocument(document: InsertAdminDocument): Promise<AdminDocument> {
+    try {
+      const [newDocument] = await db.insert(adminDocuments).values(document).returning();
+      return newDocument;
+    } catch (error) {
+      console.error('Error creating admin document:', error);
+      throw error;
+    }
+  }
+
+  async updateAdminDocument(id: number, document: Partial<InsertAdminDocument>): Promise<AdminDocument | undefined> {
+    try {
+      const [updatedDocument] = await db
+        .update(adminDocuments)
+        .set({ ...document, updatedAt: new Date() })
+        .where(eq(adminDocuments.id, id))
+        .returning();
+      return updatedDocument;
+    } catch (error) {
+      console.error('Error updating admin document:', error);
+      return undefined;
+    }
+  }
+
+  async deleteAdminDocument(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(adminDocuments).where(eq(adminDocuments.id, id));
+      return result.rowCount > 0;
+    } catch (error) {
+      console.error('Error deleting admin document:', error);
       return false;
     }
   }
