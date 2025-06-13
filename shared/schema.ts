@@ -860,31 +860,35 @@ export type InsertDealDocument = z.infer<typeof insertDealDocumentSchema>;
 export type BrokerNotification = typeof brokerNotifications.$inferSelect;
 export type InsertBrokerNotification = z.infer<typeof insertBrokerNotificationSchema>;
 
-// Document Management System
-export const documents = pgTable("documents", {
+// Maritime Document Management System
+export const maritimeDocuments = pgTable("maritime_documents", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   description: text("description"),
   content: text("content").notNull(),
   documentType: text("document_type").notNull(),
+  category: text("category").notNull().default("general"),
   status: text("status").notNull().default("active"),
-  category: text("category").default("general"),
   tags: text("tags"),
   isTemplate: boolean("is_template").default(false),
-  isActive: boolean("is_active").default(true),
+  isPublic: boolean("is_public").default(true),
+  fileName: text("file_name"),
+  filePath: text("file_path"),
+  fileSize: text("file_size"),
+  mimeType: text("mime_type"),
   createdBy: integer("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-export const insertDocumentSchema = createInsertSchema(documents).omit({
+export const insertMaritimeDocumentSchema = createInsertSchema(maritimeDocuments).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
 });
 
-export type Document = typeof documents.$inferSelect;
-export type InsertDocument = z.infer<typeof insertDocumentSchema>;
+export type MaritimeDocument = typeof maritimeDocuments.$inferSelect;
+export type InsertMaritimeDocument = z.infer<typeof insertMaritimeDocumentSchema>;
 
 // Broker Companies (intermediary companies users connect to)
 export const brokerCompanies = pgTable("broker_companies", {

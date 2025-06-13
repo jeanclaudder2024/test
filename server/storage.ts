@@ -42,7 +42,7 @@ import {
   LandingPageImage, InsertLandingPageImage,
   LandingPageBlock, InsertLandingPageBlock,
   regions, OilType, InsertOilType, Region, InsertRegion,
-  documents, Document, InsertDocument
+  maritimeDocuments, MaritimeDocument, InsertMaritimeDocument
 } from "@shared/schema";
 
 // Storage interface with CRUD methods
@@ -216,12 +216,12 @@ export interface IStorage {
   updateRegion(id: number, region: Partial<InsertRegion>): Promise<Region | undefined>;
   deleteRegion(id: number): Promise<boolean>;
 
-  // Document Management Methods
-  getDocuments(): Promise<Document[]>;
-  getDocumentById(id: number): Promise<Document | undefined>;
-  createDocument(document: InsertDocument): Promise<Document>;
-  updateDocument(id: number, updates: Partial<InsertDocument>): Promise<Document | undefined>;
-  deleteDocument(id: number): Promise<boolean>;
+  // Maritime Document Management Methods
+  getMaritimeDocuments(): Promise<MaritimeDocument[]>;
+  getMaritimeDocumentById(id: number): Promise<MaritimeDocument | undefined>;
+  createMaritimeDocument(document: InsertMaritimeDocument): Promise<MaritimeDocument>;
+  updateMaritimeDocument(id: number, updates: Partial<InsertMaritimeDocument>): Promise<MaritimeDocument | undefined>;
+  deleteMaritimeDocument(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1713,54 +1713,55 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Document Management Methods
-  async getDocuments(): Promise<Document[]> {
+  // Maritime Document Management Methods
+  async getMaritimeDocuments(): Promise<MaritimeDocument[]> {
     try {
-      return await db.select().from(documents).orderBy(documents.createdAt);
+      return await db.select().from(maritimeDocuments).orderBy(maritimeDocuments.createdAt);
     } catch (error) {
-      console.error('Error fetching documents:', error);
+      console.error('Error fetching maritime documents:', error);
       return [];
     }
   }
 
-  async getDocumentById(id: number): Promise<Document | undefined> {
+  async getMaritimeDocumentById(id: number): Promise<MaritimeDocument | undefined> {
     try {
-      const [document] = await db.select().from(documents).where(eq(documents.id, id));
+      const [document] = await db.select().from(maritimeDocuments).where(eq(maritimeDocuments.id, id));
       return document;
     } catch (error) {
-      console.error('Error fetching document by ID:', error);
+      console.error('Error fetching maritime document by ID:', error);
       return undefined;
     }
   }
 
-  async createDocument(document: InsertDocument): Promise<Document> {
+  async createMaritimeDocument(document: InsertMaritimeDocument): Promise<MaritimeDocument> {
     try {
-      const [newDocument] = await db.insert(documents).values(document).returning();
+      const [newDocument] = await db.insert(maritimeDocuments).values(document).returning();
       return newDocument;
     } catch (error) {
-      console.error('Error creating document:', error);
-      throw new Error('Failed to create document');
+      console.error('Error creating maritime document:', error);
+      throw new Error('Failed to create maritime document');
     }
   }
 
-  async updateDocument(id: number, updates: Partial<InsertDocument>): Promise<Document | undefined> {
+  async updateMaritimeDocument(id: number, updates: Partial<InsertMaritimeDocument>): Promise<MaritimeDocument | undefined> {
     try {
-      const [updatedDocument] = await db.update(documents)
+      const [updatedDocument] = await db.update(maritimeDocuments)
         .set({ ...updates, updatedAt: new Date() })
-        .where(eq(documents.id, id))
+        .where(eq(maritimeDocuments.id, id))
         .returning();
       return updatedDocument;
     } catch (error) {
-      console.error('Error updating document:', error);
-      throw new Error('Failed to update document');
+      console.error('Error updating maritime document:', error);
+      throw new Error('Failed to update maritime document');
     }
   }
 
-  async deleteDocument(id: number): Promise<boolean> {
+  async deleteMaritimeDocument(id: number): Promise<boolean> {
     try {
-      const result = await db.delete(documents).where(eq(documents.id, id));
+      const result = await db.delete(maritimeDocuments).where(eq(maritimeDocuments.id, id));
       return result.rowCount !== undefined && result.rowCount > 0;
     } catch (error) {
-      console.error('Error deleting document:', error);
+      console.error('Error deleting maritime document:', error);
       return false;
     }
   }
