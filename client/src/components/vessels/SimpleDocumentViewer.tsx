@@ -145,9 +145,26 @@ NAVIGATION & COMMUNICATION:
 CERTIFICATION STATUS:
 All technical systems meet international maritime standards and regulatory requirements.`,
       status: "published",
-      createdAt: new Date(Date.now() - 172800000).toISOString()
+      createdAt: new Date(Date.now() - 172800000).toISOString(),
+      source: 'vessel' as const,
     }
   ];
+
+  // Convert admin documents to SimpleDocument format and combine with vessel documents
+  const adminDocsConverted: SimpleDocument[] = adminDocuments.map(doc => ({
+    id: doc.id + 1000, // Offset to avoid ID conflicts
+    title: doc.title,
+    description: doc.description || '',
+    content: doc.content,
+    status: doc.status,
+    createdAt: doc.createdAt.toISOString(),
+    documentType: doc.documentType,
+    category: doc.category,
+    source: 'admin' as const,
+  }));
+
+  // Combine all documents
+  const allDocuments = [...vesselDocuments, ...adminDocsConverted];
 
   const handleDownloadWord = async (doc: SimpleDocument) => {
     setIsDownloading(true);
@@ -305,7 +322,7 @@ All technical systems meet international maritime standards and regulatory requi
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {sampleDocuments.map((document) => (
+          {allDocuments.map((document) => (
             <Card key={document.id} className="border">
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
@@ -316,6 +333,18 @@ All technical systems meet international maritime standards and regulatory requi
                     </CardDescription>
                   </div>
                   <div className="flex gap-2 ml-4">
+                    {document.source === 'admin' && (
+                      <Badge variant="outline" className="text-purple-700 bg-purple-50 border-purple-200">
+                        <Settings className="h-3 w-3 mr-1" />
+                        Admin
+                      </Badge>
+                    )}
+                    {document.source === 'vessel' && (
+                      <Badge variant="outline" className="text-blue-700 bg-blue-50 border-blue-200">
+                        <FileText className="h-3 w-3 mr-1" />
+                        Vessel
+                      </Badge>
+                    )}
                     {getStatusBadge(document.status)}
                   </div>
                 </div>
