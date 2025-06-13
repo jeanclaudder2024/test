@@ -35,9 +35,9 @@ export async function initializeCustomAuthTables() {
       )
     `);
     
-    // Create admin_documents table
+    // Create documents table (new Document Management system)
     await db.execute(sql`
-      CREATE TABLE IF NOT EXISTS admin_documents (
+      CREATE TABLE IF NOT EXISTS documents (
         id SERIAL PRIMARY KEY,
         title TEXT NOT NULL,
         description TEXT,
@@ -56,8 +56,8 @@ export async function initializeCustomAuthTables() {
     // Create indexes for better performance
     await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`);
     await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_user_subscriptions_user_id ON user_subscriptions(user_id)`);
-    await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_admin_documents_status ON admin_documents(status)`);
-    await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_admin_documents_category ON admin_documents(category)`);
+    await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_documents_status ON documents(status)`);
+    await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_documents_category ON documents(category)`);
     
     console.log('Custom authentication tables created successfully');
     

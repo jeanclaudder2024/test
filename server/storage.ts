@@ -216,14 +216,12 @@ export interface IStorage {
   updateRegion(id: number, region: Partial<InsertRegion>): Promise<Region | undefined>;
   deleteRegion(id: number): Promise<boolean>;
 
-  // Admin Document Management Methods
-  getAdminDocuments(): Promise<AdminDocument[]>;
-  getAdminDocumentById(id: number): Promise<AdminDocument | undefined>;
-  getAdminDocumentsByCategory(category: string): Promise<AdminDocument[]>;
-  getAdminDocumentsByStatus(status: string): Promise<AdminDocument[]>;
-  createAdminDocument(document: InsertAdminDocument): Promise<AdminDocument>;
-  updateAdminDocument(id: number, document: Partial<InsertAdminDocument>): Promise<AdminDocument | undefined>;
-  deleteAdminDocument(id: number): Promise<boolean>;
+  // Document Management Methods
+  getDocuments(): Promise<Document[]>;
+  getDocumentById(id: number): Promise<Document | undefined>;
+  createDocument(document: InsertDocument): Promise<Document>;
+  updateDocument(id: number, updates: Partial<InsertDocument>): Promise<Document | undefined>;
+  deleteDocument(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
