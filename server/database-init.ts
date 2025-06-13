@@ -35,7 +35,10 @@ export async function initializeCustomAuthTables() {
       )
     `);
     
-    // Create documents table (new Document Management system)
+    // Drop old admin_documents table if it exists
+    await db.execute(sql`DROP TABLE IF EXISTS admin_documents CASCADE`);
+    
+    // Create new documents table (Document Management system) - only if it doesn't exist
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS documents (
         id SERIAL PRIMARY KEY,
