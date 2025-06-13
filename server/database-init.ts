@@ -65,12 +65,14 @@ export async function initializeCustomAuthTables() {
     console.log('Custom authentication tables created successfully');
     
     // Insert test admin user (password: "admin123")
-    const adminPasswordHash = '$2b$10$ebkZSUL1mgyDtDQLr4Zr6OOoYsMtY8sNGnInRutSPTwgZfFhBeCyK';
+    const adminPasswordHash = '$2b$10$6W/1ypnjS1aTMi7zCd3nweyNsPZfOeVKJSwV.PaaY0dbW6jiYSq4u';
+    
+    // First delete any existing admin user to ensure clean recreation
+    await db.execute(sql`DELETE FROM users WHERE email = 'admin@petrodealhub.com'`);
     
     await db.execute(sql`
       INSERT INTO users (email, password, first_name, last_name, role) 
       VALUES ('admin@petrodealhub.com', ${adminPasswordHash}, 'Admin', 'User', 'admin')
-      ON CONFLICT (email) DO NOTHING
     `);
     
     console.log('Test admin user created: admin@petrodealhub.com / admin123');

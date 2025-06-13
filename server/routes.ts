@@ -102,6 +102,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register authentication routes
   app.use("/api/auth", authRoutes);
   
+  // Emergency admin user creation endpoint
+  app.post("/api/create-admin", async (req: Request, res: Response) => {
+    try {
+      const bcrypt = require('bcrypt');
+      const adminPasswordHash = '$2b$10$6W/1ypnjS1aTMi7zCd3nweyNsPZfOeVKJSwV.PaaY0dbW6jiYSq4u';
+      
+      // Delete existing admin user if any
+      await db.execute(sql`DELETE FROM users WHERE email = 'admin@petrodealhub.com'`);
+      
+      // Create fresh admin user
+      await db.execute(sql`
+        INSERT INTO users (email, password, first_name, last_name, role) 
+        VALUES ('admin@petrodealhub.com', ${adminPasswordHash}, 'Admin', 'User', 'admin')
+      `);
+      
+      res.json({ 
+        success: true, 
+        message: "Admin user created successfully",
+        credentials: {
+          email: "admin@petrodealhub.com",
+          password: "admin123"
+        }
+      });
+    } catch (error) {
+      console.error("Error creating admin user:", error);
+      res.status(500).json({ message: "Failed to create admin user", error: error.message });
+    }
+  });
+  
   // Company Management API Routes
   app.get("/api/admin/real-companies", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res: Response) => {
     try {

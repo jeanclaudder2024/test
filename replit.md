@@ -140,6 +140,13 @@ Changelog:
   * Structured headings, vessel information sections, and comprehensive content layout
   * Proper .docx file downloads that open correctly in Microsoft Word and other processors
   * Consistent company branding across both PDF and Word document formats
+- June 13, 2025. Document Management System Complete Rebuild:
+  * Completely removed old admin_documents table and replaced with new documents table
+  * Rebuilt all API endpoints from /api/admin/documents to /api/documents with full CRUD operations
+  * Fixed authentication token storage inconsistencies using 'authToken' consistently
+  * Updated database schema with proper indexes and constraints for new documents table
+  * Recreated admin user with emergency creation endpoint after database conflicts
+  * System now ready for production use with clean architecture
 
 ## User Preferences
 
