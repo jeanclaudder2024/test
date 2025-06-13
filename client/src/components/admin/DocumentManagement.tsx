@@ -1,511 +1,421 @@
-import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, Search, Filter, FileText, Download, Eye, Calendar, User, Building } from 'lucide-react';
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Plus, Edit, Trash2, FileText, Save, X, Filter, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
-interface Document {
+const documentSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().optional(),
+  content: z.string().min(1, "Content is required"),
+  documentType: z.string().min(1, "Document type is required"),
+  status: z.enum(["active", "inactive", "draft"]).default("active"),
+  category: z.enum(["general", "technical", "legal", "commercial"]).default("general"),
+  tags: z.string().optional(),
+  isTemplate: z.boolean().default(false),
+});
+
+type DocumentFormData = z.infer<typeof documentSchema>;
+
+interface AdminDocument {
   id: number;
-  vesselId?: number;
-  vesselName?: string;
-  documentType: string;
   title: string;
-  description?: string;
-  content?: string;
-  filePath?: string;
-  fileSize?: number;
-  mimeType?: string;
-  version: string;
-  status: 'draft' | 'active' | 'archived';
-  isRequired: boolean;
-  expiryDate?: string;
-  createdBy: string;
-  approvedBy?: string;
-  approvedAt?: string;
-  tags?: string;
-  metadata?: string;
-  isActive: boolean;
-  createdAt: string;
-  lastUpdated: string;
-}
-
-interface FormData {
-  vesselId: string;
-  documentType: string;
-  title: string;
-  description: string;
+  description: string | null;
   content: string;
-  version: string;
-  status: 'draft' | 'active' | 'archived';
-  isRequired: boolean;
-  expiryDate: string;
-  createdBy: string;
-  tags: string;
-  metadata: string;
-  isActive: boolean;
+  documentType: string;
+  status: string;
+  category: string;
+  tags: string | null;
+  isTemplate: boolean;
+  createdBy: number | null;
+  createdAt: Date;
+  updatedAt: Date;
 }
-
-const initialFormData: FormData = {
-  vesselId: '',
-  documentType: '',
-  title: '',
-  description: '',
-  content: '',
-  version: '1.0',
-  status: 'draft',
-  isRequired: false,
-  expiryDate: '',
-  createdBy: '',
-  tags: '',
-  metadata: '',
-  isActive: true,
-};
-
-const documentTypes = [
-  { value: 'bill_of_lading', label: 'Bill of Lading' },
-  { value: 'cargo_manifest', label: 'Cargo Manifest' },
-  { value: 'certificate_of_origin', label: 'Certificate of Origin' },
-  { value: 'commercial_invoice', label: 'Commercial Invoice' },
-  { value: 'packing_list', label: 'Packing List' },
-  { value: 'insurance_certificate', label: 'Insurance Certificate' },
-  { value: 'charter_party', label: 'Charter Party Agreement' },
-  { value: 'delivery_order', label: 'Delivery Order' },
-  { value: 'customs_declaration', label: 'Customs Declaration' },
-  { value: 'quality_certificate', label: 'Quality Certificate' },
-  { value: 'quantity_certificate', label: 'Quantity Certificate' },
-  { value: 'vessel_certificate', label: 'Vessel Certificate' },
-  { value: 'crew_manifest', label: 'Crew Manifest' },
-  { value: 'port_clearance', label: 'Port Clearance' },
-  { value: 'safety_certificate', label: 'Safety Certificate' },
-  { value: 'environmental_report', label: 'Environmental Report' },
-  { value: 'voyage_report', label: 'Voyage Report' },
-  { value: 'inspection_report', label: 'Inspection Report' },
-  { value: 'maintenance_log', label: 'Maintenance Log' },
-  { value: 'fuel_receipt', label: 'Fuel Receipt' },
-  { value: 'other', label: 'Other Document' },
-];
 
 export default function DocumentManagement() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [vesselFilter, setVesselFilter] = useState('all');
-  const [typeFilter, setTypeFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingDocument, setEditingDocument] = useState<Document | null>(null);
-  const [formData, setFormData] = useState<FormData>(initialFormData);
-  const [page, setPage] = useState(1);
-
+  const [editingDocument, setEditingDocument] = useState<AdminDocument | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch documents
-  const { data: documentsData, isLoading, error } = useQuery({
-    queryKey: ['documents', page, searchTerm, vesselFilter, typeFilter, statusFilter],
-    queryFn: async () => {
-      const params = new URLSearchParams({
-        page: page.toString(),
-        limit: '20',
-        search: searchTerm,
-        vessel: vesselFilter,
-        type: typeFilter,
-        status: statusFilter,
-      });
-      
-      const response = await fetch(`/api/documents?${params}`);
-      if (!response.ok) throw new Error('Failed to fetch documents');
-      return response.json();
+  const { data: documents = [], isLoading } = useQuery<AdminDocument[]>({
+    queryKey: ["/api/admin/documents"],
+  });
+
+  const form = useForm<DocumentFormData>({
+    resolver: zodResolver(documentSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      content: "",
+      documentType: "",
+      status: "active",
+      category: "general",
+      tags: "",
+      isTemplate: false,
     },
   });
 
-  // Fetch vessels for dropdown
-  const { data: vesselsData } = useQuery({
-    queryKey: ['vessels-for-documents'],
-    queryFn: async () => {
-      const response = await fetch('/api/vessels?limit=1000');
-      if (!response.ok) throw new Error('Failed to fetch vessels');
-      return response.json();
-    },
-  });
-
-  // Create document mutation
   const createMutation = useMutation({
-    mutationFn: async (data: Partial<FormData>) => {
-      const response = await fetch('/api/documents', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...data,
-          vesselId: data.vesselId ? parseInt(data.vesselId) : null,
-        }),
+    mutationFn: async (data: DocumentFormData) => {
+      return await apiRequest("/api/admin/documents", {
+        method: "POST",
+        body: JSON.stringify(data),
       });
-      if (!response.ok) throw new Error('Failed to create document');
-      return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['documents'] });
-      setIsDialogOpen(false);
-      setFormData(initialFormData);
-      toast({ title: 'Document created successfully', variant: 'default' });
-    },
-    onError: () => {
-      toast({ title: 'Failed to create document', variant: 'destructive' });
-    },
-  });
-
-  // Update document mutation
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: Partial<FormData> }) => {
-      const response = await fetch(`/api/documents/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...data,
-          vesselId: data.vesselId ? parseInt(data.vesselId) : null,
-        }),
-      });
-      if (!response.ok) throw new Error('Failed to update document');
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['documents'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/documents"] });
       setIsDialogOpen(false);
       setEditingDocument(null);
-      setFormData(initialFormData);
-      toast({ title: 'Document updated successfully', variant: 'default' });
+      form.reset();
+      toast({
+        title: "Success",
+        description: "Document created successfully",
+      });
     },
-    onError: () => {
-      toast({ title: 'Failed to update document', variant: 'destructive' });
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to create document",
+        variant: "destructive",
+      });
     },
   });
 
-  // Delete document mutation
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: DocumentFormData }) => {
+      return await apiRequest(`/api/admin/documents/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/documents"] });
+      setIsDialogOpen(false);
+      setEditingDocument(null);
+      form.reset();
+      toast({
+        title: "Success",
+        description: "Document updated successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update document",
+        variant: "destructive",
+      });
+    },
+  });
+
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      const response = await fetch(`/api/documents/${id}`, {
-        method: 'DELETE',
+      return await apiRequest(`/api/admin/documents/${id}`, {
+        method: "DELETE",
       });
-      if (!response.ok) throw new Error('Failed to delete document');
-      return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['documents'] });
-      toast({ title: 'Document deleted successfully', variant: 'default' });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/documents"] });
+      toast({
+        title: "Success",
+        description: "Document deleted successfully",
+      });
     },
-    onError: () => {
-      toast({ title: 'Failed to delete document', variant: 'destructive' });
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to delete document",
+        variant: "destructive",
+      });
     },
   });
 
-  // Generate document mutation
-  const generateMutation = useMutation({
-    mutationFn: async ({ vesselId, documentType }: { vesselId: number; documentType: string }) => {
-      const response = await fetch('/api/vessels/generate-document', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ vesselId, documentType }),
-      });
-      if (!response.ok) throw new Error('Failed to generate document');
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['documents'] });
-      toast({ title: 'Document generated successfully', variant: 'default' });
-    },
-    onError: () => {
-      toast({ title: 'Failed to generate document', variant: 'destructive' });
-    },
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const onSubmit = (data: DocumentFormData) => {
     if (editingDocument) {
-      updateMutation.mutate({ id: editingDocument.id, data: formData });
+      updateMutation.mutate({ id: editingDocument.id, data });
     } else {
-      createMutation.mutate(formData);
+      createMutation.mutate(data);
     }
   };
 
-  const handleEdit = (document: Document) => {
+  const handleEdit = (document: AdminDocument) => {
     setEditingDocument(document);
-    setFormData({
-      vesselId: document.vesselId?.toString() || '',
-      documentType: document.documentType,
+    form.reset({
       title: document.title,
-      description: document.description || '',
-      content: document.content || '',
-      version: document.version,
-      status: document.status,
-      isRequired: document.isRequired,
-      expiryDate: document.expiryDate || '',
-      createdBy: document.createdBy,
-      tags: document.tags || '',
-      metadata: document.metadata || '',
-      isActive: document.isActive,
+      description: document.description || "",
+      content: document.content,
+      documentType: document.documentType,
+      status: document.status as "active" | "inactive" | "draft",
+      category: document.category as "general" | "technical" | "legal" | "commercial",
+      tags: document.tags || "",
+      isTemplate: document.isTemplate,
     });
     setIsDialogOpen(true);
   };
 
   const handleDelete = (id: number) => {
-    if (confirm('Are you sure you want to delete this document?')) {
+    if (confirm("Are you sure you want to delete this document?")) {
       deleteMutation.mutate(id);
     }
   };
 
-  const resetForm = () => {
-    setFormData(initialFormData);
+  const handleNewDocument = () => {
     setEditingDocument(null);
+    form.reset();
+    setIsDialogOpen(true);
   };
 
-  const getDocumentTypeLabel = (type: string) => {
-    const docType = documentTypes.find(dt => dt.value === type);
-    return docType ? docType.label : type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-  };
+  const filteredDocuments = documents.filter((doc) => {
+    const matchesSearch = doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         doc.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         doc.documentType.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === "all" || doc.status === statusFilter;
+    const matchesCategory = categoryFilter === "all" || doc.category === categoryFilter;
+    
+    return matchesSearch && matchesStatus && matchesCategory;
+  });
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'default';
-      case 'draft': return 'secondary';
-      case 'archived': return 'outline';
-      default: return 'secondary';
+      case "active": return "bg-green-100 text-green-800";
+      case "inactive": return "bg-red-100 text-red-800";
+      case "draft": return "bg-yellow-100 text-yellow-800";
+      default: return "bg-gray-100 text-gray-800";
     }
   };
 
-  if (error) {
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case "technical": return "bg-blue-100 text-blue-800";
+      case "legal": return "bg-purple-100 text-purple-800";
+      case "commercial": return "bg-orange-100 text-orange-800";
+      default: return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  if (isLoading) {
     return (
-      <Card>
-        <CardContent className="flex items-center justify-center h-96">
-          <p className="text-destructive">Failed to load documents</p>
-        </CardContent>
-      </Card>
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Document Management</h2>
-          <p className="text-muted-foreground">Manage vessel documents, certificates, and maritime paperwork</p>
+          <h2 className="text-2xl font-bold text-gray-900">Document Management</h2>
+          <p className="text-gray-600 mt-1">Create and manage documents that appear in Professional Documents</p>
         </div>
         
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => resetForm()}>
+            <Button onClick={handleNewDocument} className="bg-blue-600 hover:bg-blue-700">
               <Plus className="h-4 w-4 mr-2" />
-              Add Document
+              New Document
             </Button>
           </DialogTrigger>
+          
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>{editingDocument ? 'Edit Document' : 'Create New Document'}</DialogTitle>
-              <DialogDescription>
-                {editingDocument ? 'Update the document information below.' : 'Add a new document to the system with detailed information.'}
-              </DialogDescription>
+              <DialogTitle>
+                {editingDocument ? "Edit Document" : "Create New Document"}
+              </DialogTitle>
             </DialogHeader>
             
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="vesselId">Vessel</Label>
-                    <Select value={formData.vesselId} onValueChange={(value) => setFormData({ ...formData, vesselId: value })}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select vessel (optional)" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="">No specific vessel</SelectItem>
-                        {vesselsData?.data?.map((vessel: any) => (
-                          <SelectItem key={vessel.id} value={vessel.id.toString()}>
-                            {vessel.name} ({vessel.imo})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="title"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Document Title</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter document title" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   
-                  <div className="space-y-2">
-                    <Label htmlFor="documentType">Document Type *</Label>
-                    <Select value={formData.documentType} onValueChange={(value) => setFormData({ ...formData, documentType: value })}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select document type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {documentTypes.map((type) => (
-                          <SelectItem key={type.value} value={type.value}>
-                            {type.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="title">Document Title *</Label>
-                    <Input
-                      id="title"
-                      value={formData.title}
-                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                      placeholder="Enter document title"
-                      required
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="version">Version</Label>
-                    <Input
-                      id="version"
-                      value={formData.version}
-                      onChange={(e) => setFormData({ ...formData, version: e.target.value })}
-                      placeholder="1.0"
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="status">Status</Label>
-                    <Select value={formData.status} onValueChange={(value: 'draft' | 'active' | 'archived') => setFormData({ ...formData, status: value })}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="draft">Draft</SelectItem>
-                        <SelectItem value="active">Active</SelectItem>
-                        <SelectItem value="archived">Archived</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="createdBy">Created By</Label>
-                    <Input
-                      id="createdBy"
-                      value={formData.createdBy}
-                      onChange={(e) => setFormData({ ...formData, createdBy: e.target.value })}
-                      placeholder="Creator name"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="expiryDate">Expiry Date</Label>
-                    <Input
-                      id="expiryDate"
-                      type="date"
-                      value={formData.expiryDate}
-                      onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="tags">Tags (comma-separated)</Label>
-                    <Input
-                      id="tags"
-                      value={formData.tags}
-                      onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-                      placeholder="maritime, cargo, certificate"
-                    />
-                  </div>
-                </div>
-              </div>
-              
-              <Separator />
-              
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Document description and purpose..."
-                    rows={3}
+                  <FormField
+                    control={form.control}
+                    name="documentType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Document Type</FormLabel>
+                        <FormControl>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select document type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Maritime Certification">Maritime Certification</SelectItem>
+                              <SelectItem value="Cargo Manifest">Cargo Manifest</SelectItem>
+                              <SelectItem value="Vessel Inspection">Vessel Inspection</SelectItem>
+                              <SelectItem value="Safety Certificate">Safety Certificate</SelectItem>
+                              <SelectItem value="Commercial Agreement">Commercial Agreement</SelectItem>
+                              <SelectItem value="Technical Specification">Technical Specification</SelectItem>
+                              <SelectItem value="Compliance Report">Compliance Report</SelectItem>
+                              <SelectItem value="Insurance Document">Insurance Document</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
                 </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="content">Document Content</Label>
-                  <Textarea
-                    id="content"
-                    value={formData.content}
-                    onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                    placeholder="Document content or template..."
-                    rows={8}
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Status</FormLabel>
+                        <FormControl>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="active">Active</SelectItem>
+                              <SelectItem value="inactive">Inactive</SelectItem>
+                              <SelectItem value="draft">Draft</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="category"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Category</FormLabel>
+                        <FormControl>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="general">General</SelectItem>
+                              <SelectItem value="technical">Technical</SelectItem>
+                              <SelectItem value="legal">Legal</SelectItem>
+                              <SelectItem value="commercial">Commercial</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="tags"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Tags (comma-separated)</FormLabel>
+                        <FormControl>
+                          <Input placeholder="certification, maritime, safety" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
                 </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="metadata">Metadata (JSON)</Label>
-                  <Textarea
-                    id="metadata"
-                    value={formData.metadata}
-                    onChange={(e) => setFormData({ ...formData, metadata: e.target.value })}
-                    placeholder='{"customField": "value"}'
-                    rows={3}
-                  />
+
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Enter document description" 
+                          className="min-h-[80px]"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="content"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Document Content</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Enter the main document content..." 
+                          className="min-h-[200px]"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="flex justify-end gap-2">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setIsDialogOpen(false)}
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    disabled={createMutation.isPending || updateMutation.isPending}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    {editingDocument ? "Update" : "Create"} Document
+                  </Button>
                 </div>
-              </div>
-              
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="isRequired"
-                    checked={formData.isRequired}
-                    onCheckedChange={(checked) => setFormData({ ...formData, isRequired: checked })}
-                  />
-                  <Label htmlFor="isRequired">Required Document</Label>
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="isActive"
-                    checked={formData.isActive}
-                    onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
-                  />
-                  <Label htmlFor="isActive">Active</Label>
-                </div>
-              </div>
-              
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                  {editingDocument ? 'Update' : 'Create'} Document
-                </Button>
-              </DialogFooter>
-            </form>
+              </form>
+            </Form>
           </DialogContent>
         </Dialog>
       </div>
 
       {/* Filters */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="h-5 w-5" />
-            Filters
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="search">Search</Label>
+        <CardContent className="pt-6">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="h-4 w-4 absolute left-3 top-3 text-gray-400" />
                 <Input
-                  id="search"
                   placeholder="Search documents..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -514,219 +424,134 @@ export default function DocumentManagement() {
               </div>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="vessel-filter">Vessel</Label>
-              <Select value={vesselFilter} onValueChange={setVesselFilter}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Vessels</SelectItem>
-                  <SelectItem value="none">No Vessel</SelectItem>
-                  {vesselsData?.data?.slice(0, 20).map((vessel: any) => (
-                    <SelectItem key={vessel.id} value={vessel.id.toString()}>
-                      {vessel.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full md:w-40">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+                <SelectItem value="draft">Draft</SelectItem>
+              </SelectContent>
+            </Select>
             
-            <div className="space-y-2">
-              <Label htmlFor="type-filter">Document Type</Label>
-              <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  {documentTypes.map((type) => (
-                    <SelectItem key={type.value} value={type.value}>
-                      {type.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="status-filter">Status</Label>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="archived">Archived</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label>Actions</Label>
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  setSearchTerm('');
-                  setVesselFilter('all');
-                  setTypeFilter('all');
-                  setStatusFilter('all');
-                  setPage(1);
-                }}
-                className="w-full"
-              >
-                Clear Filters
-              </Button>
-            </div>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="w-full md:w-40">
+                <SelectValue placeholder="Filter by category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="general">General</SelectItem>
+                <SelectItem value="technical">Technical</SelectItem>
+                <SelectItem value="legal">Legal</SelectItem>
+                <SelectItem value="commercial">Commercial</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
 
-      {/* Documents Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>Documents ({documentsData?.pagination?.total || 0})</span>
-            <Badge variant="outline">
-              Page {documentsData?.pagination?.page || 1} of {documentsData?.pagination?.totalPages || 1}
-            </Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            </div>
-          ) : (
-            <ScrollArea className="h-96">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Document</TableHead>
-                    <TableHead>Vessel</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Details</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {documentsData?.data?.map((document: Document) => (
-                    <TableRow key={document.id}>
-                      <TableCell>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <FileText className="h-4 w-4 text-blue-500" />
-                            <span className="font-medium">{document.title}</span>
-                          </div>
-                          <div className="text-sm text-muted-foreground">v{document.version}</div>
-                          {document.isRequired && (
-                            <Badge variant="destructive" className="text-xs mt-1">
-                              Required
-                            </Badge>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {document.vesselName ? (
-                          <div className="flex items-center gap-1">
-                            <Building className="h-3 w-3 text-slate-500" />
-                            <span className="text-sm">{document.vesselName}</span>
-                          </div>
-                        ) : (
-                          <span className="text-sm text-muted-foreground">No vessel</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="text-xs">
-                          {getDocumentTypeLabel(document.documentType)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={getStatusColor(document.status)}>
-                          {document.status.charAt(0).toUpperCase() + document.status.slice(1)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
-                          {document.createdBy && (
-                            <div className="flex items-center gap-1 text-xs">
-                              <User className="h-3 w-3 text-green-500" />
-                              {document.createdBy}
-                            </div>
-                          )}
-                          {document.expiryDate && (
-                            <div className="flex items-center gap-1 text-xs">
-                              <Calendar className="h-3 w-3 text-orange-500" />
-                              {new Date(document.expiryDate).toLocaleDateString()}
-                            </div>
-                          )}
-                          {document.tags && (
-                            <div className="flex flex-wrap gap-1 mt-1">
-                              {document.tags.split(',').slice(0, 2).map((tag, index) => (
-                                <Badge key={index} variant="secondary" className="text-xs">
-                                  {tag.trim()}
-                                </Badge>
-                              ))}
-                              {document.tags.split(',').length > 2 && (
-                                <span className="text-xs text-muted-foreground">
-                                  +{document.tags.split(',').length - 2} more
-                                </span>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEdit(document)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDelete(document.id)}
-                            disabled={deleteMutation.isPending}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </ScrollArea>
-          )}
-        </CardContent>
-        <CardFooter>
-          <div className="flex items-center justify-between w-full">
-            <Button
-              variant="outline"
-              onClick={() => setPage(Math.max(1, page - 1))}
-              disabled={page <= 1 || isLoading}
-            >
-              Previous
-            </Button>
-            <span className="text-sm text-muted-foreground">
-              Page {page} of {documentsData?.pagination?.totalPages || 1}
-            </span>
-            <Button
-              variant="outline"
-              onClick={() => setPage(page + 1)}
-              disabled={page >= (documentsData?.pagination?.totalPages || 1) || isLoading}
-            >
-              Next
-            </Button>
-          </div>
-        </CardFooter>
-      </Card>
+      {/* Documents Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredDocuments.map((document) => (
+          <Card key={document.id} className="hover:shadow-lg transition-shadow">
+            <CardHeader className="pb-3">
+              <div className="flex justify-between items-start">
+                <CardTitle className="text-lg font-semibold text-gray-900 line-clamp-2">
+                  {document.title}
+                </CardTitle>
+                <div className="flex gap-1">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => handleEdit(document)}
+                    className="h-8 w-8 p-0"
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => handleDelete(document.id)}
+                    className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="flex flex-wrap gap-2 mt-2">
+                <Badge className={getStatusColor(document.status)}>
+                  {document.status}
+                </Badge>
+                <Badge className={getCategoryColor(document.category)}>
+                  {document.category}
+                </Badge>
+                {document.isTemplate && (
+                  <Badge variant="outline">Template</Badge>
+                )}
+              </div>
+            </CardHeader>
+            
+            <CardContent>
+              <div className="space-y-3">
+                <div>
+                  <p className="text-sm font-medium text-gray-700">Document Type</p>
+                  <p className="text-sm text-gray-600">{document.documentType}</p>
+                </div>
+                
+                {document.description && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">Description</p>
+                    <p className="text-sm text-gray-600 line-clamp-2">{document.description}</p>
+                  </div>
+                )}
+                
+                {document.tags && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">Tags</p>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {document.tags.split(',').map((tag, index) => (
+                        <span 
+                          key={index}
+                          className="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded"
+                        >
+                          {tag.trim()}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                <div className="text-xs text-gray-500">
+                  Created: {new Date(document.createdAt).toLocaleDateString()}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {filteredDocuments.length === 0 && (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No documents found</h3>
+            <p className="text-gray-600 mb-4">
+              {searchTerm || statusFilter !== "all" || categoryFilter !== "all" 
+                ? "Try adjusting your filters or search terms." 
+                : "Create your first document to get started."}
+            </p>
+            {!searchTerm && statusFilter === "all" && categoryFilter === "all" && (
+              <Button onClick={handleNewDocument} className="bg-blue-600 hover:bg-blue-700">
+                <Plus className="h-4 w-4 mr-2" />
+                Create Document
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

@@ -383,6 +383,20 @@ export default function AdminPanel() {
           <ProfessionalRefineryManagement />
         </TabsContent>
 
+        <TabsContent value="documents" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Document Management</CardTitle>
+              <CardDescription>
+                Create and manage documents that appear in Professional Documents
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <DocumentManagement />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="data" className="space-y-4">
           <Card>
             <CardHeader>

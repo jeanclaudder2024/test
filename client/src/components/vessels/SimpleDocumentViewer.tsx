@@ -1,9 +1,10 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { FileText, Download, Clock } from "lucide-react";
+import { FileText, Download, Clock, Settings } from "lucide-react";
 
 interface SimpleDocument {
   id: number;
@@ -12,6 +13,24 @@ interface SimpleDocument {
   content: string;
   status: string;
   createdAt: string;
+  documentType?: string;
+  category?: string;
+  source: 'vessel' | 'admin';
+}
+
+interface AdminDocument {
+  id: number;
+  title: string;
+  description: string | null;
+  content: string;
+  documentType: string;
+  status: string;
+  category: string;
+  tags: string | null;
+  isTemplate: boolean;
+  createdBy: number | null;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 interface SimpleDocumentViewerProps {
@@ -23,8 +42,14 @@ export function SimpleDocumentViewer({ vessel }: SimpleDocumentViewerProps) {
   const [isDownloading, setIsDownloading] = useState(false);
   const { toast } = useToast();
 
-  // Sample documents without API dependency
-  const sampleDocuments: SimpleDocument[] = [
+  // Fetch admin documents
+  const { data: adminDocuments = [], isLoading: adminLoading } = useQuery<AdminDocument[]>({
+    queryKey: ["/api/admin/documents"],
+    retry: false,
+  });
+
+  // Sample vessel-specific documents
+  const vesselDocuments: SimpleDocument[] = [
     {
       id: 1,
       title: "Vessel Inspection Certificate",
@@ -51,7 +76,8 @@ Valid until: ${new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toLocaleDateStri
 Issued by: Maritime Safety Authority
 Certificate Number: MSA-${vessel.id}-2024`,
       status: "published",
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      source: 'vessel' as const,
     },
     {
       id: 2,
@@ -82,7 +108,8 @@ FINANCIAL PROJECTIONS:
 RECOMMENDATIONS:
 The vessel demonstrates strong commercial potential with current market conditions supporting profitable operations.`,
       status: "published",
-      createdAt: new Date(Date.now() - 86400000).toISOString()
+      createdAt: new Date(Date.now() - 86400000).toISOString(),
+      source: 'vessel' as const,
     },
     {
       id: 3,
