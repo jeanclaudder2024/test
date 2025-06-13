@@ -871,7 +871,6 @@ export const adminDocuments = pgTable("admin_documents", {
   category: text("category").default("general"), // general, technical, legal, commercial
   tags: text("tags"), // comma-separated tags
   isTemplate: boolean("is_template").default(false),
-  isActive: boolean("is_active").default(true),
   createdBy: integer("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
