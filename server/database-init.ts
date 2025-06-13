@@ -47,10 +47,17 @@ export async function initializeCustomAuthTables() {
         category TEXT DEFAULT 'general',
         tags TEXT,
         is_template BOOLEAN DEFAULT false,
+        is_active BOOLEAN DEFAULT true,
         created_by INTEGER REFERENCES users(id),
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       )
+    `);
+    
+    // Add is_active column if it doesn't exist (for existing tables)
+    await db.execute(sql`
+      ALTER TABLE admin_documents 
+      ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true
     `);
     
     // Create indexes for better performance
