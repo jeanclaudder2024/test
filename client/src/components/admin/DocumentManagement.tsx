@@ -49,12 +49,39 @@ export default function DocumentManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
-  
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: documents = [], isLoading } = useQuery<AdminDocument[]>({
+  // Custom fetch function that includes authentication
+  const authenticatedFetch = async (url: string) => {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('401: Unauthorized - Please log in again');
+      }
+      throw new Error(`${response.status}: ${response.statusText}`);
+    }
+
+    return response.json();
+  };
+
+  // Fetch admin documents with authentication
+  const { data: documents = [], isLoading, error } = useQuery<AdminDocument[]>({
     queryKey: ["/api/admin/documents"],
+    queryFn: () => authenticatedFetch("/api/admin/documents"),
+    retry: false,
   });
 
   const form = useForm<DocumentFormData>({
@@ -71,6 +98,7 @@ export default function DocumentManagement() {
     },
   });
 
+  // Create document mutation
   const createMutation = useMutation({
     mutationFn: async (data: DocumentFormData) => {
       return await apiRequest("/api/admin/documents", {
@@ -81,27 +109,28 @@ export default function DocumentManagement() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/documents"] });
       setIsDialogOpen(false);
-      setEditingDocument(null);
       form.reset();
       toast({
         title: "Success",
         description: "Document created successfully",
       });
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast({
         title: "Error",
-        description: "Failed to create document",
+        description: error.message || "Failed to create document",
         variant: "destructive",
       });
     },
   });
 
+  // Update document mutation
   const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: DocumentFormData }) => {
+    mutationFn: async (data: DocumentFormData & { id: number }) => {
+      const { id, ...updateData } = data;
       return await apiRequest(`/api/admin/documents/${id}`, {
         method: "PUT",
-        body: JSON.stringify(data),
+        body: JSON.stringify(updateData),
       });
     },
     onSuccess: () => {
@@ -114,15 +143,16 @@ export default function DocumentManagement() {
         description: "Document updated successfully",
       });
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast({
         title: "Error",
-        description: "Failed to update document",
+        description: error.message || "Failed to update document",
         variant: "destructive",
       });
     },
   });
 
+  // Delete document mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
       return await apiRequest(`/api/admin/documents/${id}`, {
@@ -136,10 +166,10 @@ export default function DocumentManagement() {
         description: "Document deleted successfully",
       });
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast({
         title: "Error",
-        description: "Failed to delete document",
+        description: error.message || "Failed to delete document",
         variant: "destructive",
       });
     },
@@ -147,7 +177,7 @@ export default function DocumentManagement() {
 
   const onSubmit = (data: DocumentFormData) => {
     if (editingDocument) {
-      updateMutation.mutate({ id: editingDocument.id, data });
+      updateMutation.mutate({ ...data, id: editingDocument.id });
     } else {
       createMutation.mutate(data);
     }
@@ -174,247 +204,57 @@ export default function DocumentManagement() {
     }
   };
 
-  const handleNewDocument = () => {
+  const openCreateDialog = () => {
     setEditingDocument(null);
     form.reset();
     setIsDialogOpen(true);
   };
 
+  // Filter documents
   const filteredDocuments = documents.filter((doc) => {
     const matchesSearch = doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         doc.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         doc.documentType.toLowerCase().includes(searchTerm.toLowerCase());
+                         doc.content.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "all" || doc.status === statusFilter;
     const matchesCategory = categoryFilter === "all" || doc.category === categoryFilter;
     
     return matchesSearch && matchesStatus && matchesCategory;
   });
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "active": return "bg-green-100 text-green-800";
-      case "inactive": return "bg-red-100 text-red-800";
-      case "draft": return "bg-yellow-100 text-yellow-800";
-      default: return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case "technical": return "bg-blue-100 text-blue-800";
-      case "legal": return "bg-purple-100 text-purple-800";
-      case "commercial": return "bg-orange-100 text-orange-800";
-      default: return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  if (isLoading) {
+  if (error) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="p-6">
+        <Card>
+          <CardContent className="p-6">
+            <div className="text-center text-red-600">
+              <p className="mb-4">Error loading documents: {error.message}</p>
+              <Button onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/admin/documents"] })}>
+                Retry
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Document Management</h2>
-          <p className="text-gray-600 mt-1">Create and manage documents that appear in Professional Documents</p>
-        </div>
-        
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={handleNewDocument} className="bg-blue-600 hover:bg-blue-700">
-              <Plus className="h-4 w-4 mr-2" />
-              New Document
-            </Button>
-          </DialogTrigger>
-          
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>
-                {editingDocument ? "Edit Document" : "Create New Document"}
-              </DialogTitle>
-            </DialogHeader>
-            
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="title"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Document Title</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter document title" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="documentType"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Document Type</FormLabel>
-                        <FormControl>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select document type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="Maritime Certification">Maritime Certification</SelectItem>
-                              <SelectItem value="Cargo Manifest">Cargo Manifest</SelectItem>
-                              <SelectItem value="Vessel Inspection">Vessel Inspection</SelectItem>
-                              <SelectItem value="Safety Certificate">Safety Certificate</SelectItem>
-                              <SelectItem value="Commercial Agreement">Commercial Agreement</SelectItem>
-                              <SelectItem value="Technical Specification">Technical Specification</SelectItem>
-                              <SelectItem value="Compliance Report">Compliance Report</SelectItem>
-                              <SelectItem value="Insurance Document">Insurance Document</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="status"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Status</FormLabel>
-                        <FormControl>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="active">Active</SelectItem>
-                              <SelectItem value="inactive">Inactive</SelectItem>
-                              <SelectItem value="draft">Draft</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="category"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Category</FormLabel>
-                        <FormControl>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="general">General</SelectItem>
-                              <SelectItem value="technical">Technical</SelectItem>
-                              <SelectItem value="legal">Legal</SelectItem>
-                              <SelectItem value="commercial">Commercial</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="tags"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Tags (comma-separated)</FormLabel>
-                        <FormControl>
-                          <Input placeholder="certification, maritime, safety" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Enter document description" 
-                          className="min-h-[80px]"
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="content"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Document Content</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Enter the main document content..." 
-                          className="min-h-[200px]"
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="flex justify-end gap-2">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => setIsDialogOpen(false)}
-                  >
-                    <X className="h-4 w-4 mr-2" />
-                    Cancel
-                  </Button>
-                  <Button 
-                    type="submit" 
-                    disabled={createMutation.isPending || updateMutation.isPending}
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
-                    <Save className="h-4 w-4 mr-2" />
-                    {editingDocument ? "Update" : "Create"} Document
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
+        <h2 className="text-2xl font-bold">Document Management</h2>
+        <Button onClick={openCreateDialog} className="flex items-center gap-2">
+          <Plus className="h-4 w-4" />
+          Create Document
+        </Button>
       </div>
 
       {/* Filters */}
       <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
+        <CardContent className="p-4">
+          <div className="flex flex-wrap gap-4">
+            <div className="flex-1 min-w-[200px]">
               <div className="relative">
-                <Search className="h-4 w-4 absolute left-3 top-3 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
                   placeholder="Search documents..."
                   value={searchTerm}
@@ -425,8 +265,8 @@ export default function DocumentManagement() {
             </div>
             
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full md:w-40">
-                <SelectValue placeholder="Filter by status" />
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
@@ -435,10 +275,10 @@ export default function DocumentManagement() {
                 <SelectItem value="draft">Draft</SelectItem>
               </SelectContent>
             </Select>
-            
+
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-full md:w-40">
-                <SelectValue placeholder="Filter by category" />
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
@@ -452,106 +292,236 @@ export default function DocumentManagement() {
         </CardContent>
       </Card>
 
-      {/* Documents Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredDocuments.map((document) => (
-          <Card key={document.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader className="pb-3">
-              <div className="flex justify-between items-start">
-                <CardTitle className="text-lg font-semibold text-gray-900 line-clamp-2">
-                  {document.title}
-                </CardTitle>
-                <div className="flex gap-1">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => handleEdit(document)}
-                    className="h-8 w-8 p-0"
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => handleDelete(document.id)}
-                    className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-              
-              <div className="flex flex-wrap gap-2 mt-2">
-                <Badge className={getStatusColor(document.status)}>
-                  {document.status}
-                </Badge>
-                <Badge className={getCategoryColor(document.category)}>
-                  {document.category}
-                </Badge>
-                {document.isTemplate && (
-                  <Badge variant="outline">Template</Badge>
-                )}
-              </div>
-            </CardHeader>
-            
-            <CardContent>
-              <div className="space-y-3">
-                <div>
-                  <p className="text-sm font-medium text-gray-700">Document Type</p>
-                  <p className="text-sm text-gray-600">{document.documentType}</p>
-                </div>
-                
-                {document.description && (
-                  <div>
-                    <p className="text-sm font-medium text-gray-700">Description</p>
-                    <p className="text-sm text-gray-600 line-clamp-2">{document.description}</p>
-                  </div>
-                )}
-                
-                {document.tags && (
-                  <div>
-                    <p className="text-sm font-medium text-gray-700">Tags</p>
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {document.tags.split(',').map((tag, index) => (
-                        <span 
-                          key={index}
-                          className="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded"
-                        >
-                          {tag.trim()}
-                        </span>
-                      ))}
+      {/* Documents List */}
+      {isLoading ? (
+        <div className="text-center py-8">Loading documents...</div>
+      ) : (
+        <div className="grid gap-4">
+          {filteredDocuments.length === 0 ? (
+            <Card>
+              <CardContent className="p-6 text-center text-gray-500">
+                No documents found. Create your first document to get started.
+              </CardContent>
+            </Card>
+          ) : (
+            filteredDocuments.map((document) => (
+              <Card key={document.id}>
+                <CardHeader className="pb-3">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <FileText className="h-5 w-5" />
+                        {document.title}
+                      </CardTitle>
+                      {document.description && (
+                        <p className="text-sm text-gray-600 mt-1">{document.description}</p>
+                      )}
+                    </div>
+                    <div className="flex gap-2 ml-4">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit(document)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(document.id)}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
-                )}
-                
-                <div className="text-xs text-gray-500">
-                  Created: {new Date(document.createdAt).toLocaleDateString()}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {filteredDocuments.length === 0 && (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No documents found</h3>
-            <p className="text-gray-600 mb-4">
-              {searchTerm || statusFilter !== "all" || categoryFilter !== "all" 
-                ? "Try adjusting your filters or search terms." 
-                : "Create your first document to get started."}
-            </p>
-            {!searchTerm && statusFilter === "all" && categoryFilter === "all" && (
-              <Button onClick={handleNewDocument} className="bg-blue-600 hover:bg-blue-700">
-                <Plus className="h-4 w-4 mr-2" />
-                Create Document
-              </Button>
-            )}
-          </CardContent>
-        </Card>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    <Badge variant="secondary">{document.documentType}</Badge>
+                    <Badge 
+                      variant={document.status === "active" ? "default" : 
+                              document.status === "draft" ? "secondary" : "outline"}
+                    >
+                      {document.status}
+                    </Badge>
+                    <Badge variant="outline">{document.category}</Badge>
+                    {document.isTemplate && <Badge variant="outline">Template</Badge>}
+                  </div>
+                  <p className="text-sm text-gray-600 line-clamp-2">
+                    {document.content.substring(0, 150)}...
+                  </p>
+                  <div className="text-xs text-gray-500 mt-2">
+                    Created: {new Date(document.createdAt).toLocaleDateString()}
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </div>
       )}
+
+      {/* Create/Edit Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {editingDocument ? "Edit Document" : "Create New Document"}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Title</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Document title" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Brief description (optional)" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="documentType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Document Type</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., Maritime Certification" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="category"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Category</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select category" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="general">General</SelectItem>
+                          <SelectItem value="technical">Technical</SelectItem>
+                          <SelectItem value="legal">Legal</SelectItem>
+                          <SelectItem value="commercial">Commercial</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="active">Active</SelectItem>
+                          <SelectItem value="inactive">Inactive</SelectItem>
+                          <SelectItem value="draft">Draft</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="tags"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tags</FormLabel>
+                      <FormControl>
+                        <Input placeholder="comma, separated, tags" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="content"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Content</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Document content..."
+                        className="min-h-[200px]"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex justify-end gap-2 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={createMutation.isPending || updateMutation.isPending}
+                >
+                  {createMutation.isPending || updateMutation.isPending ? (
+                    "Saving..."
+                  ) : editingDocument ? (
+                    "Update Document"
+                  ) : (
+                    "Create Document"
+                  )}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

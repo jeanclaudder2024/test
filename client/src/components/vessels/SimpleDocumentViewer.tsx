@@ -42,9 +42,35 @@ export function SimpleDocumentViewer({ vessel }: SimpleDocumentViewerProps) {
   const [isDownloading, setIsDownloading] = useState(false);
   const { toast } = useToast();
 
-  // Fetch admin documents
-  const { data: adminDocuments = [], isLoading: adminLoading } = useQuery<AdminDocument[]>({
+  // Custom fetch function that includes authentication
+  const authenticatedFetch = async (url: string) => {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('401: Unauthorized - Please log in again');
+      }
+      throw new Error(`${response.status}: ${response.statusText}`);
+    }
+
+    return response.json();
+  };
+
+  // Fetch admin documents with authentication
+  const { data: adminDocuments = [], isLoading: adminLoading, error: adminError } = useQuery<AdminDocument[]>({
     queryKey: ["/api/admin/documents"],
+    queryFn: () => authenticatedFetch("/api/admin/documents"),
     retry: false,
   });
 
@@ -151,7 +177,7 @@ All technical systems meet international maritime standards and regulatory requi
   ];
 
   // Convert admin documents to SimpleDocument format and combine with vessel documents
-  const adminDocsConverted: SimpleDocument[] = adminDocuments.map(doc => ({
+  const adminDocsConverted: SimpleDocument[] = adminError ? [] : adminDocuments.map(doc => ({
     id: doc.id + 1000, // Offset to avoid ID conflicts
     title: doc.title,
     description: doc.description || '',
@@ -165,6 +191,11 @@ All technical systems meet international maritime standards and regulatory requi
 
   // Combine all documents
   const allDocuments = [...vesselDocuments, ...adminDocsConverted];
+
+  // Show admin documents error if it exists
+  if (adminError) {
+    console.warn('Admin documents could not be loaded:', adminError.message);
+  }
 
   const handleDownloadWord = async (doc: SimpleDocument) => {
     setIsDownloading(true);

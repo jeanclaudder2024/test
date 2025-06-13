@@ -35,9 +35,29 @@ export async function initializeCustomAuthTables() {
       )
     `);
     
+    // Create admin_documents table
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS admin_documents (
+        id SERIAL PRIMARY KEY,
+        title TEXT NOT NULL,
+        description TEXT,
+        content TEXT NOT NULL,
+        document_type TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'active',
+        category TEXT DEFAULT 'general',
+        tags TEXT,
+        is_template BOOLEAN DEFAULT false,
+        created_by INTEGER REFERENCES users(id),
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    
     // Create indexes for better performance
     await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`);
     await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_user_subscriptions_user_id ON user_subscriptions(user_id)`);
+    await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_admin_documents_status ON admin_documents(status)`);
+    await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_admin_documents_category ON admin_documents(category)`);
     
     console.log('Custom authentication tables created successfully');
     
