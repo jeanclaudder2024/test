@@ -1717,7 +1717,20 @@ export class DatabaseStorage implements IStorage {
   // Admin Document Management Methods
   async getAdminDocuments(): Promise<AdminDocument[]> {
     try {
-      return await db.select().from(adminDocuments)
+      return await db.select({
+        id: adminDocuments.id,
+        title: adminDocuments.title,
+        description: adminDocuments.description,
+        content: adminDocuments.content,
+        documentType: adminDocuments.documentType,
+        status: adminDocuments.status,
+        category: adminDocuments.category,
+        tags: adminDocuments.tags,
+        isTemplate: adminDocuments.isTemplate,
+        createdBy: adminDocuments.createdBy,
+        createdAt: adminDocuments.createdAt,
+        updatedAt: adminDocuments.updatedAt
+      }).from(adminDocuments)
         .orderBy(adminDocuments.createdAt);
     } catch (error) {
       console.error('Error fetching admin documents:', error);
@@ -1727,7 +1740,20 @@ export class DatabaseStorage implements IStorage {
 
   async getAdminDocumentById(id: number): Promise<AdminDocument | undefined> {
     try {
-      const [document] = await db.select().from(adminDocuments)
+      const [document] = await db.select({
+        id: adminDocuments.id,
+        title: adminDocuments.title,
+        description: adminDocuments.description,
+        content: adminDocuments.content,
+        documentType: adminDocuments.documentType,
+        status: adminDocuments.status,
+        category: adminDocuments.category,
+        tags: adminDocuments.tags,
+        isTemplate: adminDocuments.isTemplate,
+        createdBy: adminDocuments.createdBy,
+        createdAt: adminDocuments.createdAt,
+        updatedAt: adminDocuments.updatedAt
+      }).from(adminDocuments)
         .where(eq(adminDocuments.id, id));
       return document;
     } catch (error) {
@@ -1738,7 +1764,20 @@ export class DatabaseStorage implements IStorage {
 
   async getAdminDocumentsByCategory(category: string): Promise<AdminDocument[]> {
     try {
-      return await db.select().from(adminDocuments)
+      return await db.select({
+        id: adminDocuments.id,
+        title: adminDocuments.title,
+        description: adminDocuments.description,
+        content: adminDocuments.content,
+        documentType: adminDocuments.documentType,
+        status: adminDocuments.status,
+        category: adminDocuments.category,
+        tags: adminDocuments.tags,
+        isTemplate: adminDocuments.isTemplate,
+        createdBy: adminDocuments.createdBy,
+        createdAt: adminDocuments.createdAt,
+        updatedAt: adminDocuments.updatedAt
+      }).from(adminDocuments)
         .where(eq(adminDocuments.category, category))
         .orderBy(adminDocuments.createdAt);
     } catch (error) {
@@ -1749,7 +1788,20 @@ export class DatabaseStorage implements IStorage {
 
   async getAdminDocumentsByStatus(status: string): Promise<AdminDocument[]> {
     try {
-      return await db.select().from(adminDocuments)
+      return await db.select({
+        id: adminDocuments.id,
+        title: adminDocuments.title,
+        description: adminDocuments.description,
+        content: adminDocuments.content,
+        documentType: adminDocuments.documentType,
+        status: adminDocuments.status,
+        category: adminDocuments.category,
+        tags: adminDocuments.tags,
+        isTemplate: adminDocuments.isTemplate,
+        createdBy: adminDocuments.createdBy,
+        createdAt: adminDocuments.createdAt,
+        updatedAt: adminDocuments.updatedAt
+      }).from(adminDocuments)
         .where(eq(adminDocuments.status, status))
         .orderBy(adminDocuments.createdAt);
     } catch (error) {
