@@ -75,9 +75,8 @@ import { portProximityRouter } from "./routes/port-proximity";
 import { vesselRefineryRouter } from "./routes/vesselRefineryRoutes";
 import { generateVesselPositionData } from "./routes/vessel-data-generation";
 import { refineryPortRouter } from "./routes/refineryPortRoutes";
-import { documentRouter } from "./routes/document-routes";
+import maritimeDocumentsRouter from "./routes/maritimeDocuments";
 import { aiRouter } from "./routes/aiRoutes";
-import { generateDocumentRouter } from "./routes/generate-document-route";
 import { companyRouter } from "./routes/companyRoutes";
 import portVesselRouter from "./routes/portVesselRoutes";
 import { subscriptionRouter } from "./routes/subscriptionRoutes";
@@ -3585,11 +3584,7 @@ Only use authentic, real-world data for existing refineries.`;
   // API routes for vessel-port connections
   app.use("/api/vessel-connections", simpleVesselConnectionsRouter);
 
-  // Document routes for vessel documents
-  app.use(documentRouter);
-  
-  // Document generation routes using OpenAI
-  app.use(generateDocumentRouter);
+  // Document routes removed - replaced with maritime document system
 
   // API routes configured and ready for production
 
@@ -9428,6 +9423,9 @@ Note: This document contains real vessel operational data and should be treated 
       });
     }
   });
+
+  // Maritime Document Management Routes - New System
+  app.use("/api/maritime-documents", maritimeDocumentsRouter);
 
   return httpServer;
 }
