@@ -7569,7 +7569,7 @@ Keep the description professional, informative, and around 150-200 words. Focus 
   });
 
   // Admin Document Management Routes
-  app.get("/api/admin/documents", async (req: Request, res: Response) => {
+  app.get("/api/admin/documents", authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const documents = await storage.getAdminDocuments();
       res.json(documents);
@@ -7579,7 +7579,7 @@ Keep the description professional, informative, and around 150-200 words. Focus 
     }
   });
 
-  app.get("/api/admin/documents/:id", async (req: Request, res: Response) => {
+  app.get("/api/admin/documents/:id", authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       const document = await storage.getAdminDocumentById(id);
@@ -7595,9 +7595,13 @@ Keep the description professional, informative, and around 150-200 words. Focus 
     }
   });
 
-  app.post("/api/admin/documents", async (req: Request, res: Response) => {
+  app.post("/api/admin/documents", authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const documentData = req.body;
+      // Add the authenticated user as the creator
+      if (req.user?.id) {
+        documentData.createdBy = req.user.id;
+      }
       const newDocument = await storage.createAdminDocument(documentData);
       res.status(201).json(newDocument);
     } catch (error) {
@@ -7606,7 +7610,7 @@ Keep the description professional, informative, and around 150-200 words. Focus 
     }
   });
 
-  app.put("/api/admin/documents/:id", async (req: Request, res: Response) => {
+  app.put("/api/admin/documents/:id", authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       const updateData = req.body;
@@ -7624,7 +7628,7 @@ Keep the description professional, informative, and around 150-200 words. Focus 
     }
   });
 
-  app.delete("/api/admin/documents/:id", async (req: Request, res: Response) => {
+  app.delete("/api/admin/documents/:id", authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const id = parseInt(req.params.id);
       const deleted = await storage.deleteAdminDocument(id);
