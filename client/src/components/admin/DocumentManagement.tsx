@@ -3,30 +3,17 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, Edit, Trash2, FileText, Save, X, Filter, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-
-const documentSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  description: z.string().optional(),
-  content: z.string().min(1, "Content is required"),
-  documentType: z.string().min(1, "Document type is required"),
-  status: z.enum(["active", "inactive", "draft"]).default("active"),
-  category: z.enum(["general", "technical", "legal", "commercial"]).default("general"),
-  tags: z.string().optional(),
-  isTemplate: z.boolean().default(false),
-});
-
-type DocumentFormData = z.infer<typeof documentSchema>;
+import { FileText, Plus, Edit, Trash2, Search } from "lucide-react";
 
 interface AdminDocument {
   id: number;
@@ -39,63 +26,48 @@ interface AdminDocument {
   tags: string | null;
   isTemplate: boolean;
   createdBy: number | null;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
 }
+
+const documentFormSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().optional(),
+  content: z.string().min(1, "Content is required"),
+  documentType: z.string().min(1, "Document type is required"),
+  status: z.enum(["active", "inactive", "draft"]),
+  category: z.enum(["general", "technical", "legal", "commercial"]),
+  tags: z.string().optional(),
+  isTemplate: z.boolean().default(false),
+});
+
+type DocumentFormData = z.infer<typeof documentFormSchema>;
 
 export default function DocumentManagement() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingDocument, setEditingDocument] = useState<AdminDocument | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Custom fetch function that includes authentication
-  const authenticatedFetch = async (url: string) => {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      throw new Error('No authentication token found');
-    }
-
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      if (response.status === 401) {
-        throw new Error('401: Unauthorized - Please log in again');
-      }
-      throw new Error(`${response.status}: ${response.statusText}`);
-    }
-
-    return response.json();
-  };
-
-  // Fetch admin documents with authentication
-  const { data: documents = [], isLoading, error } = useQuery<AdminDocument[]>({
-    queryKey: ["/api/admin/documents"],
-    queryFn: () => authenticatedFetch("/api/admin/documents"),
-    retry: false,
-  });
-
   const form = useForm<DocumentFormData>({
-    resolver: zodResolver(documentSchema),
+    resolver: zodResolver(documentFormSchema),
     defaultValues: {
       title: "",
       description: "",
       content: "",
       documentType: "",
-      status: "active",
+      status: "draft",
       category: "general",
       tags: "",
       isTemplate: false,
     },
+  });
+
+  // Fetch documents with proper error handling
+  const { data: documents = [], isLoading, error } = useQuery<AdminDocument[]>({
+    queryKey: ["/api/admin/documents"],
+    retry: 1,
   });
 
   // Create document mutation
@@ -127,10 +99,9 @@ export default function DocumentManagement() {
   // Update document mutation
   const updateMutation = useMutation({
     mutationFn: async (data: DocumentFormData & { id: number }) => {
-      const { id, ...updateData } = data;
-      return await apiRequest(`/api/admin/documents/${id}`, {
+      return await apiRequest(`/api/admin/documents/${data.id}`, {
         method: "PUT",
-        body: JSON.stringify(updateData),
+        body: JSON.stringify(data),
       });
     },
     onSuccess: () => {
@@ -214,290 +185,166 @@ export default function DocumentManagement() {
   const filteredDocuments = documents.filter((doc) => {
     const matchesSearch = doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          doc.content.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || doc.status === statusFilter;
-    const matchesCategory = categoryFilter === "all" || doc.category === categoryFilter;
-    
-    return matchesSearch && matchesStatus && matchesCategory;
+    return matchesSearch;
   });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading documents...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (error) {
     return (
-      <div className="p-6">
-        <Card>
-          <CardContent className="p-6">
-            <div className="text-center text-red-600">
-              <p className="mb-4">Error loading documents: {error.message}</p>
-              <Button onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/admin/documents"] })}>
-                Retry
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Unable to load documents</h3>
+          <p className="text-gray-500">{error.message}</p>
+          <Button 
+            onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/admin/documents"] })}
+            className="mt-4"
+          >
+            Try Again
+          </Button>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Document Management</h2>
-        <Button onClick={openCreateDialog} className="flex items-center gap-2">
-          <Plus className="h-4 w-4" />
-          Create Document
-        </Button>
-      </div>
-
-      {/* Filters */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-wrap gap-4">
-            <div className="flex-1 min-w-[200px]">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  placeholder="Search documents..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-            
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-                <SelectItem value="draft">Draft</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="Category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                <SelectItem value="general">General</SelectItem>
-                <SelectItem value="technical">Technical</SelectItem>
-                <SelectItem value="legal">Legal</SelectItem>
-                <SelectItem value="commercial">Commercial</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Documents List */}
-      {isLoading ? (
-        <div className="text-center py-8">Loading documents...</div>
-      ) : (
-        <div className="grid gap-4">
-          {filteredDocuments.length === 0 ? (
-            <Card>
-              <CardContent className="p-6 text-center text-gray-500">
-                No documents found. Create your first document to get started.
-              </CardContent>
-            </Card>
-          ) : (
-            filteredDocuments.map((document) => (
-              <Card key={document.id}>
-                <CardHeader className="pb-3">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        <FileText className="h-5 w-5" />
-                        {document.title}
-                      </CardTitle>
-                      {document.description && (
-                        <p className="text-sm text-gray-600 mt-1">{document.description}</p>
-                      )}
-                    </div>
-                    <div className="flex gap-2 ml-4">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEdit(document)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(document.id)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    <Badge variant="secondary">{document.documentType}</Badge>
-                    <Badge 
-                      variant={document.status === "active" ? "default" : 
-                              document.status === "draft" ? "secondary" : "outline"}
-                    >
-                      {document.status}
-                    </Badge>
-                    <Badge variant="outline">{document.category}</Badge>
-                    {document.isTemplate && <Badge variant="outline">Template</Badge>}
-                  </div>
-                  <p className="text-sm text-gray-600 line-clamp-2">
-                    {document.content.substring(0, 150)}...
-                  </p>
-                  <div className="text-xs text-gray-500 mt-2">
-                    Created: {new Date(document.createdAt).toLocaleDateString()}
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h3 className="text-lg font-medium text-gray-900">Document Management</h3>
+          <p className="text-sm text-gray-500">Create and manage administrative documents</p>
         </div>
-      )}
-
-      {/* Create/Edit Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {editingDocument ? "Edit Document" : "Create New Document"}
-            </DialogTitle>
-          </DialogHeader>
-          
-          <Form {...form}>
+        
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={openCreateDialog} className="bg-blue-600 hover:bg-blue-700">
+              <Plus className="h-4 w-4 mr-2" />
+              Create Document
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>
+                {editingDocument ? "Edit Document" : "Create New Document"}
+              </DialogTitle>
+              <DialogDescription>
+                {editingDocument 
+                  ? "Update the document information below." 
+                  : "Fill in the details to create a new document."
+                }
+              </DialogDescription>
+            </DialogHeader>
+            
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Title</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Document title" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Brief description (optional)" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="documentType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Document Type</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., Maritime Certification" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+              <div className="space-y-2">
+                <Label htmlFor="title">Title</Label>
+                <Input
+                  id="title"
+                  {...form.register("title")}
+                  placeholder="Document title"
                 />
+                {form.formState.errors.title && (
+                  <p className="text-sm text-red-600">{form.formState.errors.title.message}</p>
+                )}
+              </div>
 
-                <FormField
-                  control={form.control}
-                  name="category"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Category</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select category" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="general">General</SelectItem>
-                          <SelectItem value="technical">Technical</SelectItem>
-                          <SelectItem value="legal">Legal</SelectItem>
-                          <SelectItem value="commercial">Commercial</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Input
+                  id="description"
+                  {...form.register("description")}
+                  placeholder="Brief description (optional)"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select status" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="active">Active</SelectItem>
-                          <SelectItem value="inactive">Inactive</SelectItem>
-                          <SelectItem value="draft">Draft</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
+                <div className="space-y-2">
+                  <Label htmlFor="documentType">Document Type</Label>
+                  <Input
+                    id="documentType"
+                    {...form.register("documentType")}
+                    placeholder="e.g., Certificate, Report"
+                  />
+                  {form.formState.errors.documentType && (
+                    <p className="text-sm text-red-600">{form.formState.errors.documentType.message}</p>
                   )}
-                />
+                </div>
 
-                <FormField
-                  control={form.control}
-                  name="tags"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tags</FormLabel>
-                      <FormControl>
-                        <Input placeholder="comma, separated, tags" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="space-y-2">
+                  <Label htmlFor="tags">Tags</Label>
+                  <Input
+                    id="tags"
+                    {...form.register("tags")}
+                    placeholder="Comma-separated tags"
+                  />
+                </div>
               </div>
 
-              <FormField
-                control={form.control}
-                name="content"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Content</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Document content..."
-                        className="min-h-[200px]"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="status">Status</Label>
+                  <Select value={form.watch("status")} onValueChange={(value) => form.setValue("status", value as "active" | "inactive" | "draft")}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="draft">Draft</SelectItem>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              <div className="flex justify-end gap-2 pt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="category">Category</Label>
+                  <Select value={form.watch("category")} onValueChange={(value) => form.setValue("category", value as "general" | "technical" | "legal" | "commercial")}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="general">General</SelectItem>
+                      <SelectItem value="technical">Technical</SelectItem>
+                      <SelectItem value="legal">Legal</SelectItem>
+                      <SelectItem value="commercial">Commercial</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="content">Content</Label>
+                <Textarea
+                  id="content"
+                  {...form.register("content")}
+                  placeholder="Document content"
+                  rows={8}
+                />
+                {form.formState.errors.content && (
+                  <p className="text-sm text-red-600">{form.formState.errors.content.message}</p>
+                )}
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="isTemplate"
+                  {...form.register("isTemplate")}
+                  className="rounded border-gray-300"
+                />
+                <Label htmlFor="isTemplate">Use as template</Label>
+              </div>
+
+              <div className="flex justify-end space-x-2 pt-4">
                 <Button
                   type="button"
                   variant="outline"
@@ -508,20 +355,102 @@ export default function DocumentManagement() {
                 <Button
                   type="submit"
                   disabled={createMutation.isPending || updateMutation.isPending}
+                  className="bg-blue-600 hover:bg-blue-700"
                 >
-                  {createMutation.isPending || updateMutation.isPending ? (
-                    "Saving..."
-                  ) : editingDocument ? (
-                    "Update Document"
-                  ) : (
-                    "Create Document"
-                  )}
+                  {createMutation.isPending || updateMutation.isPending ? "Saving..." : editingDocument ? "Update" : "Create"}
                 </Button>
               </div>
             </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {/* Search */}
+      <div className="relative max-w-md">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+        <Input
+          placeholder="Search documents..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-10"
+        />
+      </div>
+
+      {/* Documents Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {filteredDocuments.map((document) => (
+          <Card key={document.id} className="hover:shadow-md transition-shadow">
+            <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+              <div className="flex-1">
+                <CardTitle className="text-lg font-medium line-clamp-1">
+                  {document.title}
+                </CardTitle>
+                {document.description && (
+                  <CardDescription className="line-clamp-2 mt-1">
+                    {document.description}
+                  </CardDescription>
+                )}
+              </div>
+              <div className="flex space-x-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleEdit(document)}
+                  className="h-8 w-8 p-0"
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleDelete(document.id)}
+                  className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2 mb-3">
+                <Badge variant={document.status === "active" ? "default" : document.status === "draft" ? "secondary" : "outline"}>
+                  {document.status}
+                </Badge>
+                <Badge variant="outline">{document.category}</Badge>
+                <Badge variant="outline">{document.documentType}</Badge>
+                {document.isTemplate && (
+                  <Badge variant="outline" className="bg-purple-50 text-purple-700">
+                    Template
+                  </Badge>
+                )}
+              </div>
+              <p className="text-sm text-gray-600 line-clamp-3">
+                {document.content}
+              </p>
+              {document.tags && (
+                <div className="mt-2 text-xs text-gray-500">
+                  Tags: {document.tags}
+                </div>
+              )}
+              <div className="mt-3 text-xs text-gray-400">
+                Created: {new Date(document.createdAt).toLocaleDateString()}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {filteredDocuments.length === 0 && (
+        <div className="text-center py-12">
+          <FileText className="mx-auto h-12 w-12 text-gray-400" />
+          <h3 className="mt-2 text-sm font-medium text-gray-900">No documents found</h3>
+          <p className="mt-1 text-sm text-gray-500">
+            {documents.length === 0 
+              ? "Get started by creating your first document."
+              : "Try adjusting your search filters."
+            }
+          </p>
+        </div>
+      )}
     </div>
   );
 }
