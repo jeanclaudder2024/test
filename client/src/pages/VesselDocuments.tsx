@@ -163,20 +163,24 @@ export default function VesselDocuments() {
   
   // Fetch vessel documents
   const { 
-    data: documents, 
+    data: documentsResponse, 
     isLoading: isLoadingDocuments,
     refetch: refetchDocuments
   } = useQuery({
-    queryKey: ['/api/vessels/documents', vesselId],
+    queryKey: ['/api/documents', { vessel: vesselId }],
+    queryFn: () => fetch(`/api/documents?vessel=${vesselId}`).then(res => res.json()),
     enabled: !!vesselId
   });
+
+  // Extract documents from response
+  const documents = documentsResponse?.data || [];
   
   // Generate document mutation
   const generateDocument = useMutation({
     mutationFn: async (formData: any) => {
       return apiRequest(`/api/vessels/${vesselId}/generate-document`, {
         method: 'POST',
-        data: formData
+        body: JSON.stringify(formData)
       });
     },
     onSuccess: (data) => {
@@ -184,7 +188,7 @@ export default function VesselDocuments() {
         setGeneratedDocumentId(data.documentId);
         
         // Invalidate documents query to refresh list
-        queryClient.invalidateQueries({ queryKey: ['/api/vessels/documents', vesselId] });
+        queryClient.invalidateQueries({ queryKey: ['/api/documents', { vessel: vesselId }] });
         
         // Show success toast
         toast({
