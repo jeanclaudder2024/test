@@ -206,7 +206,7 @@ TECHNICAL IMPLEMENTATION:
 - Leaflet.js for interactive mapping
 - Custom marker clustering
 - Background voyage simulation service
-- AIS data integration capabilities
+- the vessel postion update autmaticli if the nut in ports  or nut in rifiner prots bicos sum rifner have her on ports nut conect to extern ports and use a script to mouv in map usig clculation bitun destition and start and and date
 
 5. PORTS PAGE (/ports)
 --------------------------------------------------------------------------------
