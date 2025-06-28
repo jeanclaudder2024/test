@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Vessel, Refinery, Port } from '@shared/schema';
 import { apiRequest } from '@/lib/queryClient';
 import { generateConnectedPorts } from '@/data/refineryData';
@@ -19,55 +20,56 @@ interface VesselStreamData {
  * and MarineTraffic service for vessels at ports
  */
 export function useVesselStream() {
-  const [data, setData] = useState<VesselStreamData>({
+  const [vesselsAndPorts, setVesselsAndPorts] = useState<{
+    vessels: Vessel[];
+    ports: Port[];
+  }>({
     vessels: [],
-    refineries: [],
-    ports: [],
-    stats: null,
-    loading: true,
-    error: null,
-    lastUpdated: null
+    ports: []
+  });
+
+  // Use React Query for refineries to ensure cache invalidation works
+  const { data: refineriesData = [], isLoading: refineriesLoading, error: refineriesError } = useQuery<Refinery[]>({
+    queryKey: ['/api/refineries'],
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    refetchInterval: 5 * 60 * 1000, // 5 minutes
   });
 
   useEffect(() => {
-    // Function to prepare data from database and API
-    const fetchData = async () => {
+    // Function to prepare vessels and ports data when refineries change
+    const fetchVesselsAndPorts = async () => {
+      if (!refineriesData.length) return;
+      
       try {
-        console.log('Fetching vessel and refinery data...');
-        
-        // Fetch refineries from database
-        const response = await fetch('/api/refineries');
-        if (!response.ok) {
-          throw new Error('Failed to fetch refineries from API');
-        }
-        
-        const refineriesData = await response.json();
+        console.log('Processing vessels and ports for', refineriesData.length, 'refineries...');
         
         // Generate ports connected to refineries
-        const portsData = generateConnectedPorts(refineriesData);
+        const generatedPorts = generateConnectedPorts(refineriesData);
         
         // Get vessels at each refinery using MarineTraffic service
         // Convert refineries to the format expected by getVesselsForRefinery
-        const refineryFormatForAPI = refineriesData.map(r => ({
-          name: r.name,
-          country: r.country,
-          region: r.region,
-          lat: parseFloat(r.lat.toString()),
-          lng: parseFloat(r.lng.toString()),
-          capacity: r.capacity,
-          status: r.status
-        }));
+        const refineryFormatForAPI = refineriesData
+          .filter(r => r.capacity !== null) // Only process refineries with valid capacity
+          .map(r => ({
+            name: r.name,
+            country: r.country,
+            region: r.region,
+            lat: parseFloat(r.lat.toString()),
+            lng: parseFloat(r.lng.toString()),
+            capacity: r.capacity as number, // TypeScript now knows this is not null
+            status: r.status || 'active'
+          }));
         
         const vesselsPromises = refineryFormatForAPI.map(refinery => getVesselsForRefinery(refinery));
         const vesselsResults = await Promise.all(vesselsPromises);
         const vesselsAtRefineries = vesselsResults.flat();
         
-        console.log(`Loaded ${refineriesData.length} refineries, ${portsData.length} connected ports, and ${vesselsAtRefineries.length} vessels from Marine Traffic`);
+        console.log(`Loaded ${refineriesData.length} refineries, ${generatedPorts.length} connected ports, and ${vesselsAtRefineries.length} vessels from Marine Traffic`);
         
         // Debug: Show example of the first port
-        if (portsData.length > 0) {
-          console.log('Example port:', portsData[0]);
-          console.log('Port lat/lng type:', typeof portsData[0].lat, typeof portsData[0].lng);
+        if (generatedPorts.length > 0) {
+          console.log('Example port:', generatedPorts[0]);
+          console.log('Port lat/lng type:', typeof generatedPorts[0].lat, typeof generatedPorts[0].lng);
         }
         
         // Debug: Show example of the first refinery
@@ -76,35 +78,33 @@ export function useVesselStream() {
           console.log('Refinery lat/lng type:', typeof refineriesData[0].lat, typeof refineriesData[0].lng);
         }
         
-        // Update state with the prepared data
-        setData({
-          vessels: vesselsAtRefineries, // Don't add ports to vessels array anymore
-          refineries: refineriesData,
-          ports: portsData,
-          stats: null, 
-          loading: false,
-          error: null,
-          lastUpdated: new Date()
+        // Update vessels and ports state
+        setVesselsAndPorts({
+          vessels: vesselsAtRefineries,
+          ports: generatedPorts
         });
+        
       } catch (error) {
-        console.error('Error preparing data:', error);
-        setData(prev => ({
-          ...prev,
-          error: 'Failed to prepare vessel and refinery data',
-          loading: false
-        }));
+        console.error('Error preparing vessels and ports data:', error);
+        setVesselsAndPorts({
+          vessels: [],
+          ports: []
+        });
       }
     };
 
-    // Initial fetch
-    fetchData();
-    
-    // Set up interval for polling with a longer delay
-    const intervalId = setInterval(fetchData, 5 * 60 * 1000); // Update every 5 minutes
-    
-    // Clean up interval on unmount
-    return () => clearInterval(intervalId);
-  }, []);
+    // Fetch vessels and ports when refineries data changes
+    fetchVesselsAndPorts();
+  }, [refineriesData]);
 
-  return data;
+  // Return combined data with proper loading states
+  return {
+    vessels: vesselsAndPorts.vessels,
+    refineries: refineriesData,
+    ports: vesselsAndPorts.ports,
+    stats: null,
+    loading: refineriesLoading,
+    error: refineriesError ? 'Failed to fetch refineries' : null,
+    lastUpdated: new Date()
+  };
 }
