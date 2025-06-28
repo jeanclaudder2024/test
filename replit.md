@@ -155,6 +155,12 @@ Changelog:
   * Removed all old document management code causing server startup errors
   * Server now running successfully with clean maritime document architecture
   * System supports certificate management, vessel associations, and professional document generation
+- June 28, 2025. Fixed Ports Page and Admin Port Management Synchronization:
+  * Resolved data synchronization issue between main ports page and admin port management
+  * Updated main ports page to use same React Query endpoint (/api/admin/ports) as admin panel
+  * Ensured proper cache invalidation when ports are added/modified via admin panel
+  * Both pages now show identical data and stay synchronized in real-time
+  * Applied same fix pattern used successfully for refineries synchronization
 
 ## User Preferences
 

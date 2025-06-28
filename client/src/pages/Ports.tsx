@@ -124,11 +124,14 @@ const columns: ColumnDef<Port>[] = [
 
 interface PortWithVesselCount extends Port {
   vesselCount: number;
+  connectedRefineries: number;
+  totalCargo: number;
   sampleVessel?: {
     name: string;
     type: string;
     flag: string;
   } | null;
+  nearbyVessels?: any[];
 }
 
 export default function Ports() {
@@ -148,41 +151,59 @@ export default function Ports() {
     setCurrentPage(1);
   }, [selectedRegion, searchTerm]);
   
-  // Fetch ports data with nearby vessel counts
+  // Fetch ports data using React Query (same as admin panel)
   const { 
-    data: portData, 
+    data: allPorts = [], 
     isLoading, 
     isError,
     error,
     refetch
   } = useQuery({
-    queryKey: ['/api/port-vessels/with-vessels/summary', selectedRegion, currentPage, pageSize, sortBy, sortOrder],
-    queryFn: async () => {
-      const url = new URL('/api/port-vessels/with-vessels/summary', window.location.origin);
-      
-      if (selectedRegion !== 'all') {
-        url.searchParams.append('region', selectedRegion);
-      }
-      
-      url.searchParams.append('page', currentPage.toString());
-      url.searchParams.append('limit', pageSize.toString());
-      url.searchParams.append('sortBy', sortBy);
-      url.searchParams.append('sortOrder', sortOrder);
-      
-      const response = await fetch(url.toString());
-      
-      if (!response.ok) {
-        throw new Error(`Error fetching ports: ${response.statusText}`);
-      }
-      
-      return response.json();
-    }
+    queryKey: ['/api/admin/ports'],
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    refetchInterval: 5 * 60 * 1000, // 5 minutes
   });
 
-  // Extract ports data and pagination info
-  const ports = portData?.data || [];
-  const totalItems = portData?.pagination?.totalItems || 0;
-  const totalPages = portData?.pagination?.totalPages || 1;
+  // Apply region filtering client-side
+  const regionFilteredPorts = selectedRegion === 'all' 
+    ? (allPorts as PortWithVesselCount[]) 
+    : (allPorts as PortWithVesselCount[]).filter((port: PortWithVesselCount) => port.region === selectedRegion);
+
+  // Apply sorting client-side
+  const sortedPorts = [...regionFilteredPorts].sort((a: PortWithVesselCount, b: PortWithVesselCount) => {
+    const getValue = (port: PortWithVesselCount, key: string) => {
+      switch (key) {
+        case 'name': return port.name;
+        case 'country': return port.country;
+        case 'capacity': return port.capacity || 0;
+        case 'vesselCount': return port.vesselCount || 0;
+        default: return port.name;
+      }
+    };
+
+    const aValue = getValue(a, sortBy);
+    const bValue = getValue(b, sortBy);
+
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      return sortOrder === 'asc' 
+        ? aValue.localeCompare(bValue)
+        : bValue.localeCompare(aValue);
+    }
+
+    if (typeof aValue === 'number' && typeof bValue === 'number') {
+      return sortOrder === 'asc' ? aValue - bValue : bValue - aValue;
+    }
+
+    return 0;
+  });
+
+  // Apply pagination client-side
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const ports = sortedPorts.slice(startIndex, endIndex);
+  
+  const totalItems = sortedPorts.length;
+  const totalPages = Math.ceil(totalItems / pageSize);
   
   // Filter ports by search term (client-side filtering)
   const filteredPorts = ports.filter((port: PortWithVesselCount) => {
@@ -191,7 +212,7 @@ export default function Ports() {
     return (
       port.name.toLowerCase().includes(search) ||
       port.country.toLowerCase().includes(search) ||
-      (port.type && port.type.toLowerCase().includes(search))
+      ((port as any).type && (port as any).type.toLowerCase().includes(search))
     );
   });
   
@@ -310,7 +331,7 @@ export default function Ports() {
                       <div key={port.id} className="h-full">
                         <PortCard
                           port={port}
-                          vessels={(port.nearbyVessels || []).map(vessel => ({
+                          vessels={(port.nearbyVessels || []).map((vessel: any) => ({
                             vessels: vessel.vessels,
                             distance: vessel.distance
                           }))}
@@ -549,7 +570,7 @@ export default function Ports() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                   {['oil', 'commercial', 'container', 'bulk'].map((type) => {
                     const typeCount = ports.filter((p: Port) => 
-                      p.type?.toLowerCase() === type.toLowerCase()
+                      (p as any).type?.toLowerCase() === type.toLowerCase()
                     ).length;
                     
                     return (
