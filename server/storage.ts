@@ -191,7 +191,7 @@ export interface IStorage {
   deleteFakeCompany(id: number): Promise<boolean>;
   
   // Professional Document Management methods
-  getProfessionalDocuments(): Promise<ProfessionalDocument[]>;
+  getProfessionalDocuments(): Promise<any[]>;
   getProfessionalDocumentById(id: number): Promise<ProfessionalDocument | undefined>;
   createProfessionalDocument(document: InsertProfessionalDocument): Promise<ProfessionalDocument>;
   updateProfessionalDocument(id: number, document: Partial<InsertProfessionalDocument>): Promise<ProfessionalDocument | undefined>;
@@ -1072,11 +1072,31 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Professional Document Management methods
-  async getProfessionalDocuments(): Promise<ProfessionalDocument[]> {
-    return await db.select()
-      .from(professionalDocuments)
-      .where(eq(professionalDocuments.isActive, true))
-      .orderBy(professionalDocuments.createdAt);
+  async getProfessionalDocuments(): Promise<any[]> {
+    // Use vessel documents table instead of professional documents table
+    return await db.select({
+      id: vesselDocuments.id,
+      vesselId: vesselDocuments.vesselId,
+      documentType: vesselDocuments.documentType,
+      title: vesselDocuments.title,
+      description: vesselDocuments.description,
+      content: vesselDocuments.content,
+      filePath: vesselDocuments.filePath,
+      fileSize: vesselDocuments.fileSize,
+      mimeType: vesselDocuments.mimeType,
+      version: vesselDocuments.version,
+      status: vesselDocuments.status,
+      isRequired: vesselDocuments.isRequired,
+      expiryDate: vesselDocuments.expiryDate,
+      createdBy: vesselDocuments.createdBy,
+      approvedBy: vesselDocuments.approvedBy,
+      approvedAt: vesselDocuments.approvedAt,
+      tags: vesselDocuments.tags,
+      metadata: vesselDocuments.metadata,
+      createdAt: vesselDocuments.createdAt,
+    })
+      .from(vesselDocuments)
+      .orderBy(vesselDocuments.createdAt);
   }
 
   async getProfessionalDocumentById(id: number): Promise<ProfessionalDocument | undefined> {

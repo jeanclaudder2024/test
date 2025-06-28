@@ -71,9 +71,7 @@ router.get('/', async (req, res) => {
         approvedAt: vesselDocuments.approvedAt,
         tags: vesselDocuments.tags,
         metadata: vesselDocuments.metadata,
-        isActive: vesselDocuments.isActive,
         createdAt: vesselDocuments.createdAt,
-        lastUpdated: vesselDocuments.lastUpdated,
       })
       .from(vesselDocuments)
       .leftJoin(vessels, eq(vesselDocuments.vesselId, vessels.id))
@@ -141,9 +139,7 @@ router.get('/:id', async (req, res) => {
         approvedAt: vesselDocuments.approvedAt,
         tags: vesselDocuments.tags,
         metadata: vesselDocuments.metadata,
-        isActive: vesselDocuments.isActive,
         createdAt: vesselDocuments.createdAt,
-        lastUpdated: vesselDocuments.lastUpdated,
       })
       .from(vesselDocuments)
       .leftJoin(vessels, eq(vesselDocuments.vesselId, vessels.id))
@@ -187,7 +183,6 @@ router.post('/', async (req, res) => {
       createdBy,
       tags,
       metadata,
-      isActive = true,
     } = req.body;
 
     // Validate required fields
@@ -213,7 +208,6 @@ router.post('/', async (req, res) => {
         createdBy,
         tags,
         metadata,
-        isActive,
       })
       .returning();
 
@@ -250,7 +244,6 @@ router.put('/:id', async (req, res) => {
       approvedBy,
       tags,
       metadata,
-      isActive,
     } = req.body;
 
     // Check if document exists
@@ -268,9 +261,7 @@ router.put('/:id', async (req, res) => {
     }
 
     // Update document
-    const updateData: any = {
-      lastUpdated: new Date(),
-    };
+    const updateData: any = {};
 
     if (vesselId !== undefined) updateData.vesselId = vesselId || null;
     if (documentType !== undefined) updateData.documentType = documentType;
@@ -285,7 +276,6 @@ router.put('/:id', async (req, res) => {
     if (approvedBy !== undefined) updateData.approvedBy = approvedBy;
     if (tags !== undefined) updateData.tags = tags;
     if (metadata !== undefined) updateData.metadata = metadata;
-    if (isActive !== undefined) updateData.isActive = isActive;
 
     // Set approval timestamp if approvedBy is provided
     if (approvedBy && !existingDocument[0].approvedBy) {
@@ -399,7 +389,6 @@ router.patch('/bulk-status', async (req, res) => {
       .update(vesselDocuments)
       .set({
         status,
-        lastUpdated: new Date(),
       })
       .where(eq(vesselDocuments.id, documentIds[0])); // Update for multiple IDs would need different approach
 

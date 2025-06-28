@@ -803,7 +803,7 @@ export const vesselDocuments = pgTable("vessel_documents", {
   approvedAt: timestamp("approved_at"),
   tags: text("tags"),
   metadata: text("metadata"),
-  isActive: boolean("is_active").default(true),
+  // isActive: boolean("is_active").default(true), // Temporarily commented out due to database schema mismatch
   createdAt: timestamp("created_at").defaultNow(),
   lastUpdated: timestamp("last_updated").defaultNow(),
 });

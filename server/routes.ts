@@ -7515,11 +7515,49 @@ Keep the description professional, informative, and around 150-200 words. Focus 
     }
   });
 
+  // Temporary check table structure endpoint
+  app.get("/api/admin/check-table", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const result = await db.execute(sql`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'vessel_documents' 
+        ORDER BY ordinal_position
+      `);
+      res.json({ success: true, columns: result });
+    } catch (error) {
+      console.error("Error checking table:", error);
+      res.status(500).json({ message: "Failed to check table", error: error.message });
+    }
+  });
+
   // Admin Document Management Routes
   app.get("/api/admin/documents", authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
     try {
-      const documents = await storage.getAdminDocuments();
-      res.json(documents);
+      // Use the existing vessel documents table for admin document management
+      // Select only the columns that actually exist in the database
+      const allDocuments = await db.select({
+        id: vesselDocuments.id,
+        vesselId: vesselDocuments.vesselId,
+        documentType: vesselDocuments.documentType,
+        title: vesselDocuments.title,
+        description: vesselDocuments.description,
+        content: vesselDocuments.content,
+        filePath: vesselDocuments.filePath,
+        fileSize: vesselDocuments.fileSize,
+        mimeType: vesselDocuments.mimeType,
+        version: vesselDocuments.version,
+        status: vesselDocuments.status,
+        isRequired: vesselDocuments.isRequired,
+        expiryDate: vesselDocuments.expiryDate,
+        createdBy: vesselDocuments.createdBy,
+        approvedBy: vesselDocuments.approvedBy,
+        approvedAt: vesselDocuments.approvedAt,
+        tags: vesselDocuments.tags,
+        metadata: vesselDocuments.metadata,
+        createdAt: vesselDocuments.createdAt,
+      }).from(vesselDocuments);
+      res.json({ success: true, data: allDocuments });
     } catch (error) {
       console.error("Error fetching admin documents:", error);
       res.status(500).json({ message: "Failed to fetch documents" });
@@ -7529,13 +7567,13 @@ Keep the description professional, informative, and around 150-200 words. Focus 
   app.get("/api/admin/documents/:id", authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const id = parseInt(req.params.id);
-      const document = await storage.getAdminDocumentById(id);
+      const document = await db.select().from(vesselDocuments).where(eq(vesselDocuments.id, id)).limit(1);
       
-      if (!document) {
+      if (document.length === 0) {
         return res.status(404).json({ message: "Document not found" });
       }
       
-      res.json(document);
+      res.json({ success: true, data: document[0] });
     } catch (error) {
       console.error("Error fetching admin document:", error);
       res.status(500).json({ message: "Failed to fetch document" });
@@ -7544,13 +7582,14 @@ Keep the description professional, informative, and around 150-200 words. Focus 
 
   app.post("/api/admin/documents", authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
     try {
-      const documentData = req.body;
-      // Add the authenticated user as the creator
-      if (req.user?.id) {
-        documentData.createdBy = req.user.id;
-      }
-      const newDocument = await storage.createAdminDocument(documentData);
-      res.status(201).json(newDocument);
+      const documentData = {
+        ...req.body,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      
+      const newDocument = await db.insert(vesselDocuments).values(documentData).returning();
+      res.status(201).json({ success: true, data: newDocument[0] });
     } catch (error) {
       console.error("Error creating admin document:", error);
       res.status(500).json({ message: "Failed to create document" });
@@ -7560,15 +7599,22 @@ Keep the description professional, informative, and around 150-200 words. Focus 
   app.put("/api/admin/documents/:id", authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const id = parseInt(req.params.id);
-      const updateData = req.body;
+      const updateData = {
+        ...req.body,
+        updatedAt: new Date()
+      };
       
-      const updatedDocument = await storage.updateAdminDocument(id, updateData);
+      const updatedDocument = await db
+        .update(vesselDocuments)
+        .set(updateData)
+        .where(eq(vesselDocuments.id, id))
+        .returning();
       
-      if (!updatedDocument) {
+      if (updatedDocument.length === 0) {
         return res.status(404).json({ message: "Document not found" });
       }
       
-      res.json(updatedDocument);
+      res.json({ success: true, data: updatedDocument[0] });
     } catch (error) {
       console.error("Error updating admin document:", error);
       res.status(500).json({ message: "Failed to update document" });
@@ -7578,9 +7624,12 @@ Keep the description professional, informative, and around 150-200 words. Focus 
   app.delete("/api/admin/documents/:id", authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const id = parseInt(req.params.id);
-      const deleted = await storage.deleteAdminDocument(id);
+      const deleted = await db
+        .delete(vesselDocuments)
+        .where(eq(vesselDocuments.id, id))
+        .returning();
       
-      if (!deleted) {
+      if (deleted.length === 0) {
         return res.status(404).json({ message: "Document not found" });
       }
       
