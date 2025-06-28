@@ -65,10 +65,13 @@ export default function DocumentManagement() {
   });
 
   // Fetch documents
-  const { data: documents = [], isLoading, error } = useQuery<Document[]>({
+  const { data: documentsResponse, isLoading, error } = useQuery({
     queryKey: ["/api/documents"],
     retry: 1,
   });
+
+  // Extract documents from API response
+  const documents = Array.isArray(documentsResponse?.data) ? documentsResponse.data : [];
 
   // Create document mutation
   const createMutation = useMutation({

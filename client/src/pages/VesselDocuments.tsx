@@ -175,6 +175,9 @@ export default function VesselDocuments() {
   // Extract documents from response
   const documents = documentsResponse?.data || [];
   
+  // Type the vessel properly to avoid type errors
+  const typedVessel = vessel as any;
+  
   // Generate document mutation
   const generateDocument = useMutation({
     mutationFn: async (formData: any) => {
@@ -431,12 +434,12 @@ export default function VesselDocuments() {
             <div className="flex gap-1">
               <Badge variant="outline" className="bg-primary/5 text-primary">
                 <Ship className="mr-1 h-3 w-3" />
-                {vessel?.vesselType || 'Vessel'}
+                {typedVessel?.vesselType || 'Vessel'}
               </Badge>
               
               <Badge variant="outline" className="bg-primary/5">
                 <Flag className="mr-1 h-3 w-3" />
-                {vessel?.flag || 'Unknown Flag'}
+                {typedVessel?.flag || 'Unknown Flag'}
               </Badge>
             </div>
           </div>
@@ -445,11 +448,11 @@ export default function VesselDocuments() {
             <Ship className="h-8 w-8 text-primary" />
             <div>
               <h1 className="text-3xl font-bold tracking-tight">
-                {vessel?.name || ''} Documents
+                {typedVessel?.name || ''} Documents
               </h1>
               <p className="text-muted-foreground mt-1">
-                IMO: <span className="font-mono">{vessel?.imo || ''}</span> • 
-                MMSI: <span className="font-mono">{vessel?.mmsi || ''}</span>
+                IMO: <span className="font-mono">{typedVessel?.imo || ''}</span> • 
+                MMSI: <span className="font-mono">{typedVessel?.mmsi || ''}</span>
               </p>
             </div>
           </div>
