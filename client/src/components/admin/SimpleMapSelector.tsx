@@ -1,41 +1,13 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { MapPin, Loader2 } from "lucide-react";
-import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
-import L from "leaflet";
+import { MapPin, Search } from "lucide-react";
 
 interface Position {
   lat: number;
   lng: number;
-}
-
-// Fix Leaflet marker icon issue
-const defaultIcon = L.icon({
-  iconUrl: "data:image/svg+xml;base64," + btoa(`
-    <svg width="25" height="41" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12.5 0C5.6 0 0 5.6 0 12.5c0 12.5 12.5 28.5 12.5 28.5s12.5-16 12.5-28.5C25 5.6 19.4 0 12.5 0z" fill="#3b82f6"/>
-      <circle cx="12.5" cy="12.5" r="6" fill="white"/>
-    </svg>
-  `),
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-});
-
-L.Marker.prototype.options.icon = defaultIcon;
-
-function MapEvents({ onPositionSelect }: { onPositionSelect: (position: Position) => void }) {
-  useMapEvents({
-    click: (e) => {
-      onPositionSelect({ lat: e.latlng.lat, lng: e.latlng.lng });
-    },
-  });
-  
-  return null;
 }
 
 interface SimpleMapSelectorProps {
@@ -44,6 +16,19 @@ interface SimpleMapSelectorProps {
   onSelectPosition: (position: Position) => void;
   initialPosition?: Position;
 }
+
+// Major oil industry locations for easy selection
+const MAJOR_LOCATIONS = [
+  { name: "Persian Gulf", lat: 26.5, lng: 52.0, description: "Major oil hub" },
+  { name: "Ras Tanura, Saudi Arabia", lat: 26.6513, lng: 50.1672, description: "Largest oil refinery" },
+  { name: "Abadan, Iran", lat: 30.3392, lng: 48.3043, description: "Historic refinery" },
+  { name: "Kuwait City, Kuwait", lat: 29.3759, lng: 47.9774, description: "Oil center" },
+  { name: "Doha, Qatar", lat: 25.2854, lng: 51.5310, description: "Gas hub" },
+  { name: "Abu Dhabi, UAE", lat: 24.4539, lng: 54.3773, description: "Oil capital" },
+  { name: "Houston, USA", lat: 29.7604, lng: -95.3698, description: "Oil refining center" },
+  { name: "Rotterdam, Netherlands", lat: 51.9244, lng: 4.4777, description: "European oil hub" },
+  { name: "Singapore", lat: 1.3521, lng: 103.8198, description: "Asian trading hub" },
+];
 
 export function SimpleMapSelector({ 
   open, 
@@ -54,19 +39,22 @@ export function SimpleMapSelector({
   const [position, setPosition] = useState<Position | undefined>(initialPosition);
   const [manualLat, setManualLat] = useState<string>(initialPosition?.lat.toString() || "");
   const [manualLng, setManualLng] = useState<string>(initialPosition?.lng.toString() || "");
+  const [searchTerm, setSearchTerm] = useState<string>("");
 
   useEffect(() => {
     if (open) {
       setPosition(initialPosition);
       setManualLat(initialPosition?.lat.toString() || "");
       setManualLng(initialPosition?.lng.toString() || "");
+      setSearchTerm("");
     }
   }, [open, initialPosition]);
 
-  const handlePositionSelect = (newPosition: Position) => {
+  const handleLocationSelect = (location: typeof MAJOR_LOCATIONS[0]) => {
+    const newPosition = { lat: location.lat, lng: location.lng };
     setPosition(newPosition);
-    setManualLat(newPosition.lat.toString());
-    setManualLng(newPosition.lng.toString());
+    setManualLat(location.lat.toString());
+    setManualLng(location.lng.toString());
   };
 
   const handleManualUpdate = () => {
@@ -85,45 +73,60 @@ export function SimpleMapSelector({
     }
   };
 
+  // Filter locations based on search term
+  const filteredLocations = MAJOR_LOCATIONS.filter(location =>
+    location.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    location.description.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh]">
+      <DialogContent className="max-w-3xl max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Select Refinery Location</DialogTitle>
           <DialogDescription>
-            Click on the map to select the refinery location, or enter coordinates manually below.
+            Choose from major oil industry locations or enter coordinates manually.
           </DialogDescription>
         </DialogHeader>
         
-        <div className="space-y-4">
-          {/* Interactive Map */}
-          <div className="h-[60vh] w-full relative rounded-md overflow-hidden border">
-            <MapContainer
-              center={[initialPosition?.lat || 25, initialPosition?.lng || 45]}
-              zoom={6}
-              style={{ height: "100%", width: "100%" }}
-            >
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
-              
-              {/* Show selected position */}
-              {position && (
-                <Marker 
-                  position={[position.lat, position.lng]} 
-                  icon={defaultIcon}
-                />
-              )}
-              
-              {/* Map click events */}
-              <MapEvents onPositionSelect={handlePositionSelect} />
-            </MapContainer>
+        <div className="space-y-6">
+          {/* Search Bar */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search locations..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+
+          {/* Location Grid */}
+          <div className="max-h-[40vh] overflow-y-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {filteredLocations.map((location, index) => (
+                <Button
+                  key={index}
+                  variant="outline"
+                  onClick={() => handleLocationSelect(location)}
+                  className="h-auto p-4 text-left flex flex-col items-start justify-start"
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
+                    <span className="font-medium">{location.name}</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground">{location.description}</span>
+                  <span className="text-xs text-muted-foreground mt-1">
+                    {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
+                  </span>
+                </Button>
+              ))}
+            </div>
           </div>
 
           {/* Manual Coordinate Input */}
-          <div>
-            <Label className="text-sm font-medium mb-3 block">Enter coordinates manually</Label>
+          <div className="border-t pt-4">
+            <Label className="text-sm font-medium mb-3 block">Enter precise coordinates</Label>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="latitude" className="text-xs text-muted-foreground">Latitude</Label>
