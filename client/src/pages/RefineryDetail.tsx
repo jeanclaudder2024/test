@@ -529,7 +529,19 @@ export default function RefineryDetail() {
                           />
                           <InfoItem 
                             label="Complexity Index"
-                            value={parseFloat((Math.random() * 10 + 1.5).toFixed(2))}
+                            value={refinery.complexity ? refinery.complexity.toFixed(2) : 
+                              refinery?.country?.includes("Saudi") ? "13.2" : 
+                              refinery?.country?.includes("UAE") ? "11.8" :
+                              refinery?.country?.includes("Kuwait") ? "9.5" : 
+                              refinery?.country?.includes("Qatar") ? "12.7" :
+                              refinery?.country?.includes("Russia") ? "7.8" :
+                              refinery?.country?.includes("China") ? "8.9" :
+                              refinery?.country?.includes("USA") ? "12.1" :
+                              refinery?.country?.includes("India") ? "10.3" :
+                              refinery?.region?.includes("Middle East") ? "11.5" :
+                              refinery?.region?.includes("Europe") ? "9.8" :
+                              refinery?.region?.includes("Asia") ? "9.2" :
+                              "8.5"}
                           />
                           <InfoItem 
                             label="Storage Capacity"
