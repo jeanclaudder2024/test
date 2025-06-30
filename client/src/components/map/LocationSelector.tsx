@@ -112,7 +112,7 @@ export default function LocationSelector({
               <Input
                 value={selectedLat.toFixed(6)}
                 onChange={(e) => setSelectedLat(parseFloat(e.target.value) || 0)}
-                className="w-24"
+                className="w-32 font-mono"
               />
             </div>
             <div>
@@ -120,7 +120,7 @@ export default function LocationSelector({
               <Input
                 value={selectedLng.toFixed(6)}
                 onChange={(e) => setSelectedLng(parseFloat(e.target.value) || 0)}
-                className="w-24"
+                className="w-32 font-mono"
               />
             </div>
           </div>
@@ -161,16 +161,20 @@ export default function LocationSelector({
           </div>
         </div>
 
-        <div className="flex justify-between items-center p-4 border-t">
+        <div className="flex justify-between items-center p-4 border-t bg-muted/30">
           <div className="text-sm text-muted-foreground">
-            Click on the map or drag the marker to select a location
+            <div>Click on the map or drag the marker to select a location</div>
+            <div className="font-medium text-foreground mt-1">
+              Selected: {selectedLat.toFixed(6)}, {selectedLng.toFixed(6)}
+            </div>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button onClick={handleConfirm}>
-              Confirm Location
+            <Button onClick={handleConfirm} className="bg-blue-600 hover:bg-blue-700">
+              <MapPin className="h-4 w-4 mr-2" />
+              Confirm & Use Location
             </Button>
           </div>
         </div>
