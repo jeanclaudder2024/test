@@ -345,6 +345,135 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     });
     
+    // Refinery CRUD endpoints
+    // GET all refineries
+    apiRouter.get("/admin/refineries", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+      try {
+        const allRefineries = await storage.getRefineries();
+        res.json(allRefineries);
+      } catch (error) {
+        console.error("Error fetching refineries:", error);
+        res.status(500).json({
+          success: false,
+          message: "Failed to fetch refineries"
+        });
+      }
+    });
+
+    // GET single refinery by ID
+    apiRouter.get("/admin/refineries/:id", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+      try {
+        const id = parseInt(req.params.id);
+        if (isNaN(id)) {
+          return res.status(400).json({ message: "Invalid refinery ID" });
+        }
+
+        const allRefineries = await storage.getRefineries();
+        const refinery = allRefineries.find(r => r.id === id);
+        
+        if (!refinery) {
+          return res.status(404).json({ message: "Refinery not found" });
+        }
+
+        res.json(refinery);
+      } catch (error) {
+        console.error("Error fetching refinery:", error);
+        res.status(500).json({
+          success: false,
+          message: "Failed to fetch refinery"
+        });
+      }
+    });
+
+    // POST create new refinery
+    apiRouter.post("/admin/refineries", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+      try {
+        const refineryData = req.body;
+        console.log("Creating new refinery:", refineryData);
+
+        // Validate required fields
+        if (!refineryData.name || !refineryData.country || !refineryData.region) {
+          return res.status(400).json({
+            success: false,
+            message: "Missing required fields: name, country, region"
+          });
+        }
+
+        // Create the refinery
+        const newRefinery = await storage.createRefinery(refineryData);
+        console.log("Refinery created successfully:", newRefinery);
+
+        res.status(201).json({
+          success: true,
+          message: "Refinery created successfully",
+          data: newRefinery
+        });
+      } catch (error) {
+        console.error("Error creating refinery:", error);
+        res.status(500).json({
+          success: false,
+          message: "Failed to create refinery",
+          error: error instanceof Error ? error.message : "Unknown error"
+        });
+      }
+    });
+
+    // PUT update existing refinery
+    apiRouter.put("/admin/refineries/:id", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+      try {
+        const id = parseInt(req.params.id);
+        if (isNaN(id)) {
+          return res.status(400).json({ message: "Invalid refinery ID" });
+        }
+
+        const updateData = req.body;
+        console.log("Updating refinery:", id, updateData);
+
+        // Update the refinery
+        const updatedRefinery = await storage.updateRefinery(id, updateData);
+        console.log("Refinery updated successfully:", updatedRefinery);
+
+        res.json({
+          success: true,
+          message: "Refinery updated successfully",
+          data: updatedRefinery
+        });
+      } catch (error) {
+        console.error("Error updating refinery:", error);
+        res.status(500).json({
+          success: false,
+          message: "Failed to update refinery",
+          error: error instanceof Error ? error.message : "Unknown error"
+        });
+      }
+    });
+
+    // DELETE single refinery
+    apiRouter.delete("/admin/refineries/:id", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+      try {
+        const id = parseInt(req.params.id);
+        if (isNaN(id)) {
+          return res.status(400).json({ message: "Invalid refinery ID" });
+        }
+
+        console.log("Deleting refinery:", id);
+        await storage.deleteRefinery(id);
+        console.log("Refinery deleted successfully");
+
+        res.json({
+          success: true,
+          message: "Refinery deleted successfully"
+        });
+      } catch (error) {
+        console.error("Error deleting refinery:", error);
+        res.status(500).json({
+          success: false,
+          message: "Failed to delete refinery",
+          error: error instanceof Error ? error.message : "Unknown error"
+        });
+      }
+    });
+
     // Add bulk delete endpoint for refineries
     apiRouter.delete("/admin/refineries/clear-all", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
       try {

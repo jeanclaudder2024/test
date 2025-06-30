@@ -153,7 +153,7 @@ export function RefineryManagement() {
       }
       
       const token = localStorage.getItem('authToken');
-      const response = await fetch("/api/refineries", {
+      const response = await fetch("/api/admin/refineries", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -188,7 +188,7 @@ export function RefineryManagement() {
       setIsCreating(false);
       
       // Update refinery list
-      queryClient.invalidateQueries({ queryKey: ['/api/refineries'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/refineries'] });
     },
     onError: (error: Error) => {
       toast({
@@ -203,7 +203,7 @@ export function RefineryManagement() {
   const { mutate: updateRefinery, isPending: isUpdatingRefinery } = useMutation({
     mutationFn: async (data: Refinery) => {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`/api/refineries/${data.id}`, {
+      const response = await fetch(`/api/admin/refineries/${data.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -225,7 +225,7 @@ export function RefineryManagement() {
         description: "The refinery has been successfully updated.",
       });
       setSelectedRefinery(null);
-      queryClient.invalidateQueries({ queryKey: ['/api/refineries'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/refineries'] });
     },
     onError: (error: Error) => {
       toast({
@@ -240,7 +240,7 @@ export function RefineryManagement() {
   const { mutate: deleteRefinery, isPending: isDeletingRefinery } = useMutation({
     mutationFn: async (id: number) => {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`/api/refineries/${id}`, {
+      const response = await fetch(`/api/admin/refineries/${id}`, {
         method: "DELETE",
         headers: {
           ...(token && { "Authorization": `Bearer ${token}` }),
@@ -260,7 +260,7 @@ export function RefineryManagement() {
         description: "The refinery has been successfully deleted.",
       });
       setSelectedRefinery(null);
-      queryClient.invalidateQueries({ queryKey: ['/api/refineries'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/refineries'] });
     },
     onError: (error: Error) => {
       toast({
