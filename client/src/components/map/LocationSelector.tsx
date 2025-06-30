@@ -1,9 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MapPin, Search } from "lucide-react";
+import 'leaflet/dist/leaflet.css';
 
 interface LocationSelectorProps {
   isOpen: boolean;
@@ -13,6 +15,27 @@ interface LocationSelectorProps {
   initialLng?: number;
 }
 
+// Fix Leaflet default marker icons
+const L = typeof window !== 'undefined' ? (window as any).L : null;
+if (L) {
+  delete (L.Icon.Default.prototype as any)._getIconUrl;
+  L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  });
+}
+
+// Map click handler component
+function MapClickHandler({ onLocationChange }: { onLocationChange: (lat: number, lng: number) => void }) {
+  useMapEvents({
+    click: (e) => {
+      onLocationChange(e.latlng.lat, e.latlng.lng);
+    }
+  });
+  return null;
+}
+
 export default function LocationSelector({
   isOpen,
   onClose,
@@ -20,80 +43,15 @@ export default function LocationSelector({
   initialLat = 25.2048,
   initialLng = 55.2708
 }: LocationSelectorProps) {
-  const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstance = useRef<any>(null);
-  const markerRef = useRef<any>(null);
   const [selectedLat, setSelectedLat] = useState(initialLat);
   const [selectedLng, setSelectedLng] = useState(initialLng);
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Update coordinates when initial values change
   useEffect(() => {
-    if (!isOpen || !mapRef.current) return;
-
-    // Load Leaflet dynamically if not already loaded
-    const loadLeaflet = async () => {
-      if (!window.L) {
-        // Load Leaflet CSS
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-        document.head.appendChild(link);
-
-        // Load Leaflet JS
-        const script = document.createElement('script');
-        script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-        await new Promise((resolve) => {
-          script.onload = resolve;
-          document.head.appendChild(script);
-        });
-      }
-
-      // Initialize map
-      if (mapInstance.current) {
-        mapInstance.current.remove();
-      }
-
-      mapInstance.current = window.L.map(mapRef.current).setView([selectedLat, selectedLng], 8);
-
-      // Add tile layer (using OpenStreetMap)
-      window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        maxZoom: 19
-      }).addTo(mapInstance.current);
-
-      // Add initial marker
-      markerRef.current = window.L.marker([selectedLat, selectedLng], {
-        draggable: true
-      }).addTo(mapInstance.current);
-
-      // Handle map clicks
-      mapInstance.current.on('click', function(e: any) {
-        const { lat, lng } = e.latlng;
-        setSelectedLat(lat);
-        setSelectedLng(lng);
-        
-        if (markerRef.current) {
-          markerRef.current.setLatLng([lat, lng]);
-        }
-      });
-
-      // Handle marker drag
-      markerRef.current.on('dragend', function(e: any) {
-        const { lat, lng } = e.target.getLatLng();
-        setSelectedLat(lat);
-        setSelectedLng(lng);
-      });
-    };
-
-    loadLeaflet();
-
-    return () => {
-      if (mapInstance.current) {
-        mapInstance.current.remove();
-        mapInstance.current = null;
-      }
-    };
-  }, [isOpen, initialLat, initialLng]);
+    setSelectedLat(initialLat);
+    setSelectedLng(initialLng);
+  }, [initialLat, initialLng]);
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
@@ -111,13 +69,6 @@ export default function LocationSelector({
         
         setSelectedLat(lat);
         setSelectedLng(lng);
-
-        if (mapInstance.current) {
-          mapInstance.current.setView([lat, lng], 12);
-          if (markerRef.current) {
-            markerRef.current.setLatLng([lat, lng]);
-          }
-        }
       }
     } catch (error) {
       console.error('Geocoding error:', error);
@@ -176,11 +127,38 @@ export default function LocationSelector({
         </div>
 
         <div className="flex-1 relative">
-          <div 
-            ref={mapRef} 
-            className="w-full h-full rounded-lg"
-            style={{ minHeight: '400px' }}
-          />
+          <div className="w-full h-full rounded-lg border overflow-hidden" style={{ height: '400px' }}>
+            {isOpen && (
+              <MapContainer
+                center={[selectedLat, selectedLng]}
+                zoom={8}
+                style={{ height: '100%', width: '100%' }}
+                scrollWheelZoom={true}
+                zoomControl={true}
+              >
+                <TileLayer
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                />
+                <Marker 
+                  position={[selectedLat, selectedLng]}
+                  draggable={true}
+                  eventHandlers={{
+                    dragend: (e) => {
+                      const marker = e.target;
+                      const position = marker.getLatLng();
+                      setSelectedLat(position.lat);
+                      setSelectedLng(position.lng);
+                    }
+                  }}
+                />
+                <MapClickHandler onLocationChange={(lat, lng) => {
+                  setSelectedLat(lat);
+                  setSelectedLng(lng);
+                }} />
+              </MapContainer>
+            )}
+          </div>
         </div>
 
         <div className="flex justify-between items-center p-4 border-t">
