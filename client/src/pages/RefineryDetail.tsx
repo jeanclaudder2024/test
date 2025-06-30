@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useDataStream } from '@/hooks/useDataStream';
 import { Vessel } from '@/types';
 import { Refinery, Port } from '@shared/schema';
@@ -39,15 +39,15 @@ const InfoItem = ({ label, value, icon }: { label: React.ReactNode; value: React
 
 // Function to render status badge with appropriate color
 const StatusBadge = ({ status }: { status: string }) => {
-  let variant = "default";
+  let variant: "default" | "destructive" | "secondary" | "outline" = "default";
   
   switch(status.toLowerCase()) {
     case 'operational':
     case 'active':
-      variant = "success";
+      variant = "default";
       break;
     case 'maintenance':
-      variant = "warning";
+      variant = "outline";
       break;
     case 'offline':
     case 'shutdown':
@@ -57,7 +57,7 @@ const StatusBadge = ({ status }: { status: string }) => {
       variant = "secondary";
   }
   
-  return <Badge variant={variant as any}>{status}</Badge>;
+  return <Badge variant={variant}>{status}</Badge>;
 };
 
 // Component for a connected vessel card
@@ -176,8 +176,12 @@ const PortCard = ({ port, connectionType }: { port: any; connectionType: string 
 
 export default function RefineryDetail() {
   const [, params] = useRoute('/refineries/:id');
-  const refineryId = params?.id ? parseInt(params.id) : null;
   const { refineries, vessels, loading } = useDataStream();
+  
+  // Memoize the refineryId to prevent infinite loops in useEffect
+  const refineryId = useMemo(() => {
+    return params?.id ? parseInt(params.id) : null;
+  }, [params?.id]);
   const { toast } = useToast();
   const [associatedVessels, setAssociatedVessels] = useState<Vessel[]>([]);
   const [connectedPorts, setConnectedPorts] = useState<any[]>([]);
@@ -1057,7 +1061,7 @@ export default function RefineryDetail() {
                           />
                           <InfoItem 
                             label="Loading Capacity" 
-                            value={connectedPorts.length > 0 
+                            value={connectedPorts.length > 0 && refinery.capacity
                               ? `${Math.round(refinery.capacity * 0.4).toLocaleString()} bpd` 
                               : 'N/A'
                             }

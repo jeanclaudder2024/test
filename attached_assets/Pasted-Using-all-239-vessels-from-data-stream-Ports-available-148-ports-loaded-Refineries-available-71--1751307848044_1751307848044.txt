@@ -1,0 +1,40 @@
+Using all 239 vessels from data stream
+Ports available: 148 ports loaded
+Refineries available: 71 refineries loaded
+Ports available: 0 ports loaded
+Refineries available: 71 refineries loaded
+Using all 239 vessels from data stream
+Ports available: 148 ports loaded
+Refineries available: 71 refineries loaded
+Ports available: 0 ports loaded
+Refineries available: 71 refineries loaded
+Fetched 0 vessels near refinery 680489957 from MyShipTracking
+Generated 3 fallback vessels for refinery Caltex Refinery
+Using all 239 vessels from data stream
+Ports available: 148 ports loaded
+Refineries available: 71 refineries loaded
+Ports available: 0 ports loaded
+Refineries available: 71 refineries loaded
+Using all 239 vessels from data stream
+Ports available: 148 ports loaded
+Refineries available: 71 refineries loaded
+Ports available: 0 ports loaded
+Refineries available: 71 refineries loaded
+Warning: Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn&#x27;t have a dependency array, or one of the dependencies changes on every render.
+    at RefineryDetail (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/src/pages/RefineryDetail.tsx:377:22)
+    at Route (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=1379aa1c:323:16)
+    at Switch (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=1379aa1c:379:17)
+    at PresenceChild (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/framer-motion.js?v=1379aa1c:7742:24)
+    at AnimatePresence (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/framer-motion.js?v=1379aa1c:7800:26)
+    at main
+    at div
+    at div
+    at div
+    at MobileLayout (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/src/components/ui/mobile-layout.tsx:58:32)
+    at ProtectedRoutes
+    at AuthenticatedApp (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/src/App.tsx?v=CIi4RqPLSg4p_j5DUhUoY:268:45)
+    at Router (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/src/App.tsx?v=CIi4RqPLSg4p_j5DUhUoY:333:3)
+    at TranslationProvider (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/src/hooks/useTranslation.tsx:217:39)
+    at ThemeProvider (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/src/hooks/use-theme.tsx:25:3)
+    at QueryClientProvider (https://98c8caa9-0759-49e3-8339-ccc696cce776-00-2vva4j58zjmnv.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=1379aa1c:2805:3)
+    at App
