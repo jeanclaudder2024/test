@@ -197,14 +197,9 @@ export default function RefineryDetail() {
   useEffect(() => {
     // Simply set empty array since the vessel_refinery_connections table doesn't exist yet
     setAssociatedVessels([]);
-  }, [refineryId]);
-  
-  // For now, disable port connections until the database tables are created
-  useEffect(() => {
-    // Simply set empty array since the refinery_port_connections table doesn't exist yet
     setConnectedPorts([]);
     setLoadingPorts(false);
-  }, [refineryId]);
+  }, []);
   
   // Redirect to refineries page if refinery not found and not loading
   if (!loading && !refinery) {
@@ -1012,19 +1007,19 @@ export default function RefineryDetail() {
                             <span className="text-muted-foreground flex items-center">
                               Pipeline Integrity
                             </span>
-                            <Badge variant="success" className="text-xs">Good</Badge>
+                            <Badge variant="secondary" className="text-xs">Good</Badge>
                           </div>
                           <div className="flex justify-between items-center">
                             <span className="text-muted-foreground flex items-center">
                               Terminal Status
                             </span>
-                            <Badge variant="success" className="text-xs">Operational</Badge>
+                            <Badge variant="secondary" className="text-xs">Operational</Badge>
                           </div>
                           <div className="flex justify-between items-center">
                             <span className="text-muted-foreground flex items-center">
                               Port Access
                             </span>
-                            <Badge variant="success" className="text-xs">Unrestricted</Badge>
+                            <Badge variant="secondary" className="text-xs">Unrestricted</Badge>
                           </div>
                           <div className="flex justify-between items-center">
                             <span className="text-muted-foreground flex items-center">
