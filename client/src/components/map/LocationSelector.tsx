@@ -82,7 +82,7 @@ export default function LocationSelector({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl h-[600px] flex flex-col">
+      <DialogContent className="max-w-4xl h-[650px] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <MapPin className="h-5 w-5" />
@@ -127,7 +127,7 @@ export default function LocationSelector({
         </div>
 
         <div className="flex-1 relative">
-          <div className="w-full h-full rounded-lg border overflow-hidden" style={{ height: '400px' }}>
+          <div className="w-full h-full rounded-lg border overflow-hidden" style={{ height: '350px' }}>
             {isOpen && (
               <MapContainer
                 center={[selectedLat, selectedLng]}
