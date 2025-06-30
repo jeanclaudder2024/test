@@ -97,7 +97,7 @@ export async function seedVessels(minDesiredVessels: number = 2500): Promise<{
 
 /**
  * Add seed data for refineries if no refineries exist.
- * Note: This function has been modified to maintain the imported Excel data.
+ * Note: This function has been DISABLED to prevent automatic seeding
  */
 export async function seedRefineries(): Promise<{ count: number, seeded: boolean, active: number }> {
   // Check existing refinery count
@@ -106,43 +106,17 @@ export async function seedRefineries(): Promise<{ count: number, seeded: boolean
   
   console.log(`Checking existing refineries in database...`);
   
-  // If we already have refineries, no need to seed
-  if (existingCount > 0) {
-    console.log(`Database already contains ${existingCount} refineries.`);
-    
-    // Count active refineries for reporting
-    const activeRefineries = await db.select({ count: refineries.id })
-      .from(refineries)
-      .where(sql`${refineries.status} IN ('active', 'operational')`);
-    
-    return { 
-      count: existingCount, 
-      seeded: false,
-      active: activeRefineries.length > 0 ? (activeRefineries[0] as any).count || 0 : 0
-    };
-  }
-  
-  // Only seed if database is completely empty
-  console.log(`No refineries in database. Generating refinery data...`);
-  
-  // Generate refinery data
-  const refineryData = getAccurateRefineries();
-  
-  console.log(`Generated ${refineryData.length} refineries from dataset.`);
-  
-  // Insert refineries
-  await db.insert(refineries).values(refineryData);
-  
-  console.log(`Created ${refineryData.length} new refineries in database.`);
-  
   // Count active refineries for reporting
   const activeRefineries = await db.select({ count: refineries.id })
     .from(refineries)
     .where(sql`${refineries.status} IN ('active', 'operational')`);
   
+  // DISABLED: Never automatically seed refineries to respect user deletions
+  console.log(`Database contains ${existingCount} refineries. Automatic seeding disabled.`);
+  
   return { 
-    count: refineryData.length, 
-    seeded: true,
+    count: existingCount, 
+    seeded: false,
     active: activeRefineries.length > 0 ? (activeRefineries[0] as any).count || 0 : 0
   };
 }
