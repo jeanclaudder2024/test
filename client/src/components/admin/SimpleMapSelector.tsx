@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { MapPin, Search } from "lucide-react";
+import { MapPin, Loader2 } from "lucide-react";
 
 interface Position {
   lat: number;
@@ -17,21 +17,6 @@ interface SimpleMapSelectorProps {
   initialPosition?: Position;
 }
 
-const QUICK_LOCATIONS = [
-  { name: "Saudi Arabia", lat: 24.7136, lng: 46.6753 },
-  { name: "UAE", lat: 25.2048, lng: 55.2708 },
-  { name: "Qatar", lat: 25.3548, lng: 51.1839 },
-  { name: "Kuwait", lat: 29.3117, lng: 47.4818 },
-  { name: "Bahrain", lat: 26.0667, lng: 50.5577 },
-  { name: "Oman", lat: 21.4735, lng: 55.9754 },
-  { name: "Iraq", lat: 33.2232, lng: 43.6793 },
-  { name: "Iran", lat: 32.4279, lng: 53.6880 },
-  { name: "USA Gulf Coast", lat: 29.7604, lng: -95.3698 },
-  { name: "Singapore", lat: 1.3521, lng: 103.8198 },
-  { name: "Rotterdam", lat: 51.9244, lng: 4.4777 },
-  { name: "Antwerp", lat: 51.2194, lng: 4.4025 }
-];
-
 export function SimpleMapSelector({ 
   open, 
   onOpenChange, 
@@ -41,20 +26,99 @@ export function SimpleMapSelector({
   const [position, setPosition] = useState<Position | undefined>(initialPosition);
   const [manualLat, setManualLat] = useState<string>(initialPosition?.lat.toString() || "");
   const [manualLng, setManualLng] = useState<string>(initialPosition?.lng.toString() || "");
+  const [isMapLoading, setIsMapLoading] = useState(false);
+  const mapRef = useRef<HTMLDivElement>(null);
+  const leafletMapRef = useRef<any>(null);
 
   useEffect(() => {
     if (open) {
       setPosition(initialPosition);
       setManualLat(initialPosition?.lat.toString() || "");
       setManualLng(initialPosition?.lng.toString() || "");
+      
+      // Load map after dialog opens
+      setTimeout(() => {
+        initializeMap();
+      }, 100);
     }
+
+    return () => {
+      // Clean up map when dialog closes
+      if (leafletMapRef.current) {
+        leafletMapRef.current.remove();
+        leafletMapRef.current = null;
+      }
+    };
   }, [open, initialPosition]);
 
-  const handleQuickSelect = (location: { name: string; lat: number; lng: number }) => {
-    const newPosition = { lat: location.lat, lng: location.lng };
-    setPosition(newPosition);
-    setManualLat(location.lat.toString());
-    setManualLng(location.lng.toString());
+  const initializeMap = async () => {
+    if (!mapRef.current || leafletMapRef.current) return;
+    
+    setIsMapLoading(true);
+    
+    try {
+      // Dynamically import Leaflet to avoid SSR issues
+      const L = await import('leaflet');
+      await import('leaflet/dist/leaflet.css');
+      
+      // Fix default marker icon
+      delete (L.Icon.Default.prototype as any)._getIconUrl;
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl: "data:image/svg+xml;base64," + btoa(`
+          <svg width="25" height="41" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12.5 0C5.6 0 0 5.6 0 12.5c0 12.5 12.5 28.5 12.5 28.5s12.5-16 12.5-28.5C25 5.6 19.4 0 12.5 0z" fill="#3b82f6"/>
+            <circle cx="12.5" cy="12.5" r="6" fill="white"/>
+          </svg>
+        `),
+        iconUrl: "data:image/svg+xml;base64," + btoa(`
+          <svg width="25" height="41" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12.5 0C5.6 0 0 5.6 0 12.5c0 12.5 12.5 28.5 12.5 28.5s12.5-16 12.5-28.5C25 5.6 19.4 0 12.5 0z" fill="#3b82f6"/>
+            <circle cx="12.5" cy="12.5" r="6" fill="white"/>
+          </svg>
+        `),
+        shadowUrl: '',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+      });
+
+      const map = L.map(mapRef.current).setView([initialPosition?.lat || 25, initialPosition?.lng || 45], 6);
+      
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(map);
+
+      let marker: any = null;
+
+      // Add initial marker if position exists
+      if (initialPosition) {
+        marker = L.marker([initialPosition.lat, initialPosition.lng]).addTo(map);
+      }
+
+      // Handle map clicks
+      map.on('click', (e: any) => {
+        const lat = e.latlng.lat;
+        const lng = e.latlng.lng;
+        
+        setPosition({ lat, lng });
+        setManualLat(lat.toString());
+        setManualLng(lng.toString());
+        
+        // Remove existing marker
+        if (marker) {
+          map.removeLayer(marker);
+        }
+        
+        // Add new marker
+        marker = L.marker([lat, lng]).addTo(map);
+      });
+
+      leafletMapRef.current = map;
+      setIsMapLoading(false);
+    } catch (error) {
+      console.error('Error loading map:', error);
+      setIsMapLoading(false);
+    }
   };
 
   const handleManualUpdate = () => {
@@ -63,6 +127,21 @@ export function SimpleMapSelector({
     
     if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
       setPosition({ lat, lng });
+      
+      // Update map view and marker
+      if (leafletMapRef.current) {
+        const L = require('leaflet');
+        leafletMapRef.current.setView([lat, lng], 10);
+        
+        // Clear existing markers and add new one
+        leafletMapRef.current.eachLayer((layer: any) => {
+          if (layer instanceof L.Marker) {
+            leafletMapRef.current.removeLayer(layer);
+          }
+        });
+        
+        L.marker([lat, lng]).addTo(leafletMapRef.current);
+      }
     }
   };
 
@@ -75,37 +154,29 @@ export function SimpleMapSelector({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-4xl max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Select Refinery Location</DialogTitle>
           <DialogDescription>
-            Choose a quick location or enter coordinates manually to set the refinery location.
+            Click on the map to select the refinery location, or enter coordinates manually below.
           </DialogDescription>
         </DialogHeader>
         
-        <div className="space-y-6">
-          {/* Quick Location Selector */}
-          <div>
-            <Label className="text-sm font-medium mb-3 block">Select a quick location or search for a specific area</Label>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              {QUICK_LOCATIONS.map((location) => (
-                <Button
-                  key={location.name}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleQuickSelect(location)}
-                  className="justify-start text-left h-auto py-2 px-3"
-                >
-                  <MapPin className="h-3 w-3 mr-2 flex-shrink-0" />
-                  <span className="truncate">{location.name}</span>
-                </Button>
-              ))}
-            </div>
+        <div className="space-y-4">
+          {/* Interactive Map */}
+          <div className="h-[60vh] w-full relative rounded-md overflow-hidden border">
+            {isMapLoading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <span className="ml-2 text-sm">Loading map...</span>
+              </div>
+            )}
+            <div ref={mapRef} className="h-full w-full" />
           </div>
 
           {/* Manual Coordinate Input */}
-          <div className="border-t pt-4">
-            <Label className="text-sm font-medium mb-3 block">Or enter coordinates manually</Label>
+          <div>
+            <Label className="text-sm font-medium mb-3 block">Enter coordinates manually</Label>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="latitude" className="text-xs text-muted-foreground">Latitude</Label>
