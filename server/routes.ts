@@ -389,7 +389,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     apiRouter.post("/admin/refineries", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
       try {
         const refineryData = req.body;
-        console.log("Creating new refinery:", refineryData);
+        console.log("ADMIN ENDPOINT: Creating new refinery:", refineryData);
 
         // Validate required fields
         if (!refineryData.name || !refineryData.country || !refineryData.region) {
@@ -4744,7 +4744,7 @@ Only use authentic, real-world data for existing refineries.`;
       // Import OpenAI service
       const { generateRefineryDetails } = await import('./services/openai-service');
       
-      console.log("Creating new refinery with data:", req.body);
+      console.log("PUBLIC ENDPOINT: Creating new refinery with data:", req.body);
       
       // Validate the input using the refinery schema
       const result = insertRefinerySchema.safeParse(req.body);
