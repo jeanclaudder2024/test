@@ -127,7 +127,12 @@ export function RefineryManagement() {
         url += `&region=${selectedRegion}`;
       }
       
-      const response = await fetch(url);
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(url, {
+        headers: {
+          ...(token && { "Authorization": `Bearer ${token}` }),
+        },
+      });
       
       if (!response.ok) {
         throw new Error("Failed to fetch refineries");
@@ -147,10 +152,12 @@ export function RefineryManagement() {
         delete payload.generateDetails;
       }
       
+      const token = localStorage.getItem('authToken');
       const response = await fetch("/api/refineries", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...(token && { "Authorization": `Bearer ${token}` }),
         },
         body: JSON.stringify(payload),
       });
@@ -195,10 +202,12 @@ export function RefineryManagement() {
   // Mutation for updating a refinery
   const { mutate: updateRefinery, isPending: isUpdatingRefinery } = useMutation({
     mutationFn: async (data: Refinery) => {
+      const token = localStorage.getItem('authToken');
       const response = await fetch(`/api/refineries/${data.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
+          ...(token && { "Authorization": `Bearer ${token}` }),
         },
         body: JSON.stringify(data),
       });
@@ -230,8 +239,12 @@ export function RefineryManagement() {
   // Mutation for deleting refinery
   const { mutate: deleteRefinery, isPending: isDeletingRefinery } = useMutation({
     mutationFn: async (id: number) => {
+      const token = localStorage.getItem('authToken');
       const response = await fetch(`/api/refineries/${id}`, {
         method: "DELETE",
+        headers: {
+          ...(token && { "Authorization": `Bearer ${token}` }),
+        },
       });
       
       if (!response.ok) {
