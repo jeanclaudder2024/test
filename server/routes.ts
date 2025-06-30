@@ -3934,8 +3934,11 @@ Only use authentic, real-world data for existing refineries.`;
       
       console.log("Creating new refinery with data:", req.body);
       
-      // Validate the input using the refinery schema
-      const result = insertRefinerySchema.safeParse(req.body);
+      // Extract the generateDetails flag before validation
+      const { generateDetails, ...refineryInput } = req.body;
+      
+      // Validate the input using the refinery schema (without the generateDetails field)
+      const result = insertRefinerySchema.safeParse(refineryInput);
       
       if (!result.success) {
         console.error("Validation failed for refinery creation:", result.error.errors);
@@ -3948,7 +3951,7 @@ Only use authentic, real-world data for existing refineries.`;
       let refineryData = result.data;
       
       // Check if we should generate additional details with OpenAI
-      if (req.body.generateDetails === true) {
+      if (generateDetails === true) {
         try {
           console.log("Generating additional refinery details with OpenAI");
           
