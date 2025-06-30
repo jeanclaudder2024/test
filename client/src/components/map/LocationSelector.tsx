@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -88,6 +88,9 @@ export default function LocationSelector({
             <MapPin className="h-5 w-5" />
             Select Location
           </DialogTitle>
+          <DialogDescription>
+            Click on the map to select coordinates for the refinery location
+          </DialogDescription>
         </DialogHeader>
         
         <div className="flex gap-4 p-4 border-b">

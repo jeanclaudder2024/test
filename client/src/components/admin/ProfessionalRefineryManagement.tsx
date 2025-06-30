@@ -62,6 +62,7 @@ interface Refinery {
   name: string;
   country: string;
   region: string;
+  city?: string | null;
   capacity: number | null;
   latitude: string;
   longitude: string;
@@ -69,6 +70,17 @@ interface Refinery {
   status: string | null;
   description: string | null;
   lastUpdated: Date | null;
+  operator?: string | null;
+  owner?: string | null;
+  products?: string | null;
+  year_built?: number | null;
+  email?: string | null;
+  phone?: string | null;
+  website?: string | null;
+  address?: string | null;
+  technical_specs?: string | null;
+  utilization?: number | null;
+  complexity?: number | null;
 }
 
 const regions = [
@@ -113,12 +125,24 @@ export default function ProfessionalRefineryManagement() {
     name: '',
     country: '',
     region: 'Middle East',
+    city: '',
     capacity: '',
     latitude: '',
     longitude: '',
     type: 'Crude Oil Refinery',
     status: 'Operational',
-    description: ''
+    description: '',
+    operator: '',
+    owner: '',
+    products: '',
+    year_built: '',
+    email: '',
+    phone: '',
+    website: '',
+    address: '',
+    technical_specs: '',
+    utilization: '',
+    complexity: ''
   });
 
   const { toast } = useToast();
@@ -191,12 +215,24 @@ export default function ProfessionalRefineryManagement() {
       name: '',
       country: '',
       region: 'Middle East',
+      city: '',
       capacity: '',
       latitude: '',
       longitude: '',
       type: 'Crude Oil Refinery',
       status: 'Operational',
-      description: ''
+      description: '',
+      operator: '',
+      owner: '',
+      products: '',
+      year_built: '',
+      email: '',
+      phone: '',
+      website: '',
+      address: '',
+      technical_specs: '',
+      utilization: '',
+      complexity: ''
     });
   };
 
@@ -281,12 +317,24 @@ export default function ProfessionalRefineryManagement() {
       name: refinery.name,
       country: refinery.country,
       region: refinery.region,
+      city: refinery.city || '',
       capacity: refinery.capacity?.toString() || '',
       latitude: refinery.latitude,
       longitude: refinery.longitude,
       type: refinery.type || 'Crude Oil Refinery',
       status: refinery.status || 'Operational',
-      description: refinery.description || ''
+      description: refinery.description || '',
+      operator: refinery.operator || '',
+      owner: refinery.owner || '',
+      products: refinery.products || '',
+      year_built: refinery.year_built?.toString() || '',
+      email: refinery.email || '',
+      phone: refinery.phone || '',
+      website: refinery.website || '',
+      address: refinery.address || '',
+      technical_specs: refinery.technical_specs || '',
+      utilization: refinery.utilization?.toString() || '',
+      complexity: refinery.complexity?.toString() || ''
     });
   };
 
@@ -298,12 +346,24 @@ export default function ProfessionalRefineryManagement() {
       name: formData.name,
       country: formData.country,
       region: formData.region,
+      city: formData.city,
       lat: formData.latitude,    // Map latitude to lat
       lng: formData.longitude,   // Map longitude to lng
       capacity: formData.capacity ? parseInt(formData.capacity) : null,
       type: formData.type,
       status: formData.status,
-      description: formData.description
+      description: formData.description,
+      operator: formData.operator,
+      owner: formData.owner,
+      products: formData.products,
+      year_built: formData.year_built ? parseInt(formData.year_built) : null,
+      email: formData.email,
+      phone: formData.phone,
+      website: formData.website,
+      address: formData.address,
+      technical_specs: formData.technical_specs,
+      utilization: formData.utilization ? parseFloat(formData.utilization) : null,
+      complexity: formData.complexity ? parseFloat(formData.complexity) : null
     };
 
     if (editingRefinery) {
@@ -599,15 +659,162 @@ export default function ProfessionalRefineryManagement() {
                       </div>
                     </div>
 
+                    {/* Additional Location Details */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="city">City</Label>
+                        <Input
+                          id="city"
+                          value={formData.city}
+                          onChange={(e) => setFormData({...formData, city: e.target.value})}
+                          placeholder="e.g., Dhahran"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="year_built">Year Built</Label>
+                        <Input
+                          id="year_built"
+                          type="number"
+                          value={formData.year_built}
+                          onChange={(e) => setFormData({...formData, year_built: e.target.value})}
+                          placeholder="e.g., 1975"
+                        />
+                      </div>
+                    </div>
+
                     <div className="space-y-2">
-                      <Label htmlFor="description">Description</Label>
-                      <Textarea
-                        id="description"
-                        value={formData.description}
-                        onChange={(e) => setFormData({...formData, description: e.target.value})}
-                        placeholder="Additional information about the refinery..."
-                        rows={3}
+                      <Label htmlFor="address">Address</Label>
+                      <Input
+                        id="address"
+                        value={formData.address}
+                        onChange={(e) => setFormData({...formData, address: e.target.value})}
+                        placeholder="Complete address of the refinery"
                       />
+                    </div>
+
+                    {/* Operations Section */}
+                    <div className="space-y-4 border-t pt-4">
+                      <h4 className="text-md font-semibold text-gray-800">Operations Details</h4>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="operator">Operator</Label>
+                          <Input
+                            id="operator"
+                            value={formData.operator}
+                            onChange={(e) => setFormData({...formData, operator: e.target.value})}
+                            placeholder="e.g., Saudi Aramco"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="owner">Owner</Label>
+                          <Input
+                            id="owner"
+                            value={formData.owner}
+                            onChange={(e) => setFormData({...formData, owner: e.target.value})}
+                            placeholder="e.g., Saudi Aramco"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="products">Products</Label>
+                          <Input
+                            id="products"
+                            value={formData.products}
+                            onChange={(e) => setFormData({...formData, products: e.target.value})}
+                            placeholder="e.g., Gasoline, Diesel, Jet Fuel"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="utilization">Utilization (%)</Label>
+                          <Input
+                            id="utilization"
+                            type="number"
+                            step="0.1"
+                            value={formData.utilization}
+                            onChange={(e) => setFormData({...formData, utilization: e.target.value})}
+                            placeholder="e.g., 85.5"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="complexity">Complexity Index</Label>
+                        <Input
+                          id="complexity"
+                          type="number"
+                          step="0.1"
+                          value={formData.complexity}
+                          onChange={(e) => setFormData({...formData, complexity: e.target.value})}
+                          placeholder="e.g., 12.5"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Contact Information Section */}
+                    <div className="space-y-4 border-t pt-4">
+                      <h4 className="text-md font-semibold text-gray-800">Contact Information</h4>
+                      
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="email">Email</Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            value={formData.email}
+                            onChange={(e) => setFormData({...formData, email: e.target.value})}
+                            placeholder="contact@refinery.com"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="phone">Phone</Label>
+                          <Input
+                            id="phone"
+                            value={formData.phone}
+                            onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                            placeholder="+966 13 xxx xxxx"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="website">Website</Label>
+                          <Input
+                            id="website"
+                            type="url"
+                            value={formData.website}
+                            onChange={(e) => setFormData({...formData, website: e.target.value})}
+                            placeholder="https://www.refinery.com"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Technical Details Section */}
+                    <div className="space-y-4 border-t pt-4">
+                      <h4 className="text-md font-semibold text-gray-800">Technical Details</h4>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="technical_specs">Technical Specifications</Label>
+                        <Textarea
+                          id="technical_specs"
+                          value={formData.technical_specs}
+                          onChange={(e) => setFormData({...formData, technical_specs: e.target.value})}
+                          placeholder="Technical specifications and equipment details..."
+                          rows={2}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="description">Description</Label>
+                        <Textarea
+                          id="description"
+                          value={formData.description}
+                          onChange={(e) => setFormData({...formData, description: e.target.value})}
+                          placeholder="Additional information about the refinery..."
+                          rows={3}
+                        />
+                      </div>
                     </div>
 
                     <div className="flex justify-end gap-2 pt-4">
