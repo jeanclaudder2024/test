@@ -42,7 +42,7 @@ import {
   PaginationNext, 
   PaginationPrevious 
 } from "@/components/ui/pagination";
-import { RefineryMapSelector } from "./RefineryMapSelector";
+import { SimpleMapSelector } from "./SimpleMapSelector";
 import RefineryConnectionManager from "./RefineryConnectionManager";
 
 // Define the refinery type based on schema
@@ -909,7 +909,7 @@ export function RefineryManagement() {
       </Dialog>
 
       {/* Map Selector Dialog */}
-      <RefineryMapSelector
+      <SimpleMapSelector
         open={isRefineryMapOpen}
         onOpenChange={setIsRefineryMapOpen}
         onSelectPosition={handleSelectPosition}
