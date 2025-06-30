@@ -345,6 +345,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     });
     
+    // Add bulk delete endpoint for refineries
+    apiRouter.delete("/admin/refineries/clear-all", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+      try {
+        console.log("Clearing all refineries from database...");
+        
+        // Use raw SQL to completely clear the refineries table
+        await db.delete(refineries);
+        
+        console.log("All refineries deleted successfully");
+        
+        res.json({
+          success: true,
+          message: "All refineries cleared successfully"
+        });
+      } catch (error) {
+        console.error("Error clearing refineries:", error);
+        res.status(500).json({
+          success: false,
+          message: "Failed to clear refineries"
+        });
+      }
+    });
+
     apiRouter.post("/seed", async (req, res) => {
       try {
         console.log("Starting database seeding process...");

@@ -161,6 +161,13 @@ Changelog:
   * Ensured proper cache invalidation when ports are added/modified via admin panel
   * Both pages now show identical data and stay synchronized in real-time
   * Applied same fix pattern used successfully for refineries synchronization
+- June 30, 2025. Completely Disabled Automatic Refinery Seeding:
+  * Fixed persistent issue where refineries were automatically re-added after deletion
+  * Disabled seedRefineries() function in seedService.ts to prevent automatic seeding
+  * Disabled seedRefineryData() function in refineryService.ts to prevent service-level seeding
+  * Removed React Query caching for refineries (stale time: 0) for immediate fresh data
+  * Added bulk delete endpoint /api/admin/refineries/clear-all for complete refinery removal
+  * Refineries now stay deleted permanently and won't be re-added on server restart
 
 ## User Preferences
 
