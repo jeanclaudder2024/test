@@ -195,82 +195,99 @@ export default function RefineryDetail() {
   
   // Fetch vessels from API that are associated with this refinery using the vessel-refinery connections
   useEffect(() => {
-    if (refineryId) {
-      const fetchAssociatedVessels = async () => {
-        try {
-          // First get all vessel-refinery connections for this refinery
-          const connectionsResponse = await fetch(`/api/vessel-refinery`);
-          
-          if (connectionsResponse.ok) {
-            const connections = await connectionsResponse.json();
-            // Filter connections for this specific refinery
-            const refineryConnections = connections.filter(conn => conn.refineryId === refineryId);
-            
-            if (refineryConnections.length > 0) {
-              // Now get the actual vessel details for each connection
-              const vesselsPromises = refineryConnections.map(async (connection) => {
-                const vesselResponse = await fetch(`/api/vessels/${connection.vesselId}`);
-                if (vesselResponse.ok) {
-                  const vessel = await vesselResponse.json();
-                  // Add connection details to vessel object
-                  return {
-                    ...vessel,
-                    connectionType: connection.connectionType,
-                    cargoVolume: connection.cargoVolume,
-                    connectionStartDate: connection.startDate,
-                    connectionEndDate: connection.endDate,
-                    connectionStatus: connection.status
-                  };
-                }
-                return null;
-              });
-              
-              const vesselsData = await Promise.all(vesselsPromises);
-              // Filter out any null values in case some vessel fetches failed
-              setAssociatedVessels(vesselsData.filter(v => v !== null));
-            } else {
-              setAssociatedVessels([]);
+    if (!refineryId) {
+      setAssociatedVessels([]);
+      return;
+    }
+
+    console.log('Fetching vessels for refinery ID:', refineryId);
+    
+    const fetchAssociatedVessels = async () => {
+      try {
+        // First get all vessel-refinery connections for this refinery
+        const connectionsResponse = await fetch(`/api/vessel-refinery`);
+        
+        if (!connectionsResponse.ok) {
+          console.log('Vessel-refinery connections API not available, skipping vessel fetching');
+          setAssociatedVessels([]);
+          return;
+        }
+
+        const connections = await connectionsResponse.json();
+        // Filter connections for this specific refinery
+        const refineryConnections = connections.filter(conn => conn.refineryId === refineryId);
+        
+        console.log('Found vessel connections:', refineryConnections.length);
+        
+        if (refineryConnections.length > 0) {
+          // Now get the actual vessel details for each connection
+          const vesselsPromises = refineryConnections.map(async (connection) => {
+            try {
+              const vesselResponse = await fetch(`/api/vessels/${connection.vesselId}`);
+              if (vesselResponse.ok) {
+                const vessel = await vesselResponse.json();
+                // Add connection details to vessel object
+                return {
+                  ...vessel,
+                  connectionType: connection.connectionType,
+                  cargoVolume: connection.cargoVolume,
+                  connectionStartDate: connection.startDate,
+                  connectionEndDate: connection.endDate,
+                  connectionStatus: connection.status
+                };
+              }
+            } catch (vesselError) {
+              console.log('Error fetching vessel details:', vesselError);
             }
-          } else {
-            console.error('Failed to fetch vessel-refinery connections:', await connectionsResponse.text());
-            setAssociatedVessels([]);
-          }
-        } catch (error) {
-          console.error('Error fetching associated vessels:', error);
+            return null;
+          });
+          
+          const vesselsData = await Promise.all(vesselsPromises);
+          // Filter out any null values in case some vessel fetches failed
+          setAssociatedVessels(vesselsData.filter(v => v !== null));
+        } else {
           setAssociatedVessels([]);
         }
-      };
-      
-      fetchAssociatedVessels();
-    } else {
-      setAssociatedVessels([]);
-    }
+      } catch (error) {
+        console.log('Error fetching vessel connections, using fallback:', error);
+        setAssociatedVessels([]);
+      }
+    };
+    
+    fetchAssociatedVessels();
   }, [refineryId]);
   
   // Fetch connected ports
   useEffect(() => {
-    if (refineryId) {
-      const fetchConnectedPorts = async () => {
-        setLoadingPorts(true);
-        try {
-          const response = await fetch(`/api/refinery-port/refinery/${refineryId}/ports`);
-          if (response.ok) {
-            const data = await response.json();
-            setConnectedPorts(data);
-          } else {
-            console.error('Failed to fetch connected ports:', await response.text());
-          }
-        } catch (error) {
-          console.error('Error fetching connected ports:', error);
-        } finally {
-          setLoadingPorts(false);
-        }
-      };
-      
-      fetchConnectedPorts();
-    } else {
+    if (!refineryId) {
       setConnectedPorts([]);
+      setLoadingPorts(false);
+      return;
     }
+
+    console.log('Fetching ports for refinery ID:', refineryId);
+    setLoadingPorts(true);
+    
+    const fetchConnectedPorts = async () => {
+      try {
+        const response = await fetch(`/api/refinery-port/refinery/${refineryId}/ports`);
+        if (response.ok) {
+          const data = await response.json();
+          setConnectedPorts(data);
+          console.log('Found connected ports:', data.length);
+        } else {
+          console.log('Refinery-port connections API not available, using empty array');
+          setConnectedPorts([]);
+        }
+      } catch (error) {
+        console.log('Error fetching connected ports, using empty array:', error);
+        setConnectedPorts([]);
+      } finally {
+        setLoadingPorts(false);
+      }
+    };
+    
+    fetchConnectedPorts();
   }, [refineryId]);
   
   // Redirect to refineries page if refinery not found and not loading
