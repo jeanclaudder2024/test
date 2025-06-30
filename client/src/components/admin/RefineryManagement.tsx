@@ -42,7 +42,7 @@ import {
   PaginationNext, 
   PaginationPrevious 
 } from "@/components/ui/pagination";
-import { SimpleMapSelector } from "./SimpleMapSelector";
+
 import RefineryConnectionManager from "./RefineryConnectionManager";
 
 // Define the refinery type based on schema
@@ -110,7 +110,7 @@ export function RefineryManagement() {
     photo: "",
     generateDetails: true // Enable OpenAI generation by default
   });
-  const [isRefineryMapOpen, setIsRefineryMapOpen] = useState(false);
+
   const [isCreating, setIsCreating] = useState(false);
 
   // Query to fetch refineries
@@ -342,22 +342,7 @@ export function RefineryManagement() {
     "Asia Pacific"
   ];
 
-  const handleSelectPosition = (position: { lat: number; lng: number }) => {
-    if (isCreating) {
-      setFormData(prev => ({ 
-        ...prev, 
-        lat: position.lat.toString(), 
-        lng: position.lng.toString() 
-      }));
-    } else if (selectedRefinery) {
-      setSelectedRefinery(prev => prev ? {
-        ...prev,
-        lat: position.lat.toString(),
-        lng: position.lng.toString()
-      } : null);
-    }
-    setIsRefineryMapOpen(false);
-  };
+
 
   const handleInputChange = (field: string, value: string | number | boolean) => {
     if (isCreating) {
@@ -779,15 +764,7 @@ export function RefineryManagement() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="location">Location (Latitude, Longitude)*</Label>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => setIsRefineryMapOpen(true)}
-                    size="sm"
-                  >
-                    <Map className="h-4 w-4 mr-2" />
-                    Select on Map
-                  </Button>
+
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <Input 
@@ -908,21 +885,7 @@ export function RefineryManagement() {
         </DialogContent>
       </Dialog>
 
-      {/* Map Selector Dialog */}
-      <SimpleMapSelector
-        open={isRefineryMapOpen}
-        onOpenChange={setIsRefineryMapOpen}
-        onSelectPosition={handleSelectPosition}
-        initialPosition={
-          isCreating 
-            ? formData.lat && formData.lng 
-              ? { lat: parseFloat(formData.lat), lng: parseFloat(formData.lng) } 
-              : undefined
-            : selectedRefinery && selectedRefinery.lat && selectedRefinery.lng
-              ? { lat: parseFloat(selectedRefinery.lat), lng: parseFloat(selectedRefinery.lng) }
-              : undefined
-        }
-      />
+
 
       {/* Connection Selection Dialog */}
       <Dialog open={showConnectionDialog} onOpenChange={setShowConnectionDialog}>
