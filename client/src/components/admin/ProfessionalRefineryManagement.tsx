@@ -54,7 +54,7 @@ import {
   Navigation,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
+import LocationSelector from '@/components/map/LocationSelector';
 import { Textarea } from '@/components/ui/textarea';
 
 interface Refinery {
@@ -105,6 +105,7 @@ export default function ProfessionalRefineryManagement() {
   const [selectedStatus, setSelectedStatus] = useState('All Statuses');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingRefinery, setEditingRefinery] = useState<Refinery | null>(null);
+  const [showLocationSelector, setShowLocationSelector] = useState(false);
 
   const [isAutoFilling, setIsAutoFilling] = useState(false);
   const [isAiEnhancing, setIsAiEnhancing] = useState(false);
@@ -261,7 +262,18 @@ export default function ProfessionalRefineryManagement() {
     setIsAiEnhancing(false);
   };
 
-
+  const handleLocationSelect = (lat: number, lng: number) => {
+    setFormData(prev => ({
+      ...prev,
+      latitude: lat.toFixed(6),
+      longitude: lng.toFixed(6)
+    }));
+    setShowLocationSelector(false);
+    toast({ 
+      title: 'Location Selected', 
+      description: `Coordinates: ${lat.toFixed(6)}, ${lng.toFixed(6)}` 
+    });
+  };
 
   const handleEdit = (refinery: Refinery) => {
     setEditingRefinery(refinery);
@@ -519,6 +531,16 @@ export default function ProfessionalRefineryManagement() {
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <Label>Location Coordinates *</Label>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowLocationSelector(true)}
+                          className="flex items-center gap-2"
+                        >
+                          <Navigation className="h-4 w-4" />
+                          Select on Map
+                        </Button>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
@@ -729,7 +751,14 @@ export default function ProfessionalRefineryManagement() {
         </CardContent>
       </Card>
 
-
+      {/* Location Selector */}
+      <LocationSelector
+        isOpen={showLocationSelector}
+        onClose={() => setShowLocationSelector(false)}
+        onLocationSelect={handleLocationSelect}
+        initialLat={formData.latitude ? parseFloat(formData.latitude) : 25.2048}
+        initialLng={formData.longitude ? parseFloat(formData.longitude) : 55.2708}
+      />
     </div>
   );
 }
