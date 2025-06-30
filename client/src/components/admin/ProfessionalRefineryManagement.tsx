@@ -54,8 +54,7 @@ import {
   Navigation,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import RefineryLocationSelector from '@/components/map/RefineryLocationSelector';
-import RefineryLocationMap from '@/components/map/RefineryLocationMap';
+
 import { Textarea } from '@/components/ui/textarea';
 
 interface Refinery {
@@ -106,7 +105,7 @@ export default function ProfessionalRefineryManagement() {
   const [selectedStatus, setSelectedStatus] = useState('All Statuses');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingRefinery, setEditingRefinery] = useState<Refinery | null>(null);
-  const [showMapSelector, setShowMapSelector] = useState(false);
+
   const [isAutoFilling, setIsAutoFilling] = useState(false);
   const [isAiEnhancing, setIsAiEnhancing] = useState(false);
   const [formData, setFormData] = useState({
@@ -262,15 +261,7 @@ export default function ProfessionalRefineryManagement() {
     setIsAiEnhancing(false);
   };
 
-  const handleMapClick = (lat: number, lng: number) => {
-    setFormData(prev => ({
-      ...prev,
-      latitude: lat.toFixed(6),
-      longitude: lng.toFixed(6),
-    }));
-    setShowMapSelector(false);
-    toast({ title: 'Location Selected', description: `Coordinates: ${lat.toFixed(6)}, ${lng.toFixed(6)}` });
-  };
+
 
   const handleEdit = (refinery: Refinery) => {
     setEditingRefinery(refinery);
@@ -528,16 +519,6 @@ export default function ProfessionalRefineryManagement() {
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <Label>Location Coordinates *</Label>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setShowMapSelector(true)}
-                          className="flex items-center gap-2"
-                        >
-                          <Navigation className="h-4 w-4" />
-                          Select on Map
-                        </Button>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
@@ -631,31 +612,7 @@ export default function ProfessionalRefineryManagement() {
                 </DialogContent>
               </Dialog>
 
-              {/* Map Selection Dialog */}
-              <Dialog open={showMapSelector} onOpenChange={setShowMapSelector}>
-                <DialogContent className="max-w-4xl h-[600px]">
-                  <DialogHeader>
-                    <DialogTitle>Select Refinery Location</DialogTitle>
-                    <DialogDescription>
-                      Click on the map to select coordinates for the refinery
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="flex-1">
-                    <RefineryLocationMap
-                      onLocationSelect={(lat, lng, address) => {
-                        setFormData(prev => ({
-                          ...prev,
-                          latitude: lat.toString(),
-                          longitude: lng.toString()
-                        }));
-                        setShowMapSelector(false);
-                      }}
-                      initialLat={parseFloat(formData.latitude) || 25.2048}
-                      initialLng={parseFloat(formData.longitude) || 55.2708}
-                    />
-                  </div>
-                </DialogContent>
-              </Dialog>
+
               <Button variant="outline" size="sm">
                 <Download className="h-4 w-4 mr-2" />
                 Export
@@ -772,14 +729,7 @@ export default function ProfessionalRefineryManagement() {
         </CardContent>
       </Card>
 
-      {/* Interactive Map Selector */}
-      <RefineryLocationSelector
-        isOpen={showMapSelector}
-        onClose={() => setShowMapSelector(false)}
-        onLocationSelected={handleMapClick}
-        initialLat={formData.latitude ? parseFloat(formData.latitude) : undefined}
-        initialLng={formData.longitude ? parseFloat(formData.longitude) : undefined}
-      />
+
     </div>
   );
 }
