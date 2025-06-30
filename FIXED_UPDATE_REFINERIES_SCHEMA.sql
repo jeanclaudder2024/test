@@ -1,7 +1,6 @@
--- Update refineries table to include comprehensive fields
--- Run this SQL to add missing columns to your refineries table
+-- Fixed SQL script to update refineries table safely
+-- This script handles both TEXT and ARRAY column types correctly
 
--- Check if columns exist and add them if missing
 DO $$ 
 BEGIN
     -- Add city column if it doesn't exist
@@ -19,7 +18,7 @@ BEGIN
         ALTER TABLE refineries ADD COLUMN owner TEXT;
     END IF;
     
-    -- Add products column if it doesn't exist
+    -- Add products column as TEXT (not array) if it doesn't exist
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'refineries' AND column_name = 'products') THEN
         ALTER TABLE refineries ADD COLUMN products TEXT;
     END IF;
@@ -86,14 +85,24 @@ BEGIN
 
 END $$;
 
--- Verify the table structure
-SELECT column_name, data_type, is_nullable 
-FROM information_schema.columns 
-WHERE table_name = 'refineries' 
-ORDER BY ordinal_position;
+-- Check if products column is an array type and convert if needed
+DO $$
+DECLARE
+    col_type TEXT;
+BEGIN
+    -- Get the data type of the products column
+    SELECT data_type INTO col_type 
+    FROM information_schema.columns 
+    WHERE table_name = 'refineries' AND column_name = 'products';
+    
+    -- If it's an array type, we need to handle it differently
+    IF col_type = 'ARRAY' THEN
+        -- For array columns, set empty arrays instead of empty strings
+        UPDATE refineries SET products = NULL WHERE products IS NULL;
+    END IF;
+END $$;
 
--- Update any existing refineries to have default values for new fields
--- Skip the products column as it may be an array type
+-- Update existing refineries with safe default values
 UPDATE refineries SET 
     city = COALESCE(city, ''),
     operator = COALESCE(operator, ''),
@@ -105,5 +114,22 @@ UPDATE refineries SET
     technical_specs = COALESCE(technical_specs, ''),
     last_updated = COALESCE(last_updated, NOW())
 WHERE id IS NOT NULL;
+
+-- Handle products column separately (in case it's an array)
+UPDATE refineries SET 
+    products = COALESCE(products, '')
+WHERE id IS NOT NULL 
+    AND EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'refineries' 
+        AND column_name = 'products' 
+        AND data_type = 'text'
+    );
+
+-- Verify the table structure
+SELECT column_name, data_type, is_nullable 
+FROM information_schema.columns 
+WHERE table_name = 'refineries' 
+ORDER BY ordinal_position;
 
 COMMIT;
