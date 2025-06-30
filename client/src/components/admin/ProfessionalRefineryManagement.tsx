@@ -148,7 +148,7 @@ export default function ProfessionalRefineryManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: refineries = [], isLoading } = useQuery({
+  const { data: refineries = [], isLoading } = useQuery<Refinery[]>({
     queryKey: ['/api/refineries'],
   });
 
@@ -373,7 +373,7 @@ export default function ProfessionalRefineryManagement() {
     }
   };
 
-  const filteredRefineries = refineries.filter((refinery: Refinery) => {
+  const filteredRefineries = (refineries as Refinery[]).filter((refinery: Refinery) => {
     const matchesSearch = refinery.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          refinery.country.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRegion = selectedRegion === 'All Regions' || refinery.region === selectedRegion;
@@ -435,7 +435,7 @@ export default function ProfessionalRefineryManagement() {
             <Globe className="h-8 w-8 text-purple-600" />
             <div className="ml-4">
               <p className="text-sm font-medium text-muted-foreground">Regions</p>
-              <p className="text-2xl font-bold">{new Set(refineries.map((r: Refinery) => r.region)).size}</p>
+              <p className="text-2xl font-bold">{new Set((refineries as Refinery[]).map((r: Refinery) => r.region)).size}</p>
             </div>
           </CardContent>
         </Card>
