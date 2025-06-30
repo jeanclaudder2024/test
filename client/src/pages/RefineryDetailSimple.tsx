@@ -27,9 +27,12 @@ export default function RefineryDetailSimple() {
   const params = useParams<{ id: string }>();
   const refineryId = params?.id ? parseInt(params.id) : null;
 
-  // Fetch refineries data
+  // Fetch refineries data with no caching for fresh data
   const { data: refineries = [], isLoading } = useQuery<Refinery[]>({
     queryKey: ['/api/admin/refineries'],
+    staleTime: 0, // No caching - always fresh data
+    refetchOnWindowFocus: true, // Refresh when window regains focus
+    refetchOnMount: true, // Always refetch when component mounts
   });
 
   // Find the specific refinery

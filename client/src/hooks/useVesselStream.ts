@@ -31,8 +31,10 @@ export function useVesselStream() {
   // Use React Query for refineries to ensure cache invalidation works
   const { data: refineriesData = [], isLoading: refineriesLoading, error: refineriesError } = useQuery<Refinery[]>({
     queryKey: ['/api/refineries'],
-    staleTime: 2 * 60 * 1000, // 2 minutes
-    refetchInterval: 5 * 60 * 1000, // 5 minutes
+    staleTime: 0, // No caching - always fresh data
+    refetchInterval: 30 * 1000, // Refresh every 30 seconds
+    refetchOnWindowFocus: true, // Refresh when window regains focus
+    refetchOnMount: true, // Always refetch when component mounts
   });
 
   useEffect(() => {
