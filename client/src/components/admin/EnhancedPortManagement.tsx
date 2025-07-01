@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useToast } from '@/hooks/use-toast';
 import {
   Card,
   CardContent,
@@ -82,7 +83,11 @@ function PortStatusBadge({ status }: { status: string | null }) {
   );
 }
 
-function EnhancedPortCard({ port }: { port: Port }) {
+function EnhancedPortCard({ port, onEdit, onDelete }: { 
+  port: Port; 
+  onEdit: (port: Port) => void; 
+  onDelete: (port: Port) => void; 
+}) {
   return (
     <Card className="hover:shadow-lg transition-shadow border-l-4 border-l-blue-500">
       <CardHeader className="pb-3">
@@ -130,11 +135,21 @@ function EnhancedPortCard({ port }: { port: Port }) {
             <span>{port.lat}, {port.lng}</span>
           </div>
           <div className="flex space-x-2">
-            <Button size="sm" variant="outline" className="h-8">
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="h-8"
+              onClick={() => onEdit(port)}
+            >
               <Edit className="h-3 w-3 mr-1" />
               Edit
             </Button>
-            <Button size="sm" variant="outline" className="h-8 text-red-600 hover:text-red-700">
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="h-8 text-red-600 hover:text-red-700"
+              onClick={() => onDelete(port)}
+            >
               <Trash2 className="h-3 w-3" />
             </Button>
           </div>
@@ -216,6 +231,10 @@ export function EnhancedPortManagement() {
   const [sortBy, setSortBy] = useState('name');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(20);
+  const [editingPort, setEditingPort] = useState<Port | null>(null);
+
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: ports, isLoading } = useQuery({
     queryKey: ['/api/admin/ports'],
@@ -224,6 +243,51 @@ export function EnhancedPortManagement() {
   const { data: stats } = useQuery({
     queryKey: ['/api/admin/port-stats'],
   });
+
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (portId: number) => {
+      const response = await fetch(`/api/admin/ports/${portId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete port');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/ports'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/port-stats'] });
+      toast({
+        title: "Success",
+        description: "Port deleted successfully",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete port",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleEditPort = (port: Port) => {
+    setEditingPort(port);
+    toast({
+      title: "Edit Mode",
+      description: `Editing ${port.name}`,
+    });
+  };
+
+  const handleDeletePort = (port: Port) => {
+    if (window.confirm(`Are you sure you want to delete ${port.name}?`)) {
+      deleteMutation.mutate(port.id);
+    }
+  };
 
   // Filter and search logic
   const filteredPorts = Array.isArray(ports) ? ports.filter((port: Port) => {
@@ -362,7 +426,12 @@ export function EnhancedPortManagement() {
       {/* Port List */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {paginatedPorts.map((port: Port) => (
-          <EnhancedPortCard key={port.id} port={port} />
+          <EnhancedPortCard 
+            key={port.id} 
+            port={port} 
+            onEdit={handleEditPort}
+            onDelete={handleDeletePort}
+          />
         ))}
       </div>
 
