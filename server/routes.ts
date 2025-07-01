@@ -399,7 +399,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
 
-        // Prepare the data for creation (admin endpoint is more flexible)
+        // Prepare the data for creation with proper array handling
         const createData = {
           name: refineryData.name,
           country: refineryData.country,
