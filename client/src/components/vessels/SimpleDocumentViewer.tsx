@@ -183,7 +183,7 @@ All technical systems meet international maritime standards and regulatory requi
     description: doc.description || '',
     content: doc.content,
     status: doc.status,
-    createdAt: doc.createdAt.toISOString(),
+    createdAt: typeof doc.createdAt === 'string' ? doc.createdAt : new Date(doc.createdAt).toISOString(),
     documentType: doc.documentType,
     category: doc.category,
     source: 'admin' as const,
