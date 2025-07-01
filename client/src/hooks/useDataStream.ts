@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { type Vessel, type Refinery, type Port } from '@shared/schema';
-import { useVesselStream } from './useVesselStream';
 
 interface StreamData {
   vessels: Vessel[];
@@ -13,44 +12,52 @@ interface StreamData {
 }
 
 /**
- * Hook to connect to the server-sent events stream for vessel and refinery data
- * Uses the more robust useVesselStream hook as the data source
+ * Clean data stream hook - direct API calls without complex chaining
  */
-export function useDataStream() {
-  // Use our more robust vessel stream hook that handles both WebSocket and SSE
-  const streamData = useVesselStream();
-  
-  // If needed, we'll filter the data here to only show relevant vessels
-  const [data, setData] = useState<StreamData>({
-    vessels: [],
-    refineries: [],
-    ports: [],
-    stats: null,
-    loading: true,
-    error: null,
-    lastUpdated: null
+export function useDataStream(): StreamData {
+  // Direct refinery query
+  const { 
+    data: refineries = [], 
+    isLoading: refineriesLoading, 
+    error: refineriesError 
+  } = useQuery<Refinery[]>({
+    queryKey: ['/api/refineries'],
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
   });
-  
-  // Update our data whenever the stream data changes
-  useEffect(() => {
-    // Include all vessels - don't filter by type to ensure vessel detail page works
-    setData({
-      vessels: streamData.vessels,
-      refineries: streamData.refineries,
-      ports: streamData.ports,
-      stats: streamData.stats,
-      loading: streamData.loading,
-      error: streamData.error,
-      lastUpdated: streamData.lastUpdated
-    });
-    
-    if (streamData.vessels.length > 0) {
-      console.log('Using all', streamData.vessels.length, 'vessels from data stream');
-    }
-    
-    console.log('Ports available:', streamData.ports.length, 'ports loaded');
-    console.log('Refineries available:', streamData.refineries.length, 'refineries loaded');
-  }, [streamData]);
-  
-  return data;
+
+  // Direct vessels query
+  const { 
+    data: vessels = [], 
+    isLoading: vesselsLoading, 
+    error: vesselsError 
+  } = useQuery<Vessel[]>({
+    queryKey: ['/api/vessels'],
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    refetchOnWindowFocus: false,
+  });
+
+  // Direct ports query
+  const { 
+    data: ports = [], 
+    isLoading: portsLoading, 
+    error: portsError 
+  } = useQuery<Port[]>({
+    queryKey: ['/api/ports'],
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+  });
+
+  const loading = refineriesLoading || vesselsLoading || portsLoading;
+  const error = refineriesError || vesselsError || portsError;
+
+  return {
+    vessels,
+    refineries,
+    ports,
+    stats: null,
+    loading,
+    error: error ? 'Failed to load data' : null,
+    lastUpdated: new Date()
+  };
 }
