@@ -168,6 +168,15 @@ Changelog:
   * Removed React Query caching for refineries (stale time: 0) for immediate fresh data
   * Added bulk delete endpoint /api/admin/refineries/clear-all for complete refinery removal
   * Refineries now stay deleted permanently and won't be re-added on server restart
+- July 1, 2025. Enhanced Refinery Creation Form for Advanced Dashboard Features:
+  * Expanded ProfessionalRefineryManagement form with comprehensive tabbed interface
+  * Added Technical Specifications tab: distillation capacity, conversion capacity, hydrogen capacity, sulfur recovery, processing units, storage capacity
+  * Added Financial Information tab: investment cost, operating costs, revenue, profit margin, market share
+  * Added Compliance & Regulations tab: environmental certifications, safety record, workforce size, annual throughput, crude oil sources
+  * Added Strategic Information tab: pipeline connections, shipping terminals, rail connections, nearest port details
+  * Updated form data structure and resetForm function to include all 25+ enhanced fields
+  * Created ENHANCED_REFINERY_COLUMNS.sql with complete database schema updates needed for advanced dashboard
+  * All enhanced fields now support the sophisticated Command Center v2.0 dashboard features
 
 ## User Preferences
 

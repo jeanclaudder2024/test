@@ -216,7 +216,34 @@ export default function ProfessionalRefineryManagement() {
     address: '',
     technical_specs: '',
     utilization: '',
-    complexity: ''
+    complexity: '',
+    
+    // Enhanced Operational Details
+    crude_oil_sources: '',
+    processing_units: '',
+    storage_capacity: '',
+    pipeline_connections: '',
+    shipping_terminals: '',
+    rail_connections: '',
+    environmental_certifications: '',
+    safety_record: '',
+    workforce_size: '',
+    annual_throughput: '',
+    
+    // Financial & Market Information
+    investment_cost: '',
+    operating_costs: '',
+    revenue: '',
+    profit_margin: '',
+    market_share: '',
+    
+    // Technical Specifications
+    distillation_capacity: '',
+    conversion_capacity: '',
+    hydrogen_capacity: '',
+    sulfur_recovery: '',
+    octane_rating: '',
+    diesel_specifications: ''
   });
 
   const { toast } = useToast();
@@ -318,7 +345,34 @@ export default function ProfessionalRefineryManagement() {
       address: '',
       technical_specs: '',
       utilization: '',
-      complexity: ''
+      complexity: '',
+      
+      // Enhanced Operational Details
+      crude_oil_sources: '',
+      processing_units: '',
+      storage_capacity: '',
+      pipeline_connections: '',
+      shipping_terminals: '',
+      rail_connections: '',
+      environmental_certifications: '',
+      safety_record: '',
+      workforce_size: '',
+      annual_throughput: '',
+      
+      // Financial & Market Information
+      investment_cost: '',
+      operating_costs: '',
+      revenue: '',
+      profit_margin: '',
+      market_share: '',
+      
+      // Technical Specifications
+      distillation_capacity: '',
+      conversion_capacity: '',
+      hydrogen_capacity: '',
+      sulfur_recovery: '',
+      octane_rating: '',
+      diesel_specifications: ''
     });
   };
 
@@ -976,38 +1030,260 @@ export default function ProfessionalRefineryManagement() {
                       {/* Technical Tab */}
                       <TabsContent value="technical" className="space-y-4">
                         <div className="space-y-2">
-                          <Label htmlFor="technical_specs">Technical Specifications</Label>
+                          <Label htmlFor="technical_specs">General Technical Specifications</Label>
                           <Textarea
                             id="technical_specs"
                             value={formData.technical_specs}
                             onChange={(e) => setFormData({...formData, technical_specs: e.target.value})}
                             placeholder="Detailed technical specifications, equipment, and processing capabilities..."
-                            rows={4}
+                            rows={3}
                           />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="distillation_capacity">Distillation Capacity</Label>
+                            <Input
+                              id="distillation_capacity"
+                              value={formData.distillation_capacity}
+                              onChange={(e) => setFormData({...formData, distillation_capacity: e.target.value})}
+                              placeholder="e.g., 450,000 bbl/day"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="conversion_capacity">Conversion Capacity</Label>
+                            <Input
+                              id="conversion_capacity"
+                              value={formData.conversion_capacity}
+                              onChange={(e) => setFormData({...formData, conversion_capacity: e.target.value})}
+                              placeholder="e.g., 280,000 bbl/day"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="hydrogen_capacity">Hydrogen Capacity</Label>
+                            <Input
+                              id="hydrogen_capacity"
+                              value={formData.hydrogen_capacity}
+                              onChange={(e) => setFormData({...formData, hydrogen_capacity: e.target.value})}
+                              placeholder="e.g., 50 MMSCFD"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="sulfur_recovery">Sulfur Recovery</Label>
+                            <Input
+                              id="sulfur_recovery"
+                              value={formData.sulfur_recovery}
+                              onChange={(e) => setFormData({...formData, sulfur_recovery: e.target.value})}
+                              placeholder="e.g., 99.5%"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="octane_rating">Octane Rating</Label>
+                            <Input
+                              id="octane_rating"
+                              value={formData.octane_rating}
+                              onChange={(e) => setFormData({...formData, octane_rating: e.target.value})}
+                              placeholder="e.g., 95 RON"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="diesel_specifications">Diesel Specifications</Label>
+                            <Input
+                              id="diesel_specifications"
+                              value={formData.diesel_specifications}
+                              onChange={(e) => setFormData({...formData, diesel_specifications: e.target.value})}
+                              placeholder="e.g., Euro V, Ultra Low Sulfur"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="processing_units">Processing Units</Label>
+                            <Textarea
+                              id="processing_units"
+                              value={formData.processing_units}
+                              onChange={(e) => setFormData({...formData, processing_units: e.target.value})}
+                              placeholder="e.g., CDU, VDU, FCC, Hydrocracker, Reformer..."
+                              rows={2}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="storage_capacity">Storage Capacity</Label>
+                            <Input
+                              id="storage_capacity"
+                              value={formData.storage_capacity}
+                              onChange={(e) => setFormData({...formData, storage_capacity: e.target.value})}
+                              placeholder="e.g., 15 million barrels"
+                            />
+                          </div>
                         </div>
                       </TabsContent>
 
                       {/* Financial Tab */}
                       <TabsContent value="financial" className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="investment_cost">Investment Cost</Label>
+                            <Input
+                              id="investment_cost"
+                              value={formData.investment_cost}
+                              onChange={(e) => setFormData({...formData, investment_cost: e.target.value})}
+                              placeholder="e.g., $8.5 billion USD"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="operating_costs">Operating Costs</Label>
+                            <Input
+                              id="operating_costs"
+                              value={formData.operating_costs}
+                              onChange={(e) => setFormData({...formData, operating_costs: e.target.value})}
+                              placeholder="e.g., $2.50/barrel"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="revenue">Annual Revenue</Label>
+                            <Input
+                              id="revenue"
+                              value={formData.revenue}
+                              onChange={(e) => setFormData({...formData, revenue: e.target.value})}
+                              placeholder="e.g., $12.8 billion USD"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="profit_margin">Profit Margin</Label>
+                            <Input
+                              id="profit_margin"
+                              value={formData.profit_margin}
+                              onChange={(e) => setFormData({...formData, profit_margin: e.target.value})}
+                              placeholder="e.g., 15.5%"
+                            />
+                          </div>
+                        </div>
+
                         <div className="space-y-2">
-                          <Label>Financial Information</Label>
-                          <p className="text-sm text-muted-foreground">Investment, operating costs, and revenue data</p>
+                          <Label htmlFor="market_share">Market Share</Label>
+                          <Input
+                            id="market_share"
+                            value={formData.market_share}
+                            onChange={(e) => setFormData({...formData, market_share: e.target.value})}
+                            placeholder="e.g., Regional: 25%, Global: 3.2%"
+                          />
                         </div>
                       </TabsContent>
 
                       {/* Compliance Tab */}
                       <TabsContent value="compliance" className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="environmental_certifications">Environmental Certifications</Label>
+                            <Textarea
+                              id="environmental_certifications"
+                              value={formData.environmental_certifications}
+                              onChange={(e) => setFormData({...formData, environmental_certifications: e.target.value})}
+                              placeholder="e.g., ISO 14001, OHSAS 18001, API certifications..."
+                              rows={2}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="safety_record">Safety Record</Label>
+                            <Textarea
+                              id="safety_record"
+                              value={formData.safety_record}
+                              onChange={(e) => setFormData({...formData, safety_record: e.target.value})}
+                              placeholder="e.g., 0.15 TRIR, 2.1M safe hours, last incident: 2019..."
+                              rows={2}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="workforce_size">Workforce Size</Label>
+                            <Input
+                              id="workforce_size"
+                              type="number"
+                              value={formData.workforce_size}
+                              onChange={(e) => setFormData({...formData, workforce_size: e.target.value})}
+                              placeholder="e.g., 2850"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="annual_throughput">Annual Throughput</Label>
+                            <Input
+                              id="annual_throughput"
+                              value={formData.annual_throughput}
+                              onChange={(e) => setFormData({...formData, annual_throughput: e.target.value})}
+                              placeholder="e.g., 180 million barrels"
+                            />
+                          </div>
+                        </div>
+
                         <div className="space-y-2">
-                          <Label>Compliance & Regulations</Label>
-                          <p className="text-sm text-muted-foreground">Environmental compliance, safety records, and certifications</p>
+                          <Label htmlFor="crude_oil_sources">Crude Oil Sources</Label>
+                          <Textarea
+                            id="crude_oil_sources"
+                            value={formData.crude_oil_sources}
+                            onChange={(e) => setFormData({...formData, crude_oil_sources: e.target.value})}
+                            placeholder="e.g., Arab Heavy, Arab Medium, Khurais crude, Venezuelan heavy..."
+                            rows={2}
+                          />
                         </div>
                       </TabsContent>
 
                       {/* Strategic Tab */}
                       <TabsContent value="strategic" className="space-y-4">
-                        <div className="space-y-2">
-                          <Label>Strategic Information</Label>
-                          <p className="text-sm text-muted-foreground">Future plans, partnerships, and market position</p>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="pipeline_connections">Pipeline Connections</Label>
+                            <Textarea
+                              id="pipeline_connections"
+                              value={formData.pipeline_connections}
+                              onChange={(e) => setFormData({...formData, pipeline_connections: e.target.value})}
+                              placeholder="e.g., East-West Pipeline, Trans-Arabian Pipeline..."
+                              rows={2}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="shipping_terminals">Shipping Terminals</Label>
+                            <Textarea
+                              id="shipping_terminals"
+                              value={formData.shipping_terminals}
+                              onChange={(e) => setFormData({...formData, shipping_terminals: e.target.value})}
+                              placeholder="e.g., Ras Tanura Terminal, Ju'aymah Terminal..."
+                              rows={2}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="rail_connections">Rail Connections</Label>
+                            <Input
+                              id="rail_connections"
+                              value={formData.rail_connections}
+                              onChange={(e) => setFormData({...formData, rail_connections: e.target.value})}
+                              placeholder="e.g., Saudi Railway Network, Dedicated freight lines"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="nearest_port">Nearest Port</Label>
+                            <Input
+                              id="nearest_port"
+                              value={formData.nearest_port || ''}
+                              onChange={(e) => setFormData({...formData, nearest_port: e.target.value})}
+                              placeholder="e.g., Ras Tanura Port - 15km"
+                            />
+                          </div>
                         </div>
                       </TabsContent>
                     </Tabs>
