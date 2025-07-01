@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Vessel, Refinery, Port } from '@shared/schema';
 import { apiRequest } from '@/lib/queryClient';
@@ -37,20 +37,24 @@ export function useVesselStream() {
     refetchOnMount: true, // Always refetch when component mounts
   });
 
+  // Use a stable dependency to prevent infinite loops
+  const refineriesCount = refineriesData?.length || 0;
+  const refineriesStable = useMemo(() => refineriesData, [refineriesCount]);
+
   useEffect(() => {
     // Function to prepare vessels and ports data when refineries change
     const fetchVesselsAndPorts = async () => {
-      if (!refineriesData.length) return;
+      if (!refineriesStable?.length) return;
       
       try {
-        console.log('Processing vessels and ports for', refineriesData.length, 'refineries...');
+        console.log('Processing vessels and ports for', refineriesStable.length, 'refineries...');
         
         // Generate ports connected to refineries
-        const generatedPorts = generateConnectedPorts(refineriesData);
+        const generatedPorts = generateConnectedPorts(refineriesStable);
         
         // Get vessels at each refinery using MarineTraffic service
         // Convert refineries to the format expected by getVesselsForRefinery
-        const refineryFormatForAPI = refineriesData
+        const refineryFormatForAPI = refineriesStable
           .filter(r => r.capacity !== null) // Only process refineries with valid capacity
           .map(r => ({
             name: r.name,
@@ -66,7 +70,7 @@ export function useVesselStream() {
         const vesselsResults = await Promise.all(vesselsPromises);
         const vesselsAtRefineries = vesselsResults.flat();
         
-        console.log(`Loaded ${refineriesData.length} refineries, ${generatedPorts.length} connected ports, and ${vesselsAtRefineries.length} vessels from Marine Traffic`);
+        console.log(`Loaded ${refineriesStable.length} refineries, ${generatedPorts.length} connected ports, and ${vesselsAtRefineries.length} vessels from Marine Traffic`);
         
         // Debug: Show example of the first port
         if (generatedPorts.length > 0) {
@@ -75,9 +79,9 @@ export function useVesselStream() {
         }
         
         // Debug: Show example of the first refinery
-        if (refineriesData.length > 0) {
-          console.log('Example refinery:', refineriesData[0]);
-          console.log('Refinery lat/lng type:', typeof refineriesData[0].lat, typeof refineriesData[0].lng);
+        if (refineriesStable.length > 0) {
+          console.log('Example refinery:', refineriesStable[0]);
+          console.log('Refinery lat/lng type:', typeof refineriesStable[0].lat, typeof refineriesStable[0].lng);
         }
         
         // Update vessels and ports state
@@ -97,7 +101,7 @@ export function useVesselStream() {
 
     // Fetch vessels and ports when refineries data changes
     fetchVesselsAndPorts();
-  }, [refineriesData]);
+  }, [refineriesStable]);
 
   // Return combined data with proper loading states
   return {
