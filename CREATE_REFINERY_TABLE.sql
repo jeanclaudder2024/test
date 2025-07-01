@@ -73,7 +73,7 @@ INSERT INTO refineries (
     '70.0664',
     1240000,
     'Operational',
-    'World\'s largest refinery complex with integrated petrochemical facilities',
+    'World''s largest refinery complex with integrated petrochemical facilities',
     'Reliance Industries',
     'Reliance Industries Limited',
     'Integrated Refinery Complex',
