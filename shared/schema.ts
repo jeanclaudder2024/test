@@ -208,8 +208,8 @@ export const refineries = pgTable("refineries", {
   name: text("name").notNull(),
   country: text("country").notNull(),
   region: text("region").notNull(),
-  lat: decimal("lat", { precision: 10, scale: 6 }).notNull(),
-  lng: decimal("lng", { precision: 10, scale: 6 }).notNull(),
+  lat: text("lat").notNull(),
+  lng: text("lng").notNull(),
   capacity: integer("capacity"), // in barrels per day
   status: text("status").default("active"),
   description: text("description"),
@@ -222,7 +222,7 @@ export const refineries = pgTable("refineries", {
   year_built: integer("year_built"),
   last_maintenance: timestamp("last_maintenance"),
   next_maintenance: timestamp("next_maintenance"),
-  complexity: decimal("complexity", { precision: 10, scale: 2 }),
+  complexity: text("complexity"),
   email: text("email"),
   phone: text("phone"),
   website: text("website"),
@@ -231,7 +231,7 @@ export const refineries = pgTable("refineries", {
   photo: text("photo"),
   city: text("city"),
   last_updated: timestamp("last_updated"),
-  utilization: decimal("utilization", { precision: 10, scale: 2 }),
+  utilization: text("utilization"),
 });
 
 export const insertRefinerySchema = createInsertSchema(refineries).omit({
