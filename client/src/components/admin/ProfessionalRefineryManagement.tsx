@@ -58,6 +58,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import LocationSelector from '@/components/map/LocationSelector';
 import { Textarea } from '@/components/ui/textarea';
+import RefineryDetailView from './RefineryDetailView';
 
 interface Refinery {
   id: number;
@@ -187,6 +188,7 @@ export default function ProfessionalRefineryManagement() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingRefinery, setEditingRefinery] = useState<Refinery | null>(null);
   const [showLocationSelector, setShowLocationSelector] = useState(false);
+  const [viewingRefinery, setViewingRefinery] = useState<Refinery | null>(null);
 
   const [isAutoFilling, setIsAutoFilling] = useState(false);
   const [isAiEnhancing, setIsAiEnhancing] = useState(false);
@@ -1118,10 +1120,19 @@ export default function ProfessionalRefineryManagement() {
                           <Button
                             variant="ghost"
                             size="sm"
+                            onClick={() => setViewingRefinery(refinery)}
+                            title="View Details"
+                          >
+                            <Navigation className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => {
                               handleEdit(refinery);
                               setIsAddDialogOpen(true);
                             }}
+                            title="Edit Refinery"
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -1133,6 +1144,7 @@ export default function ProfessionalRefineryManagement() {
                                 deleteRefineryMutation.mutate(refinery.id);
                               }
                             }}
+                            title="Delete Refinery"
                             className="text-red-600 hover:text-red-700 hover:bg-red-50"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -1156,6 +1168,37 @@ export default function ProfessionalRefineryManagement() {
         initialLat={formData.latitude ? parseFloat(formData.latitude) : 25.2048}
         initialLng={formData.longitude ? parseFloat(formData.longitude) : 55.2708}
       />
+
+      {/* Refinery Detail View Dialog */}
+      <Dialog open={!!viewingRefinery} onOpenChange={(open) => !open && setViewingRefinery(null)}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Building className="h-5 w-5 text-blue-600" />
+              {viewingRefinery?.name || 'Refinery Details'}
+            </DialogTitle>
+            <DialogDescription>
+              Comprehensive information about this refinery facility
+            </DialogDescription>
+          </DialogHeader>
+          
+          {viewingRefinery && (
+            <RefineryDetailView 
+              refinery={{
+                ...viewingRefinery,
+                latitude: viewingRefinery.lat,
+                longitude: viewingRefinery.lng
+              }} 
+            />
+          )}
+          
+          <div className="flex justify-end pt-4">
+            <Button variant="outline" onClick={() => setViewingRefinery(null)}>
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
