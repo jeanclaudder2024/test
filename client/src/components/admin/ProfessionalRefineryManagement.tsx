@@ -149,21 +149,25 @@ export default function ProfessionalRefineryManagement() {
   const queryClient = useQueryClient();
 
   const { data: refineries = [], isLoading } = useQuery<Refinery[]>({
-    queryKey: ['/api/refineries'],
+    queryKey: ['/api/admin/refineries'],
   });
 
   const addRefineryMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await fetch('/api/refineries', {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch('/api/admin/refineries', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(token && { "Authorization": `Bearer ${token}` }),
+        },
         body: JSON.stringify(data),
       });
       if (!response.ok) throw new Error('Failed to add refinery');
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/refineries'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/refineries'] });
       toast({ title: 'Success', description: 'Refinery added successfully' });
       setIsAddDialogOpen(false);
       resetForm();
@@ -175,16 +179,20 @@ export default function ProfessionalRefineryManagement() {
 
   const updateRefineryMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: any }) => {
-      const response = await fetch(`/api/refineries/${id}`, {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`/api/admin/refineries/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(token && { "Authorization": `Bearer ${token}` }),
+        },
         body: JSON.stringify(data),
       });
       if (!response.ok) throw new Error('Failed to update refinery');
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/refineries'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/refineries'] });
       toast({ title: 'Success', description: 'Refinery updated successfully' });
       setEditingRefinery(null);
       resetForm();
@@ -196,13 +204,17 @@ export default function ProfessionalRefineryManagement() {
 
   const deleteRefineryMutation = useMutation({
     mutationFn: async (id: number) => {
-      const response = await fetch(`/api/refineries/${id}`, {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`/api/admin/refineries/${id}`, {
         method: 'DELETE',
+        headers: {
+          ...(token && { "Authorization": `Bearer ${token}` }),
+        },
       });
       if (!response.ok) throw new Error('Failed to delete refinery');
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/refineries'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/refineries'] });
       toast({ title: 'Success', description: 'Refinery deleted successfully' });
     },
     onError: () => {
@@ -244,9 +256,13 @@ export default function ProfessionalRefineryManagement() {
 
     setIsAutoFilling(true);
     try {
-      const response = await fetch('/api/refineries/autofill', {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch('/api/admin/refineries/autofill', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(token && { "Authorization": `Bearer ${token}` }),
+        },
         body: JSON.stringify({ name: formData.name }),
       });
       
@@ -275,9 +291,13 @@ export default function ProfessionalRefineryManagement() {
 
     setIsAiEnhancing(true);
     try {
-      const response = await fetch('/api/refineries/ai-enhance', {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch('/api/admin/refineries/ai-enhance', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(token && { "Authorization": `Bearer ${token}` }),
+        },
         body: JSON.stringify(formData),
       });
       

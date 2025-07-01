@@ -399,8 +399,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
 
+        // Prepare the data for creation (admin endpoint is more flexible)
+        const createData = {
+          name: refineryData.name,
+          country: refineryData.country,
+          region: refineryData.region,
+          lat: refineryData.lat?.toString() || "0",
+          lng: refineryData.lng?.toString() || "0",
+          capacity: refineryData.capacity ? parseInt(refineryData.capacity) : null,
+          status: refineryData.status || "active",
+          description: refineryData.description || "",
+          operator: refineryData.operator || "",
+          owner: refineryData.owner || "",
+          type: refineryData.type || "",
+          products: refineryData.products || "",
+          year_built: refineryData.year_built ? parseInt(refineryData.year_built) : null,
+          complexity: refineryData.complexity ? parseFloat(refineryData.complexity) : null,
+          utilization: refineryData.utilization ? parseFloat(refineryData.utilization) : null,
+          city: refineryData.city || "",
+          email: refineryData.email || "",
+          phone: refineryData.phone || "",
+          website: refineryData.website || "",
+          address: refineryData.address || "",
+          technical_specs: refineryData.technical_specs || "",
+          photo: refineryData.photo || ""
+        };
+
         // Create the refinery
-        const newRefinery = await storage.createRefinery(refineryData);
+        const newRefinery = await storage.createRefinery(createData);
         console.log("Refinery created successfully:", newRefinery);
 
         res.status(201).json({
