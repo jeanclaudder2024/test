@@ -7,6 +7,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { 
   MapPin, 
   Building, 
@@ -22,7 +23,8 @@ import {
   Ship,
   BarChart3,
   TrendingUp,
-  Clock
+  Clock,
+  X
 } from 'lucide-react';
 
 interface Refinery {
@@ -53,9 +55,10 @@ interface Refinery {
 
 interface RefineryDetailViewProps {
   refinery: Refinery;
+  onClose?: () => void;
 }
 
-export default function RefineryDetailView({ refinery }: RefineryDetailViewProps) {
+export default function RefineryDetailView({ refinery, onClose }: RefineryDetailViewProps) {
   const formatCapacity = (capacity: number | null) => {
     if (!capacity) return 'N/A';
     return `${capacity.toLocaleString()}`;
@@ -161,7 +164,19 @@ export default function RefineryDetailView({ refinery }: RefineryDetailViewProps
   };
 
   return (
-    <div className="bg-slate-900 min-h-screen p-6 text-white">
+    <div className="bg-slate-900 min-h-screen p-6 text-white relative">
+      {/* Close Button */}
+      {onClose && (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onClose}
+          className="absolute top-4 right-4 text-slate-400 hover:text-white hover:bg-slate-800 z-10"
+        >
+          <X className="h-6 w-6" />
+        </Button>
+      )}
+      
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-white mb-2">REFINERY DASHBOARD</h1>

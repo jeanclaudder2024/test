@@ -1171,32 +1171,17 @@ export default function ProfessionalRefineryManagement() {
 
       {/* Refinery Detail View Dialog */}
       <Dialog open={!!viewingRefinery} onOpenChange={(open) => !open && setViewingRefinery(null)}>
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Building className="h-5 w-5 text-blue-600" />
-              {viewingRefinery?.name || 'Refinery Details'}
-            </DialogTitle>
-            <DialogDescription>
-              Comprehensive information about this refinery facility
-            </DialogDescription>
-          </DialogHeader>
-          
+        <DialogContent className="max-w-7xl max-h-[95vh] overflow-auto p-0 bg-slate-900 border-slate-700">
           {viewingRefinery && (
             <RefineryDetailView 
               refinery={{
                 ...viewingRefinery,
                 latitude: viewingRefinery.lat,
                 longitude: viewingRefinery.lng
-              }} 
+              }}
+              onClose={() => setViewingRefinery(null)}
             />
           )}
-          
-          <div className="flex justify-end pt-4">
-            <Button variant="outline" onClick={() => setViewingRefinery(null)}>
-              Close
-            </Button>
-          </div>
         </DialogContent>
       </Dialog>
     </div>
