@@ -202,7 +202,7 @@ export const insertVesselSchema = createInsertSchema(vessels).omit({
   })
 });
 
-// Refineries
+// Refineries - Minimal schema matching existing Supabase table
 export const refineries = pgTable("refineries", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
@@ -210,11 +210,9 @@ export const refineries = pgTable("refineries", {
   region: text("region").notNull(),
   lat: text("lat").notNull(),
   lng: text("lng").notNull(),
-  capacity: integer("capacity"), // in barrels per day
+  capacity: integer("capacity"),
   status: text("status").default("active"),
   description: text("description"),
-  
-  // Basic Information
   operator: text("operator"),
   owner: text("owner"),
   type: text("type"),
@@ -231,74 +229,7 @@ export const refineries = pgTable("refineries", {
   photo: text("photo"),
   city: text("city"),
   last_updated: timestamp("last_updated"),
-  utilization: text("utilization"),
-  
-  // Enhanced Operational Details
-  crude_oil_sources: text("crude_oil_sources"), // Where crude oil comes from
-  processing_units: text("processing_units"), // List of processing units
-  storage_capacity: text("storage_capacity"), // Storage tank capacity
-  pipeline_connections: text("pipeline_connections"), // Connected pipelines
-  shipping_terminals: text("shipping_terminals"), // Marine terminals
-  rail_connections: text("rail_connections"), // Rail infrastructure
-  environmental_certifications: text("environmental_certifications"), // ISO, etc.
-  safety_record: text("safety_record"), // Safety statistics
-  workforce_size: integer("workforce_size"), // Number of employees
-  annual_throughput: text("annual_throughput"), // Actual annual processing
-  
-  // Financial & Market Information
-  investment_cost: text("investment_cost"), // Total investment
-  operating_costs: text("operating_costs"), // Annual operating costs
-  revenue: text("revenue"), // Annual revenue
-  profit_margin: text("profit_margin"), // Profit margins
-  market_share: text("market_share"), // Regional market share
-  
-  // Technical Specifications
-  distillation_capacity: text("distillation_capacity"), // Atmospheric distillation
-  conversion_capacity: text("conversion_capacity"), // Secondary processing
-  hydrogen_capacity: text("hydrogen_capacity"), // Hydrogen production
-  sulfur_recovery: text("sulfur_recovery"), // Sulfur recovery units
-  octane_rating: text("octane_rating"), // Gasoline octane capability
-  diesel_specifications: text("diesel_specifications"), // Diesel standards
-  
-  // Compliance & Regulations
-  environmental_compliance: text("environmental_compliance"), // Environmental status
-  regulatory_status: text("regulatory_status"), // Regulatory compliance
-  permits_licenses: text("permits_licenses"), // Active permits
-  inspection_schedule: text("inspection_schedule"), // Inspection timeline
-  
-  // Strategic Information
-  expansion_plans: text("expansion_plans"), // Future expansion
-  modernization_projects: text("modernization_projects"), // Upgrade projects
-  technology_partnerships: text("technology_partnerships"), // Tech partners
-  supply_contracts: text("supply_contracts"), // Supply agreements
-  distribution_network: text("distribution_network"), // Distribution channels
-  
-  // Performance Metrics
-  efficiency_rating: text("efficiency_rating"), // Operational efficiency
-  energy_consumption: text("energy_consumption"), // Energy usage
-  water_usage: text("water_usage"), // Water consumption
-  emissions_data: text("emissions_data"), // Environmental emissions
-  downtime_statistics: text("downtime_statistics"), // Maintenance downtime
-  
-  // Geographic & Infrastructure
-  nearest_port: text("nearest_port"), // Closest marine port
-  nearest_airport: text("nearest_airport"), // Closest airport
-  transportation_links: text("transportation_links"), // Transport infrastructure
-  utilities_infrastructure: text("utilities_infrastructure"), // Power, water, etc.
-  local_suppliers: text("local_suppliers"), // Local vendor network
-  
-  // Market Position
-  competitive_advantages: text("competitive_advantages"), // Key advantages
-  major_customers: text("major_customers"), // Primary customers
-  export_markets: text("export_markets"), // Export destinations
-  domestic_market_share: text("domestic_market_share"), // Local market position
-  
-  // Additional metadata
-  data_source: text("data_source"), // Where data came from
-  last_verified: timestamp("last_verified"), // Data verification date
-  confidence_level: text("confidence_level"), // Data reliability
-  notes: text("notes"), // Additional notes
-  created_at: timestamp("created_at").defaultNow(),
+  utilization: text("utilization")
 });
 
 export const insertRefinerySchema = createInsertSchema(refineries).omit({
