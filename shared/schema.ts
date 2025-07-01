@@ -888,6 +888,33 @@ export const insertMaritimeDocumentSchema = createInsertSchema(maritimeDocuments
 export type MaritimeDocument = typeof maritimeDocuments.$inferSelect;
 export type InsertMaritimeDocument = z.infer<typeof insertMaritimeDocumentSchema>;
 
+// Documents Table for Admin Document Management with Vessel Association
+export const adminDocuments = pgTable("documents", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description"),
+  content: text("content").notNull(),
+  documentType: text("document_type").notNull(),
+  status: text("status").notNull().default("draft"),
+  category: text("category").notNull().default("general"),
+  tags: text("tags"),
+  isTemplate: boolean("is_template").default(false),
+  isActive: boolean("is_active").default(true),
+  vesselId: integer("vessel_id").references(() => vessels.id), // Optional vessel association
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertAdminDocumentSchema = createInsertSchema(adminDocuments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type AdminDocument = typeof adminDocuments.$inferSelect;
+export type InsertAdminDocument = z.infer<typeof insertAdminDocumentSchema>;
+
 // Broker Companies (intermediary companies users connect to)
 export const brokerCompanies = pgTable("broker_companies", {
   id: serial("id").primaryKey(),

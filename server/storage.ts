@@ -1,4 +1,4 @@
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, sql, desc } from "drizzle-orm";
 import { db, getActiveDb } from "./db";
 import {
   users, vessels, refineries, progressEvents, brokers, stats as statsTable, ports, 
@@ -42,7 +42,8 @@ import {
   LandingPageImage, InsertLandingPageImage,
   LandingPageBlock, InsertLandingPageBlock,
   regions, OilType, InsertOilType, Region, InsertRegion,
-  maritimeDocuments, MaritimeDocument, InsertMaritimeDocument
+  maritimeDocuments, MaritimeDocument, InsertMaritimeDocument,
+  adminDocuments, AdminDocument, InsertAdminDocument
 } from "@shared/schema";
 
 // Storage interface with CRUD methods
@@ -222,6 +223,14 @@ export interface IStorage {
   createMaritimeDocument(document: InsertMaritimeDocument): Promise<MaritimeDocument>;
   updateMaritimeDocument(id: number, updates: Partial<InsertMaritimeDocument>): Promise<MaritimeDocument | undefined>;
   deleteMaritimeDocument(id: number): Promise<boolean>;
+
+  // Admin Document Management Methods (for vessel association)
+  getDocuments(): Promise<AdminDocument[]>;
+  getDocumentById(id: number): Promise<AdminDocument | undefined>;
+  createDocument(document: InsertAdminDocument): Promise<AdminDocument>;
+  updateDocument(id: number, updates: Partial<InsertAdminDocument>): Promise<AdminDocument | undefined>;
+  deleteDocument(id: number): Promise<boolean>;
+  getDocumentsByVesselId(vesselId: number): Promise<AdminDocument[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1783,6 +1792,73 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error deleting maritime document:', error);
       return false;
+    }
+  }
+
+  // Document Management Methods (for admin document management with vessel association)
+  async getDocuments(): Promise<AdminDocument[]> {
+    try {
+      const allDocuments = await db.select().from(adminDocuments).orderBy(desc(adminDocuments.createdAt));
+      return allDocuments;
+    } catch (error) {
+      console.error('Error fetching documents:', error);
+      throw new Error('Failed to fetch documents');
+    }
+  }
+
+  async getDocumentById(id: number): Promise<AdminDocument | undefined> {
+    try {
+      const [document] = await db.select().from(adminDocuments).where(eq(adminDocuments.id, id));
+      return document;
+    } catch (error) {
+      console.error('Error fetching document by ID:', error);
+      throw new Error('Failed to fetch document');
+    }
+  }
+
+  async createDocument(document: InsertAdminDocument): Promise<AdminDocument> {
+    try {
+      const [newDocument] = await db.insert(adminDocuments).values(document).returning();
+      return newDocument;
+    } catch (error) {
+      console.error('Error creating document:', error);
+      throw new Error('Failed to create document');
+    }
+  }
+
+  async updateDocument(id: number, updates: Partial<InsertAdminDocument>): Promise<AdminDocument | undefined> {
+    try {
+      const [updatedDocument] = await db.update(adminDocuments)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(adminDocuments.id, id))
+        .returning();
+      return updatedDocument;
+    } catch (error) {
+      console.error('Error updating document:', error);
+      throw new Error('Failed to update document');
+    }
+  }
+
+  async deleteDocument(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(adminDocuments).where(eq(adminDocuments.id, id));
+      return result.rowCount !== undefined && result.rowCount > 0;
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      return false;
+    }
+  }
+
+  async getDocumentsByVesselId(vesselId: number): Promise<AdminDocument[]> {
+    try {
+      const vesselDocuments = await db.select()
+        .from(adminDocuments)
+        .where(eq(adminDocuments.vesselId, vesselId))
+        .orderBy(desc(adminDocuments.createdAt));
+      return vesselDocuments;
+    } catch (error) {
+      console.error('Error fetching documents by vessel ID:', error);
+      throw new Error('Failed to fetch vessel documents');
     }
   }
 }
