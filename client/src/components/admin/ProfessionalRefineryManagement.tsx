@@ -53,6 +53,7 @@ import {
   Wand2,
   Target,
   Navigation,
+  Shuffle,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import LocationSelector from '@/components/map/LocationSelector';
@@ -399,6 +400,74 @@ export default function ProfessionalRefineryManagement() {
     });
   };
 
+  const generateRandomRefinery = async () => {
+    const refineryNames = [
+      "Al-Jubail Refinery", "Yanbu Refinery", "Jeddah Refinery", "Riyadh Processing Center",
+      "Dubai Integrated Complex", "Abu Dhabi Refinery", "Kuwait National Refinery",
+      "Bahrain Petroleum Complex", "Qatar Integrated Refinery", "Sohar Refinery",
+      "Port Arthur Refinery", "Texas City Refinery", "Baytown Complex", "Baton Rouge Refinery",
+      "Rotterdam Refinery", "Antwerp Processing Center", "Singapore Integrated Complex"
+    ];
+
+    const countries = [
+      { name: "Saudi Arabia", region: "Middle East", cities: ["Dhahran", "Yanbu", "Jeddah"], coords: { latMin: 16.3, latMax: 32.1, lngMin: 34.5, lngMax: 55.7 } },
+      { name: "United Arab Emirates", region: "Middle East", cities: ["Dubai", "Abu Dhabi"], coords: { latMin: 22.6, latMax: 26.1, lngMin: 51.0, lngMax: 56.4 } },
+      { name: "United States", region: "North America", cities: ["Houston", "Port Arthur"], coords: { latMin: 25.8, latMax: 49.4, lngMin: -125.0, lngMax: -66.9 } },
+      { name: "Netherlands", region: "Europe", cities: ["Rotterdam", "Amsterdam"], coords: { latMin: 50.7, latMax: 53.6, lngMin: 3.4, lngMax: 7.2 } },
+      { name: "Singapore", region: "Asia-Pacific", cities: ["Singapore"], coords: { latMin: 1.1, latMax: 1.5, lngMin: 103.6, lngMax: 104.0 } }
+    ];
+
+    const operators = ["Saudi Aramco", "ADNOC", "ExxonMobil", "Shell", "BP", "Chevron", "TotalEnergies"];
+    const types = ["Crude Oil Refinery", "Integrated Petrochemical Complex", "Heavy Oil Processing"];
+    const products = [
+      "Gasoline, Diesel, Jet Fuel, LPG, Lubricants",
+      "Heavy Fuel Oil, Marine Gas Oil, Petrochemicals",
+      "Premium Gasoline, Ultra-Low Sulfur Diesel, Aviation Fuel"
+    ];
+
+    const randomCountry = countries[Math.floor(Math.random() * countries.length)];
+    const randomCity = randomCountry.cities[Math.floor(Math.random() * randomCountry.cities.length)];
+    const randomName = refineryNames[Math.floor(Math.random() * refineryNames.length)];
+    const randomOperator = operators[Math.floor(Math.random() * operators.length)];
+    
+    const coords = randomCountry.coords;
+    const randomLat = (Math.random() * (coords.latMax - coords.latMin) + coords.latMin).toFixed(6);
+    const randomLng = (Math.random() * (coords.lngMax - coords.lngMin) + coords.lngMin).toFixed(6);
+
+    try {
+      await addRefineryMutation.mutateAsync({
+        name: `${randomName} - Test ${Date.now()}`,
+        country: randomCountry.name,
+        region: randomCountry.region,
+        city: randomCity,
+        lat: randomLat,
+        lng: randomLng,
+        capacity: Math.floor(Math.random() * 500000 + 100000),
+        type: types[Math.floor(Math.random() * types.length)],
+        status: Math.random() > 0.2 ? 'Operational' : 'Under Maintenance',
+        description: `Modern refinery facility with advanced processing capabilities.`,
+        operator: randomOperator,
+        owner: randomOperator,
+        products: products[Math.floor(Math.random() * products.length)],
+        year_built: Math.floor(Math.random() * 40 + 1980),
+        utilization: (Math.random() * 30 + 70).toFixed(1),
+        complexity: (Math.random() * 8 + 8).toFixed(1)
+      });
+      
+      toast({ 
+        title: 'Success', 
+        description: `Random test refinery generated successfully!` 
+      });
+    } catch (error) {
+      console.error('Error generating random refinery:', error);
+      toast({ 
+        title: 'Error', 
+        description: 'Failed to generate random refinery data', 
+        variant: 'destructive' 
+      });
+    }
+  };
+
   const handleEdit = (refinery: Refinery) => {
     setEditingRefinery(refinery);
     setFormData({
@@ -579,6 +648,16 @@ export default function ProfessionalRefineryManagement() {
               </SelectContent>
             </Select>
             <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                className="border-green-600 text-green-600 hover:bg-green-50"
+                onClick={generateRandomRefinery}
+                disabled={addRefineryMutation.isPending}
+              >
+                <Shuffle className="h-4 w-4 mr-2" />
+                Generate Test Data
+              </Button>
+              
               <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                 <DialogTrigger asChild>
                   <Button className="bg-amber-600 hover:bg-amber-700">
