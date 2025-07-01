@@ -69,7 +69,8 @@ export default function RefineryDetail() {
           refinery={{
             ...refinery,
             latitude: refinery.lat,
-            longitude: refinery.lng
+            longitude: refinery.lng,
+            lastUpdated: refinery.last_updated
           }}
         />
       )}

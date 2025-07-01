@@ -6,7 +6,7 @@ import Vessels from "@/pages/Vessels";
 import VesselDetail from "@/pages/VesselDetail";
 import VesselDocuments from "@/pages/VesselDocuments";
 import Refineries from "@/pages/Refineries";
-import RefineryDetailSimple from "@/pages/RefineryDetailSimple";
+import RefineryDetail from "@/pages/RefineryDetail";
 import Ports from "@/pages/Ports";
 import PortDetail from "@/pages/PortDetail";
 import Brokers from "@/pages/Brokers";
@@ -59,7 +59,7 @@ function ProtectedRoutes() {
           <Route path="/vessels/:id/documents" component={VesselDocuments} />
           <Route path="/vessels/:id" component={VesselDetail} />
           <Route path="/refineries" component={Refineries} />
-          <Route path="/refineries/:id" component={RefineryDetailSimple} />
+          <Route path="/refineries/:id" component={RefineryDetail} />
           <Route path="/ports" component={Ports} />
           <Route path="/ports/:id" component={PortDetail} />
           <Route path="/map" component={FixedFullPageMap} />
