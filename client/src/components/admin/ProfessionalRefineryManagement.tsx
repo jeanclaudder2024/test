@@ -33,6 +33,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import {
   Factory,
@@ -79,8 +80,75 @@ interface Refinery {
   website?: string | null;
   address?: string | null;
   technical_specs?: string | null;
-  utilization?: number | null;
-  complexity?: number | null;
+  utilization?: string | null;
+  complexity?: string | null;
+  
+  // Enhanced Operational Details
+  crude_oil_sources?: string | null;
+  processing_units?: string | null;
+  storage_capacity?: string | null;
+  pipeline_connections?: string | null;
+  shipping_terminals?: string | null;
+  rail_connections?: string | null;
+  environmental_certifications?: string | null;
+  safety_record?: string | null;
+  workforce_size?: number | null;
+  annual_throughput?: string | null;
+  
+  // Financial & Market Information
+  investment_cost?: string | null;
+  operating_costs?: string | null;
+  revenue?: string | null;
+  profit_margin?: string | null;
+  market_share?: string | null;
+  
+  // Technical Specifications
+  distillation_capacity?: string | null;
+  conversion_capacity?: string | null;
+  hydrogen_capacity?: string | null;
+  sulfur_recovery?: string | null;
+  octane_rating?: string | null;
+  diesel_specifications?: string | null;
+  
+  // Compliance & Regulations
+  environmental_compliance?: string | null;
+  regulatory_status?: string | null;
+  permits_licenses?: string | null;
+  inspection_schedule?: string | null;
+  
+  // Strategic Information
+  expansion_plans?: string | null;
+  modernization_projects?: string | null;
+  technology_partnerships?: string | null;
+  supply_contracts?: string | null;
+  distribution_network?: string | null;
+  
+  // Performance Metrics
+  efficiency_rating?: string | null;
+  energy_consumption?: string | null;
+  water_usage?: string | null;
+  emissions_data?: string | null;
+  downtime_statistics?: string | null;
+  
+  // Geographic & Infrastructure
+  nearest_port?: string | null;
+  nearest_airport?: string | null;
+  transportation_links?: string | null;
+  utilities_infrastructure?: string | null;
+  local_suppliers?: string | null;
+  
+  // Market Position
+  competitive_advantages?: string | null;
+  major_customers?: string | null;
+  export_markets?: string | null;
+  domestic_market_share?: string | null;
+  
+  // Additional metadata
+  data_source?: string | null;
+  last_verified?: Date | null;
+  confidence_level?: string | null;
+  notes?: string | null;
+  created_at?: Date | null;
 }
 
 const regions = [
@@ -518,324 +586,347 @@ export default function ProfessionalRefineryManagement() {
                     Add Refinery
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>
                       {editingRefinery ? 'Edit Refinery' : 'Add New Refinery'}
                     </DialogTitle>
                     <DialogDescription>
-                      {editingRefinery ? 'Update refinery information' : 'Add a new oil refinery to the database'}
+                      {editingRefinery ? 'Update comprehensive refinery information' : 'Add a new oil refinery with detailed specifications'}
                     </DialogDescription>
                   </DialogHeader>
                   <form onSubmit={handleSubmit} className="space-y-4">
-                    {/* Auto-fill and AI Enhancement Buttons */}
-                    <div className="flex gap-2 p-3 bg-slate-50 rounded-lg border">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={handleAutoFill}
-                        disabled={isAutoFilling || !formData.name}
-                        className="flex items-center gap-2"
-                      >
-                        <Target className="h-4 w-4" />
-                        {isAutoFilling ? 'Auto-filling...' : 'Auto Fill'}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={handleAiEnhancement}
-                        disabled={isAiEnhancing || !formData.name}
-                        className="flex items-center gap-2"
-                      >
-                        <Wand2 className="h-4 w-4" />
-                        {isAiEnhancing ? 'Enhancing...' : 'AI Enhance'}
-                      </Button>
-                      <div className="text-sm text-muted-foreground flex items-center">
-                        Enter refinery name first to use auto-fill features
-                      </div>
-                    </div>
+                    <Tabs defaultValue="basic" className="w-full">
+                      <TabsList className="grid w-full grid-cols-6">
+                        <TabsTrigger value="basic">Basic Info</TabsTrigger>
+                        <TabsTrigger value="operational">Operations</TabsTrigger>
+                        <TabsTrigger value="technical">Technical</TabsTrigger>
+                        <TabsTrigger value="financial">Financial</TabsTrigger>
+                        <TabsTrigger value="compliance">Compliance</TabsTrigger>
+                        <TabsTrigger value="strategic">Strategic</TabsTrigger>
+                      </TabsList>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="name">Refinery Name *</Label>
-                        <Input
-                          id="name"
-                          required
-                          value={formData.name}
-                          onChange={(e) => setFormData({...formData, name: e.target.value})}
-                          placeholder="e.g., Ras Tanura Refinery"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="country">Country *</Label>
-                        <Input
-                          id="country"
-                          required
-                          value={formData.country}
-                          onChange={(e) => setFormData({...formData, country: e.target.value})}
-                          placeholder="e.g., Saudi Arabia"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="region">Region *</Label>
-                        <Select value={formData.region} onValueChange={(value) => setFormData({...formData, region: value})}>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {regions.slice(1).map((region) => (
-                              <SelectItem key={region} value={region}>
-                                {region}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="capacity">Capacity (bbl/day)</Label>
-                        <Input
-                          id="capacity"
-                          type="number"
-                          value={formData.capacity}
-                          onChange={(e) => setFormData({...formData, capacity: e.target.value})}
-                          placeholder="e.g., 550000"
-                        />
-                      </div>
-                    </div>
+                      {/* Basic Information Tab */}
+                      <TabsContent value="basic" className="space-y-4">
+                        {/* Auto-fill and AI Enhancement Buttons */}
+                        <div className="flex gap-2 p-3 bg-slate-50 rounded-lg border">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={handleAutoFill}
+                            disabled={isAutoFilling || !formData.name}
+                            className="flex items-center gap-2"
+                          >
+                            <Target className="h-4 w-4" />
+                            {isAutoFilling ? 'Auto-filling...' : 'Auto Fill'}
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={handleAiEnhancement}
+                            disabled={isAiEnhancing || !formData.name}
+                            className="flex items-center gap-2"
+                          >
+                            <Wand2 className="h-4 w-4" />
+                            {isAiEnhancing ? 'Enhancing...' : 'AI Enhance'}
+                          </Button>
+                          <div className="text-sm text-muted-foreground flex items-center">
+                            Enter refinery name first to use auto-fill features
+                          </div>
+                        </div>
 
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <Label>Location Coordinates *</Label>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setShowLocationSelector(true)}
-                          className="flex items-center gap-2"
-                        >
-                          <Navigation className="h-4 w-4" />
-                          Select on Map
-                        </Button>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="name">Refinery Name *</Label>
+                            <Input
+                              id="name"
+                              required
+                              value={formData.name}
+                              onChange={(e) => setFormData({...formData, name: e.target.value})}
+                              placeholder="e.g., Ras Tanura Refinery"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="country">Country *</Label>
+                            <Input
+                              id="country"
+                              required
+                              value={formData.country}
+                              onChange={(e) => setFormData({...formData, country: e.target.value})}
+                              placeholder="e.g., Saudi Arabia"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-3 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="region">Region *</Label>
+                            <Select value={formData.region} onValueChange={(value) => setFormData({...formData, region: value})}>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {regions.slice(1).map((region) => (
+                                  <SelectItem key={region} value={region}>
+                                    {region}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="city">City</Label>
+                            <Input
+                              id="city"
+                              value={formData.city}
+                              onChange={(e) => setFormData({...formData, city: e.target.value})}
+                              placeholder="e.g., Dhahran"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="year_built">Year Built</Label>
+                            <Input
+                              id="year_built"
+                              type="number"
+                              value={formData.year_built}
+                              onChange={(e) => setFormData({...formData, year_built: e.target.value})}
+                              placeholder="e.g., 1975"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <Label>Location Coordinates *</Label>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setShowLocationSelector(true)}
+                              className="flex items-center gap-2"
+                            >
+                              <Navigation className="h-4 w-4" />
+                              Select on Map
+                            </Button>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="latitude">Latitude</Label>
+                              <Input
+                                id="latitude"
+                                required
+                                value={formData.latitude}
+                                onChange={(e) => setFormData({...formData, latitude: e.target.value})}
+                                placeholder="e.g., 26.6927"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="longitude">Longitude</Label>
+                              <Input
+                                id="longitude"
+                                required
+                                value={formData.longitude}
+                                onChange={(e) => setFormData({...formData, longitude: e.target.value})}
+                                placeholder="e.g., 50.0279"
+                              />
+                            </div>
+                          </div>
+                        </div>
+
                         <div className="space-y-2">
-                          <Label htmlFor="latitude">Latitude</Label>
-                          <Input
-                            id="latitude"
-                            required
-                            value={formData.latitude}
-                            onChange={(e) => setFormData({...formData, latitude: e.target.value})}
-                            placeholder="e.g., 26.6927"
+                          <Label htmlFor="address">Complete Address</Label>
+                          <Textarea
+                            id="address"
+                            value={formData.address}
+                            onChange={(e) => setFormData({...formData, address: e.target.value})}
+                            placeholder="Complete address of the refinery including street, postal code"
+                            rows={2}
                           />
                         </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="type">Refinery Type</Label>
+                            <Select value={formData.type} onValueChange={(value) => setFormData({...formData, type: value})}>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {refineryTypes.map((type) => (
+                                  <SelectItem key={type} value={type}>
+                                    {type}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="status">Status</Label>
+                            <Select value={formData.status} onValueChange={(value) => setFormData({...formData, status: value})}>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {statusOptions.map((status) => (
+                                  <SelectItem key={status} value={status}>
+                                    {status}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+
                         <div className="space-y-2">
-                          <Label htmlFor="longitude">Longitude</Label>
-                          <Input
-                            id="longitude"
-                            required
-                            value={formData.longitude}
-                            onChange={(e) => setFormData({...formData, longitude: e.target.value})}
-                            placeholder="e.g., 50.0279"
+                          <Label htmlFor="description">Refinery Description</Label>
+                          <Textarea
+                            id="description"
+                            value={formData.description}
+                            onChange={(e) => setFormData({...formData, description: e.target.value})}
+                            placeholder="Comprehensive description of the refinery operations, significance, and capabilities"
+                            rows={3}
                           />
                         </div>
-                      </div>
-                    </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="type">Refinery Type</Label>
-                        <Select value={formData.type} onValueChange={(value) => setFormData({...formData, type: value})}>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {refineryTypes.map((type) => (
-                              <SelectItem key={type} value={type}>
-                                {type}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="status">Status</Label>
-                        <Select value={formData.status} onValueChange={(value) => setFormData({...formData, status: value})}>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {statusOptions.map((status) => (
-                              <SelectItem key={status} value={status}>
-                                {status}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    {/* Additional Location Details */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="city">City</Label>
-                        <Input
-                          id="city"
-                          value={formData.city}
-                          onChange={(e) => setFormData({...formData, city: e.target.value})}
-                          placeholder="e.g., Dhahran"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="year_built">Year Built</Label>
-                        <Input
-                          id="year_built"
-                          type="number"
-                          value={formData.year_built}
-                          onChange={(e) => setFormData({...formData, year_built: e.target.value})}
-                          placeholder="e.g., 1975"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="address">Address</Label>
-                      <Input
-                        id="address"
-                        value={formData.address}
-                        onChange={(e) => setFormData({...formData, address: e.target.value})}
-                        placeholder="Complete address of the refinery"
-                      />
-                    </div>
-
-                    {/* Operations Section */}
-                    <div className="space-y-4 border-t pt-4">
-                      <h4 className="text-md font-semibold text-gray-800">Operations Details</h4>
-                      
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="operator">Operator</Label>
-                          <Input
-                            id="operator"
-                            value={formData.operator}
-                            onChange={(e) => setFormData({...formData, operator: e.target.value})}
-                            placeholder="e.g., Saudi Aramco"
-                          />
+                        <div className="grid grid-cols-3 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="email">Contact Email</Label>
+                            <Input
+                              id="email"
+                              type="email"
+                              value={formData.email}
+                              onChange={(e) => setFormData({...formData, email: e.target.value})}
+                              placeholder="contact@refinery.com"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="phone">Phone Number</Label>
+                            <Input
+                              id="phone"
+                              value={formData.phone}
+                              onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                              placeholder="+1-234-567-8900"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="website">Website</Label>
+                            <Input
+                              id="website"
+                              value={formData.website}
+                              onChange={(e) => setFormData({...formData, website: e.target.value})}
+                              placeholder="https://company.com"
+                            />
+                          </div>
                         </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="owner">Owner</Label>
-                          <Input
-                            id="owner"
-                            value={formData.owner}
+                      </TabsContent>
+
+                      {/* Operational Tab */}
+                      <TabsContent value="operational" className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="operator">Operator Company</Label>
+                            <Input
+                              id="operator"
+                              value={formData.operator}
+                              onChange={(e) => setFormData({...formData, operator: e.target.value})}
+                              placeholder="e.g., Saudi Aramco"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="owner">Owner</Label>
+                            <Input
+                              id="owner"
+                              value={formData.owner}
                             onChange={(e) => setFormData({...formData, owner: e.target.value})}
                             placeholder="e.g., Saudi Aramco"
-                          />
+                            />
+                          </div>
                         </div>
-                      </div>
 
-                      <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="capacity">Daily Capacity (bbl/day)</Label>
+                            <Input
+                              id="capacity"
+                              type="number"
+                              value={formData.capacity}
+                              onChange={(e) => setFormData({...formData, capacity: e.target.value})}
+                              placeholder="e.g., 550000"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="utilization">Utilization (%)</Label>
+                            <Input
+                              id="utilization"
+                              value={formData.utilization}
+                              onChange={(e) => setFormData({...formData, utilization: e.target.value})}
+                              placeholder="e.g., 85.5"
+                            />
+                          </div>
+                        </div>
+
                         <div className="space-y-2">
-                          <Label htmlFor="products">Products</Label>
-                          <Input
+                          <Label htmlFor="products">Main Products</Label>
+                          <Textarea
                             id="products"
                             value={formData.products}
                             onChange={(e) => setFormData({...formData, products: e.target.value})}
-                            placeholder="e.g., Gasoline, Diesel, Jet Fuel"
+                            placeholder="e.g., Gasoline, Diesel, Jet Fuel, Lubricants, Petrochemicals"
+                            rows={2}
                           />
                         </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="utilization">Utilization (%)</Label>
-                          <Input
-                            id="utilization"
-                            type="number"
-                            step="0.1"
-                            value={formData.utilization}
-                            onChange={(e) => setFormData({...formData, utilization: e.target.value})}
-                            placeholder="e.g., 85.5"
-                          />
-                        </div>
-                      </div>
 
-                      <div className="space-y-2">
-                        <Label htmlFor="complexity">Complexity Index</Label>
-                        <Input
-                          id="complexity"
-                          type="number"
-                          step="0.1"
-                          value={formData.complexity}
-                          onChange={(e) => setFormData({...formData, complexity: e.target.value})}
-                          placeholder="e.g., 12.5"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Contact Information Section */}
-                    <div className="space-y-4 border-t pt-4">
-                      <h4 className="text-md font-semibold text-gray-800">Contact Information</h4>
-                      
-                      <div className="grid grid-cols-3 gap-4">
                         <div className="space-y-2">
-                          <Label htmlFor="email">Email</Label>
+                          <Label htmlFor="complexity">Complexity Index</Label>
                           <Input
-                            id="email"
-                            type="email"
-                            value={formData.email}
-                            onChange={(e) => setFormData({...formData, email: e.target.value})}
-                            placeholder="contact@refinery.com"
+                            id="complexity"
+                            value={formData.complexity}
+                            onChange={(e) => setFormData({...formData, complexity: e.target.value})}
+                            placeholder="e.g., 12.5"
                           />
                         </div>
+                      </TabsContent>
+
+                      {/* Technical Tab */}
+                      <TabsContent value="technical" className="space-y-4">
                         <div className="space-y-2">
-                          <Label htmlFor="phone">Phone</Label>
-                          <Input
-                            id="phone"
-                            value={formData.phone}
-                            onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                            placeholder="+966 13 xxx xxxx"
+                          <Label htmlFor="technical_specs">Technical Specifications</Label>
+                          <Textarea
+                            id="technical_specs"
+                            value={formData.technical_specs}
+                            onChange={(e) => setFormData({...formData, technical_specs: e.target.value})}
+                            placeholder="Detailed technical specifications, equipment, and processing capabilities..."
+                            rows={4}
                           />
                         </div>
+                      </TabsContent>
+
+                      {/* Financial Tab */}
+                      <TabsContent value="financial" className="space-y-4">
                         <div className="space-y-2">
-                          <Label htmlFor="website">Website</Label>
-                          <Input
-                            id="website"
-                            type="url"
-                            value={formData.website}
-                            onChange={(e) => setFormData({...formData, website: e.target.value})}
-                            placeholder="https://www.refinery.com"
-                          />
+                          <Label>Financial Information</Label>
+                          <p className="text-sm text-muted-foreground">Investment, operating costs, and revenue data</p>
                         </div>
-                      </div>
-                    </div>
+                      </TabsContent>
 
-                    {/* Technical Details Section */}
-                    <div className="space-y-4 border-t pt-4">
-                      <h4 className="text-md font-semibold text-gray-800">Technical Details</h4>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="technical_specs">Technical Specifications</Label>
-                        <Textarea
-                          id="technical_specs"
-                          value={formData.technical_specs}
-                          onChange={(e) => setFormData({...formData, technical_specs: e.target.value})}
-                          placeholder="Technical specifications and equipment details..."
-                          rows={2}
-                        />
-                      </div>
+                      {/* Compliance Tab */}
+                      <TabsContent value="compliance" className="space-y-4">
+                        <div className="space-y-2">
+                          <Label>Compliance & Regulations</Label>
+                          <p className="text-sm text-muted-foreground">Environmental compliance, safety records, and certifications</p>
+                        </div>
+                      </TabsContent>
 
-                      <div className="space-y-2">
-                        <Label htmlFor="description">Description</Label>
-                        <Textarea
-                          id="description"
-                          value={formData.description}
-                          onChange={(e) => setFormData({...formData, description: e.target.value})}
-                          placeholder="Additional information about the refinery..."
-                          rows={3}
-                        />
-                      </div>
-                    </div>
+                      {/* Strategic Tab */}
+                      <TabsContent value="strategic" className="space-y-4">
+                        <div className="space-y-2">
+                          <Label>Strategic Information</Label>
+                          <p className="text-sm text-muted-foreground">Future plans, partnerships, and market position</p>
+                        </div>
+                      </TabsContent>
+                    </Tabs>
 
                     <div className="flex justify-end gap-2 pt-4">
                       <Button 
