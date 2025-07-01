@@ -8,7 +8,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
-import { useDataStream } from '@/hooks/useDataStream';
 import { PortDetailForm } from '@/components/ports/PortDetailForm';
 import PortMap from '@/components/map/PortMap';
 
@@ -71,8 +70,9 @@ function StatusBadge({ status }: { status: string }) {
 function PortDetail() {
   const [, params] = useRoute('/ports/:id');
   const portId = params?.id ? parseInt(params.id) : null;
-  const { ports, vessels, loading } = useDataStream();
   const { toast } = useToast();
+  const [port, setPort] = useState<Port | null>(null);
+  const [loading, setLoading] = useState(true);
   const [associatedVessels, setAssociatedVessels] = useState<Vessel[]>([]);
   const [connectedRefineries, setConnectedRefineries] = useState<any[]>([]);
   const [loadingRefineries, setLoadingRefineries] = useState(false);
@@ -81,8 +81,35 @@ function PortDetail() {
   const [activeTab, setActiveTab] = useState('overview');
   const [isEditing, setIsEditing] = useState(false);
   
-  // Find the port from our stream data
-  const port = ports.find(p => p.id === portId);
+  // Fetch port data directly from API
+  useEffect(() => {
+    if (portId) {
+      const fetchPort = async () => {
+        setLoading(true);
+        try {
+          const response = await fetch(`/api/admin/ports`);
+          if (response.ok) {
+            const ports = await response.json();
+            const foundPort = ports.find((p: Port) => p.id === portId);
+            setPort(foundPort || null);
+          } else {
+            console.error('Failed to fetch ports');
+            setPort(null);
+          }
+        } catch (error) {
+          console.error('Error fetching port:', error);
+          setPort(null);
+        } finally {
+          setLoading(false);
+        }
+      };
+      
+      fetchPort();
+    } else {
+      setLoading(false);
+      setPort(null);
+    }
+  }, [portId]);
   
   // Fetch vessels associated with this port
   useEffect(() => {
