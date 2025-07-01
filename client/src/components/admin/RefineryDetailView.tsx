@@ -187,19 +187,21 @@ export default function RefineryDetailView({ refinery, onClose }: RefineryDetail
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white overflow-auto">
       {/* Custom CSS for animations */}
-      <style jsx>{`
-        @keyframes liquidFlow {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-2px); }
-        }
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.7; }
-        }
-        .animate-liquid {
-          animation: liquidFlow 3s ease-in-out infinite;
-        }
-      `}</style>
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          @keyframes liquidFlow {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-2px); }
+          }
+          @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+          }
+          .animate-liquid {
+            animation: liquidFlow 3s ease-in-out infinite;
+          }
+        `
+      }} />
 
       {/* Close Button */}
       {onClose && (
@@ -219,7 +221,7 @@ export default function RefineryDetailView({ refinery, onClose }: RefineryDetail
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent mb-2">
-                ADVANCED REFINERY COMMAND CENTER
+                ADVANCED REFINERY COMMAND CENTER v2.0
               </h1>
               <p className="text-slate-300 text-lg font-medium">{refinery.name} • {refinery.country}</p>
               <p className="text-slate-400 text-sm">

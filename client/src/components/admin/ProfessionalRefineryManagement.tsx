@@ -60,6 +60,9 @@ import LocationSelector from '@/components/map/LocationSelector';
 import { Textarea } from '@/components/ui/textarea';
 import RefineryDetailView from './RefineryDetailView';
 
+// Force refresh
+const FORCE_REFRESH = Date.now();
+
 interface Refinery {
   id: number;
   name: string;
