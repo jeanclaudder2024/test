@@ -293,8 +293,22 @@ export function EnhancedPortManagement() {
   const handleFormSuccess = () => {
     setShowPortForm(false);
     setEditingPort(null);
+    
+    // Reset filters and sorting to show newly created ports
+    setSearchTerm('');
+    setFilterType('all');
+    setFilterStatus('all');
+    setFilterRegion('all');
+    setSortBy('id'); // Sort by ID to show newest ports first
+    setCurrentPage(1); // Go to first page
+    
     queryClient.invalidateQueries({ queryKey: ['/api/admin/ports'] });
     queryClient.invalidateQueries({ queryKey: ['/api/admin/port-stats'] });
+    
+    toast({
+      title: "Success",
+      description: "Port created successfully! Showing newest ports first.",
+    });
   };
 
   const handleDeletePort = (port: Port) => {
@@ -319,6 +333,8 @@ export function EnhancedPortManagement() {
   // Sort logic
   const sortedPorts = [...filteredPorts].sort((a: Port, b: Port) => {
     switch (sortBy) {
+      case 'id':
+        return b.id - a.id; // Newest first (highest ID first)
       case 'name':
         return a.name.localeCompare(b.name);
       case 'country':
