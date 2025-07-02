@@ -28,8 +28,14 @@ const portFormSchema = z.object({
   country: z.string().min(1, 'Country is required'),
   region: z.string().min(1, 'Region is required'),
   city: z.string().optional(),
-  lat: z.string().min(1, 'Latitude is required'),
-  lng: z.string().min(1, 'Longitude is required'),
+  lat: z.string().min(1, 'Latitude is required').refine(val => {
+    const num = parseFloat(val);
+    return !isNaN(num) && num >= -90 && num <= 90;
+  }, { message: 'Latitude must be between -90 and 90' }),
+  lng: z.string().min(1, 'Longitude is required').refine(val => {
+    const num = parseFloat(val);
+    return !isNaN(num) && num >= -180 && num <= 180;
+  }, { message: 'Longitude must be between -180 and 180' }),
   timezone: z.string().optional(),
   
   // Port Classification & Status

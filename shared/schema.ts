@@ -534,16 +534,22 @@ export const insertPortSchema = createInsertSchema(ports).omit({
   country: z.string().min(1, "Country is required"),
   region: z.string().min(1, "Region is required"),
   
-  // Geographic coordinates with transformation
-  lat: z.union([z.string(), z.number()]).transform(val => {
-    if (val === "" || val === null || val === undefined) return undefined;
+  // Geographic coordinates with transformation - REQUIRED fields
+  lat: z.union([z.string(), z.number()]).refine(val => {
+    if (val === "" || val === null || val === undefined) return false;
     const num = typeof val === "string" ? parseFloat(val) : val;
-    return isNaN(num) ? undefined : String(num);
+    return !isNaN(num) && num >= -90 && num <= 90;
+  }, { message: "Valid latitude is required (-90 to 90)" }).transform(val => {
+    const num = typeof val === "string" ? parseFloat(val) : val;
+    return String(num);
   }),
-  lng: z.union([z.string(), z.number()]).transform(val => {
-    if (val === "" || val === null || val === undefined) return undefined;
+  lng: z.union([z.string(), z.number()]).refine(val => {
+    if (val === "" || val === null || val === undefined) return false;
     const num = typeof val === "string" ? parseFloat(val) : val;
-    return isNaN(num) ? undefined : String(num);
+    return !isNaN(num) && num >= -180 && num <= 180;
+  }, { message: "Valid longitude is required (-180 to 180)" }).transform(val => {
+    const num = typeof val === "string" ? parseFloat(val) : val;
+    return String(num);
   }),
   
   // Optional string fields
