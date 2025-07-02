@@ -1,0 +1,150 @@
+2025-07-02T02:18:55.644054067Z #10 16.02 a different dependency.
+2025-07-02T02:18:55.644055696Z #10 16.02 
+2025-07-02T02:18:55.644057307Z #10 16.02 Run `npm audit` for details.
+2025-07-02T02:18:55.644059847Z #10 16.02 npm notice
+2025-07-02T02:18:55.644061577Z #10 16.02 npm notice New major version of npm available! 10.8.2 -> 11.4.2
+2025-07-02T02:18:55.644063277Z #10 16.02 npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.4.2
+2025-07-02T02:18:55.644064967Z #10 16.02 npm notice To update run: npm install -g npm@11.4.2
+2025-07-02T02:18:55.644066627Z #10 16.02 npm notice
+2025-07-02T02:22:00.956234757Z #10 DONE 201.3s
+2025-07-02T02:22:00.956257797Z 
+2025-07-02T02:22:00.956264808Z #11 [6/9] COPY . .
+2025-07-02T02:22:01.688983866Z #11 DONE 0.8s
+2025-07-02T02:22:01.839889663Z 
+2025-07-02T02:22:01.839918673Z #12 [7/9] RUN npm run build
+2025-07-02T02:22:02.141133362Z #12 0.316 
+2025-07-02T02:22:02.141155612Z #12 0.316 > rest-express@1.0.0 build
+2025-07-02T02:22:02.141161472Z #12 0.316 > vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+2025-07-02T02:22:02.141165543Z #12 0.316 
+2025-07-02T02:22:02.266361502Z #12 0.576 vite v5.4.14 building for production...
+2025-07-02T02:22:02.417346881Z #12 0.657 transforming...
+2025-07-02T02:22:02.690816579Z #12 1.000 Browserslist: browsers data (caniuse-lite) is 9 months old. Please run:
+2025-07-02T02:22:02.690842679Z #12 1.000   npx update-browserslist-db@latest
+2025-07-02T02:22:02.69084791Z #12 1.000   Why you should do it regularly: https://github.com/browserslist/update-db#readme
+2025-07-02T02:22:16.417048945Z #12 14.73 ✓ 3471 modules transformed.
+2025-07-02T02:22:18.382554946Z #12 16.63 rendering chunks...
+2025-07-02T02:22:18.382721311Z #12 16.69 computing gzip size...
+2025-07-02T02:22:18.533761721Z #12 16.76 ../dist/client/index.html                     1.98 kB │ gzip:   0.87 kB
+2025-07-02T02:22:18.533846603Z #12 16.76 ../dist/client/assets/index-hXZE2cIe.css    190.70 kB │ gzip:  33.85 kB
+2025-07-02T02:22:18.533853493Z #12 16.76 ../dist/client/assets/index--ehPI0l0.js   2,149.01 kB │ gzip: 547.06 kB
+2025-07-02T02:22:18.533858333Z #12 16.76 ✓ built in 16.16s
+2025-07-02T02:22:18.533862133Z #12 16.76 
+2025-07-02T02:22:18.533866764Z #12 16.76 (!) Some chunks are larger than 500 kB after minification. Consider:
+2025-07-02T02:22:18.533871934Z #12 16.76 - Using dynamic import() to code-split the application
+2025-07-02T02:22:18.533897154Z #12 16.76 - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+2025-07-02T02:22:18.533901705Z #12 16.76 - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+2025-07-02T02:22:18.636908078Z #12 16.93 ▲ [WARNING] Duplicate member "getVesselDocuments" in class body [duplicate-class-member]
+2025-07-02T02:22:18.636941648Z #12 16.93 
+2025-07-02T02:22:18.636944769Z #12 16.93     server/storage.ts:1166:8:
+2025-07-02T02:22:18.636947209Z #12 16.93       1166 │   async getVesselDocuments(vesselId: number): Promise<Profession...
+2025-07-02T02:22:18.637068102Z #12 16.93            ╵         ~~~~~~~~~~~~~~~~~~
+2025-07-02T02:22:18.637075002Z #12 16.93 
+2025-07-02T02:22:18.637076882Z #12 16.93   The original member "getVesselDocuments" is here:
+2025-07-02T02:22:18.637078752Z #12 16.93 
+2025-07-02T02:22:18.637081092Z #12 16.93     server/storage.ts:702:8:
+2025-07-02T02:22:18.637083552Z #12 16.93       702 │   async getVesselDocuments(): Promise<SelectVesselDocument[]> {
+2025-07-02T02:22:18.637085212Z #12 16.93           ╵         ~~~~~~~~~~~~~~~~~~
+2025-07-02T02:22:18.637087542Z #12 16.93 
+2025-07-02T02:22:18.637090192Z #12 16.95 1 warning
+2025-07-02T02:22:18.637091963Z #12 16.95 
+2025-07-02T02:22:18.637093592Z #12 16.95   dist/index.js  960.6kb
+2025-07-02T02:22:18.637095252Z #12 16.95 
+2025-07-02T02:22:18.637097533Z #12 16.95 ⚡ Done in 43ms
+2025-07-02T02:22:54.976520456Z #12 DONE 53.2s
+2025-07-02T02:22:54.976540117Z 
+2025-07-02T02:22:54.976544117Z #13 [8/9] RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
+2025-07-02T02:22:55.728830567Z #13 DONE 0.7s
+2025-07-02T02:22:55.728849548Z 
+2025-07-02T02:22:55.728856228Z #14 [9/9] RUN chown -R nodejs:nodejs /app
+2025-07-02T02:27:37.096894971Z #14 DONE 281.4s
+2025-07-02T02:27:37.247095217Z 
+2025-07-02T02:27:37.262654718Z #15 exporting to docker image format
+2025-07-02T02:27:37.262703769Z #15 exporting layers
+2025-07-02T02:28:12.372062248Z #15 exporting layers 35.1s done
+2025-07-02T02:28:12.375343883Z #15 exporting manifest sha256:1239182aefacc23eaa9512e104e477fccb27289475f09a59b8e98fa0b2abec4c
+2025-07-02T02:28:12.779022366Z #15 exporting manifest sha256:1239182aefacc23eaa9512e104e477fccb27289475f09a59b8e98fa0b2abec4c 0.5s done
+2025-07-02T02:28:12.779041847Z #15 exporting config sha256:5f8febfde83069add20296e58f369b7d66cbc7669cdf6eb0264eed41332560c5 0.0s done
+2025-07-02T02:28:18.640157888Z #15 DONE 41.5s
+2025-07-02T02:28:18.701528641Z 
+2025-07-02T02:28:18.701542072Z #16 exporting cache to client directory
+2025-07-02T02:28:18.701546042Z #16 preparing build cache for export
+2025-07-02T02:28:32.965168506Z #16 writing cache manifest sha256:37a71ee65f61d6029e82b311b0d19651238a6c51467581432f5049510981ebf7 0.0s done
+2025-07-02T02:28:32.965188907Z #16 DONE 14.4s
+2025-07-02T02:28:34.037548837Z Pushing image to registry...
+2025-07-02T02:28:47.799577633Z Upload succeeded
+2025-07-02T02:29:01.511360242Z ==> Deploying...
+2025-07-02T02:29:35.403519307Z 
+2025-07-02T02:29:35.403562668Z > rest-express@1.0.0 start
+2025-07-02T02:29:35.403569578Z > NODE_ENV=production node dist/index.js
+2025-07-02T02:29:35.403572568Z 
+2025-07-02T02:29:42.405631537Z 🚀 Starting oil vessel tracking platform with Supabase...
+2025-07-02T02:29:42.808828034Z Connecting to database...
+2025-07-02T02:29:42.904262646Z Connected to Supabase database
+2025-07-02T02:29:42.904797599Z Initializing custom authentication tables...
+2025-07-02T02:29:44.233419646Z {
+2025-07-02T02:29:44.233439526Z   severity_local: 'NOTICE',
+2025-07-02T02:29:44.233445177Z   severity: 'NOTICE',
+2025-07-02T02:29:44.233449317Z   code: '42P07',
+2025-07-02T02:29:44.233453977Z   message: 'relation "payments" already exists, skipping',
+2025-07-02T02:29:44.233458057Z   file: 'parse_utilcmd.c',
+2025-07-02T02:29:44.233462387Z   line: '207',
+2025-07-02T02:29:44.233466567Z   routine: 'transformCreateStmt'
+2025-07-02T02:29:44.233470897Z }
+2025-07-02T02:29:44.284381191Z {
+2025-07-02T02:29:44.284399581Z   severity_local: 'NOTICE',
+2025-07-02T02:29:44.284405841Z   severity: 'NOTICE',
+2025-07-02T02:29:44.284410161Z   code: '00000',
+2025-07-02T02:29:44.284415811Z   message: 'table "admin_documents" does not exist, skipping',
+2025-07-02T02:29:44.284420372Z   file: 'tablecmds.c',
+2025-07-02T02:29:44.284424772Z   line: '1293',
+2025-07-02T02:29:44.284429642Z   routine: 'DropErrorMsgNonExistent'
+2025-07-02T02:29:44.284433822Z }
+2025-07-02T02:29:44.336218866Z {
+2025-07-02T02:29:44.336318939Z   severity_local: 'NOTICE',
+2025-07-02T02:29:44.336325419Z   severity: 'NOTICE',
+2025-07-02T02:29:44.336355039Z   code: '42P07',
+2025-07-02T02:29:44.33636057Z   message: 'relation "documents" already exists, skipping',
+2025-07-02T02:29:44.33636484Z   file: 'parse_utilcmd.c',
+2025-07-02T02:29:44.33636878Z   line: '207',
+2025-07-02T02:29:44.33637247Z   routine: 'transformCreateStmt'
+2025-07-02T02:29:44.33637629Z }
+2025-07-02T02:29:44.500508566Z {
+2025-07-02T02:29:44.500539307Z   severity_local: 'NOTICE',
+2025-07-02T02:29:44.500544297Z   severity: 'NOTICE',
+2025-07-02T02:29:44.500549357Z   code: '42P07',
+2025-07-02T02:29:44.500554988Z   message: 'relation "idx_documents_status" already exists, skipping',
+2025-07-02T02:29:44.500559377Z   file: 'index.c',
+2025-07-02T02:29:44.500563678Z   line: '865',
+2025-07-02T02:29:44.500568168Z   routine: 'index_create'
+2025-07-02T02:29:44.500572388Z }
+2025-07-02T02:29:44.551286696Z {
+2025-07-02T02:29:44.551305977Z   severity_local: 'NOTICE',
+2025-07-02T02:29:44.551311367Z   severity: 'NOTICE',
+2025-07-02T02:29:44.551331158Z   code: '42P07',
+2025-07-02T02:29:44.551338378Z   message: 'relation "idx_documents_category" already exists, skipping',
+2025-07-02T02:29:44.551343288Z   file: 'index.c',
+2025-07-02T02:29:44.551347568Z   line: '865',
+2025-07-02T02:29:44.551351838Z   routine: 'index_create'
+2025-07-02T02:29:44.551356348Z }
+2025-07-02T02:29:44.551550333Z Custom authentication tables created successfully
+2025-07-02T02:29:44.712686276Z Test admin user created: admin@petrodealhub.com / admin123
+2025-07-02T02:29:44.767697359Z Subscription plans seeded successfully
+2025-07-02T02:29:44.770379214Z MyShipTracking API configuration status: API Key missing
+2025-07-02T02:29:44.77268293Z OpenAI client initialized successfully
+2025-07-02T02:29:44.781631027Z Vessel Tracking System started - updating every 30 minutes
+2025-07-02T02:29:45.006374431Z 🚢 Starting vessel tracking system...
+2025-07-02T02:29:45.006490724Z Updating vessel positions...
+2025-07-02T02:29:45.006510374Z 🚢 Vessel tracking system is now fully operational
+2025-07-02T02:29:45.007437237Z ✅ Platform ready with Supabase authentication!
+2025-07-02T02:29:45.214313848Z 2:29:45 AM [express] Production static files served from /app/dist/client
+2025-07-02T02:29:45.216261066Z 2:29:45 AM [express] Server running on port 10000
+2025-07-02T02:29:45.503998626Z Loaded 89 ports for vessel position tracking
+2025-07-02T02:29:45.806336771Z Loaded 288 vessels for position tracking
+2025-07-02T02:29:46.106684792Z ==> Your service is live 🎉
+2025-07-02T02:29:46.132356941Z ==> 
+2025-07-02T02:29:46.156122549Z ==> ///////////////////////////////////////////////////////////
+2025-07-02T02:29:46.179648207Z ==> 
+2025-07-02T02:29:46.202619036Z ==> Available at your primary URL https://pertrodealhube.onrender.com
+2025-07-02T02:29:46.226043574Z ==> 
+2025-07-02T02:29:46.249677552Z ==> ///////////////////////////////////////////////////////////
+2025-07-02T02:29:46.402447612Z Initialized 255 active voyages

@@ -1163,7 +1163,7 @@ export class DatabaseStorage implements IStorage {
     return result.rowCount > 0;
   }
 
-  async getVesselDocuments(vesselId: number): Promise<ProfessionalDocument[]> {
+  async getProfessionalDocumentsByVesselId(vesselId: number): Promise<ProfessionalDocument[]> {
     return await db.select({
       id: professionalDocuments.id,
       title: professionalDocuments.title,
