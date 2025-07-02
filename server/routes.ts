@@ -8008,6 +8008,34 @@ Keep the description professional, informative, and around 150-200 words. Focus 
     }
   });
 
+  // Admin delete port endpoint
+  apiRouter.delete("/admin/ports/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      console.log(`Admin API: Received delete request for port ID: ${id}`);
+      
+      if (isNaN(id)) {
+        console.log(`Admin API: Invalid port ID: ${req.params.id}`);
+        return res.status(400).json({ message: "Invalid port ID" });
+      }
+      
+      console.log(`Admin API: Calling storage.deletePort(${id})`);
+      const deleted = await storage.deletePort(id);
+      console.log(`Admin API: storage.deletePort returned: ${deleted}`);
+      
+      if (!deleted) {
+        console.log(`Admin API: Port ${id} not found or delete failed`);
+        return res.status(404).json({ message: "Port not found" });
+      }
+      
+      console.log(`Admin API: Successfully deleted port ${id}`);
+      res.json({ success: true, message: `Port ${id} deleted successfully` });
+    } catch (error) {
+      console.error(`Admin API: Error deleting port ${req.params.id}:`, error);
+      res.status(500).json({ message: "Failed to delete port" });
+    }
+  });
+
   // ========================================
   // SUBSCRIPTION MANAGEMENT API ROUTES
   // ========================================
