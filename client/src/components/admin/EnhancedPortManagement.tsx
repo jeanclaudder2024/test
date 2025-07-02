@@ -32,7 +32,7 @@ import {
   Package,
 } from 'lucide-react';
 
-import SimplePortCreation from './SimplePortCreation';
+import AdvancedPortCreation from './AdvancedPortCreation';
 
 interface Port {
   id: number;
@@ -488,8 +488,8 @@ export function EnhancedPortManagement() {
         </Card>
       )}
 
-      {/* Simple Port Creation Form */}
-      <SimplePortCreation
+      {/* Advanced Port Creation Form */}
+      <AdvancedPortCreation
         open={showPortForm}
         onClose={handleFormClose}
         onSuccess={handleFormSuccess}
