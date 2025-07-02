@@ -399,13 +399,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
 
-        // Prepare the data for creation with proper array handling
+        // Prepare the data for creation with comprehensive field handling
         const createData = {
+          // Basic Information
           name: refineryData.name,
           country: refineryData.country,
           region: refineryData.region,
-          lat: refineryData.lat?.toString() || "0",
-          lng: refineryData.lng?.toString() || "0",
+          lat: refineryData.lat?.toString() || refineryData.latitude?.toString() || "0",
+          lng: refineryData.lng?.toString() || refineryData.longitude?.toString() || "0",
           capacity: refineryData.capacity ? parseInt(refineryData.capacity) : null,
           status: refineryData.status || "active",
           description: refineryData.description || null,
@@ -414,15 +415,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
           type: refineryData.type || null,
           products: refineryData.products || null,
           year_built: refineryData.year_built ? parseInt(refineryData.year_built) : null,
-          complexity: refineryData.complexity ? refineryData.complexity.toString() : null,
-          utilization: refineryData.utilization ? refineryData.utilization.toString() : null,
+          complexity: refineryData.complexity || null,
+          utilization: refineryData.utilization || null,
           city: refineryData.city || null,
           email: refineryData.email || null,
           phone: refineryData.phone || null,
           website: refineryData.website || null,
           address: refineryData.address || null,
           technical_specs: refineryData.technical_specs || null,
-          photo: refineryData.photo || null
+          photo: refineryData.photo || null,
+          
+          // Technical Specifications
+          distillation_capacity: refineryData.distillation_capacity || null,
+          conversion_capacity: refineryData.conversion_capacity || null,
+          hydrogen_capacity: refineryData.hydrogen_capacity || null,
+          sulfur_recovery: refineryData.sulfur_recovery || null,
+          processing_units: refineryData.processing_units || null,
+          storage_capacity: refineryData.storage_capacity || null,
+          
+          // Financial Information
+          investment_cost: refineryData.investment_cost || null,
+          operating_costs: refineryData.operating_costs || null,
+          revenue: refineryData.revenue || null,
+          profit_margin: refineryData.profit_margin || null,
+          market_share: refineryData.market_share || null,
+          
+          // Compliance & Regulations
+          environmental_certifications: refineryData.environmental_certifications || null,
+          safety_record: refineryData.safety_record || null,
+          workforce_size: refineryData.workforce_size ? parseInt(refineryData.workforce_size) : null,
+          annual_throughput: refineryData.annual_throughput || null,
+          crude_oil_sources: refineryData.crude_oil_sources || null,
+          
+          // Strategic Information
+          pipeline_connections: refineryData.pipeline_connections || null,
+          shipping_terminals: refineryData.shipping_terminals || null,
+          rail_connections: refineryData.rail_connections || null,
+          nearest_port: refineryData.nearest_port || null,
+          
+          // Additional Fields
+          fuel_types: refineryData.fuel_types || null,
+          refinery_complexity: refineryData.refinery_complexity || null,
+          daily_throughput: refineryData.daily_throughput ? parseInt(refineryData.daily_throughput) : null,
+          annual_revenue: refineryData.annual_revenue || null,
+          employees_count: refineryData.employees_count ? parseInt(refineryData.employees_count) : null,
+          established_year: refineryData.established_year ? parseInt(refineryData.established_year) : null,
+          parent_company: refineryData.parent_company || null,
+          safety_rating: refineryData.safety_rating || null,
+          environmental_rating: refineryData.environmental_rating || null,
+          production_capacity: refineryData.production_capacity ? parseInt(refineryData.production_capacity) : null,
+          maintenance_schedule: refineryData.maintenance_schedule || null,
+          certifications: refineryData.certifications || null,
+          compliance_status: refineryData.compliance_status || null,
+          market_position: refineryData.market_position || null,
+          strategic_partnerships: refineryData.strategic_partnerships || null,
+          expansion_plans: refineryData.expansion_plans || null,
+          technology_upgrades: refineryData.technology_upgrades || null,
+          operational_efficiency: refineryData.operational_efficiency || null,
+          supply_chain_partners: refineryData.supply_chain_partners || null,
+          distribution_network: refineryData.distribution_network || null
         };
 
         // Create the refinery

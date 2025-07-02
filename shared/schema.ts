@@ -229,7 +229,57 @@ export const refineries = pgTable("refineries", {
   photo: text("photo"),
   city: text("city"),
   last_updated: timestamp("last_updated"),
-  utilization: text("utilization")
+  utilization: text("utilization"),
+  
+  // Technical Specifications
+  distillation_capacity: text("distillation_capacity"),
+  conversion_capacity: text("conversion_capacity"),
+  hydrogen_capacity: text("hydrogen_capacity"),
+  sulfur_recovery: text("sulfur_recovery"),
+  processing_units: text("processing_units"),
+  storage_capacity: text("storage_capacity"),
+  
+  // Financial Information
+  investment_cost: text("investment_cost"),
+  operating_costs: text("operating_costs"),
+  revenue: text("revenue"),
+  profit_margin: text("profit_margin"),
+  market_share: text("market_share"),
+  
+  // Compliance & Regulations
+  environmental_certifications: text("environmental_certifications"),
+  safety_record: text("safety_record"),
+  workforce_size: integer("workforce_size"),
+  annual_throughput: text("annual_throughput"),
+  crude_oil_sources: text("crude_oil_sources"),
+  
+  // Strategic Information
+  pipeline_connections: text("pipeline_connections"),
+  shipping_terminals: text("shipping_terminals"),
+  rail_connections: text("rail_connections"),
+  nearest_port: text("nearest_port"),
+  
+  // Additional Fields
+  fuel_types: text("fuel_types"),
+  refinery_complexity: text("refinery_complexity"),
+  daily_throughput: integer("daily_throughput"),
+  annual_revenue: text("annual_revenue"),
+  employees_count: integer("employees_count"),
+  established_year: integer("established_year"),
+  parent_company: text("parent_company"),
+  safety_rating: text("safety_rating"),
+  environmental_rating: text("environmental_rating"),
+  production_capacity: integer("production_capacity"),
+  maintenance_schedule: text("maintenance_schedule"),
+  certifications: text("certifications"),
+  compliance_status: text("compliance_status"),
+  market_position: text("market_position"),
+  strategic_partnerships: text("strategic_partnerships"),
+  expansion_plans: text("expansion_plans"),
+  technology_upgrades: text("technology_upgrades"),
+  operational_efficiency: text("operational_efficiency"),
+  supply_chain_partners: text("supply_chain_partners"),
+  distribution_network: text("distribution_network")
 });
 
 export const insertRefinerySchema = createInsertSchema(refineries).omit({

@@ -31,7 +31,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Plus, Edit, Trash2, Search, Eye, Ship, Anchor, ChevronLeft, ChevronRight } from "lucide-react";
+import { Loader2, Plus, Edit, Trash2, Search, Eye, Ship, Anchor, ChevronLeft, ChevronRight, Building2, DollarSign, Shield, Network } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { 
   Pagination, 
@@ -45,7 +46,7 @@ import {
 
 import RefineryConnectionManager from "./RefineryConnectionManager";
 
-// Define the refinery type based on schema
+// Define the refinery type based on enhanced schema
 interface Refinery {
   id: number;
   name: string;
@@ -53,23 +54,73 @@ interface Refinery {
   region: string;
   lat: string;
   lng: string;
-  capacity: number;
+  capacity?: number;
   status: string;
-  description: string;
-  operator: string;
-  owner: string;
-  type: string;
-  products: string;
-  year_built: number;
-  complexity: number;
-  utilization: number;
-  city: string;
-  email: string;
-  phone: string;
-  website: string;
-  address: string;
-  technical_specs: string;
-  photo: string;
+  description?: string;
+  operator?: string;
+  owner?: string;
+  type?: string;
+  products?: string;
+  year_built?: number;
+  complexity?: string;
+  utilization?: string;
+  city?: string;
+  email?: string;
+  phone?: string;
+  website?: string;
+  address?: string;
+  technical_specs?: string;
+  photo?: string;
+  
+  // Technical Specifications
+  distillation_capacity?: string;
+  conversion_capacity?: string;
+  hydrogen_capacity?: string;
+  sulfur_recovery?: string;
+  processing_units?: string;
+  storage_capacity?: string;
+  
+  // Financial Information
+  investment_cost?: string;
+  operating_costs?: string;
+  revenue?: string;
+  profit_margin?: string;
+  market_share?: string;
+  
+  // Compliance & Regulations
+  environmental_certifications?: string;
+  safety_record?: string;
+  workforce_size?: number;
+  annual_throughput?: string;
+  crude_oil_sources?: string;
+  
+  // Strategic Information
+  pipeline_connections?: string;
+  shipping_terminals?: string;
+  rail_connections?: string;
+  nearest_port?: string;
+  
+  // Additional Fields
+  fuel_types?: string;
+  refinery_complexity?: string;
+  daily_throughput?: number;
+  annual_revenue?: string;
+  employees_count?: number;
+  established_year?: number;
+  parent_company?: string;
+  safety_rating?: string;
+  environmental_rating?: string;
+  production_capacity?: number;
+  maintenance_schedule?: string;
+  certifications?: string;
+  compliance_status?: string;
+  market_position?: string;
+  strategic_partnerships?: string;
+  expansion_plans?: string;
+  technology_upgrades?: string;
+  operational_efficiency?: string;
+  supply_chain_partners?: string;
+  distribution_network?: string;
 }
 
 export function RefineryManagement() {
@@ -86,11 +137,12 @@ export function RefineryManagement() {
   const [selectedRefinery, setSelectedRefinery] = useState<Refinery | null>(null);
   const [isDetailView, setIsDetailView] = useState(false);
   const [formData, setFormData] = useState({
+    // Basic Information
     name: "",
     country: "",
     region: "Middle East",
     city: "",
-    capacity: 0,
+    capacity: "",
     lat: "",
     lng: "",
     status: "active",
@@ -99,15 +151,66 @@ export function RefineryManagement() {
     owner: "",
     type: "Crude Oil",
     products: "",
-    year_built: undefined,
-    complexity: undefined,
-    utilization: undefined,
+    year_built: "",
+    complexity: "",
+    utilization: "",
     email: "",
     phone: "",
     website: "",
     address: "",
     technical_specs: "",
     photo: "",
+    
+    // Technical Specifications
+    distillation_capacity: "",
+    conversion_capacity: "",
+    hydrogen_capacity: "",
+    sulfur_recovery: "",
+    processing_units: "",
+    storage_capacity: "",
+    
+    // Financial Information
+    investment_cost: "",
+    operating_costs: "",
+    revenue: "",
+    profit_margin: "",
+    market_share: "",
+    
+    // Compliance & Regulations
+    environmental_certifications: "",
+    safety_record: "",
+    workforce_size: "",
+    annual_throughput: "",
+    crude_oil_sources: "",
+    
+    // Strategic Information
+    pipeline_connections: "",
+    shipping_terminals: "",
+    rail_connections: "",
+    nearest_port: "",
+    
+    // Additional Fields
+    fuel_types: "",
+    refinery_complexity: "",
+    daily_throughput: "",
+    annual_revenue: "",
+    employees_count: "",
+    established_year: "",
+    parent_company: "",
+    safety_rating: "",
+    environmental_rating: "",
+    production_capacity: "",
+    maintenance_schedule: "",
+    certifications: "",
+    compliance_status: "",
+    market_position: "",
+    strategic_partnerships: "",
+    expansion_plans: "",
+    technology_upgrades: "",
+    operational_efficiency: "",
+    supply_chain_partners: "",
+    distribution_network: "",
+    
     generateDetails: true // Enable OpenAI generation by default
   });
 
