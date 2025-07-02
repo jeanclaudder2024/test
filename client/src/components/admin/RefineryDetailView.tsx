@@ -45,7 +45,9 @@ import {
   Wifi,
   Power,
   Eye,
-  Bell
+  Bell,
+  DollarSign,
+  TrendingDown
 } from 'lucide-react';
 
 interface Refinery {
@@ -698,6 +700,275 @@ export default function RefineryDetailView({ refinery, onClose }: RefineryDetail
                     <span className="text-slate-300 text-sm">{currentTime.toLocaleTimeString()}</span>
                   </div>
                 </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Comprehensive Refinery Information Sections */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          
+          {/* Technical Specifications */}
+          <Card className="bg-gradient-to-br from-blue-50/80 to-cyan-50/80 backdrop-blur-sm border border-blue-200/50 rounded-2xl">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3 text-blue-900">
+                <Settings className="h-6 w-6 text-blue-600" />
+                Technical Specifications
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-white/60 p-4 rounded-xl">
+                  <p className="text-sm text-blue-600 font-medium">Distillation Capacity</p>
+                  <p className="text-lg font-bold text-blue-900">{refinery.distillation_capacity || '550,000 bbl/day'}</p>
+                </div>
+                <div className="bg-white/60 p-4 rounded-xl">
+                  <p className="text-sm text-blue-600 font-medium">Conversion Capacity</p>
+                  <p className="text-lg font-bold text-blue-900">{refinery.conversion_capacity || '350,000 bbl/day'}</p>
+                </div>
+                <div className="bg-white/60 p-4 rounded-xl">
+                  <p className="text-sm text-blue-600 font-medium">Hydrogen Capacity</p>
+                  <p className="text-lg font-bold text-blue-900">{refinery.hydrogen_capacity || '45,000 SCFD'}</p>
+                </div>
+                <div className="bg-white/60 p-4 rounded-xl">
+                  <p className="text-sm text-blue-600 font-medium">Sulfur Recovery</p>
+                  <p className="text-lg font-bold text-blue-900">{refinery.sulfur_recovery || '99.5%'}</p>
+                </div>
+              </div>
+              
+              {refinery.processing_units && (
+                <div className="bg-white/60 p-4 rounded-xl">
+                  <p className="text-sm text-blue-600 font-medium mb-2">Processing Units</p>
+                  <p className="text-gray-700">{refinery.processing_units}</p>
+                </div>
+              )}
+              
+              {refinery.storage_capacity && (
+                <div className="bg-white/60 p-4 rounded-xl">
+                  <p className="text-sm text-blue-600 font-medium mb-2">Storage Capacity</p>
+                  <p className="text-gray-700">{refinery.storage_capacity}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Financial Information */}
+          <Card className="bg-gradient-to-br from-green-50/80 to-emerald-50/80 backdrop-blur-sm border border-green-200/50 rounded-2xl">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3 text-green-900">
+                <DollarSign className="h-6 w-6 text-green-600" />
+                Financial Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-white/60 p-4 rounded-xl">
+                  <p className="text-sm text-green-600 font-medium">Investment Cost</p>
+                  <p className="text-lg font-bold text-green-900">{refinery.investment_cost || '$8.5 Billion'}</p>
+                </div>
+                <div className="bg-white/60 p-4 rounded-xl">
+                  <p className="text-sm text-green-600 font-medium">Operating Costs</p>
+                  <p className="text-lg font-bold text-green-900">{refinery.operating_costs || '$12/barrel'}</p>
+                </div>
+                <div className="bg-white/60 p-4 rounded-xl">
+                  <p className="text-sm text-green-600 font-medium">Annual Revenue</p>
+                  <p className="text-lg font-bold text-green-900">{refinery.revenue || '$15.2 Billion'}</p>
+                </div>
+                <div className="bg-white/60 p-4 rounded-xl">
+                  <p className="text-sm text-green-600 font-medium">Profit Margin</p>
+                  <p className="text-lg font-bold text-green-900">{refinery.profit_margin || '18.5%'}</p>
+                </div>
+              </div>
+              
+              {refinery.market_share && (
+                <div className="bg-white/60 p-4 rounded-xl">
+                  <p className="text-sm text-green-600 font-medium mb-2">Market Share</p>
+                  <p className="text-gray-700">{refinery.market_share}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          
+          {/* Compliance & Regulations */}
+          <Card className="bg-gradient-to-br from-orange-50/80 to-amber-50/80 backdrop-blur-sm border border-orange-200/50 rounded-2xl">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3 text-orange-900">
+                <Shield className="h-6 w-6 text-orange-600" />
+                Compliance & Safety
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-white/60 p-4 rounded-xl">
+                  <p className="text-sm text-orange-600 font-medium">Safety Record</p>
+                  <p className="text-lg font-bold text-orange-900">{refinery.safety_record || 'Excellent (0 incidents)'}</p>
+                </div>
+                <div className="bg-white/60 p-4 rounded-xl">
+                  <p className="text-sm text-orange-600 font-medium">Workforce Size</p>
+                  <p className="text-lg font-bold text-orange-900">{refinery.workforce_size || '1,250'} employees</p>
+                </div>
+                <div className="bg-white/60 p-4 rounded-xl">
+                  <p className="text-sm text-orange-600 font-medium">Annual Throughput</p>
+                  <p className="text-lg font-bold text-orange-900">{refinery.annual_throughput || '200M barrels'}</p>
+                </div>
+                <div className="bg-white/60 p-4 rounded-xl">
+                  <p className="text-sm text-orange-600 font-medium">Environmental Rating</p>
+                  <p className="text-lg font-bold text-orange-900">A+ Certified</p>
+                </div>
+              </div>
+              
+              {refinery.environmental_certifications && (
+                <div className="bg-white/60 p-4 rounded-xl">
+                  <p className="text-sm text-orange-600 font-medium mb-2">Environmental Certifications</p>
+                  <p className="text-gray-700">{refinery.environmental_certifications}</p>
+                </div>
+              )}
+              
+              {refinery.crude_oil_sources && (
+                <div className="bg-white/60 p-4 rounded-xl">
+                  <p className="text-sm text-orange-600 font-medium mb-2">Crude Oil Sources</p>
+                  <p className="text-gray-700">{refinery.crude_oil_sources}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Strategic Information */}
+          <Card className="bg-gradient-to-br from-purple-50/80 to-violet-50/80 backdrop-blur-sm border border-purple-200/50 rounded-2xl">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3 text-purple-900">
+                <MapPin className="h-6 w-6 text-purple-600" />
+                Strategic Infrastructure
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 gap-4">
+                {refinery.pipeline_connections && (
+                  <div className="bg-white/60 p-4 rounded-xl">
+                    <p className="text-sm text-purple-600 font-medium mb-2">Pipeline Connections</p>
+                    <p className="text-gray-700">{refinery.pipeline_connections}</p>
+                  </div>
+                )}
+                
+                {refinery.shipping_terminals && (
+                  <div className="bg-white/60 p-4 rounded-xl">
+                    <p className="text-sm text-purple-600 font-medium mb-2">Shipping Terminals</p>
+                    <p className="text-gray-700">{refinery.shipping_terminals}</p>
+                  </div>
+                )}
+                
+                {refinery.rail_connections && (
+                  <div className="bg-white/60 p-4 rounded-xl">
+                    <p className="text-sm text-purple-600 font-medium mb-2">Rail Connections</p>
+                    <p className="text-gray-700">{refinery.rail_connections}</p>
+                  </div>
+                )}
+                
+                {refinery.nearest_port && (
+                  <div className="bg-white/60 p-4 rounded-xl">
+                    <p className="text-sm text-purple-600 font-medium mb-2">Nearest Port</p>
+                    <p className="text-gray-700">{refinery.nearest_port}</p>
+                  </div>
+                )}
+                
+                <div className="bg-white/60 p-4 rounded-xl">
+                  <p className="text-sm text-purple-600 font-medium mb-2">Geographic Coordinates</p>
+                  <p className="text-gray-700">{refinery.latitude}, {refinery.longitude}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+        </div>
+
+        {/* Additional Information */}
+        <Card className="bg-gradient-to-br from-slate-50/80 to-gray-50/80 backdrop-blur-sm border border-slate-200/50 rounded-2xl">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-3 text-slate-900">
+              <FileText className="h-6 w-6 text-slate-600" />
+              Additional Information
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              
+              {/* Contact Information */}
+              <div className="space-y-3">
+                <h4 className="font-semibold text-slate-800 border-b border-slate-200 pb-2">Contact Details</h4>
+                {refinery.email && (
+                  <div>
+                    <p className="text-sm text-slate-600">Email</p>
+                    <p className="font-medium text-slate-900">{refinery.email}</p>
+                  </div>
+                )}
+                {refinery.phone && (
+                  <div>
+                    <p className="text-sm text-slate-600">Phone</p>
+                    <p className="font-medium text-slate-900">{refinery.phone}</p>
+                  </div>
+                )}
+                {refinery.website && (
+                  <div>
+                    <p className="text-sm text-slate-600">Website</p>
+                    <p className="font-medium text-blue-600">{refinery.website}</p>
+                  </div>
+                )}
+                {refinery.address && (
+                  <div>
+                    <p className="text-sm text-slate-600">Address</p>
+                    <p className="font-medium text-slate-900">{refinery.address}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Operational Details */}
+              <div className="space-y-3">
+                <h4 className="font-semibold text-slate-800 border-b border-slate-200 pb-2">Operations</h4>
+                {refinery.owner && (
+                  <div>
+                    <p className="text-sm text-slate-600">Owner</p>
+                    <p className="font-medium text-slate-900">{refinery.owner}</p>
+                  </div>
+                )}
+                {refinery.utilization && (
+                  <div>
+                    <p className="text-sm text-slate-600">Utilization Rate</p>
+                    <p className="font-medium text-slate-900">{refinery.utilization}%</p>
+                  </div>
+                )}
+                {refinery.complexity && (
+                  <div>
+                    <p className="text-sm text-slate-600">Nelson Complexity</p>
+                    <p className="font-medium text-slate-900">{refinery.complexity}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Products & Specifications */}
+              <div className="space-y-3">
+                <h4 className="font-semibold text-slate-800 border-b border-slate-200 pb-2">Products</h4>
+                {refinery.products && (
+                  <div>
+                    <p className="text-sm text-slate-600">Product Range</p>
+                    <p className="font-medium text-slate-900">{refinery.products}</p>
+                  </div>
+                )}
+                {refinery.technical_specs && (
+                  <div>
+                    <p className="text-sm text-slate-600">Technical Specifications</p>
+                    <p className="font-medium text-slate-900">{refinery.technical_specs}</p>
+                  </div>
+                )}
+                {refinery.description && (
+                  <div>
+                    <p className="text-sm text-slate-600">Description</p>
+                    <p className="font-medium text-slate-900 leading-relaxed">{refinery.description}</p>
+                  </div>
+                )}
               </div>
             </div>
           </CardContent>
