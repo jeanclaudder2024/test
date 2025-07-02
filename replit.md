@@ -236,6 +236,11 @@ Changelog:
   * Renamed duplicate `getVesselDocuments(vesselId)` method to `getProfessionalDocumentsByVesselId(vesselId)` 
   * Fixed method conflict that was preventing proper functionality of ports and refinery management features
   * Application now builds cleanly without warnings and all features work properly on Render deployment
+- July 2, 2025. Removed Documents Navigation Button:
+  * Removed "Documents" button from main navigation menu per user request
+  * Updated mobile-layout.tsx to remove Documents from baseNavigation array
+  * Removed Documents route and import from App.tsx routing configuration
+  * Navigation now shows: Vessels, Map, Refineries, Ports (Documents button removed)
 
 ## User Preferences
 

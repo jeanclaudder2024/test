@@ -12,7 +12,7 @@ import PortDetail from "@/pages/PortDetail";
 import Brokers from "@/pages/Brokers";
 import BrokerDashboard from "@/pages/BrokerDashboard";
 
-import Documents from "@/pages/Documents";
+
 import AIAssistantPage from "@/pages/AIAssistant";
 import Settings from "@/pages/Settings";
 import Subscribe from "@/pages/Subscribe";
@@ -68,7 +68,7 @@ function ProtectedRoutes() {
           <Route path="/oil-vessel-map" component={OilVesselMap} />
           <Route path="/brokers" component={Brokers} />
           <Route path="/companies" component={Companies} />
-          <Route path="/documents" component={Documents} />
+
           <Route path="/ai-assistant" component={AIAssistantPage} />
           <Route path="/admin">
             <AdminRoute>

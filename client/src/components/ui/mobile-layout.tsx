@@ -56,7 +56,6 @@ export function MobileLayout({ children }: MobileLayoutProps) {
       { name: "Map", href: "/oil-vessel-map", icon: Home },
       { name: "Refineries", href: "/refineries", icon: Database },
       { name: "Ports", href: "/ports", icon: Anchor },
-      { name: "Documents", href: "/documents", icon: FileText },
     ];
 
     const secondaryNavigation = [
