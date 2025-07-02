@@ -25,6 +25,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { MapPin, Building2, Phone, Globe, Anchor, Truck, Factory } from 'lucide-react';
+import MapSelector from './MapSelector';
 
 interface AdvancedPortCreationProps {
   open: boolean;
@@ -282,6 +283,20 @@ export default function AdvancedPortCreation({ open, onClose, onSuccess }: Advan
                   />
                 </div>
 
+              </div>
+
+              {/* Interactive Map Selector */}
+              <MapSelector
+                lat={formData.lat}
+                lng={formData.lng}
+                onCoordinatesChange={(lat, lng) => {
+                  updateField('lat', lat);
+                  updateField('lng', lng);
+                }}
+                className="col-span-full mt-4"
+              />
+
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="lat">Latitude *</Label>
                   <Input
