@@ -256,53 +256,7 @@ export function EnhancedPortManagement() {
     queryKey: ['/api/admin/port-stats'],
   });
 
-  // Delete mutation
-  const deleteMutation = useMutation({
-    mutationFn: async (portId: number) => {
-      console.log('Deleting port with ID:', portId);
-      const response = await fetch(`/api/admin/ports/${portId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-        },
-      });
-      
-      console.log('Delete response status:', response.status);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Delete failed:', errorText);
-        throw new Error(`Failed to delete port: ${errorText}`);
-      }
-      
-      // Parse JSON response
-      try {
-        const result = await response.json();
-        console.log('Delete successful:', result);
-        return result;
-      } catch (error) {
-        console.log('Response not JSON, but delete was successful');
-        return { success: true };
-      }
-    },
-    onSuccess: (data, portId) => {
-      console.log('Delete mutation successful for port:', portId);
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/ports'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/port-stats'] });
-      toast({
-        title: "Success",
-        description: "Port deleted successfully",
-      });
-    },
-    onError: (error, portId) => {
-      console.error('Delete mutation failed for port:', portId, error);
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to delete port",
-        variant: "destructive",
-      });
-    },
-  });
+  // OLD DELETE MUTATION REMOVED - Using new one below
 
   const handleEditPort = (port: Port) => {
     setEditingPort(port);

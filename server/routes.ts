@@ -2854,18 +2854,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   apiRouter.delete("/ports/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      console.log(`API: Received delete request for port ID: ${id}`);
+      
       if (isNaN(id)) {
+        console.log(`API: Invalid port ID: ${req.params.id}`);
         return res.status(400).json({ message: "Invalid port ID" });
       }
       
+      console.log(`API: Calling storage.deletePort(${id})`);
       const deleted = await storage.deletePort(id);
+      console.log(`API: storage.deletePort returned: ${deleted}`);
+      
       if (!deleted) {
+        console.log(`API: Port ${id} not found or delete failed`);
         return res.status(404).json({ message: "Port not found" });
       }
       
-      res.json({ success: true });
+      console.log(`API: Successfully deleted port ${id}`);
+      res.json({ success: true, message: `Port ${id} deleted successfully` });
     } catch (error) {
-      console.error("Error deleting port:", error);
+      console.error(`API: Error deleting port ${req.params.id}:`, error);
       res.status(500).json({ message: "Failed to delete port" });
     }
   });
