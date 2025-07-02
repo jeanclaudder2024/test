@@ -2733,14 +2733,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Find vessels connected to this port
       const connectedVessels = vessels.filter(vessel => {
-        const matchesPort = (vesselPortName: string, portName: string) => {
-          if (!vesselPortName || !portName) return false;
+        const matchesPort = (vesselPortName: string | null, portName: string) => {
+          if (!vesselPortName || !portName || typeof vesselPortName !== 'string') return false;
           return vesselPortName.toLowerCase().includes(portName.toLowerCase()) ||
                  portName.toLowerCase().includes(vesselPortName.toLowerCase());
         };
         
-        return matchesPort(vessel.departurePort || '', port.name) || 
-               matchesPort(vessel.destinationPort || '', port.name);
+        return matchesPort(vessel.departurePort, port.name) || 
+               matchesPort(vessel.destinationPort, port.name);
       });
 
       res.json({

@@ -489,13 +489,12 @@ export function EnhancedPortManagement() {
       )}
 
       {/* Professional Port Management Form */}
-      {showPortForm && (
-        <ProfessionalPortManagement
-          onClose={handleFormClose}
-          onSuccess={handleFormSuccess}
-          editingPort={editingPort}
-        />
-      )}
+      <ProfessionalPortManagement
+        open={showPortForm}
+        onClose={handleFormClose}
+        onSuccess={handleFormSuccess}
+        editingPort={editingPort}
+      />
     </div>
   );
 }

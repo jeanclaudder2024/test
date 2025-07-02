@@ -12,11 +12,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { 
   Ship, Anchor, MapPin, Settings, DollarSign, Shield, 
   Truck, Plane, Train, Building, Phone, Mail, Globe,
   Clock, Gauge, AlertTriangle, CheckCircle, Info,
-  Waves, Fuel, Container, Wrench, Users
+  Waves, Fuel, Container, Wrench, Users, X
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -89,12 +90,14 @@ interface ProfessionalPortManagementProps {
   onClose?: () => void;
   onSuccess?: (port: any) => void;
   editingPort?: any;
+  open?: boolean;
 }
 
 export default function ProfessionalPortManagement({ 
   onClose, 
   onSuccess, 
-  editingPort 
+  editingPort,
+  open = false
 }: ProfessionalPortManagementProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
@@ -246,25 +249,26 @@ export default function ProfessionalPortManagement({
   };
 
   return (
-    <Card className="w-full max-w-6xl mx-auto">
-      <CardHeader className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-t-lg">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-white/20 rounded-lg">
-            <Anchor className="h-6 w-6" />
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-t-lg p-6 -mx-6 -mt-6 mb-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-white/20 rounded-lg">
+              <Anchor className="h-6 w-6" />
+            </div>
+            <div>
+              <DialogTitle className="text-2xl text-white">
+                {editingPort ? 'Edit Port' : 'Create Professional Port'}
+              </DialogTitle>
+              <DialogDescription className="text-blue-100">
+                Comprehensive port management with advanced technical specifications
+              </DialogDescription>
+            </div>
           </div>
-          <div>
-            <CardTitle className="text-2xl">
-              {editingPort ? 'Edit Port' : 'Create Professional Port'}
-            </CardTitle>
-            <CardDescription className="text-blue-100">
-              Comprehensive port management with advanced technical specifications
-            </CardDescription>
-          </div>
-        </div>
-      </CardHeader>
+        </DialogHeader>
 
-      <CardContent className="p-6">
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <div className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <Tabs defaultValue="basic" className="w-full">
             <TabsList className="grid grid-cols-6 w-full">
               <TabsTrigger value="basic" className="flex items-center gap-2">
@@ -830,7 +834,8 @@ export default function ProfessionalPortManagement({
             </div>
           </div>
         </form>
-      </CardContent>
-    </Card>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
