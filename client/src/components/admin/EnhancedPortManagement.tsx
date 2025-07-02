@@ -32,7 +32,7 @@ import {
   Package,
 } from 'lucide-react';
 
-import { AddPortDialog } from './AddPortDialog';
+import ProfessionalPortManagement from './ProfessionalPortManagement';
 
 interface Port {
   id: number;
@@ -232,6 +232,7 @@ export function EnhancedPortManagement() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(20);
   const [editingPort, setEditingPort] = useState<Port | null>(null);
+  const [showPortForm, setShowPortForm] = useState(false);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -277,10 +278,23 @@ export function EnhancedPortManagement() {
 
   const handleEditPort = (port: Port) => {
     setEditingPort(port);
+    setShowPortForm(true);
     toast({
       title: "Edit Mode",
       description: `Editing ${port.name}`,
     });
+  };
+
+  const handleFormClose = () => {
+    setShowPortForm(false);
+    setEditingPort(null);
+  };
+
+  const handleFormSuccess = () => {
+    setShowPortForm(false);
+    setEditingPort(null);
+    queryClient.invalidateQueries({ queryKey: ['/api/admin/ports'] });
+    queryClient.invalidateQueries({ queryKey: ['/api/admin/port-stats'] });
   };
 
   const handleDeletePort = (port: Port) => {
@@ -349,7 +363,15 @@ export function EnhancedPortManagement() {
             <Upload className="h-4 w-4 mr-2" />
             Import Bulk
           </Button>
-          <AddPortDialog />
+          <Button 
+            onClick={() => {
+              setEditingPort(null);
+              setShowPortForm(true);
+            }}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            Add Port
+          </Button>
         </div>
       </div>
 
@@ -464,6 +486,15 @@ export function EnhancedPortManagement() {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Professional Port Management Form */}
+      {showPortForm && (
+        <ProfessionalPortManagement
+          onClose={handleFormClose}
+          onSuccess={handleFormSuccess}
+          editingPort={editingPort}
+        />
       )}
     </div>
   );

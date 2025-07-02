@@ -2729,7 +2729,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: 'Port not found' });
       }
 
-      const vessels = await storage.getAllVessels();
+      const vessels = await storage.getVessels();
       
       // Find vessels connected to this port
       const connectedVessels = vessels.filter(vessel => {
