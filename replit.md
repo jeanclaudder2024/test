@@ -241,6 +241,8 @@ Changelog:
   * Updated mobile-layout.tsx to remove Documents from baseNavigation array
   * Removed Documents route and import from App.tsx routing configuration
   * Navigation now shows: Vessels, Map, Refineries, Ports (Documents button removed)
+  * Also removed Documents tab from vessel detail pages completely
+  * Vessel detail pages now show: Overview, Analysis, Voyage, Professional Articles (Documents tab removed)
 
 ## User Preferences
 

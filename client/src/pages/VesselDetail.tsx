@@ -585,10 +585,7 @@ export default function VesselDetail() {
                     <Compass className="h-4 w-4 mr-2" />
                     Voyage
                   </TabsTrigger>
-                  <TabsTrigger value="documents" className="flex items-center">
-                    <FileText className="h-4 w-4 mr-2" />
-                    Documents
-                  </TabsTrigger>
+
                   <TabsTrigger value="articles" className="flex items-center">
                     <FileCheck className="h-4 w-4 mr-2" />
                     Professional Articles
@@ -842,36 +839,7 @@ export default function VesselDetail() {
                   </Card>
                 </TabsContent>
                 
-                <TabsContent value="documents">
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="flex items-center">
-                        <FileText className="h-5 w-5 mr-2 text-primary" />
-                        Vessel Documents
-                      </CardTitle>
-                      <CardDescription>
-                        Access and manage vessel documents, certificates, and maritime compliance files
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex flex-col items-center justify-center py-8">
-                        <FileText className="h-16 w-16 text-muted-foreground/30 mb-4" />
-                        <h3 className="text-lg font-semibold mb-2">Document Management System</h3>
-                        <p className="text-muted-foreground text-center mb-6 max-w-md">
-                          Manage all vessel documents including certificates, manifests, inspection reports, and compliance documentation in one place.
-                        </p>
-                        <Button asChild className="bg-primary hover:bg-primary/90">
-                          <Link href={`/vessels/${vessel.id}/documents`}>
-                            <FileText className="mr-2 h-4 w-4" />
-                            Open Document Center
-                          </Link>
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
 
-                
                 <TabsContent value="articles">
                   <SimpleDocumentViewer vessel={vessel} />
                 </TabsContent>
