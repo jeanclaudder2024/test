@@ -15,6 +15,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -30,6 +38,8 @@ import {
   TrendingUp,
   Activity,
   Package,
+  Grid3X3,
+  List,
 } from 'lucide-react';
 
 import AdvancedPortCreation from './AdvancedPortCreation';
@@ -233,6 +243,7 @@ export function EnhancedPortManagement() {
   const [pageSize] = useState(20);
   const [editingPort, setEditingPort] = useState<Port | null>(null);
   const [showPortForm, setShowPortForm] = useState(false);
+  const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -375,6 +386,26 @@ export function EnhancedPortManagement() {
           <p className="text-gray-600 mt-2">Manage maritime ports and terminals</p>
         </div>
         <div className="flex space-x-3">
+          {/* View Toggle */}
+          <div className="flex border rounded-lg">
+            <Button
+              variant={viewMode === 'cards' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('cards')}
+              className="rounded-r-none"
+            >
+              <Grid3X3 className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'table' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('table')}
+              className="rounded-l-none"
+            >
+              <List className="h-4 w-4" />
+            </Button>
+          </div>
+          
           <Button variant="outline" size="sm" className="shadow-sm">
             <Upload className="h-4 w-4 mr-2" />
             Import Bulk
@@ -461,17 +492,128 @@ export function EnhancedPortManagement() {
         </CardContent>
       </Card>
 
-      {/* Port List */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        {paginatedPorts.map((port: Port) => (
-          <EnhancedPortCard 
-            key={port.id} 
-            port={port} 
-            onEdit={handleEditPort}
-            onDelete={handleDeletePort}
-          />
-        ))}
-      </div>
+      {/* Port List - Cards or Table View */}
+      {viewMode === 'cards' ? (
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          {paginatedPorts.map((port: Port) => (
+            <EnhancedPortCard 
+              key={port.id} 
+              port={port} 
+              onEdit={handleEditPort}
+              onDelete={handleDeletePort}
+            />
+          ))}
+        </div>
+      ) : (
+        <Card className="shadow-sm">
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-gray-50">
+                  <TableHead className="font-semibold">Port Name</TableHead>
+                  <TableHead className="font-semibold">Location</TableHead>
+                  <TableHead className="font-semibold">Type</TableHead>
+                  <TableHead className="font-semibold">Status</TableHead>
+                  <TableHead className="font-semibold text-center">Capacity</TableHead>
+                  <TableHead className="font-semibold text-center">Vessels</TableHead>
+                  <TableHead className="font-semibold text-center">Refineries</TableHead>
+                  <TableHead className="font-semibold text-center">Coordinates</TableHead>
+                  <TableHead className="font-semibold text-center">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedPorts.map((port: Port) => (
+                  <TableRow key={port.id} className="hover:bg-gray-50">
+                    <TableCell className="font-medium">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                          <Ship className="h-4 w-4 text-blue-600" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-gray-900">{port.name}</div>
+                          {port.description && (
+                            <div className="text-sm text-gray-500 truncate max-w-xs">
+                              {port.description}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center space-x-2">
+                        <MapPin className="h-4 w-4 text-gray-400" />
+                        <div>
+                          <div className="font-medium">{port.country}</div>
+                          <div className="text-sm text-gray-500">{port.region}</div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="capitalize">
+                        {port.type?.replace('_', ' ') || 'N/A'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <PortStatusBadge status={port.status} />
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex items-center justify-center space-x-1">
+                        <Package className="h-4 w-4 text-gray-400" />
+                        <span className="font-medium">
+                          {port.capacity?.toLocaleString() || 'N/A'}
+                        </span>
+                        {port.capacity && <span className="text-xs text-gray-500">TEU</span>}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex items-center justify-center space-x-1">
+                        <Ship className="h-4 w-4 text-blue-600" />
+                        <span className="font-medium text-blue-600">
+                          {port.vesselCount}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex items-center justify-center space-x-1">
+                        <Building2 className="h-4 w-4 text-green-600" />
+                        <span className="font-medium text-green-600">
+                          {port.connectedRefineries}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="text-xs text-gray-500 font-mono">
+                        <div>{parseFloat(port.lat).toFixed(4)}</div>
+                        <div>{parseFloat(port.lng).toFixed(4)}</div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex items-center justify-center space-x-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleEditPort(port)}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Edit className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDeletePort(port)}
+                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Pagination */}
       {totalPages > 1 && (
