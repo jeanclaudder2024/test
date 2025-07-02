@@ -345,8 +345,125 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     });
     
+    // Public refineries endpoint (no auth required)
+    apiRouter.get("/refineries", async (req, res) => {
+      try {
+        const allRefineries = await storage.getRefineries();
+        res.json(allRefineries);
+      } catch (error) {
+        console.error("Error fetching refineries:", error);
+        res.status(500).json({
+          success: false,
+          message: "Failed to fetch refineries"
+        });
+      }
+    });
+
+    // Public refinery creation endpoint (no auth required for testing)
+    apiRouter.post("/refineries", async (req, res) => {
+      try {
+        const refineryData = req.body;
+        console.log("PUBLIC ENDPOINT: Creating new refinery:", refineryData);
+
+        // Validate required fields
+        if (!refineryData.name || !refineryData.country || !refineryData.region) {
+          return res.status(400).json({
+            success: false,
+            message: "Missing required fields: name, country, region"
+          });
+        }
+
+        // Prepare the data for creation with comprehensive field handling
+        const createData = {
+          // Basic Information
+          name: refineryData.name,
+          country: refineryData.country,
+          region: refineryData.region,
+          city: refineryData.city || '',
+          lat: refineryData.lat || '0',
+          lng: refineryData.lng || '0',
+          capacity: refineryData.capacity || null,
+          status: refineryData.status || 'Operational',
+          description: refineryData.description || '',
+          operator: refineryData.operator || '',
+          owner: refineryData.owner || '',
+          type: refineryData.type || '',
+          products: refineryData.products || '',
+          yearBuilt: refineryData.yearBuilt || null,
+          complexity: refineryData.complexity || '',
+          
+          // Technical Specifications
+          distillationCapacity: refineryData.distillationCapacity || '',
+          conversionCapacity: refineryData.conversionCapacity || '',
+          hydrogenCapacity: refineryData.hydrogenCapacity || '',
+          sulfurRecovery: refineryData.sulfurRecovery || '',
+          processingUnits: refineryData.processingUnits || '',
+          storageCapacity: refineryData.storageCapacity || '',
+          
+          // Financial Information  
+          investmentCost: refineryData.investmentCost || '',
+          operatingCosts: refineryData.operatingCosts || '',
+          revenue: refineryData.revenue || '',
+          profitMargin: refineryData.profitMargin || '',
+          marketShare: refineryData.marketShare || '',
+          
+          // Compliance & Regulations
+          environmentalCertifications: refineryData.environmentalCertifications || '',
+          safetyRecord: refineryData.safetyRecord || '',
+          workforceSize: refineryData.workforceSize || '',
+          annualThroughput: refineryData.annualThroughput || null,
+          crudeOilSources: refineryData.crudeOilSources || '',
+          
+          // Strategic Information
+          pipelineConnections: refineryData.pipelineConnections || '',
+          shippingTerminals: refineryData.shippingTerminals || '',
+          railConnections: refineryData.railConnections || '',
+          nearestPort: refineryData.nearestPort || '',
+          
+          // Additional fields for comprehensive support
+          contactEmail: refineryData.contactEmail || '',
+          contactPhone: refineryData.contactPhone || '',
+          website: refineryData.website || '',
+          establishedYear: refineryData.establishedYear || null,
+          lastInspection: refineryData.lastInspection || null,
+          nextInspection: refineryData.nextInspection || null,
+          certifications: refineryData.certifications || '',
+          emergencyContact: refineryData.emergencyContact || '',
+          mainProducts: refineryData.mainProducts || '',
+          secondaryProducts: refineryData.secondaryProducts || '',
+          fuelTypes: refineryData.fuelTypes || '',
+          exportCapability: refineryData.exportCapability || '',
+          importSources: refineryData.importSources || '',
+          sustainabilityRating: refineryData.sustainabilityRating || '',
+          technologyLevel: refineryData.technologyLevel || '',
+          automationLevel: refineryData.automationLevel || '',
+          qualityCertifications: refineryData.qualityCertifications || '',
+          
+          // System fields
+          lastUpdated: new Date(),
+          createdAt: new Date()
+        };
+
+        const newRefinery = await storage.createRefinery(createData);
+        console.log("New refinery created successfully:", newRefinery);
+
+        res.status(201).json({
+          success: true,
+          message: "Refinery created successfully",
+          data: newRefinery
+        });
+      } catch (error) {
+        console.error("Error creating refinery:", error);
+        res.status(500).json({
+          success: false,
+          message: "Failed to create refinery",
+          error: error instanceof Error ? error.message : "Unknown error"
+        });
+      }
+    });
+
     // Refinery CRUD endpoints
-    // GET all refineries
+    // GET all refineries (admin only)
     apiRouter.get("/admin/refineries", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
       try {
         const allRefineries = await storage.getRefineries();

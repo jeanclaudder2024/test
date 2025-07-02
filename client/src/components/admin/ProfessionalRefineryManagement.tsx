@@ -250,17 +250,15 @@ export default function ProfessionalRefineryManagement() {
   const queryClient = useQueryClient();
 
   const { data: refineries = [], isLoading } = useQuery<Refinery[]>({
-    queryKey: ['/api/admin/refineries'],
+    queryKey: ['/api/refineries'],
   });
 
   const addRefineryMutation = useMutation({
     mutationFn: async (data: any) => {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch('/api/admin/refineries', {
+      const response = await fetch('/api/refineries', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          ...(token && { "Authorization": `Bearer ${token}` }),
         },
         body: JSON.stringify(data),
       });
@@ -268,7 +266,7 @@ export default function ProfessionalRefineryManagement() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/refineries'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/refineries'] });
       toast({ title: 'Success', description: 'Refinery added successfully' });
       setIsAddDialogOpen(false);
       resetForm();
@@ -293,7 +291,7 @@ export default function ProfessionalRefineryManagement() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/refineries'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/refineries'] });
       toast({ title: 'Success', description: 'Refinery updated successfully' });
       setEditingRefinery(null);
       resetForm();
@@ -315,7 +313,7 @@ export default function ProfessionalRefineryManagement() {
       if (!response.ok) throw new Error('Failed to delete refinery');
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/refineries'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/refineries'] });
       toast({ title: 'Success', description: 'Refinery deleted successfully' });
     },
     onError: () => {

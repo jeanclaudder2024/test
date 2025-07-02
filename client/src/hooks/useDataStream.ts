@@ -15,13 +15,13 @@ interface StreamData {
  * Clean data stream hook - direct API calls without complex chaining
  */
 export function useDataStream(): StreamData {
-  // Direct refinery query - using admin endpoint for consistency
+  // Direct refinery query - using public endpoint (no auth required)
   const { 
     data: refineries = [], 
     isLoading: refineriesLoading, 
     error: refineriesError 
   } = useQuery<Refinery[]>({
-    queryKey: ['/api/admin/refineries'],
+    queryKey: ['/api/refineries'],
     staleTime: 0, // No caching for immediate fresh data
     refetchOnWindowFocus: false,
   });
