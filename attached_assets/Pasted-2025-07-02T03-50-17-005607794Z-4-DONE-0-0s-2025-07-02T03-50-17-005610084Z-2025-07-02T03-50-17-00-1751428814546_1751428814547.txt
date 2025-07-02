@@ -1,0 +1,279 @@
+2025-07-02T03:50:17.005607794Z #4 DONE 0.0s
+2025-07-02T03:50:17.005610084Z 
+2025-07-02T03:50:17.005613364Z #5 importing cache manifest from local:5097314609400041119
+2025-07-02T03:50:17.005616615Z #5 inferred cache manifest type: application/vnd.oci.image.index.v1+json done
+2025-07-02T03:50:17.005619805Z #5 DONE 0.0s
+2025-07-02T03:50:17.005622215Z 
+2025-07-02T03:50:17.005625795Z #6 [1/9] FROM docker.io/library/node:18-alpine@sha256:8d6421d663b4c28fd3ebc498332f249011d118945588d0a35cb9bc4b8ca09d9e
+2025-07-02T03:50:17.005628605Z #6 resolve docker.io/library/node:18-alpine@sha256:8d6421d663b4c28fd3ebc498332f249011d118945588d0a35cb9bc4b8ca09d9e 0.0s done
+2025-07-02T03:50:17.005643775Z #6 DONE 0.0s
+2025-07-02T03:50:17.005646565Z 
+2025-07-02T03:50:17.005649345Z #7 [internal] load build context
+2025-07-02T03:50:17.447195732Z #7 transferring context: 17.17MB 0.4s done
+2025-07-02T03:50:17.447215873Z #7 DONE 0.4s
+2025-07-02T03:50:17.447219013Z 
+2025-07-02T03:50:17.447222323Z #8 [2/9] WORKDIR /app
+2025-07-02T03:50:17.447225013Z #8 CACHED
+2025-07-02T03:50:17.447227283Z 
+2025-07-02T03:50:17.447241153Z #9 [3/9] RUN apk add --no-cache python3 make g++ git
+2025-07-02T03:50:17.447244043Z #9 CACHED
+2025-07-02T03:50:17.447246503Z 
+2025-07-02T03:50:17.447250284Z #10 [4/9] COPY package*.json ./
+2025-07-02T03:50:17.447252984Z #10 CACHED
+2025-07-02T03:50:17.447255234Z 
+2025-07-02T03:50:17.447257704Z #11 [5/9] RUN npm ci
+2025-07-02T03:50:17.447260874Z #11 sha256:f18232174bc91741fdf3da96d85011092101a032a93a388b79e99e69c2d5c870 3.64MB / 3.64MB 0.0s done
+2025-07-02T03:50:17.447264304Z #11 extracting sha256:f18232174bc91741fdf3da96d85011092101a032a93a388b79e99e69c2d5c870
+2025-07-02T03:50:17.597313593Z #11 extracting sha256:f18232174bc91741fdf3da96d85011092101a032a93a388b79e99e69c2d5c870 0.2s done
+2025-07-02T03:50:18.049113182Z #11 sha256:dd71dde834b5c203d162902e6b8994cb2309ae049a0eabc4efea161b2b5a3d0e 15.73MB / 40.01MB 0.1s
+2025-07-02T03:50:18.199738336Z #11 sha256:dd71dde834b5c203d162902e6b8994cb2309ae049a0eabc4efea161b2b5a3d0e 31.46MB / 40.01MB 0.3s
+2025-07-02T03:50:18.350611086Z #11 sha256:dd71dde834b5c203d162902e6b8994cb2309ae049a0eabc4efea161b2b5a3d0e 40.01MB / 40.01MB 0.5s done
+2025-07-02T03:50:18.350633726Z #11 extracting sha256:dd71dde834b5c203d162902e6b8994cb2309ae049a0eabc4efea161b2b5a3d0e
+2025-07-02T03:50:22.255905091Z #11 extracting sha256:dd71dde834b5c203d162902e6b8994cb2309ae049a0eabc4efea161b2b5a3d0e 4.0s done
+2025-07-02T03:50:22.406428762Z #11 sha256:1e5a4c89cee5c0826c540ab06d4b6b491c96eda01837f430bd47f0d26702d6e3 1.26MB / 1.26MB 0.0s done
+2025-07-02T03:50:22.406450132Z #11 extracting sha256:1e5a4c89cee5c0826c540ab06d4b6b491c96eda01837f430bd47f0d26702d6e3
+2025-07-02T03:50:23.135346905Z #11 extracting sha256:1e5a4c89cee5c0826c540ab06d4b6b491c96eda01837f430bd47f0d26702d6e3 0.8s done
+2025-07-02T03:50:23.286361748Z #11 sha256:25ff2da83641908f65c3a74d80409d6b1b62ccfaab220b9ea70b80df5a2e0549 446B / 446B done
+2025-07-02T03:50:23.296160699Z #11 extracting sha256:25ff2da83641908f65c3a74d80409d6b1b62ccfaab220b9ea70b80df5a2e0549
+2025-07-02T03:50:23.575437336Z #11 extracting sha256:25ff2da83641908f65c3a74d80409d6b1b62ccfaab220b9ea70b80df5a2e0549 0.4s done
+2025-07-02T03:50:23.725571197Z #11 sha256:b299ec003600401a19baf116959cea4be03e4627988729511facc5b84bfd22d6 92B / 92B done
+2025-07-02T03:50:23.725599838Z #11 extracting sha256:b299ec003600401a19baf116959cea4be03e4627988729511facc5b84bfd22d6 0.0s done
+2025-07-02T03:50:23.832549618Z #11 sha256:f6e8251016ac8c9b754ff05f31999c28bb52339dd4aeb305b36d5842eebd0a8a 16.78MB / 104.71MB 0.2s
+2025-07-02T03:50:23.982513975Z #11 sha256:f6e8251016ac8c9b754ff05f31999c28bb52339dd4aeb305b36d5842eebd0a8a 34.60MB / 104.71MB 0.3s
+2025-07-02T03:50:24.132046322Z #11 sha256:f6e8251016ac8c9b754ff05f31999c28bb52339dd4aeb305b36d5842eebd0a8a 51.53MB / 104.71MB 0.5s
+2025-07-02T03:50:24.432882289Z #11 sha256:f6e8251016ac8c9b754ff05f31999c28bb52339dd4aeb305b36d5842eebd0a8a 84.93MB / 104.71MB 0.8s
+2025-07-02T03:50:24.595505518Z #11 sha256:f6e8251016ac8c9b754ff05f31999c28bb52339dd4aeb305b36d5842eebd0a8a 102.76MB / 104.71MB 0.9s
+2025-07-02T03:50:24.883826747Z #11 sha256:f6e8251016ac8c9b754ff05f31999c28bb52339dd4aeb305b36d5842eebd0a8a 104.71MB / 104.71MB 1.1s done
+2025-07-02T03:50:24.883850918Z #11 extracting sha256:f6e8251016ac8c9b754ff05f31999c28bb52339dd4aeb305b36d5842eebd0a8a
+2025-07-02T03:50:29.201654557Z #11 extracting sha256:f6e8251016ac8c9b754ff05f31999c28bb52339dd4aeb305b36d5842eebd0a8a 4.4s done
+2025-07-02T03:50:29.300919058Z #11 sha256:423f1766b744cf783d46249b7eb00171bc79597df380e18365a299e3781042d8 86.30kB / 86.30kB 0.0s done
+2025-07-02T03:50:29.300941238Z #11 extracting sha256:423f1766b744cf783d46249b7eb00171bc79597df380e18365a299e3781042d8 0.1s done
+2025-07-02T03:50:29.601040727Z #11 sha256:c8f8d4f7fe64dce4399deda69e04b859e2573db02d292cf95e16e16490c28f9d 22.02MB / 195.19MB 0.2s
+2025-07-02T03:50:29.751776354Z #11 sha256:c8f8d4f7fe64dce4399deda69e04b859e2573db02d292cf95e16e16490c28f9d 39.85MB / 195.19MB 0.3s
+2025-07-02T03:50:29.901902455Z #11 sha256:c8f8d4f7fe64dce4399deda69e04b859e2573db02d292cf95e16e16490c28f9d 58.72MB / 195.19MB 0.5s
+2025-07-02T03:50:30.051973015Z #11 sha256:c8f8d4f7fe64dce4399deda69e04b859e2573db02d292cf95e16e16490c28f9d 74.45MB / 195.19MB 0.6s
+2025-07-02T03:50:30.202098637Z #11 sha256:c8f8d4f7fe64dce4399deda69e04b859e2573db02d292cf95e16e16490c28f9d 94.95MB / 195.19MB 0.8s
+2025-07-02T03:50:30.35233116Z #11 sha256:c8f8d4f7fe64dce4399deda69e04b859e2573db02d292cf95e16e16490c28f9d 111.15MB / 195.19MB 0.9s
+2025-07-02T03:50:30.503119108Z #11 sha256:c8f8d4f7fe64dce4399deda69e04b859e2573db02d292cf95e16e16490c28f9d 131.07MB / 195.19MB 1.1s
+2025-07-02T03:50:30.653537577Z #11 sha256:c8f8d4f7fe64dce4399deda69e04b859e2573db02d292cf95e16e16490c28f9d 148.90MB / 195.19MB 1.2s
+2025-07-02T03:50:30.803928095Z #11 sha256:c8f8d4f7fe64dce4399deda69e04b859e2573db02d292cf95e16e16490c28f9d 168.82MB / 195.19MB 1.4s
+2025-07-02T03:50:30.95460512Z #11 sha256:c8f8d4f7fe64dce4399deda69e04b859e2573db02d292cf95e16e16490c28f9d 184.55MB / 195.19MB 1.5s
+2025-07-02T03:50:31.105350097Z #11 sha256:c8f8d4f7fe64dce4399deda69e04b859e2573db02d292cf95e16e16490c28f9d 195.19MB / 195.19MB 1.7s
+2025-07-02T03:50:32.730639981Z #11 sha256:c8f8d4f7fe64dce4399deda69e04b859e2573db02d292cf95e16e16490c28f9d 195.19MB / 195.19MB 3.4s done
+2025-07-02T03:50:32.881320946Z #11 extracting sha256:c8f8d4f7fe64dce4399deda69e04b859e2573db02d292cf95e16e16490c28f9d
+2025-07-02T03:50:45.34181094Z #11 extracting sha256:c8f8d4f7fe64dce4399deda69e04b859e2573db02d292cf95e16e16490c28f9d 12.6s done
+2025-07-02T03:50:45.341847931Z #11 CACHED
+2025-07-02T03:50:45.493211863Z 
+2025-07-02T03:50:45.493245454Z #12 [6/9] COPY . .
+2025-07-02T03:50:46.095684467Z #12 DONE 0.6s
+2025-07-02T03:50:46.095709198Z 
+2025-07-02T03:50:46.095715008Z #13 [7/9] RUN npm run build
+2025-07-02T03:50:46.231536398Z #13 0.253 
+2025-07-02T03:50:46.231557108Z #13 0.253 > rest-express@1.0.0 build
+2025-07-02T03:50:46.231561988Z #13 0.253 > vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+2025-07-02T03:50:46.231565678Z #13 0.253 
+2025-07-02T03:50:46.532534379Z #13 0.499 vite v5.4.14 building for production...
+2025-07-02T03:50:46.687630693Z #13 0.573 transforming...
+2025-07-02T03:50:46.984453702Z #13 0.913 Browserslist: browsers data (caniuse-lite) is 9 months old. Please run:
+2025-07-02T03:50:46.984623726Z #13 0.913   npx update-browserslist-db@latest
+2025-07-02T03:50:46.984713938Z #13 0.913   Why you should do it regularly: https://github.com/browserslist/update-db#readme
+2025-07-02T03:51:00.068388264Z #13 14.09 ✓ 3468 modules transformed.
+2025-07-02T03:51:01.095748918Z #13 15.12 rendering chunks...
+2025-07-02T03:51:01.246654778Z #13 15.15 computing gzip size...
+2025-07-02T03:51:01.246681909Z #13 15.20 ../dist/client/index.html                     1.98 kB │ gzip:   0.88 kB
+2025-07-02T03:51:01.246685369Z #13 15.20 ../dist/client/assets/index-Dw9uSaC9.css    190.63 kB │ gzip:  33.84 kB
+2025-07-02T03:51:01.246688179Z #13 15.20 ../dist/client/assets/index-BO_rbxuF.js   2,121.42 kB │ gzip: 541.34 kB
+2025-07-02T03:51:01.246690959Z #13 15.20 
+2025-07-02T03:51:01.246693749Z #13 15.20 (!) Some chunks are larger than 500 kB after minification. Consider:
+2025-07-02T03:51:01.246696629Z #13 15.20 - Using dynamic import() to code-split the application
+2025-07-02T03:51:01.24669949Z #13 15.20 - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+2025-07-02T03:51:01.246702299Z #13 15.20 - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+2025-07-02T03:51:01.24670505Z #13 15.20 ✓ built in 14.67s
+2025-07-02T03:51:01.384628201Z #13 15.35 
+2025-07-02T03:51:01.384644922Z #13 15.35   dist/index.js  956.0kb
+2025-07-02T03:51:01.384648522Z #13 15.35 
+2025-07-02T03:51:01.384652332Z #13 15.35 ⚡ Done in 37ms
+2025-07-02T03:51:01.384655162Z #13 DONE 15.4s
+2025-07-02T03:51:01.535167173Z 
+2025-07-02T03:51:01.535193914Z #14 [8/9] RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
+2025-07-02T03:51:01.535197644Z #14 DONE 0.1s
+2025-07-02T03:51:01.535200544Z 
+2025-07-02T03:51:01.535204134Z #15 [9/9] RUN chown -R nodejs:nodejs /app
+2025-07-02T03:53:30.155804488Z #15 DONE 148.7s
+2025-07-02T03:53:30.306274999Z 
+2025-07-02T03:53:30.30629443Z #16 exporting to docker image format
+2025-07-02T03:53:30.30629939Z #16 exporting layers
+2025-07-02T03:53:50.44537167Z #16 exporting layers 20.1s done
+2025-07-02T03:53:50.445437512Z #16 exporting manifest sha256:3088a758d7e824b1e6b00c8c860e98c7721671ba175118b8c90a9c8e5747a640 done
+2025-07-02T03:53:50.445444792Z #16 exporting config sha256:b805ba6cbc575e37e0d5ba7b0580513c158a8da3932d6a6cea3f6803f4c5dc26 done
+2025-07-02T03:53:55.921860531Z #16 DONE 25.8s
+2025-07-02T03:53:55.921884672Z 
+2025-07-02T03:53:55.921890552Z #17 exporting cache to client directory
+2025-07-02T03:53:55.921894982Z #17 preparing build cache for export
+2025-07-02T03:54:02.339911293Z #17 writing cache manifest sha256:566f419076cf0055e182a6fa6adb4e480ae2f467761cf7c0323db5acf3e18731
+2025-07-02T03:54:02.455205759Z #17 writing cache manifest sha256:566f419076cf0055e182a6fa6adb4e480ae2f467761cf7c0323db5acf3e18731 0.2s done
+2025-07-02T03:54:02.45523485Z #17 DONE 6.5s
+2025-07-02T03:54:07.008807201Z Pushing image to registry...
+2025-07-02T03:54:13.248952371Z Upload succeeded
+2025-07-02T03:54:17.300887659Z ==> Deploying...
+2025-07-02T03:54:45.241592443Z 
+2025-07-02T03:54:45.241680045Z > rest-express@1.0.0 start
+2025-07-02T03:54:45.241686615Z > NODE_ENV=production node dist/index.js
+2025-07-02T03:54:45.241689025Z 
+2025-07-02T03:54:52.442053053Z 🚀 Starting oil vessel tracking platform with Supabase...
+2025-07-02T03:54:52.443133275Z Initializing database...
+2025-07-02T03:54:52.846073292Z Connecting to database...
+2025-07-02T03:54:52.943012879Z Connected to Supabase database
+2025-07-02T03:54:52.943518159Z Connecting to database...
+2025-07-02T03:54:54.460871224Z Connected to Supabase database
+2025-07-02T03:54:54.460949856Z Skipping table initialization for production deployment
+2025-07-02T03:54:54.460955086Z Database initialized successfully
+2025-07-02T03:54:54.46114755Z Registering routes...
+2025-07-02T03:54:54.46357177Z MyShipTracking API configuration status: API Key missing
+2025-07-02T03:54:54.465851857Z OpenAI client initialized successfully
+2025-07-02T03:54:54.473601565Z Vessel Tracking System started - updating every 30 minutes
+2025-07-02T03:54:54.650590883Z 🚢 Starting vessel tracking system...
+2025-07-02T03:54:54.650712085Z Updating vessel positions...
+2025-07-02T03:54:54.650871888Z 🚢 Vessel tracking system is now fully operational
+2025-07-02T03:54:54.840553696Z 3:54:54 AM [express] Production static files served from /app/dist/client
+2025-07-02T03:54:54.842441904Z ✅ Server running on port 10000
+2025-07-02T03:54:54.842467915Z ✅ Platform ready with Supabase authentication!
+2025-07-02T03:54:55.138667685Z Loaded 89 ports for vessel position tracking
+2025-07-02T03:54:55.456007998Z Loaded 288 vessels for position tracking
+2025-07-02T03:54:56.032697866Z Initialized 255 active voyages
+2025-07-02T03:54:57.986666821Z ==> Your service is live 🎉
+2025-07-02T03:54:58.011274328Z ==> 
+2025-07-02T03:54:58.035514627Z ==> ///////////////////////////////////////////////////////////
+2025-07-02T03:54:58.058534715Z ==> 
+2025-07-02T03:54:58.081185934Z ==> Available at your primary URL https://pertrodealhube.onrender.com
+2025-07-02T03:54:58.108950022Z ==> 
+2025-07-02T03:54:58.13304222Z ==> ///////////////////////////////////////////////////////////
+2025-07-02T03:56:21.172418969Z 3:56:21 AM [express] GET /api/auth/me 304 in 853ms :: {"user":{"id":1,"email":"admin@petrodealhub.co…
+2025-07-02T03:56:21.821036921Z 3:56:21 AM [express] GET /api/auth/me 304 in 304ms :: {"user":{"id":1,"email":"admin@petrodealhub.co…
+2025-07-02T03:56:22.149166585Z 3:56:22 AM [express] GET /api/admin/stats 200 in 7ms
+2025-07-02T03:56:22.40906576Z 3:56:22 AM [express] GET /api/auth/me 304 in 308ms :: {"user":{"id":1,"email":"admin@petrodealhub.co…
+2025-07-02T03:56:22.906457651Z ==> Detected a new open port UDP:42587
+2025-07-02T03:56:22.983212996Z 3:56:22 AM [express] GET /api/auth/me 304 in 321ms :: {"user":{"id":1,"email":"admin@petrodealhub.co…
+2025-07-02T03:56:23.049883202Z 3:56:23 AM [express] GET /api/admin/stats 304 in 3ms
+2025-07-02T03:56:23.704808473Z Admin ports endpoint accessed
+2025-07-02T03:56:24.154423076Z 3:56:24 AM [express] GET /api/admin/port-stats 304 in 449ms :: {"totalPorts":89,"operationalPorts":1…
+2025-07-02T03:56:24.640920875Z 3:56:24 AM [express] GET /api/admin/ports 304 in 935ms :: [{"id":1,"name":"Ras Tanura Terminal","cou…
+2025-07-02T03:56:30.964654341Z 3:56:30 AM [express] GET /api/admin/refineries 200 in 2ms
+2025-07-02T03:56:39.839460752Z 3:56:39 AM [express] GET /api/vessels 200 in 288ms :: [{"id":72,"name":"STAR TWINKLE 6 (S)","imo":"I…
+2025-07-02T03:56:39.840293429Z 3:56:39 AM [express] GET /api/documents 200 in 388ms :: {"success":true,"data":[{"id":3,"title":"Por…
+2025-07-02T03:56:58.698719648Z 3:56:58 AM [express] DELETE /api/admin/ports/91 404 in 3ms
+2025-07-02T03:57:59.965877603Z API request for ports received
+2025-07-02T03:57:59.966065957Z MyShipTracking API not configured, using database for port data
+2025-07-02T03:57:59.975083282Z 3:57:59 AM [express] GET /api/vessels/myshiptracking 503 in 1ms :: {"message":"MyShipTracking API is…
+2025-07-02T03:58:00.219682174Z 3:58:00 AM [express] GET /api/vessels/marine-traffic 503 in 1ms :: {"message":"MyShipTracking API is…
+2025-07-02T03:58:00.581160001Z 3:58:00 AM [express] GET /api/vessels/myshiptracking 503 in 1ms :: {"message":"MyShipTracking API is…
+2025-07-02T03:58:00.590347779Z Retrieved 89 ports from database
+2025-07-02T03:58:00.593527664Z 3:58:00 AM [express] GET /api/ports 200 in 627ms :: [{"id":1,"name":"Ras Tanura Terminal","country":…
+2025-07-02T03:58:00.679876914Z Client connected to vessel tracking WebSocket
+2025-07-02T03:58:00.680232761Z sendVesselData called with sendAllVessels=false, trackPortProximity=false
+2025-07-02T03:58:00.680324013Z Using vessel position service data (288 vessels)
+2025-07-02T03:58:00.680499607Z Enhancing 3 vessels with AI data...
+2025-07-02T03:58:00.680691051Z Enhancing vessel data for BLUE SKY with AI
+2025-07-02T03:58:00.681086048Z Enhancing vessel data for AL AMAL AL SAUDI with AI
+2025-07-02T03:58:00.681120459Z Enhancing vessel data for BW TUCANA (S) with AI
+2025-07-02T03:58:00.842868854Z API request for ports received
+2025-07-02T03:58:00.842898774Z MyShipTracking API not configured, using database for port data
+2025-07-02T03:58:00.847011408Z REST API polling request received
+2025-07-02T03:58:00.859505395Z 3:58:00 AM [express] GET /api/vessels/marine-traffic 503 in 1ms :: {"message":"MyShipTracking API is…
+2025-07-02T03:58:00.939130476Z Received message: {
+2025-07-02T03:58:00.939153947Z   type: 'config',
+2025-07-02T03:58:00.939156597Z   region: 'global',
+2025-07-02T03:58:00.939158847Z   page: 1,
+2025-07-02T03:58:00.939160987Z   pageSize: 500,
+2025-07-02T03:58:00.939163077Z   vesselType: 'oil',
+2025-07-02T03:58:00.939165107Z   loadAllVessels: false,
+2025-07-02T03:58:00.939167827Z   trackPortProximity: false,
+2025-07-02T03:58:00.939169897Z   proximityRadius: 50,
+2025-07-02T03:58:00.939172027Z   maxOilVessels: 1540
+2025-07-02T03:58:00.939174157Z }
+2025-07-02T03:58:00.952303886Z Retrieved 89 ports from database
+2025-07-02T03:58:00.956828279Z 3:58:00 AM [express] GET /api/ports 304 in 113ms :: [{"id":1,"name":"Ras Tanura Terminal","country":…
+2025-07-02T03:58:01.523218335Z Fetched 288 vessels globally
+2025-07-02T03:58:01.543261615Z Sent 288 vessels to client via REST API polling (page 1/1)
+2025-07-02T03:58:01.548116925Z 3:58:01 AM [express] GET /api/vessels/polling 200 in 697ms :: {"vessels":[{"id":72,"name":"STAR TWIN…
+2025-07-02T03:58:01.717158718Z Enhanced data for BLUE SKY: { cargoType: 'Bulk Carrier', built: 2010, deadweight: 75000 }
+2025-07-02T03:58:01.80896774Z REST API polling request received
+2025-07-02T03:58:02.044958775Z Enhanced data for BW TUCANA (S): { cargoType: 'Liquefied Gas Carrier', built: 2010, deadweight: 55000 }
+2025-07-02T03:58:02.06229195Z Fetched 288 vessels globally
+2025-07-02T03:58:02.148519048Z Sent 288 vessels to client via REST API polling (page 1/1)
+2025-07-02T03:58:02.154837557Z 3:58:02 AM [express] GET /api/vessels/polling 200 in 340ms :: {"vessels":[{"id":72,"name":"STAR TWIN…
+2025-07-02T03:58:02.845785605Z Enhanced data for AL AMAL AL SAUDI: { cargoType: 'General Cargo', built: 2010, deadweight: 12000 }
+2025-07-02T03:58:02.845898307Z Enhanced vessel: BLUE SKY
+2025-07-02T03:58:02.845905087Z Enhanced vessel: AL AMAL AL SAUDI
+2025-07-02T03:58:02.845908198Z Enhanced vessel: BW TUCANA (S)
+2025-07-02T03:58:02.845965169Z Vessel coordinate check: STAR TWINKLE 6 (S): lat=26.95104000, lng=75.92707000, AFRAMAX RIVIERA: lat=20.19918000, lng=71.76597000, BLUE SKY: lat=23.96267093, lng=52.84436063, CHINTAMANI (S): lat=20.53118000, lng=48.56426000, ORLETS (S): lat=26.64400000, lng=50.15900000
+2025-07-02T03:58:02.85625807Z Sent 288 vessels to client (page 1/1)
+2025-07-02T03:58:04.638920328Z API request for ports received
+2025-07-02T03:58:04.638946388Z MyShipTracking API not configured, using database for port data
+2025-07-02T03:58:04.739872636Z Enhancing 2 refineries with AI data...
+2025-07-02T03:58:04.74005531Z Enhancing refinery data for www with AI
+2025-07-02T03:58:04.740133352Z Enhancing refinery data for 33 with AI
+2025-07-02T03:58:04.792578356Z 3:58:04 AM [express] GET /api/vessels/72 200 in 156ms :: {"id":72,"name":"STAR TWINKLE 6 (S)","imo":…
+2025-07-02T03:58:05.156121425Z 3:58:05 AM [express] GET /api/vessels/72 304 in 101ms :: {"id":72,"name":"STAR TWINKLE 6 (S)","imo":…
+2025-07-02T03:58:05.291409408Z Retrieved 89 ports from database
+2025-07-02T03:58:05.294309457Z 3:58:05 AM [express] GET /api/ports 304 in 655ms :: [{"id":1,"name":"Ras Tanura Terminal","country":…
+2025-07-02T03:58:05.382968024Z 3:58:05 AM [express] GET /api/vessels/72/voyage-info 200 in 2ms :: {"vesselId":72,"startPort":{"lat"…
+2025-07-02T03:58:05.565345401Z API request for ports received
+2025-07-02T03:58:05.565371721Z MyShipTracking API not configured, using database for port data
+2025-07-02T03:58:05.63461638Z 3:58:05 AM [express] GET /api/vessels/72/voyage-info 304 in 1ms :: {"vesselId":72,"startPort":{"lat"…
+2025-07-02T03:58:05.715410296Z Retrieved 89 ports from database
+2025-07-02T03:58:05.719173903Z 3:58:05 AM [express] GET /api/ports 304 in 153ms :: [{"id":1,"name":"Ras Tanura Terminal","country":…
+2025-07-02T03:58:07.45346507Z Enhanced data for 33: {
+2025-07-02T03:58:07.45348974Z   operator: 'Emirates National Oil Company',
+2025-07-02T03:58:07.45349463Z   capacity: '140,000 barrels per day',
+2025-07-02T03:58:07.45349952Z   products: [ 'Gasoline', 'Diesel', 'Jet fuel', 'LPG', 'Fuel oil' ],
+2025-07-02T03:58:07.453506531Z   description: 'Refinery 33 is located in the strategic Al Jebel Ali area, facilitating access to major shipping routes. It is operated by the Emirates National Oil Company and focuses on producing a balanced mix of refined petroleum products. The complex is equipped with modern technology to ensure high efficiency and compliance with environmental standards.'
+2025-07-02T03:58:07.453511481Z }
+2025-07-02T03:58:08.012288141Z Enhanced data for www: {
+2025-07-02T03:58:08.012317101Z   operator: 'WW Oil & Gas Corporation',
+2025-07-02T03:58:08.012321681Z   capacity: '250,000 barrels per day',
+2025-07-02T03:58:08.012326371Z   products: [
+2025-07-02T03:58:08.012331041Z     'Gasoline',
+2025-07-02T03:58:08.012335431Z     'Diesel',
+2025-07-02T03:58:08.012339971Z     'Jet Fuel',
+2025-07-02T03:58:08.012344522Z     'Liquefied Petroleum Gas (LPG)',
+2025-07-02T03:58:08.012348372Z     'Petrochemicals'
+2025-07-02T03:58:08.012352252Z   ],
+2025-07-02T03:58:08.012359802Z   description: 'The WWW Refinery, located in the heart of the WW region, is a significant processing facility operated by WW Oil & Gas Corporation. With a processing capacity of 250,000 barrels per day, this refinery plays a crucial role in meeting the energy demands of the area. It produces a diverse range of products including gasoline, diesel, jet fuel, and LPG, which are distributed both locally and internationally. The refinery employs advanced technologies to ensure efficient and environmentally friendly operations.'
+2025-07-02T03:58:08.012367432Z }
+2025-07-02T03:58:08.012433223Z Enhanced refinery: www
+2025-07-02T03:58:08.012454104Z Enhanced refinery: 33
+2025-07-02T03:58:08.013493215Z 3:58:08 AM [express] GET /api/refineries 200 in 3392ms :: [{"id":181,"name":"Ras Tanura Refinery","c…
+2025-07-02T03:58:08.441593817Z Enhancing 2 refineries with AI data...
+2025-07-02T03:58:08.441621908Z Enhancing refinery data for www with AI
+2025-07-02T03:58:08.441634068Z Enhancing refinery data for 33 with AI
+2025-07-02T03:58:10.789767323Z Enhanced data for www: {
+2025-07-02T03:58:10.789792954Z   operator: 'WW Energy Corporation',
+2025-07-02T03:58:10.789797243Z   capacity: '200,000 barrels per day',
+2025-07-02T03:58:10.789801134Z   products: [
+2025-07-02T03:58:10.789818544Z     'Gasoline',
+2025-07-02T03:58:10.789821314Z     'Diesel',
+2025-07-02T03:58:10.789823764Z     'Jet fuel',
+2025-07-02T03:58:10.789825954Z     'Liquefied petroleum gas (LPG)',
+2025-07-02T03:58:10.789828164Z     'Asphalt'
+2025-07-02T03:58:10.789830354Z   ],
+2025-07-02T03:58:10.789835644Z   description: 'The WWW Refinery, operated by WW Energy Corporation, is a medium-sized facility strategically located near key transport routes to efficiently distribute its diverse range of petroleum products across the region. With a processing capacity of 200,000 barrels per day, the refinery incorporates advanced technologies to optimize efficiency and reduce emissions, reflecting its commitment to environmental sustainability.'
+2025-07-02T03:58:10.789838084Z }
+2025-07-02T03:58:12.46013414Z Enhanced data for 33: {
+2025-07-02T03:58:12.46015596Z   operator: '333 National Oil Company',
+2025-07-02T03:58:12.46015982Z   capacity: '200,000 barrels per day',
+2025-07-02T03:58:12.460163161Z   products: [ 'Petrol', 'Diesel', 'Jet Fuel', 'LPG', 'Naphtha' ],
+2025-07-02T03:58:12.46016683Z   description: "The '33' refinery, operated by 333 National Oil Company, is strategically located to serve both domestic and international markets. With a capacity of 200,000 barrels per day, it produces a wide range of petroleum products including petrol, diesel, jet fuel, LPG, and naphtha. The refinery incorporates advanced processing technologies to ensure maximum efficiency and compliance with environmental standards."
+2025-07-02T03:58:12.460169501Z }
+2025-07-02T03:58:12.460263692Z Enhanced refinery: www
+2025-07-02T03:58:12.460277023Z Enhanced refinery: 33
+2025-07-02T03:58:12.461665221Z 3:58:12 AM [express] GET /api/refineries 200 in 4120ms :: [{"id":181,"name":"Ras Tanura Refinery","c…
+2025-07-02T03:58:35.301394299Z 3:58:35 AM [express] GET /api/vessels/72/voyage-info 304 in 1ms :: {"vesselId":72,"startPort":{"lat"…
+2025-07-02T03:58:35.536340753Z 3:58:35 AM [express] GET /api/vessels/72/voyage-info 304 in 1ms :: {"vesselId":72,"startPort":{"lat"…
+2025-07-02T03:59:05.708258373Z 3:59:05 AM [express] GET /api/vessels/72/voyage-info 304 in 1ms :: {"vesselId":72,"startPort":{"lat"…
+2025-07-02T03:59:05.978321787Z 3:59:05 AM [express] GET /api/vessels/72/voyage-info 304 in 0ms :: {"vesselId":72,"startPort":{"lat"…
+2025-07-02T03:59:35.752057398Z 3:59:35 AM [express] GET /api/vessels/72/voyage-info 304 in 1ms :: {"vesselId":72,"startPort":{"lat"…
+2025-07-02T03:59:36.011440413Z 3:59:36 AM [express] GET /api/vessels/72/voyage-info 304 in 0ms :: {"vesselId":72,"startPort":{"lat"…
+2025-07-02T04:00:05.451859254Z 4:00:05 AM [express] GET /api/vessels/72/voyage-info 304 in 1ms :: {"vesselId":72,"startPort":{"lat"…
+2025-07-02T04:00:06.074506782Z 4:00:06 AM [express] GET /api/vessels/72/voyage-info 304 in 0ms :: {"vesselId":72,"startPort":{"lat"…
+2025-07-02T04:00:35.42106524Z 4:00:35 AM [express] GET /api/vessels/72/voyage-info 304 in 1ms :: {"vesselId":72,"startPort":{"lat"…
