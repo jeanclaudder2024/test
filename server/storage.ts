@@ -652,7 +652,8 @@ export class DatabaseStorage implements IStorage {
 
   async deletePort(id: number): Promise<boolean> {
     const result = await db.delete(ports).where(eq(ports.id, id));
-    return true;
+    // Check if any rows were actually deleted
+    return result.rowCount !== null && result.rowCount > 0;
   }
 
   async getProgressEventsByVesselId(vesselId: number): Promise<ProgressEvent[]> {
