@@ -803,27 +803,12 @@ export default function VesselDetail() {
                 </TabsContent>
                 
 
+
                 <TabsContent value="articles">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <FileCheck className="h-5 w-5" />
-                        Professional Articles
-                      </CardTitle>
-                      <CardDescription>
-                        Professional maritime articles and reports for {vessel.name}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-center py-8">
-                        <FileCheck className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                        <h3 className="text-lg font-semibold mb-2">Maritime Articles</h3>
-                        <p className="text-muted-foreground">
-                          Professional maritime articles and industry reports will be displayed here.
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <ProfessionalArticleGenerator 
+                    vesselId={vessel.id} 
+                    vesselName={vessel.name} 
+                  />
                 </TabsContent>
               </Tabs>
             </div>
@@ -996,16 +981,12 @@ export default function VesselDetail() {
                 </CardContent>
               </Card>
             </div>
+            
+            {/* Right sidebar with related information */}
+            <div className="space-y-6">
+              {/* Sidebar content would go here */}
+            </div>
           </div>
-                </TabsContent>
-                
-                <TabsContent value="articles">
-                  <ProfessionalArticleGenerator 
-                    vesselId={vessel.id} 
-                    vesselName={vessel.name} 
-                  />
-                </TabsContent>
-              </Tabs>
         </>
       ) : (
         <div className="flex justify-center items-center h-64">
