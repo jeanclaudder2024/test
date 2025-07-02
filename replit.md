@@ -184,6 +184,7 @@ Changelog:
   * ProfessionalRefineryManagement component now fully functional with all enhanced features
   * Admin panel uses ProfessionalRefineryManagement with tabbed interface as intended
   * System supports complete refinery data including technical, financial, compliance, and strategic details
+  * Fixed processing capacity showing as 0 by updating form submission to include all comprehensive fields
 
 ## User Preferences
 

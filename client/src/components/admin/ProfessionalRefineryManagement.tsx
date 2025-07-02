@@ -557,8 +557,9 @@ export default function ProfessionalRefineryManagement() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Map form fields to database schema fields
+    // Map form fields to database schema fields with all comprehensive data
     const submitData = {
+      // Basic Information
       name: formData.name,
       country: formData.country,
       region: formData.region,
@@ -578,8 +579,36 @@ export default function ProfessionalRefineryManagement() {
       website: formData.website,
       address: formData.address,
       technical_specs: formData.technical_specs,
-      utilization: formData.utilization ? parseFloat(formData.utilization) : null,
-      complexity: formData.complexity ? parseFloat(formData.complexity) : null
+      utilization: formData.utilization,
+      complexity: formData.complexity,
+      
+      // Technical Specifications
+      distillation_capacity: formData.distillation_capacity,
+      conversion_capacity: formData.conversion_capacity,
+      hydrogen_capacity: formData.hydrogen_capacity,
+      sulfur_recovery: formData.sulfur_recovery,
+      processing_units: formData.processing_units,
+      storage_capacity: formData.storage_capacity,
+      
+      // Financial Information
+      investment_cost: formData.investment_cost,
+      operating_costs: formData.operating_costs,
+      revenue: formData.revenue,
+      profit_margin: formData.profit_margin,
+      market_share: formData.market_share,
+      
+      // Compliance & Regulations
+      environmental_certifications: formData.environmental_certifications,
+      safety_record: formData.safety_record,
+      workforce_size: formData.workforce_size ? parseInt(formData.workforce_size) : null,
+      annual_throughput: formData.annual_throughput,
+      crude_oil_sources: formData.crude_oil_sources,
+      
+      // Strategic Information
+      pipeline_connections: formData.pipeline_connections,
+      shipping_terminals: formData.shipping_terminals,
+      rail_connections: formData.rail_connections,
+      nearest_port: formData.nearest_port
     };
 
     if (editingRefinery) {
