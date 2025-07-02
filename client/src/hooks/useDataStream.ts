@@ -15,14 +15,14 @@ interface StreamData {
  * Clean data stream hook - direct API calls without complex chaining
  */
 export function useDataStream(): StreamData {
-  // Direct refinery query
+  // Direct refinery query - using admin endpoint for consistency
   const { 
     data: refineries = [], 
     isLoading: refineriesLoading, 
     error: refineriesError 
   } = useQuery<Refinery[]>({
-    queryKey: ['/api/refineries'],
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    queryKey: ['/api/admin/refineries'],
+    staleTime: 0, // No caching for immediate fresh data
     refetchOnWindowFocus: false,
   });
 
@@ -37,14 +37,14 @@ export function useDataStream(): StreamData {
     refetchOnWindowFocus: false,
   });
 
-  // Direct ports query
+  // Direct ports query - using admin endpoint for consistency
   const { 
     data: ports = [], 
     isLoading: portsLoading, 
     error: portsError 
   } = useQuery<Port[]>({
-    queryKey: ['/api/ports'],
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    queryKey: ['/api/admin/ports'],
+    staleTime: 0, // No caching for immediate fresh data
     refetchOnWindowFocus: false,
   });
 

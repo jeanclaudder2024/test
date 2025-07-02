@@ -1,0 +1,90 @@
+2025-07-02T04:33:09.750664185Z #12 DONE 2.4s
+2025-07-02T04:33:09.901196011Z 
+2025-07-02T04:33:09.901251822Z #13 [7/9] RUN npm run build
+2025-07-02T04:33:10.603634603Z #13 0.853 
+2025-07-02T04:33:10.603657714Z #13 0.853 > rest-express@1.0.0 build
+2025-07-02T04:33:10.603663314Z #13 0.853 > vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+2025-07-02T04:33:10.603667454Z #13 0.853 
+2025-07-02T04:33:10.879168368Z #13 1.129 vite v5.4.14 building for production...
+2025-07-02T04:33:11.029597733Z #13 1.203 transforming...
+2025-07-02T04:33:11.293539156Z #13 1.542 Browserslist: browsers data (caniuse-lite) is 9 months old. Please run:
+2025-07-02T04:33:11.293557777Z #13 1.542   npx update-browserslist-db@latest
+2025-07-02T04:33:11.293562357Z #13 1.542   Why you should do it regularly: https://github.com/browserslist/update-db#readme
+2025-07-02T04:33:24.384259433Z #13 14.57 ✓ 3468 modules transformed.
+2025-07-02T04:33:25.887229021Z #13 16.08 rendering chunks...
+2025-07-02T04:33:25.988852853Z #13 16.24 computing gzip size...
+2025-07-02T04:33:26.139608694Z #13 16.30 ../dist/client/index.html                     1.98 kB │ gzip:   0.88 kB
+2025-07-02T04:33:26.139629774Z #13 16.30 ../dist/client/assets/index-Dw9uSaC9.css    190.63 kB │ gzip:  33.84 kB
+2025-07-02T04:33:26.139633664Z #13 16.30 ../dist/client/assets/index-BO_rbxuF.js   2,121.42 kB │ gzip: 541.34 kB
+2025-07-02T04:33:26.139638144Z #13 16.30 
+2025-07-02T04:33:26.139642914Z #13 16.30 (!) Some chunks are larger than 500 kB after minification. Consider:
+2025-07-02T04:33:26.139647964Z #13 16.30 - Using dynamic import() to code-split the application
+2025-07-02T04:33:26.139652575Z #13 16.30 - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+2025-07-02T04:33:26.139656615Z #13 16.30 - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+2025-07-02T04:33:26.139661485Z #13 16.30 ✓ built in 15.13s
+2025-07-02T04:33:26.440616325Z #13 16.56 
+2025-07-02T04:33:26.539816041Z #13 16.56   dist/index.js  956.0kb
+2025-07-02T04:33:26.539832071Z #13 16.56 
+2025-07-02T04:33:26.539838861Z #13 16.56 ⚡ Done in 150ms
+2025-07-02T04:34:04.920786871Z #13 DONE 55.2s
+2025-07-02T04:34:05.070889589Z 
+2025-07-02T04:34:05.070916789Z #14 [8/9] RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
+2025-07-02T04:34:19.784052184Z #14 DONE 14.8s
+2025-07-02T04:34:19.93507639Z 
+2025-07-02T04:34:19.969155421Z #15 [9/9] RUN chown -R nodejs:nodejs /app
+2025-07-02T04:38:17.254361888Z #15 DONE 237.4s
+2025-07-02T04:38:17.404420045Z 
+2025-07-02T04:38:17.404446005Z #16 exporting to docker image format
+2025-07-02T04:38:17.404450155Z #16 exporting layers
+2025-07-02T04:38:35.516908125Z #16 exporting layers 18.1s done
+2025-07-02T04:38:35.516938145Z #16 exporting manifest sha256:8609aba5b3676feed8a4c5af853ed6fe0d27126e3356232e726db0ad0225caab done
+2025-07-02T04:38:35.516942625Z #16 exporting config sha256:3717c384002d5a1bfffa6922d52b80aea3268dbee95a22376ee02cefc8488a6f done
+2025-07-02T04:38:42.747216911Z #16 DONE 25.5s
+2025-07-02T04:38:42.747235751Z 
+2025-07-02T04:38:42.747239822Z #17 exporting cache to client directory
+2025-07-02T04:38:42.747242782Z #17 preparing build cache for export
+2025-07-02T04:38:45.756917222Z #17 writing cache manifest sha256:f7d606fa84453d8cd2a175b55242fc849e16fbd87fb52d3f2bd0cd87aac9ea0c 0.0s done
+2025-07-02T04:38:45.756938252Z #17 DONE 2.9s
+2025-07-02T04:38:46.748616042Z Pushing image to registry...
+2025-07-02T04:38:52.674809969Z Upload succeeded
+2025-07-02T04:38:56.2822851Z ==> Deploying...
+2025-07-02T04:39:21.421015333Z 
+2025-07-02T04:39:21.421060456Z > rest-express@1.0.0 start
+2025-07-02T04:39:21.421065436Z > NODE_ENV=production node dist/index.js
+2025-07-02T04:39:21.421067956Z 
+2025-07-02T04:39:28.410877802Z 🚀 Starting oil vessel tracking platform with Supabase...
+2025-07-02T04:39:28.41150376Z Initializing database...
+2025-07-02T04:39:28.818779545Z Connecting to database...
+2025-07-02T04:39:28.910380224Z Connected to Supabase database
+2025-07-02T04:39:28.910836112Z Connecting to database...
+2025-07-02T04:39:29.958572328Z Connected to Supabase database
+2025-07-02T04:39:29.959041166Z Skipping table initialization for production deployment
+2025-07-02T04:39:29.959051557Z Database initialized successfully
+2025-07-02T04:39:29.959055627Z Registering routes...
+2025-07-02T04:39:29.961453532Z MyShipTracking API configuration status: API Key missing
+2025-07-02T04:39:29.96391108Z OpenAI client initialized successfully
+2025-07-02T04:39:29.969979357Z Vessel Tracking System started - updating every 30 minutes
+2025-07-02T04:39:30.118859174Z 🚢 Starting vessel tracking system...
+2025-07-02T04:39:30.119024614Z Updating vessel positions...
+2025-07-02T04:39:30.119186613Z 🚢 Vessel tracking system is now fully operational
+2025-07-02T04:39:30.328577593Z 4:39:30 AM [express] Production static files served from /app/dist/client
+2025-07-02T04:39:30.330987499Z ✅ Server running on port 10000
+2025-07-02T04:39:30.3310115Z ✅ Platform ready with Supabase authentication!
+2025-07-02T04:39:30.608011612Z Loaded 89 ports for vessel position tracking
+2025-07-02T04:39:31.061602442Z Loaded 288 vessels for position tracking
+2025-07-02T04:39:31.471827226Z Initialized 255 active voyages
+2025-07-02T04:39:37.06299868Z ==> Your service is live 🎉
+2025-07-02T04:39:37.090429488Z ==> 
+2025-07-02T04:39:37.113207576Z ==> ///////////////////////////////////////////////////////////
+2025-07-02T04:39:37.137041914Z ==> 
+2025-07-02T04:39:37.160245272Z ==> Available at your primary URL https://pertrodealhube.onrender.com
+2025-07-02T04:39:37.184297861Z ==> 
+2025-07-02T04:39:37.208008099Z ==> ///////////////////////////////////////////////////////////
+2025-07-02T04:40:01.861124195Z 4:40:01 AM [express] GET /api/auth/me 304 in 791ms :: {"user":{"id":1,"email":"admin@petrodealhub.co…
+2025-07-02T04:40:02.454769432Z 4:40:02 AM [express] GET /api/auth/me 304 in 294ms :: {"user":{"id":1,"email":"admin@petrodealhub.co…
+2025-07-02T04:40:02.581755868Z 4:40:02 AM [express] GET /api/companies 304 in 53ms :: [{"id":1,"realCompanyId":1,"generatedName":"G…
+2025-07-02T04:40:06.619050961Z 4:40:06 AM [express] GET /api/auth/me 304 in 295ms :: {"user":{"id":1,"email":"admin@petrodealhub.co…
+2025-07-02T04:40:06.943528569Z 4:40:06 AM [express] GET /api/admin/stats 200 in 6ms
+2025-07-02T04:40:07.164871791Z 4:40:07 AM [express] GET /api/auth/me 304 in 294ms :: {"user":{"id":1,"email":"admin@petrodealhub.co…
+2025-07-02T04:40:07.448562727Z 4:40:07 AM [express] GET /api/admin/stats 304 in 6ms
+2025-07-02T04:40:08.026272482Z 4:40:08 AM [express] GET /api/admin/refineries 200 in 1ms
