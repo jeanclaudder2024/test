@@ -115,8 +115,8 @@ export default function ProfessionalPortManagement({
       country: editingPort?.country || '',
       region: editingPort?.region || '',
       city: editingPort?.city || '',
-      lat: editingPort?.lat || '',
-      lng: editingPort?.lng || '',
+      lat: editingPort?.lat || '25.0000',
+      lng: editingPort?.lng || '55.0000',
       timezone: editingPort?.timezone || '',
       
       type: editingPort?.type || 'Commercial',
@@ -170,8 +170,8 @@ export default function ProfessionalPortManagement({
       country: '',
       region: '',
       city: '',
-      lat: '',
-      lng: '',
+      lat: '25.0000',
+      lng: '55.0000',
       timezone: '',
       type: 'Commercial',
       status: 'Operational',
@@ -214,6 +214,11 @@ export default function ProfessionalPortManagement({
   const onSubmit = async (data: PortFormData) => {
     setIsSubmitting(true);
     try {
+      // Debug: Log the data being sent
+      console.log('Form data being submitted:', data);
+      console.log('Lat value:', data.lat, 'Type:', typeof data.lat);
+      console.log('Lng value:', data.lng, 'Type:', typeof data.lng);
+      
       const endpoint = editingPort ? `/api/admin/ports/${editingPort.id}` : '/api/admin/ports';
       const method = editingPort ? 'PUT' : 'POST';
       

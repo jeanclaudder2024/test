@@ -7975,12 +7975,24 @@ Keep the description professional, informative, and around 150-200 words. Focus 
   // Admin create port endpoint
   apiRouter.post("/admin/ports", async (req, res) => {
     try {
+      // Debug: Log the raw request body
+      console.log('Raw request body received:', req.body);
+      console.log('Raw lat value:', req.body.lat, 'Type:', typeof req.body.lat);
+      console.log('Raw lng value:', req.body.lng, 'Type:', typeof req.body.lng);
+      
       const portData = insertPortSchema.parse(req.body);
+      
+      // Debug: Log the parsed data
+      console.log('Parsed port data:', portData);
+      console.log('Parsed lat value:', portData.lat, 'Type:', typeof portData.lat);
+      console.log('Parsed lng value:', portData.lng, 'Type:', typeof portData.lng);
+      
       const port = await storage.createPort(portData);
       res.status(201).json(port);
     } catch (error) {
       if (error instanceof z.ZodError) {
         const validationError = fromZodError(error);
+        console.log('Zod validation error:', validationError);
         return res.status(400).json({ message: validationError.message });
       }
       console.error("Error creating admin port:", error);
