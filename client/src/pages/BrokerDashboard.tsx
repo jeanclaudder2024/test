@@ -50,9 +50,20 @@ interface Deal {
   oilType: string;
   quantity: string;
   notes?: string;
+  documentsCount: number;
 }
 
-
+interface Document {
+  id: number;
+  name: string;
+  type: string;
+  size: string;
+  uploadDate: string;
+  uploadedBy: string;
+  downloadCount: number;
+  dealId?: number;
+  isAdminFile: boolean;
+}
 
 interface AdminFile {
   id: number;
@@ -78,7 +89,11 @@ export default function BrokerDashboard() {
     retry: false,
   });
 
-
+  // Fetch broker documents
+  const { data: documents = [], isLoading: documentsLoading } = useQuery<Document[]>({
+    queryKey: ['/api/broker/documents'],
+    retry: false,
+  });
 
   // Fetch admin files sent to broker
   const { data: adminFiles = [], isLoading: adminFilesLoading } = useQuery<AdminFile[]>({
@@ -99,11 +114,82 @@ export default function BrokerDashboard() {
     retry: false,
   });
 
+  // Download document mutation
+  const downloadMutation = useMutation({
+    mutationFn: async (documentId: number) => {
+      const response = await fetch(`/api/broker/documents/${documentId}/download`);
+      if (!response.ok) throw new Error('Download failed');
+      return response.blob();
+    },
+    onSuccess: (blob, documentId) => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `document-${documentId}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      toast({
+        title: "Download Started",
+        description: "Your document is being downloaded.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Download Failed",
+        description: "Could not download the document. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
 
+  // Upload document mutation
+  const uploadMutation = useMutation({
+    mutationFn: async ({ file, dealId, description }: { file: File; dealId?: number; description: string }) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      if (dealId) formData.append('dealId', dealId.toString());
+      formData.append('description', description);
+      
+      const response = await fetch('/api/broker/documents/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) throw new Error('Upload failed');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/broker/documents'] });
+      toast({
+        title: "Upload Successful",
+        description: "Your document has been uploaded successfully.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Upload Failed",
+        description: "Could not upload the document. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
 
-
-
-
+  // Mark admin file as read
+  const markAsReadMutation = useMutation({
+    mutationFn: async (fileId: number) => {
+      const response = await fetch(`/api/broker/admin-files/${fileId}/mark-read`, {
+        method: 'POST',
+      });
+      if (!response.ok) throw new Error('Failed to mark as read');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/broker/admin-files'] });
+    },
+  });
 
   // Filter deals
   const filteredDeals = deals.filter(deal => {
@@ -205,7 +291,10 @@ export default function BrokerDashboard() {
               <Handshake className="h-4 w-4 mr-2" />
               Deals
             </TabsTrigger>
-
+            <TabsTrigger value="documents" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white">
+              <FileText className="h-4 w-4 mr-2" />
+              Documents
+            </TabsTrigger>
             <TabsTrigger value="admin-files" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white">
               <Paperclip className="h-4 w-4 mr-2" />
               Admin Files
@@ -308,7 +397,84 @@ export default function BrokerDashboard() {
             </div>
           </TabsContent>
 
-{/* Admin Files Tab */}
+          {/* Documents Tab */}
+          <TabsContent value="documents" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <div className="relative max-w-sm">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Search documents..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 bg-gray-800 border-gray-600 text-white"
+                />
+              </div>
+              
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button className="bg-orange-600 hover:bg-orange-700">
+                    <Upload className="h-4 w-4 mr-2" />
+                    Upload Document
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="bg-gray-800 border-gray-700 text-white">
+                  <DialogHeader>
+                    <DialogTitle>Upload Document</DialogTitle>
+                    <DialogDescription className="text-gray-300">
+                      Upload a new document to your broker account
+                    </DialogDescription>
+                  </DialogHeader>
+                  {/* Upload form would go here */}
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredDocuments.map((doc) => (
+                <Card key={doc.id} className="bg-gray-800/90 border-gray-700">
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center">
+                          <FileText className="h-5 w-5 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-white">{doc.name}</h3>
+                          <p className="text-sm text-gray-400">{doc.type}</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2 text-sm text-gray-300">
+                      <div className="flex justify-between">
+                        <span>Size:</span>
+                        <span>{doc.size}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Uploaded:</span>
+                        <span>{doc.uploadDate}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Downloads:</span>
+                        <span>{doc.downloadCount}</span>
+                      </div>
+                    </div>
+
+                    <Button 
+                      className="w-full mt-4 bg-orange-600 hover:bg-orange-700"
+                      onClick={() => downloadMutation.mutate(doc.id)}
+                      disabled={downloadMutation.isPending}
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Download
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+
+          {/* Admin Files Tab */}
           <TabsContent value="admin-files" className="space-y-6">
             <Card className="bg-gray-800/90 border-gray-700">
               <CardHeader>
@@ -344,6 +510,7 @@ export default function BrokerDashboard() {
                         <Button 
                           size="sm"
                           className="bg-orange-600 hover:bg-orange-700"
+                          onClick={() => markAsReadMutation.mutate(file.id)}
                         >
                           <Download className="h-4 w-4" />
                         </Button>

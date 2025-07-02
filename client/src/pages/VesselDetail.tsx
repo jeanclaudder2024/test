@@ -4,8 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { SimpleVoyageDetails } from '@/components/vessels/SimpleVoyageDetails';
 import SimpleVesselMap from '@/components/map/SimpleVesselMap';
 
-
-
+import { SimpleDocumentViewer } from '@/components/vessels/SimpleDocumentViewer';
 import axios from 'axios';
 import {
   Card,
@@ -31,7 +30,7 @@ import { Label } from '@/components/ui/label';
 import {
   ArrowLeft, Ship, Calendar, Map, Info, Edit, Plus, Navigation, Anchor,
   Flag, Droplet, Package, AlertCircle, Truck, Gauge, BarChart, History,
-  Users, Clock, Compass, ArrowRight, FileText, Clipboard, Download, Globe,
+  Users, Clock, Compass, ArrowRight, FileText, FileCheck, Clipboard, Download, Globe,
   ZoomIn, ZoomOut, Fuel, Activity, Layers, Filter, Tag, Check, RotateCw,
   MapPin, ExternalLink, Factory, AlertTriangle, RefreshCw, Route
 } from 'lucide-react';
@@ -462,7 +461,45 @@ export default function VesselDetail() {
     setIsUpdatingLocation(false);
   };
   
-
+  // Generate a vessel document or manifest
+  const generateVesselDocument = async (documentType: string) => {
+    if (!vessel) return;
+    
+    setIsGeneratingManifest(true);
+    try {
+      // Use the reliable PDF generator endpoint that is guaranteed to work
+      const response = await axios.post(`/api/vessels/${vessel.id}/reliable-pdf`, {
+        documentType
+      }, {
+        responseType: 'blob', // Important: get response as binary data
+      });
+      
+      // Create a download link and click it
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${vessel.name}_${documentType.toLowerCase().replace(/\s/g, '_')}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      
+      toast({
+        title: 'Document Generated',
+        description: `The ${documentType} for ${vessel.name} has been downloaded`,
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error('Error generating document:', error);
+      toast({
+        title: 'Document Generation Failed',
+        description: 'An error occurred while generating the document',
+        variant: 'destructive',
+        duration: 5000,
+      });
+    } finally {
+      setIsGeneratingManifest(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -548,8 +585,14 @@ export default function VesselDetail() {
                     <Compass className="h-4 w-4 mr-2" />
                     Voyage
                   </TabsTrigger>
-
-
+                  <TabsTrigger value="documents" className="flex items-center">
+                    <FileText className="h-4 w-4 mr-2" />
+                    Documents
+                  </TabsTrigger>
+                  <TabsTrigger value="articles" className="flex items-center">
+                    <FileCheck className="h-4 w-4 mr-2" />
+                    Professional Articles
+                  </TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="details">
@@ -799,9 +842,39 @@ export default function VesselDetail() {
                   </Card>
                 </TabsContent>
                 
+                <TabsContent value="documents">
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center">
+                        <FileText className="h-5 w-5 mr-2 text-primary" />
+                        Vessel Documents
+                      </CardTitle>
+                      <CardDescription>
+                        Access and manage vessel documents, certificates, and maritime compliance files
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-col items-center justify-center py-8">
+                        <FileText className="h-16 w-16 text-muted-foreground/30 mb-4" />
+                        <h3 className="text-lg font-semibold mb-2">Document Management System</h3>
+                        <p className="text-muted-foreground text-center mb-6 max-w-md">
+                          Manage all vessel documents including certificates, manifests, inspection reports, and compliance documentation in one place.
+                        </p>
+                        <Button asChild className="bg-primary hover:bg-primary/90">
+                          <Link href={`/vessels/${vessel.id}/documents`}>
+                            <FileText className="mr-2 h-4 w-4" />
+                            Open Document Center
+                          </Link>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
 
-
-
+                
+                <TabsContent value="articles">
+                  <SimpleDocumentViewer vessel={vessel} />
+                </TabsContent>
               </Tabs>
             </div>
             
@@ -972,11 +1045,6 @@ export default function VesselDetail() {
                   </div>
                 </CardContent>
               </Card>
-            </div>
-            
-            {/* Right sidebar with related information */}
-            <div className="space-y-6">
-              {/* Sidebar content would go here */}
             </div>
           </div>
         </>

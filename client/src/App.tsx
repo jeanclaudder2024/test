@@ -4,6 +4,7 @@ import NotFound from "@/pages/not-found";
 import AdminRoute from "@/components/AdminRoute";
 import Vessels from "@/pages/Vessels";
 import VesselDetail from "@/pages/VesselDetail";
+import VesselDocuments from "@/pages/VesselDocuments";
 import Refineries from "@/pages/Refineries";
 import RefineryDetail from "@/pages/RefineryDetail";
 import Ports from "@/pages/Ports";
@@ -11,6 +12,7 @@ import PortDetail from "@/pages/PortDetail";
 import Brokers from "@/pages/Brokers";
 import BrokerDashboard from "@/pages/BrokerDashboard";
 
+import Documents from "@/pages/Documents";
 import AIAssistantPage from "@/pages/AIAssistant";
 import Settings from "@/pages/Settings";
 import Subscribe from "@/pages/Subscribe";
@@ -33,6 +35,7 @@ import FixedFullPageMap from "@/pages/FixedFullPageMap";
 import OilVesselMap from "@/pages/OilVesselMap";
 import AdminPanel from "@/pages/AdminPanel";
 import SubscriptionAdmin from "@/pages/SubscriptionAdmin";
+import AdminDocumentsSimple from "@/pages/AdminDocumentsSimple";
 import LandingPageManager from "@/pages/LandingPageManager";
 
 import { useEffect } from "react";
@@ -55,6 +58,7 @@ function ProtectedRoutes() {
           <Route path="/dashboard" component={Companies} />
           <Route path="/broker-dashboard" component={BrokerDashboard} />
           <Route path="/vessels" component={Vessels} />
+          <Route path="/vessels/:id/documents" component={VesselDocuments} />
           <Route path="/vessels/:id" component={VesselDetail} />
           <Route path="/refineries" component={Refineries} />
           <Route path="/refineries/:id" component={RefineryDetail} />
@@ -64,6 +68,7 @@ function ProtectedRoutes() {
           <Route path="/oil-vessel-map" component={OilVesselMap} />
           <Route path="/brokers" component={Brokers} />
           <Route path="/companies" component={Companies} />
+          <Route path="/documents" component={Documents} />
           <Route path="/ai-assistant" component={AIAssistantPage} />
           <Route path="/admin">
             <AdminRoute>
@@ -73,6 +78,11 @@ function ProtectedRoutes() {
           <Route path="/admin/subscriptions">
             <AdminRoute>
               <SubscriptionAdmin />
+            </AdminRoute>
+          </Route>
+          <Route path="/admin/documents">
+            <AdminRoute>
+              <AdminDocumentsSimple />
             </AdminRoute>
           </Route>
           <Route path="/admin/landing-page">

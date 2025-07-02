@@ -236,36 +236,6 @@ Changelog:
   * Renamed duplicate `getVesselDocuments(vesselId)` method to `getProfessionalDocumentsByVesselId(vesselId)` 
   * Fixed method conflict that was preventing proper functionality of ports and refinery management features
   * Application now builds cleanly without warnings and all features work properly on Render deployment
-- July 2, 2025. **COMPLETE DOCUMENT FUNCTIONALITY REMOVAL**:
-  * Completely eliminated all document functionality from the entire system per user request
-  * Removed DocumentManagement component references and imports from AdminPanel.tsx
-  * Eliminated document tab navigation buttons and TabsContent sections from admin panel
-  * Cleaned up BrokerDashboard.tsx by removing document-related interfaces, queries, and mutations
-  * Removed documentsCount field from Deal interface and all document upload/download functionality
-  * Fixed mutation references and cleaned up all UI components related to document management
-  * System now runs successfully without any document features while maintaining all other SaaS functionality
-  * Maritime tracking, subscription management, ports, refineries, and vessel management remain fully operational
-- July 2, 2025. **RESTORED PROFESSIONAL ARTICLE GENERATION**:
-  * Restored ProfessionalArticleGenerator component functionality per user request to keep "old" working features
-  * Added ProfessionalArticleGenerator import back to VesselDetail.tsx
-  * Implemented TabsContent section for "articles" tab with full article generation interface
-  * Professional article generation now functional again with AI-powered maritime document creation
-  * Users can generate technical certificates, inspection reports, cargo manifests, and commercial analysis
-  * System maintains document management removal while preserving professional article generation functionality
-- July 2, 2025. **COMPREHENSIVE OIL TRADING DOCUMENT EXPANSION COMPLETED**:
-  * Successfully expanded professional article generator from 4 to 27+ comprehensive oil trading document types
-  * Added Trading Documents: Letter of Intent (LOI), Soft Corporate Offer (SCO), Purchase Order, Sales & Purchase Agreement (SPA)
-  * Added Financial Documents: Performance Bond (PB), Standby Letter of Credit (SBLC), Documentary Letter of Credit (DLC), invoices
-  * Added Shipping & Logistics: Bill of Lading (B/L), Packing List, Shipping Declaration, Discharge Permit, Delivery Report, Bunker Delivery Note
-  * Added Certificates & Quality: Certificate of Origin, SGS Inspection, Certificate of Quality/Quantity, Pre-discharge Inspection
-  * Added Safety & Compliance: Safety Data Sheet (SDS), Cargo Insurance, Risk Assessment documents
-  * Added Licenses & Permits: Export License, Import License for regulatory compliance
-  * Added Financial Records: Payment Receipt, Statement of Account for transaction documentation
-  * Created comprehensive AI prompts for each document type with industry-specific maritime and oil trading terminology
-  * All document types generate professional content with proper legal, commercial, and technical language
-  * Fixed complex VesselDetail.tsx syntax errors including duplicate TabsContent sections and stray closing tags
-  * **DEPLOYMENT READY**: System now supports complete oil trading workflow documentation from initial LOI through final delivery
-  * All systems operational: 288 vessels tracked, 89 ports loaded, OpenAI integration functional
 
 ## User Preferences
 
