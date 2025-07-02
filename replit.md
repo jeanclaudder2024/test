@@ -243,6 +243,13 @@ Changelog:
   * Navigation now shows: Vessels, Map, Refineries, Ports (Documents button removed)
   * Also removed Documents tab from vessel detail pages completely
   * Vessel detail pages now show: Overview, Analysis, Voyage, Professional Articles (Documents tab removed)
+- July 2, 2025. Fixed Production Deployment Synchronization Issues:
+  * Added missing `/api/admin/ports/:id` DELETE endpoint that was causing ports delete button failures
+  * Updated main pages to use admin endpoints for data consistency (refineries and ports pages now use /api/admin endpoints)
+  * Removed data caching (staleTime: 0) to ensure immediate fresh data display
+  * Fixed synchronization between admin panels and main navigation pages
+  * Local development working correctly with all CRUD operations functional
+  * **PRODUCTION DEPLOYMENT NEEDED**: Latest fixes require pushing code to Git repository and redeploying to Render
 
 ## User Preferences
 
