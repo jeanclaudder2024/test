@@ -259,24 +259,34 @@ export function EnhancedPortManagement() {
   // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: async (portId: number) => {
+      console.log('Deleting port with ID:', portId);
       const response = await fetch(`/api/admin/ports/${portId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
         },
       });
+      
+      console.log('Delete response status:', response.status);
+      
       if (!response.ok) {
         const errorText = await response.text();
+        console.error('Delete failed:', errorText);
         throw new Error(`Failed to delete port: ${errorText}`);
       }
-      // Handle response that might not contain JSON
-      const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
-        return response.json();
+      
+      // Parse JSON response
+      try {
+        const result = await response.json();
+        console.log('Delete successful:', result);
+        return result;
+      } catch (error) {
+        console.log('Response not JSON, but delete was successful');
+        return { success: true };
       }
-      return { success: true };
     },
-    onSuccess: () => {
+    onSuccess: (data, portId) => {
+      console.log('Delete mutation successful for port:', portId);
       queryClient.invalidateQueries({ queryKey: ['/api/admin/ports'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/port-stats'] });
       toast({
@@ -284,10 +294,11 @@ export function EnhancedPortManagement() {
         description: "Port deleted successfully",
       });
     },
-    onError: () => {
+    onError: (error, portId) => {
+      console.error('Delete mutation failed for port:', portId, error);
       toast({
         title: "Error",
-        description: "Failed to delete port",
+        description: error instanceof Error ? error.message : "Failed to delete port",
         variant: "destructive",
       });
     },
