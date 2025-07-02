@@ -340,10 +340,58 @@ export function EnhancedPortManagement() {
   };
 
   const handleDeletePort = (port: Port) => {
-    if (window.confirm(`Are you sure you want to delete ${port.name}?`)) {
-      deleteMutation.mutate(port.id);
+    if (window.confirm(`Are you sure you want to delete "${port.name}"? This action cannot be undone.`)) {
+      newDeleteMutation.mutate(port.id);
     }
   };
+
+  // New, completely rebuilt delete mutation
+  const newDeleteMutation = useMutation({
+    mutationFn: async (portId: number) => {
+      console.log(`Frontend: Starting delete for port ID: ${portId}`);
+      
+      const response = await fetch(`/api/admin/ports/${portId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        },
+      });
+      
+      console.log(`Frontend: Delete response status: ${response.status}`);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Frontend: Delete failed:`, errorText);
+        throw new Error(`Delete failed: ${errorText}`);
+      }
+      
+      const result = await response.json();
+      console.log(`Frontend: Delete response:`, result);
+      
+      return result;
+    },
+    onSuccess: (data, portId) => {
+      console.log(`Frontend: Delete successful for port ${portId}`);
+      
+      // Force refresh the data
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/ports'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/port-stats'] });
+      
+      // Show success message
+      toast({
+        title: "Success",
+        description: "Port deleted successfully",
+      });
+    },
+    onError: (error, portId) => {
+      console.error(`Frontend: Delete failed for port ${portId}:`, error);
+      toast({
+        title: "Delete Failed",
+        description: error instanceof Error ? error.message : "Unknown error occurred",
+        variant: "destructive",
+      });
+    },
+  });
 
   // Filter and search logic
   const filteredPorts = Array.isArray(ports) ? ports.filter((port: Port) => {

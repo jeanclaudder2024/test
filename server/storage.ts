@@ -651,9 +651,34 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deletePort(id: number): Promise<boolean> {
-    const result = await db.delete(ports).where(eq(ports.id, id));
-    // Check if any rows were actually deleted
-    return result.rowCount !== null && result.rowCount > 0;
+    console.log(`Storage: Attempting to delete port with ID: ${id}`);
+    
+    // First check if port exists
+    const existingPort = await this.getPortById(id);
+    if (!existingPort) {
+      console.log(`Storage: Port ${id} does not exist`);
+      return false;
+    }
+    
+    console.log(`Storage: Found port "${existingPort.name}" to delete`);
+    
+    try {
+      const result = await db.delete(ports).where(eq(ports.id, id));
+      console.log(`Storage: Delete result:`, result);
+      
+      // Verify deletion by trying to find the port again
+      const verifyDeleted = await this.getPortById(id);
+      if (verifyDeleted) {
+        console.log(`Storage: ERROR - Port ${id} still exists after delete`);
+        return false;
+      }
+      
+      console.log(`Storage: Successfully deleted port ${id}`);
+      return true;
+    } catch (error) {
+      console.error(`Storage: Error deleting port ${id}:`, error);
+      return false;
+    }
   }
 
   async getProgressEventsByVesselId(vesselId: number): Promise<ProgressEvent[]> {
