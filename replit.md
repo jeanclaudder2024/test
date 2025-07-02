@@ -245,6 +245,13 @@ Changelog:
   * Fixed mutation references and cleaned up all UI components related to document management
   * System now runs successfully without any document features while maintaining all other SaaS functionality
   * Maritime tracking, subscription management, ports, refineries, and vessel management remain fully operational
+- July 2, 2025. **RESTORED PROFESSIONAL ARTICLE GENERATION**:
+  * Restored ProfessionalArticleGenerator component functionality per user request to keep "old" working features
+  * Added ProfessionalArticleGenerator import back to VesselDetail.tsx
+  * Implemented TabsContent section for "articles" tab with full article generation interface
+  * Professional article generation now functional again with AI-powered maritime document creation
+  * Users can generate technical certificates, inspection reports, cargo manifests, and commercial analysis
+  * System maintains document management removal while preserving professional article generation functionality
 
 ## User Preferences
 

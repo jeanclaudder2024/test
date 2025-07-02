@@ -3,6 +3,7 @@ import { Vessel } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { SimpleVoyageDetails } from '@/components/vessels/SimpleVoyageDetails';
 import SimpleVesselMap from '@/components/map/SimpleVesselMap';
+import ProfessionalArticleGenerator from '@/components/vessels/ProfessionalArticleGenerator';
 
 
 import axios from 'axios';
@@ -996,6 +997,15 @@ export default function VesselDetail() {
               </Card>
             </div>
           </div>
+                </TabsContent>
+                
+                <TabsContent value="articles">
+                  <ProfessionalArticleGenerator 
+                    vesselId={vessel.id} 
+                    vesselName={vessel.name} 
+                  />
+                </TabsContent>
+              </Tabs>
         </>
       ) : (
         <div className="flex justify-center items-center h-64">
