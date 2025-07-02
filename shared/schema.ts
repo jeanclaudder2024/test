@@ -3,39 +3,109 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
 
-// Custom users table
+// Subscription Plans
+export const subscriptionPlans = pgTable("subscription_plans", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(), // "Free Trial", "Basic", "Pro", "Enterprise", "Broker"
+  description: text("description"),
+  price: decimal("price", { precision: 10, scale: 2 }).notNull().default("0.00"),
+  interval: text("interval").notNull().default("month"), // "month", "year"
+  trialDays: integer("trial_days").default(3),
+  stripeProductId: text("stripe_product_id"),
+  stripePriceId: text("stripe_price_id"),
+  isActive: boolean("is_active").notNull().default(true),
+  features: jsonb("features"), // JSON array of feature names
+  maxVessels: integer("max_vessels").default(-1), // -1 = unlimited
+  maxPorts: integer("max_ports").default(-1),
+  maxRefineries: integer("max_refineries").default(-1),
+  canAccessBrokerFeatures: boolean("can_access_broker_features").default(false),
+  canAccessAnalytics: boolean("can_access_analytics").default(false),
+  canExportData: boolean("can_export_data").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Enhanced Users table
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   email: text("email").notNull().unique(),
   password: text("password").notNull(), // Hashed password
   firstName: text("first_name"),
   lastName: text("last_name"),
-  role: text("role").notNull().default("user"), // 'admin' or 'user'
+  role: text("role").notNull().default("user"), // 'admin', 'user', 'broker'
+  stripeCustomerId: text("stripe_customer_id"),
+  isEmailVerified: boolean("is_email_verified").default(false),
+  emailVerificationToken: text("email_verification_token"),
+  resetPasswordToken: text("reset_password_token"),
+  resetPasswordExpires: timestamp("reset_password_expires"),
+  lastLoginAt: timestamp("last_login_at"),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // User subscriptions table
 export const userSubscriptions = pgTable("user_subscriptions", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
-  trialStartDate: timestamp("trial_start_date").notNull(),
-  trialEndDate: timestamp("trial_end_date").notNull(),
-  isActive: boolean("is_active").notNull().default(true),
+  planId: integer("plan_id").notNull().references(() => subscriptionPlans.id),
+  stripeSubscriptionId: text("stripe_subscription_id"),
+  status: text("status").notNull().default("trial"), // "trial", "active", "canceled", "past_due", "unpaid"
+  trialStartDate: timestamp("trial_start_date"),
+  trialEndDate: timestamp("trial_end_date"),
+  currentPeriodStart: timestamp("current_period_start"),
+  currentPeriodEnd: timestamp("current_period_end"),
+  canceledAt: timestamp("canceled_at"),
+  cancelAtPeriodEnd: boolean("cancel_at_period_end").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Payment history
+export const payments = pgTable("payments", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  subscriptionId: integer("subscription_id").references(() => userSubscriptions.id),
+  stripePaymentIntentId: text("stripe_payment_intent_id"),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  currency: text("currency").notNull().default("usd"),
+  status: text("status").notNull(), // "succeeded", "failed", "pending"
+  description: text("description"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
 // Define relations
-export const usersRelations = relations(users, ({ one }) => ({
+export const subscriptionPlansRelations = relations(subscriptionPlans, ({ many }) => ({
+  subscriptions: many(userSubscriptions),
+}));
+
+export const usersRelations = relations(users, ({ one, many }) => ({
   subscription: one(userSubscriptions, {
     fields: [users.id],
     references: [userSubscriptions.userId],
   }),
+  payments: many(payments),
 }));
 
-export const userSubscriptionsRelations = relations(userSubscriptions, ({ one }) => ({
+export const userSubscriptionsRelations = relations(userSubscriptions, ({ one, many }) => ({
   user: one(users, {
     fields: [userSubscriptions.userId],
     references: [users.id],
+  }),
+  plan: one(subscriptionPlans, {
+    fields: [userSubscriptions.planId],
+    references: [subscriptionPlans.id],
+  }),
+  payments: many(payments),
+}));
+
+export const paymentsRelations = relations(payments, ({ one }) => ({
+  user: one(users, {
+    fields: [payments.userId],
+    references: [users.id],
+  }),
+  subscription: one(userSubscriptions, {
+    fields: [payments.subscriptionId],
+    references: [userSubscriptions.id],
   }),
 }));
 
@@ -50,9 +120,21 @@ export const insertUserSchema = createInsertSchema(users).pick({
 
 export const insertUserSubscriptionSchema = createInsertSchema(userSubscriptions).pick({
   userId: true,
+  planId: true,
+  status: true,
   trialStartDate: true,
   trialEndDate: true,
-  isActive: true,
+});
+
+export const insertSubscriptionPlanSchema = createInsertSchema(subscriptionPlans).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertPaymentSchema = createInsertSchema(payments).omit({
+  id: true,
+  createdAt: true,
 });
 
 // Register schema with validation
@@ -1050,25 +1132,7 @@ export type InsertCompanyPartnership = z.infer<typeof insertCompanyPartnershipSc
 export type UserBrokerConnection = typeof userBrokerConnections.$inferSelect;
 export type InsertUserBrokerConnection = z.infer<typeof insertUserBrokerConnectionSchema>;
 
-// Subscription Plans
-export const subscriptionPlans = pgTable("subscription_plans", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  slug: text("slug").notNull().unique(),
-  description: text("description").notNull(),
-  monthlyPriceId: text("monthly_price_id").notNull(), // Stripe price ID for monthly billing
-  yearlyPriceId: text("yearly_price_id").notNull(), // Stripe price ID for yearly billing
-  monthlyPrice: decimal("monthly_price", { precision: 10, scale: 2 }).notNull(),
-  yearlyPrice: decimal("yearly_price", { precision: 10, scale: 2 }).notNull(),
-  currency: text("currency").default("usd"),
-  features: text("features").notNull(), // JSON array of features as a string
-  isPopular: boolean("is_popular").default(false),
-  trialDays: integer("trial_days").default(0),
-  sortOrder: integer("sort_order").default(0),
-  isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
+
 
 // Professional Document Management System
 export const professionalDocuments = pgTable("professional_documents", {
@@ -1106,14 +1170,7 @@ export type InsertProfessionalDocument = z.infer<typeof insertProfessionalDocume
 export type VesselDocumentAssociation = typeof vesselDocumentAssociations.$inferSelect;
 export type InsertVesselDocumentAssociation = z.infer<typeof insertVesselDocumentAssociationSchema>;
 
-export const insertSubscriptionPlanSchema = createInsertSchema(subscriptionPlans).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
 
-export type InsertSubscriptionPlan = z.infer<typeof insertSubscriptionPlanSchema>;
-export type SubscriptionPlan = typeof subscriptionPlans.$inferSelect;
 
 // Subscriptions (to track user subscriptions)
 export const subscriptions = pgTable("subscriptions", {

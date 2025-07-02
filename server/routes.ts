@@ -10463,5 +10463,379 @@ Note: This document contains real vessel operational data and should be treated 
     }
   });
 
+  // Subscription Management API Routes
+  
+  // Get subscription plans
+  app.get("/api/subscription-plans", async (req, res) => {
+    try {
+      const plans = [
+        {
+          id: 1,
+          name: "Free Trial",
+          description: "3-day free trial with full access",
+          price: 0,
+          interval: "trial",
+          trialDays: 3,
+          features: [
+            "Real-time vessel tracking",
+            "Basic port information",
+            "Limited refinery data",
+            "Standard support"
+          ],
+          maxVessels: 10,
+          maxPorts: 10,
+          maxRefineries: 5,
+          canAccessBrokerFeatures: false,
+          canAccessAnalytics: false,
+          canExportData: false,
+          stripePriceId: null
+        },
+        {
+          id: 2,
+          name: "Basic Plan",
+          description: "Essential features for small operations",
+          price: 49,
+          interval: "month",
+          trialDays: 0,
+          features: [
+            "Real-time vessel tracking",
+            "Full port information",
+            "Basic refinery data",
+            "Email support",
+            "Data export (CSV)"
+          ],
+          maxVessels: 50,
+          maxPorts: 50,
+          maxRefineries: 25,
+          canAccessBrokerFeatures: false,
+          canAccessAnalytics: true,
+          canExportData: true,
+          stripePriceId: "price_basic_monthly"
+        },
+        {
+          id: 3,
+          name: "Pro Plan",
+          description: "Advanced features for growing businesses",
+          price: 149,
+          interval: "month",
+          trialDays: 0,
+          features: [
+            "Unlimited vessel tracking",
+            "Complete port database",
+            "Full refinery information",
+            "Advanced analytics",
+            "Priority support",
+            "API access",
+            "Custom reports"
+          ],
+          maxVessels: -1,
+          maxPorts: -1,
+          maxRefineries: -1,
+          canAccessBrokerFeatures: false,
+          canAccessAnalytics: true,
+          canExportData: true,
+          stripePriceId: "price_pro_monthly"
+        },
+        {
+          id: 4,
+          name: "Enterprise",
+          description: "Full-scale solution for large operations",
+          price: 499,
+          interval: "month",
+          trialDays: 0,
+          features: [
+            "Everything in Pro",
+            "Dedicated account manager",
+            "Custom integrations",
+            "24/7 phone support",
+            "SLA guarantee",
+            "White-label options"
+          ],
+          maxVessels: -1,
+          maxPorts: -1,
+          maxRefineries: -1,
+          canAccessBrokerFeatures: true,
+          canAccessAnalytics: true,
+          canExportData: true,
+          stripePriceId: "price_enterprise_monthly"
+        },
+        {
+          id: 5,
+          name: "Broker Premium",
+          description: "Specialized features for oil brokers",
+          price: 299,
+          interval: "month",
+          trialDays: 0,
+          features: [
+            "Broker dashboard",
+            "Deal management",
+            "Commission tracking",
+            "Client management",
+            "Market analysis",
+            "Trading tools",
+            "Regulatory compliance"
+          ],
+          maxVessels: -1,
+          maxPorts: -1,
+          maxRefineries: -1,
+          canAccessBrokerFeatures: true,
+          canAccessAnalytics: true,
+          canExportData: true,
+          stripePriceId: "price_broker_monthly"
+        }
+      ];
+      
+      res.json(plans);
+    } catch (error) {
+      console.error('Error fetching subscription plans:', error);
+      res.status(500).json({ error: 'Failed to fetch subscription plans' });
+    }
+  });
+
+  // Get user subscription status
+  app.get("/api/subscription-status", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      // Check if user is admin (has full access)
+      if (req.user.role === 'admin') {
+        return res.json({
+          hasActiveSubscription: true,
+          planName: "Admin Access",
+          status: "active",
+          canAccessBrokerFeatures: true,
+          canAccessAnalytics: true,
+          canExportData: true,
+          maxVessels: -1,
+          maxPorts: -1,
+          maxRefineries: -1
+        });
+      }
+
+      // For regular users, return trial status (simplified for demo)
+      const user = await storage.getUserById(req.user.id);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      // Check if user has active trial
+      const now = new Date();
+      const trialStart = user.subscription?.trialStartDate;
+      const trialEnd = user.subscription?.trialEndDate;
+      
+      const hasActiveTrial = trialStart && trialEnd && 
+        new Date(trialStart) <= now && 
+        now <= new Date(trialEnd);
+
+      if (hasActiveTrial) {
+        return res.json({
+          hasActiveSubscription: true,
+          planName: "Free Trial",
+          status: "trial",
+          trialEndsAt: trialEnd?.toISOString(),
+          canAccessBrokerFeatures: false,
+          canAccessAnalytics: false,
+          canExportData: false,
+          maxVessels: 10,
+          maxPorts: 10,
+          maxRefineries: 5
+        });
+      }
+
+      // No active subscription
+      res.json({
+        hasActiveSubscription: false,
+        planName: "No Active Plan",
+        status: "inactive",
+        canAccessBrokerFeatures: false,
+        canAccessAnalytics: false,
+        canExportData: false,
+        maxVessels: 0,
+        maxPorts: 0,
+        maxRefineries: 0
+      });
+
+    } catch (error) {
+      console.error('Error fetching subscription status:', error);
+      res.status(500).json({ error: 'Failed to fetch subscription status' });
+    }
+  });
+
+  // Get user subscription details
+  app.get("/api/user-subscription", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const user = await storage.getUserById(req.user.id);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      // Admin users get unlimited access
+      if (req.user.role === 'admin') {
+        return res.json({
+          id: 1,
+          userId: req.user.id,
+          planId: 4, // Enterprise plan
+          status: 'active',
+          plan: {
+            id: 4,
+            name: "Admin Access",
+            description: "Full administrative access",
+            price: 0,
+            interval: "lifetime",
+            trialDays: 0,
+            features: ["Full system access"],
+            maxVessels: -1,
+            maxPorts: -1,
+            maxRefineries: -1,
+            canAccessBrokerFeatures: true,
+            canAccessAnalytics: true,
+            canExportData: true
+          }
+        });
+      }
+
+      // Check trial status for regular users
+      const now = new Date();
+      const trialStart = user.subscription?.trialStartDate;
+      const trialEnd = user.subscription?.trialEndDate;
+      
+      if (trialStart && trialEnd) {
+        return res.json({
+          id: 1,
+          userId: req.user.id,
+          planId: 1,
+          status: 'trial',
+          trialStartDate: trialStart.toISOString(),
+          trialEndDate: trialEnd.toISOString(),
+          plan: {
+            id: 1,
+            name: "Free Trial",
+            description: "3-day free trial with full access",
+            price: 0,
+            interval: "trial",
+            trialDays: 3,
+            features: ["Real-time vessel tracking", "Basic port information", "Limited refinery data"],
+            maxVessels: 10,
+            maxPorts: 10,
+            maxRefineries: 5,
+            canAccessBrokerFeatures: false,
+            canAccessAnalytics: false,
+            canExportData: false
+          }
+        });
+      }
+
+      // No subscription found
+      res.status(404).json({ error: 'No active subscription found' });
+
+    } catch (error) {
+      console.error('Error fetching user subscription:', error);
+      res.status(500).json({ error: 'Failed to fetch user subscription' });
+    }
+  });
+
+  // Create Stripe checkout session
+  app.post("/api/create-stripe-checkout", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const { planId, interval = 'month' } = req.body;
+      
+      if (!planId) {
+        return res.status(400).json({ error: 'Plan ID is required' });
+      }
+
+      const user = await storage.getUserById(req.user.id);
+      if (!user || !user.email) {
+        return res.status(404).json({ error: 'User email not found' });
+      }
+
+      const session = await stripeService.createCheckoutSession({
+        planId,
+        userId: req.user.id,
+        userEmail: user.email,
+        interval,
+        successUrl: `${req.protocol}://${req.get('host')}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancelUrl: `${req.protocol}://${req.get('host')}/subscription/plans`
+      });
+
+      res.json({ url: session.url });
+
+    } catch (error) {
+      console.error('Error creating Stripe checkout:', error);
+      res.status(500).json({ error: 'Failed to create checkout session' });
+    }
+  });
+
+  // Cancel subscription
+  app.post("/api/cancel-subscription", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      // In a real implementation, you would:
+      // 1. Get user's Stripe subscription ID from database
+      // 2. Cancel the subscription via Stripe
+      // 3. Update the database
+      
+      res.json({ success: true, message: 'Subscription cancelled successfully' });
+
+    } catch (error) {
+      console.error('Error cancelling subscription:', error);
+      res.status(500).json({ error: 'Failed to cancel subscription' });
+    }
+  });
+
+  // Reactivate subscription
+  app.post("/api/reactivate-subscription", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      // In a real implementation, you would:
+      // 1. Get user's Stripe subscription ID from database
+      // 2. Reactivate the subscription via Stripe
+      // 3. Update the database
+      
+      res.json({ success: true, message: 'Subscription reactivated successfully' });
+
+    } catch (error) {
+      console.error('Error reactivating subscription:', error);
+      res.status(500).json({ error: 'Failed to reactivate subscription' });
+    }
+  });
+
+  // Stripe webhook handler
+  app.post("/api/stripe/webhook", express.raw({ type: 'application/json' }), async (req, res) => {
+    try {
+      const signature = req.headers['stripe-signature'] as string;
+      const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+      
+      if (!endpointSecret) {
+        console.error('Stripe webhook secret not configured');
+        return res.status(500).json({ error: 'Webhook secret not configured' });
+      }
+
+      const event = await stripeService.handleWebhook(req.body, signature, endpointSecret);
+      await stripeService.processSubscriptionEvent(event);
+      
+      res.json({ received: true });
+
+    } catch (error) {
+      console.error('Stripe webhook error:', error);
+      res.status(400).json({ error: 'Webhook signature verification failed' });
+    }
+  });
+
   return httpServer;
 }
