@@ -3,7 +3,7 @@ import { Vessel } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { SimpleVoyageDetails } from '@/components/vessels/SimpleVoyageDetails';
 import SimpleVesselMap from '@/components/map/SimpleVesselMap';
-import ProfessionalArticleGenerator from '@/components/vessels/ProfessionalArticleGenerator';
+
 
 
 import axios from 'axios';
@@ -31,7 +31,7 @@ import { Label } from '@/components/ui/label';
 import {
   ArrowLeft, Ship, Calendar, Map, Info, Edit, Plus, Navigation, Anchor,
   Flag, Droplet, Package, AlertCircle, Truck, Gauge, BarChart, History,
-  Users, Clock, Compass, ArrowRight, FileText, FileCheck, Clipboard, Download, Globe,
+  Users, Clock, Compass, ArrowRight, FileText, Clipboard, Download, Globe,
   ZoomIn, ZoomOut, Fuel, Activity, Layers, Filter, Tag, Check, RotateCw,
   MapPin, ExternalLink, Factory, AlertTriangle, RefreshCw, Route
 } from 'lucide-react';
@@ -549,10 +549,7 @@ export default function VesselDetail() {
                     Voyage
                   </TabsTrigger>
 
-                  <TabsTrigger value="articles" className="flex items-center">
-                    <FileCheck className="h-4 w-4 mr-2" />
-                    Professional Articles
-                  </TabsTrigger>
+
                 </TabsList>
                 
                 <TabsContent value="details">
@@ -804,12 +801,7 @@ export default function VesselDetail() {
                 
 
 
-                <TabsContent value="articles">
-                  <ProfessionalArticleGenerator 
-                    vesselId={vessel.id} 
-                    vesselName={vessel.name} 
-                  />
-                </TabsContent>
+
               </Tabs>
             </div>
             
