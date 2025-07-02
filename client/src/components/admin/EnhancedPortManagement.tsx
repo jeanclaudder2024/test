@@ -266,9 +266,15 @@ export function EnhancedPortManagement() {
         },
       });
       if (!response.ok) {
-        throw new Error('Failed to delete port');
+        const errorText = await response.text();
+        throw new Error(`Failed to delete port: ${errorText}`);
       }
-      return response.json();
+      // Handle response that might not contain JSON
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        return response.json();
+      }
+      return { success: true };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/ports'] });

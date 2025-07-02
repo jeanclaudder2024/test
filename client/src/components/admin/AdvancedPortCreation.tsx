@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,13 +27,29 @@ import { useToast } from "@/hooks/use-toast";
 import { MapPin, Building2, Phone, Globe, Anchor, Truck, Factory } from 'lucide-react';
 import MapSelector from './MapSelector';
 
+interface Port {
+  id: number;
+  name: string;
+  country: string;
+  region: string;
+  lat: string;
+  lng: string;
+  type: string | null;
+  status: string | null;
+  capacity: number | null;
+  description: string | null;
+  lastUpdated: Date | null;
+  [key: string]: any; // For additional port fields
+}
+
 interface AdvancedPortCreationProps {
   open: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  editingPort?: Port | null;
 }
 
-export default function AdvancedPortCreation({ open, onClose, onSuccess }: AdvancedPortCreationProps) {
+export default function AdvancedPortCreation({ open, onClose, onSuccess, editingPort }: AdvancedPortCreationProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
@@ -113,6 +129,112 @@ export default function AdvancedPortCreation({ open, onClose, onSuccess }: Advan
     photo: ''
   });
 
+  // Effect to populate form when editing
+  useEffect(() => {
+    if (editingPort) {
+      setFormData({
+        name: editingPort.name || '',
+        country: editingPort.country || '',
+        region: editingPort.region || 'Asia-Pacific',
+        city: editingPort.city || '',
+        timezone: editingPort.timezone || '',
+        lat: editingPort.lat || '25.2048',
+        lng: editingPort.lng || '55.2708',
+        type: editingPort.type || 'commercial',
+        status: editingPort.status || 'operational',
+        capacity: editingPort.capacity?.toString() || '',
+        annualThroughput: editingPort.annualThroughput?.toString() || '',
+        operatingHours: editingPort.operatingHours || '24/7',
+        description: editingPort.description || '',
+        portAuthority: editingPort.portAuthority || '',
+        operator: editingPort.operator || '',
+        owner: editingPort.owner || '',
+        email: editingPort.email || '',
+        phone: editingPort.phone || '',
+        website: editingPort.website || '',
+        address: editingPort.address || '',
+        postalCode: editingPort.postalCode || '',
+        maxVesselLength: editingPort.maxVesselLength?.toString() || '',
+        maxVesselBeam: editingPort.maxVesselBeam?.toString() || '',
+        maxDraught: editingPort.maxDraught?.toString() || '',
+        channelDepth: editingPort.channelDepth?.toString() || '',
+        berthCount: editingPort.berthCount?.toString() || '',
+        totalBerthLength: editingPort.totalBerthLength?.toString() || '',
+        securityLevel: editingPort.securityLevel || 'ISPS Level 1',
+        pilotageRequired: editingPort.pilotageRequired || false,
+        tugAssistance: editingPort.tugAssistance || false,
+        customsFacilities: editingPort.customsFacilities || true,
+        quarantineFacilities: editingPort.quarantineFacilities || false,
+        safetyRecord: editingPort.safetyRecord || 'Excellent',
+        railConnections: editingPort.railConnections || false,
+        roadConnections: editingPort.roadConnections || true,
+        airportDistance: editingPort.airportDistance?.toString() || '',
+        warehouseArea: editingPort.warehouseArea?.toString() || '',
+        storageCapacity: editingPort.storageCapacity?.toString() || '',
+        averageWaitTime: editingPort.averageWaitTime?.toString() || '',
+        weatherRestrictions: editingPort.weatherRestrictions || '',
+        tidalRange: editingPort.tidalRange?.toString() || '',
+        portCharges: editingPort.portCharges || '',
+        currency: editingPort.currency || 'USD',
+        connectedRefineries: editingPort.connectedRefineries?.toString() || '0',
+        nearbyPorts: editingPort.nearbyPorts || '',
+        established: editingPort.established || '',
+        photo: editingPort.photo || ''
+      });
+    } else {
+      // Reset form for new port creation
+      setFormData({
+        name: '',
+        country: '',
+        region: 'Asia-Pacific',
+        city: '',
+        timezone: '',
+        lat: '25.2048',
+        lng: '55.2708',
+        type: 'commercial',
+        status: 'operational',
+        capacity: '',
+        annualThroughput: '',
+        operatingHours: '24/7',
+        description: '',
+        portAuthority: '',
+        operator: '',
+        owner: '',
+        email: '',
+        phone: '',
+        website: '',
+        address: '',
+        postalCode: '',
+        maxVesselLength: '',
+        maxVesselBeam: '',
+        maxDraught: '',
+        channelDepth: '',
+        berthCount: '',
+        totalBerthLength: '',
+        securityLevel: 'ISPS Level 1',
+        pilotageRequired: false,
+        tugAssistance: false,
+        customsFacilities: true,
+        quarantineFacilities: false,
+        safetyRecord: 'Excellent',
+        railConnections: false,
+        roadConnections: true,
+        airportDistance: '',
+        warehouseArea: '',
+        storageCapacity: '',
+        averageWaitTime: '',
+        weatherRestrictions: '',
+        tidalRange: '',
+        portCharges: '',
+        currency: 'USD',
+        connectedRefineries: '0',
+        nearbyPorts: '',
+        established: '',
+        photo: ''
+      });
+    }
+  }, [editingPort]);
+
   const regions = [
     'Asia-Pacific', 'Europe', 'North America', 'Latin America', 'Middle East', 'Africa'
   ];
@@ -152,10 +274,13 @@ export default function AdvancedPortCreation({ open, onClose, onSuccess }: Advan
     setIsSubmitting(true);
     
     try {
-      console.log('Submitting comprehensive port data:', formData);
+      console.log(editingPort ? 'Updating' : 'Creating', 'comprehensive port data:', formData);
       
-      const response = await fetch('/api/admin/ports', {
-        method: 'POST',
+      const url = editingPort ? `/api/admin/ports/${editingPort.id}` : '/api/admin/ports';
+      const method = editingPort ? 'PUT' : 'POST';
+      
+      const response = await fetch(url, {
+        method: method,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('authToken')}`
@@ -166,12 +291,12 @@ export default function AdvancedPortCreation({ open, onClose, onSuccess }: Advan
       const result = await response.json();
       
       if (!response.ok) {
-        throw new Error(result.message || 'Failed to create port');
+        throw new Error(result.message || `Failed to ${editingPort ? 'update' : 'create'} port`);
       }
 
       toast({
         title: "Success",
-        description: "Advanced port created successfully with all details"
+        description: `Advanced port ${editingPort ? 'updated' : 'created'} successfully with all details`
       });
       
       // Reset form
@@ -214,7 +339,7 @@ export default function AdvancedPortCreation({ open, onClose, onSuccess }: Advan
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Anchor className="h-5 w-5" />
-            Create Advanced Port
+            {editingPort ? 'Edit Port' : 'Create Advanced Port'}
           </DialogTitle>
         </DialogHeader>
         
@@ -838,7 +963,10 @@ export default function AdvancedPortCreation({ open, onClose, onSuccess }: Advan
               type="submit"
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Creating Advanced Port...' : 'Create Advanced Port'}
+              {isSubmitting 
+                ? (editingPort ? 'Updating Port...' : 'Creating Advanced Port...')
+                : (editingPort ? 'Update Port' : 'Create Advanced Port')
+              }
             </Button>
           </div>
         </form>
