@@ -651,6 +651,7 @@ export function EnhancedPortManagement() {
         open={showPortForm}
         onClose={handleFormClose}
         onSuccess={handleFormSuccess}
+        editingPort={editingPort}
       />
     </div>
   );
