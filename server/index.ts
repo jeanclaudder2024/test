@@ -36,32 +36,96 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Simple Supabase-only setup
-  console.log('🚀 Starting oil vessel tracking platform with Supabase...');
-  
-  // Server setup for Render deployment
-  const port = parseInt(process.env.PORT || "5000", 10);
-  
-  // Note: Authentication will be handled on the frontend with Supabase
-  
-  // Initialize custom authentication tables
   try {
-    const { initializeCustomAuthTables } = await import("./database-init");
-    await initializeCustomAuthTables();
-  } catch (error) {
-    console.error("Failed to initialize auth tables:", error);
-  }
+    // Simple Supabase-only setup
+    console.log('🚀 Starting oil vessel tracking platform with Supabase...');
+    
+    // Server setup for Render deployment
+    const port = parseInt(process.env.PORT || "5000", 10);
+    
+    // Add timeout handling for Render
+    const startupTimeout = setTimeout(() => {
+      console.error('Startup timeout - forcing server start');
+      process.exit(1);
+    }, 60000); // 60 second timeout
+    
+    // Initialize custom authentication tables with timeout
+    try {
+      console.log('Initializing database...');
+      const { initializeCustomAuthTables } = await import("./database-init");
+      await Promise.race([
+        initializeCustomAuthTables(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Database init timeout')), 30000))
+      ]);
+      console.log('Database initialized successfully');
+    } catch (error) {
+      console.error("Database init failed, continuing anyway:", error);
+    }
 
-  // Import and register API routes
-  const { registerRoutes } = await import("./routes");
-  const server = await registerRoutes(app);
-  
-  // Start the server - bind to 0.0.0.0 for Render deployment
-  server.listen(port, "0.0.0.0", () => {
-    log(`Server running on port ${port}`);
-  });
-  
-  console.log('✅ Platform ready with Supabase authentication!');
+    // Import and register API routes
+    console.log('Registering routes...');
+    const { registerRoutes } = await import("./routes");
+    const server = await registerRoutes(app);
+    
+    // Setup Vite in development mode BEFORE starting the server
+    if (process.env.NODE_ENV === "development") {
+      try {
+        const { setupVite } = await import("./vite");
+        await setupVite(app, server);
+        log("✅ Vite development server configured successfully");
+      } catch (error) {
+        console.error("❌ Vite setup failed:", error);
+        console.log("Development mode: Vite setup skipped");
+      }
+    } else {
+      // Production mode: serve static files
+      const path = await import("path");
+      const fs = await import("fs");
+      
+      // Static files are built to dist/client by Vite
+      const staticPath = path.join(process.cwd(), "dist", "client");
+      const indexPath = path.join(staticPath, "index.html");
+      
+      if (fs.existsSync(indexPath)) {
+        app.use(express.static(staticPath));
+        app.get("*", (_req, res) => {
+          res.sendFile(indexPath);
+        });
+        log(`Production static files served from ${staticPath}`);
+      } else {
+        // List available directories for debugging
+        const currentDir = fs.readdirSync(process.cwd());
+        log(`Available directories: ${currentDir.join(", ")}`);
+        
+        // Serve basic response
+        app.get("*", (_req, res) => {
+          res.status(200).send(`
+            <html>
+              <head><title>Oil Vessel Tracker</title></head>
+              <body>
+                <h1>Oil Vessel Tracking Platform</h1>
+                <p>API is running. Static files not found.</p>
+                <p>Available directories: ${currentDir.join(", ")}</p>
+              </body>
+            </html>
+          `);
+        });
+        log("Serving basic HTML response - static files not found");
+      }
+    }
+    
+    // Clear startup timeout
+    clearTimeout(startupTimeout);
+    
+    // Start the server - bind to 0.0.0.0 for Render deployment
+    server.listen(port, "0.0.0.0", () => {
+      console.log(`✅ Server running on port ${port}`);
+      console.log('✅ Platform ready with Supabase authentication!');
+    });
+  } catch (error) {
+    console.error('Fatal startup error:', error);
+    process.exit(1);
+  }
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
@@ -70,53 +134,4 @@ app.use((req, res, next) => {
     res.status(status).json({ message });
     throw err;
   });
-
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  if (process.env.NODE_ENV === "development") {
-    try {
-      const { setupVite } = await import("./vite");
-      await setupVite(app, server);
-    } catch (error) {
-      console.log("Development mode: Vite setup skipped");
-    }
-  } else {
-    // Production mode: serve static files
-    const path = await import("path");
-    const fs = await import("fs");
-    
-    // Static files are built to dist/client by Vite
-    const staticPath = path.join(process.cwd(), "dist", "client");
-    const indexPath = path.join(staticPath, "index.html");
-    
-    if (fs.existsSync(indexPath)) {
-      app.use(express.static(staticPath));
-      app.get("*", (_req, res) => {
-        res.sendFile(indexPath);
-      });
-      log(`Production static files served from ${staticPath}`);
-    } else {
-      // List available directories for debugging
-      const currentDir = fs.readdirSync(process.cwd());
-      log(`Available directories: ${currentDir.join(", ")}`);
-      
-      // Serve basic response
-      app.get("*", (_req, res) => {
-        res.status(200).send(`
-          <html>
-            <head><title>Oil Vessel Tracker</title></head>
-            <body>
-              <h1>Oil Vessel Tracking Platform</h1>
-              <p>API is running. Static files not found.</p>
-              <p>Available directories: ${currentDir.join(", ")}</p>
-            </body>
-          </html>
-        `);
-      });
-      log("Serving basic HTML response - static files not found");
-    }
-  }
-
-  // Server already started above - no need to start again
 })();
