@@ -1774,7 +1774,7 @@ export class DatabaseStorage implements IStorage {
     try {
       const [updatedOilType] = await db
         .update(oilTypes)
-        .set({ ...oilType, updatedAt: new Date() })
+        .set(oilType)
         .where(eq(oilTypes.id, id))
         .returning();
       return updatedOilType;

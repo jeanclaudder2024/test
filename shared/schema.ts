@@ -428,6 +428,18 @@ export const insertStatsSchema = createInsertSchema(stats).omit({
   lastUpdated: true,
 });
 
+// Oil Types Management - Simple version
+export const oilTypes = pgTable("oil_types", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(), // Simple oil type name like "Crude Oil", "Diesel", etc.
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertOilTypeSchema = createInsertSchema(oilTypes).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Type Exports
 
 export type InsertVessel = z.infer<typeof insertVesselSchema>;
@@ -443,6 +455,9 @@ export type ProgressEvent = typeof progressEvents.$inferSelect;
 
 export type InsertBroker = z.infer<typeof insertBrokerSchema>;
 export type Broker = typeof brokers.$inferSelect;
+
+export type InsertOilType = z.infer<typeof insertOilTypeSchema>;
+export type OilType = typeof oilTypes.$inferSelect;
 
 // Real Companies - Professional data entered by admin
 export const realCompanies = pgTable("real_companies", {
@@ -1418,29 +1433,7 @@ export const gatesRelations = relations(gates, ({ many, one }) => ({
   }),
 }));
 
-// Oil Types Management
-export const oilTypes = pgTable("oil_types", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull().unique(),
-  description: text("description"),
-  apiGravity: decimal("api_gravity", { precision: 5, scale: 2 }),
-  sulfurContent: text("sulfur_content"),
-  viscosity: text("viscosity"),
-  color: text("color"),
-  origin: text("origin"),
-  isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
 
-export const insertOilTypeSchema = createInsertSchema(oilTypes).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export type InsertOilType = z.infer<typeof insertOilTypeSchema>;
-export type OilType = typeof oilTypes.$inferSelect;
 
 // Landing Page Management Tables
 export const landingPageSections = pgTable("landing_page_sections", {

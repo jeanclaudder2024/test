@@ -27,6 +27,7 @@ import { CompanyManagement } from "@/components/admin/CompanyManagement";
 import { BrokerManagement } from "@/components/admin/BrokerManagement";
 import FilterManagement from "@/components/admin/FilterManagement";
 import DocumentManagement from "@/components/admin/DocumentManagement";
+import SimpleOilTypeManagement from "@/components/admin/SimpleOilTypeManagement";
 
 export default function AdminPanel() {
   const [_, navigate] = useLocation();
@@ -103,6 +104,7 @@ export default function AdminPanel() {
               <option value="refineries">🏭 Refinery Management</option>
               <option value="documents">📄 Professional Articles</option>
               <option value="brokers">🤝 Broker Management</option>
+              <option value="oil-types">⛽ Oil Types</option>
               <option value="filters">🔧 Filter Management</option>
               <option value="data">💾 Data Management</option>
               <option value="migration">🔄 Database Migration</option>
@@ -188,6 +190,15 @@ export default function AdminPanel() {
               <Users className="h-4 w-4" />
               <span className="hidden xl:inline font-medium">Brokers</span>
               <span className="xl:hidden">Brokers</span>
+            </TabsTrigger>
+            
+            <TabsTrigger 
+              value="oil-types" 
+              className="flex items-center gap-2 data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-200 hover:bg-amber-50 rounded-lg"
+            >
+              <Droplets className="h-4 w-4" />
+              <span className="hidden xl:inline font-medium">Oil Types</span>
+              <span className="xl:hidden">Oil</span>
             </TabsTrigger>
             
             <TabsTrigger 
@@ -411,6 +422,10 @@ export default function AdminPanel() {
 
         <TabsContent value="brokers" className="space-y-4">
           <BrokerManagement />
+        </TabsContent>
+
+        <TabsContent value="oil-types" className="space-y-4">
+          <SimpleOilTypeManagement />
         </TabsContent>
 
         <TabsContent value="filters" className="space-y-4">
