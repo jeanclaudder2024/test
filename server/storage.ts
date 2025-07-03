@@ -663,6 +663,22 @@ export class DatabaseStorage implements IStorage {
     console.log(`Storage: Found port "${existingPort.name}" to delete`);
     
     try {
+      // First, remove foreign key references from vessels table
+      console.log(`Storage: Removing foreign key references for port ${id}`);
+      
+      // Update vessels that have this port as departure port
+      await db.update(vessels)
+        .set({ departurePort: null })
+        .where(eq(vessels.departurePort, existingPort.name));
+      
+      // Update vessels that have this port as destination port  
+      await db.update(vessels)
+        .set({ destinationPort: null })
+        .where(eq(vessels.destinationPort, existingPort.name));
+
+      console.log(`Storage: Foreign key references removed, now deleting port`);
+      
+      // Now delete the port
       const result = await db.delete(ports).where(eq(ports.id, id));
       console.log(`Storage: Delete result:`, result);
       
@@ -673,7 +689,7 @@ export class DatabaseStorage implements IStorage {
         return false;
       }
       
-      console.log(`Storage: Successfully deleted port ${id}`);
+      console.log(`Storage: Successfully deleted port ${id} and removed all references`);
       return true;
     } catch (error) {
       console.error(`Storage: Error deleting port ${id}:`, error);

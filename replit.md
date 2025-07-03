@@ -256,6 +256,12 @@ Changelog:
   * Fixed refinery delete functionality working in both local and production environments
   * Production DELETE endpoint confirmed working at https://pertrodealhube.onrender.com/api/refineries/:id
   * Both GET, POST, and DELETE public refineries endpoints now fully functional in production deployment
+- July 3, 2025. Fixed Port Delete Functionality and Foreign Key Constraint Issues:
+  * Fixed port deletion failing due to foreign key constraint violations with vessels table
+  * Updated deletePort function in storage.ts to remove vessel references before deleting port
+  * Added logic to set departurePort and destinationPort to null for affected vessels before port deletion
+  * Port deletion now properly handles database relationships and completes successfully
+  * Fixed port management page showing deleted ports by resolving underlying deletion failures
 
 ## User Preferences
 
