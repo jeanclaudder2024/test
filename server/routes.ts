@@ -211,9 +211,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register company management routes
   app.use("/api/companies", companyRouter);
   
-  // Register oil type management routes
-  const { default: oilTypeRoutes } = await import("./routes/oilTypeRoutes.js");
-  app.use("/api/oil-types", oilTypeRoutes);
+  // Oil types now handled by simplified admin routes below
+  // Removed complex oilTypeRoutes to avoid schema conflicts
   
   // Register region management routes
   const { default: regionRoutes } = await import("./routes/regionRoutes.js");

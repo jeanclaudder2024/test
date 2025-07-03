@@ -5,6 +5,7 @@ import { useVesselClient } from '@/hooks/useVesselClient';
 import { Vessel } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useQuery } from '@tanstack/react-query';
 import { 
   Table, 
   TableBody, 
@@ -156,6 +157,18 @@ const getFlagCode = (countryName: string): string | null => {
 };
 
 export default function Vessels() {
+  // Fetch oil types from database
+  interface OilType {
+    id: number;
+    name: string;
+    createdAt: string;
+  }
+  
+  const { data: oilTypes = [], isLoading: oilTypesLoading } = useQuery<OilType[]>({
+    queryKey: ["/api/admin/oil-types"],
+    staleTime: 0, // Always fetch fresh data
+  });
+
   // For direct API access using the API endpoint
   const [apiVessels, setApiVessels] = useState<Vessel[]>([]);
   const [apiLoading, setApiLoading] = useState(false);
@@ -412,11 +425,21 @@ export default function Vessels() {
     setLoading(wsLoading && apiLoading);
   }, [realTimeVessels, apiVessels, wsConnected, wsLoading, apiLoading, MAX_OIL_VESSELS]);
   
-  // Helper function to determine oil category
+  // Helper function to determine oil category using database oil types
   const getOilCategory = (cargoType: string | null | undefined): string => {
-    if (!cargoType) return "Other";
-    const upperCargoType = cargoType.toUpperCase();
+    if (!cargoType || oilTypes.length === 0) return "Other";
+    const cargoTypeLower = cargoType.toLowerCase();
     
+    // Check if cargo type matches any oil type name from database
+    for (const oilType of oilTypes) {
+      const oilTypeLower = oilType.name.toLowerCase();
+      if (cargoTypeLower.includes(oilTypeLower) || oilTypeLower.includes(cargoTypeLower)) {
+        return oilType.name;
+      }
+    }
+    
+    // Keep fallback to hardcoded categories for backwards compatibility
+    const upperCargoType = cargoType.toUpperCase();
     for (const [category, keywords] of Object.entries(OIL_CATEGORIES)) {
       if (keywords.some(keyword => upperCargoType.includes(keyword))) {
         return category;
@@ -450,11 +473,18 @@ export default function Vessels() {
     }));
   }, [vessels]);
   
-  // Get unique oil categories present in the data
+  // Get unique oil categories from both vessels data and database oil types
   const availableOilCategories = useMemo(() => {
-    const categories = vesselsWithCategories.map(v => v.oilCategory);
-    return Array.from(new Set(categories)).sort();
-  }, [vesselsWithCategories]);
+    // Get categories from vessels
+    const vesselCategories = vesselsWithCategories.map(v => v.oilCategory);
+    
+    // Get categories from database oil types
+    const databaseCategories = oilTypes.map(oilType => oilType.name);
+    
+    // Combine both sources and remove duplicates
+    const allCategories = [...vesselCategories, ...databaseCategories];
+    return Array.from(new Set(allCategories)).filter(cat => cat !== "Other").sort();
+  }, [vesselsWithCategories, oilTypes]);
   
   // Filter vessels based on search term and selected oil types
   const filteredVessels = useMemo(() => {
