@@ -5,7 +5,7 @@ import {
   refineryPortConnections, vesselPortConnections, companies, vesselRefineryConnections,
   brokerCompanies, companyPartnerships, userBrokerConnections,
   subscriptionPlans, subscriptions, paymentMethods, invoices, landingPageContent,
-  vesselDocuments, professionalDocuments, oilTypes,
+  vesselDocuments, professionalDocuments, oilTypes, vesselTypes,
   realCompanies, fakeCompanies,
   brokerDeals, brokerDocuments, adminBrokerFiles, brokerDealActivities, brokerStats,
   User, InsertUser, 
@@ -41,7 +41,7 @@ import {
   LandingPageSection, InsertLandingPageSection,
   LandingPageImage, InsertLandingPageImage,
   LandingPageBlock, InsertLandingPageBlock,
-  regions, OilType, InsertOilType, Region, InsertRegion,
+  regions, OilType, InsertOilType, VesselType, InsertVesselType, Region, InsertRegion,
   maritimeDocuments, MaritimeDocument, InsertMaritimeDocument,
   adminDocuments, AdminDocument, InsertAdminDocument,
   documentTemplates, DocumentTemplate, InsertDocumentTemplate,
@@ -211,6 +211,13 @@ export interface IStorage {
   createOilType(oilType: InsertOilType): Promise<OilType>;
   updateOilType(id: number, oilType: Partial<InsertOilType>): Promise<OilType | undefined>;
   deleteOilType(id: number): Promise<boolean>;
+  
+  // Vessel Types Management methods
+  getVesselTypes(): Promise<VesselType[]>;
+  getVesselTypeById(id: number): Promise<VesselType | undefined>;
+  createVesselType(vesselType: InsertVesselType): Promise<VesselType>;
+  updateVesselType(id: number, vesselType: Partial<InsertVesselType>): Promise<VesselType | undefined>;
+  deleteVesselType(id: number): Promise<boolean>;
   
   // Regions Filter Management methods
   getRegions(): Promise<Region[]>;
@@ -1792,6 +1799,62 @@ export class DatabaseStorage implements IStorage {
       return result.length > 0;
     } catch (error) {
       console.error('Error deleting oil type:', error);
+      return false;
+    }
+  }
+
+  // Vessel Types Management methods
+  async getVesselTypes(): Promise<VesselType[]> {
+    try {
+      return await db.select().from(vesselTypes).orderBy(vesselTypes.name);
+    } catch (error) {
+      console.error('Error fetching vessel types:', error);
+      return [];
+    }
+  }
+
+  async getVesselTypeById(id: number): Promise<VesselType | undefined> {
+    try {
+      const [vesselType] = await db.select().from(vesselTypes).where(eq(vesselTypes.id, id));
+      return vesselType || undefined;
+    } catch (error) {
+      console.error('Error fetching vessel type by ID:', error);
+      return undefined;
+    }
+  }
+
+  async createVesselType(vesselType: InsertVesselType): Promise<VesselType> {
+    try {
+      const [newVesselType] = await db.insert(vesselTypes).values(vesselType).returning();
+      return newVesselType;
+    } catch (error) {
+      console.error('Error creating vessel type:', error);
+      throw error;
+    }
+  }
+
+  async updateVesselType(id: number, vesselType: Partial<InsertVesselType>): Promise<VesselType | undefined> {
+    try {
+      const [updatedVesselType] = await db
+        .update(vesselTypes)
+        .set({ ...vesselType, updatedAt: new Date() })
+        .where(eq(vesselTypes.id, id))
+        .returning();
+      return updatedVesselType;
+    } catch (error) {
+      console.error('Error updating vessel type:', error);
+      return undefined;
+    }
+  }
+
+  async deleteVesselType(id: number): Promise<boolean> {
+    try {
+      console.log('Attempting to delete vessel type with ID:', id);
+      const result = await db.delete(vesselTypes).where(eq(vesselTypes.id, id)).returning();
+      console.log('Delete result:', result);
+      return result.length > 0;
+    } catch (error) {
+      console.error('Error deleting vessel type:', error);
       return false;
     }
   }

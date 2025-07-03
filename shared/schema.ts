@@ -440,6 +440,24 @@ export const insertOilTypeSchema = createInsertSchema(oilTypes).omit({
   createdAt: true,
 });
 
+// Vessel Types Management - Dynamic vessel type system
+export const vesselTypes = pgTable("vessel_types", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(), // Vessel type name like "Oil Tanker", "Container Ship", etc.
+  description: text("description"), // Detailed description of the vessel type
+  category: text("category"), // e.g., 'TANKER', 'CARGO', 'CONTAINER', etc.
+  icon: text("icon"), // emoji or icon for UI display
+  color: text("color"), // hex color for map markers
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertVesselTypeSchema = createInsertSchema(vesselTypes).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Type Exports
 
 export type InsertVessel = z.infer<typeof insertVesselSchema>;
@@ -458,6 +476,9 @@ export type Broker = typeof brokers.$inferSelect;
 
 export type InsertOilType = z.infer<typeof insertOilTypeSchema>;
 export type OilType = typeof oilTypes.$inferSelect;
+
+export type InsertVesselType = z.infer<typeof insertVesselTypeSchema>;
+export type VesselType = typeof vesselTypes.$inferSelect;
 
 // Real Companies - Professional data entered by admin
 export const realCompanies = pgTable("real_companies", {
