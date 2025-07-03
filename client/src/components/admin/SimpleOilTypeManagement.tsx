@@ -37,7 +37,7 @@ export default function SimpleOilTypeManagement() {
   const queryClient = useQueryClient();
 
   // Fetch oil types
-  const { data: oilTypes = [], isLoading } = useQuery({
+  const { data: oilTypes = [], isLoading } = useQuery<OilType[]>({
     queryKey: ["/api/admin/oil-types"],
     staleTime: 0, // Always fetch fresh data
   });
@@ -45,11 +45,11 @@ export default function SimpleOilTypeManagement() {
   // Create oil type mutation
   const createOilTypeMutation = useMutation({
     mutationFn: async (newOilType: CreateOilTypeForm) => {
-      const response = await apiRequest("POST", "/api/admin/oil-types", newOilType);
-      if (!response.ok) {
-        throw new Error("Failed to create oil type");
-      }
-      return response.json();
+      console.log("Creating oil type:", newOilType);
+      return await apiRequest("/api/admin/oil-types", {
+        method: "POST",
+        body: JSON.stringify(newOilType)
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/oil-types"] });
@@ -72,10 +72,10 @@ export default function SimpleOilTypeManagement() {
   // Delete oil type mutation
   const deleteOilTypeMutation = useMutation({
     mutationFn: async (id: number) => {
-      const response = await apiRequest("DELETE", `/api/admin/oil-types/${id}`);
-      if (!response.ok) {
-        throw new Error("Failed to delete oil type");
-      }
+      console.log("Deleting oil type:", id);
+      return await apiRequest(`/api/admin/oil-types/${id}`, {
+        method: "DELETE"
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/oil-types"] });
@@ -101,7 +101,7 @@ export default function SimpleOilTypeManagement() {
   });
 
   // Filter oil types based on search
-  const filteredOilTypes = oilTypes.filter((oilType: OilType) => {
+  const filteredOilTypes = (oilTypes as OilType[]).filter((oilType: OilType) => {
     return oilType.name.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
