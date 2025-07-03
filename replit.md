@@ -329,6 +329,15 @@ Changelog:
   * **Fallback Support**: Added fallback vessel type options when oil types aren't loaded for system reliability
   * **Successfully Displaying 285 Vessels**: Confirmed all map features working with vessel markers, ports, refineries, and interactive controls
   * **Professional Maritime Interface**: Both map pages fully operational with dynamic filtering based on admin-managed oil types
+- July 3, 2025. **COMPLETE OIL TYPE INTEGRATION: Add New Vessel Forms Updated**:
+  * **Enhanced AddVesselForm Component**: Integrated Oil Type Management system into comprehensive vessel creation form
+  * **Dynamic Oil Type Dropdown**: Oil Type / Cargo Type field now populates from /api/admin/oil-types endpoint
+  * **VesselForm Component Updated**: Simple vessel form also uses dynamic oil types for cargo type selection
+  * **Real-time Oil Type Loading**: Both forms show loading state while fetching oil types from admin panel
+  * **Intelligent Fallback System**: Provides hardcoded oil type options when admin panel types aren't available
+  * **Consistent User Experience**: All vessel creation interfaces now use same oil types managed by administrators
+  * **Professional Form Enhancement**: Added oil barrel emoji and improved field labeling for better UX
+  * **System-Wide Oil Type Sync**: Vessel creation, filtering, and display all use centralized oil type management
 
 ## User Preferences
 
