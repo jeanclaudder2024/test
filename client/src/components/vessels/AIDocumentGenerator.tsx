@@ -11,7 +11,7 @@ import { Brain, FileText, Download, Eye, Sparkles, Bot, AlertTriangle } from "lu
 
 interface DocumentTemplate {
   id: number;
-  name: string;
+  title: string;
   description: string;
   category: string;
   isActive: boolean;
@@ -185,7 +185,7 @@ export default function AIDocumentGenerator({ vesselId, vesselName }: AIDocument
                     <div>
                       <CardTitle className="text-lg flex items-center gap-2">
                         <Brain className="h-5 w-5 text-blue-600" />
-                        {template.name}
+                        {template.title}
                       </CardTitle>
                       <Badge className={`mt-2 ${getCategoryBadge(template.category)}`}>
                         {template.category}
@@ -215,7 +215,7 @@ export default function AIDocumentGenerator({ vesselId, vesselName }: AIDocument
                           Generate AI Document
                         </DialogTitle>
                         <DialogDescription>
-                          This will generate "{template.name}" using {vesselName}'s data and AI processing.
+                          This will generate "{template.title}" using {vesselName}'s data and AI processing.
                         </DialogDescription>
                       </DialogHeader>
                       <div className="py-4">
