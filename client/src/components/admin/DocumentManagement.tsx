@@ -389,7 +389,7 @@ export default function DocumentManagement() {
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No vessel</SelectItem>
+                    <SelectItem value="none">No vessel</SelectItem>
                     {isLoadingVessels ? (
                       <div className="p-2 text-center text-sm text-gray-500">Loading vessels...</div>
                     ) : (
