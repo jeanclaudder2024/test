@@ -666,35 +666,65 @@ export class DatabaseStorage implements IStorage {
       // First, find any vessels that reference this port and update them
       console.log(`Storage: Checking for vessel references to port ${id} (${existingPort.name})`);
       
-      // Get all vessels that might reference this port  
-      const allVessels = await db.select().from(vessels);
+      // Since the database has foreign key constraints, we need to use direct SQL to update vessels
+      // that reference this port as an integer foreign key
       let updatedCount = 0;
       
-      for (const vessel of allVessels) {
-        let needsUpdate = false;
-        const updates: any = {};
+      try {
+        // Import the postgres pool for direct SQL execution
+        const { pool } = await import('./db');
         
-        // Check if departure port references this port (by ID or name)
-        if (vessel.departurePort === id.toString() || 
-            vessel.departurePort === existingPort.name ||
-            (vessel.departurePort && typeof vessel.departurePort === 'string' && vessel.departurePort.includes(existingPort.name))) {
-          updates.departurePort = null;
-          needsUpdate = true;
-        }
+        // Update vessels where departure_port equals the port ID (as integer foreign key)
+        const departureUpdateResult = await pool.query(`
+          UPDATE vessels 
+          SET departure_port = NULL 
+          WHERE departure_port = $1::text
+        `, [id]);
         
-        // Check if destination port references this port (by ID or name)
-        if (vessel.destinationPort === id.toString() || 
-            vessel.destinationPort === existingPort.name ||
-            (vessel.destinationPort && typeof vessel.destinationPort === 'string' && vessel.destinationPort.includes(existingPort.name))) {
-          updates.destinationPort = null;
-          needsUpdate = true;
-        }
+        // Update vessels where destination_port equals the port ID (as integer foreign key)  
+        const destinationUpdateResult = await pool.query(`
+          UPDATE vessels 
+          SET destination_port = NULL 
+          WHERE destination_port = $1::text
+        `, [id]);
         
-        if (needsUpdate) {
-          await db.update(vessels)
-            .set(updates)
-            .where(eq(vessels.id, vessel.id));
-          updatedCount++;
+        updatedCount = (departureUpdateResult?.rowCount || 0) + (destinationUpdateResult?.rowCount || 0);
+        console.log(`Storage: Updated ${updatedCount} vessels with foreign key references to port ${id}`);
+        
+      } catch (sqlError) {
+        console.log(`Storage: Direct SQL update failed, trying Drizzle approach...`, sqlError);
+        
+        // Fallback to Drizzle ORM approach
+        const allVessels = await db.select().from(vessels);
+        
+        for (const vessel of allVessels) {
+          let needsUpdate = false;
+          const updates: any = {};
+          
+          // Check if departure port references this port (by integer ID, string ID, or name)
+          if (vessel.departurePort === id || 
+              vessel.departurePort === id.toString() || 
+              vessel.departurePort === existingPort.name ||
+              (vessel.departurePort && typeof vessel.departurePort === 'string' && vessel.departurePort.includes(existingPort.name))) {
+            updates.departurePort = null;
+            needsUpdate = true;
+          }
+          
+          // Check if destination port references this port (by integer ID, string ID, or name)
+          if (vessel.destinationPort === id || 
+              vessel.destinationPort === id.toString() || 
+              vessel.destinationPort === existingPort.name ||
+              (vessel.destinationPort && typeof vessel.destinationPort === 'string' && vessel.destinationPort.includes(existingPort.name))) {
+            updates.destinationPort = null;
+            needsUpdate = true;
+          }
+          
+          if (needsUpdate) {
+            await db.update(vessels)
+              .set(updates)
+              .where(eq(vessels.id, vessel.id));
+            updatedCount++;
+          }
         }
       }
       

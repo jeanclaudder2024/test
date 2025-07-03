@@ -2998,29 +2998,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Public port delete endpoint (consolidated - no auth required for testing)
   apiRouter.delete("/ports/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      console.log(`API: Received delete request for port ID: ${id}`);
+      console.log(`Public API: Received delete request for port ID: ${id}`);
       
       if (isNaN(id)) {
-        console.log(`API: Invalid port ID: ${req.params.id}`);
+        console.log(`Public API: Invalid port ID: ${req.params.id}`);
         return res.status(400).json({ message: "Invalid port ID" });
       }
       
-      console.log(`API: Calling storage.deletePort(${id})`);
+      console.log(`Public API: Calling storage.deletePort(${id})`);
       const deleted = await storage.deletePort(id);
-      console.log(`API: storage.deletePort returned: ${deleted}`);
+      console.log(`Public API: storage.deletePort returned: ${deleted}`);
       
       if (!deleted) {
-        console.log(`API: Port ${id} not found or delete failed`);
+        console.log(`Public API: Port ${id} not found or delete failed`);
         return res.status(404).json({ message: "Port not found" });
       }
       
-      console.log(`API: Successfully deleted port ${id}`);
+      console.log(`Public API: Successfully deleted port ${id}`);
       res.json({ success: true, message: `Port ${id} deleted successfully` });
     } catch (error) {
-      console.error(`API: Error deleting port ${req.params.id}:`, error);
+      console.error(`Public API: Error deleting port ${req.params.id}:`, error);
       res.status(500).json({ message: "Failed to delete port" });
     }
   });
@@ -5269,42 +5270,7 @@ Only use authentic, real-world data for existing refineries.`;
       });
     }
   });
-  
-  // Public port deletion endpoint (no auth required for testing)
-  apiRouter.delete("/ports/:id", async (req, res) => {
-    try {
-      const portId = parseInt(req.params.id);
-      console.log("PUBLIC ENDPOINT: Deleting port:", portId);
 
-      if (isNaN(portId)) {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid port ID"
-        });
-      }
-
-      const success = await storage.deletePort(portId);
-      
-      if (success) {
-        res.json({
-          success: true,
-          message: `Port ${portId} deleted successfully`
-        });
-      } else {
-        res.status(404).json({
-          success: false,
-          message: "Port not found"
-        });
-      }
-    } catch (error) {
-      console.error("PUBLIC ENDPOINT: Error deleting port:", error);
-      res.status(500).json({
-        success: false,
-        message: "Failed to delete port",
-        error: error instanceof Error ? error.message : "Unknown error"
-      });
-    }
-  });
   
   // Create new port
   apiRouter.post("/ports", async (req, res) => {
@@ -5368,33 +5334,7 @@ Only use authentic, real-world data for existing refineries.`;
       });
     }
   });
-  
-  // Delete port by ID
-  apiRouter.delete("/ports/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      if (isNaN(id)) {
-        return res.status(400).json({ message: "Invalid port ID" });
-      }
-      
-      // Check if port exists
-      const port = await storage.getPortById(id);
-      if (!port) {
-        return res.status(404).json({ message: "Port not found" });
-      }
-      
-      // Delete the port
-      await storage.deletePort(id);
-      
-      res.json({ success: true, message: "Port deleted successfully" });
-    } catch (error) {
-      console.error("Error deleting port:", error);
-      res.status(500).json({ 
-        message: "Failed to delete port",
-        error: error instanceof Error ? error.message : "Unknown error"
-      });
-    }
-  });
+
 
   // Mount API router for general endpoints
   // Special endpoint to add all 7,183 ports in a simple way
