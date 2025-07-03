@@ -5780,23 +5780,38 @@ Please generate a comprehensive, professional maritime document following the te
     }
   });
 
-  // Article Template Management API Endpoints (Admin only)
+
+
+  // Document Template Management API Endpoints (Admin only) - connecting to existing document templates
   
-  // Get all article templates
-  apiRouter.get("/admin/article-templates", requireAdmin, async (req: AuthenticatedRequest, res) => {
+  // Get all document templates (admin endpoint)
+  apiRouter.get("/admin/article-templates", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
     try {
-      const templates = await storage.getArticleTemplates();
-      res.json(templates);
+      const templates = await storage.getDocumentTemplates();
+      // Transform document templates to match article template interface expected by admin panel
+      const transformedTemplates = templates.map(template => ({
+        id: template.id,
+        title: template.name,
+        description: template.description,
+        category: template.category,
+        prompt: template.prompt,
+        isActive: template.isActive,
+        usageCount: template.usageCount || 0,
+        createdBy: template.createdBy,
+        createdAt: template.createdAt,
+        updatedAt: template.updatedAt
+      }));
+      res.json(transformedTemplates);
     } catch (error) {
-      console.error("Error fetching article templates:", error);
+      console.error("Error fetching document templates:", error);
       res.status(500).json({ 
-        message: "Failed to fetch article templates",
+        message: "Failed to fetch templates",
         error: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });
 
-  // Create new article template
+  // Create new document template (admin endpoint)
   apiRouter.post("/admin/article-templates", requireAdmin, async (req: AuthenticatedRequest, res) => {
     try {
       const { title, description, category, prompt, isActive = true } = req.body;
@@ -5805,8 +5820,8 @@ Please generate a comprehensive, professional maritime document following the te
         return res.status(400).json({ message: "Missing required fields" });
       }
 
-      const template = await storage.createArticleTemplate({
-        title,
+      const template = await storage.createDocumentTemplate({
+        name: title, // Map title to name for document templates
         description,
         category,
         prompt,
@@ -5814,49 +5829,31 @@ Please generate a comprehensive, professional maritime document following the te
         createdBy: req.user!.id
       });
       
-      res.status(201).json(template);
+      // Transform response to match expected format
+      const transformedTemplate = {
+        id: template.id,
+        title: template.name,
+        description: template.description,
+        category: template.category,
+        prompt: template.prompt,
+        isActive: template.isActive,
+        usageCount: template.usageCount || 0,
+        createdBy: template.createdBy,
+        createdAt: template.createdAt,
+        updatedAt: template.updatedAt
+      };
+      
+      res.status(201).json(transformedTemplate);
     } catch (error) {
-      console.error("Error creating article template:", error);
+      console.error("Error creating document template:", error);
       res.status(500).json({ 
-        message: "Failed to create article template",
+        message: "Failed to create template",
         error: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });
 
-  // Update article template
-  apiRouter.put("/admin/article-templates/:id", requireAdmin, async (req: AuthenticatedRequest, res) => {
-    try {
-      const templateId = parseInt(req.params.id);
-      if (isNaN(templateId)) {
-        return res.status(400).json({ message: "Invalid template ID" });
-      }
-
-      const { title, description, category, prompt, isActive } = req.body;
-      
-      const template = await storage.updateArticleTemplate(templateId, {
-        title,
-        description,
-        category,
-        prompt,
-        isActive
-      });
-      
-      if (!template) {
-        return res.status(404).json({ message: "Template not found" });
-      }
-      
-      res.json(template);
-    } catch (error) {
-      console.error("Error updating article template:", error);
-      res.status(500).json({ 
-        message: "Failed to update article template",
-        error: error instanceof Error ? error.message : "Unknown error"
-      });
-    }
-  });
-
-  // Delete article template
+  // Delete document template (admin endpoint)
   apiRouter.delete("/admin/article-templates/:id", requireAdmin, async (req: AuthenticatedRequest, res) => {
     try {
       const templateId = parseInt(req.params.id);
@@ -5864,7 +5861,7 @@ Please generate a comprehensive, professional maritime document following the te
         return res.status(400).json({ message: "Invalid template ID" });
       }
 
-      const success = await storage.deleteArticleTemplate(templateId);
+      const success = await storage.deleteDocumentTemplate(templateId);
       
       if (!success) {
         return res.status(404).json({ message: "Template not found" });
@@ -5872,21 +5869,34 @@ Please generate a comprehensive, professional maritime document following the te
       
       res.json({ success: true, message: "Template deleted successfully" });
     } catch (error) {
-      console.error("Error deleting article template:", error);
+      console.error("Error deleting document template:", error);
       res.status(500).json({ 
-        message: "Failed to delete article template",
+        message: "Failed to delete template",
         error: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });
 
-  // Get all generated articles
+  // Get generated articles (admin endpoint) - maps to generated documents
   apiRouter.get("/admin/generated-articles", requireAdmin, async (req: AuthenticatedRequest, res) => {
     try {
-      const articles = await storage.getGeneratedArticles();
-      res.json(articles);
+      const documents = await storage.getAllGeneratedDocuments();
+      // Transform to match expected article format
+      const transformedDocuments = documents.map(doc => ({
+        id: doc.id,
+        templateId: doc.templateId,
+        vesselId: doc.vesselId,
+        vesselName: doc.vesselName,
+        title: doc.title,
+        content: doc.content,
+        status: doc.status,
+        createdBy: doc.createdBy || 1,
+        createdAt: doc.createdAt,
+        updatedAt: doc.updatedAt
+      }));
+      res.json(transformedDocuments);
     } catch (error) {
-      console.error("Error fetching generated articles:", error);
+      console.error("Error fetching generated documents:", error);
       res.status(500).json({ 
         message: "Failed to fetch generated articles",
         error: error instanceof Error ? error.message : "Unknown error"

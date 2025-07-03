@@ -84,7 +84,7 @@ export async function authenticateToken(req: AuthenticatedRequest, res: Response
       return res.status(401).json({ message: 'User not found' });
     }
 
-    // Fetch subscription
+    // Fetch subscription (optional)
     const [subscription] = await db
       .select()
       .from(userSubscriptions)
@@ -92,8 +92,12 @@ export async function authenticateToken(req: AuthenticatedRequest, res: Response
       .limit(1);
 
     req.user = {
-      ...user,
-      subscription
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role: user.role,
+      subscription: subscription || undefined
     };
 
     next();

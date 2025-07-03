@@ -2346,6 +2346,16 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async getAllGeneratedDocuments(): Promise<any[]> {
+    try {
+      // Return all documents from memory storage
+      return this.generatedDocuments;
+    } catch (error) {
+      console.error('Error fetching all generated documents:', error);
+      throw new Error('Failed to fetch all generated documents');
+    }
+  }
+
   async getGeneratedArticles(): Promise<any[]> {
     try {
       // For now, return mock data until database tables are created
