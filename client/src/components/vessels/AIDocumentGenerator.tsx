@@ -27,6 +27,10 @@ interface GeneratedDocument {
   content: string;
   status: string;
   createdAt: string;
+  format?: string;
+  downloadUrl?: string;
+  pdfPath?: string;
+  wordPath?: string;
 }
 
 interface AIDocumentGeneratorProps {
@@ -108,18 +112,36 @@ export default function AIDocumentGenerator({ vesselId, vesselName }: AIDocument
   };
 
   const handleDownloadDocument = (document: GeneratedDocument) => {
-    const element = window.document.createElement('a');
-    const file = new Blob([document.content], { type: 'text/plain' });
-    element.href = URL.createObjectURL(file);
-    element.download = `${document.title.replace(/\s+/g, '_')}.txt`;
-    window.document.body.appendChild(element);
-    element.click();
-    window.document.body.removeChild(element);
+    if (document.format === 'pdf' || document.format === 'word') {
+      // For PDF and Word documents, use the downloadUrl
+      if (document.downloadUrl) {
+        window.open(document.downloadUrl, '_blank');
+        toast({
+          title: "Download Started", 
+          description: `${document.format.toUpperCase()} document opened in new tab`
+        });
+      } else {
+        toast({
+          title: "Download Error",
+          description: "Download link not available for this document",
+          variant: "destructive"
+        });
+      }
+    } else {
+      // For text documents, create a blob download
+      const element = window.document.createElement('a');
+      const file = new Blob([document.content], { type: 'text/plain' });
+      element.href = URL.createObjectURL(file);
+      element.download = `${document.title.replace(/\s+/g, '_')}.txt`;
+      window.document.body.appendChild(element);
+      element.click();
+      window.document.body.removeChild(element);
 
-    toast({
-      title: "Download Started",
-      description: "Document downloaded successfully"
-    });
+      toast({
+        title: "Download Started",
+        description: "Text document downloaded successfully"
+      });
+    }
   };
 
   if (isLoadingTemplates || isLoadingDocuments) {
@@ -320,6 +342,11 @@ export default function AIDocumentGenerator({ vesselId, vesselName }: AIDocument
                         <Badge variant={document.status === 'generated' ? 'default' : 'secondary'}>
                           {document.status}
                         </Badge>
+                        {document.format && (
+                          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                            {document.format.toUpperCase()}
+                          </Badge>
+                        )}
                       </div>
                     </div>
                     <div className="flex gap-2">
@@ -337,11 +364,45 @@ export default function AIDocumentGenerator({ vesselId, vesselName }: AIDocument
                             </DialogDescription>
                           </DialogHeader>
                           <div className="py-4">
-                            <div className="bg-gray-50 p-6 rounded-lg max-h-96 overflow-y-auto">
-                              <pre className="text-sm text-gray-700 whitespace-pre-wrap font-mono">
-                                {document.content}
-                              </pre>
-                            </div>
+                            {document.format === 'pdf' || document.format === 'word' ? (
+                              <div className="bg-gray-50 p-6 rounded-lg text-center">
+                                <div className="flex flex-col items-center gap-4">
+                                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                                    {document.format === 'pdf' ? (
+                                      <FileText className="h-8 w-8 text-blue-600" />
+                                    ) : (
+                                      <File className="h-8 w-8 text-blue-600" />
+                                    )}
+                                  </div>
+                                  <div>
+                                    <h4 className="font-semibold text-gray-900">
+                                      {document.format === 'pdf' ? 'PDF Document Generated' : 'Word Document Generated'}
+                                    </h4>
+                                    <p className="text-sm text-gray-600 mt-1">
+                                      {document.format === 'pdf' 
+                                        ? 'Professional PDF with PetroDealHub branding and formatting' 
+                                        : 'Microsoft Word document (.docx) ready for download'
+                                      }
+                                    </p>
+                                  </div>
+                                  {document.downloadUrl && (
+                                    <Button 
+                                      onClick={() => window.open(document.downloadUrl, '_blank')}
+                                      className="bg-blue-600 hover:bg-blue-700"
+                                    >
+                                      <Download className="h-4 w-4 mr-2" />
+                                      Download {document.format.toUpperCase()}
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="bg-gray-50 p-6 rounded-lg max-h-96 overflow-y-auto">
+                                <pre className="text-sm text-gray-700 whitespace-pre-wrap font-mono">
+                                  {document.content}
+                                </pre>
+                              </div>
+                            )}
                           </div>
                         </DialogContent>
                       </Dialog>
