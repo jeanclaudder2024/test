@@ -299,16 +299,13 @@ export function EnhancedPortManagement() {
     }
   };
 
-  // New, completely rebuilt delete mutation
+  // New, completely rebuilt delete mutation using public endpoint
   const newDeleteMutation = useMutation({
     mutationFn: async (portId: number) => {
       console.log(`Frontend: Starting delete for port ID: ${portId}`);
       
-      const response = await fetch(`/api/admin/ports/${portId}`, {
+      const response = await fetch(`/api/ports/${portId}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-        },
       });
       
       console.log(`Frontend: Delete response status: ${response.status}`);

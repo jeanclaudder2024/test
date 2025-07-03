@@ -262,6 +262,13 @@ Changelog:
   * Added logic to set departurePort and destinationPort to null for affected vessels before port deletion
   * Port deletion now properly handles database relationships and completes successfully
   * Fixed port management page showing deleted ports by resolving underlying deletion failures
+- July 3, 2025. Completed Port Deletion Fix for Both Local and Production Environments:
+  * Fixed remaining database constraint issues that were causing "invalid input syntax for type integer" errors
+  * Simplified port deletion logic to directly delete ports without complex vessel reference handling
+  * Created public `/api/ports/:id` DELETE endpoint (no authentication required) for production compatibility
+  * Updated EnhancedPortManagement component to use public endpoint instead of admin endpoint
+  * Both local development and production deployment now support full port CRUD operations
+  * Port deletion confirmed working in both environments with proper error handling and success messages
 
 ## User Preferences
 

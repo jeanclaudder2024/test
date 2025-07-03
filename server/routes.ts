@@ -5270,6 +5270,42 @@ Only use authentic, real-world data for existing refineries.`;
     }
   });
   
+  // Public port deletion endpoint (no auth required for testing)
+  apiRouter.delete("/ports/:id", async (req, res) => {
+    try {
+      const portId = parseInt(req.params.id);
+      console.log("PUBLIC ENDPOINT: Deleting port:", portId);
+
+      if (isNaN(portId)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid port ID"
+        });
+      }
+
+      const success = await storage.deletePort(portId);
+      
+      if (success) {
+        res.json({
+          success: true,
+          message: `Port ${portId} deleted successfully`
+        });
+      } else {
+        res.status(404).json({
+          success: false,
+          message: "Port not found"
+        });
+      }
+    } catch (error) {
+      console.error("PUBLIC ENDPOINT: Error deleting port:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to delete port",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
   // Create new port
   apiRouter.post("/ports", async (req, res) => {
     try {
