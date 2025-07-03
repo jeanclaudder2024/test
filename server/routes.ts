@@ -5665,7 +5665,122 @@ Only use authentic, real-world data for existing refineries.`;
     }
   });
 
-  // Article Template Management API Endpoints
+  // Public Document Templates Endpoint (for vessel AI generation)
+  apiRouter.get("/document-templates", async (req: Request, res) => {
+    try {
+      const templates = await storage.getArticleTemplates();
+      res.json(templates);
+    } catch (error) {
+      console.error("Error fetching document templates:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch document templates",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Generate AI Document from Template
+  apiRouter.post("/generate-document", async (req: Request, res) => {
+    try {
+      const { templateId, vesselId } = req.body;
+
+      if (!templateId || !vesselId) {
+        return res.status(400).json({ message: "Template ID and Vessel ID are required" });
+      }
+
+      // Get template
+      const template = await storage.getArticleTemplateById(templateId);
+      if (!template) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+
+      // Get vessel data
+      const vessel = await storage.getVesselById(vesselId);
+      if (!vessel) {
+        return res.status(404).json({ message: "Vessel not found" });
+      }
+
+      // Generate AI document using OpenAI
+      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+      
+      const prompt = template.prompt.replace('{vesselName}', vessel.name);
+      const enhancedPrompt = `${prompt}
+
+Vessel Details:
+- Name: ${vessel.name}
+- Type: ${vessel.vesselType}
+- IMO: ${vessel.imo}
+- MMSI: ${vessel.mmsi}
+- Flag: ${vessel.flag}
+- Built: ${vessel.built}
+- Deadweight: ${vessel.deadweight} MT
+- Current Position: ${vessel.currentLat}, ${vessel.currentLng}
+- Status: ${vessel.status}
+
+Please generate a comprehensive, professional maritime document following the template requirements.`;
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+        messages: [
+          { role: "system", content: "You are a professional maritime documentation expert. Generate formal, comprehensive maritime documents." },
+          { role: "user", content: enhancedPrompt }
+        ],
+        max_tokens: 3000,
+        temperature: 0.7
+      });
+
+      const content = response.choices[0].message.content;
+      
+      // Create generated document record
+      const generatedDocument = {
+        id: Date.now(), // Simple ID for mock storage
+        templateId,
+        vesselId,
+        title: `${template.title} - ${vessel.name}`,
+        content: content || "Document generation failed",
+        status: "generated",
+        createdAt: new Date().toISOString()
+      };
+
+      // Store generated document (using mock storage for now)
+      await storage.createGeneratedDocument(generatedDocument);
+
+      res.json({ 
+        success: true, 
+        document: generatedDocument,
+        message: "Document generated successfully"
+      });
+
+    } catch (error: any) {
+      console.error("Error generating document:", error);
+      res.status(500).json({ 
+        message: "Failed to generate document", 
+        error: error.message || "Unknown error"
+      });
+    }
+  });
+
+  // Get Generated Documents for Vessel
+  apiRouter.get("/generated-documents", async (req: Request, res) => {
+    try {
+      const { vesselId } = req.query;
+      
+      if (!vesselId) {
+        return res.status(400).json({ message: "Vessel ID is required" });
+      }
+
+      const documents = await storage.getGeneratedDocumentsByVessel(Number(vesselId));
+      res.json(documents);
+    } catch (error: any) {
+      console.error("Error fetching generated documents:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch generated documents",
+        error: error.message || "Unknown error"
+      });
+    }
+  });
+
+  // Article Template Management API Endpoints (Admin only)
   
   // Get all article templates
   apiRouter.get("/admin/article-templates", requireAdmin, async (req: AuthenticatedRequest, res) => {

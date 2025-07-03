@@ -240,6 +240,8 @@ export interface IStorage {
   createArticleTemplate(template: any): Promise<any>;
   updateArticleTemplate(id: number, updates: any): Promise<any | undefined>;
   deleteArticleTemplate(id: number): Promise<boolean>;
+  createGeneratedDocument(document: any): Promise<any>;
+  getGeneratedDocumentsByVessel(vesselId: number): Promise<any[]>;
   getGeneratedArticles(): Promise<any[]>;
 }
 
@@ -2313,6 +2315,34 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error deleting article template:', error);
       throw new Error('Failed to delete article template');
+    }
+  }
+
+  // Generated Document Methods
+  private generatedDocuments: any[] = [];
+
+  async createGeneratedDocument(document: any): Promise<any> {
+    try {
+      // Store in memory until database tables are created
+      const newDocument = {
+        ...document,
+        id: Date.now()
+      };
+      this.generatedDocuments.push(newDocument);
+      return newDocument;
+    } catch (error) {
+      console.error('Error creating generated document:', error);
+      throw new Error('Failed to create generated document');
+    }
+  }
+
+  async getGeneratedDocumentsByVessel(vesselId: number): Promise<any[]> {
+    try {
+      // Filter documents by vessel ID from memory storage
+      return this.generatedDocuments.filter(doc => doc.vesselId === vesselId);
+    } catch (error) {
+      console.error('Error fetching generated documents:', error);
+      throw new Error('Failed to fetch generated documents');
     }
   }
 
