@@ -10,7 +10,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Loader2, Ship, FileText, Map } from "lucide-react";
 import { MapPositionSelector } from "./MapPositionSelector";
-import { useQuery } from "@tanstack/react-query";
 
 interface AddVesselFormProps {
   open: boolean;
@@ -20,12 +19,6 @@ interface AddVesselFormProps {
 }
 
 export function AddVesselForm({ open, onOpenChange, onAddVessel, loading }: AddVesselFormProps) {
-  // Fetch oil types from Oil Type Management system
-  const { data: oilTypes = [], isLoading: loadingOilTypes } = useQuery({
-    queryKey: ['/api/admin/oil-types'],
-    staleTime: 0, // Always fetch fresh data
-  });
-
   const [vessel, setVessel] = useState({
     name: "",
     mmsi: "",
@@ -208,34 +201,20 @@ export function AddVesselForm({ open, onOpenChange, onAddVessel, loading }: AddV
                             className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
                             value={vessel.oilType}
                             onChange={(e) => handleInputChange('oilType', e.target.value)}
-                            disabled={loadingOilTypes}
                           >
-                            <option value="">
-                              {loadingOilTypes ? "Loading oil types..." : "Select Oil Type"}
-                            </option>
-                            {/* Dynamic oil types from Oil Type Management system */}
-                            {oilTypes.map((oilType: any) => (
-                              <option key={oilType.id} value={oilType.name}>
-                                {oilType.name}
-                              </option>
-                            ))}
-                            {/* Fallback options if no oil types loaded */}
-                            {!loadingOilTypes && oilTypes.length === 0 && (
-                              <>
-                                <option value="Crude Oil">Crude Oil</option>
-                                <option value="Brent Crude">Brent Crude</option>
-                                <option value="WTI Crude">WTI Crude</option>
-                                <option value="Heavy Crude">Heavy Crude</option>
-                                <option value="Light Crude">Light Crude</option>
-                                <option value="Gasoline">Gasoline</option>
-                                <option value="Diesel">Diesel</option>
-                                <option value="Jet Fuel">Jet Fuel</option>
-                                <option value="LNG">LNG</option>
-                                <option value="LPG">LPG</option>
-                                <option value="Naphtha">Naphtha</option>
-                                <option value="Fuel Oil">Fuel Oil</option>
-                              </>
-                            )}
+                            <option value="">Select Oil Type</option>
+                            <option value="Crude Oil">Crude Oil</option>
+                            <option value="Brent Crude">Brent Crude</option>
+                            <option value="WTI Crude">WTI Crude</option>
+                            <option value="Heavy Crude">Heavy Crude</option>
+                            <option value="Light Crude">Light Crude</option>
+                            <option value="Gasoline">Gasoline</option>
+                            <option value="Diesel">Diesel</option>
+                            <option value="Jet Fuel">Jet Fuel</option>
+                            <option value="LNG">LNG</option>
+                            <option value="LPG">LPG</option>
+                            <option value="Naphtha">Naphtha</option>
+                            <option value="Fuel Oil">Fuel Oil</option>
                           </select>
                         </div>
                         

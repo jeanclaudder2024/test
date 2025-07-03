@@ -28,7 +28,6 @@ import { BrokerManagement } from "@/components/admin/BrokerManagement";
 import FilterManagement from "@/components/admin/FilterManagement";
 import DocumentManagement from "@/components/admin/DocumentManagement";
 import SimpleOilTypeManagement from "@/components/admin/SimpleOilTypeManagement";
-import VesselTypeManagement from "@/components/admin/VesselTypeManagement";
 
 export default function AdminPanel() {
   const [_, navigate] = useLocation();
@@ -106,7 +105,6 @@ export default function AdminPanel() {
               <option value="documents">📄 Professional Articles</option>
               <option value="brokers">🤝 Broker Management</option>
               <option value="oil-types">⛽ Oil Types</option>
-              <option value="vessel-types">🚢 Vessel Types</option>
               <option value="filters">🔧 Filter Management</option>
               <option value="data">💾 Data Management</option>
               <option value="migration">🔄 Database Migration</option>
@@ -201,15 +199,6 @@ export default function AdminPanel() {
               <Droplets className="h-4 w-4" />
               <span className="hidden xl:inline font-medium">Oil Types</span>
               <span className="xl:hidden">Oil</span>
-            </TabsTrigger>
-            
-            <TabsTrigger 
-              value="vessel-types" 
-              className="flex items-center gap-2 data-[state=active]:bg-cyan-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-200 hover:bg-cyan-50 rounded-lg"
-            >
-              <Ship className="h-4 w-4" />
-              <span className="hidden xl:inline font-medium">Vessel Types</span>
-              <span className="xl:hidden">Ship</span>
             </TabsTrigger>
             
             <TabsTrigger 
@@ -437,10 +426,6 @@ export default function AdminPanel() {
 
         <TabsContent value="oil-types" className="space-y-4">
           <SimpleOilTypeManagement />
-        </TabsContent>
-
-        <TabsContent value="vessel-types" className="space-y-4">
-          <VesselTypeManagement />
         </TabsContent>
 
         <TabsContent value="filters" className="space-y-4">
