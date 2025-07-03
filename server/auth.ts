@@ -57,8 +57,14 @@ export function verifyToken(token: string): any {
 
 // Authentication middleware
 export async function authenticateToken(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  // Try to get token from Authorization header first, then from cookies
   const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+  let token = authHeader && authHeader.split(' ')[1];
+  
+  // If no Authorization header, try to get from cookies
+  if (!token && req.cookies) {
+    token = req.cookies.authToken;
+  }
 
   if (!token) {
     return res.status(401).json({ message: 'Access token required' });
