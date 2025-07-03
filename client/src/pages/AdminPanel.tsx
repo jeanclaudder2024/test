@@ -398,22 +398,7 @@ export default function AdminPanel() {
         </TabsContent>
 
 
-        <TabsContent value="documents" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5 text-indigo-500" />
-                Document Management
-              </CardTitle>
-              <CardDescription>
-                Manage vessel documents, certificates, and maritime paperwork for the platform
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <DocumentManagement />
-            </CardContent>
-          </Card>
-        </TabsContent>
+
 
         <TabsContent value="brokers" className="space-y-4">
           <BrokerManagement />
