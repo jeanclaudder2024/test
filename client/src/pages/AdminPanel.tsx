@@ -317,20 +317,7 @@ export default function AdminPanel() {
                 </CardContent>
               </Card>
               
-              <Card className="bg-white/80 backdrop-blur-sm border-slate-200/60 shadow-lg hover:shadow-xl transition-all cursor-pointer"
-                    onClick={() => navigate("/admin/documents")}>
-                <CardContent className="p-6">
-                  <div className="flex items-center space-x-4">
-                    <div className="bg-gradient-to-br from-blue-500 to-cyan-600 p-3 rounded-lg">
-                      <FileText className="h-6 w-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-800">Document Management</h3>
-                      <p className="text-sm text-slate-600">Manage professional documents and templates</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+
               
               <Card className="bg-white/80 backdrop-blur-sm border-slate-200/60 shadow-lg hover:shadow-xl transition-all cursor-pointer"
                     onClick={() => navigate("/admin/subscriptions")}>
