@@ -72,7 +72,6 @@ export async function authenticateToken(req: AuthenticatedRequest, res: Response
 
   try {
     const decoded = verifyToken(token);
-    console.log('Decoded token:', decoded);
     
     // Fetch user with subscription
     const [user] = await db
@@ -81,9 +80,7 @@ export async function authenticateToken(req: AuthenticatedRequest, res: Response
       .where(eq(users.id, decoded.id))
       .limit(1);
 
-    console.log('Found user:', user);
     if (!user) {
-      console.log('User not found for ID:', decoded.id);
       return res.status(401).json({ message: 'User not found' });
     }
 

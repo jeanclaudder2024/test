@@ -1057,9 +1057,11 @@ export type InsertAdminDocument = z.infer<typeof insertAdminDocumentSchema>;
 export const documentTemplates = pgTable("document_templates", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(), // Template name (e.g., "Vessel Certificate", "Safety Report")
-  description: text("description").notNull(), // AI prompt describing what document to generate
+  description: text("description").notNull(), // Description of the template
   category: text("category").notNull().default("general"), // general, technical, safety, commercial
+  prompt: text("prompt").notNull(), // AI prompt describing what document to generate
   isActive: boolean("is_active").default(true),
+  usageCount: integer("usage_count").default(0),
   createdBy: integer("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
