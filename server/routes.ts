@@ -5812,7 +5812,7 @@ Please generate a comprehensive, professional maritime document following the te
   });
 
   // Create new document template (admin endpoint)
-  apiRouter.post("/admin/article-templates", requireAdmin, async (req: AuthenticatedRequest, res) => {
+  apiRouter.post("/admin/article-templates", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
     try {
       const { title, description, category, prompt, isActive = true } = req.body;
       
@@ -5854,7 +5854,7 @@ Please generate a comprehensive, professional maritime document following the te
   });
 
   // Delete document template (admin endpoint)
-  apiRouter.delete("/admin/article-templates/:id", requireAdmin, async (req: AuthenticatedRequest, res) => {
+  apiRouter.delete("/admin/article-templates/:id", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
     try {
       const templateId = parseInt(req.params.id);
       if (isNaN(templateId)) {
