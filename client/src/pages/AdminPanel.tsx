@@ -16,14 +16,14 @@ import { DatabaseMigration } from "@/components/admin/DatabaseMigration";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Shield, Database, Users, Settings as SettingsIcon, ChevronLeft, Factory, Anchor, Ship, CreditCard, HardDrive, Globe, Building2, BarChart3, Activity, Droplets, FileText } from "lucide-react";
+import { Shield, Database, Users, Settings as SettingsIcon, ChevronLeft, Factory, Anchor, Ship, CreditCard, HardDrive, Globe, Building2, BarChart3, Activity, Droplets } from "lucide-react";
 
 import { useLocation } from "wouter";
 import SubscriptionAdmin from "@/pages/SubscriptionAdmin";
 import ProfessionalRefineryManagement from "@/components/admin/ProfessionalRefineryManagement";
 import { CompanyManagement } from "@/components/admin/CompanyManagement";
 
-import DocumentManagement from "@/components/admin/DocumentManagement";
+
 import { BrokerManagement } from "@/components/admin/BrokerManagement";
 import FilterManagement from "@/components/admin/FilterManagement";
 
@@ -101,7 +101,7 @@ export default function AdminPanel() {
               <option value="ports">⚓ Ports Management</option>
               <option value="refineries">🏭 Refinery Management</option>
 
-              <option value="documents">📄 Document Management</option>
+
               <option value="brokers">🤝 Broker Management</option>
               <option value="filters">🔧 Filter Management</option>
               <option value="data">💾 Data Management</option>
@@ -172,14 +172,7 @@ export default function AdminPanel() {
             </TabsTrigger>
 
 
-            <TabsTrigger 
-              value="documents" 
-              className="flex items-center gap-2 data-[state=active]:bg-indigo-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-200 hover:bg-indigo-50 rounded-lg"
-            >
-              <FileText className="h-4 w-4" />
-              <span className="hidden xl:inline font-medium">Documents</span>
-              <span className="xl:hidden">Docs</span>
-            </TabsTrigger>
+
             <TabsTrigger 
               value="brokers" 
               className="flex items-center gap-2 data-[state=active]:bg-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-200 hover:bg-purple-50 rounded-lg"
@@ -370,19 +363,7 @@ export default function AdminPanel() {
           <ProfessionalRefineryManagement />
         </TabsContent>
 
-        <TabsContent value="documents" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Document Management</CardTitle>
-              <CardDescription>
-                Create and manage documents that appear in Professional Documents
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <DocumentManagement />
-            </CardContent>
-          </Card>
-        </TabsContent>
+
 
         <TabsContent value="data" className="space-y-4">
           <Card>
