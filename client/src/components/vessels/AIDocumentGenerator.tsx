@@ -338,7 +338,6 @@ export default function AIDocumentGenerator({ vesselId, vesselName }: AIDocument
                         {document.title}
                       </CardTitle>
                       <div className="flex items-center gap-2 mt-2">
-                        <Badge variant="secondary">AI Generated</Badge>
                         <Badge variant={document.status === 'generated' ? 'default' : 'secondary'}>
                           {document.status}
                         </Badge>
