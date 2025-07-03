@@ -994,31 +994,21 @@ export default function Vessels() {
       {/* Oil Category Tabs */}
       <div className="mb-6">
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-          <TabsList className="grid grid-cols-2 md:grid-cols-8 mb-4">
+          <TabsList className={`grid mb-4 ${availableOilCategories.length > 6 ? 'grid-cols-2 md:grid-cols-4 lg:grid-cols-6' : `grid-cols-${Math.min(availableOilCategories.length + 1, 8)}`}`}>
             <TabsTrigger value="all" className="flex items-center gap-1">
               <Layers className="h-4 w-4" /> All
             </TabsTrigger>
-            <TabsTrigger value="crude" className="flex items-center gap-1">
-              <Droplet className="h-4 w-4 text-amber-600" /> Crude
-            </TabsTrigger>
-            <TabsTrigger value="jet fuel" className="flex items-center gap-1">
-              <Droplet className="h-4 w-4 text-blue-600" /> Jet Fuel
-            </TabsTrigger>
-            <TabsTrigger value="diesel" className="flex items-center gap-1">
-              <Droplet className="h-4 w-4 text-indigo-600" /> Diesel
-            </TabsTrigger>
-            <TabsTrigger value="fuel oil" className="flex items-center gap-1">
-              <Droplet className="h-4 w-4 text-orange-600" /> Fuel Oil
-            </TabsTrigger>
-            <TabsTrigger value="gas" className="flex items-center gap-1">
-              <Droplet className="h-4 w-4 text-emerald-600" /> Gas
-            </TabsTrigger>
-            <TabsTrigger value="gasoline" className="flex items-center gap-1">
-              <Droplet className="h-4 w-4 text-red-600" /> Gasoline
-            </TabsTrigger>
-            <TabsTrigger value="other" className="flex items-center gap-1">
-              <Droplet className="h-4 w-4 text-gray-600" /> Other
-            </TabsTrigger>
+            {availableOilCategories.slice(0, 7).map((category, index) => {
+              const colors = [
+                'text-amber-600', 'text-blue-600', 'text-indigo-600', 
+                'text-orange-600', 'text-emerald-600', 'text-red-600', 'text-gray-600'
+              ];
+              return (
+                <TabsTrigger key={category} value={category.toLowerCase()} className="flex items-center gap-1">
+                  <Droplet className={`h-4 w-4 ${colors[index % colors.length]}`} /> {category}
+                </TabsTrigger>
+              );
+            })}
           </TabsList>
         </Tabs>
         
