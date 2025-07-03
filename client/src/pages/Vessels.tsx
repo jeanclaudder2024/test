@@ -993,24 +993,62 @@ export default function Vessels() {
       
       {/* Oil Category Tabs */}
       <div className="mb-6">
-        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-          <TabsList className={`grid mb-4 ${availableOilCategories.length > 6 ? 'grid-cols-2 md:grid-cols-4 lg:grid-cols-6' : `grid-cols-${Math.min(availableOilCategories.length + 1, 8)}`}`}>
-            <TabsTrigger value="all" className="flex items-center gap-1">
-              <Layers className="h-4 w-4" /> All
-            </TabsTrigger>
-            {availableOilCategories.slice(0, 7).map((category, index) => {
+        <div className="bg-white dark:bg-gray-800 rounded-lg border shadow-sm p-4">
+          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center">
+            <Droplet className="h-4 w-4 mr-2" />
+            Oil Product Categories
+          </h3>
+          
+          {/* Scrollable filter buttons */}
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+            <Button
+              variant={selectedTab === "all" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSelectedTab("all")}
+              className={`flex items-center gap-1 whitespace-nowrap flex-shrink-0 ${
+                selectedTab === "all" 
+                  ? "bg-primary text-primary-foreground" 
+                  : "hover:bg-gray-50 dark:hover:bg-gray-700"
+              }`}
+            >
+              <Layers className="h-4 w-4" /> 
+              All ({vesselsWithCategories.length})
+            </Button>
+            
+            {availableOilCategories.map((category, index) => {
+              const count = vesselsWithCategories.filter(v => v.oilCategory === category).length;
+              const isSelected = selectedTab === category.toLowerCase();
               const colors = [
-                'text-amber-600', 'text-blue-600', 'text-indigo-600', 
-                'text-orange-600', 'text-emerald-600', 'text-red-600', 'text-gray-600'
+                { bg: 'bg-amber-100 hover:bg-amber-200', text: 'text-amber-700', icon: 'text-amber-600' },
+                { bg: 'bg-blue-100 hover:bg-blue-200', text: 'text-blue-700', icon: 'text-blue-600' },
+                { bg: 'bg-indigo-100 hover:bg-indigo-200', text: 'text-indigo-700', icon: 'text-indigo-600' },
+                { bg: 'bg-orange-100 hover:bg-orange-200', text: 'text-orange-700', icon: 'text-orange-600' },
+                { bg: 'bg-emerald-100 hover:bg-emerald-200', text: 'text-emerald-700', icon: 'text-emerald-600' },
+                { bg: 'bg-red-100 hover:bg-red-200', text: 'text-red-700', icon: 'text-red-600' },
+                { bg: 'bg-purple-100 hover:bg-purple-200', text: 'text-purple-700', icon: 'text-purple-600' },
+                { bg: 'bg-pink-100 hover:bg-pink-200', text: 'text-pink-700', icon: 'text-pink-600' },
               ];
+              const colorScheme = colors[index % colors.length];
+              
               return (
-                <TabsTrigger key={category} value={category.toLowerCase()} className="flex items-center gap-1">
-                  <Droplet className={`h-4 w-4 ${colors[index % colors.length]}`} /> {category}
-                </TabsTrigger>
+                <Button
+                  key={category}
+                  variant={isSelected ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSelectedTab(isSelected ? "all" : category.toLowerCase())}
+                  className={`flex items-center gap-1 whitespace-nowrap flex-shrink-0 ${
+                    isSelected 
+                      ? "bg-primary text-primary-foreground" 
+                      : `${colorScheme.bg} ${colorScheme.text} border-transparent`
+                  }`}
+                >
+                  <Droplet className={`h-4 w-4 ${isSelected ? '' : colorScheme.icon}`} />
+                  {category} ({count})
+                </Button>
               );
             })}
-          </TabsList>
-        </Tabs>
+          </div>
+        </div>
         
         <div className="flex flex-wrap gap-2 mb-4">
           {availableOilCategories.map(category => {
