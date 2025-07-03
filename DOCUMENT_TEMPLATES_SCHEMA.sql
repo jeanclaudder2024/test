@@ -1,69 +1,78 @@
--- AI Document Templates System Database Schema
--- Create this schema in your Supabase database
+-- Professional Article Templates Schema
+-- Drop existing tables if they exist to avoid conflicts
+DROP TABLE IF EXISTS generated_articles CASCADE;
+DROP TABLE IF EXISTS article_templates CASCADE;
 
--- Create document templates table
-CREATE TABLE IF NOT EXISTS document_templates (
+-- Create article templates table
+CREATE TABLE article_templates (
   id SERIAL PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
+  title VARCHAR(255) NOT NULL,
   description TEXT NOT NULL,
-  category VARCHAR(50) NOT NULL DEFAULT 'general',
-  is_active BOOLEAN NOT NULL DEFAULT true,
-  created_by INTEGER REFERENCES users(id),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  category VARCHAR(50) NOT NULL CHECK (category IN ('technical', 'commercial', 'inspection', 'cargo', 'compliance')),
+  prompt TEXT NOT NULL,
+  is_active BOOLEAN DEFAULT true,
+  usage_count INTEGER DEFAULT 0,
+  created_by INTEGER NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create generated documents table
-CREATE TABLE IF NOT EXISTS generated_documents (
+-- Create generated articles table to track articles created from templates
+CREATE TABLE generated_articles (
   id SERIAL PRIMARY KEY,
-  template_id INTEGER REFERENCES document_templates(id) ON DELETE CASCADE,
-  vessel_id INTEGER REFERENCES vessels(id) ON DELETE CASCADE,
+  template_id INTEGER REFERENCES article_templates(id) ON DELETE CASCADE,
+  vessel_id INTEGER NOT NULL,
+  vessel_name VARCHAR(255) NOT NULL,
   title VARCHAR(255) NOT NULL,
   content TEXT NOT NULL,
-  status VARCHAR(50) NOT NULL DEFAULT 'generated',
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  status VARCHAR(50) DEFAULT 'generated' CHECK (status IN ('generated', 'published', 'archived')),
+  created_by INTEGER NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Add indexes for better performance
-CREATE INDEX IF NOT EXISTS idx_document_templates_category ON document_templates(category);
-CREATE INDEX IF NOT EXISTS idx_document_templates_active ON document_templates(is_active);
-CREATE INDEX IF NOT EXISTS idx_generated_documents_vessel ON generated_documents(vessel_id);
-CREATE INDEX IF NOT EXISTS idx_generated_documents_template ON generated_documents(template_id);
+-- Create indexes for better performance
+CREATE INDEX idx_article_templates_category ON article_templates(category);
+CREATE INDEX idx_article_templates_active ON article_templates(is_active);
+CREATE INDEX idx_article_templates_created_by ON article_templates(created_by);
+CREATE INDEX idx_generated_articles_template_id ON generated_articles(template_id);
+CREATE INDEX idx_generated_articles_vessel_id ON generated_articles(vessel_id);
+CREATE INDEX idx_generated_articles_created_by ON generated_articles(created_by);
 
--- Insert sample document templates
-INSERT INTO document_templates (name, description, category, created_by) VALUES 
-(
-  'Vessel Safety Certificate', 
-  'Generate a comprehensive safety certificate for this vessel including all safety equipment, emergency procedures, and compliance with international maritime safety regulations. Include specific vessel details like capacity, safety equipment inventory, and certification dates.',
-  'safety',
-  1
-),
-(
-  'Technical Specification Report',
-  'Create a detailed technical specification document for this vessel covering engine specifications, cargo capacity, dimensions, construction details, and technical performance data. Use the vessel data to provide specific technical parameters.',
-  'technical',
-  1
-),
-(
-  'Commercial Cargo Manifest',
-  'Generate a professional cargo manifest document for this vessel including cargo details, loading specifications, commercial terms, and shipping documentation. Include vessel capacity and current operational status.',
-  'commercial',
-  1
-),
-(
-  'Port Operations Report',
-  'Create a comprehensive port operations report for this vessel including arrival/departure details, port services utilized, operational timeline, and port authority communications.',
-  'general',
-  1
-) ON CONFLICT (name) DO NOTHING;
+-- Insert some default article templates
+INSERT INTO article_templates (title, description, category, prompt, is_active, usage_count, created_by) VALUES
+('Technical Safety Certificate', 'Comprehensive technical specifications and safety compliance documentation', 'technical', 'Generate a professional technical safety certificate for the vessel {vesselName}. Include the following sections: 1. Vessel Technical Specifications, 2. Safety Equipment and Systems, 3. Compliance Certifications, 4. Inspection Records, 5. Operational Guidelines. Write in formal maritime technical language with specific details about safety protocols, equipment specifications, and regulatory compliance. Format as structured HTML suitable for official maritime documentation.', true, 0, 1),
+('Commercial Viability Analysis', 'Detailed commercial analysis and market assessment report', 'commercial', 'Generate a comprehensive commercial viability analysis for the vessel {vesselName}. Include the following sections: 1. Market Analysis and Positioning, 2. Financial Performance Metrics, 3. Operational Efficiency Assessment, 4. Risk Analysis and Mitigation, 5. Investment Recommendations. Write in professional business language with quantitative analysis, market insights, and strategic recommendations. Format as structured HTML suitable for executive decision-making.', true, 0, 1),
+('Vessel Inspection Report', 'Detailed inspection findings and compliance assessment', 'inspection', 'Generate a comprehensive vessel inspection report for {vesselName}. Include the following sections: 1. Hull and Structural Integrity, 2. Cargo Systems and Equipment, 3. Navigation and Communication Systems, 4. Safety Equipment and Procedures, 5. Environmental Compliance, 6. Crew Facilities and Standards, 7. Maintenance Status, 8. Recommendations and Action Items. Write in professional maritime inspection language with specific findings, recommendations, and compliance status. Format as structured HTML with clear sections.', true, 0, 1),
+('Cargo Manifest Document', 'Official cargo documentation and handling specifications', 'cargo', 'Generate a comprehensive cargo manifest document for the vessel {vesselName}. Include the following sections: 1. Cargo Description and Classification, 2. Loading and Stowage Details, 3. Quantity and Weight Specifications, 4. Origin and Destination Information, 5. Handling Requirements, 6. Safety and Environmental Considerations, 7. Documentation and Certificates, 8. Compliance with International Regulations. Write in formal maritime documentation language with precise technical details. Format as structured HTML suitable for official cargo documentation.', true, 0, 1),
+('Environmental Compliance Certificate', 'Environmental impact assessment and compliance documentation', 'compliance', 'Generate a comprehensive environmental compliance certificate for the vessel {vesselName}. Include the following sections: 1. Environmental Impact Assessment, 2. Emission Control Systems, 3. Waste Management Procedures, 4. Ballast Water Management, 5. Oil Pollution Prevention, 6. International Environmental Compliance, 7. Environmental Management Systems, 8. Monitoring and Reporting. Write in formal environmental regulatory language with specific compliance details. Format as structured HTML suitable for regulatory submission.', true, 0, 1);
 
--- Grant permissions (if using RLS)
--- ALTER TABLE document_templates ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE generated_documents ENABLE ROW LEVEL SECURITY;
+-- Update trigger to automatically update updated_at timestamp
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
 
--- Create RLS policies (optional, for security)
--- CREATE POLICY "Users can view document templates" ON document_templates FOR SELECT USING (true);
--- CREATE POLICY "Admins can manage document templates" ON document_templates FOR ALL USING (auth.role() = 'admin');
--- CREATE POLICY "Users can view their generated documents" ON generated_documents FOR SELECT USING (true);
--- CREATE POLICY "Users can create generated documents" ON generated_documents FOR INSERT WITH CHECK (true);
+CREATE TRIGGER update_article_templates_updated_at BEFORE UPDATE ON article_templates FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_generated_articles_updated_at BEFORE UPDATE ON generated_articles FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Trigger to increment usage count when article is generated
+CREATE OR REPLACE FUNCTION increment_template_usage()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE article_templates 
+    SET usage_count = usage_count + 1 
+    WHERE id = NEW.template_id;
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+CREATE TRIGGER increment_usage_on_generation AFTER INSERT ON generated_articles FOR EACH ROW EXECUTE FUNCTION increment_template_usage();
+
+-- Grant necessary permissions (adjust as needed for your setup)
+-- GRANT ALL PRIVILEGES ON article_templates TO your_database_user;
+-- GRANT ALL PRIVILEGES ON generated_articles TO your_database_user;
+-- GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO your_database_user;

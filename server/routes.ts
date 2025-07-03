@@ -5665,6 +5665,120 @@ Only use authentic, real-world data for existing refineries.`;
     }
   });
 
+  // Article Template Management API Endpoints
+  
+  // Get all article templates
+  apiRouter.get("/admin/article-templates", requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const templates = await storage.getArticleTemplates();
+      res.json(templates);
+    } catch (error) {
+      console.error("Error fetching article templates:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch article templates",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Create new article template
+  apiRouter.post("/admin/article-templates", requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const { title, description, category, prompt, isActive = true } = req.body;
+      
+      if (!title || !description || !category || !prompt) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      const template = await storage.createArticleTemplate({
+        title,
+        description,
+        category,
+        prompt,
+        isActive,
+        createdBy: req.user!.id
+      });
+      
+      res.status(201).json(template);
+    } catch (error) {
+      console.error("Error creating article template:", error);
+      res.status(500).json({ 
+        message: "Failed to create article template",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Update article template
+  apiRouter.put("/admin/article-templates/:id", requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const templateId = parseInt(req.params.id);
+      if (isNaN(templateId)) {
+        return res.status(400).json({ message: "Invalid template ID" });
+      }
+
+      const { title, description, category, prompt, isActive } = req.body;
+      
+      const template = await storage.updateArticleTemplate(templateId, {
+        title,
+        description,
+        category,
+        prompt,
+        isActive
+      });
+      
+      if (!template) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+      
+      res.json(template);
+    } catch (error) {
+      console.error("Error updating article template:", error);
+      res.status(500).json({ 
+        message: "Failed to update article template",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Delete article template
+  apiRouter.delete("/admin/article-templates/:id", requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const templateId = parseInt(req.params.id);
+      if (isNaN(templateId)) {
+        return res.status(400).json({ message: "Invalid template ID" });
+      }
+
+      const success = await storage.deleteArticleTemplate(templateId);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+      
+      res.json({ success: true, message: "Template deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting article template:", error);
+      res.status(500).json({ 
+        message: "Failed to delete article template",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Get all generated articles
+  apiRouter.get("/admin/generated-articles", requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const articles = await storage.getGeneratedArticles();
+      res.json(articles);
+    } catch (error) {
+      console.error("Error fetching generated articles:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch generated articles",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   // Landing Page Content Management API Endpoints
   
   // Get all landing page sections

@@ -233,6 +233,14 @@ export interface IStorage {
   updateDocument(id: number, updates: Partial<InsertAdminDocument>): Promise<AdminDocument | undefined>;
   deleteDocument(id: number): Promise<boolean>;
   getDocumentsByVesselId(vesselId: number): Promise<AdminDocument[]>;
+
+  // Article Template Management Methods
+  getArticleTemplates(): Promise<any[]>;
+  getArticleTemplateById(id: number): Promise<any | undefined>;
+  createArticleTemplate(template: any): Promise<any>;
+  updateArticleTemplate(id: number, updates: any): Promise<any | undefined>;
+  deleteArticleTemplate(id: number): Promise<boolean>;
+  getGeneratedArticles(): Promise<any[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2057,6 +2065,147 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error updating generated document status:', error);
       throw new Error('Failed to update generated document status');
+    }
+  }
+
+  // Article Template Management Methods
+  async getArticleTemplates(): Promise<any[]> {
+    try {
+      // For now, return mock data until database tables are created
+      return [
+        {
+          id: 1,
+          title: "Technical Safety Certificate",
+          description: "Comprehensive technical specifications and safety compliance documentation",
+          category: "technical",
+          prompt: "Generate a professional technical safety certificate for the vessel {vesselName}. Include technical specifications, safety equipment, compliance certifications, inspection records, and operational guidelines.",
+          isActive: true,
+          usageCount: 5,
+          createdBy: 1,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
+        {
+          id: 2,
+          title: "Commercial Viability Analysis",
+          description: "Detailed commercial analysis and market assessment report",
+          category: "commercial",
+          prompt: "Generate a comprehensive commercial viability analysis for the vessel {vesselName}. Include market analysis, financial metrics, operational efficiency, risk analysis, and investment recommendations.",
+          isActive: true,
+          usageCount: 3,
+          createdBy: 1,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
+        {
+          id: 3,
+          title: "Vessel Inspection Report",
+          description: "Detailed inspection findings and compliance assessment",
+          category: "inspection",
+          prompt: "Generate a comprehensive vessel inspection report for {vesselName}. Include hull integrity, cargo systems, navigation equipment, safety procedures, environmental compliance, crew facilities, and maintenance status.",
+          isActive: true,
+          usageCount: 7,
+          createdBy: 1,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }
+      ];
+    } catch (error) {
+      console.error('Error fetching article templates:', error);
+      throw new Error('Failed to fetch article templates');
+    }
+  }
+
+  async getArticleTemplateById(id: number): Promise<any | undefined> {
+    try {
+      const templates = await this.getArticleTemplates();
+      return templates.find(t => t.id === id);
+    } catch (error) {
+      console.error('Error fetching article template by ID:', error);
+      throw new Error('Failed to fetch article template');
+    }
+  }
+
+  async createArticleTemplate(template: any): Promise<any> {
+    try {
+      // For now, return mock creation until database tables are created
+      const newTemplate = {
+        id: Math.floor(Math.random() * 1000) + 100,
+        ...template,
+        usageCount: 0,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      return newTemplate;
+    } catch (error) {
+      console.error('Error creating article template:', error);
+      throw new Error('Failed to create article template');
+    }
+  }
+
+  async updateArticleTemplate(id: number, updates: any): Promise<any | undefined> {
+    try {
+      // For now, return mock update until database tables are created
+      const template = await this.getArticleTemplateById(id);
+      if (!template) return undefined;
+      
+      const updatedTemplate = {
+        ...template,
+        ...updates,
+        updatedAt: new Date()
+      };
+      return updatedTemplate;
+    } catch (error) {
+      console.error('Error updating article template:', error);
+      throw new Error('Failed to update article template');
+    }
+  }
+
+  async deleteArticleTemplate(id: number): Promise<boolean> {
+    try {
+      // For now, return true until database tables are created
+      const template = await this.getArticleTemplateById(id);
+      return !!template;
+    } catch (error) {
+      console.error('Error deleting article template:', error);
+      throw new Error('Failed to delete article template');
+    }
+  }
+
+  async getGeneratedArticles(): Promise<any[]> {
+    try {
+      // For now, return mock data until database tables are created
+      return [
+        {
+          id: 1,
+          templateId: 1,
+          vesselId: 1,
+          vesselName: "Ocean Titan",
+          title: "Technical Safety Certificate - Ocean Titan",
+          content: "<h1>Technical Safety Certificate</h1><p>This document certifies that the vessel Ocean Titan meets all technical safety requirements...</p>",
+          status: "generated",
+          createdBy: 1,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          templateTitle: "Technical Safety Certificate"
+        },
+        {
+          id: 2,
+          templateId: 2,
+          vesselId: 2,
+          vesselName: "Maritime Glory",
+          title: "Commercial Viability Analysis - Maritime Glory",
+          content: "<h1>Commercial Viability Analysis</h1><p>This analysis evaluates the commercial potential of the vessel Maritime Glory...</p>",
+          status: "generated",
+          createdBy: 1,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          templateTitle: "Commercial Viability Analysis"
+        }
+      ];
+    } catch (error) {
+      console.error('Error fetching generated articles:', error);
+      throw new Error('Failed to fetch generated articles');
     }
   }
 }

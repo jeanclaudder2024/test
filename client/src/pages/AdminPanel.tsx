@@ -16,7 +16,7 @@ import { DatabaseMigration } from "@/components/admin/DatabaseMigration";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Shield, Database, Users, Settings as SettingsIcon, ChevronLeft, Factory, Anchor, Ship, CreditCard, HardDrive, Globe, Building2, BarChart3, Activity, Droplets } from "lucide-react";
+import { Shield, Database, Users, Settings as SettingsIcon, ChevronLeft, Factory, Anchor, Ship, CreditCard, HardDrive, Globe, Building2, BarChart3, Activity, Droplets, FileText } from "lucide-react";
 
 import { useLocation } from "wouter";
 import SubscriptionAdmin from "@/pages/SubscriptionAdmin";
@@ -26,6 +26,7 @@ import { CompanyManagement } from "@/components/admin/CompanyManagement";
 
 import { BrokerManagement } from "@/components/admin/BrokerManagement";
 import FilterManagement from "@/components/admin/FilterManagement";
+import DocumentManagement from "@/components/admin/DocumentManagement";
 
 export default function AdminPanel() {
   const [_, navigate] = useLocation();
@@ -100,8 +101,7 @@ export default function AdminPanel() {
               <option value="vessels">🚢 Vessel Management</option>
               <option value="ports">⚓ Ports Management</option>
               <option value="refineries">🏭 Refinery Management</option>
-
-
+              <option value="documents">📄 Professional Articles</option>
               <option value="brokers">🤝 Broker Management</option>
               <option value="filters">🔧 Filter Management</option>
               <option value="data">💾 Data Management</option>
@@ -169,6 +169,14 @@ export default function AdminPanel() {
               <Factory className="h-4 w-4" />
               <span className="hidden xl:inline font-medium">Refineries</span>
               <span className="xl:hidden">Plants</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="documents" 
+              className="flex items-center gap-2 data-[state=active]:bg-indigo-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-200 hover:bg-indigo-50 rounded-lg"
+            >
+              <FileText className="h-4 w-4" />
+              <span className="hidden xl:inline font-medium">Documents</span>
+              <span className="xl:hidden">Docs</span>
             </TabsTrigger>
 
 
@@ -393,12 +401,13 @@ export default function AdminPanel() {
           </Card>
         </TabsContent>
 
+        <TabsContent value="documents" className="space-y-4">
+          <DocumentManagement />
+        </TabsContent>
+
         <TabsContent value="migration" className="space-y-4">
           <DatabaseMigration />
         </TabsContent>
-
-
-
 
         <TabsContent value="brokers" className="space-y-4">
           <BrokerManagement />
