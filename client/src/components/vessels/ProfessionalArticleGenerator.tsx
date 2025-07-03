@@ -158,7 +158,7 @@ export default function ProfessionalArticleGenerator({ vesselId, vesselName }: P
             <Shield className="h-12 w-12 mx-auto text-gray-400 mb-4" />
             <h3 className="text-lg font-medium mb-2">Authentication Required</h3>
             <p className="text-gray-600 mb-4">
-              Please log in to access AI-powered article generation and professional documentation.
+              Please log in to access professional documentation.
             </p>
             <Button onClick={() => window.location.href = '/api/login'}>
               Sign In to Continue
@@ -179,7 +179,7 @@ export default function ProfessionalArticleGenerator({ vesselId, vesselName }: P
             Generate Professional Articles
           </CardTitle>
           <p className="text-sm text-gray-600">
-            Create professional documentation for {vesselName} using AI-powered generation
+            Create professional documentation for {vesselName}
           </p>
         </CardHeader>
         <CardContent>
