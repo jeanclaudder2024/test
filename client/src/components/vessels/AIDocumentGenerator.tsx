@@ -7,7 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Brain, FileText, Download, Eye, Sparkles, Bot, AlertTriangle } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Brain, FileText, Download, Eye, Sparkles, Bot, AlertTriangle, FileIcon, File } from "lucide-react";
 
 interface DocumentTemplate {
   id: number;
@@ -36,6 +37,7 @@ interface AIDocumentGeneratorProps {
 export default function AIDocumentGenerator({ vesselId, vesselName }: AIDocumentGeneratorProps) {
   const [selectedTemplate, setSelectedTemplate] = useState<DocumentTemplate | null>(null);
   const [viewingDocument, setViewingDocument] = useState<GeneratedDocument | null>(null);
+  const [selectedFormat, setSelectedFormat] = useState<string>("pdf");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -71,10 +73,10 @@ export default function AIDocumentGenerator({ vesselId, vesselName }: AIDocument
 
   // Generate document mutation
   const generateDocumentMutation = useMutation({
-    mutationFn: async (templateId: number) => {
+    mutationFn: async ({ templateId, format }: { templateId: number; format: string }) => {
       const response = await apiRequest("/api/generate-document", {
         method: "POST",
-        body: JSON.stringify({ templateId, vesselId })
+        body: JSON.stringify({ templateId, vesselId, format })
       });
       return response;
     },
@@ -232,13 +234,43 @@ export default function AIDocumentGenerator({ vesselId, vesselName }: AIDocument
                             <li>• Professional maritime formatting</li>
                           </ul>
                         </div>
+                        
+                        {/* Format Selection */}
+                        <div className="bg-amber-50 p-4 rounded-lg mt-4">
+                          <h4 className="font-semibold text-amber-900 mb-2">Choose Document Format:</h4>
+                          <Select value={selectedFormat} onValueChange={setSelectedFormat}>
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select format" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="text">
+                                <div className="flex items-center gap-2">
+                                  <FileText className="h-4 w-4" />
+                                  Text (.txt) - Simple text format
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="pdf">
+                                <div className="flex items-center gap-2">
+                                  <File className="h-4 w-4" />
+                                  PDF (.pdf) - Beautiful formatted document with logos
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="word">
+                                <div className="flex items-center gap-2">
+                                  <FileIcon className="h-4 w-4" />
+                                  Word (.docx) - Microsoft Word document format
+                                </div>
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
                       <div className="flex gap-3">
                         <Button variant="outline" onClick={() => setSelectedTemplate(null)}>
                           Cancel
                         </Button>
                         <Button 
-                          onClick={() => generateDocumentMutation.mutate(template.id)}
+                          onClick={() => generateDocumentMutation.mutate({ templateId: template.id, format: selectedFormat })}
                           disabled={generateDocumentMutation.isPending}
                           className="flex-1"
                         >

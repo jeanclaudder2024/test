@@ -11322,10 +11322,16 @@ Note: This document contains real vessel operational data and should be treated 
         return res.status(401).json({ error: 'Authentication required' });
       }
 
-      const { templateId, vesselId } = req.body;
+      const { templateId, vesselId, format = 'text' } = req.body;
       
       if (!templateId || !vesselId) {
         return res.status(400).json({ error: 'Template ID and Vessel ID are required' });
+      }
+
+      // Validate format
+      const validFormats = ['text', 'pdf', 'word'];
+      if (!validFormats.includes(format)) {
+        return res.status(400).json({ error: 'Format must be one of: text, pdf, word' });
       }
 
       // Get template and vessel data
@@ -11411,9 +11417,88 @@ Generate a professional, detailed document that incorporates the vessel informat
         status: 'generated'
       });
 
+      // Handle different output formats
+      let documentResponse = { ...generatedDocument };
+      
+      if (format === 'pdf') {
+        // Generate PDF using existing PDF service
+        const { createProfessionalPDF } = await import('./services/professionalDocumentService');
+        const pdfPath = await createProfessionalPDF({
+          title: generatedDocument.title,
+          content: generatedContent,
+          vesselData: vessel,
+          documentId: generatedDocument.id
+        });
+        documentResponse.pdfPath = pdfPath;
+        documentResponse.downloadUrl = `/uploads/documents/${pdfPath.split('/').pop()}`;
+      } else if (format === 'word') {
+        // Generate Word document using docx library
+        const { Document, Packer, Paragraph, TextRun, HeadingLevel } = await import('docx');
+        const fs = await import('fs');
+        const path = await import('path');
+        
+        // Create Word document
+        const doc = new Document({
+          sections: [{
+            properties: {},
+            children: [
+              new Paragraph({
+                text: generatedDocument.title,
+                heading: HeadingLevel.TITLE,
+              }),
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: `Vessel: ${vessel.name}`,
+                    bold: true,
+                  }),
+                ],
+              }),
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: `Generated on: ${new Date().toLocaleDateString()}`,
+                    italics: true,
+                  }),
+                ],
+              }),
+              new Paragraph({
+                text: "",
+              }),
+              ...generatedContent.split('\n\n').map((paragraph: string) => 
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: paragraph,
+                    }),
+                  ],
+                })
+              ),
+            ],
+          }],
+        });
+
+        // Save Word document
+        const uploadsDir = path.join(process.cwd(), 'uploads', 'documents');
+        if (!fs.existsSync(uploadsDir)) {
+          fs.mkdirSync(uploadsDir, { recursive: true });
+        }
+        
+        const fileName = `${generatedDocument.title.replace(/\s+/g, '_')}_${Date.now()}.docx`;
+        const filePath = path.join(uploadsDir, fileName);
+        
+        const buffer = await Packer.toBuffer(doc);
+        fs.writeFileSync(filePath, buffer);
+        
+        documentResponse.wordPath = `/uploads/documents/${fileName}`;
+        documentResponse.downloadUrl = `/uploads/documents/${fileName}`;
+      }
+
       res.json({
         success: true,
-        document: generatedDocument
+        document: documentResponse,
+        format: format,
+        message: `Document generated successfully in ${format.toUpperCase()} format`
       });
 
     } catch (error) {
