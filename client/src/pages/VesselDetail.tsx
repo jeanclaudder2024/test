@@ -5,7 +5,7 @@ import { SimpleVoyageDetails } from '@/components/vessels/SimpleVoyageDetails';
 import SimpleVesselMap from '@/components/map/SimpleVesselMap';
 
 import { SimpleDocumentViewer } from '@/components/vessels/SimpleDocumentViewer';
-import AIDocumentGenerator from '@/components/vessels/AIDocumentGenerator';
+import SimpleDocumentCreator from '@/components/vessels/SimpleDocumentCreator';
 import axios from 'axios';
 import {
   Card,
@@ -842,7 +842,7 @@ export default function VesselDetail() {
                 
 
                 <TabsContent value="articles">
-                  <AIDocumentGenerator vesselId={vessel.id} vesselName={vessel.name} />
+                  <SimpleDocumentCreator vessel={vessel} />
                 </TabsContent>
               </Tabs>
             </div>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -6,8 +6,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, Download, Plus, Sparkles } from "lucide-react";
+import { FileText, Download, Plus, Sparkles, Eye, Edit, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 
 interface Vessel {
   id: number;
@@ -22,193 +24,152 @@ interface Vessel {
   currentLng: string | null;
 }
 
-interface DocumentTemplate {
+interface CreatedDocument {
   id: string;
-  name: string;
+  title: string;
   description: string;
   content: string;
+  createdAt: string;
+  vesselId: number;
 }
-
-const documentTemplates: DocumentTemplate[] = [
-  {
-    id: "vessel_certificate",
-    name: "Vessel Certificate",
-    description: "Official vessel certification document",
-    content: `VESSEL CERTIFICATION DOCUMENT
-
-Vessel Name: {VESSEL_NAME}
-IMO Number: {VESSEL_IMO}
-MMSI: {VESSEL_MMSI}
-Vessel Type: {VESSEL_TYPE}
-Flag State: {VESSEL_FLAG}
-Year Built: {VESSEL_BUILT}
-Deadweight: {VESSEL_DEADWEIGHT} MT
-
-CERTIFICATION DETAILS:
-This document certifies that the above-mentioned vessel meets all international maritime safety and environmental standards.
-
-Current Position: {VESSEL_POSITION}
-Certificate Issue Date: {CURRENT_DATE}
-Certificate Valid Until: {VALIDITY_DATE}
-
-PETRODEALHUB MARITIME SERVICES
-Official Document Generator`
-  },
-  {
-    id: "cargo_manifest",
-    name: "Cargo Manifest",
-    description: "Detailed cargo manifest for vessel operations",
-    content: `CARGO MANIFEST
-
-Vessel Details:
-- Name: {VESSEL_NAME}
-- IMO: {VESSEL_IMO}
-- Type: {VESSEL_TYPE}
-- Flag: {VESSEL_FLAG}
-- Built: {VESSEL_BUILT}
-
-Cargo Information:
-- Vessel Capacity: {VESSEL_DEADWEIGHT} MT
-- Current Position: {VESSEL_POSITION}
-- Document Date: {CURRENT_DATE}
-
-CARGO DECLARATION:
-This manifest certifies the cargo details for the specified vessel in accordance with international maritime regulations.
-
-Prepared by: PETRODEALHUB Maritime Documentation System`
-  },
-  {
-    id: "safety_inspection",
-    name: "Safety Inspection Report",
-    description: "Comprehensive safety inspection documentation",
-    content: `MARITIME SAFETY INSPECTION REPORT
-
-VESSEL IDENTIFICATION:
-Name: {VESSEL_NAME}
-IMO Number: {VESSEL_IMO}
-MMSI: {VESSEL_MMSI}
-Type: {VESSEL_TYPE}
-Flag: {VESSEL_FLAG}
-Built: {VESSEL_BUILT}
-
-INSPECTION DETAILS:
-Inspection Date: {CURRENT_DATE}
-Current Location: {VESSEL_POSITION}
-Deadweight Tonnage: {VESSEL_DEADWEIGHT} MT
-
-SAFETY COMPLIANCE:
-✓ Hull Integrity: Satisfactory
-✓ Navigation Equipment: Operational
-✓ Safety Equipment: Compliant
-✓ Communication Systems: Functional
-✓ Emergency Procedures: Up to Date
-
-This vessel has passed all required safety inspections and is certified for maritime operations.
-
-PETRODEALHUB SAFETY CERTIFICATION DEPARTMENT`
-  }
-];
 
 interface SimpleDocumentCreatorProps {
   vessel: Vessel;
 }
 
 export default function SimpleDocumentCreator({ vessel }: SimpleDocumentCreatorProps) {
-  const [selectedTemplate, setSelectedTemplate] = useState<DocumentTemplate | null>(null);
-  const [customTitle, setCustomTitle] = useState("");
-  const [customContent, setCustomContent] = useState("");
-  const [showCustomDialog, setShowCustomDialog] = useState(false);
+  const [documents, setDocuments] = useState<CreatedDocument[]>([]);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [editingDocument, setEditingDocument] = useState<CreatedDocument | null>(null);
+  const [viewingDocument, setViewingDocument] = useState<CreatedDocument | null>(null);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [content, setContent] = useState("");
   const { toast } = useToast();
 
-  const getCurrentDate = () => {
-    return new Date().toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
-
-  const getValidityDate = () => {
-    const date = new Date();
-    date.setFullYear(date.getFullYear() + 1);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
-
-  const getVesselPosition = () => {
-    if (vessel.currentLat && vessel.currentLng) {
-      return `${parseFloat(vessel.currentLat).toFixed(4)}°N, ${parseFloat(vessel.currentLng).toFixed(4)}°E`;
+  // Load documents from localStorage on component mount
+  useEffect(() => {
+    const storageKey = `vessel_documents_${vessel.id}`;
+    const savedDocuments = localStorage.getItem(storageKey);
+    if (savedDocuments) {
+      try {
+        setDocuments(JSON.parse(savedDocuments));
+      } catch (error) {
+        console.error('Error loading documents:', error);
+      }
     }
-    return "Position Not Available";
+  }, [vessel.id]);
+
+  // Save documents to localStorage whenever documents change
+  const saveDocuments = (newDocuments: CreatedDocument[]) => {
+    const storageKey = `vessel_documents_${vessel.id}`;
+    localStorage.setItem(storageKey, JSON.stringify(newDocuments));
+    setDocuments(newDocuments);
   };
 
-  const generateDocument = (template: DocumentTemplate) => {
-    let content = template.content;
-    
-    // Replace all placeholders with vessel data
-    content = content.replace(/{VESSEL_NAME}/g, vessel.name || "N/A");
-    content = content.replace(/{VESSEL_IMO}/g, vessel.imo || "N/A");
-    content = content.replace(/{VESSEL_MMSI}/g, vessel.mmsi || "N/A");
-    content = content.replace(/{VESSEL_TYPE}/g, vessel.vesselType || "N/A");
-    content = content.replace(/{VESSEL_FLAG}/g, vessel.flag || "N/A");
-    content = content.replace(/{VESSEL_BUILT}/g, vessel.built?.toString() || "N/A");
-    content = content.replace(/{VESSEL_DEADWEIGHT}/g, vessel.deadweight?.toString() || "N/A");
-    content = content.replace(/{VESSEL_POSITION}/g, getVesselPosition());
-    content = content.replace(/{CURRENT_DATE}/g, getCurrentDate());
-    content = content.replace(/{VALIDITY_DATE}/g, getValidityDate());
-
-    return content;
-  };
-
-  const downloadDocument = (template: DocumentTemplate) => {
-    const content = generateDocument(template);
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${vessel.name}_${template.name.replace(/\s+/g, '_')}_${getCurrentDate().replace(/\s+/g, '_')}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
-    toast({
-      title: "Document Downloaded",
-      description: `${template.name} has been generated and downloaded successfully.`
-    });
-  };
-
-  const downloadCustomDocument = () => {
-    if (!customTitle || !customContent) {
+  const createDocument = () => {
+    if (!title.trim() || !description.trim() || !content.trim()) {
       toast({
         title: "Missing Information",
-        description: "Please provide both title and content for the document.",
+        description: "Please provide title, description, and content for the document.",
         variant: "destructive"
       });
       return;
     }
 
-    const blob = new Blob([customContent], { type: 'text/plain' });
+    const newDocument: CreatedDocument = {
+      id: Date.now().toString(),
+      title: title.trim(),
+      description: description.trim(),
+      content: content.trim(),
+      createdAt: new Date().toISOString(),
+      vesselId: vessel.id
+    };
+
+    const updatedDocuments = [...documents, newDocument];
+    saveDocuments(updatedDocuments);
+
+    toast({
+      title: "Document Created",
+      description: `"${title}" has been created successfully.`
+    });
+
+    // Reset form
+    setTitle("");
+    setDescription("");
+    setContent("");
+    setShowCreateDialog(false);
+  };
+
+  const updateDocument = () => {
+    if (!editingDocument || !title.trim() || !description.trim() || !content.trim()) {
+      toast({
+        title: "Missing Information",
+        description: "Please provide title, description, and content for the document.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const updatedDocuments = documents.map(doc => 
+      doc.id === editingDocument.id 
+        ? { ...doc, title: title.trim(), description: description.trim(), content: content.trim() }
+        : doc
+    );
+    saveDocuments(updatedDocuments);
+
+    toast({
+      title: "Document Updated",
+      description: `"${title}" has been updated successfully.`
+    });
+
+    // Reset form
+    setTitle("");
+    setDescription("");
+    setContent("");
+    setEditingDocument(null);
+  };
+
+  const deleteDocument = (id: string) => {
+    const updatedDocuments = documents.filter(doc => doc.id !== id);
+    saveDocuments(updatedDocuments);
+
+    toast({
+      title: "Document Deleted",
+      description: "Document has been deleted successfully."
+    });
+  };
+
+  const downloadDocument = (document: CreatedDocument) => {
+    const blob = new Blob([document.content], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = window.document.createElement('a');
     a.href = url;
-    a.download = `${vessel.name}_${customTitle.replace(/\s+/g, '_')}_${getCurrentDate().replace(/\s+/g, '_')}.txt`;
-    document.body.appendChild(a);
+    a.download = `${vessel.name}_${document.title.replace(/\s+/g, '_')}.txt`;
+    window.document.body.appendChild(a);
     a.click();
-    document.body.removeChild(a);
+    window.document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
     toast({
-      title: "Custom Document Downloaded",
-      description: `${customTitle} has been created and downloaded successfully.`
+      title: "Document Downloaded",
+      description: `"${document.title}" has been downloaded successfully.`
     });
+  };
 
-    setCustomTitle("");
-    setCustomContent("");
-    setShowCustomDialog(false);
+  const startEdit = (document: CreatedDocument) => {
+    setEditingDocument(document);
+    setTitle(document.title);
+    setDescription(document.description);
+    setContent(document.content);
+  };
+
+  const resetForm = () => {
+    setTitle("");
+    setDescription("");
+    setContent("");
+    setEditingDocument(null);
+    setShowCreateDialog(false);
   };
 
   return (
@@ -217,131 +178,177 @@ export default function SimpleDocumentCreator({ vessel }: SimpleDocumentCreatorP
       <div className="text-center">
         <div className="flex items-center justify-center gap-2 mb-2">
           <FileText className="h-8 w-8 text-blue-600" />
-          <h2 className="text-2xl font-bold text-gray-900">Document Creator</h2>
+          <h2 className="text-2xl font-bold text-gray-900">Professional Articles</h2>
         </div>
-        <p className="text-gray-600">Create professional maritime documents for {vessel.name}</p>
+        <p className="text-gray-600">Create and manage documents for {vessel.name}</p>
       </div>
 
-      {/* Quick Templates */}
+      {/* Create Document Button */}
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-blue-600" />
-          Quick Templates
-        </h3>
-        
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {documentTemplates.map((template) => (
-            <Card key={template.id} className="hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-blue-600" />
-                  {template.name}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-gray-600 mb-4">{template.description}</p>
-                <div className="space-y-2">
-                  <Dialog open={selectedTemplate?.id === template.id} onOpenChange={(open) => !open && setSelectedTemplate(null)}>
-                    <DialogTrigger asChild>
-                      <Button 
-                        variant="outline" 
-                        className="w-full"
-                        onClick={() => setSelectedTemplate(template)}
-                      >
-                        Preview
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-y-auto">
-                      <DialogHeader>
-                        <DialogTitle>{template.name} - Preview</DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-4">
-                        <div className="bg-gray-50 p-4 rounded-lg">
-                          <pre className="text-sm whitespace-pre-wrap font-mono">
-                            {generateDocument(template)}
-                          </pre>
-                        </div>
-                        <div className="flex gap-3">
-                          <Button variant="outline" onClick={() => setSelectedTemplate(null)}>
-                            Close
-                          </Button>
-                          <Button onClick={() => downloadDocument(template)} className="flex-1">
-                            <Download className="h-4 w-4 mr-2" />
-                            Download Document
-                          </Button>
-                        </div>
+        <Button 
+          onClick={() => setShowCreateDialog(true)} 
+          className="w-full"
+          size="lg"
+        >
+          <Plus className="h-5 w-5 mr-2" />
+          Create New Document
+        </Button>
+      </div>
+
+      {/* Documents List */}
+      {documents.length > 0 && (
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <FileText className="h-5 w-5 text-blue-600" />
+            Your Documents ({documents.length})
+          </h3>
+          
+          <div className="space-y-4">
+            {documents.map((document) => (
+              <Card key={document.id} className="hover:shadow-md transition-shadow">
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <CardTitle className="text-lg">{document.title}</CardTitle>
+                      <p className="text-sm text-gray-600 mt-1">{document.description}</p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <Badge variant="secondary">
+                          {new Date(document.createdAt).toLocaleDateString()}
+                        </Badge>
                       </div>
-                    </DialogContent>
-                  </Dialog>
-                  <Button 
-                    onClick={() => downloadDocument(template)}
-                    className="w-full"
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Generate & Download
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setViewingDocument(document)}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => startEdit(document)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => downloadDocument(document)}
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => deleteDocument(document.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+              </Card>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Custom Document Creator */}
-      <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <Plus className="h-5 w-5 text-green-600" />
-          Create Custom Document
-        </h3>
-        
+      {/* No Documents Message */}
+      {documents.length === 0 && (
         <Card>
-          <CardContent className="pt-6">
-            <Dialog open={showCustomDialog} onOpenChange={setShowCustomDialog}>
-              <DialogTrigger asChild>
-                <Button className="w-full">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Custom Document
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[600px]">
-                <DialogHeader>
-                  <DialogTitle>Create Custom Document</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="title">Document Title</Label>
-                    <Input
-                      id="title"
-                      value={customTitle}
-                      onChange={(e) => setCustomTitle(e.target.value)}
-                      placeholder="Enter document title..."
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="content">Document Content</Label>
-                    <Textarea
-                      id="content"
-                      value={customContent}
-                      onChange={(e) => setCustomContent(e.target.value)}
-                      placeholder="Enter your document content here..."
-                      rows={10}
-                    />
-                  </div>
-                  <div className="flex gap-3">
-                    <Button variant="outline" onClick={() => setShowCustomDialog(false)}>
-                      Cancel
-                    </Button>
-                    <Button onClick={downloadCustomDocument} className="flex-1">
-                      <Download className="h-4 w-4 mr-2" />
-                      Create & Download
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+          <CardContent className="text-center py-12">
+            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Documents Yet</h3>
+            <p className="text-gray-600 mb-4">
+              Create your first document to get started with professional articles for {vessel.name}.
+            </p>
           </CardContent>
         </Card>
-      </div>
+      )}
+
+      {/* Create/Edit Document Dialog */}
+      <Dialog open={showCreateDialog || editingDocument !== null} onOpenChange={(open) => !open && resetForm()}>
+        <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {editingDocument ? 'Edit Document' : 'Create New Document'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="title">Document Title</Label>
+              <Input
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Enter document title..."
+              />
+            </div>
+            <div>
+              <Label htmlFor="description">Description</Label>
+              <Input
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Brief description of the document..."
+              />
+            </div>
+            <div>
+              <Label htmlFor="content">Document Content</Label>
+              <Textarea
+                id="content"
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder="Enter your document content here..."
+                rows={12}
+              />
+            </div>
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={resetForm}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={editingDocument ? updateDocument : createDocument} 
+                className="flex-1"
+              >
+                {editingDocument ? 'Update Document' : 'Create Document'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Document Dialog */}
+      <Dialog open={viewingDocument !== null} onOpenChange={(open) => !open && setViewingDocument(null)}>
+        <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{viewingDocument?.title}</DialogTitle>
+          </DialogHeader>
+          {viewingDocument && (
+            <div className="space-y-4">
+              <div className="bg-blue-50 p-3 rounded-lg">
+                <p className="text-sm text-blue-800">{viewingDocument.description}</p>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <pre className="text-sm whitespace-pre-wrap font-mono">
+                  {viewingDocument.content}
+                </pre>
+              </div>
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={() => setViewingDocument(null)}>
+                  Close
+                </Button>
+                <Button onClick={() => downloadDocument(viewingDocument)} className="flex-1">
+                  <Download className="h-4 w-4 mr-2" />
+                  Download
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
