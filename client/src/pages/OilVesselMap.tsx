@@ -139,6 +139,12 @@ export default function OilVesselMap() {
     enabled: true
   });
 
+  // Fetch oil types from admin management
+  const { data: oilTypes = [] } = useQuery({
+    queryKey: ['/api/admin/oil-types'],
+    enabled: true
+  });
+
   // Location search function
   const searchForLocation = async () => {
     if (!searchTerm.trim()) return;
@@ -173,9 +179,13 @@ export default function OilVesselMap() {
     }
   };
 
-  // Filter for oil vessels only
+  // Filter for oil vessels with dynamic oil types
   const oilVessels = vessels.filter(vessel => {
     const vesselType = vessel.vesselType?.toLowerCase() || '';
+    const oilType = vessel.oilType?.toLowerCase() || '';
+    const cargoType = vessel.cargoType?.toLowerCase() || '';
+    
+    // Check if vessel is oil-related
     const isOilVessel = vesselType.includes('tanker') || 
            vesselType.includes('oil') || 
            vesselType.includes('crude') || 
@@ -183,12 +193,27 @@ export default function OilVesselMap() {
            vesselType.includes('lpg') || 
            vesselType.includes('chemical');
     
-    // Apply vessel filter
+    // Apply vessel filter based on oil types from admin panel
     if (vesselFilter !== 'all') {
-      if (vesselFilter === 'tanker' && !vesselType.includes('tanker')) return false;
-      if (vesselFilter === 'crude' && !vesselType.includes('crude')) return false;
-      if (vesselFilter === 'lng' && !vesselType.includes('lng')) return false;
-      if (vesselFilter === 'lpg' && !vesselType.includes('lpg')) return false;
+      // Check if filter matches any oil type from admin panel
+      const matchesOilType = Array.isArray(oilTypes) && oilTypes.some((oilTypeObj: any) => {
+        const oilTypeName = oilTypeObj.name?.toLowerCase() || '';
+        return vesselFilter === oilTypeName && (
+          oilType.includes(oilTypeName) ||
+          cargoType.includes(oilTypeName) ||
+          vesselType.includes(oilTypeName)
+        );
+      });
+      
+      // Fallback to old filter logic if no match in oil types
+      if (!matchesOilType) {
+        if (vesselFilter === 'tanker' && !vesselType.includes('tanker')) return false;
+        if (vesselFilter === 'crude' && !vesselType.includes('crude')) return false;
+        if (vesselFilter === 'lng' && !vesselType.includes('lng')) return false;
+        if (vesselFilter === 'lpg' && !vesselType.includes('lpg')) return false;
+      } else if (!matchesOilType) {
+        return false;
+      }
     }
     
     // Apply search filter
@@ -196,7 +221,10 @@ export default function OilVesselMap() {
       const searchLower = searchTerm.toLowerCase();
       const matchesSearch = vessel.name?.toLowerCase().includes(searchLower) ||
                            vessel.flag?.toLowerCase().includes(searchLower) ||
-                           vessel.destination?.toLowerCase().includes(searchLower);
+                           vessel.imo?.toLowerCase().includes(searchLower) ||
+                           vessel.mmsi?.toLowerCase().includes(searchLower) ||
+                           oilType.includes(searchLower) ||
+                           cargoType.includes(searchLower);
       return isOilVessel && matchesSearch;
     }
     
@@ -441,10 +469,20 @@ export default function OilVesselMap() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Oil Vessels</SelectItem>
-                <SelectItem value="tanker">Oil Tankers</SelectItem>
-                <SelectItem value="crude">Crude Carriers</SelectItem>
-                <SelectItem value="lng">LNG Carriers</SelectItem>
-                <SelectItem value="lpg">LPG Carriers</SelectItem>
+                {Array.isArray(oilTypes) && oilTypes.map((oilType: any) => (
+                  <SelectItem key={oilType.id} value={oilType.name.toLowerCase()}>
+                    {oilType.name}
+                  </SelectItem>
+                ))}
+                {/* Fallback options if oil types aren't loaded */}
+                {(!Array.isArray(oilTypes) || oilTypes.length === 0) && (
+                  <>
+                    <SelectItem value="tanker">Oil Tankers</SelectItem>
+                    <SelectItem value="crude">Crude Carriers</SelectItem>
+                    <SelectItem value="lng">LNG Carriers</SelectItem>
+                    <SelectItem value="lpg">LPG Carriers</SelectItem>
+                  </>
+                )}
               </SelectContent>
             </Select>
           </div>

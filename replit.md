@@ -320,6 +320,15 @@ Changelog:
   * **Header Text Cleaned**: Removed "using AI-powered generation" from article generation description
   * **Professional Appearance**: Interface now presents document generation without technical implementation details
   * **User Experience Enhanced**: Cleaner, more professional interface focused on document creation functionality
+- July 3, 2025. **DYNAMIC VESSEL TYPE FILTERING: Integration with Oil Type Management System**:
+  * **Fixed Critical React Hooks Error**: Resolved Map import conflict between lucide-react and react-leaflet in AdvancedMaritimeMap.tsx by renaming to MapIcon
+  * **Dynamic Oil Type Integration**: Updated vessel type filters to use oil types from Oil Type Management admin panel
+  * **Enhanced Filtering Logic**: Vessel type dropdown now dynamically populates with oil types from /api/admin/oil-types endpoint
+  * **Improved Search Capabilities**: Enhanced vessel filtering to match against oilType, cargoType, and vesselType fields
+  * **Real-time Data Sync**: Both OilVesselMap and AdvancedMaritimeMap now query oil types with proper caching (staleTime: 0)
+  * **Fallback Support**: Added fallback vessel type options when oil types aren't loaded for system reliability
+  * **Successfully Displaying 285 Vessels**: Confirmed all map features working with vessel markers, ports, refineries, and interactive controls
+  * **Professional Maritime Interface**: Both map pages fully operational with dynamic filtering based on admin-managed oil types
 
 ## User Preferences
 

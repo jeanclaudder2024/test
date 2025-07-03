@@ -234,6 +234,12 @@ export default function AdvancedMaritimeMap() {
     }
   });
 
+  // Fetch oil types from admin management
+  const { data: oilTypes = [] } = useQuery({
+    queryKey: ['/api/admin/oil-types'],
+    staleTime: 5 * 60 * 1000
+  });
+
   // Filter vessels based on selected types and search
   const filteredVessels = useMemo(() => {
     return vessels.filter(vessel => {
