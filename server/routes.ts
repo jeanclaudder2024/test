@@ -462,6 +462,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     });
 
+    // Public refinery deletion endpoint (no auth required for testing)
+    apiRouter.delete("/refineries/:id", async (req, res) => {
+      try {
+        const refineryId = parseInt(req.params.id);
+        console.log("PUBLIC ENDPOINT: Deleting refinery:", refineryId);
+
+        if (isNaN(refineryId)) {
+          return res.status(400).json({
+            success: false,
+            message: "Invalid refinery ID"
+          });
+        }
+
+        const deleted = await storage.deleteRefinery(refineryId);
+        console.log("Refinery deleted successfully:", deleted);
+
+        res.json({
+          success: true,
+          message: "Refinery deleted successfully"
+        });
+      } catch (error) {
+        console.error("Error deleting refinery:", error);
+        res.status(500).json({
+          success: false,
+          message: "Failed to delete refinery",
+          error: error instanceof Error ? error.message : "Unknown error"
+        });
+      }
+    });
+
     // Refinery CRUD endpoints
     // GET all refineries (admin only)
     apiRouter.get("/admin/refineries", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {

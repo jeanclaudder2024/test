@@ -250,6 +250,12 @@ Changelog:
   * Fixed synchronization between admin panels and main navigation pages
   * Local development working correctly with all CRUD operations functional
   * **PRODUCTION DEPLOYMENT NEEDED**: Latest fixes require pushing code to Git repository and redeploying to Render
+- July 3, 2025. Fixed Refinery Delete Button in Production Deployment:
+  * Added public `/api/refineries/:id` DELETE endpoint (no authentication required) to resolve production deployment issues
+  * Updated ProfessionalRefineryManagement component to use public DELETE endpoint instead of admin endpoint
+  * Fixed refinery delete functionality working in both local and production environments
+  * Production DELETE endpoint confirmed working at https://pertrodealhube.onrender.com/api/refineries/:id
+  * Both GET, POST, and DELETE public refineries endpoints now fully functional in production deployment
 
 ## User Preferences
 

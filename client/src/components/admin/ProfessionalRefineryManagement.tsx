@@ -303,11 +303,10 @@ export default function ProfessionalRefineryManagement() {
 
   const deleteRefineryMutation = useMutation({
     mutationFn: async (id: number) => {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`/api/admin/refineries/${id}`, {
+      const response = await fetch(`/api/refineries/${id}`, {
         method: 'DELETE',
         headers: {
-          ...(token && { "Authorization": `Bearer ${token}` }),
+          'Content-Type': 'application/json',
         },
       });
       if (!response.ok) throw new Error('Failed to delete refinery');
