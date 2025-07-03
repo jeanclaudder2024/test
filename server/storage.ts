@@ -1786,8 +1786,10 @@ export class DatabaseStorage implements IStorage {
 
   async deleteOilType(id: number): Promise<boolean> {
     try {
-      const result = await db.delete(oilTypes).where(eq(oilTypes.id, id));
-      return result.rowCount > 0;
+      console.log('Attempting to delete oil type with ID:', id);
+      const result = await db.delete(oilTypes).where(eq(oilTypes.id, id)).returning();
+      console.log('Delete result:', result);
+      return result.length > 0;
     } catch (error) {
       console.error('Error deleting oil type:', error);
       return false;
