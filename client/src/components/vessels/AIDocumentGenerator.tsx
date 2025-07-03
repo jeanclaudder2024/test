@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Brain, FileText, Download, Eye, Sparkles, Bot } from "lucide-react";
+import { Brain, FileText, Download, Eye, Sparkles, Bot, AlertTriangle } from "lucide-react";
 
 interface DocumentTemplate {
   id: number;
@@ -40,21 +40,33 @@ export default function AIDocumentGenerator({ vesselId, vesselName }: AIDocument
   const queryClient = useQueryClient();
 
   // Fetch document templates
-  const { data: templates = [], isLoading: isLoadingTemplates } = useQuery({
+  const { data: templates = [], isLoading: isLoadingTemplates, error: templatesError } = useQuery({
     queryKey: ["/api/document-templates"],
     queryFn: async () => {
-      const response = await apiRequest("/api/document-templates");
-      return Array.isArray(response) ? response : [];
-    }
+      try {
+        const response = await apiRequest("/api/document-templates");
+        return Array.isArray(response) ? response : [];
+      } catch (error) {
+        console.error("Error fetching templates:", error);
+        return [];
+      }
+    },
+    retry: false
   });
 
   // Fetch generated documents for this vessel
-  const { data: generatedDocuments = [], isLoading: isLoadingDocuments } = useQuery({
+  const { data: generatedDocuments = [], isLoading: isLoadingDocuments, error: documentsError } = useQuery({
     queryKey: ["/api/generated-documents", vesselId],
     queryFn: async () => {
-      const response = await apiRequest(`/api/generated-documents?vesselId=${vesselId}`);
-      return Array.isArray(response) ? response : [];
-    }
+      try {
+        const response = await apiRequest(`/api/generated-documents?vesselId=${vesselId}`);
+        return Array.isArray(response) ? response : [];
+      } catch (error) {
+        console.error("Error fetching generated documents:", error);
+        return [];
+      }
+    },
+    retry: false
   });
 
   // Generate document mutation
@@ -112,6 +124,29 @@ export default function AIDocumentGenerator({ vesselId, vesselName }: AIDocument
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  // Show setup message if database tables don't exist
+  if (templatesError || documentsError) {
+    return (
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <AlertTriangle className="h-5 w-5 text-yellow-600" />
+          <h3 className="text-lg font-semibold text-yellow-800">Database Setup Required</h3>
+        </div>
+        <p className="text-yellow-700 mb-4">
+          The AI document template system needs database tables to be created. Please run the following SQL schema in your Supabase database:
+        </p>
+        <div className="bg-white rounded border p-4 mb-4">
+          <code className="text-sm text-gray-600">
+            See DOCUMENT_TEMPLATES_SCHEMA.sql file for the complete schema
+          </code>
+        </div>
+        <p className="text-sm text-yellow-600">
+          Once the database schema is applied, the AI document generation system will be ready to use.
+        </p>
       </div>
     );
   }
