@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, LayerGroup, ZoomControl, Circle, Polyline, useMap, CircleMarker } from 'react-leaflet';
-import MarkerClusterGroup from 'react-leaflet-cluster';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -150,7 +149,6 @@ export default function AdvancedMaritimeMap() {
   const [showRoutes, setShowRoutes] = useState(false);
   const [showWeather, setShowWeather] = useState(false);
   const [showHeatMap, setShowHeatMap] = useState(false);
-  const [showClusters, setShowClusters] = useState(true);
   const [realTimeTracking, setRealTimeTracking] = useState(true);
   const [selectedVesselTypes, setSelectedVesselTypes] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -338,16 +336,16 @@ export default function AdvancedMaritimeMap() {
     });
   };
 
-  // Map controls component
-  const MapControls = () => {
+  // Map controls component - must be inside MapContainer
+  const MapControlsInner = () => {
     const map = useMap();
 
     const handleZoomIn = () => map.zoomIn();
     const handleZoomOut = () => map.zoomOut();
     const handleFitBounds = () => {
-      if (vessels.length > 0) {
+      if (filteredVessels.length > 0) {
         const bounds = L.latLngBounds(
-          vessels.map(v => [Number(v.lat), Number(v.lng)])
+          filteredVessels.map(v => [Number(v.lat), Number(v.lng)])
         );
         map.fitBounds(bounds, { padding: [50, 50] });
       }
@@ -519,7 +517,7 @@ export default function AdvancedMaritimeMap() {
           />
         )}
 
-        <MapControls />
+        <MapControlsInner />
         <VesselHeatMap />
         <WeatherOverlay />
         <VesselRoutes />
@@ -595,94 +593,46 @@ export default function AdvancedMaritimeMap() {
 
         {/* Vessels Layer */}
         {showVessels && (
-          showClusters ? (
-            <MarkerClusterGroup
-              chunkedLoading
-              maxClusterRadius={50}
-              spiderfyOnMaxZoom={true}
-              showCoverageOnHover={false}
-            >
-              {filteredVessels.map(vessel => (
-                <Marker
-                  key={`vessel-${vessel.id}`}
-                  position={[Number(vessel.lat), Number(vessel.lng)]}
-                  icon={getVesselIcon(vessel)}
-                >
-                  <Popup>
-                    <div className="p-2 min-w-[250px]">
-                      <h3 className="font-semibold text-lg flex items-center gap-2">
-                        <Ship className="h-4 w-4" />
-                        {vessel.name}
-                      </h3>
-                      <div className="mt-2 space-y-1 text-sm">
-                        <p><span className="font-medium">Type:</span> {vessel.vesselType}</p>
-                        <p><span className="font-medium">IMO:</span> {vessel.imo}</p>
-                        <p><span className="font-medium">Flag:</span> {vessel.flag}</p>
-                        <p><span className="font-medium">Status:</span> 
-                          <Badge variant="default" className="ml-1">
-                            {vessel.status}
-                          </Badge>
-                        </p>
-                        {vessel.speed !== undefined && (
-                          <p><span className="font-medium">Speed:</span> {vessel.speed.toFixed(1)} knots</p>
-                        )}
-                        {vessel.course !== undefined && (
-                          <p><span className="font-medium">Course:</span> {vessel.course.toFixed(0)}°</p>
-                        )}
-                        {vessel.destinationPort && (
-                          <p><span className="font-medium">Destination:</span> {vessel.destinationPort}</p>
-                        )}
-                        {vessel.eta && (
-                          <p><span className="font-medium">ETA:</span> {new Date(vessel.eta).toLocaleString()}</p>
-                        )}
-                      </div>
+          <LayerGroup>
+            {filteredVessels.map(vessel => (
+              <Marker
+                key={`vessel-${vessel.id}`}
+                position={[Number(vessel.lat), Number(vessel.lng)]}
+                icon={getVesselIcon(vessel)}
+              >
+                <Popup>
+                  <div className="p-2 min-w-[250px]">
+                    <h3 className="font-semibold text-lg flex items-center gap-2">
+                      <Ship className="h-4 w-4" />
+                      {vessel.name}
+                    </h3>
+                    <div className="mt-2 space-y-1 text-sm">
+                      <p><span className="font-medium">Type:</span> {vessel.vesselType}</p>
+                      <p><span className="font-medium">IMO:</span> {vessel.imo}</p>
+                      <p><span className="font-medium">Flag:</span> {vessel.flag}</p>
+                      <p><span className="font-medium">Status:</span> 
+                        <Badge variant="default" className="ml-1">
+                          {vessel.status}
+                        </Badge>
+                      </p>
+                      {vessel.speed !== undefined && (
+                        <p><span className="font-medium">Speed:</span> {vessel.speed.toFixed(1)} knots</p>
+                      )}
+                      {vessel.course !== undefined && (
+                        <p><span className="font-medium">Course:</span> {vessel.course.toFixed(0)}°</p>
+                      )}
+                      {vessel.destinationPort && (
+                        <p><span className="font-medium">Destination:</span> {vessel.destinationPort}</p>
+                      )}
+                      {vessel.eta && (
+                        <p><span className="font-medium">ETA:</span> {new Date(vessel.eta).toLocaleString()}</p>
+                      )}
                     </div>
-                  </Popup>
-                </Marker>
-              ))}
-            </MarkerClusterGroup>
-          ) : (
-            <LayerGroup>
-              {filteredVessels.map(vessel => (
-                <Marker
-                  key={`vessel-${vessel.id}`}
-                  position={[Number(vessel.lat), Number(vessel.lng)]}
-                  icon={getVesselIcon(vessel)}
-                >
-                  <Popup>
-                    <div className="p-2 min-w-[250px]">
-                      <h3 className="font-semibold text-lg flex items-center gap-2">
-                        <Ship className="h-4 w-4" />
-                        {vessel.name}
-                      </h3>
-                      <div className="mt-2 space-y-1 text-sm">
-                        <p><span className="font-medium">Type:</span> {vessel.vesselType}</p>
-                        <p><span className="font-medium">IMO:</span> {vessel.imo}</p>
-                        <p><span className="font-medium">Flag:</span> {vessel.flag}</p>
-                        <p><span className="font-medium">Status:</span> 
-                          <Badge variant="default" className="ml-1">
-                            {vessel.status}
-                          </Badge>
-                        </p>
-                        {vessel.speed !== undefined && (
-                          <p><span className="font-medium">Speed:</span> {vessel.speed.toFixed(1)} knots</p>
-                        )}
-                        {vessel.course !== undefined && (
-                          <p><span className="font-medium">Course:</span> {vessel.course.toFixed(0)}°</p>
-                        )}
-                        {vessel.destinationPort && (
-                          <p><span className="font-medium">Destination:</span> {vessel.destinationPort}</p>
-                        )}
-                        {vessel.eta && (
-                          <p><span className="font-medium">ETA:</span> {new Date(vessel.eta).toLocaleString()}</p>
-                        )}
-                      </div>
-                    </div>
-                  </Popup>
-                </Marker>
-              ))}
-            </LayerGroup>
-          )
+                  </div>
+                </Popup>
+              </Marker>
+            ))}
+          </LayerGroup>
         )}
       </MapContainer>
 
