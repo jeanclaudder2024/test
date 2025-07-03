@@ -1,5 +1,8 @@
 import express, { type Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
+import { execSync } from 'child_process';
+import * as path from 'path';
+import * as fs from 'fs';
 import { storage } from "./storage";
 import authRoutes from "./routes/authRoutes";
 import { authenticateToken, requireAdmin, AuthenticatedRequest } from "./auth";
@@ -104,7 +107,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Emergency admin user creation endpoint
   app.post("/api/create-admin", async (req: Request, res: Response) => {
     try {
-      const bcrypt = require('bcrypt');
+      // Pre-hashed password for "admin123"
       const adminPasswordHash = '$2b$10$6W/1ypnjS1aTMi7zCd3nweyNsPZfOeVKJSwV.PaaY0dbW6jiYSq4u';
       
       // Delete existing admin user if any
@@ -124,7 +127,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           password: "admin123"
         }
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating admin user:", error);
       res.status(500).json({ message: "Failed to create admin user", error: error.message });
     }
@@ -7186,8 +7189,6 @@ Please generate a comprehensive, professional maritime document following the te
       }
 
       // Serve the PDF file
-      const path = require('path');
-      const fs = require('fs');
       const fullPath = path.join(process.cwd(), article.pdfUrl);
       
       if (!fs.existsSync(fullPath)) {
@@ -7232,8 +7233,6 @@ Please generate a comprehensive, professional maritime document following the te
 
       // Delete PDF file if exists
       if (article.pdfUrl) {
-        const path = require('path');
-        const fs = require('fs');
         const fullPath = path.join(process.cwd(), article.pdfUrl);
         
         if (fs.existsSync(fullPath)) {
@@ -9065,7 +9064,6 @@ Keep the description professional, informative, and around 150-200 words. Focus 
           console.log(`📦 Migrating table: ${tableName}`);
           
           // Export data from PostgreSQL
-          const { execSync } = require('child_process');
           const csvFileName = `${tableName}_export.csv`;
           
           // Export to CSV from PostgreSQL
