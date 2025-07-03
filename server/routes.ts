@@ -10988,5 +10988,212 @@ Note: This document contains real vessel operational data and should be treated 
     }
   });
 
+  // Document Template API Endpoints
+  
+  // GET /api/document-templates - Get all document templates
+  app.get("/api/document-templates", async (req, res) => {
+    try {
+      const templates = await storage.getDocumentTemplates();
+      res.json(templates);
+    } catch (error) {
+      console.error('Error fetching document templates:', error);
+      res.status(500).json({ error: 'Failed to fetch document templates' });
+    }
+  });
+
+  // POST /api/document-templates - Create new document template (admin only)
+  app.post("/api/document-templates", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user || req.user.role !== 'admin') {
+        return res.status(403).json({ error: 'Admin access required' });
+      }
+
+      const { name, description, category } = req.body;
+      
+      if (!name || !description) {
+        return res.status(400).json({ error: 'Name and description are required' });
+      }
+
+      const template = await storage.createDocumentTemplate({
+        name,
+        description,
+        category: category || 'general',
+        createdBy: req.user.id
+      });
+      
+      res.status(201).json(template);
+    } catch (error) {
+      console.error('Error creating document template:', error);
+      res.status(500).json({ error: 'Failed to create document template' });
+    }
+  });
+
+  // PUT /api/document-templates/:id - Update document template (admin only)
+  app.put("/api/document-templates/:id", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user || req.user.role !== 'admin') {
+        return res.status(403).json({ error: 'Admin access required' });
+      }
+
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: 'Invalid template ID' });
+      }
+
+      const { name, description, category, isActive } = req.body;
+      
+      const updatedTemplate = await storage.updateDocumentTemplate(id, {
+        name,
+        description,
+        category,
+        isActive
+      });
+      
+      res.json(updatedTemplate);
+    } catch (error) {
+      console.error('Error updating document template:', error);
+      res.status(500).json({ error: 'Failed to update document template' });
+    }
+  });
+
+  // DELETE /api/document-templates/:id - Delete document template (admin only)
+  app.delete("/api/document-templates/:id", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user || req.user.role !== 'admin') {
+        return res.status(403).json({ error: 'Admin access required' });
+      }
+
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: 'Invalid template ID' });
+      }
+
+      await storage.deleteDocumentTemplate(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting document template:', error);
+      res.status(500).json({ error: 'Failed to delete document template' });
+    }
+  });
+
+  // POST /api/generate-document - Generate document from template using AI
+  app.post("/api/generate-document", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'Authentication required' });
+      }
+
+      const { templateId, vesselId } = req.body;
+      
+      if (!templateId || !vesselId) {
+        return res.status(400).json({ error: 'Template ID and Vessel ID are required' });
+      }
+
+      // Get template and vessel data
+      const template = await storage.getDocumentTemplateById(templateId);
+      const vessel = await storage.getVesselById(vesselId);
+      
+      if (!template) {
+        return res.status(404).json({ error: 'Template not found' });
+      }
+      
+      if (!vessel) {
+        return res.status(404).json({ error: 'Vessel not found' });
+      }
+
+      // Check if OpenAI API key is available
+      if (!process.env.OPENAI_API_KEY) {
+        return res.status(500).json({ error: 'AI service not configured' });
+      }
+
+      // Import OpenAI
+      const OpenAI = (await import('openai')).default;
+      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+      // Create AI prompt with template description and vessel data
+      const vesselInfo = `
+Vessel Name: ${vessel.name}
+IMO: ${vessel.imo}
+MMSI: ${vessel.mmsi}
+Type: ${vessel.vesselType}
+Flag: ${vessel.flag}
+Built: ${vessel.built}
+Deadweight: ${vessel.deadweight} tons
+Cargo Capacity: ${vessel.cargoCapacity} tons
+Current Position: ${vessel.currentLat}, ${vessel.currentLng}
+Status: ${vessel.status}
+Departure Port: ${vessel.departurePort}
+Destination Port: ${vessel.destinationPort}
+Price: ${vessel.price}
+Deal Value: ${vessel.dealValue}
+Market Price: ${vessel.marketPrice}
+Quantity: ${vessel.quantity}
+Route Distance: ${vessel.routeDistance} nm
+`;
+
+      const prompt = `${template.description}
+
+Use the following vessel data to create the document:
+
+${vesselInfo}
+
+Generate a professional, detailed document that incorporates the vessel information above. Format the output as a structured document with appropriate sections and professional language suitable for maritime industry use.`;
+
+      // Generate content using OpenAI
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+        messages: [
+          {
+            role: "system",
+            content: "You are a professional maritime document generator. Create detailed, accurate, and professionally formatted maritime documents based on vessel data and template descriptions."
+          },
+          {
+            role: "user",
+            content: prompt
+          }
+        ],
+        max_tokens: 2000,
+        temperature: 0.3
+      });
+
+      const generatedContent = response.choices[0].message.content;
+      
+      if (!generatedContent) {
+        return res.status(500).json({ error: 'Failed to generate document content' });
+      }
+
+      // Save generated document to database
+      const generatedDocument = await storage.createGeneratedDocument({
+        templateId,
+        vesselId,
+        title: `${template.name} - ${vessel.name}`,
+        content: generatedContent,
+        generatedBy: req.user.id,
+        status: 'generated'
+      });
+
+      res.json({
+        success: true,
+        document: generatedDocument
+      });
+
+    } catch (error) {
+      console.error('Error generating document:', error);
+      res.status(500).json({ error: 'Failed to generate document' });
+    }
+  });
+
+  // GET /api/generated-documents - Get generated documents
+  app.get("/api/generated-documents", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const vesselId = req.query.vesselId ? parseInt(req.query.vesselId as string) : undefined;
+      const documents = await storage.getGeneratedDocuments(vesselId);
+      res.json(documents);
+    } catch (error) {
+      console.error('Error fetching generated documents:', error);
+      res.status(500).json({ error: 'Failed to fetch generated documents' });
+    }
+  });
+
   return httpServer;
 }

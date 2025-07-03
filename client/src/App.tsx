@@ -36,6 +36,7 @@ import OilVesselMap from "@/pages/OilVesselMap";
 import AdminPanel from "@/pages/AdminPanel";
 import SubscriptionAdmin from "@/pages/SubscriptionAdmin";
 import AdminDocumentsSimple from "@/pages/AdminDocumentsSimple";
+import AdminDocumentTemplates from "@/pages/AdminDocumentTemplates";
 import LandingPageManager from "@/pages/LandingPageManager";
 
 import { useEffect } from "react";
@@ -82,7 +83,7 @@ function ProtectedRoutes() {
           </Route>
           <Route path="/admin/documents">
             <AdminRoute>
-              <AdminDocumentsSimple />
+              <AdminDocumentTemplates />
             </AdminRoute>
           </Route>
           <Route path="/admin/landing-page">

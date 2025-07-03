@@ -1053,6 +1053,49 @@ export const insertAdminDocumentSchema = createInsertSchema(adminDocuments).omit
 export type AdminDocument = typeof adminDocuments.$inferSelect;
 export type InsertAdminDocument = z.infer<typeof insertAdminDocumentSchema>;
 
+// Document Templates Table - AI-powered templates for dynamic document generation
+export const documentTemplates = pgTable("document_templates", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(), // Template name (e.g., "Vessel Certificate", "Safety Report")
+  description: text("description").notNull(), // AI prompt describing what document to generate
+  category: text("category").notNull().default("general"), // general, technical, safety, commercial
+  isActive: boolean("is_active").default(true),
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertDocumentTemplateSchema = createInsertSchema(documentTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type DocumentTemplate = typeof documentTemplates.$inferSelect;
+export type InsertDocumentTemplate = z.infer<typeof insertDocumentTemplateSchema>;
+
+// Generated Documents Table - AI-generated documents from templates
+export const generatedDocuments = pgTable("generated_documents", {
+  id: serial("id").primaryKey(),
+  templateId: integer("template_id").notNull().references(() => documentTemplates.id),
+  vesselId: integer("vessel_id").notNull().references(() => vessels.id),
+  title: text("title").notNull(),
+  content: text("content").notNull(), // AI-generated content
+  status: text("status").notNull().default("generated"), // generated, approved, archived
+  generatedBy: integer("generated_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertGeneratedDocumentSchema = createInsertSchema(generatedDocuments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type GeneratedDocument = typeof generatedDocuments.$inferSelect;
+export type InsertGeneratedDocument = z.infer<typeof insertGeneratedDocumentSchema>;
+
 // Broker Companies (intermediary companies users connect to)
 export const brokerCompanies = pgTable("broker_companies", {
   id: serial("id").primaryKey(),

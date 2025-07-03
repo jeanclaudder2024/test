@@ -43,7 +43,9 @@ import {
   LandingPageBlock, InsertLandingPageBlock,
   regions, OilType, InsertOilType, Region, InsertRegion,
   maritimeDocuments, MaritimeDocument, InsertMaritimeDocument,
-  adminDocuments, AdminDocument, InsertAdminDocument
+  adminDocuments, AdminDocument, InsertAdminDocument,
+  documentTemplates, DocumentTemplate, InsertDocumentTemplate,
+  generatedDocuments, GeneratedDocument, InsertGeneratedDocument
 } from "@shared/schema";
 
 // Storage interface with CRUD methods
@@ -1954,6 +1956,107 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error fetching documents by vessel ID:', error);
       throw new Error('Failed to fetch vessel documents');
+    }
+  }
+
+  // Document Template Management Methods
+  async getDocumentTemplates(): Promise<DocumentTemplate[]> {
+    try {
+      const templates = await db.select().from(documentTemplates)
+        .where(eq(documentTemplates.isActive, true))
+        .orderBy(desc(documentTemplates.createdAt));
+      return templates;
+    } catch (error) {
+      console.error('Error fetching document templates:', error);
+      throw new Error('Failed to fetch document templates');
+    }
+  }
+
+  async getDocumentTemplateById(id: number): Promise<DocumentTemplate | undefined> {
+    try {
+      const [template] = await db.select().from(documentTemplates).where(eq(documentTemplates.id, id));
+      return template;
+    } catch (error) {
+      console.error('Error fetching document template by ID:', error);
+      throw new Error('Failed to fetch document template');
+    }
+  }
+
+  async createDocumentTemplate(template: InsertDocumentTemplate): Promise<DocumentTemplate> {
+    try {
+      const [newTemplate] = await db.insert(documentTemplates).values(template).returning();
+      return newTemplate;
+    } catch (error) {
+      console.error('Error creating document template:', error);
+      throw new Error('Failed to create document template');
+    }
+  }
+
+  async updateDocumentTemplate(id: number, template: Partial<InsertDocumentTemplate>): Promise<DocumentTemplate> {
+    try {
+      const [updatedTemplate] = await db
+        .update(documentTemplates)
+        .set({ ...template, updatedAt: new Date() })
+        .where(eq(documentTemplates.id, id))
+        .returning();
+      return updatedTemplate;
+    } catch (error) {
+      console.error('Error updating document template:', error);
+      throw new Error('Failed to update document template');
+    }
+  }
+
+  async deleteDocumentTemplate(id: number): Promise<boolean> {
+    try {
+      await db
+        .update(documentTemplates)
+        .set({ isActive: false, updatedAt: new Date() })
+        .where(eq(documentTemplates.id, id));
+      return true;
+    } catch (error) {
+      console.error('Error deleting document template:', error);
+      throw new Error('Failed to delete document template');
+    }
+  }
+
+  // Generated Document Management Methods
+  async getGeneratedDocuments(vesselId?: number): Promise<GeneratedDocument[]> {
+    try {
+      let query = db.select().from(generatedDocuments);
+      
+      if (vesselId) {
+        query = query.where(eq(generatedDocuments.vesselId, vesselId));
+      }
+      
+      const documents = await query.orderBy(desc(generatedDocuments.createdAt));
+      return documents;
+    } catch (error) {
+      console.error('Error fetching generated documents:', error);
+      throw new Error('Failed to fetch generated documents');
+    }
+  }
+
+  async createGeneratedDocument(document: InsertGeneratedDocument): Promise<GeneratedDocument> {
+    try {
+      const [newDocument] = await db.insert(generatedDocuments).values(document).returning();
+      return newDocument;
+    } catch (error) {
+      console.error('Error creating generated document:', error);
+      throw new Error('Failed to create generated document');
+    }
+  }
+
+  async updateGeneratedDocumentStatus(id: number, status: string): Promise<GeneratedDocument> {
+    try {
+      const [updatedDocument] = await db
+        .update(generatedDocuments)
+        .set({ status, updatedAt: new Date() })
+        .where(eq(generatedDocuments.id, id))
+        .returning();
+      return updatedDocument;
+    } catch (error) {
+      console.error('Error updating generated document status:', error);
+      throw new Error('Failed to update generated document status');
     }
   }
 }
