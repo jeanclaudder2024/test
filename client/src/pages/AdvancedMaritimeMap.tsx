@@ -760,17 +760,7 @@ export default function AdvancedMaritimeMap() {
                 />
               </div>
 
-              <div className="flex items-center justify-between">
-                <Label htmlFor="clusters" className="text-sm flex items-center gap-2">
-                  <Layers className="h-4 w-4" />
-                  Cluster Markers
-                </Label>
-                <Switch
-                  id="clusters"
-                  checked={showClusters}
-                  onCheckedChange={setShowClusters}
-                />
-              </div>
+
             </div>
 
             <Separator />

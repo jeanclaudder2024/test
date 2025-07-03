@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Ship, Anchor, RefreshCw, MapIcon, Factory, Map, Search, Filter, Layers, ArrowRight } from 'lucide-react';
+import { Ship, Anchor, RefreshCw, MapIcon, Factory, MapPin, Search, Filter, Layers, ArrowRight } from 'lucide-react';
 import { useVesselWebSocket } from '@/hooks/useVesselWebSocket';
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
@@ -970,7 +970,7 @@ export default function OilVesselMap() {
           
           <Card className="p-4">
             <div className="flex items-center gap-3">
-              <Map className="h-8 w-8 text-purple-600" />
+              <MapPin className="h-8 w-8 text-purple-600" />
               <div>
                 <div className="text-2xl font-bold">{mappableVessels.filter(v => v.voyageProgress && v.voyageProgress > 0).length}</div>
                 <div className="text-sm text-gray-600">Active Voyages</div>
