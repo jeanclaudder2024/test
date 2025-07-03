@@ -663,10 +663,45 @@ export class DatabaseStorage implements IStorage {
     console.log(`Storage: Found port "${existingPort.name}" to delete`);
     
     try {
-      // Skip vessel updates for now and try direct deletion
-      console.log(`Storage: Attempting direct port deletion for port ${id}`);
+      // First, find any vessels that reference this port and update them
+      console.log(`Storage: Checking for vessel references to port ${id} (${existingPort.name})`);
       
-      // Try to delete the port directly
+      // Get all vessels that might reference this port  
+      const allVessels = await db.select().from(vessels);
+      let updatedCount = 0;
+      
+      for (const vessel of allVessels) {
+        let needsUpdate = false;
+        const updates: any = {};
+        
+        // Check if departure port references this port (by ID or name)
+        if (vessel.departurePort === id.toString() || 
+            vessel.departurePort === existingPort.name ||
+            (vessel.departurePort && typeof vessel.departurePort === 'string' && vessel.departurePort.includes(existingPort.name))) {
+          updates.departurePort = null;
+          needsUpdate = true;
+        }
+        
+        // Check if destination port references this port (by ID or name)
+        if (vessel.destinationPort === id.toString() || 
+            vessel.destinationPort === existingPort.name ||
+            (vessel.destinationPort && typeof vessel.destinationPort === 'string' && vessel.destinationPort.includes(existingPort.name))) {
+          updates.destinationPort = null;
+          needsUpdate = true;
+        }
+        
+        if (needsUpdate) {
+          await db.update(vessels)
+            .set(updates)
+            .where(eq(vessels.id, vessel.id));
+          updatedCount++;
+        }
+      }
+      
+      console.log(`Storage: Updated ${updatedCount} vessels that referenced port ${id}`);
+      
+      // Now try to delete the port
+      console.log(`Storage: Attempting to delete port ${id} after removing all references`);
       const result = await db.delete(ports).where(eq(ports.id, id));
       console.log(`Storage: Delete result:`, result);
       

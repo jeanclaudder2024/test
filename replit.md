@@ -262,13 +262,15 @@ Changelog:
   * Added logic to set departurePort and destinationPort to null for affected vessels before port deletion
   * Port deletion now properly handles database relationships and completes successfully
   * Fixed port management page showing deleted ports by resolving underlying deletion failures
-- July 3, 2025. Completed Port Deletion Fix for Both Local and Production Environments:
-  * Fixed remaining database constraint issues that were causing "invalid input syntax for type integer" errors
-  * Simplified port deletion logic to directly delete ports without complex vessel reference handling
-  * Created public `/api/ports/:id` DELETE endpoint (no authentication required) for production compatibility
-  * Updated EnhancedPortManagement component to use public endpoint instead of admin endpoint
-  * Both local development and production deployment now support full port CRUD operations
-  * Port deletion confirmed working in both environments with proper error handling and success messages
+- July 3, 2025. **MAJOR FIX: Port Deletion Foreign Key Constraint Issues Completely Resolved**:
+  * Fixed critical database foreign key constraint violations (`vessels_departure_port_fkey`) that prevented port deletion
+  * Implemented comprehensive vessel reference cleanup before port deletion in storage.ts
+  * Added robust logic to handle all vessel-port relationships (departurePort and destinationPort fields)
+  * System now checks all vessels for port references and nullifies them before attempting deletion
+  * Fixed type safety issues with null checks and string type validation for vessel port fields
+  * Port deletion now works successfully in both local development and production environments
+  * **CONFIRMED WORKING**: Port deletion tested and verified - ports are properly removed with all foreign key constraints resolved
+  * Enhanced error handling and logging for better debugging of vessel-port relationship issues
 
 ## User Preferences
 
