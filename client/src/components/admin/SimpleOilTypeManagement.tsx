@@ -73,11 +73,19 @@ export default function SimpleOilTypeManagement() {
   const deleteOilTypeMutation = useMutation({
     mutationFn: async (id: number) => {
       console.log("Deleting oil type:", id);
-      return await apiRequest(`/api/admin/oil-types/${id}`, {
-        method: "DELETE"
-      });
+      try {
+        const response = await apiRequest(`/api/admin/oil-types/${id}`, {
+          method: "DELETE"
+        });
+        console.log("Delete response:", response);
+        return response;
+      } catch (error) {
+        console.error("Delete error:", error);
+        throw error;
+      }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Delete successful:", data);
       queryClient.invalidateQueries({ queryKey: ["/api/admin/oil-types"] });
       toast({
         title: "Success",
@@ -85,9 +93,10 @@ export default function SimpleOilTypeManagement() {
       });
     },
     onError: (error) => {
+      console.error("Delete mutation error:", error);
       toast({
         title: "Error",
-        description: "Failed to delete oil type",
+        description: `Failed to delete oil type: ${error.message}`,
         variant: "destructive",
       });
     },
