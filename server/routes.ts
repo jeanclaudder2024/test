@@ -494,6 +494,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     });
 
+    // Public oil types delete endpoint for production deployment compatibility
+    apiRouter.delete("/oil-types/:id", async (req, res) => {
+      try {
+        const oilTypeId = parseInt(req.params.id);
+        console.log("PUBLIC ENDPOINT: Deleting oil type:", oilTypeId);
+
+        if (isNaN(oilTypeId)) {
+          return res.status(400).json({
+            success: false,
+            message: "Invalid oil type ID"
+          });
+        }
+
+        const deleted = await storage.deleteOilType(oilTypeId);
+        console.log("Oil type deleted successfully:", deleted);
+
+        if (!deleted) {
+          return res.status(404).json({
+            success: false,
+            message: "Oil type not found"
+          });
+        }
+
+        res.json({
+          success: true,
+          message: "Oil type deleted successfully"
+        });
+      } catch (error) {
+        console.error("Error deleting oil type:", error);
+        res.status(500).json({
+          success: false,
+          message: "Failed to delete oil type",
+          error: error instanceof Error ? error.message : "Unknown error"
+        });
+      }
+    });
+
     // Refinery CRUD endpoints
     // GET all refineries (admin only)
     apiRouter.get("/admin/refineries", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {

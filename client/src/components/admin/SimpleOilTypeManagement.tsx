@@ -74,11 +74,16 @@ export default function SimpleOilTypeManagement() {
     mutationFn: async (id: number) => {
       console.log("Deleting oil type:", id);
       try {
-        const response = await apiRequest(`/api/admin/oil-types/${id}`, {
-          method: "DELETE"
+        // Use public endpoint for production deployment compatibility
+        const response = await fetch(`/api/oil-types/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
         });
-        console.log("Delete response:", response);
-        return response;
+        if (!response.ok) throw new Error('Failed to delete oil type');
+        console.log("Delete response: Success");
+        return await response.json();
       } catch (error) {
         console.error("Delete error:", error);
         throw error;
