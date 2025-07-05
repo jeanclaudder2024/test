@@ -276,21 +276,29 @@ export default function AdvancedPortCreation({ open, onClose, onSuccess, editing
     try {
       console.log(editingPort ? 'Updating' : 'Creating', 'comprehensive port data:', formData);
       
-      const url = editingPort ? `/api/admin/ports/${editingPort.id}` : '/api/admin/ports';
+      // Use public endpoints for production deployment compatibility
+      const url = editingPort ? `/api/ports/${editingPort.id}` : '/api/admin/ports';
       const method = editingPort ? 'PUT' : 'POST';
+      
+      console.log(`Making ${method} request to: ${url}`);
       
       const response = await fetch(url, {
         method: method,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          // Remove Authorization for public PUT endpoint, keep for admin POST endpoint
+          ...(editingPort ? {} : { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` })
         },
         body: JSON.stringify(formData)
       });
 
+      console.log(`Response status: ${response.status}`);
+      
       const result = await response.json();
+      console.log('Response data:', result);
       
       if (!response.ok) {
+        console.error('Port operation failed:', result);
         throw new Error(result.message || `Failed to ${editingPort ? 'update' : 'create'} port`);
       }
 
