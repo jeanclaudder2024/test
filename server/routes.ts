@@ -36,6 +36,8 @@ import {
 import { WebSocketServer, WebSocket } from "ws";
 import { and, eq, isNotNull, sql } from "drizzle-orm";
 import { db } from "./db";
+import PDFDocument from 'pdfkit';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
 // Removed old voyage progress service
 import { 
   insertVesselSchema, 
@@ -5851,7 +5853,6 @@ Please generate a comprehensive, professional maritime document following the te
 
       if (format === 'pdf') {
         // Generate PDF using PDFKit
-        const PDFDocument = require('pdfkit');
         const doc = new PDFDocument();
         
         // Set response headers for PDF download
@@ -5878,7 +5879,6 @@ Please generate a comprehensive, professional maritime document following the te
         
       } else if (format === 'docx') {
         // Generate Word document using docx library
-        const { Document, Packer, Paragraph, TextRun, HeadingLevel } = require('docx');
         
         const docx = new Document({
           sections: [{
