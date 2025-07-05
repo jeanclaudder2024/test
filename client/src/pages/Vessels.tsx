@@ -6,7 +6,6 @@ import { Vessel } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useQuery } from '@tanstack/react-query';
-import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Table, 
   TableBody, 
@@ -670,19 +669,9 @@ export default function Vessels() {
   };
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="container mx-auto px-4 py-6"
-    >
+    <div className="container mx-auto px-4 py-6">
       {/* Mobile-First Responsive Header */}
-      <motion.div 
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.1 }}
-        className="bg-white rounded-xl shadow-lg dark:bg-gray-800 mb-6"
-      >
+      <div className="bg-white rounded-xl shadow-lg dark:bg-gray-800 mb-6">
         <div className="p-4 lg:p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex flex-col space-y-4 lg:flex-row lg:justify-between lg:items-center lg:space-y-0">
             <div className="flex-1">
@@ -1126,30 +1115,23 @@ export default function Vessels() {
             </div>
           </div>
 
-          {/* Mobile Card View with Animations */}
+          {/* Mobile Card View */}
           <div className="lg:hidden">
             <div className="p-4 space-y-4">
               {currentVessels.map((vessel, index) => (
-                <div
+                <MobileVesselCard
                   key={`${vessel.id}-${index}`}
-                  className="animate-fade-in-up"
-                  style={{
-                    animationDelay: `${index * 0.05}s`
-                  }}
-                >
-                  <MobileVesselCard
-                    vessel={vessel}
-                  />
-                </div>
+                  vessel={vessel}
+                />
               ))}
             </div>
           </div>
 
-          {/* Desktop Table View with Animations */}
+          {/* Desktop Table View */}
           <div className="hidden lg:block">
           
           <Table>
-            <TableHeader className="animate-fade-in-down">
+            <TableHeader>
               <TableRow className="bg-gray-50/50 dark:bg-gray-800/60 border-b border-gray-200 dark:border-gray-700">
                 <TableHead className="text-xs font-semibold text-gray-600 dark:text-gray-400 py-3">Name</TableHead>
                 <TableHead className="text-xs font-semibold text-gray-600 dark:text-gray-400 py-3">IMO</TableHead>
@@ -1169,18 +1151,10 @@ export default function Vessels() {
             </TableHeader>
             <TableBody>
               {currentVessels.map((vessel, index) => (
-                <TableRow 
-                  key={`${vessel.id}-${index}`} 
-                  className="group hover:bg-slate-50/80 transition-all duration-300 animate-in fade-in slide-in-from-left-4 border-b border-slate-100 hover:border-slate-200 hover:shadow-sm"
-                  style={{
-                    animationDelay: `${index * 0.08}s`,
-                    animationDuration: '0.6s',
-                    animationFillMode: 'both'
-                  }}
-                >
+                <TableRow key={`${vessel.id}-${index}`} className="hover:bg-muted/30">
                   <TableCell className="font-medium">
                     <div className="flex items-center">
-                      <Ship className="h-3.5 w-3.5 mr-2 text-primary opacity-70 transition-transform hover:scale-110" />
+                      <Ship className="h-3.5 w-3.5 mr-2 text-primary opacity-70" />
                       {vessel.name}
                     </div>
                   </TableCell>
@@ -1436,7 +1410,6 @@ export default function Vessels() {
           )}
         </div>
       )}
-      </motion.div>
-    </motion.div>
+    </div>
   );
 }
