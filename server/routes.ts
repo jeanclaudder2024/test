@@ -5768,7 +5768,16 @@ VESSEL INFORMATION:
 - Beam: ${vessel.beam} meters
 - Draft: ${vessel.draft} meters
 
-IMPORTANT: Generate a complete professional maritime document with all actual vessel details filled in. Do NOT use placeholders like [CompanyName], [Date], [Address], etc. Use the actual vessel information provided above and create realistic company details for a complete document. The document should be ready to use without any placeholder text that needs to be filled in later.`;
+IMPORTANT: Generate a complete professional maritime document with the following requirements:
+1. Use ONLY real vessel information provided above - NO placeholders like [CompanyName] or [Date]
+2. Create a professional business letter format with realistic company details
+3. Use proper maritime business language and terminology
+4. Include specific vessel specifications and technical details
+5. Format as a formal business document with clear sections
+6. Do NOT include any brackets, placeholder text, or incomplete information
+7. Generate realistic company names, addresses, and contact information
+8. Include proper maritime document elements like LOI (Letter of Intent), Charter agreements, or Certificate formats
+9. Make it look like a real professional maritime business document`;
 
       const response = await openai.chat.completions.create({
         model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
@@ -5929,17 +5938,62 @@ IMPORTANT: Generate a complete professional maritime document with all actual ve
            .fillColor(darkGray)
            .text('Document Content:', 50, 300);
         
-        // Content box
-        doc.rect(50, 320, 500, doc.page.height - 420)
-           .stroke(lightBlue);
+        // Process and format the content properly
+        let formattedContent = document.content;
         
-        doc.fontSize(10)
-           .fillColor('#111827')
-           .text(document.content, 60, 330, {
-             width: 480,
-             align: 'justify',
-             lineGap: 2
-           });
+        // Remove placeholder brackets and clean up content
+        formattedContent = formattedContent
+          .replace(/\[Company Logo\]/g, '')
+          .replace(/\[.*?\]/g, '')
+          .replace(/\*\*(.*?)\*\*/g, '$1')
+          .replace(/\*(.*?)\*/g, '$1')
+          .replace(/^\s*[\-\*]\s*/gm, '• ')
+          .replace(/\n\s*\n/g, '\n\n')
+          .trim();
+        
+        // Split content into paragraphs for better formatting
+        const paragraphs = formattedContent.split('\n\n').filter(p => p.trim());
+        
+        let currentY = 330;
+        const lineHeight = 14;
+        const maxWidth = 480;
+        
+        paragraphs.forEach((paragraph, index) => {
+          if (currentY > doc.page.height - 150) {
+            doc.addPage();
+            currentY = 50;
+          }
+          
+          // Check if it's a header (short line, all caps, or starts with specific words)
+          const isHeader = paragraph.length < 100 && 
+            (paragraph.toUpperCase() === paragraph || 
+             paragraph.match(/^(SUBJECT|TO|FROM|VESSEL|SPECIFICATIONS|TERMS|CONDITIONS):/i));
+          
+          if (isHeader) {
+            doc.fontSize(12)
+               .fillColor(primaryBlue)
+               .text(paragraph, 60, currentY, {
+                 width: maxWidth,
+                 align: 'left'
+               });
+            currentY += 20;
+          } else {
+            doc.fontSize(10)
+               .fillColor('#111827')
+               .text(paragraph, 60, currentY, {
+                 width: maxWidth,
+                 align: 'justify',
+                 lineGap: 3
+               });
+            
+            // Calculate height of text block
+            const textHeight = doc.heightOfString(paragraph, {
+              width: maxWidth,
+              lineGap: 3
+            });
+            currentY += textHeight + 15;
+          }
+        });
         
         // Footer
         const footerY = doc.page.height - 80;
@@ -6067,10 +6121,46 @@ IMPORTANT: Generate a complete professional maritime document with all actual ve
                 spacing: { after: 200 }
               }),
               
-              new Paragraph({
-                text: document.content,
-                spacing: { after: 400 }
-              }),
+              // Process and format content for Word document
+              ...(() => {
+                let formattedContent = document.content;
+                
+                // Clean up content
+                formattedContent = formattedContent
+                  .replace(/\[Company Logo\]/g, '')
+                  .replace(/\[.*?\]/g, '')
+                  .replace(/\*\*(.*?)\*\*/g, '$1')
+                  .replace(/\*(.*?)\*/g, '$1')
+                  .trim();
+                
+                // Split into paragraphs
+                const paragraphs = formattedContent.split('\n\n').filter(p => p.trim());
+                
+                return paragraphs.map(paragraph => {
+                  const isHeader = paragraph.length < 100 && 
+                    (paragraph.toUpperCase() === paragraph || 
+                     paragraph.match(/^(SUBJECT|TO|FROM|VESSEL|SPECIFICATIONS|TERMS|CONDITIONS):/i));
+                  
+                  if (isHeader) {
+                    return new Paragraph({
+                      children: [
+                        new TextRun({ 
+                          text: paragraph, 
+                          bold: true, 
+                          size: 24,
+                          color: "1e40af"
+                        }),
+                      ],
+                      spacing: { after: 200, before: 200 }
+                    });
+                  } else {
+                    return new Paragraph({
+                      text: paragraph,
+                      spacing: { after: 200 }
+                    });
+                  }
+                });
+              })(),
               
               // Footer
               new Paragraph({
