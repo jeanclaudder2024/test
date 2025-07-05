@@ -303,20 +303,31 @@ export default function ProfessionalRefineryManagement() {
 
   const deleteRefineryMutation = useMutation({
     mutationFn: async (id: number) => {
-      const response = await fetch(`/api/refineries/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      if (!response.ok) throw new Error('Failed to delete refinery');
+      console.log("Deleting refinery:", id);
+      try {
+        const response = await fetch(`/api/refineries/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        if (!response.ok) throw new Error('Failed to delete refinery');
+        const result = await response.json();
+        console.log("Delete response:", result);
+        return result;
+      } catch (error) {
+        console.error("Delete error:", error);
+        throw error;
+      }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Delete successful:", data);
       queryClient.invalidateQueries({ queryKey: ['/api/refineries'] });
       toast({ title: 'Success', description: 'Refinery deleted successfully' });
     },
-    onError: () => {
-      toast({ title: 'Error', description: 'Failed to delete refinery', variant: 'destructive' });
+    onError: (error) => {
+      console.error("Delete mutation error:", error);
+      toast({ title: 'Error', description: `Failed to delete refinery: ${error.message}`, variant: 'destructive' });
     },
   });
 
