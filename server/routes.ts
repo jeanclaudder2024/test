@@ -11369,7 +11369,7 @@ Note: This document contains real vessel operational data and should be treated 
       }
 
       // Get template and vessel data
-      const template = await storage.getDocumentTemplateById(templateId);
+      const template = await storage.getArticleTemplateById(templateId);
       const vessel = await storage.getVesselById(vesselId);
       
       if (!template) {
