@@ -5753,23 +5753,30 @@ Only use authentic, real-world data for existing refineries.`;
       const prompt = template.prompt.replace('{vesselName}', vessel.name);
       const enhancedPrompt = `${prompt}
 
-Vessel Details:
-- Name: ${vessel.name}
-- Type: ${vessel.vesselType}
-- IMO: ${vessel.imo}
+VESSEL INFORMATION:
+- Vessel Name: ${vessel.name}
+- Vessel Type: ${vessel.vesselType}
+- IMO Number: ${vessel.imo}
 - MMSI: ${vessel.mmsi}
-- Flag: ${vessel.flag}
-- Built: ${vessel.built}
+- Flag State: ${vessel.flag}
+- Year Built: ${vessel.built}
 - Deadweight: ${vessel.deadweight} MT
 - Current Position: ${vessel.currentLat}, ${vessel.currentLng}
 - Status: ${vessel.status}
+- Cargo Capacity: ${vessel.cargoCapacity} MT
+- Length: ${vessel.length} meters
+- Beam: ${vessel.beam} meters
+- Draft: ${vessel.draft} meters
 
-Please generate a comprehensive, professional maritime document following the template requirements.`;
+IMPORTANT: Generate a complete professional maritime document with all actual vessel details filled in. Do NOT use placeholders like [CompanyName], [Date], [Address], etc. Use the actual vessel information provided above and create realistic company details for a complete document. The document should be ready to use without any placeholder text that needs to be filled in later.`;
 
       const response = await openai.chat.completions.create({
         model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
         messages: [
-          { role: "system", content: "You are a professional maritime documentation expert. Generate formal, comprehensive maritime documents." },
+          { 
+            role: "system", 
+            content: "You are a professional maritime documentation expert. Generate complete, formal maritime documents with all fields filled in using real data. NEVER use placeholder text like [CompanyName], [Date], [Address], etc. Always generate realistic company names, addresses, dates, and other details to create a fully completed document." 
+          },
           { role: "user", content: enhancedPrompt }
         ],
         max_tokens: 3000,
