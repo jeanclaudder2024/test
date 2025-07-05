@@ -95,7 +95,7 @@ export default function AIDocumentGenerator({ vesselId, vesselName }: AIDocument
     },
     onSuccess: (data) => {
       toast({
-        title: "Document Generated Successfully",
+        title: "Document Created Successfully",
         description: "Professional document has been created and is ready for download.",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/generated-documents', vesselId] });
@@ -103,8 +103,8 @@ export default function AIDocumentGenerator({ vesselId, vesselName }: AIDocument
     },
     onError: (error: any) => {
       toast({
-        title: "Generation Failed",
-        description: error.message || "Failed to generate document. Please try again.",
+        title: "Creation Failed",
+        description: error.message || "Failed to create document. Please try again.",
         variant: "destructive",
       });
     },
@@ -178,7 +178,7 @@ export default function AIDocumentGenerator({ vesselId, vesselName }: AIDocument
             Available Document Templates
           </CardTitle>
           <CardDescription>
-            Select a template to generate professional maritime documentation for {vesselName}
+            Select a template to create professional maritime documentation for {vesselName}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -206,7 +206,7 @@ export default function AIDocumentGenerator({ vesselId, vesselName }: AIDocument
                         ) : (
                           <Plus className="h-4 w-4" />
                         )}
-                        Generate
+                        Create
                       </Button>
                     </CardTitle>
                     <CardDescription className="line-clamp-2">
@@ -226,23 +226,23 @@ export default function AIDocumentGenerator({ vesselId, vesselName }: AIDocument
         </CardContent>
       </Card>
 
-      {/* Generated Documents */}
+      {/* Downloaded Documents */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
             <FileText className="h-5 w-5 mr-2" />
-            Generated Documents
+            Downloaded Documents
           </CardTitle>
           <CardDescription>
-            Professional documents generated for {vesselName}
+            Professional documents created for {vesselName}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {generatedDocuments.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p className="text-lg font-medium mb-2">No Documents Generated Yet</p>
-              <p className="text-sm">Generate your first document using the templates above.</p>
+              <p className="text-lg font-medium mb-2">No Documents Created Yet</p>
+              <p className="text-sm">Create your first document using the templates above.</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -254,7 +254,7 @@ export default function AIDocumentGenerator({ vesselId, vesselName }: AIDocument
                         <CardTitle className="text-lg mb-2">{document.title}</CardTitle>
                         <div className="flex items-center text-sm text-muted-foreground mb-2">
                           <Clock className="h-4 w-4 mr-1" />
-                          Generated {new Date(document.createdAt).toLocaleDateString()}
+                          Created {new Date(document.createdAt).toLocaleDateString()}
                         </div>
                       </div>
                       <div className="flex gap-2 ml-4">
