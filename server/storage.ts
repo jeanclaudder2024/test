@@ -5,7 +5,7 @@ import {
   refineryPortConnections, vesselPortConnections, companies, vesselRefineryConnections,
   brokerCompanies, companyPartnerships, userBrokerConnections,
   subscriptionPlans, subscriptions, paymentMethods, invoices, landingPageContent,
-  vesselDocuments, professionalDocuments, oilTypes,
+  vesselDocuments, professionalDocuments, oilTypes, documentTemplates,
   realCompanies, fakeCompanies,
   brokerDeals, brokerDocuments, adminBrokerFiles, brokerDealActivities, brokerStats,
   User, InsertUser, 
@@ -2075,7 +2075,15 @@ export class DatabaseStorage implements IStorage {
   // Article Template Management Methods
   async getArticleTemplates(): Promise<any[]> {
     try {
-      // For now, return mock data until database tables are created
+      // Try to get templates from database first
+      const dbTemplates = await db.select().from(documentTemplates);
+      
+      // If database has templates, return them
+      if (dbTemplates && dbTemplates.length > 0) {
+        return dbTemplates;
+      }
+      
+      // Otherwise, return default seeded templates
       return [
         {
           id: 1,
@@ -2266,8 +2274,8 @@ export class DatabaseStorage implements IStorage {
 
   async getArticleTemplateById(id: number): Promise<any | undefined> {
     try {
-      const templates = await this.getArticleTemplates();
-      return templates.find(t => t.id === id);
+      const [template] = await db.select().from(documentTemplates).where(eq(documentTemplates.id, id));
+      return template || undefined;
     } catch (error) {
       console.error('Error fetching article template by ID:', error);
       throw new Error('Failed to fetch article template');
@@ -2276,15 +2284,19 @@ export class DatabaseStorage implements IStorage {
 
   async createArticleTemplate(template: any): Promise<any> {
     try {
-      // For now, return mock creation until database tables are created
       const newTemplate = {
-        id: Math.floor(Math.random() * 1000) + 100,
-        ...template,
+        name: template.title || template.name,
+        description: template.description || "AI-generated document template",
+        prompt: template.description, // The admin panel's description field contains the AI prompt
+        category: template.category || 'general',
+        isActive: true,
         usageCount: 0,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        createdBy: template.createdBy || 1
       };
-      return newTemplate;
+      
+      const [created] = await db.insert(documentTemplates).values(newTemplate).returning();
+      console.log('Article template created in database:', created.name);
+      return created;
     } catch (error) {
       console.error('Error creating article template:', error);
       throw new Error('Failed to create article template');

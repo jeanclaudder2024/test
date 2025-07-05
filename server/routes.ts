@@ -5727,8 +5727,14 @@ Only use authentic, real-world data for existing refineries.`;
         return res.status(400).json({ message: "Template ID and Vessel ID are required" });
       }
 
+      // Convert IDs to numbers for database query
+      const templateIdNum = parseInt(templateId);
+      const vesselIdNum = parseInt(vesselId);
+      
+      console.log(`Debug: templateId=${templateId} (${typeof templateId}), parsed=${templateIdNum}`);
+
       // Get template
-      const template = await storage.getArticleTemplateById(templateId);
+      const template = await storage.getArticleTemplateById(templateIdNum);
       if (!template) {
         return res.status(404).json({ message: "Template not found" });
       }
@@ -5859,22 +5865,20 @@ Please generate a comprehensive, professional maritime document following the te
         return res.status(400).json({ message: "Missing required fields" });
       }
 
-      const template = await storage.createDocumentTemplate({
-        name: title, // Map title to name for document templates
-        description,
+      const template = await storage.createArticleTemplate({
+        title: title,
+        description: prompt, // Use prompt as description since that's what contains the AI instructions
         category,
-        prompt,
-        isActive,
         createdBy: req.user!.id
       });
       
       // Transform response to match expected format
       const transformedTemplate = {
         id: template.id,
-        title: template.name,
-        description: template.description,
+        title: template.name, // Database stores in 'name' field
+        description: prompt, // Use the original prompt as description for display
         category: template.category,
-        prompt: template.prompt,
+        prompt: template.prompt, // AI instructions are now properly stored in prompt field
         isActive: template.isActive,
         usageCount: template.usageCount || 0,
         createdBy: template.createdBy,
@@ -11368,9 +11372,17 @@ Note: This document contains real vessel operational data and should be treated 
         return res.status(400).json({ error: 'Format must be one of: text, pdf, word' });
       }
 
+      // Convert IDs to numbers for database query
+      const templateIdNum = parseInt(templateId);
+      const vesselIdNum = parseInt(vesselId);
+      
+      console.log(`Debug: templateId=${templateId} (${typeof templateId}), parsed=${templateIdNum}`);
+      
       // Get template and vessel data
-      const template = await storage.getArticleTemplateById(templateId);
-      const vessel = await storage.getVesselById(vesselId);
+      const template = await storage.getArticleTemplateById(templateIdNum);
+      const vessel = await storage.getVesselById(vesselIdNum);
+      
+      console.log(`Debug: template found=${!!template}, vessel found=${!!vessel}`);
       
       if (!template) {
         return res.status(404).json({ error: 'Template not found' });
