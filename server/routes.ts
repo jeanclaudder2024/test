@@ -5860,7 +5860,10 @@ IMPORTANT: Generate a complete professional maritime document with all actual ve
 
       if (format === 'pdf') {
         // Generate PDF using PDFKit
-        const doc = new PDFDocument();
+        const doc = new PDFDocument({
+          margin: 50,
+          size: 'A4'
+        });
         
         // Set response headers for PDF download
         res.setHeader('Content-Type', 'application/pdf');
@@ -5869,18 +5872,92 @@ IMPORTANT: Generate a complete professional maritime document with all actual ve
         // Pipe PDF to response
         doc.pipe(res);
         
-        // Add content to PDF
-        doc.fontSize(20).text('PETRODEALHUB', 50, 50);
-        doc.fontSize(16).text(document.title, 50, 100);
-        doc.fontSize(12).text(`Vessel: ${vessel.name}`, 50, 130);
-        doc.fontSize(12).text(`IMO: ${vessel.imo}`, 50, 150);
-        doc.fontSize(12).text(`Generated: ${new Date(document.createdAt).toLocaleDateString()}`, 50, 170);
+        // Define colors
+        const primaryBlue = '#1e40af';
+        const lightBlue = '#3b82f6';
+        const darkGray = '#374151';
+        const lightGray = '#f3f4f6';
         
-        // Add document content
-        doc.fontSize(10).text(document.content, 50, 220, {
-          width: 500,
-          align: 'left'
-        });
+        // Header background
+        doc.rect(0, 0, doc.page.width, 120)
+           .fill(primaryBlue);
+        
+        // Company logo circle
+        doc.circle(80, 60, 25)
+           .fill('white');
+        
+        // Logo "P" letter
+        doc.fontSize(24)
+           .fillColor(primaryBlue)
+           .text('P', 70, 45);
+        
+        // Company name
+        doc.fontSize(28)
+           .fillColor('white')
+           .text('PETRODEALHUB', 120, 35);
+        
+        // Subtitle
+        doc.fontSize(12)
+           .fillColor('#e5e7eb')
+           .text('Maritime Documentation Services', 120, 70);
+        
+        // Document title section
+        doc.rect(0, 120, doc.page.width, 60)
+           .fill(lightBlue);
+        
+        doc.fontSize(20)
+           .fillColor('white')
+           .text(document.title, 50, 140);
+        
+        // Vessel information box
+        doc.rect(50, 200, 500, 80)
+           .fillAndStroke(lightGray, darkGray);
+        
+        doc.fontSize(14)
+           .fillColor(darkGray)
+           .text('Vessel Information', 60, 210);
+        
+        doc.fontSize(10)
+           .text(`Vessel: ${vessel.name}`, 60, 230)
+           .text(`IMO: ${vessel.imo}`, 60, 245)
+           .text(`Type: ${vessel.vesselType}`, 300, 230)
+           .text(`Flag: ${vessel.flag}`, 300, 245)
+           .text(`Generated: ${new Date(document.createdAt).toLocaleDateString()}`, 60, 260);
+        
+        // Document content
+        doc.fontSize(12)
+           .fillColor(darkGray)
+           .text('Document Content:', 50, 300);
+        
+        // Content box
+        doc.rect(50, 320, 500, doc.page.height - 420)
+           .stroke(lightBlue);
+        
+        doc.fontSize(10)
+           .fillColor('#111827')
+           .text(document.content, 60, 330, {
+             width: 480,
+             align: 'justify',
+             lineGap: 2
+           });
+        
+        // Footer
+        const footerY = doc.page.height - 80;
+        doc.rect(0, footerY, doc.page.width, 80)
+           .fill(darkGray);
+        
+        doc.fontSize(8)
+           .fillColor('white')
+           .text('PETRODEALHUB - Maritime Documentation Services', 50, footerY + 20)
+           .text('Generated on ' + new Date().toLocaleString(), 50, footerY + 35)
+           .text('Document ID: ' + document.id, 50, footerY + 50);
+        
+        // Watermark
+        doc.fontSize(60)
+           .fillColor('#000000', 0.05)
+           .text('PETRODEALHUB', 100, 400, {
+             rotate: -45
+           });
         
         doc.end();
         
@@ -5891,32 +5968,130 @@ IMPORTANT: Generate a complete professional maritime document with all actual ve
           sections: [{
             properties: {},
             children: [
+              // Header with company branding
               new Paragraph({
-                text: "PETRODEALHUB",
-                heading: HeadingLevel.TITLE,
+                children: [
+                  new TextRun({ 
+                    text: "PETRODEALHUB", 
+                    bold: true, 
+                    size: 56, // 28pt
+                    color: "1e40af" // Blue color
+                  }),
+                ],
+                spacing: { after: 200 }
               }),
               new Paragraph({
-                text: document.title,
+                children: [
+                  new TextRun({ 
+                    text: "Maritime Documentation Services", 
+                    size: 24, // 12pt
+                    color: "6b7280" // Gray color
+                  }),
+                ],
+                spacing: { after: 400 }
+              }),
+              
+              // Document title
+              new Paragraph({
+                children: [
+                  new TextRun({ 
+                    text: document.title, 
+                    bold: true, 
+                    size: 40, // 20pt
+                    color: "1e40af"
+                  }),
+                ],
                 heading: HeadingLevel.HEADING_1,
+                spacing: { after: 300 }
               }),
+              
+              // Vessel information section
               new Paragraph({
                 children: [
-                  new TextRun({ text: `Vessel: ${vessel.name}`, bold: true }),
+                  new TextRun({ 
+                    text: "VESSEL INFORMATION", 
+                    bold: true, 
+                    size: 28, // 14pt
+                    color: "374151"
+                  }),
                 ],
+                spacing: { after: 200 }
               }),
+              
               new Paragraph({
                 children: [
-                  new TextRun({ text: `IMO: ${vessel.imo}`, bold: true }),
+                  new TextRun({ text: `Vessel Name: `, bold: true }),
+                  new TextRun({ text: vessel.name }),
                 ],
+                spacing: { after: 100 }
               }),
+              
               new Paragraph({
                 children: [
-                  new TextRun({ text: `Generated: ${new Date(document.createdAt).toLocaleDateString()}`, bold: true }),
+                  new TextRun({ text: `IMO Number: `, bold: true }),
+                  new TextRun({ text: vessel.imo }),
+                  new TextRun({ text: `    Type: `, bold: true }),
+                  new TextRun({ text: vessel.vesselType }),
                 ],
+                spacing: { after: 100 }
               }),
-              new Paragraph({ text: "" }), // Empty line
+              
+              new Paragraph({
+                children: [
+                  new TextRun({ text: `Flag State: `, bold: true }),
+                  new TextRun({ text: vessel.flag }),
+                  new TextRun({ text: `    Built: `, bold: true }),
+                  new TextRun({ text: vessel.built?.toString() || 'N/A' }),
+                ],
+                spacing: { after: 100 }
+              }),
+              
+              new Paragraph({
+                children: [
+                  new TextRun({ text: `Generated: `, bold: true }),
+                  new TextRun({ text: new Date(document.createdAt).toLocaleDateString() }),
+                ],
+                spacing: { after: 400 }
+              }),
+              
+              // Document content section
+              new Paragraph({
+                children: [
+                  new TextRun({ 
+                    text: "DOCUMENT CONTENT", 
+                    bold: true, 
+                    size: 28, // 14pt
+                    color: "374151"
+                  }),
+                ],
+                spacing: { after: 200 }
+              }),
+              
               new Paragraph({
                 text: document.content,
+                spacing: { after: 400 }
+              }),
+              
+              // Footer
+              new Paragraph({
+                children: [
+                  new TextRun({ 
+                    text: "PETRODEALHUB - Maritime Documentation Services", 
+                    size: 16, // 8pt
+                    color: "6b7280"
+                  }),
+                ],
+                spacing: { before: 400 }
+              }),
+              
+              new Paragraph({
+                children: [
+                  new TextRun({ 
+                    text: `Generated on ${new Date().toLocaleString()} | Document ID: ${document.id}`, 
+                    size: 16, // 8pt
+                    color: "6b7280"
+                  }),
+                ],
               }),
             ],
           }],
