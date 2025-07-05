@@ -5825,7 +5825,116 @@ Please generate a comprehensive, professional maritime document following the te
     }
   });
 
+  // Download Generated Document as PDF or Word
+  apiRouter.get("/download-document/:id", async (req: Request, res) => {
+    try {
+      const { id } = req.params;
+      const { format = 'pdf' } = req.query;
+      
+      if (!id) {
+        return res.status(400).json({ message: "Document ID is required" });
+      }
 
+      // Get the generated document
+      const documents = await storage.getAllGeneratedDocuments();
+      const document = documents.find(doc => doc.id.toString() === id);
+      
+      if (!document) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+
+      // Get vessel data for enhanced document generation
+      const vessel = await storage.getVesselById(document.vesselId);
+      if (!vessel) {
+        return res.status(404).json({ message: "Vessel not found" });
+      }
+
+      if (format === 'pdf') {
+        // Generate PDF using PDFKit
+        const PDFDocument = require('pdfkit');
+        const doc = new PDFDocument();
+        
+        // Set response headers for PDF download
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="${document.title.replace(/[^a-z0-9]/gi, '_')}.pdf"`);
+        
+        // Pipe PDF to response
+        doc.pipe(res);
+        
+        // Add content to PDF
+        doc.fontSize(20).text('PETRODEALHUB', 50, 50);
+        doc.fontSize(16).text(document.title, 50, 100);
+        doc.fontSize(12).text(`Vessel: ${vessel.name}`, 50, 130);
+        doc.fontSize(12).text(`IMO: ${vessel.imo}`, 50, 150);
+        doc.fontSize(12).text(`Generated: ${new Date(document.createdAt).toLocaleDateString()}`, 50, 170);
+        
+        // Add document content
+        doc.fontSize(10).text(document.content, 50, 220, {
+          width: 500,
+          align: 'left'
+        });
+        
+        doc.end();
+        
+      } else if (format === 'docx') {
+        // Generate Word document using docx library
+        const { Document, Packer, Paragraph, TextRun, HeadingLevel } = require('docx');
+        
+        const docx = new Document({
+          sections: [{
+            properties: {},
+            children: [
+              new Paragraph({
+                text: "PETRODEALHUB",
+                heading: HeadingLevel.TITLE,
+              }),
+              new Paragraph({
+                text: document.title,
+                heading: HeadingLevel.HEADING_1,
+              }),
+              new Paragraph({
+                children: [
+                  new TextRun({ text: `Vessel: ${vessel.name}`, bold: true }),
+                ],
+              }),
+              new Paragraph({
+                children: [
+                  new TextRun({ text: `IMO: ${vessel.imo}`, bold: true }),
+                ],
+              }),
+              new Paragraph({
+                children: [
+                  new TextRun({ text: `Generated: ${new Date(document.createdAt).toLocaleDateString()}`, bold: true }),
+                ],
+              }),
+              new Paragraph({ text: "" }), // Empty line
+              new Paragraph({
+                text: document.content,
+              }),
+            ],
+          }],
+        });
+        
+        // Set response headers for Word download
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+        res.setHeader('Content-Disposition', `attachment; filename="${document.title.replace(/[^a-z0-9]/gi, '_')}.docx"`);
+        
+        // Generate and send Word document
+        const buffer = await Packer.toBuffer(docx);
+        res.send(buffer);
+        
+      } else {
+        return res.status(400).json({ message: "Invalid format. Use 'pdf' or 'docx'" });
+      }
+
+    } catch (error: any) {
+      console.error("Error downloading document:", error);
+      res.status(500).json({ 
+        message: "Failed to download document", 
+        error: error.message || "Unknown error"
+      });
+    }
+  });
 
   // Document Template Management API Endpoints (Admin only) - connecting to existing document templates
   
