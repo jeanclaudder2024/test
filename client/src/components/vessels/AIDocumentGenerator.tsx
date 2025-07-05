@@ -39,7 +39,18 @@ export default function AIDocumentGenerator({ vesselId, vesselName }: AIDocument
 
   // Fetch available document templates
   const { data: templates = [], isLoading: templatesLoading } = useQuery<DocumentTemplate[]>({
-    queryKey: ['/api/document-templates'],
+    queryKey: ['/api/admin/article-templates'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/article-templates', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch templates');
+      }
+      return response.json();
+    },
     staleTime: 0
   });
 
