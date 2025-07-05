@@ -1,36 +1,29 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Brain, FileText, Download, Eye, Sparkles, Bot, AlertTriangle, FileIcon, File } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useToast } from "@/hooks/use-toast";
+import { FileText, Download, Plus, Eye, BookOpen, Clock, Loader2 } from "lucide-react";
+import type { Vessel } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface DocumentTemplate {
   id: number;
-  title: string;
+  name: string;
   description: string;
-  category: string;
-  isActive: boolean;
   createdAt: string;
+  updatedAt: string;
 }
 
 interface GeneratedDocument {
   id: number;
-  templateId: number;
-  vesselId: number;
   title: string;
   content: string;
-  status: string;
   createdAt: string;
-  format?: string;
-  downloadUrl?: string;
-  pdfPath?: string;
-  wordPath?: string;
+  vesselId: number;
+  templateId: number;
 }
 
 interface AIDocumentGeneratorProps {
@@ -39,392 +32,246 @@ interface AIDocumentGeneratorProps {
 }
 
 export default function AIDocumentGenerator({ vesselId, vesselName }: AIDocumentGeneratorProps) {
-  const [selectedTemplate, setSelectedTemplate] = useState<DocumentTemplate | null>(null);
-  const [viewingDocument, setViewingDocument] = useState<GeneratedDocument | null>(null);
-  const [selectedFormat, setSelectedFormat] = useState<string>("pdf");
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [selectedTemplate, setSelectedTemplate] = useState<DocumentTemplate | null>(null);
+  const [expandedDocument, setExpandedDocument] = useState<number | null>(null);
 
-  // Fetch document templates
-  const { data: templates = [], isLoading: isLoadingTemplates, error: templatesError } = useQuery({
-    queryKey: ["/api/document-templates"],
-    queryFn: async () => {
-      try {
-        const response = await apiRequest("/api/document-templates");
-        return Array.isArray(response) ? response : [];
-      } catch (error) {
-        console.error("Error fetching templates:", error);
-        return [];
-      }
-    },
-    retry: false
+  // Fetch available document templates
+  const { data: templates = [], isLoading: templatesLoading } = useQuery({
+    queryKey: ['/api/document-templates'],
+    staleTime: 0
   });
 
   // Fetch generated documents for this vessel
-  const { data: generatedDocuments = [], isLoading: isLoadingDocuments, error: documentsError } = useQuery({
-    queryKey: ["/api/generated-documents", vesselId],
-    queryFn: async () => {
-      try {
-        const response = await apiRequest(`/api/generated-documents?vesselId=${vesselId}`);
-        return Array.isArray(response) ? response : [];
-      } catch (error) {
-        console.error("Error fetching generated documents:", error);
-        return [];
-      }
-    },
-    retry: false
+  const { data: generatedDocuments = [], isLoading: documentsLoading } = useQuery({
+    queryKey: ['/api/generated-documents', vesselId],
+    staleTime: 0
   });
 
   // Generate document mutation
   const generateDocumentMutation = useMutation({
-    mutationFn: async ({ templateId, format }: { templateId: number; format: string }) => {
-      const response = await apiRequest("/api/generate-document", {
-        method: "POST",
-        body: JSON.stringify({ templateId, vesselId, format })
+    mutationFn: async (templateId: number) => {
+      return await apiRequest('/api/generate-document', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          templateId,
+          vesselId,
+          vesselName
+        })
       });
-      return response;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/generated-documents", vesselId] });
-      setSelectedTemplate(null);
       toast({
-        title: "Document Generated!",
-        description: `AI has successfully generated "${data.document.title}" using vessel data.`
+        title: "Document Generated Successfully",
+        description: "Professional document has been created and is ready for download.",
       });
+      queryClient.invalidateQueries({ queryKey: ['/api/generated-documents', vesselId] });
+      setSelectedTemplate(null);
     },
     onError: (error: any) => {
       toast({
         title: "Generation Failed",
-        description: error.message || "Failed to generate document. Please check if AI service is configured.",
-        variant: "destructive"
+        description: error.message || "Failed to generate document. Please try again.",
+        variant: "destructive",
       });
-    }
+    },
   });
 
-  const getCategoryBadge = (category: string) => {
-    const colors = {
-      general: "bg-gray-100 text-gray-800",
-      technical: "bg-blue-100 text-blue-800",
-      safety: "bg-red-100 text-red-800",
-      commercial: "bg-green-100 text-green-800"
-    };
-    return colors[category as keyof typeof colors] || colors.general;
-  };
+  // Download document function
+  const downloadDocument = async (document: GeneratedDocument, format: 'pdf' | 'docx' = 'pdf') => {
+    try {
+      const response = await fetch(`/api/download-document/${document.id}?format=${format}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        },
+      });
 
-  const handleDownloadDocument = (document: GeneratedDocument) => {
-    if (document.format === 'pdf' || document.format === 'word') {
-      // For PDF and Word documents, use the downloadUrl
-      if (document.downloadUrl) {
-        window.open(document.downloadUrl, '_blank');
-        toast({
-          title: "Download Started", 
-          description: `${document.format.toUpperCase()} document opened in new tab`
-        });
-      } else {
-        toast({
-          title: "Download Error",
-          description: "Download link not available for this document",
-          variant: "destructive"
-        });
+      if (!response.ok) {
+        throw new Error('Download failed');
       }
-    } else {
-      // For text documents, create a blob download
-      const element = window.document.createElement('a');
-      const file = new Blob([document.content], { type: 'text/plain' });
-      element.href = URL.createObjectURL(file);
-      element.download = `${document.title.replace(/\s+/g, '_')}.txt`;
-      window.document.body.appendChild(element);
-      element.click();
-      window.document.body.removeChild(element);
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${document.title.replace(/[^a-z0-9]/gi, '_')}.${format}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
 
       toast({
         title: "Download Started",
-        description: "Text document downloaded successfully"
+        description: `${document.title} is being downloaded as ${format.toUpperCase()}.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Download Failed",
+        description: "Failed to download document. Please try again.",
+        variant: "destructive",
       });
     }
   };
 
-  if (isLoadingTemplates || isLoadingDocuments) {
+  if (templatesLoading || documentsLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
-      </div>
-    );
-  }
-
-  // Show setup message if database tables don't exist
-  if (templatesError || documentsError) {
-    return (
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <AlertTriangle className="h-5 w-5 text-yellow-600" />
-          <h3 className="text-lg font-semibold text-yellow-800">Database Setup Required</h3>
-        </div>
-        <p className="text-yellow-700 mb-4">
-          The AI document template system needs database tables to be created. Please run the following SQL schema in your Supabase database:
-        </p>
-        <div className="bg-white rounded border p-4 mb-4">
-          <code className="text-sm text-gray-600">
-            See DOCUMENT_TEMPLATES_SCHEMA.sql file for the complete schema
-          </code>
-        </div>
-        <p className="text-sm text-yellow-600">
-          Once the database schema is applied, the AI document generation system will be ready to use.
-        </p>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <FileText className="h-5 w-5 mr-2" />
+            Professional Documentation
+          </CardTitle>
+          <CardDescription>
+            Loading available document templates...
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center p-8">
+            <Loader2 className="h-8 w-8 animate-spin" />
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="text-center">
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <Bot className="h-8 w-8 text-blue-600" />
-          <h2 className="text-2xl font-bold text-gray-900">AI Document Generator</h2>
-        </div>
-        <p className="text-gray-600">Generate professional maritime documents using AI and real vessel data</p>
-      </div>
-
       {/* Available Templates */}
-      <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-blue-600" />
-          Available Templates
-        </h3>
-        
-        {templates.length === 0 ? (
-          <Card>
-            <CardContent className="text-center py-8">
-              <Brain className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-              <p className="text-gray-500">No document templates available. Contact admin to create templates.</p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2">
-            {templates.map((template: DocumentTemplate) => (
-              <Card key={template.id} className="hover:shadow-md transition-shadow">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        <Brain className="h-5 w-5 text-blue-600" />
-                        {template.title}
-                      </CardTitle>
-                      <Badge className={`mt-2 ${getCategoryBadge(template.category)}`}>
-                        {template.category}
-                      </Badge>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription className="mb-4 line-clamp-2">
-                    {template.description}
-                  </CardDescription>
-                  <Dialog open={selectedTemplate?.id === template.id} onOpenChange={(open) => !open && setSelectedTemplate(null)}>
-                    <DialogTrigger asChild>
-                      <Button 
-                        className="w-full" 
-                        onClick={() => setSelectedTemplate(template)}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <BookOpen className="h-5 w-5 mr-2" />
+            Available Document Templates
+          </CardTitle>
+          <CardDescription>
+            Select a template to generate professional maritime documentation for {vesselName}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {templates.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p className="text-lg font-medium mb-2">No Templates Available</p>
+              <p className="text-sm">Contact your administrator to add document templates.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {templates.map((template: DocumentTemplate) => (
+                <Card key={template.id} className="border cursor-pointer hover:border-primary/50 transition-colors">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center justify-between">
+                      {template.name}
+                      <Button
+                        size="sm"
+                        onClick={() => generateDocumentMutation.mutate(template.id)}
                         disabled={generateDocumentMutation.isPending}
+                        className="ml-2"
                       >
-                        <Brain className="h-4 w-4 mr-2" />
-                        Documents
+                        {generateDocumentMutation.isPending ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Plus className="h-4 w-4" />
+                        )}
+                        Generate
                       </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[600px]">
-                      <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                          <Bot className="h-5 w-5 text-blue-600" />
-                          Generate AI Document
-                        </DialogTitle>
-                        <DialogDescription>
-                          This will generate "{template.title}" using {vesselName}'s data and AI processing.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="py-4">
-                        <div className="bg-blue-50 p-4 rounded-lg mb-4">
-                          <h4 className="font-semibold text-blue-900 mb-2">Template Description:</h4>
-                          <p className="text-blue-800 text-sm">{template.description}</p>
-                        </div>
-                        <div className="bg-gray-50 p-4 rounded-lg">
-                          <h4 className="font-semibold text-gray-900 mb-2">What will be included:</h4>
-                          <ul className="text-sm text-gray-700 space-y-1">
-                            <li>• Complete vessel specifications and details</li>
-                            <li>• Current operational status and position</li>
-                            <li>• Technical capabilities and certifications</li>
-                            <li>• Professional maritime formatting</li>
-                          </ul>
-                        </div>
-                        
-                        {/* Format Selection */}
-                        <div className="bg-amber-50 p-4 rounded-lg mt-4">
-                          <h4 className="font-semibold text-amber-900 mb-2">Choose Document Format:</h4>
-                          <Select value={selectedFormat} onValueChange={setSelectedFormat}>
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Select format" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="text">
-                                <div className="flex items-center gap-2">
-                                  <FileText className="h-4 w-4" />
-                                  Text (.txt) - Simple text format
-                                </div>
-                              </SelectItem>
-                              <SelectItem value="pdf">
-                                <div className="flex items-center gap-2">
-                                  <File className="h-4 w-4" />
-                                  PDF (.pdf) - Beautiful formatted document with logos
-                                </div>
-                              </SelectItem>
-                              <SelectItem value="word">
-                                <div className="flex items-center gap-2">
-                                  <FileIcon className="h-4 w-4" />
-                                  Word (.docx) - Microsoft Word document format
-                                </div>
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                      <div className="flex gap-3">
-                        <Button variant="outline" onClick={() => setSelectedTemplate(null)}>
-                          Cancel
-                        </Button>
-                        <Button 
-                          onClick={() => generateDocumentMutation.mutate({ templateId: template.id, format: selectedFormat })}
-                          disabled={generateDocumentMutation.isPending}
-                          className="flex-1"
-                        >
-                          {generateDocumentMutation.isPending ? (
-                            <>
-                              <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
-                              Generating...
-                            </>
-                          ) : (
-                            <>
-                              <Sparkles className="h-4 w-4 mr-2" />
-                              Generate Now
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-      </div>
+                    </CardTitle>
+                    <CardDescription className="line-clamp-2">
+                      {template.description}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center text-sm text-muted-foreground">
+                      <Clock className="h-4 w-4 mr-1" />
+                      Created {new Date(template.createdAt).toLocaleDateString()}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Generated Documents */}
-      {generatedDocuments.length > 0 && (
-        <div>
-          <Separator className="mb-6" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <FileText className="h-5 w-5 text-green-600" />
-            Generated Documents ({generatedDocuments.length})
-          </h3>
-          
-          <div className="grid gap-4">
-            {generatedDocuments.map((document: GeneratedDocument) => (
-              <Card key={document.id} className="hover:shadow-md transition-shadow">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        <FileText className="h-5 w-5 text-green-600" />
-                        {document.title}
-                      </CardTitle>
-                      <div className="flex items-center gap-2 mt-2">
-                        <Badge variant={document.status === 'generated' ? 'default' : 'secondary'}>
-                          {document.status}
-                        </Badge>
-                        {document.format && (
-                          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                            {document.format.toUpperCase()}
-                          </Badge>
-                        )}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <FileText className="h-5 w-5 mr-2" />
+            Generated Documents
+          </CardTitle>
+          <CardDescription>
+            Professional documents generated for {vesselName}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {generatedDocuments.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p className="text-lg font-medium mb-2">No Documents Generated Yet</p>
+              <p className="text-sm">Generate your first document using the templates above.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {generatedDocuments.map((document: GeneratedDocument) => (
+                <Card key={document.id} className="border">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <CardTitle className="text-lg mb-2">{document.title}</CardTitle>
+                        <div className="flex items-center text-sm text-muted-foreground mb-2">
+                          <Clock className="h-4 w-4 mr-1" />
+                          Generated {new Date(document.createdAt).toLocaleDateString()}
+                        </div>
+                      </div>
+                      <div className="flex gap-2 ml-4">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setExpandedDocument(
+                            expandedDocument === document.id ? null : document.id
+                          )}
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          {expandedDocument === document.id ? 'Hide' : 'Preview'}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => downloadDocument(document, 'pdf')}
+                        >
+                          <Download className="h-4 w-4 mr-1" />
+                          PDF
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => downloadDocument(document, 'docx')}
+                        >
+                          <Download className="h-4 w-4 mr-1" />
+                          Word
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex gap-2">
-                      <Dialog open={viewingDocument?.id === document.id} onOpenChange={(open) => !open && setViewingDocument(null)}>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" size="sm" onClick={() => setViewingDocument(document)}>
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-y-auto">
-                          <DialogHeader>
-                            <DialogTitle>{document.title}</DialogTitle>
-                            <DialogDescription>
-                              Generated on {new Date(document.createdAt).toLocaleDateString()}
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="py-4">
-                            {document.format === 'pdf' || document.format === 'word' ? (
-                              <div className="bg-gray-50 p-6 rounded-lg text-center">
-                                <div className="flex flex-col items-center gap-4">
-                                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-                                    {document.format === 'pdf' ? (
-                                      <FileText className="h-8 w-8 text-blue-600" />
-                                    ) : (
-                                      <File className="h-8 w-8 text-blue-600" />
-                                    )}
-                                  </div>
-                                  <div>
-                                    <h4 className="font-semibold text-gray-900">
-                                      {document.format === 'pdf' ? 'PDF Document Generated' : 'Word Document Generated'}
-                                    </h4>
-                                    <p className="text-sm text-gray-600 mt-1">
-                                      {document.format === 'pdf' 
-                                        ? 'Professional PDF with PetroDealHub branding and formatting' 
-                                        : 'Microsoft Word document (.docx) ready for download'
-                                      }
-                                    </p>
-                                  </div>
-                                  {document.downloadUrl && (
-                                    <Button 
-                                      onClick={() => window.open(document.downloadUrl, '_blank')}
-                                      className="bg-blue-600 hover:bg-blue-700"
-                                    >
-                                      <Download className="h-4 w-4 mr-2" />
-                                      Download {document.format.toUpperCase()}
-                                    </Button>
-                                  )}
-                                </div>
-                              </div>
-                            ) : (
-                              <div className="bg-gray-50 p-6 rounded-lg max-h-96 overflow-y-auto">
-                                <pre className="text-sm text-gray-700 whitespace-pre-wrap font-mono">
-                                  {document.content}
-                                </pre>
-                              </div>
-                            )}
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleDownloadDocument(document)}
-                      >
-                        <Download className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-sm text-gray-500">
-                    Generated: {new Date(document.createdAt).toLocaleDateString()} at {new Date(document.createdAt).toLocaleTimeString()}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
+                  </CardHeader>
+                  {expandedDocument === document.id && (
+                    <CardContent>
+                      <ScrollArea className="h-64 w-full rounded border p-4">
+                        <div 
+                          className="prose prose-sm max-w-none"
+                          dangerouslySetInnerHTML={{ __html: document.content }}
+                        />
+                      </ScrollArea>
+                    </CardContent>
+                  )}
+                </Card>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
