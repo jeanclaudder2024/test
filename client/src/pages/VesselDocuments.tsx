@@ -463,12 +463,12 @@ export default function VesselDocuments() {
             <DialogTrigger asChild>
               <Button className="w-full md:w-auto">
                 <FileOutput className="mr-2 h-4 w-4" />
-                Generate Professional Document
+                Create Professional Document
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[600px]">
               <DialogHeader>
-                <DialogTitle>Generate Advanced Document</DialogTitle>
+                <DialogTitle>Create Advanced Document</DialogTitle>
                 <DialogDescription>
                   Create professional maritime documents with AI-powered content generation.
                 </DialogDescription>

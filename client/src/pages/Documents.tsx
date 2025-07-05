@@ -79,8 +79,8 @@ export default function Documents() {
     },
     onSuccess: () => {
       toast({
-        title: 'Document generated',
-        description: 'The document was successfully generated.',
+        title: 'Document created',
+        description: 'The document was successfully created.',
       });
       setShowGenerateDialog(false);
       queryClient.invalidateQueries({ queryKey: ['/api/documents'] });
@@ -88,10 +88,10 @@ export default function Documents() {
     onError: (error) => {
       toast({
         title: 'Error',
-        description: 'Failed to generate document. Please try again.',
+        description: 'Failed to create document. Please try again.',
         variant: 'destructive',
       });
-      console.error('Error generating document:', error);
+      console.error('Error creating document:', error);
     }
   });
 
@@ -458,13 +458,13 @@ export default function Documents() {
         </div>
       </div>
 
-      {/* Generate Document Dialog */}
+      {/* Create Document Dialog */}
       <Dialog open={showGenerateDialog} onOpenChange={setShowGenerateDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Generate New Document</DialogTitle>
+            <DialogTitle>Create New Document</DialogTitle>
             <DialogDescription>
-              Select a vessel and document type to generate using AI.
+              Select a vessel and document type to create professional documentation.
             </DialogDescription>
           </DialogHeader>
           
@@ -652,7 +652,7 @@ export default function Documents() {
               onClick={handleGenerateDocument} 
               disabled={generateDocumentMutation.isPending}
             >
-              {generateDocumentMutation.isPending ? 'Generating...' : 'Generate'}
+              {generateDocumentMutation.isPending ? 'Creating...' : 'Create'}
             </Button>
           </DialogFooter>
         </DialogContent>
