@@ -5,7 +5,7 @@ import {
   refineryPortConnections, vesselPortConnections, companies, vesselRefineryConnections,
   brokerCompanies, companyPartnerships, userBrokerConnections,
   subscriptionPlans, subscriptions, paymentMethods, invoices, landingPageContent,
-  vesselDocuments, professionalDocuments, oilTypes, documentTemplates,
+  vesselDocuments, professionalDocuments, oilTypes,
   realCompanies, fakeCompanies,
   brokerDeals, brokerDocuments, adminBrokerFiles, brokerDealActivities, brokerStats,
   User, InsertUser, 
@@ -29,7 +29,7 @@ import {
   BrokerCompany, InsertBrokerCompany,
   CompanyPartnership, InsertCompanyPartnership,
   UserBrokerConnection, InsertUserBrokerConnection,
-  SubscriptionPlan, InsertSubscriptionPlan,
+  Subscription as SubscriptionPlan, InsertSubscription as InsertSubscriptionPlan,
   Subscription, InsertSubscription,
   PaymentMethod, InsertPaymentMethod,
   Invoice, InsertInvoice,
@@ -44,7 +44,7 @@ import {
   regions, OilType, InsertOilType, Region, InsertRegion,
   maritimeDocuments, MaritimeDocument, InsertMaritimeDocument,
   adminDocuments, AdminDocument, InsertAdminDocument,
-  documentTemplates, DocumentTemplate, InsertDocumentTemplate,
+  DocumentTemplate, InsertDocumentTemplate,
   generatedDocuments, GeneratedDocument, InsertGeneratedDocument
 } from "@shared/schema";
 
