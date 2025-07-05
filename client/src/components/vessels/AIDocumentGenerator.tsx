@@ -11,7 +11,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface DocumentTemplate {
   id: number;
-  name: string;
+  title: string;
   description: string;
   createdAt: string;
   updatedAt: string;
@@ -38,29 +38,49 @@ export default function AIDocumentGenerator({ vesselId, vesselName }: AIDocument
   const [expandedDocument, setExpandedDocument] = useState<number | null>(null);
 
   // Fetch available document templates
-  const { data: templates = [], isLoading: templatesLoading } = useQuery({
+  const { data: templates = [], isLoading: templatesLoading } = useQuery<DocumentTemplate[]>({
     queryKey: ['/api/document-templates'],
     staleTime: 0
   });
 
   // Fetch generated documents for this vessel
-  const { data: generatedDocuments = [], isLoading: documentsLoading } = useQuery({
+  const { data: generatedDocuments = [], isLoading: documentsLoading } = useQuery<GeneratedDocument[]>({
     queryKey: ['/api/generated-documents', vesselId],
+    queryFn: async () => {
+      const response = await fetch(`/api/generated-documents?vesselId=${vesselId}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch generated documents');
+      }
+      return response.json();
+    },
     staleTime: 0
   });
 
   // Generate document mutation
   const generateDocumentMutation = useMutation({
     mutationFn: async (templateId: number) => {
-      return await apiRequest('/api/generate-document', {
+      const response = await fetch('/api/generate-document', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        },
         body: JSON.stringify({ 
           templateId,
           vesselId,
           vesselName
         })
       });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to generate document: ${response.statusText}`);
+      }
+      
+      return response.json();
     },
     onSuccess: (data) => {
       toast({
@@ -80,9 +100,9 @@ export default function AIDocumentGenerator({ vesselId, vesselName }: AIDocument
   });
 
   // Download document function
-  const downloadDocument = async (document: GeneratedDocument, format: 'pdf' | 'docx' = 'pdf') => {
+  const downloadDocument = async (doc: GeneratedDocument, format: 'pdf' | 'docx' = 'pdf') => {
     try {
-      const response = await fetch(`/api/download-document/${document.id}?format=${format}`, {
+      const response = await fetch(`/api/download-document/${doc.id}?format=${format}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
@@ -95,17 +115,17 @@ export default function AIDocumentGenerator({ vesselId, vesselName }: AIDocument
 
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = window.document.createElement('a');
       link.href = url;
-      link.download = `${document.title.replace(/[^a-z0-9]/gi, '_')}.${format}`;
-      document.body.appendChild(link);
+      link.download = `${doc.title.replace(/[^a-z0-9]/gi, '_')}.${format}`;
+      window.document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
+      window.document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
 
       toast({
         title: "Download Started",
-        description: `${document.title} is being downloaded as ${format.toUpperCase()}.`,
+        description: `${doc.title} is being downloaded as ${format.toUpperCase()}.`,
       });
     } catch (error) {
       toast({
@@ -163,7 +183,7 @@ export default function AIDocumentGenerator({ vesselId, vesselName }: AIDocument
                 <Card key={template.id} className="border cursor-pointer hover:border-primary/50 transition-colors">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-lg flex items-center justify-between">
-                      {template.name}
+                      {template.title}
                       <Button
                         size="sm"
                         onClick={() => generateDocumentMutation.mutate(template.id)}
