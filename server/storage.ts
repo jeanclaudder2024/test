@@ -4,9 +4,9 @@ import {
   users, vessels, refineries, progressEvents, brokers, stats as statsTable, ports, 
   refineryPortConnections, vesselPortConnections, companies, vesselRefineryConnections,
   brokerCompanies, companyPartnerships, userBrokerConnections,
-  subscriptionPlans, subscriptions, paymentMethods, invoices, landingPageContent,
+  subscriptionPlans, userSubscriptions, payments, landingPageContent,
   vesselDocuments, professionalDocuments, oilTypes, documentTemplates,
-  realCompanies, fakeCompanies,
+  realCompanies, fakeCompanies, vesselDocumentAssociations,
   brokerDeals, brokerDocuments, adminBrokerFiles, brokerDealActivities, brokerStats,
   User, InsertUser, 
   Vessel, InsertVessel,
@@ -29,10 +29,8 @@ import {
   BrokerCompany, InsertBrokerCompany,
   CompanyPartnership, InsertCompanyPartnership,
   UserBrokerConnection, InsertUserBrokerConnection,
-  SubscriptionPlan, InsertSubscriptionPlan,
-  Subscription, InsertSubscription,
-  PaymentMethod, InsertPaymentMethod,
-  Invoice, InsertInvoice,
+  UserSubscription, InsertUserSubscription,
+  Payment, InsertPayment,
   LandingPageContent, InsertLandingPageContent,
   InsertVesselDocument, SelectVesselDocument,
   ProfessionalDocument, InsertProfessionalDocument,
@@ -44,7 +42,7 @@ import {
   regions, OilType, InsertOilType, Region, InsertRegion,
   maritimeDocuments, MaritimeDocument, InsertMaritimeDocument,
   adminDocuments, AdminDocument, InsertAdminDocument,
-  documentTemplates, DocumentTemplate, InsertDocumentTemplate,
+  DocumentTemplate, InsertDocumentTemplate,
   generatedDocuments, GeneratedDocument, InsertGeneratedDocument
 } from "@shared/schema";
 

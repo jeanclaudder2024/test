@@ -66,22 +66,7 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// User subscriptions table
-export const userSubscriptions = pgTable("user_subscriptions", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id),
-  planId: integer("plan_id").notNull().references(() => subscriptionPlans.id),
-  stripeSubscriptionId: text("stripe_subscription_id"),
-  status: text("status").notNull().default("trial"), // "trial", "active", "canceled", "past_due", "unpaid"
-  trialStartDate: timestamp("trial_start_date"),
-  trialEndDate: timestamp("trial_end_date"),
-  currentPeriodStart: timestamp("current_period_start"),
-  currentPeriodEnd: timestamp("current_period_end"),
-  canceledAt: timestamp("canceled_at"),
-  cancelAtPeriodEnd: boolean("cancel_at_period_end").default(false),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
+
 
 // Payment history
 export const payments = pgTable("payments", {
@@ -98,7 +83,7 @@ export const payments = pgTable("payments", {
 
 // Define relations
 export const subscriptionPlansRelations = relations(subscriptionPlans, ({ many }) => ({
-  subscriptions: many(userSubscriptions),
+  userSubscriptions: many(userSubscriptions),
 }));
 
 export const usersRelations = relations(users, ({ one, many }) => ({
