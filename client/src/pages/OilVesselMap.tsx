@@ -7,8 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
-import { Ship, Anchor, RefreshCw, MapIcon, Factory, MapPin, Search, Filter, Layers, ArrowRight } from 'lucide-react';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
+import { Ship, Anchor, RefreshCw, MapIcon, Factory, MapPin, Search, Filter, Layers, ArrowRight, Info } from 'lucide-react';
 import { useVesselWebSocket } from '@/hooks/useVesselWebSocket';
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
@@ -479,21 +479,37 @@ export default function OilVesselMap() {
               <SelectContent>
                 <SelectItem value="all">All Types</SelectItem>
                 {Array.isArray(oilTypes) && oilTypes.map((oilType: any) => (
-                  <SelectItem 
-                    key={oilType.id} 
-                    value={oilType.name?.toLowerCase() || ''}
-                    title={oilType.description || `Filter vessels by ${oilType.name}`}
-                    className="cursor-pointer hover:bg-blue-50"
-                  >
-                    <div className="flex flex-col">
-                      <span className="font-medium">{oilType.name}</span>
-                      {oilType.description && (
-                        <span className="text-xs text-gray-500 truncate max-w-[200px]" title={oilType.description}>
-                          {oilType.description}
-                        </span>
-                      )}
-                    </div>
-                  </SelectItem>
+                  <HoverCard key={oilType.id}>
+                    <HoverCardTrigger asChild>
+                      <SelectItem 
+                        value={oilType.name?.toLowerCase() || ''}
+                        className="cursor-pointer hover:bg-blue-50"
+                      >
+                        <div className="flex flex-col">
+                          <span className="font-medium">{oilType.name}</span>
+                          {oilType.description && (
+                            <span className="text-xs text-gray-500 truncate max-w-[200px]">
+                              {oilType.description.length > 50 ? 
+                                `${oilType.description.substring(0, 50)}...` : 
+                                oilType.description
+                              }
+                            </span>
+                          )}
+                        </div>
+                      </SelectItem>
+                    </HoverCardTrigger>
+                    <HoverCardContent className="w-80 p-4">
+                      <div className="space-y-2">
+                        <h4 className="text-sm font-semibold text-blue-700">{oilType.name}</h4>
+                        <p className="text-sm text-gray-600 leading-relaxed">
+                          {oilType.description || `Filter vessels by ${oilType.name} type`}
+                        </p>
+                        <div className="text-xs text-gray-500 border-t pt-2">
+                          Click to filter vessels by this oil type
+                        </div>
+                      </div>
+                    </HoverCardContent>
+                  </HoverCard>
                 ))}
                 {/* Fallback options if oil types aren't loaded */}
                 {(!Array.isArray(oilTypes) || oilTypes.length === 0) && (

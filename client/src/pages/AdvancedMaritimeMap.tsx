@@ -53,6 +53,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -709,19 +710,37 @@ export default function AdvancedMaritimeMap() {
                     ).length;
                     
                     return (
-                      <SelectItem key={oilType.id} value={oilType.name}>
-                        <div className="flex items-center justify-between w-full">
-                          <div className="flex flex-col items-start">
-                            <span className="font-medium">{oilType.name}</span>
-                            {oilType.description && (
-                              <span className="text-xs text-muted-foreground">{oilType.description}</span>
-                            )}
+                      <HoverCard key={oilType.id}>
+                        <HoverCardTrigger asChild>
+                          <SelectItem value={oilType.name}>
+                            <div className="flex items-center justify-between w-full">
+                              <div className="flex flex-col items-start">
+                                <span className="font-medium">{oilType.name}</span>
+                                {oilType.description && (
+                                  <span className="text-xs text-muted-foreground">{oilType.description}</span>
+                                )}
+                              </div>
+                              <Badge variant="secondary" className="ml-2 text-xs">
+                                {vesselCount}
+                              </Badge>
+                            </div>
+                          </SelectItem>
+                        </HoverCardTrigger>
+                        <HoverCardContent className="w-80">
+                          <div className="space-y-2">
+                            <h4 className="text-sm font-semibold">{oilType.name}</h4>
+                            <p className="text-sm text-muted-foreground">
+                              {oilType.description || 'No description available'}
+                            </p>
+                            <div className="flex items-center pt-2">
+                              <Ship className="mr-2 h-4 w-4 opacity-70" />
+                              <span className="text-xs text-muted-foreground">
+                                {vesselCount} vessels match this oil type
+                              </span>
+                            </div>
                           </div>
-                          <Badge variant="secondary" className="ml-2 text-xs">
-                            {vesselCount}
-                          </Badge>
-                        </div>
-                      </SelectItem>
+                        </HoverCardContent>
+                      </HoverCard>
                     );
                   })}
                 </SelectContent>
