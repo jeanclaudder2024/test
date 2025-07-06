@@ -206,4 +206,31 @@ router.patch('/bulk/update', async (req: Request, res: Response) => {
   }
 });
 
+// Schema fix endpoint - adds missing display_name column
+router.post('/fix-schema', async (req: Request, res: Response) => {
+  try {
+    console.log('Attempting to fix oil_types schema...');
+    
+    // Add the missing display_name column
+    const addColumnQuery = `
+      ALTER TABLE oil_types 
+      ADD COLUMN IF NOT EXISTS display_name TEXT NOT NULL DEFAULT '';
+    `;
+    
+    await db.execute(sql.raw(addColumnQuery));
+    console.log('Successfully added display_name column');
+    
+    res.json({ 
+      success: true, 
+      message: 'Schema fix applied successfully - display_name column added' 
+    });
+  } catch (error) {
+    console.error('Error fixing oil types schema:', error);
+    res.status(500).json({ 
+      error: 'Failed to fix schema',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 export default router;

@@ -11093,6 +11093,59 @@ Note: This document contains real vessel operational data and should be treated 
     }
   });
 
+  // Fix oil types schema - add missing display_name column
+  apiRouter.post("/admin/oil-types/fix-schema", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      console.log("Starting oil types schema fix...");
+      
+      // Check if display_name column exists
+      const checkQuery = `
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'oil_types' AND column_name = 'display_name';
+      `;
+      
+      const { db } = await import("./db");
+      const { sql } = await import("drizzle-orm");
+      const columnExists = await db.execute(sql.raw(checkQuery));
+      
+      if (columnExists.length === 0) {
+        console.log("Adding display_name column to oil_types table...");
+        
+        // Add the missing column
+        await db.execute(sql`
+          ALTER TABLE oil_types 
+          ADD COLUMN display_name TEXT NOT NULL DEFAULT '';
+        `);
+        
+        // Update existing records to have display_name same as name
+        await db.execute(sql`
+          UPDATE oil_types 
+          SET display_name = name 
+          WHERE display_name = '' OR display_name IS NULL;
+        `);
+        
+        console.log("Oil types schema fix completed successfully");
+        res.json({ 
+          message: "Schema fix completed successfully",
+          changes: ["Added display_name column", "Updated existing records"]
+        });
+      } else {
+        console.log("display_name column already exists");
+        res.json({ 
+          message: "Schema is already up to date",
+          changes: []
+        });
+      }
+    } catch (error) {
+      console.error("Error fixing oil types schema:", error);
+      res.status(500).json({ 
+        message: "Failed to fix oil types schema",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   // ==========================================
   // REGIONS FILTER MANAGEMENT API ROUTES
   // ==========================================
