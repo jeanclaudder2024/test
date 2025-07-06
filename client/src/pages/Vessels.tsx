@@ -41,6 +41,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from '@/components/ui/checkbox';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { PortalHoverCard } from '@/components/ui/portal-hover-card';
 import { OilTypeInfoButton } from '@/components/ui/oil-type-info-button';
 import { Link } from 'wouter';
@@ -672,7 +673,8 @@ export default function Vessels() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-6">
+    <TooltipProvider>
+      <div className="container mx-auto px-4 py-6">
       {/* Mobile-First Responsive Header */}
       <div className="bg-white rounded-xl shadow-lg dark:bg-gray-800 mb-6">
         <div className="p-4 lg:p-6 border-b border-gray-200 dark:border-gray-700">
@@ -1052,21 +1054,45 @@ export default function Vessels() {
               ];
               const colorScheme = colors[index % colors.length];
               
+              // Oil category descriptions
+              const getOilCategoryDescription = (category: string) => {
+                const descriptions: { [key: string]: string } = {
+                  'Crude': 'Unrefined petroleum extracted directly from oil wells. Used as feedstock for refineries to produce various petroleum products.',
+                  'Fuel Oil': 'Heavy petroleum product used for heating, power generation, and marine propulsion. Includes bunker fuel for ships.',
+                  'Gasoline': 'Refined petroleum product primarily used as motor fuel for automobiles and light aircraft.',
+                  'Diesel': 'Middle distillate fuel used in diesel engines for trucks, buses, trains, and ships. Also used for heating.',
+                  'Jet Fuel': 'Specialized kerosene-based fuel designed for aircraft turbine engines. Meets strict aviation fuel specifications.',
+                  'Kerosene': 'Refined petroleum product used for heating, lighting, cooking, and as aviation fuel.',
+                  'Naphtha': 'Light petroleum product used as petrochemical feedstock and for gasoline blending.',
+                  'LPG': 'Liquefied Petroleum Gas - propane and butane used for heating, cooking, and industrial applications.',
+                  'Lubricants': 'Petroleum-based oils and greases used to reduce friction and wear in mechanical systems.',
+                  'Bitumen': 'Heavy petroleum product used primarily in road construction and waterproofing applications.',
+                  'Other': 'Specialized petroleum products including solvents, petrochemicals, and other refined products.'
+                };
+                return descriptions[category] || 'Petroleum product used in various industrial and commercial applications.';
+              };
+              
               return (
-                <Button
-                  key={category}
-                  variant={isSelected ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSelectedTab(isSelected ? "all" : category.toLowerCase())}
-                  className={`flex items-center gap-1 whitespace-nowrap flex-shrink-0 ${
-                    isSelected 
-                      ? "bg-primary text-primary-foreground" 
-                      : `${colorScheme.bg} ${colorScheme.text} border-transparent`
-                  }`}
-                >
-                  <Droplet className={`h-4 w-4 ${isSelected ? '' : colorScheme.icon}`} />
-                  {category} ({count})
-                </Button>
+                <Tooltip key={category}>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant={isSelected ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSelectedTab(isSelected ? "all" : category.toLowerCase())}
+                      className={`flex items-center gap-1 whitespace-nowrap flex-shrink-0 ${
+                        isSelected 
+                          ? "bg-primary text-primary-foreground" 
+                          : `${colorScheme.bg} ${colorScheme.text} border-transparent`
+                      }`}
+                    >
+                      <Droplet className={`h-4 w-4 ${isSelected ? '' : colorScheme.icon}`} />
+                      {category} ({count})
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="max-w-xs text-sm">{getOilCategoryDescription(category)}</p>
+                  </TooltipContent>
+                </Tooltip>
               );
             })}
           </div>
@@ -1434,5 +1460,6 @@ export default function Vessels() {
         </div>
       )}
     </div>
+    </TooltipProvider>
   );
 }
