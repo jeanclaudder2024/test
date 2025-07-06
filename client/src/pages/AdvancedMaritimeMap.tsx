@@ -688,6 +688,67 @@ export default function AdvancedMaritimeMap() {
               </Select>
             </div>
 
+            {/* Vessel Type Filter */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Filter by Vessel Type</Label>
+              <div className="max-h-40 overflow-y-auto space-y-1">
+                {oilTypes.map((oilType) => {
+                  const vesselCount = vessels.filter(v => 
+                    v.oilType === oilType.name || 
+                    v.cargoType === oilType.name || 
+                    v.vesselType === oilType.name
+                  ).length;
+                  
+                  const isSelected = selectedVesselTypes.includes(oilType.name);
+                  
+                  return (
+                    <div
+                      key={oilType.id}
+                      className={`p-2 rounded-lg border cursor-pointer transition-all hover:shadow-md ${
+                        isSelected
+                          ? 'bg-blue-50 border-blue-300 dark:bg-blue-900/20 dark:border-blue-600'
+                          : 'bg-white border-gray-200 hover:border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:hover:border-gray-600'
+                      }`}
+                      onClick={() => {
+                        if (isSelected) {
+                          setSelectedVesselTypes(prev => prev.filter(type => type !== oilType.name));
+                        } else {
+                          setSelectedVesselTypes(prev => [...prev, oilType.name]);
+                        }
+                      }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-3 h-3 rounded-full ${
+                            isSelected ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'
+                          }`} />
+                          <div>
+                            <p className="font-medium text-sm">{oilType.name}</p>
+                            {oilType.description && (
+                              <p className="text-xs text-muted-foreground">{oilType.description}</p>
+                            )}
+                          </div>
+                        </div>
+                        <Badge variant="secondary" className="text-xs">
+                          {vesselCount}
+                        </Badge>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              {selectedVesselTypes.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedVesselTypes([])}
+                  className="w-full"
+                >
+                  Clear All Filters
+                </Button>
+              )}
+            </div>
+
             <Separator />
 
             {/* Layer Controls */}

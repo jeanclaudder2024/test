@@ -6,12 +6,12 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { Ship, Anchor, RefreshCw, MapIcon, Factory, MapPin, Search, Filter, Layers, ArrowRight } from 'lucide-react';
 import { useVesselWebSocket } from '@/hooks/useVesselWebSocket';
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { OilTypeHoverCard } from '@/components/ui/oil-type-hover-card';
+import { OilTypeList } from '@/components/ui/oil-type-list';
 
 // Fix leaflet default icon issue
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -463,31 +463,11 @@ export default function OilVesselMap() {
 
           {/* Vessel Filter */}
           <div className="space-y-2">
-            <label className="text-sm font-semibold">Vessel Type</label>
-            <Select value={vesselFilter} onValueChange={setVesselFilter}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Oil Vessels</SelectItem>
-                {Array.isArray(oilTypes) && oilTypes.map((oilType: any) => (
-                  <OilTypeHoverCard key={oilType.id} oilType={oilType}>
-                    <SelectItem value={oilType.name.toLowerCase()}>
-                      {oilType.name}
-                    </SelectItem>
-                  </OilTypeHoverCard>
-                ))}
-                {/* Fallback options if oil types aren't loaded */}
-                {(!Array.isArray(oilTypes) || oilTypes.length === 0) && (
-                  <>
-                    <SelectItem value="tanker">Oil Tankers</SelectItem>
-                    <SelectItem value="crude">Crude Carriers</SelectItem>
-                    <SelectItem value="lng">LNG Carriers</SelectItem>
-                    <SelectItem value="lpg">LPG Carriers</SelectItem>
-                  </>
-                )}
-              </SelectContent>
-            </Select>
+            <OilTypeList
+              oilTypes={Array.isArray(oilTypes) ? oilTypes : []}
+              selectedType={vesselFilter === 'all' ? 'All Types' : vesselFilter}
+              onTypeSelect={(type) => setVesselFilter(type === 'All Types' ? 'all' : type.toLowerCase())}
+            />
           </div>
 
           {/* Map Style */}
