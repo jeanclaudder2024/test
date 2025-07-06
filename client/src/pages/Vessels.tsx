@@ -42,6 +42,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from '@/components/ui/checkbox';
 import { PortalHoverCard } from '@/components/ui/portal-hover-card';
+import { OilTypeHoverCard } from '@/components/ui/oil-type-hover-card';
 import { Link } from 'wouter';
 import { formatDate } from '@/lib/utils';
 import { Ship, Search, Plus, Filter, Droplet, Fuel, Layers, Tag, Anchor, AlertCircle, Wifi, WifiOff, ChevronLeft, ChevronRight, Globe, Grid, List } from 'lucide-react';
@@ -893,27 +894,40 @@ export default function Vessels() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              {availableOilCategories.map((category) => (
-                <div key={category} className="flex items-center space-x-2 px-2 py-1.5">
-                  <Checkbox
-                    id={`oil-type-${category}`}
-                    checked={selectedOilTypes.includes(category)}
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        setSelectedOilTypes([...selectedOilTypes, category]);
-                      } else {
-                        setSelectedOilTypes(selectedOilTypes.filter(t => t !== category));
-                      }
-                    }}
-                  />
-                  <label 
-                    htmlFor={`oil-type-${category}`}
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                  >
-                    {category}
-                  </label>
-                </div>
-              ))}
+              {availableOilCategories.map((category) => {
+                // Find the full oil type object to get the description
+                const oilType = oilTypes.find(ot => ot.name === category);
+                
+                return (
+                  <div key={category} className="flex items-center space-x-2 px-2 py-1.5">
+                    <Checkbox
+                      id={`oil-type-${category}`}
+                      checked={selectedOilTypes.includes(category)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedOilTypes([...selectedOilTypes, category]);
+                        } else {
+                          setSelectedOilTypes(selectedOilTypes.filter(t => t !== category));
+                        }
+                      }}
+                    />
+                    <label 
+                      htmlFor={`oil-type-${category}`}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                    >
+                      {oilType ? (
+                        <OilTypeHoverCard oilType={oilType}>
+                          <span className="hover:text-blue-600 transition-colors">
+                            {category}
+                          </span>
+                        </OilTypeHoverCard>
+                      ) : (
+                        category
+                      )}
+                    </label>
+                  </div>
+                );
+              })}
               {selectedOilTypes.length > 0 && (
                 <>
                   <DropdownMenuSeparator />
