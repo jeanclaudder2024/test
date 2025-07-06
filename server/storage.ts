@@ -1138,15 +1138,15 @@ export class DatabaseStorage implements IStorage {
       const allPorts = await this.getPorts();
       
       const nearbyPorts = allPorts.filter(port => {
-        if (!port.latitude || !port.longitude) return false;
+        if (!port.lat || !port.lng) return false;
         
         // Calculate distance using Haversine formula
         const R = 6371; // Earth radius in km
-        const dLat = this.deg2rad(parseFloat(port.latitude) - lat);
-        const dLon = this.deg2rad(parseFloat(port.longitude) - lng);
+        const dLat = this.deg2rad(parseFloat(port.lat) - lat);
+        const dLon = this.deg2rad(parseFloat(port.lng) - lng);
         const a = 
           Math.sin(dLat/2) * Math.sin(dLat/2) +
-          Math.cos(this.deg2rad(lat)) * Math.cos(this.deg2rad(parseFloat(port.latitude))) * 
+          Math.cos(this.deg2rad(lat)) * Math.cos(this.deg2rad(parseFloat(port.lat))) * 
           Math.sin(dLon/2) * Math.sin(dLon/2);
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
         const distance = R * c; // Distance in km
@@ -1156,8 +1156,8 @@ export class DatabaseStorage implements IStorage {
       
       // Sort by distance (closest first)
       nearbyPorts.sort((a, b) => {
-        const distA = this.calculateDistance(lat, lng, parseFloat(a.latitude || "0"), parseFloat(a.longitude || "0"));
-        const distB = this.calculateDistance(lat, lng, parseFloat(b.latitude || "0"), parseFloat(b.longitude || "0"));
+        const distA = this.calculateDistance(lat, lng, parseFloat(a.lat || "0"), parseFloat(a.lng || "0"));
+        const distB = this.calculateDistance(lat, lng, parseFloat(b.lat || "0"), parseFloat(b.lng || "0"));
         return distA - distB;
       });
       

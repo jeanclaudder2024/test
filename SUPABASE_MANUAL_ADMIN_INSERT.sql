@@ -31,9 +31,9 @@ INSERT INTO users (
   email,
   password,
   role,
-  "firstName",
-  "lastName",
-  "createdAt"
+  first_name,
+  last_name,
+  created_at
 ) VALUES (
   'superadmin@petrodealhub.com',
   '$2b$10$9XdKzI.ZoX0.Q5QqZl8/0.rKqMQ8tG5t2VjqEgHt6/QFZ2tK8Y2L6', -- Pre-hashed admin123

@@ -950,10 +950,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           message: "Refinery data has been updated with real-world information",
           data: {
             count: refineries.length,
-            regions: refineries.reduce((acc, r) => {
+            regions: refineries.reduce((acc: Record<string, number>, r) => {
               acc[r.region] = (acc[r.region] || 0) + 1;
               return acc;
-            }, {})
+            }, {} as Record<string, number>)
           }
         });
       } catch (error) {
@@ -1496,12 +1496,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: vesselData.status || 'AT_SEA',
         currentLat: vesselData.currentLat || null,
         currentLng: vesselData.currentLng || null,
-        destination: vesselData.destination || null,
+        destinationPort: vesselData.destinationPort || null,
         eta: vesselData.eta || null,
         speed: vesselData.speed || null,
         course: vesselData.course || null,
         draught: vesselData.draught || null,
-        cargo: vesselData.cargo || null,
+        cargoType: vesselData.cargo || null,
         cargoCapacity: vesselData.cargoCapacity || null
       });
       
@@ -1808,9 +1808,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             mmsi: "123456789",
             vesselStatus: "Active",
             destination: "Rotterdam",
-            length: 250,
-            beam: 40,
-            draught: 12.5,
+            length: "250",
+            beam: "40",
+            draught: "12.5",
             built: 2010,
             deadweight: 120000,
             grossTonnage: 65000
@@ -1826,9 +1826,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             mmsi: "234567890",
             vesselStatus: "Active",
             destination: "Singapore",
-            length: 280,
-            beam: 45,
-            draught: 14.2,
+            length: "280",
+            beam: "45",
+            draught: "14.2",
             built: 2015,
             deadweight: 160000,
             grossTonnage: 85000
@@ -1844,9 +1844,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             mmsi: "345678901",
             vesselStatus: "Active",
             destination: "New York",
-            length: 290,
-            beam: 46,
-            draught: 13.8,
+            length: "290",
+            beam: "46",
+            draught: "13.8",
             built: 2018,
             deadweight: 145000,
             grossTonnage: 95000
