@@ -1,9 +1,6 @@
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import ws from "ws";
+import postgres from 'postgres';
+import { drizzle } from 'drizzle-orm/postgres-js';
 import * as schema from "@shared/schema";
-
-neonConfig.webSocketConstructor = ws;
 
 if (!process.env.DATABASE_URL) {
   throw new Error(
@@ -11,13 +8,11 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-// Use Neon serverless for Supabase compatibility
-// Add SSL configuration for production database
-export const pool = new Pool({ 
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : true
+// Use postgres-js driver for better Supabase compatibility
+export const pool = postgres(process.env.DATABASE_URL, {
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
-export const db = drizzle({ client: pool, schema });
+export const db = drizzle(pool, { schema });
 
 export function getActiveDb() {
   return db;
