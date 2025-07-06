@@ -387,13 +387,137 @@ export default function OilTypeManagement() {
                     </CardDescription>
                   </div>
                   <div className="flex gap-1">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setEditingOilType(oilType)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
+                    <Dialog open={editingOilType?.id === oilType.id} onOpenChange={(open) => !open && setEditingOilType(null)}>
+                      <DialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setEditingOilType(oilType)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-[600px]">
+                        <DialogHeader>
+                          <DialogTitle>Edit Oil Type</DialogTitle>
+                          <DialogDescription>
+                            Modify the oil type information for vessel filtering and categorization.
+                          </DialogDescription>
+                        </DialogHeader>
+                        {editingOilType && (
+                          <form onSubmit={handleSubmit} className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <Label htmlFor="edit-name">Technical Name *</Label>
+                                <Input
+                                  id="edit-name"
+                                  name="name"
+                                  defaultValue={editingOilType.name}
+                                  required
+                                />
+                              </div>
+                              <div>
+                                <Label htmlFor="edit-displayName">Display Name *</Label>
+                                <Input
+                                  id="edit-displayName"
+                                  name="displayName"
+                                  defaultValue={editingOilType.displayName}
+                                  required
+                                />
+                              </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <Label htmlFor="edit-category">Category *</Label>
+                                <Select name="category" defaultValue={editingOilType.category} required>
+                                  <SelectTrigger>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {CATEGORIES.map((category) => (
+                                      <SelectItem key={category.value} value={category.value}>
+                                        <div className="flex items-center gap-2">
+                                          <span>{category.icon}</span>
+                                          <span>{category.label}</span>
+                                        </div>
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div>
+                                <Label htmlFor="edit-tradingSymbol">Trading Symbol</Label>
+                                <Input
+                                  id="edit-tradingSymbol"
+                                  name="tradingSymbol"
+                                  defaultValue={editingOilType.tradingSymbol || ""}
+                                />
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <Label htmlFor="edit-marketPrice">Market Price (USD)</Label>
+                                <Input
+                                  id="edit-marketPrice"
+                                  name="marketPrice"
+                                  type="number"
+                                  step="0.01"
+                                  defaultValue={editingOilType.marketPrice || ""}
+                                />
+                              </div>
+                              <div>
+                                <Label htmlFor="edit-priceUnit">Price Unit</Label>
+                                <Select name="priceUnit" defaultValue={editingOilType.priceUnit || "barrel"}>
+                                  <SelectTrigger>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {PRICE_UNITS.map((unit) => (
+                                      <SelectItem key={unit.value} value={unit.value}>
+                                        {unit.label}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+
+                            <div>
+                              <Label htmlFor="edit-description">Description</Label>
+                              <Textarea
+                                id="edit-description"
+                                name="description"
+                                defaultValue={editingOilType.description || ""}
+                                rows={3}
+                              />
+                            </div>
+
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                id="edit-isActive"
+                                name="isActive"
+                                value="true"
+                                defaultChecked={editingOilType.isActive}
+                                className="rounded"
+                              />
+                              <Label htmlFor="edit-isActive">Active (available for vessel filtering)</Label>
+                            </div>
+
+                            <div className="flex justify-end space-x-2 pt-4">
+                              <Button type="button" variant="outline" onClick={() => setEditingOilType(null)}>
+                                Cancel
+                              </Button>
+                              <Button type="submit" disabled={updateOilTypeMutation.isPending}>
+                                {updateOilTypeMutation.isPending ? "Updating..." : "Update Oil Type"}
+                              </Button>
+                            </div>
+                          </form>
+                        )}
+                      </DialogContent>
+                    </Dialog>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button variant="outline" size="sm">
@@ -478,129 +602,7 @@ export default function OilTypeManagement() {
         </Card>
       )}
 
-      {/* Edit Dialog */}
-      <Dialog open={!!editingOilType} onOpenChange={() => setEditingOilType(null)}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Edit Oil Type</DialogTitle>
-            <DialogDescription>
-              Update the oil type information.
-            </DialogDescription>
-          </DialogHeader>
-          {editingOilType && (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="edit-name">Technical Name *</Label>
-                  <Input
-                    id="edit-name"
-                    name="name"
-                    defaultValue={editingOilType.name}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="edit-displayName">Display Name *</Label>
-                  <Input
-                    id="edit-displayName"
-                    name="displayName"
-                    defaultValue={editingOilType.displayName}
-                    required
-                  />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="edit-category">Category *</Label>
-                  <Select name="category" defaultValue={editingOilType.category} required>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {CATEGORIES.map((category) => (
-                        <SelectItem key={category.value} value={category.value}>
-                          <div className="flex items-center gap-2">
-                            <span>{category.icon}</span>
-                            <span>{category.label}</span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="edit-tradingSymbol">Trading Symbol</Label>
-                  <Input
-                    id="edit-tradingSymbol"
-                    name="tradingSymbol"
-                    defaultValue={editingOilType.tradingSymbol || ""}
-                  />
-                </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="edit-marketPrice">Market Price (USD)</Label>
-                  <Input
-                    id="edit-marketPrice"
-                    name="marketPrice"
-                    type="number"
-                    step="0.01"
-                    defaultValue={editingOilType.marketPrice || ""}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="edit-priceUnit">Price Unit</Label>
-                  <Select name="priceUnit" defaultValue={editingOilType.priceUnit || "barrel"}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {PRICE_UNITS.map((unit) => (
-                        <SelectItem key={unit.value} value={unit.value}>
-                          {unit.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="edit-description">Description</Label>
-                <Textarea
-                  id="edit-description"
-                  name="description"
-                  defaultValue={editingOilType.description || ""}
-                  rows={3}
-                />
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="edit-isActive"
-                  name="isActive"
-                  value="true"
-                  defaultChecked={editingOilType.isActive}
-                  className="rounded"
-                />
-                <Label htmlFor="edit-isActive">Active (available for vessel filtering)</Label>
-              </div>
-
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button type="button" variant="outline" onClick={() => setEditingOilType(null)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={updateOilTypeMutation.isPending}>
-                  {updateOilTypeMutation.isPending ? "Updating..." : "Update Oil Type"}
-                </Button>
-              </div>
-            </form>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
