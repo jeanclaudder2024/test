@@ -71,69 +71,74 @@ export function OilTypeHoverCard({ oilTypeName, children, position = 'top' }: Oi
   };
 
   return (
-    <div className="relative inline-block">
+    <>
       <div
         onMouseEnter={() => setIsVisible(true)}
         onMouseLeave={() => setIsVisible(false)}
-        className="cursor-help"
+        className="cursor-help relative"
       >
         {children}
       </div>
       
+      {/* Portal the hover card to body to avoid z-index issues */}
       {isVisible && (
-        <div className={`absolute z-50 ${positionClasses[position]}`}>
-          <Card className="w-80 shadow-2xl border border-blue-200 bg-white/95 backdrop-blur-sm">
-            <CardContent className="p-4">
-              {/* Header with oil type info */}
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center space-x-2">
-                  <div className="p-2 bg-blue-50 rounded-full">
-                    <Droplet className="h-4 w-4 text-blue-600" />
+        <div className="fixed inset-0 pointer-events-none z-[9999]">
+          <div className={`absolute pointer-events-auto ${positionClasses[position]}`} 
+               style={{
+                 left: '50%',
+                 top: '50%',
+                 transform: 'translate(-50%, -50%)'
+               }}>
+            <Card className="w-80 shadow-2xl border border-blue-200 bg-white backdrop-blur-sm">
+              <CardContent className="p-4">
+                {/* Header with oil type info */}
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center space-x-2">
+                    <div className="p-2 bg-blue-50 rounded-full">
+                      <Droplet className="h-4 w-4 text-blue-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900 text-sm">
+                        {oilType.displayName || oilType.name}
+                      </h3>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900 text-sm">
-                      {oilType.name}
-                    </h3>
-                  </div>
+                  <Badge 
+                    className={`text-xs px-2 py-1 ${getCategoryColor(oilType.category || 'Other')}`}
+                    variant="secondary"
+                  >
+                    {oilType.category || 'Oil Type'}
+                  </Badge>
                 </div>
-                <Badge 
-                  className={`text-xs px-2 py-1 ${getCategoryColor(oilType.category)}`}
-                  variant="secondary"
-                >
-                  {oilType.category}
-                </Badge>
-              </div>
 
-              {/* Description */}
-              <div className="border-t border-gray-100 pt-3">
-                <div className="flex items-start space-x-2">
-                  <Info className="h-3 w-3 text-blue-500 mt-0.5 flex-shrink-0" />
-                  <p className="text-sm text-gray-700 leading-relaxed">
-                    {oilType.description || 'Professional maritime oil type used in global petroleum trading and vessel operations.'}
-                  </p>
-                </div>
-              </div>
-
-              {/* Professional styling footer */}
-              <div className="mt-3 pt-2 border-t border-gray-100">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-400 font-medium">
-                    PETRODEALHUB
-                  </span>
-                  <div className="flex items-center space-x-1">
-                    <div className="w-1 h-1 bg-blue-400 rounded-full"></div>
-                    <div className="w-1 h-1 bg-blue-300 rounded-full"></div>
-                    <div className="w-1 h-1 bg-blue-200 rounded-full"></div>
+                {/* Description */}
+                <div className="border-t border-gray-100 pt-3">
+                  <div className="flex items-start space-x-2">
+                    <Info className="h-3 w-3 text-blue-500 mt-0.5 flex-shrink-0" />
+                    <p className="text-sm text-gray-700 leading-relaxed">
+                      {oilType.description || 'Professional maritime oil type used in global petroleum trading and vessel operations.'}
+                    </p>
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          {/* Arrow */}
-          <div className={`absolute w-0 h-0 border-4 ${arrowClasses[position]}`}></div>
+
+                {/* Professional styling footer */}
+                <div className="mt-3 pt-2 border-t border-gray-100">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-400 font-medium">
+                      PETRODEALHUB
+                    </span>
+                    <div className="flex items-center space-x-1">
+                      <div className="w-1 h-1 bg-blue-400 rounded-full"></div>
+                      <div className="w-1 h-1 bg-blue-300 rounded-full"></div>
+                      <div className="w-1 h-1 bg-blue-200 rounded-full"></div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
