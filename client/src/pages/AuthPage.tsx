@@ -5,7 +5,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { loginSchema, registerSchema, LoginInput, RegisterInput } from "@shared/schema";
 import { Anchor, Globe, Loader2, Lock, Mail, User } from "lucide-react";
 
 import {
@@ -21,21 +20,37 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 
+// Form schemas
+const loginSchema = z.object({
+  username: z.string().min(1, "Username is required"),
+  password: z.string().min(1, "Password is required"),
+});
+
+const registerSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
+type RegisterFormValues = z.infer<typeof registerSchema>;
+
 export default function AuthPage() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const { user, loginMutation, registerMutation } = useAuth();
 
   // Form definition
-  const loginForm = useForm<LoginInput>({
+  const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "",
+      username: "",
       password: "",
     },
   });
 
-  const registerForm = useForm<RegisterInput>({
+  const registerForm = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
       email: "",
@@ -167,8 +182,8 @@ export default function AuthPage() {
                       type="button" 
                       className="w-full bg-[#FF6F00] hover:bg-[#FF5000] text-white font-bold py-4 rounded-lg transition-colors shadow-lg"
                       onClick={() => {
-                        loginForm.setValue("email", "admin@petrodealhub.com");
-                        loginForm.setValue("password", "admin123");
+                        loginForm.setValue("username", "demo");
+                        loginForm.setValue("password", "password");
                         loginForm.handleSubmit(onLoginSubmit)();
                       }}
                     >
@@ -199,16 +214,15 @@ export default function AuthPage() {
                     <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
                       <FormField
                         control={loginForm.control}
-                        name="email"
+                        name="username"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Email</FormLabel>
+                            <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Username</FormLabel>
                             <FormControl>
                               <div className="relative">
-                                <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                                <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                                 <Input 
-                                  type="email"
-                                  placeholder="admin@petrodealhub.com"
+                                  placeholder="john.doe"
                                   className="pl-10 h-12 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 rounded-lg focus:ring-blue-500 focus:border-blue-500"
                                   {...field}
                                 />
@@ -330,8 +344,8 @@ export default function AuthPage() {
                         
                         // Use setTimeout to allow tab change to complete
                         setTimeout(() => {
-                          loginForm.setValue("email", "admin@petrodealhub.com");
-                          loginForm.setValue("password", "admin123");
+                          loginForm.setValue("username", "demo");
+                          loginForm.setValue("password", "password");
                           loginForm.handleSubmit(onLoginSubmit)();
                         }, 100);
                       }}

@@ -6,7 +6,7 @@ import { relations } from "drizzle-orm";
 // Subscription Plans
 export const subscriptionPlans = pgTable("subscription_plans", {
   id: serial("id").primaryKey(),
-  name: text("name").notNull().unique(), // "Free Trial", "Basic", "Pro", "Enterprise", "Broker"
+  name: text("name").notNull(), // "Free Trial", "Basic", "Pro", "Enterprise", "Broker"
   description: text("description"),
   price: decimal("price", { precision: 10, scale: 2 }).notNull().default("0.00"),
   interval: text("interval").notNull().default("month"), // "month", "year"
@@ -21,10 +21,6 @@ export const subscriptionPlans = pgTable("subscription_plans", {
   canAccessBrokerFeatures: boolean("can_access_broker_features").default(false),
   canAccessAnalytics: boolean("can_access_analytics").default(false),
   canExportData: boolean("can_export_data").default(false),
-  slug: text("slug").unique(),
-  sortOrder: integer("sort_order").default(0),
-  monthlyPrice: decimal("monthly_price", { precision: 10, scale: 2 }),
-  yearlyPrice: decimal("yearly_price", { precision: 10, scale: 2 }),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -37,7 +33,6 @@ export const users = pgTable("users", {
   firstName: text("first_name"),
   lastName: text("last_name"),
   role: text("role").notNull().default("user"), // 'admin', 'user', 'broker'
-  token: text("token"), // JWT token field for admin authentication
   stripeCustomerId: text("stripe_customer_id"),
   isEmailVerified: boolean("is_email_verified").default(false),
   emailVerificationToken: text("email_verification_token"),

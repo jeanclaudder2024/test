@@ -70,8 +70,8 @@ interface Refinery {
   region: string;
   city?: string | null;
   capacity: number | null;
-  lat: string;
-  lng: string;
+  latitude: string;
+  longitude: string;
   type: string | null;
   status: string | null;
   description: string | null;
@@ -201,8 +201,8 @@ export default function ProfessionalRefineryManagement() {
     region: 'Middle East',
     city: '',
     capacity: '',
-    lat: '',
-    lng: '',
+    latitude: '',
+    longitude: '',
     type: 'Crude Oil Refinery',
     status: 'Operational',
     description: '',
@@ -229,7 +229,6 @@ export default function ProfessionalRefineryManagement() {
     safety_record: '',
     workforce_size: '',
     annual_throughput: '',
-    nearest_port: '',
     
     // Financial & Market Information
     investment_cost: '',
@@ -339,8 +338,8 @@ export default function ProfessionalRefineryManagement() {
       region: 'Middle East',
       city: '',
       capacity: '',
-      lat: '',
-      lng: '',
+      latitude: '',
+      longitude: '',
       type: 'Crude Oil Refinery',
       status: 'Operational',
       description: '',
@@ -381,10 +380,7 @@ export default function ProfessionalRefineryManagement() {
       hydrogen_capacity: '',
       sulfur_recovery: '',
       octane_rating: '',
-      diesel_specifications: '',
-      
-      // Missing nearest_port field
-      nearest_port: ''
+      diesel_specifications: ''
     });
   };
 
@@ -547,8 +543,8 @@ export default function ProfessionalRefineryManagement() {
       region: refinery.region,
       city: refinery.city || '',
       capacity: refinery.capacity?.toString() || '',
-      lat: refinery.lat,
-      lng: refinery.lng,
+      latitude: refinery.latitude,
+      longitude: refinery.longitude,
       type: refinery.type || 'Crude Oil Refinery',
       status: refinery.status || 'Operational',
       description: refinery.description || '',
@@ -562,35 +558,7 @@ export default function ProfessionalRefineryManagement() {
       address: refinery.address || '',
       technical_specs: refinery.technical_specs || '',
       utilization: refinery.utilization?.toString() || '',
-      complexity: refinery.complexity?.toString() || '',
-      
-      // Enhanced fields
-      crude_oil_sources: refinery.crude_oil_sources || '',
-      processing_units: refinery.processing_units || '',
-      storage_capacity: refinery.storage_capacity?.toString() || '',
-      pipeline_connections: refinery.pipeline_connections || '',
-      shipping_terminals: refinery.shipping_terminals || '',
-      rail_connections: refinery.rail_connections || '',
-      environmental_certifications: refinery.environmental_certifications || '',
-      safety_record: refinery.safety_record || '',
-      workforce_size: refinery.workforce_size?.toString() || '',
-      annual_throughput: refinery.annual_throughput?.toString() || '',
-      nearest_port: refinery.nearest_port || '',
-      
-      // Financial & Market Information
-      investment_cost: refinery.investment_cost?.toString() || '',
-      operating_costs: refinery.operating_costs?.toString() || '',
-      revenue: refinery.revenue?.toString() || '',
-      profit_margin: refinery.profit_margin?.toString() || '',
-      market_share: refinery.market_share?.toString() || '',
-      
-      // Technical Specifications
-      distillation_capacity: refinery.distillation_capacity?.toString() || '',
-      conversion_capacity: refinery.conversion_capacity?.toString() || '',
-      hydrogen_capacity: refinery.hydrogen_capacity?.toString() || '',
-      sulfur_recovery: refinery.sulfur_recovery?.toString() || '',
-      octane_rating: refinery.octane_rating?.toString() || '',
-      diesel_specifications: refinery.diesel_specifications || ''
+      complexity: refinery.complexity?.toString() || ''
     });
   };
 
@@ -604,8 +572,8 @@ export default function ProfessionalRefineryManagement() {
       country: formData.country,
       region: formData.region,
       city: formData.city,
-      lat: formData.lat,
-      lng: formData.lng,
+      lat: formData.latitude,    // Map latitude to lat
+      lng: formData.longitude,   // Map longitude to lng
       capacity: formData.capacity ? parseInt(formData.capacity) : null,
       type: formData.type,
       status: formData.status,
@@ -924,8 +892,8 @@ export default function ProfessionalRefineryManagement() {
                               <Input
                                 id="latitude"
                                 required
-                                value={formData.lat}
-                                onChange={(e) => setFormData({...formData, lat: e.target.value})}
+                                value={formData.latitude}
+                                onChange={(e) => setFormData({...formData, latitude: e.target.value})}
                                 placeholder="e.g., 26.6927"
                               />
                             </div>
@@ -934,8 +902,8 @@ export default function ProfessionalRefineryManagement() {
                               <Input
                                 id="longitude"
                                 required
-                                value={formData.lng}
-                                onChange={(e) => setFormData({...formData, lng: e.target.value})}
+                                value={formData.longitude}
+                                onChange={(e) => setFormData({...formData, longitude: e.target.value})}
                                 placeholder="e.g., 50.0279"
                               />
                             </div>
@@ -1459,8 +1427,8 @@ export default function ProfessionalRefineryManagement() {
                       </TableCell>
                       <TableCell>
                         <div className="text-sm font-mono">
-                          <div>{parseFloat(refinery.lat).toFixed(4)}</div>
-                          <div>{parseFloat(refinery.lng).toFixed(4)}</div>
+                          <div>{parseFloat(refinery.latitude).toFixed(4)}</div>
+                          <div>{parseFloat(refinery.longitude).toFixed(4)}</div>
                         </div>
                       </TableCell>
                       <TableCell className="text-right">
@@ -1513,8 +1481,8 @@ export default function ProfessionalRefineryManagement() {
         isOpen={showLocationSelector}
         onClose={() => setShowLocationSelector(false)}
         onLocationSelect={handleLocationSelect}
-        initialLat={formData.lat ? parseFloat(formData.lat) : 25.2048}
-        initialLng={formData.lng ? parseFloat(formData.lng) : 55.2708}
+        initialLat={formData.latitude ? parseFloat(formData.latitude) : 25.2048}
+        initialLng={formData.longitude ? parseFloat(formData.longitude) : 55.2708}
       />
 
       {/* Refinery Detail View Dialog */}

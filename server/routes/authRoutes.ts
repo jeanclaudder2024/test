@@ -10,7 +10,6 @@ import {
   authenticateToken,
   AuthenticatedRequest 
 } from '../auth';
-import { FallbackAuth } from '../fallback-auth';
 
 const router = Router();
 
@@ -88,71 +87,48 @@ router.post('/login', async (req, res) => {
   try {
     const validatedData = loginSchema.parse(req.body);
 
-    try {
-      // Try database authentication first
-      const [user] = await db
-        .select()
-        .from(users)
-        .where(eq(users.email, validatedData.email))
-        .limit(1);
+    // Find user by email
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, validatedData.email))
+      .limit(1);
 
-      if (!user) {
-        // User not found in database, skip to fallback auth
-        throw new Error('User not found in database, trying fallback auth');
-      }
-
-      // Verify password
-      const isPasswordValid = await comparePassword(validatedData.password, user.password);
-      
-      if (!isPasswordValid) {
-        // Password comparison failed, skip to fallback auth
-        console.log('Database password comparison failed, trying fallback auth...');
-        throw new Error('Password comparison failed, trying fallback auth');
-      }
-
-      // Get user subscription
-      const [subscription] = await db
-        .select()
-        .from(userSubscriptions)
-        .where(eq(userSubscriptions.userId, user.id))
-        .limit(1);
-
-      // Check trial status
-      const now = new Date();
-      const trialExpired = subscription ? now > new Date(subscription.trialEndDate) : true;
-
-      // Generate token
-      const token = generateToken(user);
-
-      // Return user data without password
-      const { password, ...userWithoutPassword } = user;
-
-      res.json({
-        message: 'Login successful',
-        user: userWithoutPassword,
-        token,
-        subscription,
-        trialExpired
-      });
-
-    } catch (dbError) {
-      console.log('Database login failed, trying fallback auth...');
-      
-      // Use fallback authentication
-      const fallbackResult = await FallbackAuth.login(validatedData.email, validatedData.password);
-      
-      if (!fallbackResult.success || !fallbackResult.user) {
-        return res.status(401).json({ message: 'Invalid email or password' });
-      }
-      
-      res.json({
-        message: 'Login successful (fallback)',
-        user: fallbackResult.user,
-        token: fallbackResult.token,
-        subscription: null,
-        trialExpired: false
-      });
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid email or password' });
     }
+
+    // Verify password
+    const isPasswordValid = await comparePassword(validatedData.password, user.password);
+    
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
+
+    // Get user subscription
+    const [subscription] = await db
+      .select()
+      .from(userSubscriptions)
+      .where(eq(userSubscriptions.userId, user.id))
+      .limit(1);
+
+    // Check trial status
+    const now = new Date();
+    const trialExpired = subscription ? now > new Date(subscription.trialEndDate) : true;
+
+    // Generate token
+    const token = generateToken(user);
+
+    // Return user data without password
+    const { password, ...userWithoutPassword } = user;
+
+    res.json({
+      message: 'Login successful',
+      user: userWithoutPassword,
+      token,
+      subscription,
+      trialExpired
+    });
 
   } catch (error: any) {
     console.error('Login error:', error);

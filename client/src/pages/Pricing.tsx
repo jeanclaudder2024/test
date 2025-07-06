@@ -13,28 +13,24 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useLocation } from 'wouter';
 import { cn } from '@/lib/utils';
 
+interface PlanFeature {
+  name: string;
+  included: boolean;
+}
+
 interface PricingPlan {
   id: number;
   name: string;
+  slug: string;
   description: string;
-  price: string;
+  monthlyPrice: string;
+  yearlyPrice: string;
   monthlyPriceId: string;
   yearlyPriceId: string;
   currency: string;
-  features: string[];
-  metadata: any;
-  isActive: boolean;
-  maxVessels: number | null;
-  maxApiCalls: number | null;
-  maxUsers: number | null;
-  customBranding: boolean;
-  supportLevel: string | null;
-  dataRetention: number | null;
-  exportFormats: string | null;
-  advancedAnalytics: boolean;
-  priorityUpdates: boolean;
-  contractManagement: boolean;
-  billingInterval: string;
+  features: PlanFeature[];
+  isPopular: boolean;
+  trialDays: number;
 }
 
 export default function PricingPage() {
@@ -62,7 +58,10 @@ export default function PricingPage() {
         
         return plansData.map((plan: any) => ({
           ...plan,
-          features: JSON.parse(plan.features || '[]')
+          features: JSON.parse(plan.features || '[]').map((feature: string) => ({
+            name: feature,
+            included: true
+          })),
         })).sort((a: PricingPlan, b: PricingPlan) => a.name.localeCompare(b.name));
       } catch (err) {
         console.error('Error fetching plans:', err);
@@ -86,7 +85,7 @@ export default function PricingPage() {
               { name: "Data export (CSV)", included: true }
             ],
             isPopular: false,
-            trialDays: 5
+            trialDays: 14
           },
           {
             id: 2,
@@ -107,7 +106,7 @@ export default function PricingPage() {
               { name: "Custom alerts", included: true }
             ],
             isPopular: true,
-            trialDays: 5
+            trialDays: 14
           },
           {
             id: 3,
@@ -131,7 +130,7 @@ export default function PricingPage() {
               { name: "Dedicated account manager", included: true }
             ],
             isPopular: false,
-            trialDays: 5
+            trialDays: 30
           }
         ];
       }

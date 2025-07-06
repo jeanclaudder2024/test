@@ -47,7 +47,7 @@ export default function TrialExpired() {
             <CardDescription className="text-white/70 text-lg">
               {user && (
                 <>
-                  Your 5-day trial has ended. Please upgrade to continue using PetroDealHub.
+                  Your 3-day trial has ended. Please upgrade to continue using PetroDealHub.
                 </>
               )}
             </CardDescription>

@@ -950,10 +950,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           message: "Refinery data has been updated with real-world information",
           data: {
             count: refineries.length,
-            regions: refineries.reduce((acc: Record<string, number>, r) => {
+            regions: refineries.reduce((acc, r) => {
               acc[r.region] = (acc[r.region] || 0) + 1;
               return acc;
-            }, {} as Record<string, number>)
+            }, {})
           }
         });
       } catch (error) {
@@ -1496,12 +1496,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: vesselData.status || 'AT_SEA',
         currentLat: vesselData.currentLat || null,
         currentLng: vesselData.currentLng || null,
-        destinationPort: vesselData.destinationPort || null,
+        destination: vesselData.destination || null,
         eta: vesselData.eta || null,
         speed: vesselData.speed || null,
         course: vesselData.course || null,
         draught: vesselData.draught || null,
-        cargoType: vesselData.cargo || null,
+        cargo: vesselData.cargo || null,
         cargoCapacity: vesselData.cargoCapacity || null
       });
       
@@ -1808,9 +1808,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             mmsi: "123456789",
             vesselStatus: "Active",
             destination: "Rotterdam",
-            length: "250",
-            beam: "40",
-            draught: "12.5",
+            length: 250,
+            beam: 40,
+            draught: 12.5,
             built: 2010,
             deadweight: 120000,
             grossTonnage: 65000
@@ -1826,9 +1826,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             mmsi: "234567890",
             vesselStatus: "Active",
             destination: "Singapore",
-            length: "280",
-            beam: "45",
-            draught: "14.2",
+            length: 280,
+            beam: 45,
+            draught: 14.2,
             built: 2015,
             deadweight: 160000,
             grossTonnage: 85000
@@ -1844,9 +1844,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             mmsi: "345678901",
             vesselStatus: "Active",
             destination: "New York",
-            length: "290",
-            beam: "46",
-            draught: "13.8",
+            length: 290,
+            beam: 46,
+            draught: 13.8,
             built: 2018,
             deadweight: 145000,
             grossTonnage: 95000
@@ -4352,80 +4352,6 @@ Only use authentic, real-world data for existing refineries.`;
     } catch (error) {
       console.error("Error checking elite status:", error);
       res.status(500).json({ message: "Failed to check elite status" });
-    }
-  });
-
-  // Stripe subscription endpoints
-  apiRouter.post("/subscription/create-checkout", authenticateToken, async (req: AuthenticatedRequest, res) => {
-    try {
-      const { planId, isYearly } = req.body;
-      
-      if (!planId || typeof planId !== 'number') {
-        return res.status(400).json({ message: "Valid plan ID is required" });
-      }
-
-      const plan = await storage.getSubscriptionPlan(planId);
-      if (!plan) {
-        return res.status(404).json({ message: "Subscription plan not found" });
-      }
-
-      const session = await stripeService.createCheckoutSession({
-        userId: req.user!.id,
-        planId: planId,
-        priceId: isYearly ? plan.stripeYearlyPriceId : plan.stripeMonthlyPriceId,
-        successUrl: `${req.protocol}://${req.get('host')}/subscription/success`,
-        cancelUrl: `${req.protocol}://${req.get('host')}/subscription/plans`
-      });
-
-      res.json({ url: session.url });
-    } catch (error) {
-      console.error("Error creating checkout session:", error);
-      res.status(500).json({ 
-        message: "Failed to create checkout session",
-        error: error instanceof Error ? error.message : "Unknown error"
-      });
-    }
-  });
-
-  apiRouter.post("/subscription/create-portal", authenticateToken, async (req: AuthenticatedRequest, res) => {
-    try {
-      const user = await storage.getUserById(req.user!.id);
-      if (!user?.stripeCustomerId) {
-        return res.status(400).json({ message: "No Stripe customer found" });
-      }
-
-      const session = await stripeService.createPortalSession(
-        user.stripeCustomerId,
-        `${req.protocol}://${req.get('host')}/subscription/plans`
-      );
-
-      res.json({ url: session.url });
-    } catch (error) {
-      console.error("Error creating portal session:", error);
-      res.status(500).json({ 
-        message: "Failed to create portal session",
-        error: error instanceof Error ? error.message : "Unknown error"
-      });
-    }
-  });
-
-  apiRouter.get("/subscription", authenticateToken, async (req: AuthenticatedRequest, res) => {
-    try {
-      const subscription = await storage.getUserSubscription(req.user!.id);
-      res.json(subscription);
-    } catch (error) {
-      console.error("Error fetching subscription:", error);
-      res.status(500).json({ message: "Failed to fetch subscription" });
-    }
-  });
-
-  apiRouter.get("/subscription/plans", async (req, res) => {
-    try {
-      const plans = await storage.getSubscriptionPlans();
-      res.json(plans);
-    } catch (error) {
-      console.error("Error fetching subscription plans:", error);
-      res.status(500).json({ message: "Failed to fetch subscription plans" });
     }
   });
 
@@ -11426,10 +11352,10 @@ Note: This document contains real vessel operational data and should be treated 
         {
           id: 1,
           name: "Free Trial",
-          description: "5-day free trial with full access",
+          description: "3-day free trial with full access",
           price: 0,
           interval: "trial",
-          trialDays: 5,
+          trialDays: 3,
           features: [
             "Real-time vessel tracking",
             "Basic port information",
@@ -11670,10 +11596,10 @@ Note: This document contains real vessel operational data and should be treated 
           plan: {
             id: 1,
             name: "Free Trial",
-            description: "5-day free trial with full access",
+            description: "3-day free trial with full access",
             price: 0,
             interval: "trial",
-            trialDays: 5,
+            trialDays: 3,
             features: ["Real-time vessel tracking", "Basic port information", "Limited refinery data"],
             maxVessels: 10,
             maxPorts: 10,
