@@ -167,8 +167,8 @@ export default function AuthPage() {
                       type="button" 
                       className="w-full bg-[#FF6F00] hover:bg-[#FF5000] text-white font-bold py-4 rounded-lg transition-colors shadow-lg"
                       onClick={() => {
-                        loginForm.setValue("username", "demo");
-                        loginForm.setValue("password", "password");
+                        loginForm.setValue("email", "admin@petrodealhub.com");
+                        loginForm.setValue("password", "admin123");
                         loginForm.handleSubmit(onLoginSubmit)();
                       }}
                     >
