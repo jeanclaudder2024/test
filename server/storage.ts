@@ -86,6 +86,7 @@ export interface IStorage {
   // Vessel methods
   getVessels(): Promise<Vessel[]>;
   getVesselById(id: number): Promise<Vessel | undefined>;
+  getVesselByIMO(imo: string): Promise<Vessel | undefined>;
   getVesselsByRegion(region: string): Promise<Vessel[]>;
   createVessel(vessel: InsertVessel): Promise<Vessel>;
   updateVessel(id: number, vessel: Partial<InsertVessel>): Promise<Vessel | undefined>;
@@ -249,7 +250,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
+    const [user] = await db.select().from(users).where(eq(users.email, username));
     return user || undefined;
   }
 
@@ -548,6 +549,11 @@ export class DatabaseStorage implements IStorage {
     return vessel || undefined;
   }
 
+  async getVesselByIMO(imo: string): Promise<Vessel | undefined> {
+    const [vessel] = await db.select().from(vessels).where(eq(vessels.imo, imo));
+    return vessel || undefined;
+  }
+
   async getVesselsByRegion(region: string): Promise<Vessel[]> {
     return await db.select().from(vessels).where(eq(vessels.currentRegion, region));
   }
@@ -688,18 +694,14 @@ export class DatabaseStorage implements IStorage {
         const { pool } = await import('./db');
         
         // Update vessels where departure_port equals the port ID (as integer foreign key)
-        const departureUpdateResult = await pool.query(`
-          UPDATE vessels 
-          SET departure_port = NULL 
-          WHERE departure_port = $1::text
-        `, [id]);
+        const departureUpdateResult = await db.update(vessels)
+          .set({ departurePort: null })
+          .where(eq(vessels.departurePort, id.toString()));
         
         // Update vessels where destination_port equals the port ID (as integer foreign key)  
-        const destinationUpdateResult = await pool.query(`
-          UPDATE vessels 
-          SET destination_port = NULL 
-          WHERE destination_port = $1::text
-        `, [id]);
+        const destinationUpdateResult = await db.update(vessels)
+          .set({ destinationPort: null })
+          .where(eq(vessels.destinationPort, id.toString()));
         
         updatedCount = (departureUpdateResult?.rowCount || 0) + (destinationUpdateResult?.rowCount || 0);
         console.log(`Storage: Updated ${updatedCount} vessels with foreign key references to port ${id}`);
