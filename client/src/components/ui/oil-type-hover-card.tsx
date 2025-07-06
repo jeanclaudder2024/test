@@ -61,7 +61,7 @@ export function OilTypeHoverCard({ oilType, children, position = 'top' }: OilTyp
         {children}
       </div>
       
-      {isVisible && oilType.description && (
+      {isVisible && (
         <div className={`absolute z-50 ${positionClasses[position]}`}>
           <Card className="w-80 shadow-2xl border border-blue-200 bg-white/95 backdrop-blur-sm">
             <CardContent className="p-4">
@@ -93,7 +93,7 @@ export function OilTypeHoverCard({ oilType, children, position = 'top' }: OilTyp
                 <div className="flex items-start space-x-2">
                   <Info className="h-3 w-3 text-blue-500 mt-0.5 flex-shrink-0" />
                   <p className="text-sm text-gray-700 leading-relaxed">
-                    {oilType.description}
+                    {oilType.description || 'Professional maritime oil type used in global petroleum trading and vessel operations.'}
                   </p>
                 </div>
               </div>

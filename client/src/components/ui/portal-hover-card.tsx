@@ -66,7 +66,7 @@ export function PortalHoverCard({ children, content, className }: PortalHoverCar
       </div>
       {isOpen && createPortal(
         <div
-          className={`fixed z-[9999] w-80 p-4 bg-popover border rounded-md shadow-md ${className || ''}`}
+          className={`fixed z-[9999] w-80 p-4 bg-white border border-gray-200 rounded-lg shadow-2xl backdrop-blur-sm ${className || ''}`}
           style={{
             left: position.x,
             top: position.y,
