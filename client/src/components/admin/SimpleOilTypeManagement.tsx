@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -18,16 +19,19 @@ import { apiRequest } from "@/lib/queryClient";
 interface OilType {
   id: number;
   name: string;
+  description?: string;
   createdAt: string;
 }
 
 // Simple Form Schema
 interface CreateOilTypeForm {
   name: string;
+  description: string;
 }
 
 const oilTypeFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
+  description: z.string().min(1, "Description is required"),
 });
 
 export default function SimpleOilTypeManagement() {
@@ -111,6 +115,7 @@ export default function SimpleOilTypeManagement() {
     resolver: zodResolver(oilTypeFormSchema),
     defaultValues: {
       name: "",
+      description: "",
     },
   });
 
@@ -162,6 +167,19 @@ export default function SimpleOilTypeManagement() {
                       <FormLabel>Oil Type Name</FormLabel>
                       <FormControl>
                         <Input placeholder="e.g., Crude Oil, Diesel, Gasoline" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., Light crude oil with low sulfur content" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -224,6 +242,7 @@ export default function SimpleOilTypeManagement() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
+                  <TableHead>Description</TableHead>
                   <TableHead>Created</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -232,6 +251,9 @@ export default function SimpleOilTypeManagement() {
                 {filteredOilTypes.map((oilType: OilType) => (
                   <TableRow key={oilType.id}>
                     <TableCell className="font-medium">{oilType.name}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {oilType.description || 'No description'}
+                    </TableCell>
                     <TableCell>
                       {new Date(oilType.createdAt).toLocaleDateString()}
                     </TableCell>
@@ -249,7 +271,7 @@ export default function SimpleOilTypeManagement() {
                 ))}
                 {filteredOilTypes.length === 0 && !isLoading && (
                   <TableRow>
-                    <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
                       No oil types found
                     </TableCell>
                   </TableRow>

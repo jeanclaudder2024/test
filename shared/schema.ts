@@ -428,16 +428,35 @@ export const insertStatsSchema = createInsertSchema(stats).omit({
   lastUpdated: true,
 });
 
-// Oil Types Management - Simple version
+// Oil Types Management - Comprehensive version with description and full maritime data
 export const oilTypes = pgTable("oil_types", {
   id: serial("id").primaryKey(),
-  name: text("name").notNull().unique(), // Simple oil type name like "Crude Oil", "Diesel", etc.
+  name: text("name").notNull().unique(), // Technical name: brent_crude, wti, etc.
+  displayName: text("display_name").notNull(), // Human readable: Brent Crude Oil, West Texas Intermediate
+  category: text("category").notNull(), // crude, refined, lng, lpg, petrochemical, other
+  apiGravity: decimal("api_gravity", { precision: 5, scale: 2 }), // API gravity
+  sulfurContent: decimal("sulfur_content", { precision: 5, scale: 3 }), // Sulfur percentage
+  viscosity: decimal("viscosity", { precision: 8, scale: 2 }), // Viscosity in cSt
+  density: decimal("density", { precision: 8, scale: 4 }), // Density in kg/m³
+  flashPoint: integer("flash_point"), // Flash point in Celsius
+  pourPoint: integer("pour_point"), // Pour point in Celsius
+  marketPrice: decimal("market_price", { precision: 10, scale: 2 }), // USD per barrel/ton
+  priceUnit: text("price_unit").default("barrel"), // barrel, ton, gallon, mmbtu
+  description: text("description"), // Detailed description field
+  commonUses: text("common_uses"), // JSON array of uses
+  majorProducers: text("major_producers"), // JSON array of countries/companies
+  tradingSymbol: text("trading_symbol"), // WTI, BRENT, etc.
+  hsCode: text("hs_code"), // Harmonized System code for customs
+  unClass: text("un_class"), // UN classification for hazardous materials
+  isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
+  lastUpdated: timestamp("last_updated").defaultNow(),
 });
 
 export const insertOilTypeSchema = createInsertSchema(oilTypes).omit({
   id: true,
   createdAt: true,
+  lastUpdated: true,
 });
 
 // Type Exports
