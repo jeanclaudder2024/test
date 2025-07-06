@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, Trash2, Search } from "lucide-react";
+import { Plus, Trash2, Search, Edit } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -58,6 +58,8 @@ const oilCategories = [
 export default function SimpleOilTypeManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [editingOilType, setEditingOilType] = useState<OilType | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -89,6 +91,34 @@ export default function SimpleOilTypeManagement() {
       toast({
         title: "Error",
         description: "Failed to create oil type",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Edit oil type mutation
+  const editOilTypeMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: CreateOilTypeForm }) => {
+      console.log("Updating oil type:", id, data);
+      return await apiRequest(`/api/admin/oil-types/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data)
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/oil-types"] });
+      setIsEditDialogOpen(false);
+      setEditingOilType(null);
+      editForm.reset();
+      toast({
+        title: "Success",
+        description: "Oil type updated successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update oil type",
         variant: "destructive",
       });
     },
@@ -149,6 +179,23 @@ export default function SimpleOilTypeManagement() {
 
   const onSubmit = (data: CreateOilTypeForm) => {
     createOilTypeMutation.mutate(data);
+  };
+
+  const onEditSubmit = (data: CreateOilTypeForm) => {
+    if (editingOilType) {
+      editOilTypeMutation.mutate({ id: editingOilType.id, data });
+    }
+  };
+
+  const handleEdit = (oilType: OilType) => {
+    setEditingOilType(oilType);
+    setIsEditDialogOpen(true);
+    editForm.reset({
+      name: oilType.name,
+      displayName: oilType.displayName,
+      category: oilType.category,
+      description: oilType.description || "",
+    });
   };
 
   const handleDelete = (id: number) => {
@@ -250,6 +297,86 @@ export default function SimpleOilTypeManagement() {
             </Form>
           </DialogContent>
         </Dialog>
+
+        {/* Edit Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Oil Type</DialogTitle>
+              <DialogDescription>
+                Update oil type information
+              </DialogDescription>
+            </DialogHeader>
+            <Form {...editForm}>
+              <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
+                <FormField
+                  control={editForm.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Oil Type Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., Crude Oil, Diesel, Gasoline" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={editForm.control}
+                  name="displayName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Display Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., Premium Crude Oil" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={editForm.control}
+                  name="category"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Category</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., Light Crude, Heavy Crude, Refined Product" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={editForm.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., Light crude oil with low sulfur content" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="flex justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsEditDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={editOilTypeMutation.isPending}>
+                    {editOilTypeMutation.isPending ? "Updating..." : "Update"}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Search Control */}
@@ -307,14 +434,24 @@ export default function SimpleOilTypeManagement() {
                       {new Date(oilType.createdAt).toLocaleDateString()}
                     </TableCell>
                     <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(oilType.id)}
-                        disabled={deleteOilTypeMutation.isPending}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(oilType)}
+                          disabled={editOilTypeMutation.isPending}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(oilType.id)}
+                          disabled={deleteOilTypeMutation.isPending}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

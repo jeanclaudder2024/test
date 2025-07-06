@@ -77,7 +77,9 @@ export default function OilTypeManagement() {
   // Fetch oil types
   const { data: oilTypes = [], isLoading } = useQuery({
     queryKey: ["/api/oil-types"],
-    staleTime: 0 // Always fetch fresh data
+    staleTime: 0, // Always fetch fresh data
+    refetchOnMount: true,
+    refetchOnWindowFocus: true
   });
 
   // Create oil type mutation
