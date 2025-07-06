@@ -12,7 +12,7 @@ import { Ship, Anchor, RefreshCw, MapIcon, Factory, MapPin, Search, Filter, Laye
 import { useVesselWebSocket } from '@/hooks/useVesselWebSocket';
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { OilTypeList } from '@/components/ui/oil-type-list';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 // Fix leaflet default icon issue
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -462,13 +462,50 @@ export default function OilVesselMap() {
             </div>
           </div>
 
-          {/* Vessel Filter */}
+          {/* Vessel Filter with Hover Descriptions */}
           <div className="space-y-2">
-            <OilTypeList
-              oilTypes={Array.isArray(oilTypes) ? oilTypes : []}
-              selectedType={vesselFilter === 'all' ? 'All Types' : vesselFilter}
-              onTypeSelect={(type) => setVesselFilter(type === 'All Types' ? 'all' : type.toLowerCase())}
-            />
+            <label className="text-sm font-semibold">Vessel Type Filter</label>
+            <Select 
+              value={vesselFilter === 'all' ? 'all' : vesselFilter} 
+              onValueChange={(value) => setVesselFilter(value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select vessel type">
+                  {vesselFilter === 'all' ? 'All Types' : 
+                   Array.isArray(oilTypes) && oilTypes.find((type: any) => type.name?.toLowerCase() === vesselFilter)?.name || 
+                   vesselFilter.charAt(0).toUpperCase() + vesselFilter.slice(1)}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                {Array.isArray(oilTypes) && oilTypes.map((oilType: any) => (
+                  <SelectItem 
+                    key={oilType.id} 
+                    value={oilType.name?.toLowerCase() || ''}
+                    title={oilType.description || `Filter vessels by ${oilType.name}`}
+                    className="cursor-pointer hover:bg-blue-50"
+                  >
+                    <div className="flex flex-col">
+                      <span className="font-medium">{oilType.name}</span>
+                      {oilType.description && (
+                        <span className="text-xs text-gray-500 truncate max-w-[200px]" title={oilType.description}>
+                          {oilType.description}
+                        </span>
+                      )}
+                    </div>
+                  </SelectItem>
+                ))}
+                {/* Fallback options if oil types aren't loaded */}
+                {(!Array.isArray(oilTypes) || oilTypes.length === 0) && (
+                  <>
+                    <SelectItem value="tanker" title="Vessels designed for transporting liquid petroleum products">Tanker</SelectItem>
+                    <SelectItem value="crude" title="Vessels specifically for transporting crude oil">Crude Oil</SelectItem>
+                    <SelectItem value="lng" title="Vessels for transporting liquefied natural gas">LNG</SelectItem>
+                    <SelectItem value="lpg" title="Vessels for transporting liquefied petroleum gas">LPG</SelectItem>
+                  </>
+                )}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Map Style */}

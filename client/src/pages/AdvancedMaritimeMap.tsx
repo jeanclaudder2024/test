@@ -691,61 +691,69 @@ export default function AdvancedMaritimeMap() {
             {/* Vessel Type Filter */}
             <div className="space-y-2">
               <Label className="text-sm font-medium">Filter by Vessel Type</Label>
-              <div className="max-h-40 overflow-y-auto space-y-1">
-                {oilTypes.map((oilType) => {
-                  const vesselCount = vessels.filter(v => 
-                    v.oilType === oilType.name || 
-                    v.cargoType === oilType.name || 
-                    v.vesselType === oilType.name
-                  ).length;
-                  
-                  const isSelected = selectedVesselTypes.includes(oilType.name);
-                  
-                  return (
-                    <div
-                      key={oilType.id}
-                      className={`p-2 rounded-lg border cursor-pointer transition-all hover:shadow-md ${
-                        isSelected
-                          ? 'bg-blue-50 border-blue-300 dark:bg-blue-900/20 dark:border-blue-600'
-                          : 'bg-white border-gray-200 hover:border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:hover:border-gray-600'
-                      }`}
-                      onClick={() => {
-                        if (isSelected) {
-                          setSelectedVesselTypes(prev => prev.filter(type => type !== oilType.name));
-                        } else {
-                          setSelectedVesselTypes(prev => [...prev, oilType.name]);
-                        }
-                      }}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className={`w-3 h-3 rounded-full ${
-                            isSelected ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'
-                          }`} />
-                          <div>
-                            <p className="font-medium text-sm">{oilType.name}</p>
+              
+              <Select onValueChange={(value) => {
+                if (value && !selectedVesselTypes.includes(value)) {
+                  setSelectedVesselTypes(prev => [...prev, value]);
+                }
+              }}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select oil types to filter vessels..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {oilTypes.map((oilType) => {
+                    const vesselCount = vessels.filter(v => 
+                      v.oilType === oilType.name || 
+                      v.cargoType === oilType.name || 
+                      v.vesselType === oilType.name
+                    ).length;
+                    
+                    return (
+                      <SelectItem key={oilType.id} value={oilType.name}>
+                        <div className="flex items-center justify-between w-full">
+                          <div className="flex flex-col items-start">
+                            <span className="font-medium">{oilType.name}</span>
                             {oilType.description && (
-                              <p className="text-xs text-muted-foreground">{oilType.description}</p>
+                              <span className="text-xs text-muted-foreground">{oilType.description}</span>
                             )}
                           </div>
+                          <Badge variant="secondary" className="ml-2 text-xs">
+                            {vesselCount}
+                          </Badge>
                         </div>
-                        <Badge variant="secondary" className="text-xs">
-                          {vesselCount}
-                        </Badge>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+
+              {/* Selected Oil Types */}
               {selectedVesselTypes.length > 0 && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSelectedVesselTypes([])}
-                  className="w-full"
-                >
-                  Clear All Filters
-                </Button>
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Selected Filters:</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedVesselTypes.map((type) => (
+                      <Badge 
+                        key={type} 
+                        variant="default" 
+                        className="cursor-pointer hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                        onClick={() => {
+                          setSelectedVesselTypes(prev => prev.filter(t => t !== type));
+                        }}
+                      >
+                        {type} ×
+                      </Badge>
+                    ))}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedVesselTypes([])}
+                    className="w-full"
+                  >
+                    Clear All Filters
+                  </Button>
+                </div>
               )}
             </div>
 
