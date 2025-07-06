@@ -533,6 +533,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     });
 
+    // ==========================================
+    // PUBLIC OIL TYPES API (for dropdown filters)
+    // ==========================================
+
+    // Public endpoint for oil types (no authentication required)
+    apiRouter.get("/oil-types", async (req, res) => {
+      try {
+        const oilTypes = await storage.getOilTypes();
+        res.json(oilTypes);
+      } catch (error) {
+        console.error("Error fetching oil types:", error);
+        res.status(500).json({ 
+          message: "Failed to fetch oil types",
+          error: error instanceof Error ? error.message : "Unknown error"
+        });
+      }
+    });
+
     // Refinery CRUD endpoints
     // GET all refineries (admin only)
     apiRouter.get("/admin/refineries", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
