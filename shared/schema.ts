@@ -21,26 +21,6 @@ export const subscriptionPlans = pgTable("subscription_plans", {
   canAccessBrokerFeatures: boolean("can_access_broker_features").default(false),
   canAccessAnalytics: boolean("can_access_analytics").default(false),
   canExportData: boolean("can_export_data").default(false),
-  sortOrder: integer("sort_order"),
-  slug: text("slug"),
-  monthlyPrice: decimal("monthly_price", { precision: 10, scale: 2 }),
-  yearlyPrice: decimal("yearly_price", { precision: 10, scale: 2 }),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-// User Subscriptions
-export const userSubscriptions = pgTable("user_subscriptions", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  planId: integer("plan_id").notNull().references(() => subscriptionPlans.id),
-  stripeSubscriptionId: text("stripe_subscription_id"),
-  stripeCustomerId: text("stripe_customer_id"),
-  status: text("status").notNull().default("active"), // "trial", "active", "canceled", "past_due", "unpaid"
-  currentPeriodStart: timestamp("current_period_start"),
-  currentPeriodEnd: timestamp("current_period_end"),
-  cancelAtPeriodEnd: boolean("cancel_at_period_end").default(false),
-  billingInterval: text("billing_interval").default("monthly"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -52,10 +32,7 @@ export const users = pgTable("users", {
   password: text("password").notNull(), // Hashed password
   firstName: text("first_name"),
   lastName: text("last_name"),
-  username: text("username"),
   role: text("role").notNull().default("user"), // 'admin', 'user', 'broker'
-  isSubscribed: boolean("is_subscribed").default(false),
-  subscriptionTier: text("subscription_tier"),
   stripeCustomerId: text("stripe_customer_id"),
   isEmailVerified: boolean("is_email_verified").default(false),
   emailVerificationToken: text("email_verification_token"),
@@ -66,7 +43,22 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-
+// User subscriptions table
+export const userSubscriptions = pgTable("user_subscriptions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  planId: integer("plan_id").notNull().references(() => subscriptionPlans.id),
+  stripeSubscriptionId: text("stripe_subscription_id"),
+  status: text("status").notNull().default("trial"), // "trial", "active", "canceled", "past_due", "unpaid"
+  trialStartDate: timestamp("trial_start_date"),
+  trialEndDate: timestamp("trial_end_date"),
+  currentPeriodStart: timestamp("current_period_start"),
+  currentPeriodEnd: timestamp("current_period_end"),
+  canceledAt: timestamp("canceled_at"),
+  cancelAtPeriodEnd: boolean("cancel_at_period_end").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
 
 // Payment history
 export const payments = pgTable("payments", {
@@ -83,7 +75,7 @@ export const payments = pgTable("payments", {
 
 // Define relations
 export const subscriptionPlansRelations = relations(subscriptionPlans, ({ many }) => ({
-  userSubscriptions: many(userSubscriptions),
+  subscriptions: many(userSubscriptions),
 }));
 
 export const usersRelations = relations(users, ({ one, many }) => ({
@@ -1585,16 +1577,12 @@ export const brokerDeals = pgTable("broker_deals", {
   id: serial("id").primaryKey(),
   brokerId: integer("broker_id").notNull().references(() => users.id),
   companyId: integer("company_id").notNull().references(() => realCompanies.id),
-  title: text("title"), // Alternative to dealTitle for compatibility
   dealTitle: text("deal_title").notNull(),
-  description: text("description"), // New field
-  requestedAmount: text("requested_amount"), // Alternative to dealValue
   dealValue: text("deal_value").notNull(),
   status: text("status").notNull().default("pending"), // active, pending, completed, cancelled
   progress: integer("progress").default(0), // 0-100
   oilType: text("oil_type").notNull(),
   quantity: text("quantity").notNull(),
-  deliveryDate: timestamp("delivery_date"), // New field
   startDate: timestamp("start_date").defaultNow(),
   expectedCloseDate: timestamp("expected_close_date"),
   actualCloseDate: timestamp("actual_close_date"),
