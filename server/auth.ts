@@ -4,6 +4,7 @@ import { Request, Response, NextFunction } from 'express';
 import { db } from './db';
 import { users, userSubscriptions } from '@shared/schema';
 import { eq } from 'drizzle-orm';
+import { FallbackAuth } from './fallback-auth';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 const SALT_ROUNDS = 10;
@@ -73,34 +74,59 @@ export async function authenticateToken(req: AuthenticatedRequest, res: Response
   try {
     const decoded = verifyToken(token);
     
-    // Fetch user with subscription
-    const [user] = await db
-      .select()
-      .from(users)
-      .where(eq(users.id, decoded.id))
-      .limit(1);
+    // Try to get user from fallback auth first
+    const fallbackUser = await FallbackAuth.getUserById(decoded.id);
+    
+    if (fallbackUser) {
+      req.user = {
+        id: fallbackUser.id,
+        email: fallbackUser.email,
+        firstName: fallbackUser.firstName,
+        lastName: fallbackUser.lastName,
+        role: fallbackUser.role,
+        subscription: {
+          trialStartDate: new Date(),
+          trialEndDate: calculateTrialEndDate(),
+          isActive: true
+        }
+      };
+      return next();
+    }
+    
+    // Fallback to database lookup if fallback auth doesn't have the user
+    try {
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, decoded.id))
+        .limit(1);
 
-    if (!user) {
+      if (!user) {
+        return res.status(401).json({ message: 'User not found' });
+      }
+
+      // Fetch subscription (optional)
+      const [subscription] = await db
+        .select()
+        .from(userSubscriptions)
+        .where(eq(userSubscriptions.userId, user.id))
+        .limit(1);
+
+      req.user = {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        subscription: subscription || undefined
+      };
+
+      next();
+    } catch (dbError) {
+      // If database lookup fails, return error
+      console.error('Database authentication error:', dbError);
       return res.status(401).json({ message: 'User not found' });
     }
-
-    // Fetch subscription (optional)
-    const [subscription] = await db
-      .select()
-      .from(userSubscriptions)
-      .where(eq(userSubscriptions.userId, user.id))
-      .limit(1);
-
-    req.user = {
-      id: user.id,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      role: user.role,
-      subscription: subscription || undefined
-    };
-
-    next();
   } catch (error) {
     return res.status(403).json({ message: 'Invalid token' });
   }
