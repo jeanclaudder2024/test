@@ -42,7 +42,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from '@/components/ui/checkbox';
 import { PortalHoverCard } from '@/components/ui/portal-hover-card';
-import { OilTypeHoverCard } from '@/components/ui/oil-type-hover-card';
+import { OilTypeInfoButton } from '@/components/ui/oil-type-info-button';
 import { Link } from 'wouter';
 import { formatDate } from '@/lib/utils';
 import { Ship, Search, Plus, Filter, Droplet, Fuel, Layers, Tag, Anchor, AlertCircle, Wifi, WifiOff, ChevronLeft, ChevronRight, Globe, Grid, List } from 'lucide-react';
@@ -915,15 +915,15 @@ export default function Vessels() {
                       htmlFor={`oil-type-${category}`}
                       className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
                     >
-                      {oilType ? (
-                        <OilTypeHoverCard oilType={oilType}>
-                          <span className="hover:text-blue-600 transition-colors">
-                            {category}
-                          </span>
-                        </OilTypeHoverCard>
-                      ) : (
-                        category
-                      )}
+                      <div className="flex items-center gap-1.5">
+                        {category}
+                        {oilType && (
+                          <OilTypeInfoButton 
+                            oilTypeName={oilType.name}
+                            className="h-3 w-3"
+                          />
+                        )}
+                      </div>
                     </label>
                   </div>
                 );
