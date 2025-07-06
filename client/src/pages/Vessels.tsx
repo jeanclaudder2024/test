@@ -167,7 +167,7 @@ export default function Vessels() {
   }
   
   const { data: oilTypes = [], isLoading: oilTypesLoading } = useQuery<OilType[]>({
-    queryKey: ["/api/admin/oil-types"],
+    queryKey: ["/api/oil-types"],
     staleTime: 0, // Always fetch fresh data
   });
 

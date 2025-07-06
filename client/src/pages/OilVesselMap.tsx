@@ -142,9 +142,9 @@ export default function OilVesselMap() {
     enabled: true
   });
 
-  // Fetch oil types from admin management
+  // Fetch oil types
   const { data: oilTypes = [] } = useQuery({
-    queryKey: ['/api/admin/oil-types'],
+    queryKey: ['/api/oil-types'],
     enabled: true
   });
 

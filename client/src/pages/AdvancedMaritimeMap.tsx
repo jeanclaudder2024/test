@@ -235,9 +235,9 @@ export default function AdvancedMaritimeMap() {
     }
   });
 
-  // Fetch oil types from admin management
+  // Fetch oil types from public endpoint
   const { data: oilTypes = [] } = useQuery({
-    queryKey: ['/api/admin/oil-types'],
+    queryKey: ['/api/oil-types'],
     staleTime: 5 * 60 * 1000
   });
 
