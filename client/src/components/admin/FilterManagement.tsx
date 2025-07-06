@@ -433,6 +433,7 @@ export default function FilterManagement() {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Name</TableHead>
+                        <TableHead>Description</TableHead>
                         <TableHead>Category</TableHead>
                         <TableHead>API Gravity</TableHead>
                         <TableHead>Sulfur Content</TableHead>
@@ -450,6 +451,11 @@ export default function FilterManagement() {
                               {oilType.tradingSymbol && (
                                 <div className="text-sm text-muted-foreground">{oilType.tradingSymbol}</div>
                               )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="max-w-xs">
+                            <div className="truncate" title={oilType.description || ''}>
+                              {oilType.description || 'No description'}
                             </div>
                           </TableCell>
                           <TableCell>
