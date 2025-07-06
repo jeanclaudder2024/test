@@ -134,9 +134,9 @@ export function checkTrialStatus(req: AuthenticatedRequest, res: Response, next:
   next();
 }
 
-// Calculate trial end date (3 days from now)
+// Calculate trial end date (5 days from now)
 export function calculateTrialEndDate(): Date {
   const trialEndDate = new Date();
-  trialEndDate.setDate(trialEndDate.getDate() + 3);
+  trialEndDate.setDate(trialEndDate.getDate() + 5);
   return trialEndDate;
 }

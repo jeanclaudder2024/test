@@ -11426,10 +11426,10 @@ Note: This document contains real vessel operational data and should be treated 
         {
           id: 1,
           name: "Free Trial",
-          description: "3-day free trial with full access",
+          description: "5-day free trial with full access",
           price: 0,
           interval: "trial",
-          trialDays: 3,
+          trialDays: 5,
           features: [
             "Real-time vessel tracking",
             "Basic port information",
@@ -11670,10 +11670,10 @@ Note: This document contains real vessel operational data and should be treated 
           plan: {
             id: 1,
             name: "Free Trial",
-            description: "3-day free trial with full access",
+            description: "5-day free trial with full access",
             price: 0,
             interval: "trial",
-            trialDays: 3,
+            trialDays: 5,
             features: ["Real-time vessel tracking", "Basic port information", "Limited refinery data"],
             maxVessels: 10,
             maxPorts: 10,

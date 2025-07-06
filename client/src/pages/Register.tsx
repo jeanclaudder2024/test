@@ -232,7 +232,7 @@ export default function RegisterPage() {
               <Star className="h-8 w-8 text-yellow-400" />
             </div>
             <div>
-              <p className="font-semibold text-white text-lg">3-Day Free Trial</p>
+              <p className="font-semibold text-white text-lg">5-Day Free Trial</p>
               <p className="text-blue-200">
                 Full access to all premium features
               </p>

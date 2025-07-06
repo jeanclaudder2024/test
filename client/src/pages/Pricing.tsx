@@ -85,7 +85,7 @@ export default function PricingPage() {
               { name: "Data export (CSV)", included: true }
             ],
             isPopular: false,
-            trialDays: 14
+            trialDays: 5
           },
           {
             id: 2,
@@ -106,7 +106,7 @@ export default function PricingPage() {
               { name: "Custom alerts", included: true }
             ],
             isPopular: true,
-            trialDays: 14
+            trialDays: 5
           },
           {
             id: 3,
@@ -130,7 +130,7 @@ export default function PricingPage() {
               { name: "Dedicated account manager", included: true }
             ],
             isPopular: false,
-            trialDays: 30
+            trialDays: 5
           }
         ];
       }

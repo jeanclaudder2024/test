@@ -262,6 +262,12 @@ Changelog:
   * Added logic to set departurePort and destinationPort to null for affected vessels before port deletion
   * Port deletion now properly handles database relationships and completes successfully
   * Fixed port management page showing deleted ports by resolving underlying deletion failures
+- July 6, 2025. Trial Period Standardization Completed:
+  * Successfully standardized all trial periods from 3 days to 5 days throughout the application
+  * Updated SAAS_SCHEMA_UPDATE.sql: Changed trial_days default value from 3 to 5 in table definition
+  * Updated SAAS_SCHEMA_UPDATE.sql: Changed Free Trial plan insertion to use 5-day trial period
+  * Verified CHECK_AND_FIX_SUBSCRIPTION_TABLES.sql already has correct 5-day trial period updates
+  * All database schema, plans, and application code now consistently use 5-day trial periods
 - July 3, 2025. **MAJOR FIX: Port Deletion Foreign Key Constraint Issues Completely Resolved**:
   * Fixed critical database foreign key constraint violations (`vessels_departure_port_fkey`) that prevented port deletion
   * Implemented comprehensive vessel reference cleanup before port deletion in storage.ts

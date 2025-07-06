@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS subscription_plans (
     description TEXT,
     price DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     interval TEXT NOT NULL DEFAULT 'month', -- "month", "year"
-    trial_days INTEGER DEFAULT 3,
+    trial_days INTEGER DEFAULT 5,
     stripe_product_id TEXT,
     stripe_price_id TEXT,
     is_active BOOLEAN NOT NULL DEFAULT true,
@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS payments (
 
 -- Step 5: Insert Default Subscription Plans
 INSERT INTO subscription_plans (name, description, price, interval, trial_days, features, max_vessels, max_ports, max_refineries, can_access_broker_features, can_access_analytics, can_export_data) VALUES
-('Free Trial', '3-day free trial with limited access', 0.00, 'month', 3, '["vessel_tracking", "port_data", "basic_analytics"]', 10, 10, 5, false, false, false),
+('Free Trial', '5-day free trial with limited access', 0.00, 'month', 5, '["vessel_tracking", "port_data", "basic_analytics"]', 10, 10, 5, false, false, false),
 ('Basic Plan', 'Essential features for small operations', 29.99, 'month', 0, '["vessel_tracking", "port_data", "basic_analytics", "document_generation"]', 50, 25, 10, false, true, false),
 ('Pro Plan', 'Advanced features for growing businesses', 79.99, 'month', 0, '["vessel_tracking", "port_data", "advanced_analytics", "document_generation", "real_time_updates", "api_access"]', 200, 100, 50, false, true, true),
 ('Enterprise', 'Full features for large organizations', 199.99, 'month', 0, '["all_features", "priority_support", "custom_integrations"]', -1, -1, -1, false, true, true),
