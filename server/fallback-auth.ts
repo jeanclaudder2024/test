@@ -28,6 +28,14 @@ const fallbackUsers: FallbackUser[] = [
     firstName: 'Test',
     lastName: 'User',
     role: 'user'
+  },
+  {
+    id: 3,
+    email: 'test@test.com',
+    password: 'test123', // plain text for easy testing
+    firstName: 'New',
+    lastName: 'Tester',
+    role: 'user'
   }
 ];
 
@@ -39,8 +47,22 @@ export class FallbackAuth {
         return { success: false, message: 'User not found' };
       }
 
-      // For demo purposes, accept both the actual password and hashed comparison
-      const isValid = password === 'admin123' || await bcrypt.compare(password, user.password);
+      // Handle both plain text and hashed passwords
+      let isValid = false;
+      
+      // First try plain text comparison (for test accounts)
+      if (password === user.password) {
+        isValid = true;
+      } else {
+        // Then try bcrypt comparison (for hashed passwords)
+        try {
+          isValid = await bcrypt.compare(password, user.password);
+        } catch (error) {
+          // If bcrypt fails, password is likely plain text, so already checked above
+          isValid = false;
+        }
+      }
+
       if (!isValid) {
         return { success: false, message: 'Invalid password' };
       }
