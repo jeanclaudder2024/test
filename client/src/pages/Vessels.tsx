@@ -1208,9 +1208,8 @@ export default function Vessels() {
                             'text-gray-500'
                           }
                         `} />
-                        <PortalHoverCard oilType={vessel.oilCategory}>
-                          {vessel.oilCategory}
-                        </PortalHoverCard>
+                        <OilTypeInfoButton oilType={vessel.oilCategory} />
+                        <span className="ml-1">{vessel.oilCategory}</span>
                       </div>
                     </Badge>
                     {vessel.cargoType && (
