@@ -11,12 +11,12 @@ interface FallbackUser {
   role: string;
 }
 
-// Temporary in-memory users for testing
+// Temporary in-memory users for testing with proper bcrypt hashes
 const fallbackUsers: FallbackUser[] = [
   {
     id: 1,
     email: 'admin@petrodealhub.com',
-    password: '$2b$10$rQJJqHO4n4yO1KGxOQH4G.Cv8tqNmJjLrOHxJQ5n4yO1KGxOQH4G.', // hashed "admin123"
+    password: '$2b$10$UAaPVOd4jasr6MK1FVIImOv2aXpPAxnf8wbHta1ZQS2KGxHp0c.jy', // hashed "admin123"
     firstName: 'Admin',
     lastName: 'User',
     role: 'admin'
@@ -24,7 +24,7 @@ const fallbackUsers: FallbackUser[] = [
   {
     id: 2,
     email: 'user@example.com',
-    password: '$2b$10$rQJJqHO4n4yO1KGxOQH4G.Cv8tqNmJjLrOHxJQ5n4yO1KGxOQH4G.', // hashed "admin123"
+    password: '$2b$10$WPWtYa1zvg6IiA5Ug9/jGOX0cQrR3UjYCrz9b2qtrmA64T88TQmKm', // hashed "admin123"
     firstName: 'Test',
     lastName: 'User',
     role: 'user'
@@ -32,7 +32,7 @@ const fallbackUsers: FallbackUser[] = [
   {
     id: 3,
     email: 'test@test.com',
-    password: 'test123', // plain text for easy testing
+    password: '$2b$10$P.Vj7g3OA0Lk7WiQni99puwLkfIxuWXW6K42k9t.CTin3erfncQPe', // hashed "test123"
     firstName: 'New',
     lastName: 'Tester',
     role: 'user'
@@ -40,7 +40,7 @@ const fallbackUsers: FallbackUser[] = [
   {
     id: 4,
     email: 'demo@demo.com',
-    password: 'demo123', // plain text for easy testing
+    password: '$2b$10$ZLhhwDSHNM/aH2lFkcKg6.c/k7lBlzbfcHaaD77e4Vk/qh0L4AIQe', // hashed "demo123"
     firstName: 'Demo',
     lastName: 'User',
     role: 'user'
