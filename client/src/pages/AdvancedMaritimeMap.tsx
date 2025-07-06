@@ -53,7 +53,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { PortalHoverCard } from "@/components/ui/portal-hover-card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -710,23 +710,9 @@ export default function AdvancedMaritimeMap() {
                     ).length;
                     
                     return (
-                      <HoverCard key={oilType.id}>
-                        <HoverCardTrigger asChild>
-                          <SelectItem value={oilType.name}>
-                            <div className="flex items-center justify-between w-full">
-                              <div className="flex flex-col items-start">
-                                <span className="font-medium">{oilType.name}</span>
-                                {oilType.description && (
-                                  <span className="text-xs text-muted-foreground">{oilType.description}</span>
-                                )}
-                              </div>
-                              <Badge variant="secondary" className="ml-2 text-xs">
-                                {vesselCount}
-                              </Badge>
-                            </div>
-                          </SelectItem>
-                        </HoverCardTrigger>
-                        <HoverCardContent className="w-80">
+                      <PortalHoverCard 
+                        key={oilType.id}
+                        content={
                           <div className="space-y-2">
                             <h4 className="text-sm font-semibold">{oilType.name}</h4>
                             <p className="text-sm text-muted-foreground">
@@ -739,8 +725,23 @@ export default function AdvancedMaritimeMap() {
                               </span>
                             </div>
                           </div>
-                        </HoverCardContent>
-                      </HoverCard>
+                        }
+                        className="w-80"
+                      >
+                        <SelectItem value={oilType.name}>
+                          <div className="flex items-center justify-between w-full">
+                            <div className="flex flex-col items-start">
+                              <span className="font-medium">{oilType.name}</span>
+                              {oilType.description && (
+                                <span className="text-xs text-muted-foreground">{oilType.description}</span>
+                              )}
+                            </div>
+                            <Badge variant="secondary" className="ml-2 text-xs">
+                              {vesselCount}
+                            </Badge>
+                          </div>
+                        </SelectItem>
+                      </PortalHoverCard>
                     );
                   })}
                 </SelectContent>
