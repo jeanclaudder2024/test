@@ -8,9 +8,17 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-// Use postgres-js driver for better Supabase compatibility
+// Configure postgres connection with better error handling
 export const pool = postgres(process.env.DATABASE_URL, {
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+  ssl: 'require',
+  prepare: false,
+  max: 10,
+  idle_timeout: 20,
+  connect_timeout: 10,
+  onnotice: () => {}, // Suppress notices
+  transform: {
+    undefined: null,
+  },
 });
 export const db = drizzle(pool, { schema });
 
