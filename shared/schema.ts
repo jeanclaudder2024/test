@@ -37,6 +37,7 @@ export const users = pgTable("users", {
   firstName: text("first_name"),
   lastName: text("last_name"),
   role: text("role").notNull().default("user"), // 'admin', 'user', 'broker'
+  token: text("token"), // JWT token field for admin authentication
   stripeCustomerId: text("stripe_customer_id"),
   isEmailVerified: boolean("is_email_verified").default(false),
   emailVerificationToken: text("email_verification_token"),
