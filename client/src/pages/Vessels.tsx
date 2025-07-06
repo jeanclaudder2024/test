@@ -40,6 +40,8 @@ import {
 } from "@/components/ui/select";
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from '@/components/ui/checkbox';
+import { PortalHoverCard } from '@/components/ui/portal-hover-card';
 import { Link } from 'wouter';
 import { formatDate } from '@/lib/utils';
 import { Ship, Search, Plus, Filter, Droplet, Fuel, Layers, Tag, Anchor, AlertCircle, Wifi, WifiOff, ChevronLeft, ChevronRight, Globe, Grid, List } from 'lucide-react';
@@ -892,19 +894,45 @@ export default function Vessels() {
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               {availableOilCategories.map((category) => (
-                <DropdownMenuCheckboxItem
-                  key={category}
-                  checked={selectedOilTypes.includes(category)}
-                  onCheckedChange={(checked) => {
-                    if (checked) {
-                      setSelectedOilTypes([...selectedOilTypes, category]);
-                    } else {
-                      setSelectedOilTypes(selectedOilTypes.filter(t => t !== category));
+                <div key={category} className="flex items-center space-x-2 px-2 py-1.5">
+                  <PortalHoverCard 
+                    trigger={
+                      <div className="flex items-center space-x-2 cursor-pointer">
+                        <Checkbox
+                          id={`oil-type-${category}`}
+                          checked={selectedOilTypes.includes(category)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedOilTypes([...selectedOilTypes, category]);
+                            } else {
+                              setSelectedOilTypes(selectedOilTypes.filter(t => t !== category));
+                            }
+                          }}
+                        />
+                        <label 
+                          htmlFor={`oil-type-${category}`}
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                        >
+                          {category}
+                        </label>
+                      </div>
                     }
-                  }}
-                >
-                  {category}
-                </DropdownMenuCheckboxItem>
+                    content={
+                      <div className="p-3 space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <Droplet className="h-4 w-4 text-blue-500" />
+                          <span className="font-semibold text-blue-600">{category}</span>
+                        </div>
+                        <p className="text-sm text-gray-600">
+                          Oil product category for maritime vessel filtering and tracking
+                        </p>
+                        <div className="text-xs text-gray-500">
+                          Click checkbox to toggle filter selection
+                        </div>
+                      </div>
+                    }
+                  />
+                </div>
               ))}
               {selectedOilTypes.length > 0 && (
                 <>
