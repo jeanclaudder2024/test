@@ -172,6 +172,16 @@ export default function SimpleOilTypeManagement() {
     },
   });
 
+  const editForm = useForm<CreateOilTypeForm>({
+    resolver: zodResolver(oilTypeFormSchema),
+    defaultValues: {
+      name: "",
+      displayName: "",
+      category: "",
+      description: "",
+    },
+  });
+
   // Filter oil types based on search
   const filteredOilTypes = (oilTypes as OilType[]).filter((oilType: OilType) => {
     return oilType.name.toLowerCase().includes(searchTerm.toLowerCase());
