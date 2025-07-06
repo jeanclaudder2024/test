@@ -70,8 +70,8 @@ interface Refinery {
   region: string;
   city?: string | null;
   capacity: number | null;
-  latitude: string;
-  longitude: string;
+  lat: string;
+  lng: string;
   type: string | null;
   status: string | null;
   description: string | null;
@@ -543,8 +543,8 @@ export default function ProfessionalRefineryManagement() {
       region: refinery.region,
       city: refinery.city || '',
       capacity: refinery.capacity?.toString() || '',
-      latitude: refinery.latitude,
-      longitude: refinery.longitude,
+      latitude: refinery.lat,
+      longitude: refinery.lng,
       type: refinery.type || 'Crude Oil Refinery',
       status: refinery.status || 'Operational',
       description: refinery.description || '',
