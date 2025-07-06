@@ -4,8 +4,8 @@ import {
   users, vessels, refineries, progressEvents, brokers, stats as statsTable, ports, 
   refineryPortConnections, vesselPortConnections, companies, vesselRefineryConnections,
   brokerCompanies, companyPartnerships, userBrokerConnections,
-  subscriptionPlans, subscriptions, paymentMethods, invoices, landingPageContent,
-  vesselDocuments, professionalDocuments, oilTypes, documentTemplates,
+  subscriptionPlans, userSubscriptions, payments, insertPaymentSchema,
+  vesselDocuments, professionalDocuments, oilTypes,
   realCompanies, fakeCompanies,
   brokerDeals, brokerDocuments, adminBrokerFiles, brokerDealActivities, brokerStats,
   User, InsertUser, 
@@ -29,24 +29,22 @@ import {
   BrokerCompany, InsertBrokerCompany,
   CompanyPartnership, InsertCompanyPartnership,
   UserBrokerConnection, InsertUserBrokerConnection,
-  SubscriptionPlan, InsertSubscriptionPlan,
-  Subscription, InsertSubscription,
-  PaymentMethod, InsertPaymentMethod,
-  Invoice, InsertInvoice,
-  LandingPageContent, InsertLandingPageContent,
+  UserSubscription, InsertUserSubscription,
   InsertVesselDocument, SelectVesselDocument,
   ProfessionalDocument, InsertProfessionalDocument,
   VesselDocumentAssociation, InsertVesselDocumentAssociation,
-  landingPageSections, landingPageImages, landingPageBlocks,
-  LandingPageSection, InsertLandingPageSection,
-  LandingPageImage, InsertLandingPageImage,
-  LandingPageBlock, InsertLandingPageBlock,
   regions, OilType, InsertOilType, Region, InsertRegion,
   maritimeDocuments, MaritimeDocument, InsertMaritimeDocument,
   adminDocuments, AdminDocument, InsertAdminDocument,
   documentTemplates, DocumentTemplate, InsertDocumentTemplate,
   generatedDocuments, GeneratedDocument, InsertGeneratedDocument
 } from "@shared/schema";
+import { z } from "zod";
+
+// Type aliases for subscription types
+type SubscriptionPlan = typeof subscriptionPlans.$inferSelect;
+type Payment = typeof payments.$inferSelect;
+type InsertPayment = z.infer<typeof insertPaymentSchema>;
 
 // Storage interface with CRUD methods
 export interface IStorage {
@@ -64,36 +62,26 @@ export interface IStorage {
   getSubscriptionPlans(): Promise<SubscriptionPlan[]>;
   getSubscriptionPlanById(id: number): Promise<SubscriptionPlan | undefined>;
   getSubscriptionPlanBySlug(slug: string): Promise<SubscriptionPlan | undefined>;
-  createSubscriptionPlan(plan: InsertSubscriptionPlan): Promise<SubscriptionPlan>;
-  updateSubscriptionPlan(id: number, plan: Partial<InsertSubscriptionPlan>): Promise<SubscriptionPlan | undefined>;
+  createSubscriptionPlan(plan: Partial<SubscriptionPlan>): Promise<SubscriptionPlan>;
+  updateSubscriptionPlan(id: number, plan: Partial<SubscriptionPlan>): Promise<SubscriptionPlan | undefined>;
   deleteSubscriptionPlan(id: number): Promise<boolean>;
   
-  // Subscription methods
-  getSubscriptions(): Promise<Subscription[]>;
+  // User Subscription methods
+  getSubscriptions(): Promise<UserSubscription[]>;
   getSubscriptionsWithDetails(): Promise<any[]>;
-  getSubscriptionById(id: number): Promise<Subscription | undefined>;
-  getSubscriptionsByUserId(userId: number): Promise<Subscription[]>;
-  getActiveSubscriptionByUserId(userId: number): Promise<Subscription | undefined>;
-  getSubscriptionByStripeId(stripeSubscriptionId: string): Promise<Subscription | undefined>;
-  createSubscription(subscription: InsertSubscription): Promise<Subscription>;
-  updateSubscription(id: number, subscription: Partial<InsertSubscription>): Promise<Subscription | undefined>;
+  getSubscriptionById(id: number): Promise<UserSubscription | undefined>;
+  getSubscriptionsByUserId(userId: number): Promise<UserSubscription[]>;
+  getActiveSubscriptionByUserId(userId: number): Promise<UserSubscription | undefined>;
+  getSubscriptionByStripeId(stripeSubscriptionId: string): Promise<UserSubscription | undefined>;
+  createSubscription(subscription: InsertUserSubscription): Promise<UserSubscription>;
+  updateSubscription(id: number, subscription: Partial<InsertUserSubscription>): Promise<UserSubscription | undefined>;
   deleteSubscription(id: number): Promise<boolean>;
   
-  // Payment Method methods
-  getPaymentMethods(userId: number): Promise<PaymentMethod[]>;
-  getPaymentMethodById(id: number): Promise<PaymentMethod | undefined>;
-  getDefaultPaymentMethod(userId: number): Promise<PaymentMethod | undefined>;
-  createPaymentMethod(paymentMethod: InsertPaymentMethod): Promise<PaymentMethod>;
-  updatePaymentMethod(id: number, paymentMethod: Partial<InsertPaymentMethod>): Promise<PaymentMethod | undefined>;
-  deletePaymentMethod(id: number): Promise<boolean>;
-  
-  // Invoice methods
-  getInvoices(userId: number): Promise<Invoice[]>;
-  getInvoiceById(id: number): Promise<Invoice | undefined>;
-  getInvoiceByStripeId(stripeInvoiceId: string): Promise<Invoice | undefined>;
-  createInvoice(invoice: InsertInvoice): Promise<Invoice>;
-  updateInvoice(id: number, invoice: Partial<InsertInvoice>): Promise<Invoice | undefined>;
-  deleteInvoice(id: number): Promise<boolean>;
+  // Payment methods
+  getPayments(userId: number): Promise<Payment[]>;
+  getPaymentById(id: number): Promise<Payment | undefined>;
+  createPayment(payment: InsertPayment): Promise<Payment>;
+  updatePayment(id: number, payment: Partial<InsertPayment>): Promise<Payment | undefined>;
 
   // Vessel methods
   getVessels(): Promise<Vessel[]>;
@@ -304,12 +292,12 @@ export class DatabaseStorage implements IStorage {
     return plan || undefined;
   }
   
-  async createSubscriptionPlan(plan: InsertSubscriptionPlan): Promise<SubscriptionPlan> {
+  async createSubscriptionPlan(plan: Partial<SubscriptionPlan>): Promise<SubscriptionPlan> {
     const [newPlan] = await db.insert(subscriptionPlans).values(plan).returning();
     return newPlan;
   }
   
-  async updateSubscriptionPlan(id: number, planUpdate: Partial<InsertSubscriptionPlan>): Promise<SubscriptionPlan | undefined> {
+  async updateSubscriptionPlan(id: number, planUpdate: Partial<SubscriptionPlan>): Promise<SubscriptionPlan | undefined> {
     const [updatedPlan] = await db
       .update(subscriptionPlans)
       .set({
@@ -326,7 +314,10 @@ export class DatabaseStorage implements IStorage {
     return true;
   }
   
-  // Subscription Methods
+  // Legacy Subscription Methods - Commented out due to migration to userSubscriptions table
+  // These methods are kept for reference but use the old subscriptions table that no longer exists
+  
+  /*
   async getSubscriptions(): Promise<Subscription[]> {
     return await db.select().from(subscriptions);
   }
@@ -420,8 +411,17 @@ export class DatabaseStorage implements IStorage {
     await db.delete(subscriptions).where(eq(subscriptions.id, id));
     return true;
   }
+  */
   
-  // Payment Method Methods
+  // New subscription methods using userSubscriptions table
+  async getSubscriptions(): Promise<UserSubscription[]> {
+    return await db.select().from(userSubscriptions);
+  }
+  
+  // Legacy Payment Method Methods - Commented out due to migration to new payment structure
+  // These methods are kept for reference but use the old paymentMethods table that no longer exists
+  
+  /*
   async getPaymentMethods(userId: number): Promise<PaymentMethod[]> {
     return await db
       .select()
@@ -537,6 +537,7 @@ export class DatabaseStorage implements IStorage {
     await db.delete(invoices).where(eq(invoices.id, id));
     return true;
   }
+  */
 
   async getVessels(): Promise<Vessel[]> {
     return await db.select().from(vessels);
