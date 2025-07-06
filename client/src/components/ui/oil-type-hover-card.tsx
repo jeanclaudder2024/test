@@ -6,9 +6,9 @@ import { Droplet, Info } from "lucide-react";
 interface OilType {
   id: number;
   name: string;
-  displayName: string;
-  category: string;
-  description?: string;
+  category: string | null;
+  description?: string | null;
+  displayName?: string;
 }
 
 interface OilTypeHoverCardProps {
@@ -73,11 +73,8 @@ export function OilTypeHoverCard({ oilType, children, position = 'top' }: OilTyp
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900 text-sm">
-                      {oilType.displayName}
-                    </h3>
-                    <p className="text-xs text-gray-500">
                       {oilType.name}
-                    </p>
+                    </h3>
                   </div>
                 </div>
                 <Badge 
