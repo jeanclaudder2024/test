@@ -6,8 +6,8 @@ INSERT INTO users (email, password, first_name, last_name, role, is_email_verifi
 VALUES (
   'admin@petrodealhub.com',
   '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', -- password: admin123
+  'Super',
   'Admin',
-  'User',
   'admin',
   true,
   NOW(),
