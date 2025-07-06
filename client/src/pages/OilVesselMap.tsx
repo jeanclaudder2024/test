@@ -11,6 +11,7 @@ import { Ship, Anchor, RefreshCw, MapIcon, Factory, MapPin, Search, Filter, Laye
 import { useVesselWebSocket } from '@/hooks/useVesselWebSocket';
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
+import { OilTypeHoverCard } from '@/components/ui/oil-type-hover-card';
 
 // Fix leaflet default icon issue
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -470,9 +471,11 @@ export default function OilVesselMap() {
               <SelectContent>
                 <SelectItem value="all">All Oil Vessels</SelectItem>
                 {Array.isArray(oilTypes) && oilTypes.map((oilType: any) => (
-                  <SelectItem key={oilType.id} value={oilType.name.toLowerCase()}>
-                    {oilType.name}
-                  </SelectItem>
+                  <OilTypeHoverCard key={oilType.id} oilType={oilType}>
+                    <SelectItem value={oilType.name.toLowerCase()}>
+                      {oilType.name}
+                    </SelectItem>
+                  </OilTypeHoverCard>
                 ))}
                 {/* Fallback options if oil types aren't loaded */}
                 {(!Array.isArray(oilTypes) || oilTypes.length === 0) && (
