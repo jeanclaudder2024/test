@@ -13,24 +13,28 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useLocation } from 'wouter';
 import { cn } from '@/lib/utils';
 
-interface PlanFeature {
-  name: string;
-  included: boolean;
-}
-
 interface PricingPlan {
   id: number;
   name: string;
-  slug: string;
   description: string;
-  monthlyPrice: string;
-  yearlyPrice: string;
+  price: string;
   monthlyPriceId: string;
   yearlyPriceId: string;
   currency: string;
-  features: PlanFeature[];
-  isPopular: boolean;
-  trialDays: number;
+  features: string[];
+  metadata: any;
+  isActive: boolean;
+  maxVessels: number | null;
+  maxApiCalls: number | null;
+  maxUsers: number | null;
+  customBranding: boolean;
+  supportLevel: string | null;
+  dataRetention: number | null;
+  exportFormats: string | null;
+  advancedAnalytics: boolean;
+  priorityUpdates: boolean;
+  contractManagement: boolean;
+  billingInterval: string;
 }
 
 export default function PricingPage() {
@@ -58,10 +62,7 @@ export default function PricingPage() {
         
         return plansData.map((plan: any) => ({
           ...plan,
-          features: JSON.parse(plan.features || '[]').map((feature: string) => ({
-            name: feature,
-            included: true
-          })),
+          features: JSON.parse(plan.features || '[]')
         })).sort((a: PricingPlan, b: PricingPlan) => a.name.localeCompare(b.name));
       } catch (err) {
         console.error('Error fetching plans:', err);

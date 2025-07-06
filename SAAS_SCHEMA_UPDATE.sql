@@ -63,13 +63,26 @@ CREATE TABLE IF NOT EXISTS payments (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Step 5: Insert Default Subscription Plans
+-- Step 5: Insert Default Subscription Plans with ON CONFLICT handling
 INSERT INTO subscription_plans (name, description, price, interval, trial_days, features, max_vessels, max_ports, max_refineries, can_access_broker_features, can_access_analytics, can_export_data) VALUES
 ('Free Trial', '5-day free trial with limited access', 0.00, 'month', 5, '["vessel_tracking", "port_data", "basic_analytics"]', 10, 10, 5, false, false, false),
 ('Basic Plan', 'Essential features for small operations', 29.99, 'month', 0, '["vessel_tracking", "port_data", "basic_analytics", "document_generation"]', 50, 25, 10, false, true, false),
 ('Pro Plan', 'Advanced features for growing businesses', 79.99, 'month', 0, '["vessel_tracking", "port_data", "advanced_analytics", "document_generation", "real_time_updates", "api_access"]', 200, 100, 50, false, true, true),
 ('Enterprise', 'Full features for large organizations', 199.99, 'month', 0, '["all_features", "priority_support", "custom_integrations"]', -1, -1, -1, false, true, true),
-('Broker Premium', 'Specialized broker features and tools', 149.99, 'month', 0, '["broker_dashboard", "deal_management", "client_portal", "commission_tracking", "advanced_reporting"]', -1, -1, -1, true, true, true);
+('Broker Premium', 'Specialized broker features and tools', 149.99, 'month', 0, '["broker_dashboard", "deal_management", "client_portal", "commission_tracking", "advanced_reporting"]', -1, -1, -1, true, true, true)
+ON CONFLICT (name) DO UPDATE SET 
+    description = EXCLUDED.description,
+    price = EXCLUDED.price,
+    interval = EXCLUDED.interval,
+    trial_days = EXCLUDED.trial_days,
+    features = EXCLUDED.features,
+    max_vessels = EXCLUDED.max_vessels,
+    max_ports = EXCLUDED.max_ports,
+    max_refineries = EXCLUDED.max_refineries,
+    can_access_broker_features = EXCLUDED.can_access_broker_features,
+    can_access_analytics = EXCLUDED.can_access_analytics,
+    can_export_data = EXCLUDED.can_export_data,
+    updated_at = NOW();
 
 -- Step 6: Create indexes for performance
 CREATE INDEX IF NOT EXISTS idx_user_subscriptions_user_id ON user_subscriptions(user_id);

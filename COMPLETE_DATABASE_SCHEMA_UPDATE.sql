@@ -134,10 +134,17 @@ CREATE INDEX IF NOT EXISTS idx_vessels_vessel_status ON vessels(vesselStatus);
 -- 9. UPDATE CONSTRAINTS
 -- ======================================
 
--- Ensure unique constraint on subscription_plans name
-ALTER TABLE subscription_plans 
-ADD CONSTRAINT subscription_plans_name_key UNIQUE (name) 
-ON CONFLICT DO NOTHING;
+-- Ensure unique constraint on subscription_plans name (if not exists)
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint 
+        WHERE conname = 'subscription_plans_name_key' 
+        OR conname = 'subscription_plans_name_unique'
+    ) THEN
+        ALTER TABLE subscription_plans ADD CONSTRAINT subscription_plans_name_key UNIQUE (name);
+    END IF;
+END $$;
 
 -- ======================================
 -- 10. CREATE TRIGGERS FOR UPDATED_AT
