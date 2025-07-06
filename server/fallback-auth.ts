@@ -36,6 +36,14 @@ const fallbackUsers: FallbackUser[] = [
     firstName: 'New',
     lastName: 'Tester',
     role: 'user'
+  },
+  {
+    id: 4,
+    email: 'demo@demo.com',
+    password: 'demo123', // plain text for easy testing
+    firstName: 'Demo',
+    lastName: 'User',
+    role: 'user'
   }
 ];
 
