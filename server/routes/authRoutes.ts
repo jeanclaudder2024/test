@@ -97,14 +97,17 @@ router.post('/login', async (req, res) => {
         .limit(1);
 
       if (!user) {
-        return res.status(401).json({ message: 'Invalid email or password' });
+        // User not found in database, skip to fallback auth
+        throw new Error('User not found in database, trying fallback auth');
       }
 
       // Verify password
       const isPasswordValid = await comparePassword(validatedData.password, user.password);
       
       if (!isPasswordValid) {
-        return res.status(401).json({ message: 'Invalid email or password' });
+        // Password comparison failed, skip to fallback auth
+        console.log('Database password comparison failed, trying fallback auth...');
+        throw new Error('Password comparison failed, trying fallback auth');
       }
 
       // Get user subscription
