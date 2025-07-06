@@ -1,70 +1,52 @@
 import Stripe from 'stripe';
 
 if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
+  throw new Error('STRIPE_SECRET_KEY environment variable is required');
 }
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2024-06-20',
+  apiVersion: '2023-10-16',
 });
 
-interface CreateCheckoutSessionOptions {
-  planId: number;
+export interface CreateCheckoutSessionOptions {
   userId: number;
-  userEmail: string;
-  interval: 'month' | 'year';
+  planId: number;
+  priceId?: string | null;
   successUrl: string;
   cancelUrl: string;
 }
 
-export const stripeService = {
-  // Create a checkout session for subscription
+export class StripeService {
   async createCheckoutSession(options: CreateCheckoutSessionOptions): Promise<Stripe.Checkout.Session> {
-    const { planId, userId, userEmail, interval, successUrl, cancelUrl } = options;
-    
-    // In a real implementation, you would fetch the plan details from the database
-    // For now, we'll use hardcoded Stripe price IDs based on plan
-    const priceIdMap: Record<string, { month: string; year: string }> = {
-      '1': { month: 'price_trial', year: 'price_trial_yearly' }, // Free Trial
-      '2': { month: 'price_basic', year: 'price_basic_yearly' }, // Basic Plan
-      '3': { month: 'price_pro', year: 'price_pro_yearly' }, // Pro Plan
-      '4': { month: 'price_enterprise', year: 'price_enterprise_yearly' }, // Enterprise
-      '5': { month: 'price_broker', year: 'price_broker_yearly' }, // Broker Premium
-    };
+    const { userId, planId, priceId, successUrl, cancelUrl } = options;
 
-    const priceId = priceIdMap[planId.toString()]?.[interval];
-    
     if (!priceId) {
-      throw new Error(`No Stripe price ID found for plan ${planId} with interval ${interval}`);
+      throw new Error('Price ID is required for checkout session');
     }
 
     const session = await stripe.checkout.sessions.create({
-      customer_email: userEmail,
+      mode: 'subscription',
+      payment_method_types: ['card'],
       line_items: [
         {
           price: priceId,
           quantity: 1,
         },
       ],
-      mode: 'subscription',
       success_url: successUrl,
       cancel_url: cancelUrl,
       metadata: {
-        planId: planId.toString(),
         userId: userId.toString(),
+        planId: planId.toString(),
       },
-      subscription_data: {
-        metadata: {
-          planId: planId.toString(),
-          userId: userId.toString(),
-        },
-      },
+      allow_promotion_codes: true,
+      billing_address_collection: 'required',
+      customer_creation: 'always',
     });
 
     return session;
-  },
+  }
 
-  // Create a customer portal session for subscription management
   async createPortalSession(customerId: string, returnUrl: string): Promise<Stripe.BillingPortal.Session> {
     const session = await stripe.billingPortal.sessions.create({
       customer: customerId,
@@ -72,86 +54,83 @@ export const stripeService = {
     });
 
     return session;
-  },
+  }
 
-  // Create or retrieve a customer
-  async createOrRetrieveCustomer(email: string, name?: string): Promise<Stripe.Customer> {
-    // Try to find existing customer
-    const existingCustomers = await stripe.customers.list({
-      email,
-      limit: 1,
+  async createPaymentIntent(amount: number, currency: string = 'usd'): Promise<Stripe.PaymentIntent> {
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: Math.round(amount * 100), // Convert to cents
+      currency,
+      automatic_payment_methods: {
+        enabled: true,
+      },
     });
 
-    if (existingCustomers.data.length > 0) {
-      return existingCustomers.data[0];
-    }
+    return paymentIntent;
+  }
 
-    // Create new customer
-    return await stripe.customers.create({
-      email,
-      name,
-    });
-  },
-
-  // Cancel a subscription
-  async cancelSubscription(subscriptionId: string, cancelAtPeriodEnd: boolean = true): Promise<Stripe.Subscription> {
-    if (cancelAtPeriodEnd) {
-      return await stripe.subscriptions.update(subscriptionId, {
-        cancel_at_period_end: true,
-      });
-    } else {
-      return await stripe.subscriptions.cancel(subscriptionId);
-    }
-  },
-
-  // Reactivate a subscription
-  async reactivateSubscription(subscriptionId: string): Promise<Stripe.Subscription> {
-    return await stripe.subscriptions.update(subscriptionId, {
-      cancel_at_period_end: false,
-    });
-  },
-
-  // Get subscription details
   async getSubscription(subscriptionId: string): Promise<Stripe.Subscription> {
     return await stripe.subscriptions.retrieve(subscriptionId);
-  },
+  }
 
-  // Handle webhook events
-  async handleWebhook(
-    payload: string | Buffer, 
-    signature: string, 
-    endpointSecret: string
-  ): Promise<Stripe.Event> {
-    return stripe.webhooks.constructEvent(payload, signature, endpointSecret);
-  },
+  async cancelSubscription(subscriptionId: string): Promise<Stripe.Subscription> {
+    return await stripe.subscriptions.cancel(subscriptionId);
+  }
 
-  // Process subscription events
+  async getCustomer(customerId: string): Promise<Stripe.Customer> {
+    const customer = await stripe.customers.retrieve(customerId);
+    if (customer.deleted) {
+      throw new Error('Customer has been deleted');
+    }
+    return customer as Stripe.Customer;
+  }
+
   async processSubscriptionEvent(event: Stripe.Event): Promise<void> {
     switch (event.type) {
-      case 'customer.subscription.created':
+      case 'checkout.session.completed':
+        await this.handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session);
+        break;
       case 'customer.subscription.updated':
+        await this.handleSubscriptionUpdated(event.data.object as Stripe.Subscription);
+        break;
       case 'customer.subscription.deleted':
-        const subscription = event.data.object as Stripe.Subscription;
-        console.log(`Subscription ${event.type}:`, subscription.id);
-        // Here you would update your database with the subscription status
+        await this.handleSubscriptionDeleted(event.data.object as Stripe.Subscription);
         break;
-      
       case 'invoice.payment_succeeded':
-        const invoice = event.data.object as Stripe.Invoice;
-        console.log(`Payment succeeded for invoice:`, invoice.id);
-        // Here you would update payment records
+        await this.handlePaymentSucceeded(event.data.object as Stripe.Invoice);
         break;
-      
       case 'invoice.payment_failed':
-        const failedInvoice = event.data.object as Stripe.Invoice;
-        console.log(`Payment failed for invoice:`, failedInvoice.id);
-        // Here you would handle failed payments
+        await this.handlePaymentFailed(event.data.object as Stripe.Invoice);
         break;
-      
       default:
         console.log(`Unhandled event type: ${event.type}`);
     }
-  },
-};
+  }
 
-export default stripeService;
+  private async handleCheckoutCompleted(session: Stripe.Checkout.Session): Promise<void> {
+    console.log('Checkout completed:', session.id);
+    // Handle subscription creation/update in database
+    // This would typically involve updating the user's subscription status
+  }
+
+  private async handleSubscriptionUpdated(subscription: Stripe.Subscription): Promise<void> {
+    console.log('Subscription updated:', subscription.id);
+    // Handle subscription updates in database
+  }
+
+  private async handleSubscriptionDeleted(subscription: Stripe.Subscription): Promise<void> {
+    console.log('Subscription deleted:', subscription.id);
+    // Handle subscription deletion in database
+  }
+
+  private async handlePaymentSucceeded(invoice: Stripe.Invoice): Promise<void> {
+    console.log('Payment succeeded:', invoice.id);
+    // Handle successful payment
+  }
+
+  private async handlePaymentFailed(invoice: Stripe.Invoice): Promise<void> {
+    console.log('Payment failed:', invoice.id);
+    // Handle failed payment
+  }
+}
+
+export const stripeService = new StripeService();

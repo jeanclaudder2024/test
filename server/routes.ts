@@ -4355,6 +4355,80 @@ Only use authentic, real-world data for existing refineries.`;
     }
   });
 
+  // Stripe subscription endpoints
+  apiRouter.post("/subscription/create-checkout", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const { planId, isYearly } = req.body;
+      
+      if (!planId || typeof planId !== 'number') {
+        return res.status(400).json({ message: "Valid plan ID is required" });
+      }
+
+      const plan = await storage.getSubscriptionPlan(planId);
+      if (!plan) {
+        return res.status(404).json({ message: "Subscription plan not found" });
+      }
+
+      const session = await stripeService.createCheckoutSession({
+        userId: req.user!.id,
+        planId: planId,
+        priceId: isYearly ? plan.stripeYearlyPriceId : plan.stripeMonthlyPriceId,
+        successUrl: `${req.protocol}://${req.get('host')}/subscription/success`,
+        cancelUrl: `${req.protocol}://${req.get('host')}/subscription/plans`
+      });
+
+      res.json({ url: session.url });
+    } catch (error) {
+      console.error("Error creating checkout session:", error);
+      res.status(500).json({ 
+        message: "Failed to create checkout session",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  apiRouter.post("/subscription/create-portal", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const user = await storage.getUserById(req.user!.id);
+      if (!user?.stripeCustomerId) {
+        return res.status(400).json({ message: "No Stripe customer found" });
+      }
+
+      const session = await stripeService.createPortalSession(
+        user.stripeCustomerId,
+        `${req.protocol}://${req.get('host')}/subscription/plans`
+      );
+
+      res.json({ url: session.url });
+    } catch (error) {
+      console.error("Error creating portal session:", error);
+      res.status(500).json({ 
+        message: "Failed to create portal session",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  apiRouter.get("/subscription", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const subscription = await storage.getUserSubscription(req.user!.id);
+      res.json(subscription);
+    } catch (error) {
+      console.error("Error fetching subscription:", error);
+      res.status(500).json({ message: "Failed to fetch subscription" });
+    }
+  });
+
+  apiRouter.get("/subscription/plans", async (req, res) => {
+    try {
+      const plans = await storage.getSubscriptionPlans();
+      res.json(plans);
+    } catch (error) {
+      console.error("Error fetching subscription plans:", error);
+      res.status(500).json({ message: "Failed to fetch subscription plans" });
+    }
+  });
+
   // Stripe payment endpoints
   apiRouter.post("/payment/create-intent", async (req, res) => {
     try {
