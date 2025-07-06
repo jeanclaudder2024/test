@@ -343,6 +343,13 @@ Changelog:
   * **Fallback Support**: Added fallback vessel type options when oil types aren't loaded for system reliability
   * **Successfully Displaying 285 Vessels**: Confirmed all map features working with vessel markers, ports, refineries, and interactive controls
   * **Professional Maritime Interface**: Both map pages fully operational with dynamic filtering based on admin-managed oil types
+- July 6, 2025. **SUPERADMIN USER CREATION COMPLETED**:
+  * **Successfully Created New Admin User**: Created superadmin@petrodealhub.com with admin role using API-based approach
+  * **Fixed ES Module Compatibility**: Resolved CommonJS/ES module conflicts by using .cjs extension for creation scripts
+  * **Credentials Established**: Email: superadmin@petrodealhub.com, Password: admin123, Role: admin
+  * **Database Integration Confirmed**: User creation successful with proper role assignment and password hashing
+  * **API Endpoint Tested**: Registration endpoint working correctly with 200 status response
+  * **Ready for Admin Access**: New superadmin account available for administrative functions and system management
 
 ## User Preferences
 
