@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Droplet, Info } from "lucide-react";
@@ -12,13 +13,31 @@ interface OilType {
 }
 
 interface OilTypeHoverCardProps {
-  oilType: OilType;
+  oilTypeName: string;
   children: React.ReactNode;
   position?: 'top' | 'bottom' | 'left' | 'right';
 }
 
-export function OilTypeHoverCard({ oilType, children, position = 'top' }: OilTypeHoverCardProps) {
+export function OilTypeHoverCard({ oilTypeName, children, position = 'top' }: OilTypeHoverCardProps) {
   const [isVisible, setIsVisible] = useState(false);
+
+  // Fetch oil types from the API
+  const { data: oilTypes = [] } = useQuery({
+    queryKey: ['/api/oil-types'],
+    staleTime: 0,
+  });
+
+  // Find the matching oil type by name
+  const oilType = oilTypes.find((type: OilType) => 
+    type.name === oilTypeName || 
+    type.displayName === oilTypeName ||
+    type.category === oilTypeName
+  );
+
+  // If no oil type found, just show children without hover card
+  if (!oilType) {
+    return <>{children}</>;
+  }
 
   const positionClasses = {
     top: 'bottom-full left-1/2 transform -translate-x-1/2 mb-2',
