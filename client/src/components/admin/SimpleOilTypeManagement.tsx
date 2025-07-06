@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -15,24 +16,44 @@ import { Plus, Trash2, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
-// Simple Oil Type Interface
+// Extended Oil Type Interface
 interface OilType {
   id: number;
   name: string;
+  displayName: string;
+  category: string;
   description?: string;
   createdAt: string;
 }
 
-// Simple Form Schema
+// Updated Form Schema with required fields
 interface CreateOilTypeForm {
   name: string;
+  displayName: string;
+  category: string;
   description: string;
 }
 
 const oilTypeFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
+  displayName: z.string().min(1, "Display name is required"),
+  category: z.string().min(1, "Category is required"),
   description: z.string().min(1, "Description is required"),
 });
+
+// Maritime Oil Categories
+const oilCategories = [
+  "Crude Oil",
+  "Refined Products",
+  "Heavy Fuel Oil",
+  "Marine Gas Oil",
+  "Diesel",
+  "Gasoline",
+  "Jet Fuel",
+  "Lubricants",
+  "Bunker Fuel",
+  "Other"
+];
 
 export default function SimpleOilTypeManagement() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -115,6 +136,8 @@ export default function SimpleOilTypeManagement() {
     resolver: zodResolver(oilTypeFormSchema),
     defaultValues: {
       name: "",
+      displayName: "",
+      category: "",
       description: "",
     },
   });
@@ -167,6 +190,32 @@ export default function SimpleOilTypeManagement() {
                       <FormLabel>Oil Type Name</FormLabel>
                       <FormControl>
                         <Input placeholder="e.g., Crude Oil, Diesel, Gasoline" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="displayName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Display Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., Premium Crude Oil" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="category"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Category</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., Light Crude, Heavy Crude, Refined Product" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
