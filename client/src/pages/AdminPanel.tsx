@@ -25,7 +25,6 @@ import { CompanyManagement } from "@/components/admin/CompanyManagement";
 
 
 import { BrokerManagement } from "@/components/admin/BrokerManagement";
-import FilterManagement from "@/components/admin/FilterManagement";
 import DocumentManagement from "@/components/admin/DocumentManagement";
 import SimpleOilTypeManagement from "@/components/admin/SimpleOilTypeManagement";
 
@@ -201,14 +200,7 @@ export default function AdminPanel() {
               <span className="xl:hidden">Oil</span>
             </TabsTrigger>
             
-            <TabsTrigger 
-              value="filters" 
-              className="flex items-center gap-2 data-[state=active]:bg-orange-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-200 hover:bg-orange-50 rounded-lg"
-            >
-              <SettingsIcon className="h-4 w-4" />
-              <span className="hidden xl:inline font-medium">Filters</span>
-              <span className="xl:hidden">Filters</span>
-            </TabsTrigger>
+
 
             <TabsTrigger 
               value="data" 
@@ -428,22 +420,7 @@ export default function AdminPanel() {
           <SimpleOilTypeManagement />
         </TabsContent>
 
-        <TabsContent value="filters" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Settings className="h-5 w-5 text-orange-500" />
-                Filter Management
-              </CardTitle>
-              <CardDescription>
-                Manage oil types and regions for the platform filtering system
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <FilterManagement />
-            </CardContent>
-          </Card>
-        </TabsContent>
+
 
         <TabsContent value="settings" className="space-y-4">
           <Card>
