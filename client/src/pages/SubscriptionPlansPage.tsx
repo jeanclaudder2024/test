@@ -13,29 +13,62 @@ export default function SubscriptionPlansPage() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   
-  const { data: plans, isLoading: plansLoading } = useQuery({
-    queryKey: ['/api/subscription-plans'],
-    queryFn: () => getSubscriptionPlans(),
-  });
+  // Mock data for frontend testing - no backend calls
+  const plans = [
+    {
+      id: 1,
+      name: 'Free Trial',
+      price: 0,
+      description: 'Try our platform for 3 days',
+      features: ['Real-time vessel tracking', 'Basic analytics', '5 vessel limit'],
+      maxVessels: 5,
+      maxPorts: 10,
+      maxRefineries: 5,
+      isPopular: false
+    },
+    {
+      id: 2,
+      name: 'Professional',
+      price: 29,
+      description: 'Perfect for maritime professionals',
+      features: ['All vessel tracking', 'Advanced analytics', 'Document generation', 'Priority support'],
+      maxVessels: -1,
+      maxPorts: -1,
+      maxRefineries: -1,
+      isPopular: true
+    },
+    {
+      id: 3,
+      name: 'Enterprise',
+      price: 99,
+      description: 'For large maritime organizations',
+      features: ['Everything in Professional', 'API access', 'Custom integrations', 'Dedicated support'],
+      maxVessels: -1,
+      maxPorts: -1,
+      maxRefineries: -1,
+      isPopular: false
+    }
+  ];
 
-  const { data: status } = useQuery({
-    queryKey: ['/api/subscription-status'],
-    queryFn: () => getSubscriptionStatus(),
-  });
+  const plansLoading = false;
 
   const handleSelectPlan = async (planId: number) => {
-    try {
-      // Store selected plan in localStorage for payment page
-      localStorage.setItem('selectedPlanId', planId.toString());
-      // Redirect to payment methods page
-      setLocation('/payment');
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to start checkout process. Please try again.',
-        variant: 'destructive',
-      });
+    // Store selected plan in localStorage for payment page
+    const selectedPlan = plans.find(p => p.id === planId);
+    if (selectedPlan) {
+      localStorage.setItem('selectedPlan', JSON.stringify(selectedPlan));
     }
+    
+    // Show success message and redirect
+    toast({
+      title: 'Plan Selected!',
+      description: `You've chosen the ${selectedPlan?.name} plan. Redirecting to payment...`,
+    });
+    
+    // Redirect to payment methods page
+    setTimeout(() => {
+      setLocation('/payment');
+    }, 1000);
   };
 
   const getPlanIcon = (planName: string) => {
@@ -93,17 +126,12 @@ export default function SubscriptionPlansPage() {
             Start with a free trial and upgrade when you're ready.
           </p>
           
-          {status?.hasActiveSubscription && (
-            <div className="mt-6 inline-flex items-center px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-              <Check className="h-4 w-4 mr-2" />
-              Current Plan: {status.planName}
-            </div>
-          )}
+
         </div>
 
         {/* Plans Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {plans?.map((plan) => (
+          {plans.map((plan) => (
             <Card 
               key={plan.id} 
               className={`relative overflow-hidden transform hover:scale-105 transition-all duration-300 ${
