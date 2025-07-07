@@ -19,9 +19,8 @@ import Subscribe from "@/pages/Subscribe";
 import Pricing from "@/pages/Pricing";
 import AccountSubscription from "@/pages/AccountSubscription";
 import SubscriptionSuccess from "@/pages/SubscriptionSuccess";
-import SubscriptionPlansDemo from "@/pages/SubscriptionPlansDemo";
+import SubscriptionPlansPage from "@/pages/SubscriptionPlansPage";
 import AccountPage from "@/pages/AccountPage";
-import PaymentMethodsDemo from "@/pages/PaymentMethodsDemo";
 import LandingPage from "@/pages/LandingPage";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
@@ -95,8 +94,7 @@ function ProtectedRoutes() {
           <Route path="/settings" component={Settings} />
           <Route path="/subscribe" component={Subscribe} />
           <Route path="/pricing" component={Pricing} />
-          <Route path="/plans" component={SubscriptionPlansDemo} />
-          <Route path="/payment" component={PaymentMethodsDemo} />
+          <Route path="/plans" component={SubscriptionPlansPage} />
           <Route path="/account" component={AccountPage} />
           <Route path="/upgrade" component={SubscriptionUpgrade} />
           <Route path="/account/subscription" component={AccountSubscription} />
