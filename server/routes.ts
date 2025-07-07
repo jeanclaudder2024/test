@@ -67,8 +67,7 @@ import {
   ports,
   vesselPortConnections,
   oilTypes,
-  regions,
-  subscriptionPlans
+  regions
 } from "@shared/schema";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
@@ -89,7 +88,7 @@ import { subscriptionRouter } from "./routes/subscriptionRoutes";
 import translationRouter from "./routes/translationRoutes";
 import vesselDashboardRouter from "./routes/vessel-dashboard";
 import { cargoManifestRouter } from "./routes/cargo-manifest-router";
-import { seedBrokers, seedSubscriptionPlans } from "./services/seedService";
+import { seedBrokers } from "./services/seedService";
 import simpleVesselConnectionsRouter from "./routes/simple-vessel-connections";
 
 // Import route handlers
@@ -103,8 +102,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes handled in index.ts
   
   const apiRouter = express.Router();
-
-
 
   // Register authentication routes
   app.use("/api/auth", authRoutes);
@@ -803,17 +800,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Skip automatic vessel seeding - will use CSV import instead
         console.log("Skipping automatic vessel seeding - use CSV import instead");
-
-        // Seed subscription plans first (required for user registration)
-        let subscriptionPlansResult = { count: 0, seeded: false };
-        try {
-          console.log("Seeding subscription plans...");
-          subscriptionPlansResult = await seedSubscriptionPlans();
-          console.log("Subscription plans seeded successfully:", subscriptionPlansResult);
-        } catch (plansError) {
-          console.error("Error seeding subscription plans:", plansError);
-          // Continue with what we have
-        }
 
         // Seed broker data
         let brokerResult = { count: 0, seeded: false };
@@ -11359,28 +11345,6 @@ Note: This document contains real vessel operational data and should be treated 
 
   // Subscription Management API Routes
   
-  // TEST: Check subscription plans in database
-  app.get("/api/test-check-plans", async (req, res) => {
-    try {
-      const plans = await db.select().from(subscriptionPlans).orderBy(subscriptionPlans.id);
-      res.json({ success: true, plans });
-    } catch (error) {
-      console.error("Error checking plans:", error);
-      res.status(500).json({ success: false, error: error instanceof Error ? error.message : "Unknown error" });
-    }
-  });
-
-  // TEST: Direct seed subscription plans into database
-  app.post("/api/test-seed-plans", async (req, res) => {
-    try {
-      const result = await seedSubscriptionPlans();
-      res.json({ success: true, result });
-    } catch (error) {
-      console.error("Error seeding plans:", error);
-      res.status(500).json({ success: false, error: error instanceof Error ? error.message : "Unknown error" });
-    }
-  });
-
   // Get subscription plans
   app.get("/api/subscription-plans", async (req, res) => {
     try {

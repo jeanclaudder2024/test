@@ -1,5 +1,5 @@
 import { db } from "../db";
-import { progressEvents, vessels, refineries, brokers, vesselDocuments, subscriptionPlans } from "@shared/schema";
+import { progressEvents, vessels, refineries, brokers, vesselDocuments } from "@shared/schema";
 import { generateLargeVesselDataset, determineRegionFromCoordinates } from "./vesselGenerator";
 import { getAccurateRefineries } from "./refineryCoordinates";
 import { isCoordinateAtSea } from "./vesselGenerator";
@@ -158,139 +158,6 @@ export async function seedBrokers(): Promise<{ count: number, seeded: boolean }>
   await db.insert(brokers).values(brokerData);
   
   return { count: brokerData.length, seeded: true };
-}
-
-/**
- * Seed subscription plans if they don't exist
- */
-export async function seedSubscriptionPlans(): Promise<{ count: number, seeded: boolean }> {
-  try {
-    // Check if plans already exist
-    const existingPlans = await db.select().from(subscriptionPlans);
-    
-    if (existingPlans.length > 0) {
-      console.log(`Database already contains ${existingPlans.length} subscription plans.`);
-      console.log('Existing plan IDs:', existingPlans.map(p => p.id));
-      return { count: existingPlans.length, seeded: false };
-    }
-
-    // Insert default subscription plans
-    const defaultPlans = [
-      {
-        name: "Free Trial",
-        description: "3-day free trial with full access",
-        price: "0.00",
-        interval: "trial",
-        trialDays: 3,
-        features: JSON.stringify([
-          "Real-time vessel tracking",
-          "Basic port information", 
-          "Limited refinery data",
-          "Standard support"
-        ]),
-        maxVessels: 10,
-        maxPorts: 10,
-        maxRefineries: 5,
-        canAccessBrokerFeatures: false,
-        canAccessAnalytics: false,
-        canExportData: false
-      },
-      {
-        name: "Basic Plan",
-        description: "Essential features for small operations",
-        price: "49.00",
-        interval: "month",
-        trialDays: 0,
-        features: JSON.stringify([
-          "Real-time vessel tracking",
-          "Full port information",
-          "Basic refinery data",
-          "Email support",
-          "Data export (CSV)"
-        ]),
-        maxVessels: 50,
-        maxPorts: 50,
-        maxRefineries: 25,
-        canAccessBrokerFeatures: false,
-        canAccessAnalytics: true,
-        canExportData: true
-      },
-      {
-        name: "Pro Plan", 
-        description: "Advanced features for growing businesses",
-        price: "149.00",
-        interval: "month",
-        trialDays: 0,
-        features: JSON.stringify([
-          "Unlimited vessel tracking",
-          "Complete port database",
-          "Full refinery information",
-          "Advanced analytics",
-          "Priority support",
-          "API access",
-          "Custom reports"
-        ]),
-        maxVessels: -1,
-        maxPorts: -1,
-        maxRefineries: -1,
-        canAccessBrokerFeatures: false,
-        canAccessAnalytics: true,
-        canExportData: true
-      },
-      {
-        name: "Enterprise",
-        description: "Full-scale solution for large operations", 
-        price: "499.00",
-        interval: "month",
-        trialDays: 0,
-        features: JSON.stringify([
-          "Everything in Pro",
-          "Dedicated account manager",
-          "Custom integrations",
-          "24/7 phone support",
-          "SLA guarantee",
-          "White-label options"
-        ]),
-        maxVessels: -1,
-        maxPorts: -1,
-        maxRefineries: -1,
-        canAccessBrokerFeatures: true,
-        canAccessAnalytics: true,
-        canExportData: true
-      },
-      {
-        name: "Broker Premium",
-        description: "Specialized features for oil brokers",
-        price: "299.00", 
-        interval: "month",
-        trialDays: 0,
-        features: JSON.stringify([
-          "Broker dashboard",
-          "Deal management",
-          "Commission tracking",
-          "Client management",
-          "Market analysis",
-          "Trading tools",
-          "Regulatory compliance"
-        ]),
-        maxVessels: -1,
-        maxPorts: -1,
-        maxRefineries: -1,
-        canAccessBrokerFeatures: true,
-        canAccessAnalytics: true,
-        canExportData: true
-      }
-    ];
-
-    await db.insert(subscriptionPlans).values(defaultPlans);
-    
-    console.log(`Inserted ${defaultPlans.length} subscription plans.`);
-    return { count: defaultPlans.length, seeded: true };
-    
-  } catch (error) {
-    console.error("Error seeding subscription plans:", error);
-    return { count: 0, seeded: false };
-  }
 }
 
 /**
@@ -624,7 +491,8 @@ export async function seedAllData(): Promise<{
   console.log("Broker data seeded successfully:", brokerResult);
   
   console.log("Seeding subscription plans...");
-  const subscriptionPlansResult = await seedSubscriptionPlans();
+  // Subscription plans seeding was removed during cleanup
+  const subscriptionPlansResult = { plans: 0, seeded: false };
   console.log("Subscription plans seeded successfully:", subscriptionPlansResult);
   
   console.log("Seeding vessel jobs and dashboard data...");
