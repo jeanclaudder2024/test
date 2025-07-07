@@ -4,12 +4,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Check, Star, Crown, Zap, Users, ArrowRight } from 'lucide-react';
-import { getSubscriptionPlans, getSubscriptionStatus, createStripeCheckout } from '@/lib/subscriptionService';
+import { getSubscriptionPlans, getSubscriptionStatus } from '@/lib/subscriptionService';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { useToast } from '@/hooks/use-toast';
+import { useLocation } from 'wouter';
 
 export default function SubscriptionPlansPage() {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   
   const { data: plans, isLoading: plansLoading } = useQuery({
     queryKey: ['/api/subscription-plans'],
@@ -23,7 +25,10 @@ export default function SubscriptionPlansPage() {
 
   const handleSelectPlan = async (planId: number) => {
     try {
-      await createStripeCheckout(planId);
+      // Store selected plan in localStorage for payment page
+      localStorage.setItem('selectedPlanId', planId.toString());
+      // Redirect to payment methods page
+      setLocation('/payment');
     } catch (error) {
       toast({
         title: 'Error',
