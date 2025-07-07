@@ -320,6 +320,14 @@ Changelog:
   * **Header Text Cleaned**: Removed "using AI-powered generation" from article generation description
   * **Professional Appearance**: Interface now presents document generation without technical implementation details
   * **User Experience Enhanced**: Cleaner, more professional interface focused on document creation functionality
+- July 7, 2025. **CRITICAL FIX: Registration System Foreign Key Constraint Error Resolved**:
+  * **Root Cause Identified**: Registration was hardcoded to use plan_id=1 but actual subscription plans have IDs 7, 8, 9
+  * **Dynamic Plan Assignment**: Fixed registration to query first available subscription plan instead of hardcoded plan_id=1
+  * **Database Query Enhancement**: Added proper subscription plan lookup with isActive=true and ordered by ID
+  * **Error Handling**: Added validation to ensure subscription plans exist before user registration
+  * **Successful Testing**: Confirmed new user registration works correctly with proper plan assignment (plan_id=7)
+  * **Login System**: Verified login process works correctly with subscription data and trial period tracking
+  * **System Stability**: Registration system now fully operational with proper database constraint compliance
 - July 5, 2025. **MAJOR DESIGN ENHANCEMENT: Beautiful Professional Document Styling Complete**:
   * **Enhanced PDF Design**: Implemented professional maritime branding with blue color scheme and PETRODEALHUB logo
   * **Company Logo Integration**: Added white circular logo with blue "P" symbol for authentic branding

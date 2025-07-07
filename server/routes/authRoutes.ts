@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { db } from '../db';
-import { users, userSubscriptions, registerSchema, loginSchema } from '@shared/schema';
+import { users, userSubscriptions, subscriptionPlans, registerSchema, loginSchema } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import { 
   hashPassword, 
@@ -48,11 +48,23 @@ router.post('/register', async (req, res) => {
     const trialStartDate = new Date();
     const trialEndDate = calculateTrialEndDate();
 
+    // Get the first available subscription plan
+    const [defaultPlan] = await db
+      .select()
+      .from(subscriptionPlans)
+      .where(eq(subscriptionPlans.isActive, true))
+      .orderBy(subscriptionPlans.id)
+      .limit(1);
+
+    if (!defaultPlan) {
+      throw new Error('No subscription plans available');
+    }
+
     await db
       .insert(userSubscriptions)
       .values({
         userId: newUser.id,
-        planId: 1, // Default trial plan ID
+        planId: defaultPlan.id, // Use first available plan ID
         trialStartDate,
         trialEndDate,
         status: 'trial'
