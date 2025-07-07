@@ -52,9 +52,10 @@ router.post('/register', async (req, res) => {
       .insert(userSubscriptions)
       .values({
         userId: newUser.id,
+        planId: 1, // Default trial plan ID
         trialStartDate,
         trialEndDate,
-        isActive: true
+        status: 'trial'
       });
 
     // Generate token
