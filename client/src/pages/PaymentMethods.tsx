@@ -20,7 +20,6 @@ import {
   Zap
 } from "lucide-react";
 import { useLocation } from "wouter";
-import { useToast } from "@/hooks/use-toast";
 
 const paymentMethods = [
   {
@@ -70,7 +69,6 @@ const cardBrands = [
 
 export default function PaymentMethods() {
   const [, setLocation] = useLocation();
-  const { toast } = useToast();
   const [selectedMethod, setSelectedMethod] = useState("card");
   const [isProcessing, setIsProcessing] = useState(false);
   const [formData, setFormData] = useState({
@@ -81,28 +79,6 @@ export default function PaymentMethods() {
     email: "",
     country: ""
   });
-
-  // Get selected plan from localStorage or fetch from API
-  const getSelectedPlan = () => {
-    try {
-      const stored = localStorage.getItem('selectedPlan');
-      if (stored) {
-        return JSON.parse(stored);
-      }
-    } catch (e) {
-      console.log('No stored plan found');
-    }
-    
-    // Default to Professional plan if nothing stored
-    return {
-      id: 2,
-      name: 'Professional',
-      price: 29,
-      description: 'Perfect for maritime professionals'
-    };
-  };
-
-  const selectedPlan = getSelectedPlan();
 
   const containerVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -169,22 +145,12 @@ export default function PaymentMethods() {
     e.preventDefault();
     setIsProcessing(true);
     
-    // Simulate payment processing for frontend testing
+    // Simulate payment processing
     await new Promise(resolve => setTimeout(resolve, 2000));
     
     setIsProcessing(false);
-    
-    // Show success message
-    toast({
-      title: "Payment Successful! 🎉",
-      description: "Your subscription has been activated. Welcome to PetroDealHub Professional!",
-      duration: 5000,
-    });
-    
-    // Redirect to dashboard
-    setTimeout(() => {
-      setLocation("/dashboard");
-    }, 1000);
+    // Redirect to success page or dashboard
+    setLocation("/dashboard");
   };
 
   const getMethodIcon = (method: typeof paymentMethods[0]) => {
@@ -488,29 +454,21 @@ export default function PaymentMethods() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex justify-between">
-                    <span>{selectedPlan.name || 'Professional Plan'}</span>
-                    <span className="font-semibold">
-                      {(selectedPlan.monthlyPrice || selectedPlan.price) === 0 ? 'Free' : `$${selectedPlan.monthlyPrice || selectedPlan.price || 29}/month`}
-                    </span>
+                    <span>Professional Plan</span>
+                    <span className="font-semibold">$29/month</span>
                   </div>
-                  {((selectedPlan.monthlyPrice || selectedPlan.price) || 29) > 0 && (
-                    <>
-                      <div className="flex justify-between text-sm text-gray-600">
-                        <span>Setup fee</span>
-                        <span className="line-through">$10</span>
-                      </div>
-                      <div className="flex justify-between text-sm text-green-600">
-                        <span>First month discount</span>
-                        <span>-$10</span>
-                      </div>
-                    </>
-                  )}
+                  <div className="flex justify-between text-sm text-gray-600">
+                    <span>Setup fee</span>
+                    <span className="line-through">$10</span>
+                  </div>
+                  <div className="flex justify-between text-sm text-green-600">
+                    <span>First month discount</span>
+                    <span>-$10</span>
+                  </div>
                   <Separator />
                   <div className="flex justify-between text-lg font-bold">
                     <span>Total due today</span>
-                    <span>
-                      {(selectedPlan.monthlyPrice || selectedPlan.price) === 0 ? 'Free' : `$${Math.max(0, ((selectedPlan.monthlyPrice || selectedPlan.price) || 29) - 10)}`}
-                    </span>
+                    <span>$19</span>
                   </div>
                   
                   <div className="bg-blue-50 p-4 rounded-lg mt-4">
