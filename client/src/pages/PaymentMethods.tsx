@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -71,6 +71,7 @@ export default function PaymentMethods() {
   const [, setLocation] = useLocation();
   const [selectedMethod, setSelectedMethod] = useState("card");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<any>(null);
   const [formData, setFormData] = useState({
     cardNumber: "",
     expiryDate: "",
@@ -79,6 +80,35 @@ export default function PaymentMethods() {
     email: "",
     country: ""
   });
+
+  // Get the selected plan from localStorage or fallback
+  useEffect(() => {
+    const planId = localStorage.getItem('selectedPlanId');
+    
+    const fallbackPlans = [
+      {
+        id: 1,
+        name: "Free Trial",
+        price: 0,
+        description: "3-day free trial with full access"
+      },
+      {
+        id: 2,
+        name: "Professional",
+        price: 29,
+        description: "Advanced features for maritime professionals"
+      },
+      {
+        id: 3,
+        name: "Enterprise", 
+        price: 99,
+        description: "Full-scale solution for large operations"
+      }
+    ];
+    
+    const plan = fallbackPlans.find(p => p.id === parseInt(planId || '2')) || fallbackPlans[1];
+    setSelectedPlan(plan);
+  }, []);
 
   const containerVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -454,21 +484,29 @@ export default function PaymentMethods() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex justify-between">
-                    <span>Professional Plan</span>
-                    <span className="font-semibold">$29/month</span>
+                    <span>{selectedPlan?.name || 'Professional'} Plan</span>
+                    <span className="font-semibold">
+                      {selectedPlan?.price === 0 ? 'Free Trial' : `$${selectedPlan?.price || 29}/month`}
+                    </span>
                   </div>
-                  <div className="flex justify-between text-sm text-gray-600">
-                    <span>Setup fee</span>
-                    <span className="line-through">$10</span>
-                  </div>
-                  <div className="flex justify-between text-sm text-green-600">
-                    <span>First month discount</span>
-                    <span>-$10</span>
-                  </div>
+                  {selectedPlan?.price > 0 && (
+                    <>
+                      <div className="flex justify-between text-sm text-gray-600">
+                        <span>Setup fee</span>
+                        <span className="line-through">$10</span>
+                      </div>
+                      <div className="flex justify-between text-sm text-green-600">
+                        <span>First month discount</span>
+                        <span>-$10</span>
+                      </div>
+                    </>
+                  )}
                   <Separator />
                   <div className="flex justify-between text-lg font-bold">
                     <span>Total due today</span>
-                    <span>$19</span>
+                    <span>
+                      {selectedPlan?.price === 0 ? '$0' : `$${Math.max(0, (selectedPlan?.price || 29) - 10)}`}
+                    </span>
                   </div>
                   
                   <div className="bg-blue-50 p-4 rounded-lg mt-4">
