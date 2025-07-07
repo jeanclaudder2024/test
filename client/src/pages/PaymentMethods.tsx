@@ -82,7 +82,7 @@ export default function PaymentMethods() {
     country: ""
   });
 
-  // Get selected plan from localStorage or use default
+  // Get selected plan from localStorage or fetch from API
   const getSelectedPlan = () => {
     try {
       const stored = localStorage.getItem('selectedPlan');
@@ -93,7 +93,7 @@ export default function PaymentMethods() {
       console.log('No stored plan found');
     }
     
-    // Default plan
+    // Default to Professional plan if nothing stored
     return {
       id: 2,
       name: 'Professional',
@@ -488,12 +488,12 @@ export default function PaymentMethods() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex justify-between">
-                    <span>{selectedPlan.name}</span>
+                    <span>{selectedPlan.name || 'Professional Plan'}</span>
                     <span className="font-semibold">
-                      {selectedPlan.price === 0 ? 'Free' : `$${selectedPlan.price}/month`}
+                      {(selectedPlan.monthlyPrice || selectedPlan.price) === 0 ? 'Free' : `$${selectedPlan.monthlyPrice || selectedPlan.price || 29}/month`}
                     </span>
                   </div>
-                  {selectedPlan.price > 0 && (
+                  {((selectedPlan.monthlyPrice || selectedPlan.price) || 29) > 0 && (
                     <>
                       <div className="flex justify-between text-sm text-gray-600">
                         <span>Setup fee</span>
@@ -509,7 +509,7 @@ export default function PaymentMethods() {
                   <div className="flex justify-between text-lg font-bold">
                     <span>Total due today</span>
                     <span>
-                      {selectedPlan.price === 0 ? 'Free' : `$${Math.max(0, selectedPlan.price - 10)}`}
+                      {(selectedPlan.monthlyPrice || selectedPlan.price) === 0 ? 'Free' : `$${Math.max(0, ((selectedPlan.monthlyPrice || selectedPlan.price) || 29) - 10)}`}
                     </span>
                   </div>
                   

@@ -13,48 +13,51 @@ export default function SubscriptionPlansPage() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   
-  // Mock data for frontend testing - no backend calls
-  const plans = [
-    {
-      id: 1,
-      name: 'Free Trial',
-      price: 0,
-      description: 'Try our platform for 3 days',
-      features: ['Real-time vessel tracking', 'Basic analytics', '5 vessel limit'],
-      maxVessels: 5,
-      maxPorts: 10,
-      maxRefineries: 5,
-      isPopular: false
-    },
-    {
-      id: 2,
-      name: 'Professional',
-      price: 29,
-      description: 'Perfect for maritime professionals',
-      features: ['All vessel tracking', 'Advanced analytics', 'Document generation', 'Priority support'],
-      maxVessels: -1,
-      maxPorts: -1,
-      maxRefineries: -1,
-      isPopular: true
-    },
-    {
-      id: 3,
-      name: 'Enterprise',
-      price: 99,
-      description: 'For large maritime organizations',
-      features: ['Everything in Professional', 'API access', 'Custom integrations', 'Dedicated support'],
-      maxVessels: -1,
-      maxPorts: -1,
-      maxRefineries: -1,
-      isPopular: false
-    }
-  ];
-
-  const plansLoading = false;
+  // Fetch real subscription plans from API
+  const { data: plans, isLoading: plansLoading } = useQuery({
+    queryKey: ['/api/subscription-plans'],
+    queryFn: () => getSubscriptionPlans(),
+    // Use fallback data if API fails
+    placeholderData: [
+      {
+        id: 1,
+        name: 'Free Trial',
+        monthlyPrice: 0,
+        yearlyPrice: 0,
+        description: 'Try our platform for 3 days',
+        features: ['Real-time vessel tracking', 'Basic analytics', '5 vessel limit'],
+        maxVessels: 5,
+        maxPorts: 10,
+        maxRefineries: 5
+      },
+      {
+        id: 2,
+        name: 'Professional',
+        monthlyPrice: 29,
+        yearlyPrice: 290,
+        description: 'Perfect for maritime professionals',
+        features: ['All vessel tracking', 'Advanced analytics', 'Document generation', 'Priority support'],
+        maxVessels: -1,
+        maxPorts: -1,
+        maxRefineries: -1
+      },
+      {
+        id: 3,
+        name: 'Enterprise',
+        monthlyPrice: 99,
+        yearlyPrice: 990,
+        description: 'For large maritime organizations',
+        features: ['Everything in Professional', 'API access', 'Custom integrations', 'Dedicated support'],
+        maxVessels: -1,
+        maxPorts: -1,
+        maxRefineries: -1
+      }
+    ] as any
+  });
 
   const handleSelectPlan = async (planId: number) => {
     // Store selected plan in localStorage for payment page
-    const selectedPlan = plans.find(p => p.id === planId);
+    const selectedPlan = plans?.find(p => p.id === planId);
     if (selectedPlan) {
       localStorage.setItem('selectedPlan', JSON.stringify(selectedPlan));
     }
@@ -131,7 +134,7 @@ export default function SubscriptionPlansPage() {
 
         {/* Plans Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {plans.map((plan) => (
+          {(plans || []).map((plan) => (
             <Card 
               key={plan.id} 
               className={`relative overflow-hidden transform hover:scale-105 transition-all duration-300 ${
@@ -157,8 +160,8 @@ export default function SubscriptionPlansPage() {
                 
                 <div className="text-center">
                   <div className="text-4xl font-bold text-gray-900 mb-2">
-                    ${plan.price}
-                    {plan.price > 0 && <span className="text-lg text-gray-600 font-normal">/month</span>}
+                    ${plan.monthlyPrice || plan.price || 0}
+                    {(plan.monthlyPrice || plan.price || 0) > 0 && <span className="text-lg text-gray-600 font-normal">/month</span>}
                   </div>
                   {plan.name === 'Free Trial' && (
                     <p className="text-sm text-gray-600">3-day trial period</p>
@@ -212,7 +215,7 @@ export default function SubscriptionPlansPage() {
                   className={`w-full bg-gradient-to-r ${getPlanColor(plan.name)} hover:opacity-90 transition-opacity`}
                   size="lg"
                 >
-                  {plan.price === 0 ? 'Start Free Trial' : `Upgrade to ${plan.name}`}
+                  {(plan.monthlyPrice || plan.price || 0) === 0 ? 'Start Free Trial' : `Upgrade to ${plan.name}`}
                   <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>
               </CardContent>
