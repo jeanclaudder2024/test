@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   Card,
   CardContent,
@@ -49,7 +50,8 @@ import {
   Waves,
   Plane,
   Train,
-  Factory
+  Factory,
+  ExternalLink
 } from 'lucide-react';
 
 interface Port {
@@ -122,7 +124,6 @@ interface PortDetailViewProps {
 export default function PortDetailView({ port, onClose }: PortDetailViewProps) {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [realTimeData, setRealTimeData] = useState({
-    vessels: Math.floor(Math.random() * 25) + 5,
     utilization: Math.floor(Math.random() * 30) + 70,
     efficiency: Math.floor(Math.random() * 20) + 80,
     throughput: Math.floor(Math.random() * 40) + 60,
@@ -133,11 +134,38 @@ export default function PortDetailView({ port, onClose }: PortDetailViewProps) {
     traffic: Math.floor(Math.random() * 20) + 80
   });
 
+  // Fetch real vessels connected to this port
+  const { data: vesselsData = [], isLoading: isVesselsLoading } = useQuery({
+    queryKey: ['/api/vessels'],
+    staleTime: 0,
+  });
+
+  // Calculate real vessel connections to this port
+  const connectedVessels = React.useMemo(() => {
+    if (!vesselsData || !Array.isArray(vesselsData)) return [];
+    
+    return vesselsData.filter((vessel: any) => {
+      try {
+        const departurePortId = vessel.departurePort ? Number(vessel.departurePort) : null;
+        const destinationPortId = vessel.destinationPort ? Number(vessel.destinationPort) : null;
+        return departurePortId === port.id || destinationPortId === port.id;
+      } catch (e) {
+        return false;
+      }
+    }).map((vessel: any) => {
+      const departurePortId = vessel.departurePort ? Number(vessel.departurePort) : null;
+      const destinationPortId = vessel.destinationPort ? Number(vessel.destinationPort) : null;
+      return {
+        ...vessel,
+        connectionType: departurePortId === port.id ? 'Departing' : 'Arriving'
+      };
+    });
+  }, [vesselsData, port.id]);
+
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTime(new Date());
       setRealTimeData(prev => ({
-        vessels: Math.max(1, prev.vessels + Math.floor(Math.random() * 5) - 2),
         utilization: Math.max(50, Math.min(100, prev.utilization + Math.floor(Math.random() * 10) - 5)),
         efficiency: Math.max(70, Math.min(100, prev.efficiency + Math.floor(Math.random() * 6) - 3)),
         throughput: Math.max(40, Math.min(100, prev.throughput + Math.floor(Math.random() * 8) - 4)),
@@ -204,8 +232,8 @@ export default function PortDetailView({ port, onClose }: PortDetailViewProps) {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-blue-600 text-sm font-medium">Active Vessels</p>
-                  <p className="text-3xl font-bold text-blue-900">{realTimeData.vessels}</p>
-                  <p className="text-blue-600 text-xs">Currently docked</p>
+                  <p className="text-3xl font-bold text-blue-900">{connectedVessels.length}</p>
+                  <p className="text-blue-600 text-xs">Currently connected</p>
                 </div>
                 <Ship className="h-12 w-12 text-blue-400" />
               </div>
@@ -369,6 +397,68 @@ export default function PortDetailView({ port, onClose }: PortDetailViewProps) {
             </CardContent>
           </Card>
         </div>
+
+        {/* Active Vessels Section */}
+        <Card className="bg-gradient-to-br from-blue-50/80 to-cyan-50/80 backdrop-blur-sm border border-blue-200/50 rounded-2xl mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-3 text-blue-900">
+              <Ship className="h-6 w-6 text-blue-600" />
+              Active Vessels ({connectedVessels.length})
+            </CardTitle>
+            <CardDescription className="text-blue-700">
+              Vessels currently connected to this port
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isVesselsLoading ? (
+              <div className="text-center py-6">
+                <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-2" />
+                <p className="text-blue-600">Loading vessels...</p>
+              </div>
+            ) : connectedVessels.length > 0 ? (
+              <div className="grid gap-4">
+                {connectedVessels.map((vessel: any) => (
+                  <div key={vessel.id} className="bg-white/60 p-4 rounded-xl border border-blue-200/30 hover:bg-white/80 transition-colors group">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4 flex-1">
+                        <div className={`h-3 w-3 rounded-full ${
+                          vessel.connectionType === 'Departing' ? 'bg-red-500' : 'bg-green-500'
+                        }`} />
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-semibold text-blue-900">{vessel.name || 'Unknown Vessel'}</h4>
+                            <Badge variant="outline" className="text-xs">
+                              {vessel.connectionType}
+                            </Badge>
+                          </div>
+                          <div className="text-sm text-blue-700 mt-1">
+                            <span className="mr-4">IMO: {vessel.imo || 'N/A'}</span>
+                            <span className="mr-4">Type: {vessel.vesselType || 'Unknown'}</span>
+                            {vessel.cargoType && <span>Cargo: {vessel.cargoType}</span>}
+                          </div>
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => window.open(`/vessels/${vessel.id}`, '_blank')}
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Ship className="h-12 w-12 text-blue-300 mx-auto mb-4" />
+                <p className="text-blue-600 font-medium">No vessels currently connected</p>
+                <p className="text-blue-500 text-sm">Vessels will appear here when they arrive or depart from this port</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Comprehensive Port Information Sections */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
