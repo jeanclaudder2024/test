@@ -347,6 +347,14 @@ Changelog:
   * **Complete Data Flow Fixed**: Vessel creation, editing, and updates now work flawlessly without integer conversion errors
   * **Testing Confirmed**: Successfully tested vessel update with port changes - no more "invalid input syntax for type integer" errors
   * **Production Ready**: All 290 vessels loading correctly, 47 ports available, authentication working, vessel management fully operational
+- July 8, 2025. **MAJOR FIX: PostgreSQL Port Routing and Database Error Resolution**:
+  * **Fixed PostgreSQL "NaN" Error**: Resolved critical database errors caused by invalid port ID parameters being passed to SQL queries
+  * **Express Route Ordering Fixed**: Corrected routing conflicts between `/api/ports/:id` and `/api/ports/with-vessels` endpoints by proper route ordering
+  * **Comprehensive Port ID Validation**: Added robust validation for port ID parameters at both route and storage levels to prevent database errors
+  * **Enhanced Error Handling**: Improved error handling and logging for port-related API endpoints with detailed error messages
+  * **Frontend Data Flow Optimized**: Updated ports page to use reliable admin endpoint with client-side vessel connection processing
+  * **Beautiful Vessel Detail Buttons**: Added hover-activated Info buttons to each vessel in port cards for easy navigation to vessel details
+  * **Production Stability**: All port-related functionality now working correctly without database parameter errors
 
 ## User Preferences
 

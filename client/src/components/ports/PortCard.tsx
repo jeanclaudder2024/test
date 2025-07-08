@@ -95,9 +95,9 @@ export default function PortCard({ port, vessels, isLoading = false }: PortCardP
                     .map((vessel: any) => (
                     <div 
                       key={vessel.id} 
-                      className="flex items-center justify-between p-1.5 rounded-md hover:bg-muted/40 text-sm"
+                      className="flex items-center justify-between p-1.5 rounded-md hover:bg-muted/40 text-sm group"
                     >
-                      <div className="flex items-center">
+                      <div className="flex items-center flex-1">
                         <div 
                           className={`h-2 w-2 rounded-full mr-2 ${
                             vessel.connectionType === 'Departing' ? 'bg-red-500' : 
@@ -105,12 +105,23 @@ export default function PortCard({ port, vessels, isLoading = false }: PortCardP
                             'bg-blue-500'
                           }`} 
                         />
-                        <span className="font-medium truncate max-w-[120px]" title={vessel.name}>
+                        <span className="font-medium truncate max-w-[100px]" title={vessel.name}>
                           {vessel.name}
                         </span>
                       </div>
-                      <div className="flex items-center text-xs text-muted-foreground">
-                        <span>{vessel.connectionType}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">
+                          {vessel.connectionType}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity bg-primary/10 hover:bg-primary/20 text-primary"
+                          onClick={() => navigate(`/vessels/${vessel.id}`)}
+                          title="View vessel details"
+                        >
+                          <Info className="h-3 w-3" />
+                        </Button>
                       </div>
                     </div>
                     ))}
@@ -137,9 +148,9 @@ export default function PortCard({ port, vessels, isLoading = false }: PortCardP
                   .map(({ vessels: vessel, distance }) => (
                     <div 
                       key={vessel.id} 
-                      className="flex items-center justify-between p-1.5 rounded-md hover:bg-muted/40 text-sm"
+                      className="flex items-center justify-between p-1.5 rounded-md hover:bg-muted/40 text-sm group"
                     >
-                      <div className="flex items-center">
+                      <div className="flex items-center flex-1">
                         <div 
                           className={`h-2 w-2 rounded-full mr-2 ${
                             distance < 5 ? 'bg-green-500' : 
@@ -147,12 +158,23 @@ export default function PortCard({ port, vessels, isLoading = false }: PortCardP
                             'bg-blue-500'
                           }`} 
                         />
-                        <span className="font-medium truncate max-w-[150px]" title={vessel.name}>
+                        <span className="font-medium truncate max-w-[100px]" title={vessel.name}>
                           {vessel.name}
                         </span>
                       </div>
-                      <div className="flex items-center text-xs text-muted-foreground">
-                        <span>{distance.toFixed(1)} km</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">
+                          {distance.toFixed(1)} km
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity bg-primary/10 hover:bg-primary/20 text-primary"
+                          onClick={() => navigate(`/vessels/${vessel.id}`)}
+                          title="View vessel details"
+                        >
+                          <Info className="h-3 w-3" />
+                        </Button>
                       </div>
                     </div>
                   ))
