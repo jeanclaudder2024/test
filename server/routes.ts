@@ -2666,19 +2666,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Vessel not found" });
       }
 
-      // Update vessel data
-      const updateData = {
-        ...req.body,
-        lastUpdated: new Date().toISOString()
-      };
+      // Clean and validate data before database update
+      const vesselData = req.body;
+      const cleanedData: any = {};
 
-      const updatedVessel = await storage.updateVessel(id, updateData);
+      // Only include defined fields and properly convert types
+      if (vesselData.name !== undefined) cleanedData.name = vesselData.name ? vesselData.name.toString().trim() : "";
+      if (vesselData.imo !== undefined) cleanedData.imo = vesselData.imo ? vesselData.imo.toString().trim() : "";
+      if (vesselData.mmsi !== undefined) cleanedData.mmsi = vesselData.mmsi ? vesselData.mmsi.toString().trim() : "";
+      if (vesselData.vesselType !== undefined) cleanedData.vesselType = vesselData.vesselType ? vesselData.vesselType.toString().trim() : "";
+      if (vesselData.flag !== undefined) cleanedData.flag = vesselData.flag ? vesselData.flag.toString().trim() : "";
+      
+      // Integer fields with safe parsing
+      if (vesselData.built !== undefined) {
+        cleanedData.built = vesselData.built ? (isNaN(parseInt(vesselData.built)) ? null : parseInt(vesselData.built)) : null;
+      }
+      if (vesselData.deadweight !== undefined) {
+        cleanedData.deadweight = vesselData.deadweight ? (isNaN(parseInt(vesselData.deadweight)) ? null : parseInt(vesselData.deadweight)) : null;
+      }
+      if (vesselData.cargoCapacity !== undefined) {
+        cleanedData.cargoCapacity = vesselData.cargoCapacity ? (isNaN(parseInt(vesselData.cargoCapacity)) ? null : parseInt(vesselData.cargoCapacity)) : null;
+      }
+      if (vesselData.course !== undefined) {
+        cleanedData.course = vesselData.course ? (isNaN(parseInt(vesselData.course)) ? null : parseInt(vesselData.course)) : null;
+      }
+      if (vesselData.enginePower !== undefined) {
+        cleanedData.enginePower = vesselData.enginePower ? (isNaN(parseInt(vesselData.enginePower)) ? null : parseInt(vesselData.enginePower)) : null;
+      }
+      if (vesselData.crewSize !== undefined) {
+        cleanedData.crewSize = vesselData.crewSize ? (isNaN(parseInt(vesselData.crewSize)) ? null : parseInt(vesselData.crewSize)) : null;
+      }
+      if (vesselData.grossTonnage !== undefined) {
+        cleanedData.grossTonnage = vesselData.grossTonnage ? (isNaN(parseInt(vesselData.grossTonnage)) ? null : parseInt(vesselData.grossTonnage)) : null;
+      }
+
+      // Text/String fields
+      if (vesselData.currentLat !== undefined) cleanedData.currentLat = vesselData.currentLat;
+      if (vesselData.currentLng !== undefined) cleanedData.currentLng = vesselData.currentLng;
+      if (vesselData.departurePort !== undefined) cleanedData.departurePort = vesselData.departurePort ? vesselData.departurePort.toString().trim() : null;
+      if (vesselData.destinationPort !== undefined) cleanedData.destinationPort = vesselData.destinationPort ? vesselData.destinationPort.toString().trim() : null;
+      if (vesselData.cargoType !== undefined) cleanedData.cargoType = vesselData.cargoType ? vesselData.cargoType.toString().trim() : null;
+      if (vesselData.currentRegion !== undefined) cleanedData.currentRegion = vesselData.currentRegion;
+      if (vesselData.status !== undefined) cleanedData.status = vesselData.status || "underway";
+      if (vesselData.speed !== undefined) cleanedData.speed = vesselData.speed ? vesselData.speed.toString().trim() : null;
+      if (vesselData.buyerName !== undefined) cleanedData.buyerName = vesselData.buyerName ? vesselData.buyerName.toString().trim() : null;
+      if (vesselData.sellerName !== undefined) cleanedData.sellerName = vesselData.sellerName ? vesselData.sellerName.toString().trim() : null;
+      if (vesselData.ownerName !== undefined) cleanedData.ownerName = vesselData.ownerName ? vesselData.ownerName.toString().trim() : null;
+
+      // Date fields
+      if (vesselData.departureDate !== undefined) {
+        cleanedData.departureDate = vesselData.departureDate ? new Date(vesselData.departureDate) : null;
+      }
+      if (vesselData.eta !== undefined) {
+        cleanedData.eta = vesselData.eta ? new Date(vesselData.eta) : null;
+      }
+
+      // Add lastUpdated timestamp
+      cleanedData.lastUpdated = new Date().toISOString();
+
+      const updatedVessel = await storage.updateVessel(id, cleanedData);
       console.log("Updated vessel:", updatedVessel);
       
       res.json(updatedVessel);
     } catch (error) {
       console.error("Error updating vessel:", error);
-      res.status(500).json({ error: "Failed to update vessel" });
+      res.status(500).json({ error: "Failed to update vessel: " + error.message });
     }
   });
 
