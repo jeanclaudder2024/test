@@ -355,6 +355,12 @@ Changelog:
   * **Frontend Data Flow Optimized**: Updated ports page to use reliable admin endpoint with client-side vessel connection processing
   * **Beautiful Vessel Detail Buttons**: Added hover-activated Info buttons to each vessel in port cards for easy navigation to vessel details
   * **Production Stability**: All port-related functionality now working correctly without database parameter errors
+- July 8, 2025. **Companies Page Real Company Display Update**:
+  * **Real Company Direct Display**: Updated Companies page to show real companies directly instead of fake companies with real company data
+  * **API Endpoint Switch**: Changed from `/api/companies` to `/api/admin/real-companies` endpoint for authentic company data
+  * **Interface Simplification**: Updated all company card references to use direct company fields instead of nested realCompany structure
+  * **Safety Enhancements**: Added null checks and filtering for missing company fields to prevent display errors
+  * **Clean User Experience**: Companies page now displays authentic real company information without fake company layer
 
 ## User Preferences
 

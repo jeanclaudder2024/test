@@ -20,42 +20,38 @@ import {
   Factory
 } from 'lucide-react';
 
-interface CompanyWithRealData {
+interface RealCompany {
   id: number;
-  generatedName: string;
-  realCompany: {
-    id: number;
-    name: string;
-    industry: string;
-    address: string;
-    logo?: string;
-    description: string;
-    website?: string;
-    phone?: string;
-    email?: string;
-    founded?: number;
-    employees?: number;
-    revenue?: string;
-    headquarters?: string;
-    ceo?: string;
-  };
+  name: string;
+  industry: string;
+  address: string;
+  logo?: string;
+  description: string;
+  website?: string;
+  phone?: string;
+  email?: string;
+  founded?: number;
+  employees?: number;
+  revenue?: string;
+  headquarters?: string;
+  ceo?: string;
 }
 
 export default function Companies() {
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Fetch fake companies with real company data
+  // Fetch real companies directly
   const { data: response, isLoading } = useQuery({
-    queryKey: ['/api/companies'],
+    queryKey: ['/api/admin/real-companies'],
     retry: false,
   });
 
   const companies = Array.isArray(response) ? response : [];
 
-  const filteredCompanies = companies.filter((company: CompanyWithRealData) =>
-    company.generatedName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    company.realCompany.industry.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    company.realCompany.headquarters?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredCompanies = companies.filter((company: RealCompany) =>
+    company.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    company.industry?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    company.headquarters?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
 
@@ -130,7 +126,7 @@ export default function Companies() {
                 <div>
                   <p className="text-sm font-medium text-gray-600">Industries</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {new Set(companies.map((c: CompanyWithRealData) => c.realCompany.industry)).size}
+                    {new Set(companies.map((c: RealCompany) => c.industry).filter(Boolean)).size}
                   </p>
                 </div>
                 <Factory className="h-8 w-8 text-orange-500" />
@@ -144,9 +140,9 @@ export default function Companies() {
                 <div>
                   <p className="text-sm font-medium text-gray-600">Countries</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {new Set(companies.map((c: CompanyWithRealData) => 
-                      c.realCompany.headquarters?.split(',').pop()?.trim() || 'Global'
-                    )).size}
+                    {new Set(companies.map((c: RealCompany) => 
+                      c.headquarters?.split(',').pop()?.trim() || 'Global'
+                    ).filter(Boolean)).size}
                   </p>
                 </div>
                 <Globe className="h-8 w-8 text-orange-500" />
@@ -157,16 +153,16 @@ export default function Companies() {
 
         {/* Companies Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCompanies.map((company: CompanyWithRealData) => (
+          {filteredCompanies.map((company: RealCompany) => (
             <Card key={company.id} className="group hover:shadow-xl transition-all duration-300 bg-white/90 backdrop-blur-sm border-gray-200 shadow-lg">
               <CardHeader className="pb-4">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center space-x-3">
-                    {company.realCompany.logo ? (
+                    {company.logo ? (
                       <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-100 flex items-center justify-center">
                         <img 
-                          src={company.realCompany.logo} 
-                          alt={`${company.realCompany.name} logo`}
+                          src={company.logo} 
+                          alt={`${company.name} logo`}
                           className="w-full h-full object-cover"
                           onError={(e) => {
                             e.currentTarget.style.display = 'none';
@@ -181,11 +177,11 @@ export default function Companies() {
                     )}
                     <div>
                       <CardTitle className="text-lg group-hover:text-orange-600 transition-colors text-gray-900">
-                        {company.realCompany.name}
+                        {company.name}
                       </CardTitle>
                       <CardDescription className="flex items-center mt-1 text-gray-600">
                         <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full border border-orange-200">
-                          {company.realCompany.industry}
+                          {company.industry}
                         </span>
                       </CardDescription>
                     </div>
@@ -196,43 +192,43 @@ export default function Companies() {
               <CardContent className="space-y-4">
                 {/* Company Description */}
                 <p className="text-sm text-gray-600 line-clamp-3">
-                  {company.realCompany.description}
+                  {company.description}
                 </p>
 
                 {/* Company Details */}
                 <div className="space-y-2">
-                  {company.realCompany.headquarters && (
+                  {company.headquarters && (
                     <div className="flex items-center text-sm text-gray-600">
                       <MapPin className="h-4 w-4 mr-2 text-orange-500" />
-                      {company.realCompany.headquarters}
+                      {company.headquarters}
                     </div>
                   )}
 
-                  {company.realCompany.ceo && (
+                  {company.ceo && (
                     <div className="flex items-center text-sm text-gray-600">
                       <User className="h-4 w-4 mr-2 text-orange-500" />
-                      CEO: {company.realCompany.ceo}
+                      CEO: {company.ceo}
                     </div>
                   )}
 
-                  {company.realCompany.founded && (
+                  {company.founded && (
                     <div className="flex items-center text-sm text-gray-600">
                       <Calendar className="h-4 w-4 mr-2 text-orange-500" />
-                      Founded {company.realCompany.founded}
+                      Founded: {company.founded}
                     </div>
                   )}
 
-                  {company.realCompany.employees && (
+                  {company.employees && (
                     <div className="flex items-center text-sm text-gray-600">
                       <Users className="h-4 w-4 mr-2 text-orange-500" />
-                      {company.realCompany.employees.toLocaleString()} employees
+                      {company.employees.toLocaleString()} employees
                     </div>
                   )}
 
-                  {company.realCompany.revenue && (
+                  {company.revenue && (
                     <div className="flex items-center text-sm text-gray-600">
                       <DollarSign className="h-4 w-4 mr-2 text-orange-500" />
-                      Revenue: {company.realCompany.revenue}
+                      Revenue: {company.revenue}
                     </div>
                   )}
                 </div>
@@ -241,10 +237,10 @@ export default function Companies() {
                 <div className="pt-4 border-t border-gray-200">
                   <div className="flex items-center justify-between">
                     <div className="flex space-x-2">
-                      {company.realCompany.website && (
+                      {company.website && (
                         <Button variant="outline" size="sm" asChild className="border-gray-300 text-gray-600 hover:bg-gray-50">
                           <a 
-                            href={company.realCompany.website} 
+                            href={company.website} 
                             target="_blank" 
                             rel="noopener noreferrer"
                             className="flex items-center"
@@ -256,9 +252,9 @@ export default function Companies() {
                         </Button>
                       )}
 
-                      {company.realCompany.email && (
+                      {company.email && (
                         <Button variant="outline" size="sm" asChild className="border-gray-300 text-gray-600 hover:bg-gray-50">
-                          <a href={`mailto:${company.realCompany.email}`} className="flex items-center">
+                          <a href={`mailto:${company.email}`} className="flex items-center">
                             <Mail className="h-3 w-3 mr-1" />
                             Email
                           </a>
