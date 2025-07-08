@@ -609,8 +609,19 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPortById(id: number): Promise<Port | undefined> {
-    const [port] = await db.select().from(ports).where(eq(ports.id, id));
-    return port || undefined;
+    // Validate the ID is a valid number
+    if (!id || isNaN(id) || id <= 0) {
+      console.error(`Invalid port ID provided: ${id}`);
+      return undefined;
+    }
+    
+    try {
+      const [port] = await db.select().from(ports).where(eq(ports.id, id));
+      return port || undefined;
+    } catch (error) {
+      console.error(`Error fetching port with ID ${id}:`, error);
+      return undefined;
+    }
   }
 
   async getPortsByRegion(region: string): Promise<Port[]> {

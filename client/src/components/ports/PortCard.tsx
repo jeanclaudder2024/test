@@ -80,23 +80,58 @@ export default function PortCard({ port, vessels, isLoading = false }: PortCardP
             <div className="flex items-center justify-between mb-2">
               <h4 className="text-sm font-medium flex items-center">
                 <Ship className="h-4 w-4 mr-1.5 text-primary/70" />
-                Nearby Vessels
+                Connected Vessels
               </h4>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-8 px-2 text-xs"
-                onClick={() => setIsExpanded(!isExpanded)}
-              >
-                {isExpanded ? 
-                  <ChevronUp className="h-4 w-4 mr-1" /> : 
-                  <ChevronDown className="h-4 w-4 mr-1" />
-                }
-                {isExpanded ? 'Show Less' : 'Show More'}
-              </Button>
+              <Badge variant="secondary" className="text-xs">
+                {(port as any).vesselCount || vessels.length}
+              </Badge>
             </div>
             <div className="space-y-1">
-              {sortedVessels.length > 0 ? (
+              {/* Show connected vessels from port data if available */}
+              {(port as any).connectedVessels?.length > 0 ? (
+                <>
+                  {(port as any).connectedVessels
+                    .slice(0, isExpanded ? (port as any).connectedVessels.length : 3)
+                    .map((vessel: any) => (
+                    <div 
+                      key={vessel.id} 
+                      className="flex items-center justify-between p-1.5 rounded-md hover:bg-muted/40 text-sm"
+                    >
+                      <div className="flex items-center">
+                        <div 
+                          className={`h-2 w-2 rounded-full mr-2 ${
+                            vessel.connectionType === 'Departing' ? 'bg-red-500' : 
+                            vessel.connectionType === 'Arriving' ? 'bg-green-500' : 
+                            'bg-blue-500'
+                          }`} 
+                        />
+                        <span className="font-medium truncate max-w-[120px]" title={vessel.name}>
+                          {vessel.name}
+                        </span>
+                      </div>
+                      <div className="flex items-center text-xs text-muted-foreground">
+                        <span>{vessel.connectionType}</span>
+                      </div>
+                    </div>
+                    ))}
+                  {(port as any).connectedVessels.length > 3 && (
+                    <div className="text-center pt-2">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-6 px-2 text-xs"
+                        onClick={() => setIsExpanded(!isExpanded)}
+                      >
+                        {isExpanded ? 
+                          <><ChevronUp className="h-3 w-3 mr-1" /> Show Less</> : 
+                          <><ChevronDown className="h-3 w-3 mr-1" /> Show More ({(port as any).connectedVessels.length - 3})</>
+                        }
+                      </Button>
+                    </div>
+                  )}
+                </>
+              ) : sortedVessels.length > 0 ? (
+                /* Fallback to original vessel format */
                 sortedVessels
                   .slice(0, isExpanded ? sortedVessels.length : 3)
                   .map(({ vessels: vessel, distance }) => (
@@ -123,7 +158,7 @@ export default function PortCard({ port, vessels, isLoading = false }: PortCardP
                   ))
               ) : (
                 <div className="text-center py-3 text-sm text-muted-foreground">
-                  No vessels currently near this port
+                  No vessels currently connected
                 </div>
               )}
             </div>

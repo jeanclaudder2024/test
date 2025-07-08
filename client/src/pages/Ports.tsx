@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useLocation, Link as WouterLink } from 'wouter';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -151,18 +151,106 @@ export default function Ports() {
     setCurrentPage(1);
   }, [selectedRegion, searchTerm]);
   
-  // Fetch ports data using React Query (same as admin panel)
+  // Fetch ports data
   const { 
-    data: allPorts = [], 
-    isLoading, 
-    isError,
-    error,
-    refetch
+    data: portsData = [], 
+    isLoading: isPortsLoading, 
+    isError: isPortsError,
+    error: portsError,
+    refetch: refetchPorts
   } = useQuery({
-    queryKey: ['/api/admin/ports'],
-    staleTime: 2 * 60 * 1000, // 2 minutes
-    refetchInterval: 5 * 60 * 1000, // 5 minutes
+    queryKey: ['/api/admin/ports'], // Use admin endpoint for consistent data
+    staleTime: 0, // Always fresh data
   });
+
+  // Fetch vessels data for connections
+  const { 
+    data: vesselsData = [], 
+    isLoading: isVesselsLoading,
+  } = useQuery({
+    queryKey: ['/api/vessels'],
+    staleTime: 0, // Always fresh data
+  });
+
+  // Process ports with vessel connections
+  const allPorts = useMemo(() => {
+    if (!portsData || !vesselsData) return [];
+    
+    return portsData.map((port: Port) => {
+      // Find vessels connected to this port
+      const departingVessels = vesselsData.filter((vessel: any) => {
+        try {
+          return vessel.departurePort && Number(vessel.departurePort) === port.id;
+        } catch (e) {
+          return false;
+        }
+      });
+      
+      const arrivingVessels = vesselsData.filter((vessel: any) => {
+        try {
+          return vessel.destinationPort && Number(vessel.destinationPort) === port.id;
+        } catch (e) {
+          return false;
+        }
+      });
+
+      // Create combined vessel connections (avoiding duplicates)
+      const allConnectedVessels: any[] = [];
+      
+      // Add departing vessels
+      departingVessels.forEach((vessel: any) => {
+        allConnectedVessels.push({
+          id: vessel.id,
+          name: vessel.name || 'Unknown Vessel',
+          type: vessel.vesselType || 'Unknown',
+          imo: vessel.imo || 'N/A',
+          connectionType: 'Departing',
+          distance: 0
+        });
+      });
+
+      // Add arriving vessels (avoiding duplicates)
+      arrivingVessels.forEach((vessel: any) => {
+        if (!allConnectedVessels.find(v => v.id === vessel.id)) {
+          allConnectedVessels.push({
+            id: vessel.id,
+            name: vessel.name || 'Unknown Vessel',
+            type: vessel.vesselType || 'Unknown',
+            imo: vessel.imo || 'N/A',
+            connectionType: 'Arriving',
+            distance: 0
+          });
+        }
+      });
+
+      return {
+        ...port,
+        vesselCount: allConnectedVessels.length,
+        connectedRefineries: 0, // Calculate if needed
+        totalCargo: 0, // Calculate if needed
+        sampleVessel: allConnectedVessels.length > 0 ? {
+          name: allConnectedVessels[0].name,
+          type: allConnectedVessels[0].type,
+          flag: 'Unknown'
+        } : null,
+        // For backwards compatibility with PortCard
+        nearbyVessels: allConnectedVessels.map(vessel => ({
+          vessels: {
+            name: vessel.name,
+            type: vessel.type,
+            imo: vessel.imo,
+            connectionType: vessel.connectionType
+          },
+          distance: vessel.distance || 0
+        }))
+      } as PortWithVesselCount;
+    });
+  }, [portsData, vesselsData]);
+
+  const isLoading = isPortsLoading || isVesselsLoading;
+  const isError = isPortsError;
+  const error = portsError;
+  const refetch = refetchPorts;
 
   // Apply region filtering client-side
   const regionFilteredPorts = selectedRegion === 'all' 

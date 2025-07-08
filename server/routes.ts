@@ -3009,7 +3009,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Individual port details with vessels
   app.get("/api/ports/:id", async (req: Request, res: Response) => {
     try {
-      const portId = parseInt(req.params.id);
+      // Validate port ID parameter
+      const portIdParam = req.params.id;
+      console.log(`Port detail request received with ID: "${portIdParam}"`);
+      
+      if (!portIdParam || portIdParam === 'undefined' || portIdParam === 'null') {
+        console.log(`Rejecting invalid port ID parameter: ${portIdParam}`);
+        return res.status(400).json({ error: 'Invalid port ID parameter' });
+      }
+      
+      const portId = parseInt(portIdParam);
+      if (isNaN(portId)) {
+        console.log(`Rejecting non-numeric port ID: ${portIdParam} -> ${portId}`);
+        return res.status(400).json({ error: 'Port ID must be a valid number' });
+      }
+      
+      console.log(`Fetching port with valid ID: ${portId}`);
       const port = await storage.getPortById(portId);
       
       if (!port) {
@@ -3050,12 +3065,130 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get ports with connected vessels for port directory (MUST come before /ports/:id route)
+  apiRouter.get("/ports/with-vessels", async (req, res) => {
+    try {
+      console.log("Ports with vessels endpoint accessed");
+      
+      // Fetch ports and vessel data with error handling
+      let allPorts = [];
+      let allVessels = [];
+      
+      try {
+        allPorts = await db.select().from(portsTable);
+        console.log(`Fetched ${allPorts.length} ports from database`);
+      } catch (error) {
+        console.error("Error fetching ports:", error);
+        return res.status(500).json({ message: "Failed to fetch ports data" });
+      }
+      
+      try {
+        allVessels = await db.select().from(vesselsTable);
+        console.log(`Fetched ${allVessels.length} vessels from database`);
+      } catch (error) {
+        console.error("Error fetching vessels:", error);
+        return res.status(500).json({ message: "Failed to fetch vessels data" });
+      }
+
+      // Create port data with vessel information
+      const portsWithVessels = allPorts.map(port => {
+        // Find vessels connected via port ID matching (safer approach)
+        const departingVessels = allVessels.filter(vessel => {
+          try {
+            const portId = vessel.departurePort;
+            return portId && Number(portId) === port.id;
+          } catch (e) {
+            return false;
+          }
+        });
+        
+        const arrivingVessels = allVessels.filter(vessel => {
+          try {
+            const portId = vessel.destinationPort;
+            return portId && Number(portId) === port.id;
+          } catch (e) {
+            return false;
+          }
+        });
+
+        // Combine all connections (avoiding duplicates)
+        const allConnectedVessels = [];
+        
+        // Add departing vessels
+        departingVessels.forEach(vessel => {
+          allConnectedVessels.push({
+            id: vessel.id,
+            name: vessel.name || 'Unknown Vessel',
+            type: vessel.vesselType || 'Unknown',
+            imo: vessel.imo || 'N/A',
+            connectionType: 'Departing',
+            distance: 0
+          });
+        });
+
+        // Add arriving vessels (avoiding duplicates)
+        arrivingVessels.forEach(vessel => {
+          if (!allConnectedVessels.find(v => v.id === vessel.id)) {
+            allConnectedVessels.push({
+              id: vessel.id,
+              name: vessel.name || 'Unknown Vessel',
+              type: vessel.vesselType || 'Unknown',
+              imo: vessel.imo || 'N/A',
+              connectionType: 'Arriving',
+              distance: 0
+            });
+          }
+        });
+
+        return {
+          ...port,
+          vesselCount: allConnectedVessels.length,
+          connectedVessels: allConnectedVessels.slice(0, 5), // Limit to 5 vessels for UI
+          departingCount: departingVessels.length,
+          arrivingCount: arrivingVessels.length,
+          nearbyCount: 0,
+          // For backwards compatibility with PortCard
+          nearbyVessels: allConnectedVessels.map(vessel => ({
+            vessels: {
+              name: vessel.name,
+              type: vessel.type,
+              imo: vessel.imo,
+              connectionType: vessel.connectionType
+            },
+            distance: vessel.distance || 0
+          }))
+        };
+      });
+
+      console.log(`Returning ${portsWithVessels.length} ports with vessel connections`);
+      res.json(portsWithVessels);
+    } catch (error) {
+      console.error("Error fetching ports with vessels:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch ports with vessel data",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   apiRouter.get("/ports/:id", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
-      if (isNaN(id)) {
-        return res.status(400).json({ message: "Invalid port ID" });
+      // Validate port ID parameter first
+      const portIdParam = req.params.id;
+      console.log(`API Router: Port detail request received with ID: "${portIdParam}"`);
+      
+      if (!portIdParam || portIdParam === 'undefined' || portIdParam === 'null') {
+        console.log(`API Router: Rejecting invalid port ID parameter: ${portIdParam}`);
+        return res.status(400).json({ message: 'Invalid port ID parameter' });
       }
+      
+      const id = parseInt(portIdParam);
+      if (isNaN(id)) {
+        console.log(`API Router: Rejecting non-numeric port ID: ${portIdParam} -> ${id}`);
+        return res.status(400).json({ message: "Port ID must be a valid number" });
+      }
+      
+      console.log(`API Router: Fetching port with valid ID: ${id}`);
       
       // Try to find port in MyShipTracking API data first
       if (marineTrafficService.isConfigured()) {
