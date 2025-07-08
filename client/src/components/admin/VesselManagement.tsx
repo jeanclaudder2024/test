@@ -229,9 +229,10 @@ export default function VesselManagement() {
   const queryClient = useQueryClient();
 
   // Fetch vessels
-  const { data: vessels, isLoading } = useQuery({
+  const { data: vessels, isLoading, refetch } = useQuery({
     queryKey: ["/api/admin/vessels"],
     staleTime: 0, // Always fetch fresh data
+    refetchInterval: 0, // Disable automatic refetch
     queryFn: async () => {
       const response = await fetch("/api/admin/vessels", {
         headers: {
@@ -374,12 +375,24 @@ export default function VesselManagement() {
       return response.json();
     },
     onSuccess: () => {
+      // Force immediate refresh of vessel data
       queryClient.invalidateQueries({ queryKey: ["/api/admin/vessels"] });
       queryClient.refetchQueries({ queryKey: ["/api/admin/vessels"] });
+      
+      // Reset form and close dialog
       setIsDialogOpen(false);
       setFormData(defaultFormData);
       setEditingVessel(null);
-      toast({ title: "Success", description: "Vessel created successfully" });
+      
+      toast({ 
+        title: "Success", 
+        description: "Vessel created successfully - refreshing list..." 
+      });
+      
+      // Force a second refresh after a short delay to ensure data appears
+      setTimeout(() => {
+        queryClient.refetchQueries({ queryKey: ["/api/admin/vessels"] });
+      }, 1000);
     },
     onError: (error) => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -886,6 +899,16 @@ export default function VesselManagement() {
           <p className="text-gray-600 mt-1">Comprehensive vessel tracking and management system</p>
         </div>
         <div className="flex gap-2">
+          <Button 
+            onClick={() => refetch()}
+            disabled={isLoading}
+            variant="outline"
+            className="bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            {isLoading ? "Loading..." : "Refresh List"}
+          </Button>
+          
           <Button 
             onClick={() => updateVesselDealsMutation.mutate()}
             disabled={updateVesselDealsMutation.isPending}
