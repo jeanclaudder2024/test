@@ -233,7 +233,11 @@ export default function VesselManagement() {
     queryKey: ["/api/admin/vessels"],
     staleTime: 0, // Always fetch fresh data
     queryFn: async () => {
-      const response = await fetch("/api/admin/vessels");
+      const response = await fetch("/api/admin/vessels", {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      });
       if (!response.ok) throw new Error("Failed to fetch vessels");
       return response.json();
     }
@@ -241,9 +245,14 @@ export default function VesselManagement() {
 
   // Fetch refineries for connection options
   const { data: refineries } = useQuery({
-    queryKey: ["/api/refineries"],
+    queryKey: ["/api/admin/refineries"],
+    staleTime: 0,
     queryFn: async () => {
-      const response = await fetch("/api/refineries");
+      const response = await fetch("/api/admin/refineries", {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      });
       if (!response.ok) throw new Error("Failed to fetch refineries");
       return response.json();
     }
@@ -251,9 +260,10 @@ export default function VesselManagement() {
 
   // Fetch ports for departure and destination options
   const { data: ports } = useQuery({
-    queryKey: ["/api/ports"],
+    queryKey: ["/api/admin/ports"],
+    staleTime: 0,
     queryFn: async () => {
-      const response = await fetch("/api/ports");
+      const response = await fetch("/api/admin/ports");
       if (!response.ok) throw new Error("Failed to fetch ports");
       return response.json();
     }
@@ -261,10 +271,14 @@ export default function VesselManagement() {
 
   // Fetch oil types for dynamic vessel type filtering
   const { data: oilTypes } = useQuery({
-    queryKey: ["/api/oil-types"],
+    queryKey: ["/api/admin/oil-types"],
     staleTime: 0,
     queryFn: async () => {
-      const response = await fetch("/api/oil-types");
+      const response = await fetch("/api/admin/oil-types", {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      });
       if (!response.ok) throw new Error("Failed to fetch oil types");
       return response.json();
     }
@@ -336,7 +350,10 @@ export default function VesselManagement() {
 
       const response = await fetch("/api/admin/vessels", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        },
         body: JSON.stringify(processedData)
       });
       if (!response.ok) {
@@ -425,7 +442,10 @@ export default function VesselManagement() {
 
       const response = await fetch(`/api/admin/vessels/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        },
         body: JSON.stringify(processedData)
       });
       if (!response.ok) {
@@ -451,7 +471,10 @@ export default function VesselManagement() {
   const deleteVesselMutation = useMutation({
     mutationFn: async (id: number) => {
       const response = await fetch(`/api/admin/vessels/${id}`, {
-        method: "DELETE"
+        method: "DELETE",
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
       });
       if (!response.ok) throw new Error("Failed to delete vessel");
       return response.json();
@@ -469,7 +492,10 @@ export default function VesselManagement() {
   const updateVesselDealsMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch("/api/admin/update-vessel-deals", {
-        method: "POST"
+        method: "POST",
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
       });
       if (!response.ok) {
         const error = await response.json();
@@ -497,7 +523,10 @@ export default function VesselManagement() {
   const generateAIDataMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch("/api/admin/vessels/generate-ai", {
-        method: "POST"
+        method: "POST",
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
       });
       if (!response.ok) {
         const error = await response.json();
