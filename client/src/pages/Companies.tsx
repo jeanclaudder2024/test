@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
+
 import { 
   Building2, 
   MapPin, 
@@ -17,8 +17,7 @@ import {
   User,
   Search,
   ExternalLink,
-  Factory,
-  Handshake
+  Factory
 } from 'lucide-react';
 
 interface CompanyWithRealData {
@@ -44,7 +43,6 @@ interface CompanyWithRealData {
 
 export default function Companies() {
   const [searchTerm, setSearchTerm] = useState('');
-  const { toast } = useToast();
 
   // Fetch fake companies with real company data
   const { data: response, isLoading } = useQuery({
@@ -60,12 +58,7 @@ export default function Companies() {
     company.realCompany.headquarters?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleRequestDeal = (companyName: string) => {
-    toast({
-      title: "Deal Request Initiated",
-      description: `Your deal request with ${companyName} has been submitted. We'll contact you soon.`,
-    });
-  };
+
 
   if (isLoading) {
     return (
@@ -275,16 +268,7 @@ export default function Companies() {
                   </div>
                 </div>
 
-                {/* Request Deal Button */}
-                <div className="pt-4">
-                  <Button 
-                    className="w-full bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white"
-                    onClick={() => handleRequestDeal(company.realCompany.name)}
-                  >
-                    <Handshake className="h-4 w-4 mr-2" />
-                    Request Deal
-                  </Button>
-                </div>
+
               </CardContent>
             </Card>
           ))}
