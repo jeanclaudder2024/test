@@ -75,7 +75,8 @@ const CATEGORY_CONFIG = {
   commercial: { label: 'Commercial Analysis', icon: Building, color: 'bg-green-100 text-green-800' },
   inspection: { label: 'Inspection Report', icon: Shield, color: 'bg-orange-100 text-orange-800' },
   cargo: { label: 'Cargo Manifest', icon: Ship, color: 'bg-purple-100 text-purple-800' },
-  compliance: { label: 'Compliance Document', icon: FileText, color: 'bg-red-100 text-red-800' }
+  compliance: { label: 'Compliance Document', icon: FileText, color: 'bg-red-100 text-red-800' },
+  general: { label: 'General Document', icon: FileText, color: 'bg-slate-100 text-slate-800' }
 };
 
 export default function DocumentManagement() {

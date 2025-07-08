@@ -6390,12 +6390,23 @@ IMPORTANT: Generate a complete professional maritime document with the following
         return res.status(400).json({ message: "Missing required fields" });
       }
 
+      // Map unsupported categories to supported ones temporarily
+      const categoryMapping = {
+        'compliance': 'general',
+        'safety': 'general',
+        'environmental': 'general',
+        'crew': 'general',
+        'insurance': 'general'
+      };
+      
+      const mappedCategory = categoryMapping[category] || category;
+
       // Update the template
       const updatedTemplate = await storage.updateDocumentTemplate(templateId, {
         name: title,
         description: prompt, // Store the prompt as description for AI processing
         prompt: prompt, // Store prompt in prompt field
-        category: category,
+        category: mappedCategory, // Use mapped category
         isActive: isActive !== undefined ? isActive : true,
         updatedAt: new Date()
       });
