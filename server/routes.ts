@@ -6359,7 +6359,7 @@ IMPORTANT: Generate a complete professional maritime document with the following
 
       const template = await storage.createArticleTemplate({
         title: title,
-        description: prompt, // Use prompt as description since that's what contains the AI instructions
+        description: description, // Use actual description from form
         category: mappedCategory, // Use mapped category
         createdBy: req.user!.id
       });
@@ -6414,12 +6414,12 @@ IMPORTANT: Generate a complete professional maritime document with the following
       
       const mappedCategory = categoryMapping[category] || category;
       
-      console.log(`Category mapping: ${category} -> ${mappedCategory}`);
+
 
       // Update the template
       const updatedTemplate = await storage.updateDocumentTemplate(templateId, {
         name: title,
-        description: prompt, // Store the prompt as description for AI processing
+        description: description, // Store the actual description from form
         prompt: prompt, // Store prompt in prompt field
         category: mappedCategory, // Use mapped category
         isActive: isActive !== undefined ? isActive : true,
