@@ -602,7 +602,7 @@ export function CompanyManagement() {
 
       {/* Create Company Dialog */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create Company</DialogTitle>
             <DialogDescription>
@@ -857,7 +857,7 @@ export function CompanyManagement() {
 
       {/* Edit Real Company Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Real Company</DialogTitle>
             <DialogDescription>
@@ -1018,7 +1018,7 @@ export function CompanyManagement() {
 
       {/* Edit Fake Company Dialog */}
       <Dialog open={editFakeDialogOpen} onOpenChange={setEditFakeDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Fake Company</DialogTitle>
             <DialogDescription>
