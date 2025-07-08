@@ -38,7 +38,7 @@ import {
 const articleTemplateSchema = z.object({
   title: z.string().min(1, 'Title is required').max(200, 'Title too long'),
   description: z.string().min(1, 'Description is required').max(500, 'Description too long'),
-  category: z.enum(['technical', 'commercial', 'inspection', 'cargo', 'compliance']),
+  category: z.enum(['technical', 'commercial', 'inspection', 'cargo', 'compliance', 'general']),
   prompt: z.string().min(50, 'Prompt must be at least 50 characters').max(2000, 'Prompt too long'),
   isActive: z.boolean().default(true)
 });
