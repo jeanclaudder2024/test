@@ -224,7 +224,7 @@ export default function RefineryDetailView({ refinery, onClose }: RefineryDetail
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent mb-2">
-                ADVANCED REFINERY COMMAND CENTER v2.0
+                Refinery Detail
               </h1>
               <p className="text-gray-700 text-lg font-medium">{refinery.name} • {refinery.country}</p>
               <p className="text-gray-600 text-sm">
