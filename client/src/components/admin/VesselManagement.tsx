@@ -231,6 +231,7 @@ export default function VesselManagement() {
   // Fetch vessels
   const { data: vessels, isLoading } = useQuery({
     queryKey: ["/api/admin/vessels"],
+    staleTime: 0, // Always fetch fresh data
     queryFn: async () => {
       const response = await fetch("/api/admin/vessels");
       if (!response.ok) throw new Error("Failed to fetch vessels");
@@ -335,6 +336,7 @@ export default function VesselManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/vessels"] });
+      queryClient.refetchQueries({ queryKey: ["/api/admin/vessels"] });
       setIsDialogOpen(false);
       setFormData(defaultFormData);
       setEditingVessel(null);
@@ -423,6 +425,7 @@ export default function VesselManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/vessels"] });
+      queryClient.refetchQueries({ queryKey: ["/api/admin/vessels"] });
       setIsDialogOpen(false);
       setFormData(defaultFormData);
       setEditingVessel(null);
@@ -647,6 +650,7 @@ export default function VesselManagement() {
 
   const handleEdit = (vessel: Vessel) => {
     setEditingVessel(vessel);
+    setIsDialogOpen(true); // Open the dialog
     setFormData({
       name: vessel.name || "",
       imo: vessel.imo || "",
