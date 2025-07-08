@@ -84,34 +84,35 @@ interface RefineryDetailViewProps {
 export default function RefineryDetailView({ refinery, onClose }: RefineryDetailViewProps) {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [realTimeData, setRealTimeData] = useState({
-    production: Math.floor(Math.random() * 20) + 80,
-    temperature: Math.floor(Math.random() * 50) + 150,
-    pressure: Math.floor(Math.random() * 30) + 70,
-    efficiency: Math.floor(Math.random() * 15) + 85,
-    safety: Math.floor(Math.random() * 10) + 90,
-    alerts: Math.floor(Math.random() * 5),
-    vessels: Math.floor(Math.random() * 8) + 3,
-    throughput: Math.floor(Math.random() * 500) + 1500
+    production: Math.floor(Math.random() * 8) + 87,  // 87-95% - more stable industrial range
+    temperature: Math.floor(Math.random() * 15) + 155,  // 155-170°C - realistic process temperature
+    pressure: Math.floor(Math.random() * 10) + 72,  // 72-82 PSI - stable pressure range
+    efficiency: Math.floor(Math.random() * 6) + 90,  // 90-96% - high efficiency range
+    safety: Math.floor(Math.random() * 4) + 95,  // 95-99% - excellent safety standards
+    alerts: Math.floor(Math.random() * 2),  // 0-1 alerts - minimal issues
+    vessels: Math.floor(Math.random() * 3) + 4,  // 4-6 vessels - realistic port traffic
+    throughput: Math.floor(Math.random() * 200) + 1700  // 1700-1900 - steady throughput
   });
 
-  // Simulate real-time updates
+  // Simulate real-time updates with daily changes
   useEffect(() => {
     const timeInterval = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
 
+    // Update data once per day (24 hours = 86400000 ms) with very small realistic changes
     const dataInterval = setInterval(() => {
       setRealTimeData(prev => ({
-        production: Math.max(50, Math.min(100, prev.production + (Math.random() - 0.5) * 5)),
-        temperature: Math.max(120, Math.min(200, prev.temperature + (Math.random() - 0.5) * 10)),
-        pressure: Math.max(50, Math.min(100, prev.pressure + (Math.random() - 0.5) * 8)),
-        efficiency: Math.max(70, Math.min(100, prev.efficiency + (Math.random() - 0.5) * 3)),
-        safety: Math.max(80, Math.min(100, prev.safety + (Math.random() - 0.5) * 2)),
-        alerts: Math.max(0, Math.min(10, Math.floor(prev.alerts + (Math.random() - 0.7) * 2))),
-        vessels: Math.max(1, Math.min(15, Math.floor(prev.vessels + (Math.random() - 0.5) * 2))),
-        throughput: Math.max(1000, Math.min(3000, prev.throughput + (Math.random() - 0.5) * 100))
+        production: Math.max(75, Math.min(95, prev.production + (Math.random() - 0.5) * 1.5)),
+        temperature: Math.max(145, Math.min(175, prev.temperature + (Math.random() - 0.5) * 2)),
+        pressure: Math.max(65, Math.min(85, prev.pressure + (Math.random() - 0.5) * 1)),
+        efficiency: Math.max(82, Math.min(98, prev.efficiency + (Math.random() - 0.5) * 0.8)),
+        safety: Math.max(88, Math.min(100, prev.safety + (Math.random() - 0.5) * 0.5)),
+        alerts: Math.max(0, Math.min(3, Math.floor(prev.alerts + (Math.random() - 0.8) * 1))),
+        vessels: Math.max(2, Math.min(8, Math.floor(prev.vessels + (Math.random() - 0.5) * 0.5))),
+        throughput: Math.max(1400, Math.min(2200, prev.throughput + (Math.random() - 0.5) * 25))
       }));
-    }, 3000);
+    }, 86400000); // 24 hours in milliseconds
 
     return () => {
       clearInterval(timeInterval);
