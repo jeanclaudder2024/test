@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLocation } from 'wouter';
 import PortMiniMap from '@/components/map/PortMiniMap';
-import { Anchor, Ship, MapPin, Building2, ArrowRight, ChevronDown, ChevronUp, Info } from 'lucide-react';
+import { Anchor, Ship, MapPin, Building2, ArrowRight, ChevronDown, ChevronUp, Info, ExternalLink } from 'lucide-react';
 
 interface PortCardProps {
   port: Port;
@@ -118,9 +118,9 @@ export default function PortCard({ port, vessels, isLoading = false }: PortCardP
                           size="sm"
                           className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity bg-primary/10 hover:bg-primary/20 text-primary"
                           onClick={() => navigate(`/vessels/${vessel.id}`)}
-                          title="View vessel details"
+                          title="Go to vessel details"
                         >
-                          <Info className="h-3 w-3" />
+                          <ExternalLink className="h-3 w-3" />
                         </Button>
                       </div>
                     </div>
@@ -171,9 +171,9 @@ export default function PortCard({ port, vessels, isLoading = false }: PortCardP
                           size="sm"
                           className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity bg-primary/10 hover:bg-primary/20 text-primary"
                           onClick={() => navigate(`/vessels/${vessel.id}`)}
-                          title="View vessel details"
+                          title="Go to vessel details"
                         >
-                          <Info className="h-3 w-3" />
+                          <ExternalLink className="h-3 w-3" />
                         </Button>
                       </div>
                     </div>
