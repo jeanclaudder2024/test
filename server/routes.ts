@@ -2703,8 +2703,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Text/String fields
       if (vesselData.currentLat !== undefined) cleanedData.currentLat = vesselData.currentLat;
       if (vesselData.currentLng !== undefined) cleanedData.currentLng = vesselData.currentLng;
-      if (vesselData.departurePort !== undefined) cleanedData.departurePort = vesselData.departurePort ? vesselData.departurePort.toString().trim() : null;
-      if (vesselData.destinationPort !== undefined) cleanedData.destinationPort = vesselData.destinationPort ? vesselData.destinationPort.toString().trim() : null;
+      
+      // Port fields - expect INTEGER port IDs but handle both ID and name inputs
+      if (vesselData.departurePort !== undefined) {
+        if (vesselData.departurePort) {
+          const portValue = vesselData.departurePort.toString().trim();
+          // If it's a numeric ID, use it directly. If it's a port name, convert to null for now
+          cleanedData.departurePort = isNaN(parseInt(portValue)) ? null : parseInt(portValue);
+        } else {
+          cleanedData.departurePort = null;
+        }
+      }
+      if (vesselData.destinationPort !== undefined) {
+        if (vesselData.destinationPort) {
+          const portValue = vesselData.destinationPort.toString().trim();
+          // If it's a numeric ID, use it directly. If it's a port name, convert to null for now
+          cleanedData.destinationPort = isNaN(parseInt(portValue)) ? null : parseInt(portValue);
+        } else {
+          cleanedData.destinationPort = null;
+        }
+      }
       if (vesselData.cargoType !== undefined) cleanedData.cargoType = vesselData.cargoType ? vesselData.cargoType.toString().trim() : null;
       if (vesselData.currentRegion !== undefined) cleanedData.currentRegion = vesselData.currentRegion;
       if (vesselData.status !== undefined) cleanedData.status = vesselData.status || "underway";

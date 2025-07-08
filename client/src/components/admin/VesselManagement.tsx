@@ -283,11 +283,11 @@ export default function VesselManagement() {
         deadweight: vesselData.deadweight ? (isNaN(parseInt(vesselData.deadweight)) ? null : parseInt(vesselData.deadweight)) : null,
         currentLat: vesselData.currentLat || null,
         currentLng: vesselData.currentLng || null,
-        departurePort: vesselData.departurePort?.trim() || null,
+        departurePort: vesselData.departurePort ? parseInt(vesselData.departurePort) : null,
         departureDate: vesselData.departureDate ? new Date(vesselData.departureDate).toISOString() : null,
         departureLat: vesselData.departureLat || null,
         departureLng: vesselData.departureLng || null,
-        destinationPort: vesselData.destinationPort?.trim() || null,
+        destinationPort: vesselData.destinationPort ? parseInt(vesselData.destinationPort) : null,
         destinationLat: vesselData.destinationLat || null,
         destinationLng: vesselData.destinationLng || null,
         eta: vesselData.eta ? new Date(vesselData.eta).toISOString() : null,
@@ -372,11 +372,11 @@ export default function VesselManagement() {
         deadweight: data.deadweight ? (isNaN(parseInt(data.deadweight)) ? null : parseInt(data.deadweight)) : null,
         currentLat: data.currentLat || null,
         currentLng: data.currentLng || null,
-        departurePort: data.departurePort?.trim() || null,
+        departurePort: data.departurePort ? parseInt(data.departurePort) : null,
         departureDate: data.departureDate ? new Date(data.departureDate).toISOString() : null,
         departureLat: data.departureLat || null,
         departureLng: data.departureLng || null,
-        destinationPort: data.destinationPort?.trim() || null,
+        destinationPort: data.destinationPort ? parseInt(data.destinationPort) : null,
         destinationLat: data.destinationLat || null,
         destinationLng: data.destinationLng || null,
         eta: data.eta ? new Date(data.eta).toISOString() : null,
@@ -672,11 +672,11 @@ export default function VesselManagement() {
       deadweight: vessel.deadweight?.toString() || "",
       currentLat: vessel.currentLat || "",
       currentLng: vessel.currentLng || "",
-      departurePort: vessel.departurePort || "",
+      departurePort: vessel.departurePort ? vessel.departurePort.toString() : "",
       departureDate: vessel.departureDate ? vessel.departureDate.split('T')[0] : "",
       departureLat: vessel.departureLat || "",
       departureLng: vessel.departureLng || "",
-      destinationPort: vessel.destinationPort || "",
+      destinationPort: vessel.destinationPort ? vessel.destinationPort.toString() : "",
       destinationLat: vessel.destinationLat || "",
       destinationLng: vessel.destinationLng || "",
       eta: vessel.eta ? vessel.eta.split('T')[0] : "",
@@ -1123,7 +1123,7 @@ export default function VesselManagement() {
                           </SelectTrigger>
                           <SelectContent>
                             {ports?.map((port) => (
-                              <SelectItem key={port.id} value={port.name}>
+                              <SelectItem key={port.id} value={port.id.toString()}>
                                 <div className="flex items-center justify-between w-full">
                                   <span>{port.name}</span>
                                   <span className="text-xs text-muted-foreground ml-2">
@@ -1143,7 +1143,7 @@ export default function VesselManagement() {
                           </SelectTrigger>
                           <SelectContent>
                             {ports?.map((port) => (
-                              <SelectItem key={port.id} value={port.name}>
+                              <SelectItem key={port.id} value={port.id.toString()}>
                                 <div className="flex items-center justify-between w-full">
                                   <span>{port.name}</span>
                                   <span className="text-xs text-muted-foreground ml-2">
@@ -1195,7 +1195,7 @@ export default function VesselManagement() {
                             </SelectTrigger>
                             <SelectContent>
                               {ports?.map(port => (
-                                <SelectItem key={port.id} value={port.name}>
+                                <SelectItem key={port.id} value={port.id.toString()}>
                                   {port.name} - {port.country}
                                 </SelectItem>
                               ))}
@@ -1210,7 +1210,7 @@ export default function VesselManagement() {
                             </SelectTrigger>
                             <SelectContent>
                               {ports?.map(port => (
-                                <SelectItem key={port.id} value={port.name}>
+                                <SelectItem key={port.id} value={port.id.toString()}>
                                   {port.name} - {port.country}
                                 </SelectItem>
                               ))}
@@ -1241,7 +1241,7 @@ export default function VesselManagement() {
                             </SelectTrigger>
                             <SelectContent>
                               {ports?.map(port => (
-                                <SelectItem key={port.id} value={port.name}>
+                                <SelectItem key={port.id} value={port.id.toString()}>
                                   {port.name} - {port.country}
                                 </SelectItem>
                               ))}

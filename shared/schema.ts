@@ -171,11 +171,11 @@ export const vessels = pgTable("vessels", {
   deadweight: integer("deadweight"),
   currentLat: decimal("current_lat", { precision: 10, scale: 6 }),
   currentLng: decimal("current_lng", { precision: 10, scale: 6 }),
-  departurePort: text("departure_port"),
+  departurePort: integer("departure_port"),
   departureDate: timestamp("departure_date"),
   departureLat: decimal("departure_lat", { precision: 10, scale: 6 }),
   departureLng: decimal("departure_lng", { precision: 10, scale: 6 }),
-  destinationPort: text("destination_port"), // Will store refinery references in format "REF:id:name"
+  destinationPort: integer("destination_port"), // References ports(id)
   destinationLat: decimal("destination_lat", { precision: 10, scale: 6 }),
   destinationLng: decimal("destination_lng", { precision: 10, scale: 6 }),  
   eta: timestamp("eta"),
