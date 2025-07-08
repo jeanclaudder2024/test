@@ -239,6 +239,7 @@ export function CompanyManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/real-companies'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/fake-companies'] });
       toast({
         title: "Success",
         description: "Real company updated successfully",
