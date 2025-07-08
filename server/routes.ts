@@ -6345,10 +6345,22 @@ IMPORTANT: Generate a complete professional maritime document with the following
         return res.status(400).json({ message: "Missing required fields" });
       }
 
+      // Map unsupported categories to supported ones temporarily
+      const categoryMapping = {
+        'general': 'technical', // Map general to technical since general is not allowed
+        'compliance': 'technical',
+        'safety': 'technical',
+        'environmental': 'technical',
+        'crew': 'technical',
+        'insurance': 'technical'
+      };
+      
+      const mappedCategory = categoryMapping[category] || category;
+
       const template = await storage.createArticleTemplate({
         title: title,
         description: prompt, // Use prompt as description since that's what contains the AI instructions
-        category,
+        category: mappedCategory, // Use mapped category
         createdBy: req.user!.id
       });
       
@@ -6392,11 +6404,12 @@ IMPORTANT: Generate a complete professional maritime document with the following
 
       // Map unsupported categories to supported ones temporarily
       const categoryMapping = {
-        'compliance': 'general',
-        'safety': 'general',
-        'environmental': 'general',
-        'crew': 'general',
-        'insurance': 'general'
+        'general': 'technical', // Map general to technical since general is not allowed
+        'compliance': 'technical',
+        'safety': 'technical',
+        'environmental': 'technical',
+        'crew': 'technical',
+        'insurance': 'technical'
       };
       
       const mappedCategory = categoryMapping[category] || category;
