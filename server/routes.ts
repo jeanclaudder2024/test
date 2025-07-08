@@ -2724,6 +2724,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Add lastUpdated timestamp
       cleanedData.lastUpdated = new Date().toISOString();
 
+      console.log(`Cleaned data that will be sent to database:`, cleanedData);
       const updatedVessel = await storage.updateVessel(id, cleanedData);
       console.log("Updated vessel:", updatedVessel);
       
