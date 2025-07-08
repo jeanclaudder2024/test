@@ -6413,6 +6413,8 @@ IMPORTANT: Generate a complete professional maritime document with the following
       };
       
       const mappedCategory = categoryMapping[category] || category;
+      
+      console.log(`Category mapping: ${category} -> ${mappedCategory}`);
 
       // Update the template
       const updatedTemplate = await storage.updateDocumentTemplate(templateId, {

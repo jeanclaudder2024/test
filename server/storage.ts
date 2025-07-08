@@ -2006,6 +2006,7 @@ export class DatabaseStorage implements IStorage {
 
   async updateDocumentTemplate(id: number, template: Partial<InsertDocumentTemplate>): Promise<DocumentTemplate> {
     try {
+      console.log('Updating template with data:', template);
       const [updatedTemplate] = await db
         .update(documentTemplates)
         .set({ ...template, updatedAt: new Date() })
