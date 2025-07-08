@@ -543,8 +543,8 @@ export default function ProfessionalRefineryManagement() {
       region: refinery.region,
       city: refinery.city || '',
       capacity: refinery.capacity?.toString() || '',
-      latitude: refinery.latitude,
-      longitude: refinery.longitude,
+      latitude: refinery.lat || '',  // Fix: use lat instead of latitude
+      longitude: refinery.lng || '', // Fix: use lng instead of longitude
       type: refinery.type || 'Crude Oil Refinery',
       status: refinery.status || 'Operational',
       description: refinery.description || '',
@@ -558,7 +558,31 @@ export default function ProfessionalRefineryManagement() {
       address: refinery.address || '',
       technical_specs: refinery.technical_specs || '',
       utilization: refinery.utilization?.toString() || '',
-      complexity: refinery.complexity?.toString() || ''
+      complexity: refinery.complexity?.toString() || '',
+      
+      // Enhanced fields - add all the comprehensive fields
+      distillation_capacity: refinery.distillation_capacity || '',
+      conversion_capacity: refinery.conversion_capacity || '',
+      hydrogen_capacity: refinery.hydrogen_capacity || '',
+      sulfur_recovery: refinery.sulfur_recovery || '',
+      processing_units: refinery.processing_units || '',
+      storage_capacity: refinery.storage_capacity || '',
+      investment_cost: refinery.investment_cost || '',
+      operating_costs: refinery.operating_costs || '',
+      revenue: refinery.revenue || '',
+      profit_margin: refinery.profit_margin?.toString() || '',
+      market_share: refinery.market_share?.toString() || '',
+      environmental_certifications: refinery.environmental_certifications || '',
+      safety_record: refinery.safety_record || '',
+      workforce_size: refinery.workforce_size?.toString() || '',
+      annual_throughput: refinery.annual_throughput || '',
+      crude_oil_sources: refinery.crude_oil_sources || '',
+      pipeline_connections: refinery.pipeline_connections || '',
+      shipping_terminals: refinery.shipping_terminals || '',
+      rail_connections: refinery.rail_connections || '',
+      nearest_port: refinery.nearest_port || '',
+      octane_rating: '',
+      diesel_specifications: ''
     });
   };
 
