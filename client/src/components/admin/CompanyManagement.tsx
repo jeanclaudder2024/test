@@ -66,6 +66,8 @@ export function CompanyManagement() {
   const [companyTypeChoice, setCompanyTypeChoice] = useState<'real' | 'fake' | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<RealCompany | null>(null);
+  const [editFakeDialogOpen, setEditFakeDialogOpen] = useState(false);
+  const [selectedFakeCompany, setSelectedFakeCompany] = useState<CompanyWithRelations | null>(null);
   const [selectedRealCompanyForFake, setSelectedRealCompanyForFake] = useState<string>('');
 
   const { toast } = useToast();
@@ -221,6 +223,87 @@ export function CompanyManagement() {
     const realCompanyId = parseInt(selectedRealCompanyForFake);
     if (realCompanyId) {
       createFakeCompanyMutation.mutate(realCompanyId);
+    }
+  };
+
+  // Edit real company mutation
+  const editRealCompanyMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: RealCompanyFormData }) => {
+      return apiRequest(`/api/admin/real-companies/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/real-companies'] });
+      toast({
+        title: "Success",
+        description: "Real company updated successfully",
+      });
+      setEditDialogOpen(false);
+      setSelectedCompany(null);
+      realCompanyForm.reset();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update real company",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Edit fake company mutation
+  const editFakeCompanyMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: { generatedName: string; realCompanyId: number } }) => {
+      return apiRequest(`/api/admin/fake-companies/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/fake-companies'] });
+      toast({
+        title: "Success",
+        description: "Fake company updated successfully",
+      });
+      setEditFakeDialogOpen(false);
+      setSelectedFakeCompany(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update fake company",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleEditRealCompany = (company: RealCompany) => {
+    setSelectedCompany(company);
+    realCompanyForm.reset({
+      name: company.name,
+      industry: company.industry,
+      address: company.address,
+      description: company.description,
+      website: company.website || '',
+      phone: company.phone || '',
+      email: company.email || '',
+      headquarters: company.headquarters || '',
+      ceo: company.ceo || '',
+      revenue: company.revenue || '',
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleEditFakeCompany = (company: CompanyWithRelations) => {
+    setSelectedFakeCompany(company);
+    setEditFakeDialogOpen(true);
+  };
+
+  const handleEditRealCompanySubmit = (data: RealCompanyFormData) => {
+    if (selectedCompany) {
+      editRealCompanyMutation.mutate({ id: selectedCompany.id, data });
     }
   };
 
@@ -407,6 +490,13 @@ export function CompanyManagement() {
                             <Button
                               variant="outline"
                               size="sm"
+                              onClick={() => handleEditRealCompany(company)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
                               onClick={() => deleteRealCompanyMutation.mutate(company.id)}
                             >
                               <Trash2 className="h-4 w-4" />
@@ -470,13 +560,22 @@ export function CompanyManagement() {
                         </span>
                       </TableCell>
                       <TableCell>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => deleteFakeCompanyMutation.mutate(company.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditFakeCompany(company)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => deleteFakeCompanyMutation.mutate(company.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -716,6 +815,229 @@ export function CompanyManagement() {
               </DialogFooter>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Real Company Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Real Company</DialogTitle>
+            <DialogDescription>
+              Update the real company information
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={realCompanyForm.handleSubmit(handleEditRealCompanySubmit)} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-name">Company Name*</Label>
+                <Input
+                  id="edit-name"
+                  {...realCompanyForm.register('name')}
+                  placeholder="Company name"
+                />
+                {realCompanyForm.formState.errors.name && (
+                  <p className="text-sm text-red-600">
+                    {realCompanyForm.formState.errors.name.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-industry">Industry*</Label>
+                <Input
+                  id="edit-industry"
+                  {...realCompanyForm.register('industry')}
+                  placeholder="e.g., Oil, Shipping"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-headquarters">Headquarters</Label>
+                <Input
+                  id="edit-headquarters"
+                  {...realCompanyForm.register('headquarters')}
+                  placeholder="e.g., Houston, TX, USA"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-ceo">CEO</Label>
+                <Input
+                  id="edit-ceo"
+                  {...realCompanyForm.register('ceo')}
+                  placeholder="CEO name"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-revenue">Revenue</Label>
+                <Input
+                  id="edit-revenue"
+                  {...realCompanyForm.register('revenue')}
+                  placeholder="e.g., $100M - $500M"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-website">Website</Label>
+                <Input
+                  id="edit-website"
+                  {...realCompanyForm.register('website')}
+                  placeholder="https://company.com"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-phone">Phone</Label>
+                <Input
+                  id="edit-phone"
+                  {...realCompanyForm.register('phone')}
+                  placeholder="+1 (555) 123-4567"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-email">Email</Label>
+                <Input
+                  id="edit-email"
+                  type="email"
+                  {...realCompanyForm.register('email')}
+                  placeholder="contact@company.com"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-address">Address*</Label>
+              <Input
+                id="edit-address"
+                {...realCompanyForm.register('address')}
+                placeholder="Full company address"
+              />
+              {realCompanyForm.formState.errors.address && (
+                <p className="text-sm text-red-600">
+                  {realCompanyForm.formState.errors.address.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-description">Description*</Label>
+              <Textarea
+                id="edit-description"
+                {...realCompanyForm.register('description')}
+                placeholder="Detailed company description"
+                rows={3}
+              />
+              {realCompanyForm.formState.errors.description && (
+                <p className="text-sm text-red-600">
+                  {realCompanyForm.formState.errors.description.message}
+                </p>
+              )}
+            </div>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setEditDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={editRealCompanyMutation.isPending}
+              >
+                {editRealCompanyMutation.isPending ? 'Updating...' : 'Update Company'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Fake Company Dialog */}
+      <Dialog open={editFakeDialogOpen} onOpenChange={setEditFakeDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Fake Company</DialogTitle>
+            <DialogDescription>
+              Update the fake company name and linked real company
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Generated Name</Label>
+              <Input
+                value={selectedFakeCompany?.generatedName || ''}
+                onChange={(e) => {
+                  if (selectedFakeCompany) {
+                    setSelectedFakeCompany({
+                      ...selectedFakeCompany,
+                      generatedName: e.target.value
+                    });
+                  }
+                }}
+                placeholder="Fake company name"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Linked Real Company</Label>
+              <Select 
+                value={selectedFakeCompany?.realCompanyId?.toString() || ''} 
+                onValueChange={(value) => {
+                  if (selectedFakeCompany) {
+                    const realCompany = realCompanies.find(c => c.id === parseInt(value));
+                    if (realCompany) {
+                      setSelectedFakeCompany({
+                        ...selectedFakeCompany,
+                        realCompanyId: parseInt(value),
+                        realCompany: realCompany
+                      });
+                    }
+                  }
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a real company" />
+                </SelectTrigger>
+                <SelectContent>
+                  {realCompanies.map((company: RealCompany) => (
+                    <SelectItem key={company.id} value={company.id.toString()}>
+                      {company.name} - {company.industry}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setEditFakeDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  if (selectedFakeCompany) {
+                    editFakeCompanyMutation.mutate({
+                      id: selectedFakeCompany.id,
+                      data: {
+                        generatedName: selectedFakeCompany.generatedName,
+                        realCompanyId: selectedFakeCompany.realCompanyId
+                      }
+                    });
+                  }
+                }}
+                disabled={editFakeCompanyMutation.isPending || !selectedFakeCompany}
+              >
+                {editFakeCompanyMutation.isPending ? 'Updating...' : 'Update Company'}
+              </Button>
+            </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

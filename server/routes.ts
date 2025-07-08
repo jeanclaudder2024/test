@@ -7899,6 +7899,35 @@ IMPORTANT: Generate a complete professional maritime document with the following
     }
   });
 
+  // Update real company (admin endpoint)
+  apiRouter.put("/admin/real-companies/:id", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid company ID" });
+      }
+
+      const validatedData = insertRealCompanySchema.parse(req.body);
+      const [updatedCompany] = await db
+        .update(realCompanies)
+        .set({ ...validatedData, updatedAt: new Date() })
+        .where(eq(realCompanies.id, id))
+        .returning();
+
+      if (!updatedCompany) {
+        return res.status(404).json({ message: "Company not found" });
+      }
+
+      res.json(updatedCompany);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: fromZodError(error).toString() });
+      }
+      console.error("Error updating real company:", error);
+      res.status(500).json({ message: "Failed to update real company" });
+    }
+  });
+
   // Fake Companies
   apiRouter.get("/admin/fake-companies", authenticateToken, requireAdmin, async (req, res) => {
     try {
@@ -7964,6 +7993,41 @@ IMPORTANT: Generate a complete professional maritime document with the following
     } catch (error) {
       console.error("Error deleting fake company:", error);
       res.status(500).json({ message: "Failed to delete fake company" });
+    }
+  });
+
+  // Update fake company (admin endpoint)
+  apiRouter.put("/admin/fake-companies/:id", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid company ID" });
+      }
+
+      const { generatedName, realCompanyId } = req.body;
+      
+      if (!generatedName || !realCompanyId) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      const [updatedCompany] = await db
+        .update(fakeCompanies)
+        .set({ 
+          generatedName, 
+          realCompanyId: parseInt(realCompanyId),
+          updatedAt: new Date() 
+        })
+        .where(eq(fakeCompanies.id, id))
+        .returning();
+
+      if (!updatedCompany) {
+        return res.status(404).json({ message: "Fake company not found" });
+      }
+
+      res.json(updatedCompany);
+    } catch (error) {
+      console.error("Error updating fake company:", error);
+      res.status(500).json({ message: "Failed to update fake company" });
     }
   });
 
