@@ -152,119 +152,176 @@ export default function Companies() {
         </div>
 
         {/* Companies Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredCompanies.map((company: RealCompany) => (
-            <Card key={company.id} className="group hover:shadow-xl transition-all duration-300 bg-white/90 backdrop-blur-sm border-gray-200 shadow-lg">
-              <CardHeader className="pb-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center space-x-3">
+            <Card key={company.id} className="group relative overflow-hidden bg-gradient-to-br from-white via-white to-orange-50/30 border-0 shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 hover:scale-[1.02]">
+              {/* Background gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-orange-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              
+              {/* Top accent line */}
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700" />
+              
+              <CardHeader className="pb-6 relative z-10">
+                <div className="flex items-start space-x-4">
+                  {/* Enhanced Logo */}
+                  <div className="relative">
                     {company.logo ? (
-                      <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-100 flex items-center justify-center">
+                      <div className="w-16 h-16 rounded-2xl overflow-hidden bg-white shadow-lg ring-4 ring-orange-100 group-hover:ring-orange-200 transition-all duration-300">
                         <img 
                           src={company.logo} 
                           alt={`${company.name} logo`}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                           onError={(e) => {
                             e.currentTarget.style.display = 'none';
-                            e.currentTarget.parentElement!.innerHTML = '<div class="w-12 h-12 bg-gradient-to-br from-orange-600 to-orange-800 rounded-xl flex items-center justify-center"><svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg></div>';
+                            e.currentTarget.parentElement!.innerHTML = '<div class="w-16 h-16 bg-gradient-to-br from-orange-500 via-orange-600 to-orange-700 rounded-2xl flex items-center justify-center shadow-lg"><svg class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg></div>';
                           }}
                         />
                       </div>
                     ) : (
-                      <div className="w-12 h-12 bg-gradient-to-br from-orange-600 to-orange-800 rounded-xl flex items-center justify-center">
-                        <Building2 className="h-6 w-6 text-white" />
+                      <div className="w-16 h-16 bg-gradient-to-br from-orange-500 via-orange-600 to-orange-700 rounded-2xl flex items-center justify-center shadow-lg ring-4 ring-orange-100 group-hover:ring-orange-200 transition-all duration-300">
+                        <Building2 className="h-8 w-8 text-white" />
                       </div>
                     )}
-                    <div>
-                      <CardTitle className="text-lg group-hover:text-orange-600 transition-colors text-gray-900">
-                        {company.name}
-                      </CardTitle>
-                      <CardDescription className="flex items-center mt-1 text-gray-600">
-                        <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full border border-orange-200">
-                          {company.industry}
-                        </span>
-                      </CardDescription>
-                    </div>
+                    {/* Animated pulse ring */}
+                    <div className="absolute inset-0 rounded-2xl ring-2 ring-orange-400/30 animate-pulse opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  </div>
+                  
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="text-xl font-bold group-hover:text-orange-600 transition-colors duration-300 text-gray-900 mb-2 leading-tight">
+                      {company.name}
+                    </CardTitle>
+                    <CardDescription className="flex items-center">
+                      <span className="text-sm bg-gradient-to-r from-orange-500 to-orange-600 text-white px-3 py-1.5 rounded-full font-medium shadow-sm">
+                        {company.industry}
+                      </span>
+                    </CardDescription>
                   </div>
                 </div>
               </CardHeader>
 
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6 relative z-10">
                 {/* Company Description */}
-                <p className="text-sm text-gray-600 line-clamp-3">
-                  {company.description}
-                </p>
+                <div className="bg-gradient-to-r from-gray-50 to-orange-50/50 rounded-xl p-4 border border-gray-100">
+                  <p className="text-sm text-gray-700 line-clamp-3 leading-relaxed">
+                    {company.description}
+                  </p>
+                </div>
 
-                {/* Company Details */}
-                <div className="space-y-2">
+                {/* Company Details Grid */}
+                <div className="grid grid-cols-1 gap-3">
                   {company.headquarters && (
-                    <div className="flex items-center text-sm text-gray-600">
-                      <MapPin className="h-4 w-4 mr-2 text-orange-500" />
-                      {company.headquarters}
+                    <div className="flex items-center text-sm text-gray-700 bg-white/60 rounded-lg p-3 border border-gray-100">
+                      <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-orange-500 rounded-lg flex items-center justify-center mr-3">
+                        <MapPin className="h-4 w-4 text-white" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">Location</p>
+                        <p className="text-gray-600">{company.headquarters}</p>
+                      </div>
                     </div>
                   )}
 
                   {company.ceo && (
-                    <div className="flex items-center text-sm text-gray-600">
-                      <User className="h-4 w-4 mr-2 text-orange-500" />
-                      CEO: {company.ceo}
+                    <div className="flex items-center text-sm text-gray-700 bg-white/60 rounded-lg p-3 border border-gray-100">
+                      <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-500 rounded-lg flex items-center justify-center mr-3">
+                        <User className="h-4 w-4 text-white" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">Chief Executive</p>
+                        <p className="text-gray-600">{company.ceo}</p>
+                      </div>
                     </div>
                   )}
 
-                  {company.founded && (
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Calendar className="h-4 w-4 mr-2 text-orange-500" />
-                      Founded: {company.founded}
-                    </div>
-                  )}
+                  <div className="grid grid-cols-2 gap-3">
+                    {company.founded && (
+                      <div className="bg-white/60 rounded-lg p-3 border border-gray-100 text-center">
+                        <div className="w-6 h-6 bg-gradient-to-br from-green-400 to-green-500 rounded-md flex items-center justify-center mx-auto mb-2">
+                          <Calendar className="h-3 w-3 text-white" />
+                        </div>
+                        <p className="text-xs font-medium text-gray-900">Founded</p>
+                        <p className="text-sm font-bold text-gray-700">{company.founded}</p>
+                      </div>
+                    )}
 
-                  {company.employees && (
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Users className="h-4 w-4 mr-2 text-orange-500" />
-                      {company.employees.toLocaleString()} employees
-                    </div>
-                  )}
+                    {company.employees && (
+                      <div className="bg-white/60 rounded-lg p-3 border border-gray-100 text-center">
+                        <div className="w-6 h-6 bg-gradient-to-br from-purple-400 to-purple-500 rounded-md flex items-center justify-center mx-auto mb-2">
+                          <Users className="h-3 w-3 text-white" />
+                        </div>
+                        <p className="text-xs font-medium text-gray-900">Employees</p>
+                        <p className="text-sm font-bold text-gray-700">{company.employees.toLocaleString()}</p>
+                      </div>
+                    )}
+                  </div>
 
                   {company.revenue && (
-                    <div className="flex items-center text-sm text-gray-600">
-                      <DollarSign className="h-4 w-4 mr-2 text-orange-500" />
-                      Revenue: {company.revenue}
+                    <div className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-lg p-3 border border-emerald-200">
+                      <div className="flex items-center">
+                        <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-green-600 rounded-lg flex items-center justify-center mr-3">
+                          <DollarSign className="h-4 w-4 text-white" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-medium text-emerald-800">Annual Revenue</p>
+                          <p className="text-sm font-bold text-emerald-900">{company.revenue}</p>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
 
                 {/* Contact Information */}
-                <div className="pt-4 border-t border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <div className="flex space-x-2">
-                      {company.website && (
-                        <Button variant="outline" size="sm" asChild className="border-gray-300 text-gray-600 hover:bg-gray-50">
-                          <a 
-                            href={company.website} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="flex items-center"
-                          >
-                            <Globe className="h-3 w-3 mr-1" />
-                            Website
-                            <ExternalLink className="h-3 w-3 ml-1" />
-                          </a>
-                        </Button>
-                      )}
+                <div className="pt-4 border-t border-gradient-to-r from-gray-200 to-orange-200">
+                  <div className="flex flex-wrap gap-2">
+                    {company.website && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        asChild 
+                        className="border-orange-200 text-orange-600 hover:bg-orange-50 hover:border-orange-300 transition-all duration-300 group/btn"
+                      >
+                        <a 
+                          href={company.website} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center"
+                        >
+                          <Globe className="h-3 w-3 mr-1 group-hover/btn:rotate-12 transition-transform duration-300" />
+                          Website
+                          <ExternalLink className="h-3 w-3 ml-1 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform duration-300" />
+                        </a>
+                      </Button>
+                    )}
 
-                      {company.email && (
-                        <Button variant="outline" size="sm" asChild className="border-gray-300 text-gray-600 hover:bg-gray-50">
-                          <a href={`mailto:${company.email}`} className="flex items-center">
-                            <Mail className="h-3 w-3 mr-1" />
-                            Email
-                          </a>
-                        </Button>
-                      )}
-                    </div>
+                    {company.email && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        asChild 
+                        className="border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-300 transition-all duration-300 group/btn"
+                      >
+                        <a href={`mailto:${company.email}`} className="flex items-center">
+                          <Mail className="h-3 w-3 mr-1 group-hover/btn:scale-110 transition-transform duration-300" />
+                          Contact
+                        </a>
+                      </Button>
+                    )}
+
+                    {company.phone && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        asChild 
+                        className="border-green-200 text-green-600 hover:bg-green-50 hover:border-green-300 transition-all duration-300 group/btn"
+                      >
+                        <a href={`tel:${company.phone}`} className="flex items-center">
+                          <Phone className="h-3 w-3 mr-1 group-hover/btn:rotate-12 transition-transform duration-300" />
+                          Call
+                        </a>
+                      </Button>
+                    )}
                   </div>
                 </div>
-
-
               </CardContent>
             </Card>
           ))}
