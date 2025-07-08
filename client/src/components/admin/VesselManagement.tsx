@@ -10,7 +10,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit, Trash2, Ship, Search, Filter, Download, Upload, MapPin, Calendar, Anchor, Zap, Sparkles, RefreshCw } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { Plus, Edit, Trash2, Ship, Search, Filter, Download, Upload, MapPin, Calendar, Anchor, Zap, Sparkles, RefreshCw, CalendarIcon } from "lucide-react";
 import MapSelector from "@/components/MapSelector";
 
 interface Vessel {
@@ -1220,21 +1223,57 @@ export default function VesselManagement() {
                       </div>
                       <div>
                         <Label htmlFor="departureDate">Departure Date</Label>
-                        <Input
-                          id="departureDate"
-                          type="date"
-                          value={formData.departureDate}
-                          onChange={(e) => setFormData(prev => ({ ...prev, departureDate: e.target.value }))}
-                        />
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className="w-full justify-start text-left font-normal"
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {formData.departureDate ? format(new Date(formData.departureDate), "PPP") : "Select departure date"}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0">
+                            <CalendarComponent
+                              mode="single"
+                              selected={formData.departureDate ? new Date(formData.departureDate) : undefined}
+                              onSelect={(date) => {
+                                setFormData(prev => ({ 
+                                  ...prev, 
+                                  departureDate: date ? date.toISOString().split('T')[0] : "" 
+                                }));
+                              }}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
                       </div>
                       <div>
                         <Label htmlFor="eta">Estimated Arrival</Label>
-                        <Input
-                          id="eta"
-                          type="date"
-                          value={formData.eta}
-                          onChange={(e) => setFormData(prev => ({ ...prev, eta: e.target.value }))}
-                        />
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className="w-full justify-start text-left font-normal"
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {formData.eta ? format(new Date(formData.eta), "PPP") : "Select arrival date"}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0">
+                            <CalendarComponent
+                              mode="single"
+                              selected={formData.eta ? new Date(formData.eta) : undefined}
+                              onSelect={(date) => {
+                                setFormData(prev => ({ 
+                                  ...prev, 
+                                  eta: date ? date.toISOString().split('T')[0] : "" 
+                                }));
+                              }}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
                       </div>
                     </CardContent>
                   </Card>
