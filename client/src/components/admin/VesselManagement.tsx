@@ -1220,29 +1220,29 @@ export default function VesselManagement() {
                       </div>
                       <div>
                         <Label htmlFor="departureDate">Departure Date</Label>
-                        <div className="relative">
-                          <Input
-                            id="departureDate"
-                            type="date"
-                            value={formData.departureDate}
-                            onChange={(e) => setFormData(prev => ({ ...prev, departureDate: e.target.value }))}
-                            className="pl-10"
-                          />
-                          <CalendarIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        </div>
+                        <Input
+                          id="departureDate"
+                          type="date"
+                          value={formData.departureDate || ""}
+                          onChange={(e) => {
+                            console.log("Date changed:", e.target.value);
+                            setFormData(prev => ({ ...prev, departureDate: e.target.value }));
+                          }}
+                          className="w-full"
+                        />
                       </div>
                       <div>
                         <Label htmlFor="eta">Estimated Arrival</Label>
-                        <div className="relative">
-                          <Input
-                            id="eta"
-                            type="date"
-                            value={formData.eta}
-                            onChange={(e) => setFormData(prev => ({ ...prev, eta: e.target.value }))}
-                            className="pl-10"
-                          />
-                          <CalendarIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        </div>
+                        <Input
+                          id="eta"
+                          type="date"
+                          value={formData.eta || ""}
+                          onChange={(e) => {
+                            console.log("ETA changed:", e.target.value);
+                            setFormData(prev => ({ ...prev, eta: e.target.value }));
+                          }}
+                          className="w-full"
+                        />
                       </div>
                     </CardContent>
                   </Card>
