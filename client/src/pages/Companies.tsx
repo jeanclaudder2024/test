@@ -17,7 +17,10 @@ import {
   User,
   Search,
   ExternalLink,
-  Factory
+  Factory,
+  Ship,
+  Anchor,
+  ChevronRight
 } from 'lucide-react';
 
 interface RealCompany {
@@ -37,8 +40,19 @@ interface RealCompany {
   ceo?: string;
 }
 
+interface Vessel {
+  id: number;
+  name: string;
+  imo?: string;
+  vesselType?: string;
+  oilType?: string;
+  cargoCapacity?: number;
+  currentLocation?: string;
+}
+
 export default function Companies() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [expandedCompany, setExpandedCompany] = useState<number | null>(null);
 
   // Fetch real companies directly
   const { data: response, isLoading } = useQuery({
@@ -47,6 +61,17 @@ export default function Companies() {
   });
 
   const companies = Array.isArray(response) ? response : [];
+
+  // Get company name for expanded company
+  const expandedCompanyName = expandedCompany ? 
+    companies.find(c => c.id === expandedCompany)?.name : null;
+
+  // Fetch vessels for expanded company
+  const { data: companyVessels, isLoading: vesselsLoading } = useQuery({
+    queryKey: [`/api/admin/companies/${encodeURIComponent(expandedCompanyName || '')}/vessels`],
+    enabled: !!expandedCompanyName,
+    retry: false,
+  });
 
   const filteredCompanies = companies.filter((company: RealCompany) =>
     company.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -266,6 +291,103 @@ export default function Companies() {
                           <p className="text-sm font-bold text-emerald-900">{company.revenue}</p>
                         </div>
                       </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Fleet Information */}
+                <div className="pt-4 border-t border-gray-200">
+                  <Button
+                    onClick={() => setExpandedCompany(expandedCompany === company.id ? null : company.id)}
+                    variant="ghost"
+                    className="w-full justify-between p-3 bg-gradient-to-r from-blue-50 to-cyan-50 hover:from-blue-100 hover:to-cyan-100 border border-blue-200 rounded-lg group/fleet"
+                  >
+                    <div className="flex items-center">
+                      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg flex items-center justify-center mr-3">
+                        <Ship className="h-4 w-4 text-white" />
+                      </div>
+                      <div className="text-left">
+                        <p className="font-semibold text-blue-900">Fleet Information</p>
+                        <p className="text-xs text-blue-600">View company vessels</p>
+                      </div>
+                    </div>
+                    <ChevronRight className={`h-4 w-4 text-blue-600 transition-transform duration-300 ${
+                      expandedCompany === company.id ? 'rotate-90' : ''
+                    }`} />
+                  </Button>
+
+                  {/* Vessels Display */}
+                  {expandedCompany === company.id && (
+                    <div className="mt-4 space-y-3">
+                      {vesselsLoading ? (
+                        <div className="text-center py-4">
+                          <div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto" />
+                          <p className="text-sm text-gray-600 mt-2">Loading vessels...</p>
+                        </div>
+                      ) : companyVessels && companyVessels.length > 0 ? (
+                        <div className="space-y-2">
+                          <p className="text-sm font-medium text-gray-900 mb-3">
+                            🚢 Fleet ({companyVessels.length} vessels)
+                          </p>
+                          <div className="max-h-48 overflow-y-auto space-y-2">
+                            {companyVessels.slice(0, 5).map((vessel: Vessel) => (
+                              <div
+                                key={vessel.id}
+                                className="bg-gradient-to-r from-slate-50 to-blue-50 rounded-lg p-3 border border-slate-200 hover:border-blue-300 transition-all duration-300 group/vessel"
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center space-x-3">
+                                    <div className="w-6 h-6 bg-gradient-to-br from-slate-500 to-slate-600 rounded-md flex items-center justify-center">
+                                      <Anchor className="h-3 w-3 text-white" />
+                                    </div>
+                                    <div>
+                                      <p className="font-semibold text-slate-900 text-sm group-hover/vessel:text-blue-700 transition-colors">
+                                        {vessel.name}
+                                      </p>
+                                      <div className="flex items-center space-x-2 text-xs text-slate-600">
+                                        {vessel.imo && (
+                                          <span className="bg-slate-200 px-2 py-0.5 rounded">
+                                            IMO: {vessel.imo}
+                                          </span>
+                                        )}
+                                        {vessel.vesselType && (
+                                          <span className="bg-blue-200 text-blue-800 px-2 py-0.5 rounded">
+                                            {vessel.vesselType}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="text-right text-xs">
+                                    {vessel.oilType && (
+                                      <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded-full font-medium">
+                                        {vessel.oilType}
+                                      </span>
+                                    )}
+                                    {vessel.cargoCapacity && (
+                                      <p className="text-slate-600 mt-1">
+                                        {vessel.cargoCapacity.toLocaleString()} MT
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                            {companyVessels.length > 5 && (
+                              <div className="text-center py-2">
+                                <p className="text-xs text-gray-500">
+                                  +{companyVessels.length - 5} more vessels
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center py-4 text-gray-500">
+                          <Ship className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                          <p className="text-sm">No vessels found for this company</p>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

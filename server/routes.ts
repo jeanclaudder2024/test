@@ -34,7 +34,7 @@ import {
   setCachedVesselsByRegion 
 } from "./utils/cacheManager";
 import { WebSocketServer, WebSocket } from "ws";
-import { and, eq, isNotNull, sql } from "drizzle-orm";
+import { and, eq, isNotNull, sql, like, or } from "drizzle-orm";
 import { db } from "./db";
 import PDFDocument from 'pdfkit';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
@@ -7994,6 +7994,28 @@ IMPORTANT: Generate a complete professional maritime document with the following
     } catch (error) {
       console.error("Error fetching real companies:", error);
       res.status(500).json({ message: "Failed to fetch real companies" });
+    }
+  });
+
+  // Get vessels by company name
+  apiRouter.get("/admin/companies/:companyName/vessels", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const companyName = decodeURIComponent(req.params.companyName);
+      
+      // Search for vessels where the company name appears in various company fields
+      const companyVessels = await db.select().from(vessels).where(
+        or(
+          like(vessels.sellerName, `%${companyName}%`),
+          like(vessels.sourceCompany, `%${companyName}%`),
+          like(vessels.oilSource, `%${companyName}%`),
+          like(vessels.buyerName, `%${companyName}%`)
+        )
+      );
+      
+      res.json(companyVessels);
+    } catch (error) {
+      console.error("Error fetching company vessels:", error);
+      res.status(500).json({ message: "Failed to fetch company vessels" });
     }
   });
 
