@@ -69,36 +69,12 @@ export function CompanyManagement() {
   const [editFakeDialogOpen, setEditFakeDialogOpen] = useState(false);
   const [selectedFakeCompany, setSelectedFakeCompany] = useState<CompanyWithRelations | null>(null);
   const [selectedRealCompanyForFake, setSelectedRealCompanyForFake] = useState<string>('');
-  const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [logoPreview, setLogoPreview] = useState<string>('');
+
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Handle logo file selection
-  const handleLogoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setLogoFile(file);
-      
-      // Create preview URL
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setLogoPreview(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
 
-  // Convert file to base64 for storage
-  const convertFileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  };
 
   // Fetch real companies
   const { data: realCompaniesResponse, isLoading: realCompaniesLoading } = useQuery({
@@ -135,21 +111,9 @@ export function CompanyManagement() {
   // Create real company mutation
   const createRealCompanyMutation = useMutation({
     mutationFn: async (data: RealCompanyFormData) => {
-      let logoData = '';
-      
-      // Convert logo file to base64 if provided
-      if (logoFile) {
-        logoData = await convertFileToBase64(logoFile);
-      }
-      
-      const companyData = {
-        ...data,
-        logo: logoData || data.logo || '',
-      };
-      
       return apiRequest('/api/admin/real-companies', {
         method: 'POST',
-        body: JSON.stringify(companyData),
+        body: JSON.stringify(data),
       });
     },
     onSuccess: () => {
@@ -161,8 +125,6 @@ export function CompanyManagement() {
       setCreateDialogOpen(false);
       setCompanyTypeChoice(null);
       realCompanyForm.reset();
-      setLogoFile(null);
-      setLogoPreview('');
     },
     onError: (error: any) => {
       toast({
@@ -270,21 +232,9 @@ export function CompanyManagement() {
   // Edit real company mutation
   const editRealCompanyMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: RealCompanyFormData }) => {
-      let logoData = data.logo || '';
-      
-      // Convert logo file to base64 if provided
-      if (logoFile) {
-        logoData = await convertFileToBase64(logoFile);
-      }
-      
-      const companyData = {
-        ...data,
-        logo: logoData,
-      };
-      
       return apiRequest(`/api/admin/real-companies/${id}`, {
         method: 'PUT',
-        body: JSON.stringify(companyData),
+        body: JSON.stringify(data),
       });
     },
     onSuccess: () => {
@@ -296,8 +246,6 @@ export function CompanyManagement() {
       setEditDialogOpen(false);
       setSelectedCompany(null);
       realCompanyForm.reset();
-      setLogoFile(null);
-      setLogoPreview('');
     },
     onError: (error: any) => {
       toast({
@@ -349,10 +297,7 @@ export function CompanyManagement() {
       revenue: company.revenue || '',
       logo: company.logo || '',
     });
-    
-    // Set logo preview if company has logo
-    setLogoFile(null);
-    setLogoPreview(company.logo || '');
+
     
     setEditDialogOpen(true);
   };
@@ -722,24 +667,26 @@ export function CompanyManagement() {
                 </div>
 
                 <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="logo">Company Logo</Label>
+                  <Label htmlFor="logo">Company Logo URL</Label>
                   <Input
                     id="logo"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleLogoChange}
-                    className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    {...realCompanyForm.register('logo')}
+                    placeholder="https://example.com/logo.png"
+                    className="w-full"
                   />
-                  {logoPreview && (
+                  {realCompanyForm.watch('logo') && (
                     <div className="mt-2">
                       <img
-                        src={logoPreview}
+                        src={realCompanyForm.watch('logo')}
                         alt="Logo preview"
                         className="h-20 w-20 object-contain border border-gray-200 rounded-lg"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
                       />
                     </div>
                   )}
-                  <p className="text-xs text-gray-500">Upload company logo (JPG, PNG, GIF - max 2MB)</p>
+                  <p className="text-xs text-gray-500">Enter logo image URL (JPG, PNG, GIF)</p>
                 </div>
 
                 <div className="space-y-2">
@@ -943,24 +890,26 @@ export function CompanyManagement() {
               </div>
 
               <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="edit-logo">Company Logo</Label>
+                <Label htmlFor="edit-logo">Company Logo URL</Label>
                 <Input
                   id="edit-logo"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleLogoChange}
-                  className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  {...realCompanyForm.register('logo')}
+                  placeholder="https://example.com/logo.png"
+                  className="w-full"
                 />
-                {logoPreview && (
+                {realCompanyForm.watch('logo') && (
                   <div className="mt-2">
                     <img
-                      src={logoPreview}
+                      src={realCompanyForm.watch('logo')}
                       alt="Logo preview"
                       className="h-20 w-20 object-contain border border-gray-200 rounded-lg"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
                     />
                   </div>
                 )}
-                <p className="text-xs text-gray-500">Upload company logo (JPG, PNG, GIF - max 2MB)</p>
+                <p className="text-xs text-gray-500">Enter logo image URL (JPG, PNG, GIF)</p>
               </div>
 
               <div className="space-y-2">
