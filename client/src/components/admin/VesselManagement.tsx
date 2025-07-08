@@ -259,6 +259,17 @@ export default function VesselManagement() {
     }
   });
 
+  // Fetch oil types for dynamic vessel type filtering
+  const { data: oilTypes } = useQuery({
+    queryKey: ["/api/oil-types"],
+    staleTime: 0,
+    queryFn: async () => {
+      const response = await fetch("/api/oil-types");
+      if (!response.ok) throw new Error("Failed to fetch oil types");
+      return response.json();
+    }
+  });
+
   // Create vessel mutation
   const createVesselMutation = useMutation({
     mutationFn: async (vesselData: VesselFormData) => {
@@ -305,15 +316,15 @@ export default function VesselManagement() {
         
         // Technical Specifications
         callsign: vesselData.callsign?.trim() || null,
-        course: vesselData.course ? parseInt(vesselData.course) : null,
+        course: vesselData.course ? (isNaN(parseInt(vesselData.course)) ? null : parseInt(vesselData.course)) : null,
         navStatus: vesselData.navStatus?.trim() || null,
         draught: vesselData.draught ? vesselData.draught.toString() : null,
         length: vesselData.length ? vesselData.length.toString() : null,
         width: vesselData.width ? vesselData.width.toString() : null,
-        enginePower: vesselData.enginePower ? parseInt(vesselData.enginePower) : null,
+        enginePower: vesselData.enginePower ? (isNaN(parseInt(vesselData.enginePower)) ? null : parseInt(vesselData.enginePower)) : null,
         fuelConsumption: vesselData.fuelConsumption ? vesselData.fuelConsumption.toString() : null,
-        crewSize: vesselData.crewSize ? parseInt(vesselData.crewSize) : null,
-        grossTonnage: vesselData.grossTonnage ? parseInt(vesselData.grossTonnage) : null
+        crewSize: vesselData.crewSize ? (isNaN(parseInt(vesselData.crewSize)) ? null : parseInt(vesselData.crewSize)) : null,
+        grossTonnage: vesselData.grossTonnage ? (isNaN(parseInt(vesselData.grossTonnage)) ? null : parseInt(vesselData.grossTonnage)) : null
       };
 
       // Remove undefined values to prevent database errors
@@ -394,15 +405,15 @@ export default function VesselManagement() {
         
         // Technical Specifications
         callsign: data.callsign?.trim() || null,
-        course: data.course ? parseInt(data.course) : null,
+        course: data.course ? (isNaN(parseInt(data.course)) ? null : parseInt(data.course)) : null,
         navStatus: data.navStatus?.trim() || null,
         draught: data.draught ? data.draught.toString() : null,
         length: data.length ? data.length.toString() : null,
         width: data.width ? data.width.toString() : null,
-        enginePower: data.enginePower ? parseInt(data.enginePower) : null,
+        enginePower: data.enginePower ? (isNaN(parseInt(data.enginePower)) ? null : parseInt(data.enginePower)) : null,
         fuelConsumption: data.fuelConsumption ? data.fuelConsumption.toString() : null,
-        crewSize: data.crewSize ? parseInt(data.crewSize) : null,
-        grossTonnage: data.grossTonnage ? parseInt(data.grossTonnage) : null
+        crewSize: data.crewSize ? (isNaN(parseInt(data.crewSize)) ? null : parseInt(data.crewSize)) : null,
+        grossTonnage: data.grossTonnage ? (isNaN(parseInt(data.grossTonnage)) ? null : parseInt(data.grossTonnage)) : null
       };
 
       // Remove undefined values to prevent database errors
@@ -941,9 +952,15 @@ export default function VesselManagement() {
                             <SelectValue placeholder="Select vessel type" />
                           </SelectTrigger>
                           <SelectContent>
-                            {vesselTypes.map(type => (
-                              <SelectItem key={type} value={type}>{type}</SelectItem>
-                            ))}
+                            {oilTypes && oilTypes.length > 0 ? (
+                              oilTypes.map((oilType: any) => (
+                                <SelectItem key={oilType.id} value={oilType.name}>{oilType.displayName || oilType.name}</SelectItem>
+                              ))
+                            ) : (
+                              vesselTypes.map(type => (
+                                <SelectItem key={type} value={type}>{type}</SelectItem>
+                              ))
+                            )}
                           </SelectContent>
                         </Select>
                       </div>
@@ -1626,9 +1643,15 @@ export default function VesselManagement() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Types</SelectItem>
-                  {vesselTypes.map(type => (
-                    <SelectItem key={type} value={type}>{type}</SelectItem>
-                  ))}
+                  {oilTypes && oilTypes.length > 0 ? (
+                    oilTypes.map((oilType: any) => (
+                      <SelectItem key={oilType.id} value={oilType.name}>{oilType.displayName || oilType.name}</SelectItem>
+                    ))
+                  ) : (
+                    vesselTypes.map(type => (
+                      <SelectItem key={type} value={type}>{type}</SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
