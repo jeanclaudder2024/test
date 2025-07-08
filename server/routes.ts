@@ -6376,6 +6376,58 @@ IMPORTANT: Generate a complete professional maritime document with the following
     }
   });
 
+  // Update document template (admin endpoint)
+  apiRouter.put("/admin/article-templates/:id", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const templateId = parseInt(req.params.id);
+      if (isNaN(templateId)) {
+        return res.status(400).json({ message: "Invalid template ID" });
+      }
+
+      const { title, description, category, prompt, isActive } = req.body;
+      
+      if (!title || !description || !category || !prompt) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      // Update the template
+      const updatedTemplate = await storage.updateDocumentTemplate(templateId, {
+        name: title,
+        description: prompt, // Store the prompt as description for AI processing
+        prompt: prompt, // Store prompt in prompt field
+        category: category,
+        isActive: isActive !== undefined ? isActive : true,
+        updatedAt: new Date()
+      });
+      
+      if (!updatedTemplate) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+      
+      // Transform response to match expected format
+      const transformedTemplate = {
+        id: updatedTemplate.id,
+        title: updatedTemplate.name,
+        description: description, // Return original description for display
+        category: updatedTemplate.category,
+        prompt: updatedTemplate.prompt,
+        isActive: updatedTemplate.isActive,
+        usageCount: updatedTemplate.usageCount || 0,
+        createdBy: updatedTemplate.createdBy,
+        createdAt: updatedTemplate.createdAt,
+        updatedAt: updatedTemplate.updatedAt
+      };
+      
+      res.json(transformedTemplate);
+    } catch (error) {
+      console.error("Error updating document template:", error);
+      res.status(500).json({ 
+        message: "Failed to update template",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   // Delete document template (admin endpoint)
   apiRouter.delete("/admin/article-templates/:id", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
     try {
