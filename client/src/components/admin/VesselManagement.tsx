@@ -287,6 +287,17 @@ export default function VesselManagement() {
   // Create vessel mutation
   const createVesselMutation = useMutation({
     mutationFn: async (vesselData: VesselFormData) => {
+      // Log the form data to debug validation issues
+      console.log("Form data being submitted:", vesselData);
+      
+      // Validate required fields on client side
+      const requiredFields = ['name', 'imo', 'mmsi', 'vesselType', 'flag'];
+      const missingFields = requiredFields.filter(field => !vesselData[field] || vesselData[field].trim() === '');
+      
+      if (missingFields.length > 0) {
+        throw new Error(`Please fill in all required fields: ${missingFields.join(', ')}`);
+      }
+      
       const processedData: any = {
         name: vesselData.name?.trim() || "",
         imo: vesselData.imo?.trim() || "",

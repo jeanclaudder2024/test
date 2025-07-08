@@ -2626,11 +2626,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("Creating new vessel via admin:", req.body);
       
-      // Validate required fields
+      // Validate required fields - check for empty strings too
       const { name, imo, mmsi, vesselType, flag } = req.body;
-      if (!name || !imo || !mmsi || !vesselType || !flag) {
+      console.log("Validation check:", { name: name || "EMPTY", imo: imo || "EMPTY", mmsi: mmsi || "EMPTY", vesselType: vesselType || "EMPTY", flag: flag || "EMPTY" });
+      
+      if (!name || name.trim() === "" || !imo || imo.trim() === "" || !mmsi || mmsi.trim() === "" || !vesselType || vesselType.trim() === "" || !flag || flag.trim() === "") {
+        console.log("Missing fields detected:", { 
+          name: name || "MISSING", 
+          imo: imo || "MISSING", 
+          mmsi: mmsi || "MISSING", 
+          vesselType: vesselType || "MISSING", 
+          flag: flag || "MISSING" 
+        });
         return res.status(400).json({ 
-          error: "Missing required fields: name, imo, mmsi, vesselType, flag are required" 
+          error: "Missing required fields: name, imo, mmsi, vesselType, flag are required and cannot be empty",
+          received: { name, imo, mmsi, vesselType, flag }
         });
       }
 
