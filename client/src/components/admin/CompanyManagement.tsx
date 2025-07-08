@@ -69,9 +69,36 @@ export function CompanyManagement() {
   const [editFakeDialogOpen, setEditFakeDialogOpen] = useState(false);
   const [selectedFakeCompany, setSelectedFakeCompany] = useState<CompanyWithRelations | null>(null);
   const [selectedRealCompanyForFake, setSelectedRealCompanyForFake] = useState<string>('');
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string>('');
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Handle logo file selection
+  const handleLogoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setLogoFile(file);
+      
+      // Create preview URL
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setLogoPreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Convert file to base64 for storage
+  const convertFileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
 
   // Fetch real companies
   const { data: realCompaniesResponse, isLoading: realCompaniesLoading } = useQuery({
@@ -108,9 +135,21 @@ export function CompanyManagement() {
   // Create real company mutation
   const createRealCompanyMutation = useMutation({
     mutationFn: async (data: RealCompanyFormData) => {
+      let logoData = '';
+      
+      // Convert logo file to base64 if provided
+      if (logoFile) {
+        logoData = await convertFileToBase64(logoFile);
+      }
+      
+      const companyData = {
+        ...data,
+        logo: logoData || data.logo || '',
+      };
+      
       return apiRequest('/api/admin/real-companies', {
         method: 'POST',
-        body: JSON.stringify(data),
+        body: JSON.stringify(companyData),
       });
     },
     onSuccess: () => {
@@ -122,6 +161,8 @@ export function CompanyManagement() {
       setCreateDialogOpen(false);
       setCompanyTypeChoice(null);
       realCompanyForm.reset();
+      setLogoFile(null);
+      setLogoPreview('');
     },
     onError: (error: any) => {
       toast({
@@ -229,9 +270,21 @@ export function CompanyManagement() {
   // Edit real company mutation
   const editRealCompanyMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: RealCompanyFormData }) => {
+      let logoData = data.logo || '';
+      
+      // Convert logo file to base64 if provided
+      if (logoFile) {
+        logoData = await convertFileToBase64(logoFile);
+      }
+      
+      const companyData = {
+        ...data,
+        logo: logoData,
+      };
+      
       return apiRequest(`/api/admin/real-companies/${id}`, {
         method: 'PUT',
-        body: JSON.stringify(data),
+        body: JSON.stringify(companyData),
       });
     },
     onSuccess: () => {
@@ -243,6 +296,8 @@ export function CompanyManagement() {
       setEditDialogOpen(false);
       setSelectedCompany(null);
       realCompanyForm.reset();
+      setLogoFile(null);
+      setLogoPreview('');
     },
     onError: (error: any) => {
       toast({
@@ -292,7 +347,13 @@ export function CompanyManagement() {
       headquarters: company.headquarters || '',
       ceo: company.ceo || '',
       revenue: company.revenue || '',
+      logo: company.logo || '',
     });
+    
+    // Set logo preview if company has logo
+    setLogoFile(null);
+    setLogoPreview(company.logo || '');
+    
     setEditDialogOpen(true);
   };
 
@@ -464,8 +525,16 @@ export function CompanyManagement() {
                       <TableRow key={company.id}>
                         <TableCell>
                           <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                              <Factory className="h-4 w-4 text-blue-600" />
+                            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center overflow-hidden">
+                              {company.logo ? (
+                                <img
+                                  src={company.logo}
+                                  alt={`${company.name} logo`}
+                                  className="w-full h-full object-contain"
+                                />
+                              ) : (
+                                <Factory className="h-4 w-4 text-blue-600" />
+                              )}
                             </div>
                             <div>
                               <p className="font-medium">{company.name}</p>
@@ -650,6 +719,27 @@ export function CompanyManagement() {
                     {...realCompanyForm.register('industry')}
                     placeholder="e.g., Oil, Shipping"
                   />
+                </div>
+
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="logo">Company Logo</Label>
+                  <Input
+                    id="logo"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoChange}
+                    className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  />
+                  {logoPreview && (
+                    <div className="mt-2">
+                      <img
+                        src={logoPreview}
+                        alt="Logo preview"
+                        className="h-20 w-20 object-contain border border-gray-200 rounded-lg"
+                      />
+                    </div>
+                  )}
+                  <p className="text-xs text-gray-500">Upload company logo (JPG, PNG, GIF - max 2MB)</p>
                 </div>
 
                 <div className="space-y-2">
@@ -850,6 +940,27 @@ export function CompanyManagement() {
                   {...realCompanyForm.register('industry')}
                   placeholder="e.g., Oil, Shipping"
                 />
+              </div>
+
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="edit-logo">Company Logo</Label>
+                <Input
+                  id="edit-logo"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLogoChange}
+                  className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                />
+                {logoPreview && (
+                  <div className="mt-2">
+                    <img
+                      src={logoPreview}
+                      alt="Logo preview"
+                      className="h-20 w-20 object-contain border border-gray-200 rounded-lg"
+                    />
+                  </div>
+                )}
+                <p className="text-xs text-gray-500">Upload company logo (JPG, PNG, GIF - max 2MB)</p>
               </div>
 
               <div className="space-y-2">
