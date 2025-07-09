@@ -6,6 +6,7 @@ import { z } from 'zod';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -280,6 +281,9 @@ export function AddPortDialog() {
             <MapPin className="h-5 w-5" />
             Add New Port with Map Selection
           </DialogTitle>
+          <DialogDescription>
+            Create a new port entry by filling in the details and selecting the location on the interactive map
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
