@@ -770,7 +770,7 @@ export default function VesselDetail() {
                         Current Destination
                       </CardTitle>
                       <CardDescription>
-                        Real-time destination tracking with simulation data - معلومات التتبع والتقدم في الوقت الفعلي
+                        Real-time destination tracking with simulation data
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -942,7 +942,7 @@ export default function VesselDetail() {
                     Cargo & Deal Information
                   </CardTitle>
                   <CardDescription>
-                    Complete cargo details and deal specifications - المعلومات التفصيلية للشحنة والصفقة
+                    Complete cargo details and deal specifications
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
