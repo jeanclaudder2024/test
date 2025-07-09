@@ -41,28 +41,38 @@ export default function PricingPage() {
 
   // Fetch subscription plans
   const { data: plans, isLoading, error } = useQuery({
-    queryKey: ['/api/subscriptions/plans'],
+    queryKey: ['/api/subscription-plans'],
     queryFn: async () => {
       try {
         const response = await apiRequest(
           'GET',
-          '/api/subscriptions/plans'
+          '/api/subscription-plans'
         );
         
         if (!response.ok) {
           throw new Error('Failed to fetch subscription plans');
         }
         
-        // Parse the JSON features string and transform data
+        // Parse the response from the updated API
         const plansData = await response.json();
         
         return plansData.map((plan: any) => ({
-          ...plan,
-          features: JSON.parse(plan.features || '[]').map((feature: string) => ({
+          id: plan.id,
+          name: plan.name,
+          slug: plan.name.toLowerCase(),
+          description: plan.description,
+          monthlyPrice: plan.price.toFixed(2),
+          yearlyPrice: plan.priceAnnual ? plan.priceAnnual.toFixed(2) : (plan.price * 12 * 0.8).toFixed(2),
+          monthlyPriceId: plan.stripePriceId,
+          yearlyPriceId: plan.stripePriceId.replace('monthly', 'yearly'),
+          currency: 'usd',
+          features: plan.features.map((feature: string) => ({
             name: feature,
             included: true
           })),
-        })).sort((a: PricingPlan, b: PricingPlan) => a.name.localeCompare(b.name));
+          isPopular: plan.isPopular || false,
+          trialDays: plan.trialDays || 5
+        })).sort((a: PricingPlan, b: PricingPlan) => a.id - b.id);
       } catch (err) {
         console.error('Error fetching plans:', err);
         
@@ -244,12 +254,26 @@ export default function PricingPage() {
   return (
     <div className="container py-12 mx-auto">
       <div className="flex flex-col items-center justify-center mb-12">
+        <Badge variant="outline" className="px-4 py-2 bg-blue-500/20 text-blue-400 border-blue-500/30 backdrop-blur-sm mb-6 inline-flex items-center">
+          <div className="w-2 h-2 rounded-full bg-blue-400 mr-2 animate-pulse"></div>
+          Choose the Plan That Fits Your Petroleum Trading Needs
+        </Badge>
         <h1 className="text-3xl font-bold tracking-tight mb-2">
-          Maritime Intelligence Pricing
+          Flexible Subscription Plans
         </h1>
         <p className="text-muted-foreground mb-6 text-center max-w-2xl">
-          Choose the perfect plan for your maritime tracking and intelligence needs
+          Whether you're an individual broker or a global trading company, PetroDealHub provides 
+          flexible subscription plans tailored to your scale of operations, market access, and trading goals.
         </p>
+        <div className="mb-6 text-center">
+          <div className="inline-flex items-center gap-4 text-sm text-slate-500">
+            <span>✅ 5-Day free trial for every plan</span>
+            <span>•</span>
+            <span>✅ No credit card required</span>
+            <span>•</span>
+            <span>✅ Cancel anytime</span>
+          </div>
+        </div>
         
         <div className="flex items-center space-x-2">
           <Label htmlFor="billing-toggle" className={cn(
@@ -269,7 +293,7 @@ export default function PricingPage() {
           )}>
             <span>Annual Billing</span>
             <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-              Save 15%
+              Save 20%
             </Badge>
           </Label>
         </div>
