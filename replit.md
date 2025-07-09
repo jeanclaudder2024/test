@@ -440,6 +440,12 @@ Changelog:
   * **Destination Tracking Cleanup**: Removed Arabic text from destination tracking section descriptions
   * **Cargo Information Cleanup**: Eliminated Arabic text from cargo and deal information section descriptions
   * **Professional English Interface**: Clean, professional appearance with consistent English-only content throughout the platform
+- July 9, 2025. **BROKER NAVIGATION UPDATE: Locked Feature Button Implementation**:
+  * **Removed Brokers Page**: Eliminated "/brokers" route and page from navigation system
+  * **Added Broker Lock Button**: Replaced "Brokers" with "Broker" button using Lock icon in secondary navigation
+  * **Direct Upgrade Flow**: Broker button now links to "/broker-dashboard" which shows locked page for non-subscribers
+  * **Streamlined User Experience**: Users see upgrade prompt immediately when clicking Broker button
+  * **Navigation Cleanup**: Simplified navigation by removing unnecessary brokers listing page
 
 ## User Preferences
 

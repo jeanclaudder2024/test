@@ -25,6 +25,7 @@ import {
   CreditCard,
   LifeBuoy,
   AlertCircle,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -61,7 +62,7 @@ export function MobileLayout({ children }: MobileLayoutProps) {
     const secondaryNavigation = [
       { name: "Companies", href: "/companies", icon: Briefcase },
       { name: "Oil Prices", href: "/oil-prices", icon: RefreshCw },
-      { name: "Brokers", href: "/brokers", icon: UserPlus },
+      { name: "Broker", href: "/broker-dashboard", icon: Lock },
       { name: "AI Assistant", href: "/ai-assistant", icon: MessageSquare },
       { name: "Pricing", href: "/pricing", icon: ShoppingBag },
     ];

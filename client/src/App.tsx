@@ -82,7 +82,7 @@ function ProtectedRoutes() {
           <Route path="/ports/:id" component={PortDetail} />
           <Route path="/map" component={AdvancedMaritimeMap} />
           <Route path="/oil-vessel-map" component={OilVesselMap} />
-          <Route path="/brokers" component={Brokers} />
+
           <Route path="/companies" component={Companies} />
 
           <Route path="/ai-assistant" component={AIAssistantPage} />
