@@ -844,16 +844,7 @@ export default function VesselDetail() {
                         </div>
                       )}
                       
-                      {!voyageInfo && !isLoadingVoyageInfo && (
-                        <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
-                          <div className="flex items-center">
-                            <AlertTriangle className="h-5 w-5 mr-2 text-amber-600" />
-                            <p className="text-sm text-amber-800 dark:text-amber-200">
-                              No active destination simulation found. The vessel may not be on a tracked route.
-                            </p>
-                          </div>
-                        </div>
-                      )}
+
                       
                       <SimpleVoyageDetails 
                         vessel={vessel} 
