@@ -136,11 +136,16 @@ export default function BrokerPayment() {
           brokerData: parsedData,
         });
         
-        setClientSecret(response.clientSecret);
+        if (response && response.clientSecret) {
+          setClientSecret(response.clientSecret);
+        } else {
+          throw new Error('No client secret received from server');
+        }
       } catch (error) {
+        console.error('Payment setup error:', error);
         toast({
           title: "Payment Setup Failed",
-          description: "Unable to initialize payment. Please try again.",
+          description: error instanceof Error ? error.message : "Unable to initialize payment. Please try again.",
           variant: "destructive",
         });
       } finally {
