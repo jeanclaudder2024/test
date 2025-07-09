@@ -599,34 +599,7 @@ export default function VesselDetail() {
                   </div>
                 </div>
                 
-                {/* Action Buttons */}
-                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
-                  <Button 
-                    onClick={() => {
-                      toast({
-                        title: "Deal Interest Recorded",
-                        description: "Our maritime team will contact you soon.",
-                        duration: 5000,
-                      });
-                    }}
-                  >
-                    <TrendingUp className="h-4 w-4 mr-2" />
-                    Express Interest
-                  </Button>
-                  <Button 
-                    variant="outline"
-                    onClick={() => {
-                      toast({
-                        title: "Contact Request Sent",
-                        description: "Our specialists will reach out within 24 hours.",
-                        duration: 5000,
-                      });
-                    }}
-                  >
-                    <Phone className="h-4 w-4 mr-2" />
-                    Request Contact
-                  </Button>
-                </div>
+
               </div>
             </CardHeader>
           </Card>
