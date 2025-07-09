@@ -481,6 +481,25 @@ Changelog:
   * **Landing Page Integration**: Trial buttons now redirect to registration with plan parameter for seamless trial activation
   * **Dashboard Integration**: Added trial banner to Dashboard.tsx to display trial status prominently to users
   * **Production Ready**: Complete 7-day trial system with controlled access to subscription features but not everything - users get substantial access during trial period
+- July 9, 2025. **PROFESSIONAL SUBSCRIPTION PLANS UPDATE: Complete Pricing Structure Overhaul**:
+  * **Updated Subscription Plans API**: Replaced old pricing with professional English version structure
+  * **Basic Plan**: Updated to $69/month (was $49) with 5-day trial and marine zone access
+  * **Professional Plan**: Updated to $150/month with broker features, documentation sets, and deal participation
+  * **Enterprise Plan**: Updated to $399/month (was $499) with full global access and legal protection
+  * **Enhanced Features**: Added comprehensive feature sets including marine zones, documentation types (LOI, B/L, SPA, ICPO, etc.), and International Broker ID eligibility
+  * **Professional Pricing Page**: Updated client interface with professional description and 5-day trial messaging
+  * **Fixed Subscription Button Error**: Resolved JSON parsing error by adding proper checkout endpoint with informational response
+  * **User Experience**: Subscription buttons now work properly with informative messages about contacting support for payment setup
+- July 9, 2025. **COMPLETE PROFESSIONAL SUBSCRIPTION PLANS REDESIGN**:
+  * **Beautiful Plans Comparison Component**: Created ProfessionalPlansComparison.tsx with comprehensive tabbed interface matching professional English version
+  * **Professional Pricing Structure**: Updated to exact pricing ($69 Basic, $150 Professional, $399 Enterprise) with 5-day free trials and annual savings
+  * **Feature Comparison Tables**: Added detailed feature comparison table with marine zones, vessel tracking, documentation types, and exclusive features
+  * **Exclusive Features Section**: Professional table showing International Broker Membership, Direct Seller Access, Legal Protection, Real Contract Access
+  * **Enhanced Landing Page**: Updated landing page pricing section to match professional structure with proper 5-day trial messaging
+  * **Emojis and Professional Design**: Added professional emojis (🧪 Basic, 📈 Professional, 🏢 Enterprise) with beautiful gradient cards and hover effects
+  * **Complete Feature Lists**: Comprehensive feature breakdown including marine zones (2/6/9), vessel tracking limits, port coverage (5/20+/100+), documentation sets
+  * **All Plans Include Section**: Professional benefits listing with multi-language support, secure infrastructure, and no long-term commitment
+  * **Production Ready**: Beautiful, professional subscription plans page ready for petroleum trading industry with proper pricing and feature structure
 
 ## User Preferences
 

@@ -1280,7 +1280,7 @@ export default function LandingPage() {
               from independent brokers to large international corporations.
             </p>
             <div className="inline-flex items-center gap-6 text-sm text-orange-300/80">
-              <span>✅ 7-Day free trial for every plan</span>
+              <span>✅ 5-Day free trial for every plan</span>
               <span>•</span>
               <span>✅ No credit card required</span>
               <span>•</span>
@@ -1328,7 +1328,7 @@ export default function LandingPage() {
                     className="w-full bg-white/10 hover:bg-white/20 border border-white/20 text-white mb-3"
                     onClick={() => handleStartTrial(1)}
                   >
-                    Start 7-Day Free Trial
+                    Start 5-Day Free Trial
                   </Button>
                   <p className="text-xs text-center text-white/50">No credit card required</p>
                 </div>
@@ -1383,7 +1383,7 @@ export default function LandingPage() {
                     className="w-full bg-orange-500 hover:bg-orange-600 text-white border border-orange-600/50 mb-3"
                     onClick={() => handleStartTrial(2)}
                   >
-                    Start 7-Day Free Trial
+                    Start 5-Day Free Trial
                   </Button>
                   <p className="text-xs text-center text-white/50">No credit card required</p>
                 </div>
@@ -1437,7 +1437,7 @@ export default function LandingPage() {
                     className="w-full bg-white/10 hover:bg-white/20 border border-white/20 text-white mb-3"
                     onClick={() => handleStartTrial(3)}
                   >
-                    Start 7-Day Free Trial
+                    Start 5-Day Free Trial
                   </Button>
                   <p className="text-xs text-center text-white/50">No credit card required</p>
                 </div>
