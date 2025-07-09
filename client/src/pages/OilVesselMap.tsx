@@ -607,38 +607,23 @@ export default function OilVesselMap() {
               <SelectContent>
                 <SelectItem value="all">All Types</SelectItem>
                 {Array.isArray(oilTypes) && oilTypes.map((oilType: any) => (
-                  <PortalHoverCard 
+                  <SelectItem 
                     key={oilType.id}
-                    content={
-                      <div className="space-y-2">
-                        <h4 className="text-sm font-semibold text-blue-700">{oilType.name}</h4>
-                        <p className="text-sm text-gray-600 leading-relaxed">
-                          {oilType.description || `Filter vessels by ${oilType.name} type`}
-                        </p>
-                        <div className="text-xs text-gray-500 border-t pt-2">
-                          Click to filter vessels by this oil type
-                        </div>
-                      </div>
-                    }
-                    className="w-80 p-4"
+                    value={oilType.name?.toLowerCase() || ''}
+                    className="cursor-pointer hover:bg-blue-50"
                   >
-                    <SelectItem 
-                      value={oilType.name?.toLowerCase() || ''}
-                      className="cursor-pointer hover:bg-blue-50"
-                    >
-                      <div className="flex flex-col">
-                        <span className="font-medium">{oilType.name}</span>
-                        {oilType.description && (
-                          <span className="text-xs text-gray-500 truncate max-w-[200px]">
-                            {oilType.description.length > 50 ? 
-                              `${oilType.description.substring(0, 50)}...` : 
-                              oilType.description
-                            }
-                          </span>
-                        )}
-                      </div>
-                    </SelectItem>
-                  </PortalHoverCard>
+                    <div className="flex flex-col">
+                      <span className="font-medium">{oilType.name}</span>
+                      {oilType.description && (
+                        <span className="text-xs text-gray-500 truncate max-w-[200px]">
+                          {oilType.description.length > 50 ? 
+                            `${oilType.description.substring(0, 50)}...` : 
+                            oilType.description
+                          }
+                        </span>
+                      )}
+                    </div>
+                  </SelectItem>
                 ))}
                 {/* Fallback options if oil types aren't loaded */}
                 {(!Array.isArray(oilTypes) || oilTypes.length === 0) && (
@@ -722,18 +707,30 @@ export default function OilVesselMap() {
           </div>
         )}
         
-        <Wrapper apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''}>
-          <GoogleMapComponent
-            vessels={mappableVessels}
-            ports={ports}
-            refineries={refineries}
-            selectedFilters={{ vesselType: vesselFilter, region: 'all' }}
-            onVesselClick={(vessel) => {
-              // Navigate to vessel detail or show vessel info
-              console.log('Vessel clicked:', vessel);
-            }}
-          />
-        </Wrapper>
+        {import.meta.env.VITE_GOOGLE_MAPS_API_KEY ? (
+          <Wrapper apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
+            <GoogleMapComponent
+              vessels={mappableVessels}
+              ports={ports}
+              refineries={refineries}
+              selectedFilters={{ vesselType: vesselFilter, region: 'all' }}
+              onVesselClick={(vessel) => {
+                console.log('Vessel clicked:', vessel);
+              }}
+            />
+          </Wrapper>
+        ) : (
+          <div className="absolute inset-0 bg-white flex items-center justify-center">
+            <div className="text-center">
+              <div className="text-red-600 mb-2">
+                Google Maps API key not found
+              </div>
+              <div className="text-sm text-gray-600">
+                Please check your environment configuration
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Mobile-First Content Sections Below Map */}
