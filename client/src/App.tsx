@@ -28,7 +28,6 @@ import TrialExpired from "@/pages/TrialExpired";
 import SubscriptionUpgrade from "@/pages/SubscriptionUpgrade";
 import TradingDashboard from "@/pages/TradingDashboard";
 import Companies from "@/pages/Companies";
-import Deals from "@/pages/Deals";
 import ApiTest from "@/pages/ApiTest";
 import TranslationPage from "@/pages/TranslationPage";
 import TrafficInsights from "@/pages/TrafficInsights";
@@ -71,7 +70,6 @@ function ProtectedRoutes() {
           <Route path="/oil-vessel-map" component={OilVesselMap} />
           <Route path="/brokers" component={Brokers} />
           <Route path="/companies" component={Companies} />
-          <Route path="/deals" component={Deals} />
 
           <Route path="/ai-assistant" component={AIAssistantPage} />
           <Route path="/admin">

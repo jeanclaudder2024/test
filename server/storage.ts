@@ -8,7 +8,6 @@ import {
   vesselDocuments, professionalDocuments, oilTypes, documentTemplates,
   realCompanies, fakeCompanies,
   brokerDeals, brokerDocuments, adminBrokerFiles, brokerDealActivities, brokerStats,
-  deals, dealAnalytics, dealSubscriptions,
   User, InsertUser, 
   Vessel, InsertVessel,
   Refinery, InsertRefinery,
@@ -46,8 +45,7 @@ import {
   maritimeDocuments, MaritimeDocument, InsertMaritimeDocument,
   adminDocuments, AdminDocument, InsertAdminDocument,
   documentTemplates, DocumentTemplate, InsertDocumentTemplate,
-  generatedDocuments, GeneratedDocument, InsertGeneratedDocument,
-  Deal, InsertDeal, DealAnalytics, DealSubscription
+  generatedDocuments, GeneratedDocument, InsertGeneratedDocument
 } from "@shared/schema";
 
 // Storage interface with CRUD methods
@@ -2418,196 +2416,6 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error fetching generated articles:', error);
       throw new Error('Failed to fetch generated articles');
-    }
-  }
-
-  // ==================== ENHANCED DEALS MANAGEMENT ====================
-
-  // Get all deals (using current database structure)
-  async getAllDeals(): Promise<Deal[]> {
-    try {
-      // Query the existing deals table structure
-      const result = await db.select().from(deals).orderBy(desc(deals.createdAt));
-      return result;
-    } catch (error) {
-      console.error('Error fetching all deals:', error);
-      // Return sample deals for testing if database fails
-      return [
-        {
-          id: 1,
-          dealCode: "DEAL-001",
-          oilType: "ULSD EN 590",
-          originCountry: "UAE",
-          destinationPorts: "Rotterdam, Houston",
-          loadingPort: "Fujairah Terminal",
-          quantityBarrels: 500000,
-          quantityMts: 75000,
-          dealValueUsd: 45000000,
-          pricePerBarrel: 90.00,
-          contractType: "Spot Trial",
-          deliveryTerms: "FOB",
-          sourceCompany: "BP Trading",
-          dealStatus: "open",
-          dealDate: new Date('2025-07-09'),
-          createdAt: new Date(),
-          updatedAt: new Date()
-        },
-        {
-          id: 2,
-          dealCode: "DEAL-002",
-          oilType: "Crude Oil",
-          originCountry: "Norway",
-          destinationPorts: "Houston, ASWP",
-          loadingPort: "Mongstad Terminal",
-          quantityBarrels: 1000000,
-          quantityMts: 140000,
-          dealValueUsd: 75000000,
-          pricePerBarrel: 75.00,
-          contractType: "12 Months Contract",
-          deliveryTerms: "FOB",
-          sourceCompany: "Equinor",
-          dealStatus: "open",
-          dealDate: new Date('2025-07-07'),
-          createdAt: new Date(),
-          updatedAt: new Date()
-        },
-        {
-          id: 3,
-          dealCode: "DEAL-003",
-          oilType: "Gasoline",
-          originCountry: "Singapore",
-          destinationPorts: "Singapore, Hong Kong",
-          loadingPort: "Singapore Terminal",
-          quantityBarrels: 200000,
-          quantityMts: 28000,
-          dealValueUsd: 19000000,
-          pricePerBarrel: 95.00,
-          contractType: "Spot Trial",
-          deliveryTerms: "CIF",
-          sourceCompany: "ExxonMobil",
-          dealStatus: "reserved",
-          dealDate: new Date('2025-07-06'),
-          createdAt: new Date(),
-          updatedAt: new Date()
-        }
-      ];
-    }
-  }
-
-  // Get deal by ID
-  async getDealById(dealId: number): Promise<Deal | null> {
-    try {
-      const [deal] = await db.select().from(deals).where(eq(deals.id, dealId));
-      return deal || null;
-    } catch (error) {
-      console.error('Error fetching deal by ID:', error);
-      return null;
-    }
-  }
-
-  // Get deals by status
-  async getDealsByStatus(status: string): Promise<Deal[]> {
-    try {
-      return await db.select().from(deals).where(eq(deals.dealStatus, status));
-    } catch (error) {
-      console.error('Error fetching deals by status:', error);
-      return [];
-    }
-  }
-
-  // Create new deal
-  async createDeal(dealData: InsertDeal): Promise<Deal> {
-    try {
-      const [newDeal] = await db.insert(deals).values(dealData).returning();
-      return newDeal;
-    } catch (error) {
-      console.error('Error creating deal:', error);
-      throw error;
-    }
-  }
-
-  // Update deal
-  async updateDeal(dealId: number, dealData: Partial<InsertDeal>): Promise<Deal | null> {
-    try {
-      const [updatedDeal] = await db
-        .update(deals)
-        .set({ ...dealData, updatedAt: new Date() })
-        .where(eq(deals.id, dealId))
-        .returning();
-      return updatedDeal || null;
-    } catch (error) {
-      console.error('Error updating deal:', error);
-      return null;
-    }
-  }
-
-  // Delete deal
-  async deleteDeal(dealId: number): Promise<boolean> {
-    try {
-      // First delete any subscriptions
-      await db.delete(dealSubscriptions).where(eq(dealSubscriptions.dealId, dealId));
-      
-      // Then delete analytics
-      await db.delete(dealAnalytics).where(eq(dealAnalytics.dealId, dealId));
-      
-      // Finally delete the deal
-      const result = await db.delete(deals).where(eq(deals.id, dealId));
-      return result.rowCount ? result.rowCount > 0 : false;
-    } catch (error) {
-      console.error('Error deleting deal:', error);
-      return false;
-    }
-  }
-
-  // Subscribe to deal
-  async subscribeToDeal(dealId: number, userId: number, subscriptionType: string): Promise<DealSubscription> {
-    try {
-      const [subscription] = await db
-        .insert(dealSubscriptions)
-        .values({
-          dealId,
-          userId,
-          subscriptionType,
-          isActive: true,
-          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days from now
-        })
-        .returning();
-      return subscription;
-    } catch (error) {
-      console.error('Error subscribing to deal:', error);
-      throw error;
-    }
-  }
-
-  // Get user subscriptions for deals
-  async getUserDealSubscriptions(userId: number): Promise<DealSubscription[]> {
-    try {
-      return await db
-        .select()
-        .from(dealSubscriptions)
-        .where(and(eq(dealSubscriptions.userId, userId), eq(dealSubscriptions.isActive, true)));
-    } catch (error) {
-      console.error('Error fetching user deal subscriptions:', error);
-      return [];
-    }
-  }
-
-  // Add deal analytics
-  async addDealAnalytics(dealId: number, metricName: string, metricValue: number, metricUnit: string): Promise<DealAnalytics> {
-    try {
-      const [analytics] = await db
-        .insert(dealAnalytics)
-        .values({
-          dealId,
-          metricName,
-          metricValue: metricValue.toString(),
-          metricUnit
-        })
-        .returning();
-      return analytics;
-    } catch (error) {
-      console.error('Error adding deal analytics:', error);
-      throw error;
     }
   }
 }
