@@ -141,9 +141,9 @@ router.post('/login', async (req, res) => {
       .where(eq(userSubscriptions.userId, user.id))
       .limit(1);
 
-    // Check trial status
+    // Check trial status - Admin users never have trial expiration
     const now = new Date();
-    const trialExpired = subscription ? now > new Date(subscription.trialEndDate) : true;
+    const trialExpired = user.role === 'admin' ? false : (subscription ? now > new Date(subscription.trialEndDate) : true);
 
     // Generate token
     const token = generateToken(user);
@@ -194,7 +194,31 @@ router.get('/me', authenticateToken, async (req: AuthenticatedRequest, res) => {
 
     const userSubscription = subscription[0] || null;
     
-    // Check if trial is expired
+    // Admin users have unlimited access - no trial expiration
+    if (req.user.role === 'admin') {
+      res.json({
+        user: {
+          id: req.user.id,
+          email: req.user.email,
+          firstName: req.user.firstName,
+          lastName: req.user.lastName,
+          role: req.user.role
+        },
+        subscription: userSubscription ? {
+          ...userSubscription,
+          status: 'active', // Always active for admin
+          trialStartDate: null,
+          trialEndDate: null,
+          currentPeriodStart: new Date(),
+          currentPeriodEnd: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year from now
+          cancelAtPeriodEnd: false
+        } : null,
+        trialExpired: false // Admin never has trial expiration
+      });
+      return;
+    }
+    
+    // Check if trial is expired for regular users
     const trialExpired = userSubscription 
       ? new Date() > new Date(userSubscription.trialEndDate)
       : false;
