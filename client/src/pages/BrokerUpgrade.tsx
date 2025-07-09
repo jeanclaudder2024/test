@@ -148,16 +148,19 @@ export default function BrokerUpgrade() {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
+      // Save broker data to localStorage for payment process
+      localStorage.setItem('brokerUpgradeData', JSON.stringify(formData));
+      
       // Simulate API call for membership application
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       toast({
         title: "Application submitted successfully!",
-        description: "Your oil union membership application has been submitted for review",
+        description: "Proceeding to payment for your elite membership",
       });
       
-      // Redirect to broker dashboard after successful submission
-      window.location.href = '/broker-dashboard';
+      // Redirect to payment page
+      window.location.href = '/broker-payment';
     } catch (error) {
       toast({
         title: "Submission failed",

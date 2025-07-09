@@ -12,6 +12,8 @@ import PortDetail from "@/pages/PortDetail";
 import Brokers from "@/pages/Brokers";
 import BrokerDashboard from "@/pages/BrokerDashboard";
 import BrokerUpgrade from "@/pages/BrokerUpgrade";
+import BrokerPayment from "@/pages/BrokerPayment";
+import BrokerPaymentSuccess from "@/pages/BrokerPaymentSuccess";
 import OilPrices from "@/pages/OilPrices";
 
 
@@ -62,6 +64,8 @@ function ProtectedRoutes() {
           <Route path="/dashboard" component={Companies} />
           <Route path="/broker-dashboard" component={BrokerDashboard} />
           <Route path="/broker-upgrade" component={BrokerUpgrade} />
+          <Route path="/broker-payment" component={BrokerPayment} />
+          <Route path="/broker-payment-success" component={BrokerPaymentSuccess} />
           <Route path="/oil-prices" component={OilPrices} />
           <Route path="/vessels" component={Vessels} />
           <Route path="/vessels/:id/documents" component={VesselDocuments} />

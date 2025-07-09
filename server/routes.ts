@@ -12395,5 +12395,180 @@ Generate a professional, detailed document that incorporates the vessel informat
     }
   });
 
+  // Broker Payment Endpoints
+  
+  // Create payment intent for broker membership
+  apiRouter.post("/broker/create-payment-intent", async (req, res) => {
+    try {
+      const { amount, brokerData } = req.body;
+      
+      // Check if we have Stripe configured
+      if (!process.env.STRIPE_SECRET_KEY) {
+        return res.status(500).json({ 
+          message: "Payment processing not configured. Please contact support." 
+        });
+      }
+      
+      const Stripe = require('stripe');
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+      
+      // Create payment intent
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(amount * 100), // Convert to cents
+        currency: 'usd',
+        metadata: {
+          type: 'broker_membership',
+          firstName: brokerData.firstName,
+          lastName: brokerData.lastName,
+          email: brokerData.email,
+        },
+      });
+      
+      res.json({ clientSecret: paymentIntent.client_secret });
+    } catch (error) {
+      console.error("Error creating payment intent:", error);
+      res.status(500).json({ message: "Failed to create payment intent" });
+    }
+  });
+  
+  // Confirm payment and update broker status
+  apiRouter.post("/broker/payment-confirm", async (req, res) => {
+    try {
+      const { paymentIntentId, brokerData } = req.body;
+      
+      // Generate membership card number
+      const cardNumber = Date.now().toString().slice(-6);
+      
+      // Calculate membership expiry (1 year from now)
+      const membershipStart = new Date();
+      const membershipEnd = new Date();
+      membershipEnd.setFullYear(membershipEnd.getFullYear() + 1);
+      
+      // Store payment record (if we had the broker payments table)
+      // For now, we'll just return success
+      
+      res.json({
+        success: true,
+        cardNumber,
+        membershipStart: membershipStart.toISOString(),
+        membershipEnd: membershipEnd.toISOString(),
+      });
+    } catch (error) {
+      console.error("Error confirming payment:", error);
+      res.status(500).json({ message: "Failed to confirm payment" });
+    }
+  });
+  
+  // Generate membership card
+  apiRouter.post("/broker/generate-membership-card", async (req, res) => {
+    try {
+      // Get broker data from localStorage or session
+      const cardNumber = Date.now().toString().slice(-6);
+      const expiryDate = new Date();
+      expiryDate.setFullYear(expiryDate.getFullYear() + 1);
+      
+      const membershipCard = {
+        cardNumber,
+        firstName: "Elite",
+        lastName: "Broker",
+        expiryDate: `${String(expiryDate.getMonth() + 1).padStart(2, '0')}/${String(expiryDate.getFullYear()).slice(-2)}`,
+        issueDate: new Date().toLocaleDateString(),
+      };
+      
+      res.json(membershipCard);
+    } catch (error) {
+      console.error("Error generating membership card:", error);
+      res.status(500).json({ message: "Failed to generate membership card" });
+    }
+  });
+  
+  // Download membership card as PDF
+  apiRouter.get("/broker/download-membership-card", async (req, res) => {
+    try {
+      const PDFDocument = require('pdfkit');
+      const doc = new PDFDocument({ size: 'A4', margin: 50 });
+      
+      // Set response headers for PDF download
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', 'attachment; filename="GloboOil-Elite-Membership-Card.pdf"');
+      
+      // Pipe the PDF to the response
+      doc.pipe(res);
+      
+      // Generate membership card number and dates
+      const cardNumber = Date.now().toString().slice(-6);
+      const issueDate = new Date().toLocaleDateString();
+      const expiryDate = new Date();
+      expiryDate.setFullYear(expiryDate.getFullYear() + 1);
+      
+      // Add beautiful gradient background
+      doc.rect(0, 0, 595, 842).fill('#1a365d');
+      
+      // Add gold gradient overlay
+      const gradient = doc.linearGradient(0, 0, 595, 200);
+      gradient.stop(0, '#f6e05e').stop(1, '#d69e2e');
+      doc.rect(0, 0, 595, 200).fill(gradient);
+      
+      // Company Logo and Header
+      doc.fontSize(32).fillColor('#1a365d').font('Helvetica-Bold');
+      doc.text('GloboOil', 50, 60);
+      doc.fontSize(14).fillColor('#2d3748');
+      doc.text('ELITE BROKER MEMBERSHIP', 50, 100);
+      
+      // Main card content area with white background
+      doc.rect(50, 180, 495, 300).fill('#ffffff').stroke('#d69e2e', 3);
+      
+      // Member Information
+      doc.fontSize(24).fillColor('#1a365d').font('Helvetica-Bold');
+      doc.text('Elite Broker', 70, 220);
+      
+      doc.fontSize(16).fillColor('#2d3748').font('Helvetica');
+      doc.text(`Member ID: ${cardNumber}`, 70, 260);
+      doc.text(`Issue Date: ${issueDate}`, 70, 285);
+      doc.text(`Valid Until: ${expiryDate.toLocaleDateString()}`, 70, 310);
+      
+      // Elite benefits section
+      doc.fontSize(14).fillColor('#d69e2e').font('Helvetica-Bold');
+      doc.text('ELITE PRIVILEGES:', 70, 350);
+      
+      doc.fontSize(12).fillColor('#2d3748').font('Helvetica');
+      const benefits = [
+        '• Exclusive access to premium oil deals',
+        '• Priority customer support',
+        '• Advanced market analytics',
+        '• Global broker network access',
+        '• Unlimited document generation'
+      ];
+      
+      benefits.forEach((benefit, index) => {
+        doc.text(benefit, 70, 375 + (index * 18));
+      });
+      
+      // Footer with contact information
+      doc.fontSize(10).fillColor('#718096');
+      doc.text('GloboOil Elite Membership Services', 50, 520);
+      doc.text('For support: elite@globooil.com | +1 (555) 123-4567', 50, 535);
+      
+      // QR Code placeholder (represented as a square)
+      doc.rect(450, 220, 80, 80).stroke('#d69e2e', 2);
+      doc.fontSize(10).fillColor('#718096');
+      doc.text('QR Code', 470, 250);
+      doc.text('Scan for', 470, 265);
+      doc.text('Verification', 465, 280);
+      
+      // Security features
+      doc.fontSize(8).fillColor('#a0aec0');
+      doc.text('This card is the property of GloboOil and must be returned upon request.', 50, 560);
+      doc.text('Unauthorized use is prohibited. Report lost or stolen cards immediately.', 50, 575);
+      
+      // Finalize the PDF
+      doc.end();
+      
+    } catch (error) {
+      console.error("Error generating membership card PDF:", error);
+      res.status(500).json({ message: "Failed to generate membership card PDF" });
+    }
+  });
+
   return httpServer;
 }
