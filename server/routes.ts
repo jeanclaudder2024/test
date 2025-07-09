@@ -496,6 +496,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     });
 
+    // Public oil types endpoint (no auth required)
+    apiRouter.get("/oil-types", async (req, res) => {
+      try {
+        const allOilTypes = await storage.getOilTypes();
+        res.json(allOilTypes);
+      } catch (error) {
+        console.error("Error fetching oil types:", error);
+        res.status(500).json({
+          success: false,
+          message: "Failed to fetch oil types"
+        });
+      }
+    });
+
     // Public oil types delete endpoint for production deployment compatibility
     apiRouter.delete("/oil-types/:id", async (req, res) => {
       try {

@@ -123,18 +123,12 @@ export default function OilVesselMap() {
   });
 
   const { data: oilTypes = [], isLoading: oilTypesLoading } = useQuery({
-    queryKey: ['admin-oil-types'],
+    queryKey: ['oil-types'],
     queryFn: async () => {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch('/api/admin/oil-types', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await fetch('/api/oil-types');
       if (!response.ok) throw new Error('Failed to fetch oil types');
       const data = await response.json();
-      console.log('Fetched oil types:', data);
+      console.log('Fetched oil types for vessel filtering:', data);
       return data;
     },
     staleTime: 0,
