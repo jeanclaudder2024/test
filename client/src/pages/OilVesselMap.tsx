@@ -30,7 +30,7 @@ export default function OilVesselMap() {
   const [mapZoom] = useState(4);
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
-  const markersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
+  const markersRef = useRef<google.maps.Marker[]>([]);
   const { toast } = useToast();
 
   // Load Google Maps API
@@ -42,7 +42,7 @@ export default function OilVesselMap() {
       }
 
       const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyAVyB_LKIVJwkcUIPcgKeioPWH71ulpays&libraries=marker&callback=initMap`;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyAVyB_LKIVJwkcUIPcgKeioPWH71ulpays&callback=initMap`;
       script.async = true;
       script.defer = true;
       
@@ -59,7 +59,6 @@ export default function OilVesselMap() {
     mapInstanceRef.current = new window.google.maps.Map(mapRef.current, {
       center: { lat: mapCenter[0], lng: mapCenter[1] },
       zoom: mapZoom,
-      mapId: 'maritime-tracking-map',
       mapTypeId: getGoogleMapType(),
       styles: mapStyle === 'dark' ? getDarkMapStyles() : undefined,
     });
@@ -249,13 +248,11 @@ export default function OilVesselMap() {
 
   // Create markers when map and data are ready
   useEffect(() => {
-    if (!mapInstanceRef.current || !window.google?.maps?.marker?.AdvancedMarkerElement) return;
+    if (!mapInstanceRef.current || !window.google?.maps) return;
 
     // Clear existing markers
     markersRef.current.forEach(marker => {
-      if (marker.map) {
-        marker.map = null;
-      }
+      marker.setMap(null);
     });
     markersRef.current = [];
 
@@ -266,24 +263,18 @@ export default function OilVesselMap() {
       
       if (isNaN(lat) || isNaN(lng)) return;
 
-      // Create marker element
-      const markerElement = document.createElement('div');
-      markerElement.style.cssText = `
-        width: 20px; 
-        height: 20px; 
-        background: ${getVesselColor(vessel.vesselType)}; 
-        border: 2px solid white; 
-        border-radius: 50%; 
-        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        cursor: pointer;
-        animation: pulse 2s infinite;
-      `;
-
-      const marker = new window.google.maps.marker.AdvancedMarkerElement({
+      const marker = new window.google.maps.Marker({
         position: { lat, lng },
         map: mapInstanceRef.current,
-        content: markerElement,
         title: vessel.name,
+        icon: {
+          path: window.google.maps.SymbolPath.CIRCLE,
+          fillColor: getVesselColor(vessel.vesselType),
+          fillOpacity: 0.8,
+          strokeColor: '#ffffff',
+          strokeWeight: 2,
+          scale: 8,
+        },
       });
 
       // Create info window
@@ -306,22 +297,18 @@ export default function OilVesselMap() {
         
         if (!lat || !lng || isNaN(lat) || isNaN(lng)) return;
 
-        const portElement = document.createElement('div');
-        portElement.style.cssText = `
-          width: 16px; 
-          height: 16px; 
-          background: #f59e0b; 
-          border: 2px solid white; 
-          border-radius: 3px; 
-          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-          cursor: pointer;
-        `;
-
-        const marker = new window.google.maps.marker.AdvancedMarkerElement({
+        const marker = new window.google.maps.Marker({
           position: { lat, lng },
           map: mapInstanceRef.current,
-          content: portElement,
           title: port.name,
+          icon: {
+            path: window.google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+            fillColor: '#f59e0b',
+            fillOpacity: 0.8,
+            strokeColor: '#ffffff',
+            strokeWeight: 2,
+            scale: 6,
+          },
         });
 
         const infoWindow = new window.google.maps.InfoWindow({
@@ -348,22 +335,18 @@ export default function OilVesselMap() {
       
       if (!lat || !lng || isNaN(lat) || isNaN(lng)) return;
 
-      const refineryElement = document.createElement('div');
-      refineryElement.style.cssText = `
-        width: 18px; 
-        height: 18px; 
-        background: #9333ea; 
-        border: 2px solid white; 
-        border-radius: 3px; 
-        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        cursor: pointer;
-      `;
-
-      const marker = new window.google.maps.marker.AdvancedMarkerElement({
+      const marker = new window.google.maps.Marker({
         position: { lat, lng },
         map: mapInstanceRef.current,
-        content: refineryElement,
         title: refinery.name,
+        icon: {
+          path: window.google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+          fillColor: '#9333ea',
+          fillOpacity: 0.8,
+          strokeColor: '#ffffff',
+          strokeWeight: 2,
+          scale: 7,
+        },
       });
 
       const infoWindow = new window.google.maps.InfoWindow({
