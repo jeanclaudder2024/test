@@ -12115,6 +12115,41 @@ Note: This document contains real vessel operational data and should be treated 
     }
   });
 
+  // Upgrade subscription plan
+  app.post("/api/upgrade-subscription", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const { planId } = req.body;
+      
+      if (!planId) {
+        return res.status(400).json({ error: 'Plan ID is required' });
+      }
+
+      // Update user's subscription tier and status
+      const updatedUser = await storage.updateUser(req.user.id, {
+        subscriptionTier: planId === 1 ? 'Basic' : planId === 2 ? 'Professional' : 'Enterprise',
+        isSubscribed: true,
+        subscriptionStatus: 'active'
+      });
+
+      // For demo purposes, we'll just update the user record
+      // In production, this would involve Stripe integration
+      
+      res.json({ 
+        success: true, 
+        message: 'Subscription upgraded successfully',
+        user: updatedUser 
+      });
+
+    } catch (error) {
+      console.error('Error upgrading subscription:', error);
+      res.status(500).json({ error: 'Failed to upgrade subscription' });
+    }
+  });
+
   // Reactivate subscription
   app.post("/api/reactivate-subscription", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {

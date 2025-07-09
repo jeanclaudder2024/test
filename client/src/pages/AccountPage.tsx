@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,8 @@ import {
   CheckCircle,
   Download,
   BarChart3,
-  Ship
+  Ship,
+  ArrowUp
 } from 'lucide-react';
 import { getSubscriptionStatus, getUserSubscription, cancelSubscription, getDaysRemainingInTrial } from '@/lib/subscriptionService';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
@@ -23,8 +24,10 @@ import { useToast } from '@/hooks/use-toast';
 import { SubscriptionStatus } from '@/components/subscription/SubscriptionStatus';
 import { useAuth } from '@/hooks/useAuth';
 import { formatDistanceToNow } from 'date-fns';
+import UpgradeModal from '@/components/UpgradeModal';
 
 export default function AccountPage() {
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
   
@@ -165,8 +168,14 @@ export default function AccountPage() {
                         )}
 
                         <div className="flex space-x-3">
-                          <Button variant="outline" size="sm">
-                            Change Plan
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => setIsUpgradeModalOpen(true)}
+                            className="flex items-center gap-2"
+                          >
+                            <ArrowUp className="h-4 w-4" />
+                            Upgrade Plan
                           </Button>
                           {subscription.status === 'active' && (
                             <Button 
@@ -323,6 +332,12 @@ export default function AccountPage() {
           </TabsContent>
         </Tabs>
       </div>
+      
+      {/* Upgrade Modal */}
+      <UpgradeModal
+        isOpen={isUpgradeModalOpen}
+        onClose={() => setIsUpgradeModalOpen(false)}
+      />
     </div>
   );
 }

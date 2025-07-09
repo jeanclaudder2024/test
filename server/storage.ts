@@ -400,43 +400,48 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getSubscriptionsWithDetails(): Promise<any[]> {
-    const result = await db
-      .select({
-        id: subscriptions.id,
-        userId: subscriptions.userId,
-        planId: subscriptions.planId,
-        status: subscriptions.status,
-        stripeCustomerId: subscriptions.stripeCustomerId,
-        stripeSubscriptionId: subscriptions.stripeSubscriptionId,
-        currentPeriodStart: subscriptions.currentPeriodStart,
-        currentPeriodEnd: subscriptions.currentPeriodEnd,
-        cancelAtPeriodEnd: subscriptions.cancelAtPeriodEnd,
-        billingInterval: subscriptions.billingInterval,
-        createdAt: subscriptions.createdAt,
-        updatedAt: subscriptions.updatedAt,
-        user: {
-          id: users.id,
-          username: users.username,
-          email: users.email,
-          isSubscribed: users.isSubscribed,
-          subscriptionTier: users.subscriptionTier
-        },
-        plan: {
-          id: subscriptionPlans.id,
-          name: subscriptionPlans.name,
-          slug: subscriptionPlans.slug,
-          description: subscriptionPlans.description,
-          monthlyPrice: subscriptionPlans.monthlyPrice,
-          yearlyPrice: subscriptionPlans.yearlyPrice,
-          features: subscriptionPlans.features
-        }
-      })
-      .from(subscriptions)
-      .leftJoin(users, eq(subscriptions.userId, users.id))
-      .leftJoin(subscriptionPlans, eq(subscriptions.planId, subscriptionPlans.id))
-      .orderBy(subscriptions.createdAt);
-    
-    return result;
+    try {
+      const result = await db
+        .select({
+          id: subscriptions.id,
+          userId: subscriptions.userId,
+          planId: subscriptions.planId,
+          status: subscriptions.status,
+          stripeCustomerId: subscriptions.stripeCustomerId,
+          stripeSubscriptionId: subscriptions.stripeSubscriptionId,
+          currentPeriodStart: subscriptions.currentPeriodStart,
+          currentPeriodEnd: subscriptions.currentPeriodEnd,
+          cancelAtPeriodEnd: subscriptions.cancelAtPeriodEnd,
+          billingInterval: subscriptions.billingInterval,
+          createdAt: subscriptions.createdAt,
+          updatedAt: subscriptions.updatedAt,
+          user: {
+            id: users.id,
+            email: users.email,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            role: users.role
+          },
+          plan: {
+            id: subscriptionPlans.id,
+            name: subscriptionPlans.name,
+            description: subscriptionPlans.description,
+            price: subscriptionPlans.price,
+            interval: subscriptionPlans.interval,
+            features: subscriptionPlans.features
+          }
+        })
+        .from(subscriptions)
+        .leftJoin(users, eq(subscriptions.userId, users.id))
+        .leftJoin(subscriptionPlans, eq(subscriptions.planId, subscriptionPlans.id))
+        .orderBy(subscriptions.createdAt);
+      
+      return result;
+    } catch (error) {
+      console.error("Error in getSubscriptionsWithDetails:", error);
+      // Return empty array if subscriptions table doesn't exist yet
+      return [];
+    }
   }
   
   async getSubscriptionById(id: number): Promise<Subscription | undefined> {
