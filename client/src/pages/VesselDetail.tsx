@@ -1031,37 +1031,37 @@ export default function VesselDetail() {
                         Deal & Financial Details
                       </h4>
                       
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="bg-white dark:bg-slate-700 p-3 rounded border">
-                          <div className="text-sm text-muted-foreground mb-1">Deal Value</div>
-                          <div className="font-medium text-lg">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="bg-white dark:bg-slate-700 p-4 rounded border">
+                          <div className="text-sm text-muted-foreground mb-2">Deal Value</div>
+                          <div className="font-medium text-lg break-words">
                             {vessel.dealValue && !isNaN(parseFloat(vessel.dealValue))
                               ? `$${parseFloat(vessel.dealValue).toLocaleString()} USD`
                               : '$93,806,381 USD'}
                           </div>
                         </div>
                         
-                        <div className="bg-white dark:bg-slate-700 p-3 rounded border">
-                          <div className="text-sm text-muted-foreground mb-1">Price per Barrel</div>
-                          <div className="font-medium text-lg">
+                        <div className="bg-white dark:bg-slate-700 p-4 rounded border">
+                          <div className="text-sm text-muted-foreground mb-2">Price per Barrel</div>
+                          <div className="font-medium text-lg break-words">
                             {vessel.price && !isNaN(parseFloat(vessel.price))
                               ? `$${parseFloat(vessel.price).toFixed(2)}`
                               : '$72.61'}
                           </div>
                         </div>
                         
-                        <div className="bg-white dark:bg-slate-700 p-3 rounded border">
-                          <div className="text-sm text-muted-foreground mb-1">Market Price</div>
-                          <div className="font-medium text-lg">
+                        <div className="bg-white dark:bg-slate-700 p-4 rounded border">
+                          <div className="text-sm text-muted-foreground mb-2">Market Price</div>
+                          <div className="font-medium text-lg break-words">
                             {vessel.marketPrice && !isNaN(parseFloat(vessel.marketPrice))
                               ? `$${parseFloat(vessel.marketPrice).toFixed(2)}`
                               : '$72.37'}
                           </div>
                         </div>
                         
-                        <div className="bg-white dark:bg-slate-700 p-3 rounded border">
-                          <div className="text-sm text-muted-foreground mb-1">Payment Terms</div>
-                          <div className="font-medium text-lg">
+                        <div className="bg-white dark:bg-slate-700 p-4 rounded border md:col-span-2 lg:col-span-1">
+                          <div className="text-sm text-muted-foreground mb-2">Payment Terms</div>
+                          <div className="font-medium text-base break-words leading-tight">
                             {vessel.paymentTerms || 'MT103/TT After Delivery'}
                           </div>
                         </div>
