@@ -1233,7 +1233,10 @@ export default function VesselDetail() {
                       {/* Action Button */}
                       <div className="mt-6">
                         <Button 
-                          className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-4 px-6 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 animate-pulse"
+                          className="w-full py-4 px-6 font-semibold shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-700 animate-pulse"
+                          style={{
+                            animationDuration: '3s'
+                          }}
                           onClick={() => {
                             toast({
                               title: "Deal Interest Registered",
@@ -1242,7 +1245,7 @@ export default function VesselDetail() {
                             });
                           }}
                         >
-                          <TrendingUp className="mr-2 h-5 w-5 animate-bounce" />
+                          <TrendingUp className="mr-2 h-4 w-4" />
                           Express Interest in Deal
                         </Button>
                       </div>

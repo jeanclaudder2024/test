@@ -394,6 +394,15 @@ Changelog:
   * **Professional Action Button**: Enhanced deal interest button with gradient styling and prominent placement
   * **Fixed Layout Issues**: Resolved data positioning problems and removed unwanted spacing for clean presentation
   * **Corporate Appearance**: Design now suitable for business use with professional appearance and consistent spacing throughout
+- July 9, 2025. **BEAUTIFUL ROW-BASED DATA DISPLAY: Enhanced Vessel Information Layout**:
+  * **Individual Row Design**: Redesigned all cargo and deal information to display each field in its own beautiful row with icons
+  * **Icon Integration**: Added 19 different colored icons for visual hierarchy (Droplet, MapPin, Navigation, BarChart, DollarSign, etc.)
+  * **Color-Coded Categories**: Used consistent color scheme - financial data (green), location data (blue/orange), status data (purple)
+  * **Enhanced Visual Appeal**: Each row has gray background, proper padding, and icon-text alignment for better readability
+  * **Professional Animation**: Added slow, subtle pulse animation (3s duration) to "Express Interest in Deal" button for user engagement
+  * **Hover Effects**: Implemented gentle scaling (1.02x) and shadow enhancement on button hover with 700ms transitions
+  * **Clean Spacing**: Organized data into clear sections with consistent spacing and visual hierarchy
+  * **User-Focused Design**: Layout optimized for easy scanning and understanding of vessel deal information
 
 ## User Preferences
 
