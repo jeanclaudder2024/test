@@ -1389,43 +1389,38 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Broker Deals Methods
-  async getBrokerDeals(brokerId: number): Promise<(BrokerDeal & { companyName: string; documentsCount: number })[]> {
-    const results = await db
-      .select({
-        id: brokerDeals.id,
-        brokerId: brokerDeals.brokerId,
-        companyId: brokerDeals.companyId,
-        dealTitle: brokerDeals.dealTitle,
-        dealValue: brokerDeals.dealValue,
-        status: brokerDeals.status,
-        progress: brokerDeals.progress,
-        oilType: brokerDeals.oilType,
-        quantity: brokerDeals.quantity,
-        startDate: brokerDeals.startDate,
-        expectedCloseDate: brokerDeals.expectedCloseDate,
-        actualCloseDate: brokerDeals.actualCloseDate,
-        notes: brokerDeals.notes,
-        commissionRate: brokerDeals.commissionRate,
-        commissionAmount: brokerDeals.commissionAmount,
-        metadata: brokerDeals.metadata,
-        createdAt: brokerDeals.createdAt,
-        updatedAt: brokerDeals.updatedAt,
-        companyName: realCompanies.name,
-        documentsCount: sql<number>`COALESCE(doc_count.count, 0)`,
-      })
-      .from(brokerDeals)
-      .leftJoin(realCompanies, eq(brokerDeals.companyId, realCompanies.id))
-      .leftJoin(
-        db.select({ dealId: brokerDocuments.dealId, count: sql<number>`count(*)` })
-          .from(brokerDocuments)
-          .groupBy(brokerDocuments.dealId)
-          .as('doc_count'),
-        eq(brokerDeals.id, sql`doc_count.deal_id`)
-      )
-      .where(eq(brokerDeals.brokerId, brokerId))
-      .orderBy(brokerDeals.createdAt);
-
-    return results as (BrokerDeal & { companyName: string; documentsCount: number })[];
+  async getBrokerDeals(brokerId: number): Promise<any[]> {
+    try {
+      const results = await db.execute(sql`
+        SELECT 
+          bd.id,
+          bd.deal_title,
+          bd.company_name,
+          bd.company_id,
+          bd.deal_value,
+          bd.status,
+          bd.progress,
+          bd.start_date,
+          bd.expected_close_date,
+          bd.oil_type,
+          bd.quantity,
+          bd.notes,
+          bd.documents_count,
+          bd.broker_id,
+          bd.created_at,
+          COALESCE(COUNT(doc.id), 0) as documents_count
+        FROM broker_deals bd
+        LEFT JOIN broker_documents doc ON bd.id = doc.deal_id
+        WHERE bd.broker_id = ${brokerId}
+        GROUP BY bd.id, bd.deal_title, bd.company_name, bd.company_id, bd.deal_value, bd.status, bd.progress, bd.start_date, bd.expected_close_date, bd.oil_type, bd.quantity, bd.notes, bd.documents_count, bd.broker_id, bd.created_at
+        ORDER BY bd.created_at DESC
+      `);
+      
+      return results.rows || [];
+    } catch (error) {
+      console.error('Error fetching broker deals:', error);
+      return [];
+    }
   }
 
   async createBrokerDeal(deal: InsertBrokerDeal): Promise<BrokerDeal> {
@@ -1448,12 +1443,31 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Broker Documents Methods
-  async getBrokerDocuments(brokerId: number): Promise<BrokerDocument[]> {
-    return await db
-      .select()
-      .from(brokerDocuments)
-      .where(eq(brokerDocuments.brokerId, brokerId))
-      .orderBy(brokerDocuments.createdAt);
+  async getBrokerDocuments(brokerId: number): Promise<any[]> {
+    try {
+      const results = await db.execute(sql`
+        SELECT 
+          id,
+          name,
+          type,
+          size,
+          upload_date,
+          uploaded_by,
+          download_count,
+          deal_id,
+          is_admin_file,
+          broker_id,
+          file_path
+        FROM broker_documents
+        WHERE broker_id = ${brokerId}
+        ORDER BY upload_date DESC
+      `);
+      
+      return results.rows || [];
+    } catch (error) {
+      console.error('Error fetching broker documents:', error);
+      return [];
+    }
   }
 
   async getBrokerDocumentsByDeal(dealId: number): Promise<BrokerDocument[]> {
@@ -1482,36 +1496,30 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Admin Broker Files Methods
-  async getAdminBrokerFiles(brokerId: number): Promise<(AdminBrokerFile & { sentByName: string })[]> {
-    const results = await db
-      .select({
-        id: adminBrokerFiles.id,
-        brokerId: adminBrokerFiles.brokerId,
-        sentByUserId: adminBrokerFiles.sentByUserId,
-        fileName: adminBrokerFiles.fileName,
-        originalName: adminBrokerFiles.originalName,
-        fileType: adminBrokerFiles.fileType,
-        fileSize: adminBrokerFiles.fileSize,
-        filePath: adminBrokerFiles.filePath,
-        description: adminBrokerFiles.description,
-        category: adminBrokerFiles.category,
-        priority: adminBrokerFiles.priority,
-        isRead: adminBrokerFiles.isRead,
-        readAt: adminBrokerFiles.readAt,
-        expiresAt: adminBrokerFiles.expiresAt,
-        requiresSignature: adminBrokerFiles.requiresSignature,
-        signedAt: adminBrokerFiles.signedAt,
-        notes: adminBrokerFiles.notes,
-        createdAt: adminBrokerFiles.createdAt,
-        updatedAt: adminBrokerFiles.updatedAt,
-        sentByName: sql<string>`CONCAT(${users.firstName}, ' ', ${users.lastName})`,
-      })
-      .from(adminBrokerFiles)
-      .leftJoin(users, eq(adminBrokerFiles.sentByUserId, users.id))
-      .where(eq(adminBrokerFiles.brokerId, brokerId))
-      .orderBy(adminBrokerFiles.createdAt);
-
-    return results as (AdminBrokerFile & { sentByName: string })[];
+  async getAdminBrokerFiles(brokerId: number): Promise<any[]> {
+    try {
+      const results = await db.execute(sql`
+        SELECT 
+          id,
+          file_name,
+          file_type,
+          file_size,
+          sent_date,
+          sent_by,
+          description,
+          category,
+          broker_id,
+          file_path
+        FROM admin_broker_files
+        WHERE broker_id = ${brokerId}
+        ORDER BY sent_date DESC
+      `);
+      
+      return results.rows || [];
+    } catch (error) {
+      console.error('Error fetching admin broker files:', error);
+      return [];
+    }
   }
 
   async createAdminBrokerFile(file: InsertAdminBrokerFile): Promise<AdminBrokerFile> {
