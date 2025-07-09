@@ -33,7 +33,8 @@ import {
   Flag, Droplet, Package, AlertCircle, Truck, Gauge, BarChart, History,
   Users, Clock, Compass, ArrowRight, FileText, FileCheck, Clipboard, Download, Globe,
   ZoomIn, ZoomOut, Fuel, Activity, Layers, Filter, Tag, Check, RotateCw,
-  MapPin, ExternalLink, Factory, AlertTriangle, RefreshCw, Route, TrendingUp, Phone, Building
+  MapPin, ExternalLink, Factory, AlertTriangle, RefreshCw, Route, TrendingUp, Phone, Building,
+  DollarSign, CreditCard, CheckCircle, Star, Shield, Hash
 } from 'lucide-react';
 
 // Define oil product categories for filtering
@@ -988,36 +989,48 @@ export default function VesselDetail() {
                         <Package className="h-5 w-5 mr-2 text-blue-600" />
                         Primary Cargo Details
                       </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <div className="text-sm text-muted-foreground mb-1">Oil Type / Commodity</div>
-                          <div className="font-medium">
-                            {vessel.oilType || vessel.cargoType || 'ULSD EN 590 – 10ppm / Gasoline'}
+                      <div className="space-y-3">
+                        <div className="flex items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                          <Droplet className="h-5 w-5 mr-3 text-blue-600" />
+                          <div className="flex-1">
+                            <div className="text-sm text-muted-foreground">Oil Type / Commodity</div>
+                            <div className="font-medium">
+                              {vessel.oilType || vessel.cargoType || 'ULSD EN 590 – 10ppm / Gasoline'}
+                            </div>
                           </div>
                         </div>
                         
-                        <div>
-                          <div className="text-sm text-muted-foreground mb-1">Origin</div>
-                          <div className="font-medium">
-                            {vessel.origin || getDeparturePortName(vessel.departurePort) || 'Kharg Island'}
+                        <div className="flex items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                          <MapPin className="h-5 w-5 mr-3 text-green-600" />
+                          <div className="flex-1">
+                            <div className="text-sm text-muted-foreground">Origin</div>
+                            <div className="font-medium">
+                              {vessel.origin || getDeparturePortName(vessel.departurePort) || 'Kharg Island'}
+                            </div>
                           </div>
                         </div>
                         
-                        <div>
-                          <div className="text-sm text-muted-foreground mb-1">Destination</div>
-                          <div className="font-medium">
-                            {vessel.destination || getDestinationPortName(vessel.destinationPort) || 'Rotterdam – Houston – Jurong'}
+                        <div className="flex items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                          <Navigation className="h-5 w-5 mr-3 text-orange-600" />
+                          <div className="flex-1">
+                            <div className="text-sm text-muted-foreground">Destination</div>
+                            <div className="font-medium">
+                              {vessel.destination || getDestinationPortName(vessel.destinationPort) || 'Rotterdam – Houston – Jurong'}
+                            </div>
                           </div>
                         </div>
                         
-                        <div>
-                          <div className="text-sm text-muted-foreground mb-1">Quantity</div>
-                          <div className="font-medium">
-                            {vessel.quantity && !isNaN(parseFloat(vessel.quantity))
-                              ? `${parseFloat(vessel.quantity).toLocaleString()} barrels`
-                              : vessel.cargoCapacity 
-                              ? `${vessel.cargoCapacity.toLocaleString()} barrels` 
-                              : '1,291,833 barrels / 50,000-500,000 MTs'}
+                        <div className="flex items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                          <BarChart className="h-5 w-5 mr-3 text-purple-600" />
+                          <div className="flex-1">
+                            <div className="text-sm text-muted-foreground">Quantity</div>
+                            <div className="font-medium">
+                              {vessel.quantity && !isNaN(parseFloat(vessel.quantity))
+                                ? `${parseFloat(vessel.quantity).toLocaleString()} barrels`
+                                : vessel.cargoCapacity 
+                                ? `${vessel.cargoCapacity.toLocaleString()} barrels` 
+                                : '1,291,833 barrels / 50,000-500,000 MTs'}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -1026,41 +1039,53 @@ export default function VesselDetail() {
                     {/* Deal & Financial Information */}
                     <div>
                       <h4 className="font-semibold text-lg mb-4 flex items-center">
-                        <Droplet className="h-5 w-5 mr-2 text-green-600" />
+                        <DollarSign className="h-5 w-5 mr-2 text-green-600" />
                         Deal & Financial Details
                       </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div>
-                          <div className="text-sm text-muted-foreground mb-1">Deal Value</div>
-                          <div className="font-medium text-lg">
-                            {vessel.dealValue && !isNaN(parseFloat(vessel.dealValue))
-                              ? `$${parseFloat(vessel.dealValue).toLocaleString()} USD`
-                              : '$93,806,381 USD'}
+                      <div className="space-y-3">
+                        <div className="flex items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                          <DollarSign className="h-5 w-5 mr-3 text-green-600" />
+                          <div className="flex-1">
+                            <div className="text-sm text-muted-foreground">Deal Value</div>
+                            <div className="font-medium text-lg">
+                              {vessel.dealValue && !isNaN(parseFloat(vessel.dealValue))
+                                ? `$${parseFloat(vessel.dealValue).toLocaleString()} USD`
+                                : '$93,806,381 USD'}
+                            </div>
                           </div>
                         </div>
                         
-                        <div>
-                          <div className="text-sm text-muted-foreground mb-1">Price per Barrel</div>
-                          <div className="font-medium text-lg">
-                            {vessel.price && !isNaN(parseFloat(vessel.price))
-                              ? `$${parseFloat(vessel.price).toFixed(2)}`
-                              : '$72.61'}
+                        <div className="flex items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                          <TrendingUp className="h-5 w-5 mr-3 text-blue-600" />
+                          <div className="flex-1">
+                            <div className="text-sm text-muted-foreground">Price per Barrel</div>
+                            <div className="font-medium text-lg">
+                              {vessel.price && !isNaN(parseFloat(vessel.price))
+                                ? `$${parseFloat(vessel.price).toFixed(2)}`
+                                : '$72.61'}
+                            </div>
                           </div>
                         </div>
                         
-                        <div>
-                          <div className="text-sm text-muted-foreground mb-1">Market Price</div>
-                          <div className="font-medium text-lg">
-                            {vessel.marketPrice && !isNaN(parseFloat(vessel.marketPrice))
-                              ? `$${parseFloat(vessel.marketPrice).toFixed(2)}`
-                              : '$72.37'}
+                        <div className="flex items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                          <BarChart className="h-5 w-5 mr-3 text-orange-600" />
+                          <div className="flex-1">
+                            <div className="text-sm text-muted-foreground">Market Price</div>
+                            <div className="font-medium text-lg">
+                              {vessel.marketPrice && !isNaN(parseFloat(vessel.marketPrice))
+                                ? `$${parseFloat(vessel.marketPrice).toFixed(2)}`
+                                : '$72.37'}
+                            </div>
                           </div>
                         </div>
                         
-                        <div>
-                          <div className="text-sm text-muted-foreground mb-1">Payment Terms</div>
-                          <div className="font-medium text-base">
-                            {vessel.paymentTerms || 'MT103/TT After Delivery'}
+                        <div className="flex items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                          <CreditCard className="h-5 w-5 mr-3 text-purple-600" />
+                          <div className="flex-1">
+                            <div className="text-sm text-muted-foreground">Payment Terms</div>
+                            <div className="font-medium text-base">
+                              {vessel.paymentTerms || 'MT103/TT After Delivery'}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -1072,32 +1097,44 @@ export default function VesselDetail() {
                         <FileText className="h-5 w-5 mr-2 text-orange-600" />
                         Contract & Operations
                       </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <div className="text-sm text-muted-foreground mb-1">Contract Type</div>
-                          <div className="font-medium">
-                            {vessel.contractType || 'Spot Trial + 12 Months Optional Contract'}
+                      <div className="space-y-3">
+                        <div className="flex items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                          <FileText className="h-5 w-5 mr-3 text-orange-600" />
+                          <div className="flex-1">
+                            <div className="text-sm text-muted-foreground">Contract Type</div>
+                            <div className="font-medium">
+                              {vessel.contractType || 'Spot Trial + 12 Months Optional Contract'}
+                            </div>
                           </div>
                         </div>
                         
-                        <div>
-                          <div className="text-sm text-muted-foreground mb-1">Delivery Terms</div>
-                          <div className="font-medium">
-                            {vessel.deliveryTerms || 'FOB – CIF'}
+                        <div className="flex items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                          <Truck className="h-5 w-5 mr-3 text-green-600" />
+                          <div className="flex-1">
+                            <div className="text-sm text-muted-foreground">Delivery Terms</div>
+                            <div className="font-medium">
+                              {vessel.deliveryTerms || 'FOB – CIF'}
+                            </div>
                           </div>
                         </div>
                         
-                        <div>
-                          <div className="text-sm text-muted-foreground mb-1">Loading Port</div>
-                          <div className="font-medium">
-                            {vessel.loadingPort || getDeparturePortName(vessel.departurePort) || 'Kharg Island'}
+                        <div className="flex items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                          <Anchor className="h-5 w-5 mr-3 text-blue-600" />
+                          <div className="flex-1">
+                            <div className="text-sm text-muted-foreground">Loading Port</div>
+                            <div className="font-medium">
+                              {vessel.loadingPort || getDeparturePortName(vessel.departurePort) || 'Kharg Island'}
+                            </div>
                           </div>
                         </div>
                         
-                        <div>
-                          <div className="text-sm text-muted-foreground mb-1">Quality Specification</div>
-                          <div className="font-medium">
-                            {vessel.qualitySpec || 'ULSD 10ppm / Standard Gasoline Spec'}
+                        <div className="flex items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                          <CheckCircle className="h-5 w-5 mr-3 text-purple-600" />
+                          <div className="flex-1">
+                            <div className="text-sm text-muted-foreground">Quality Specification</div>
+                            <div className="font-medium">
+                              {vessel.qualitySpec || 'ULSD 10ppm / Standard Gasoline Spec'}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -1109,28 +1146,37 @@ export default function VesselDetail() {
                         <Building className="h-5 w-5 mr-2 text-purple-600" />
                         Company & Source Details
                       </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <div>
-                          <div className="text-sm text-muted-foreground mb-1">Source Company</div>
-                          <div className="font-medium">
-                            {vessel.sourceCompany || vessel.oilSource || vessel.sellerName || 'BP / Source Refinery'}
+                      <div className="space-y-3">
+                        <div className="flex items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                          <Building className="h-5 w-5 mr-3 text-blue-600" />
+                          <div className="flex-1">
+                            <div className="text-sm text-muted-foreground">Source Company</div>
+                            <div className="font-medium">
+                              {vessel.sourceCompany || vessel.oilSource || vessel.sellerName || 'BP / Source Refinery'}
+                            </div>
                           </div>
                         </div>
                         
-                        <div>
-                          <div className="text-sm text-muted-foreground mb-1">Target Refinery</div>
-                          <div className="font-medium">
-                            {vessel.targetRefinery || 
-                             (vessel.destinationPort && vessel.destinationPort.startsWith('REF:') 
-                               ? vessel.destinationPort.split(':')[2] 
-                               : 'Esmeraldas Refinery')}
+                        <div className="flex items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                          <Factory className="h-5 w-5 mr-3 text-green-600" />
+                          <div className="flex-1">
+                            <div className="text-sm text-muted-foreground">Target Refinery</div>
+                            <div className="font-medium">
+                              {vessel.targetRefinery || 
+                               (vessel.destinationPort && vessel.destinationPort.startsWith('REF:') 
+                                 ? vessel.destinationPort.split(':')[2] 
+                                 : 'Esmeraldas Refinery')}
+                            </div>
                           </div>
                         </div>
                         
-                        <div>
-                          <div className="text-sm text-muted-foreground mb-1">Customer Experience</div>
-                          <div className="font-medium">
-                            4.7/5 – Based on 13 corporate buyers
+                        <div className="flex items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                          <Star className="h-5 w-5 mr-3 text-yellow-600" />
+                          <div className="flex-1">
+                            <div className="text-sm text-muted-foreground">Customer Experience</div>
+                            <div className="font-medium">
+                              4.7/5 – Based on 13 corporate buyers
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -1142,32 +1188,44 @@ export default function VesselDetail() {
                         <TrendingUp className="h-5 w-5 mr-2 text-purple-600" />
                         Deal Status & Verification
                       </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                        <div>
-                          <div className="text-sm text-muted-foreground mb-1">Deal Date</div>
-                          <div className="font-medium">
-                            {vessel.dealDate || 'July 2025 / Active'}
+                      <div className="space-y-3 mb-6">
+                        <div className="flex items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                          <Calendar className="h-5 w-5 mr-3 text-blue-600" />
+                          <div className="flex-1">
+                            <div className="text-sm text-muted-foreground">Deal Date</div>
+                            <div className="font-medium">
+                              {vessel.dealDate || 'July 2025 / Active'}
+                            </div>
                           </div>
                         </div>
                         
-                        <div>
-                          <div className="text-sm text-muted-foreground mb-1">Verified Deal</div>
-                          <div className="font-medium text-green-600">
-                            Platform Verified
+                        <div className="flex items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                          <Shield className="h-5 w-5 mr-3 text-green-600" />
+                          <div className="flex-1">
+                            <div className="text-sm text-muted-foreground">Verified Deal</div>
+                            <div className="font-medium text-green-600">
+                              Platform Verified
+                            </div>
                           </div>
                         </div>
                         
-                        <div>
-                          <div className="text-sm text-muted-foreground mb-1">Deal Status</div>
-                          <div className="font-medium text-blue-600">
-                            Open for Subscription
+                        <div className="flex items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                          <Activity className="h-5 w-5 mr-3 text-blue-600" />
+                          <div className="flex-1">
+                            <div className="text-sm text-muted-foreground">Deal Status</div>
+                            <div className="font-medium text-blue-600">
+                              Open for Subscription
+                            </div>
                           </div>
                         </div>
                         
-                        <div>
-                          <div className="text-sm text-muted-foreground mb-1">Deal Code</div>
-                          <div className="font-medium font-mono">
-                            {vessel.dealCode || 'DEAL-00923'}
+                        <div className="flex items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                          <Hash className="h-5 w-5 mr-3 text-purple-600" />
+                          <div className="flex-1">
+                            <div className="text-sm text-muted-foreground">Deal Code</div>
+                            <div className="font-medium font-mono">
+                              {vessel.dealCode || 'DEAL-00923'}
+                            </div>
                           </div>
                         </div>
                       </div>
