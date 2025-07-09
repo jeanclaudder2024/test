@@ -33,7 +33,7 @@ import {
   Flag, Droplet, Package, AlertCircle, Truck, Gauge, BarChart, History,
   Users, Clock, Compass, ArrowRight, FileText, FileCheck, Clipboard, Download, Globe,
   ZoomIn, ZoomOut, Fuel, Activity, Layers, Filter, Tag, Check, RotateCw,
-  MapPin, ExternalLink, Factory, AlertTriangle, RefreshCw, Route
+  MapPin, ExternalLink, Factory, AlertTriangle, RefreshCw, Route, TrendingUp, Phone
 } from 'lucide-react';
 
 // Define oil product categories for filtering
@@ -553,13 +553,14 @@ export default function VesselDetail() {
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <Link href="/vessels">
-        <Button variant="ghost" className="mb-4 hover:bg-blue-50 transition-colors">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Vessels
-        </Button>
-      </Link>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
+      <div className="container mx-auto p-4">
+        <Link href="/vessels">
+          <Button variant="ghost" className="mb-6 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all duration-300 shadow-sm hover:shadow-md">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Vessels
+          </Button>
+        </Link>
       
       {loading ? (
         <div className="flex justify-center items-center h-64">
@@ -567,69 +568,116 @@ export default function VesselDetail() {
         </div>
       ) : vessel ? (
         <>
-          {/* Header with vessel name, status badge and actions */}
-          <div className="relative overflow-hidden bg-gradient-to-r from-blue-900 to-blue-800 rounded-lg p-6 mb-6 shadow-lg">
-            <div className="absolute opacity-10 right-0 bottom-0">
-              <Ship className="h-64 w-64 text-white" />
+          {/* Enhanced Header with vessel name, status badge and actions */}
+          <div className="relative overflow-hidden bg-gradient-to-br from-blue-900 via-blue-800 to-purple-900 rounded-2xl p-8 mb-8 shadow-2xl border border-blue-700/20">
+            {/* Animated Background Elements */}
+            <div className="absolute opacity-5 right-0 bottom-0 transform rotate-12">
+              <Ship className="h-72 w-72 text-white" />
+            </div>
+            <div className="absolute -top-10 -left-10 opacity-10">
+              <div className="w-40 h-40 bg-blue-400 rounded-full blur-3xl"></div>
+            </div>
+            <div className="absolute -bottom-10 -right-10 opacity-10">
+              <div className="w-32 h-32 bg-purple-400 rounded-full blur-2xl"></div>
             </div>
             
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center relative z-10">
-              <div className="text-white">
-                <div className="flex items-center space-x-3 mb-1">
-                  <h1 className="text-3xl font-bold flex items-center">
+              <div className="text-white mb-4 md:mb-0">
+                <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 mb-2">
+                  <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
                     {vessel.name}
                   </h1>
-                  <Badge className="bg-blue-600 hover:bg-blue-700">
-                    {getOilCategory(vessel.cargoType)}
-                  </Badge>
+                  <div className="flex space-x-2">
+                    <Badge className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-3 py-1 text-sm font-semibold shadow-lg">
+                      {getOilCategory(vessel.cargoType)}
+                    </Badge>
+                    <Badge className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-3 py-1 text-sm font-semibold shadow-lg">
+                      🌊 Active
+                    </Badge>
+                  </div>
                 </div>
-                <p className="text-blue-100">
-                  {vessel.vesselType || 'Oil Tanker'} • IMO: {vessel.imo || 'N/A'} • MMSI: {vessel.mmsi || 'N/A'}
-                </p>
+                <div className="text-blue-100 text-lg space-y-1">
+                  <p className="flex items-center">
+                    <Ship className="h-4 w-4 mr-2" />
+                    {vessel.vesselType || 'Oil Tanker'} • IMO: {vessel.imo || 'N/A'} • MMSI: {vessel.mmsi || 'N/A'}
+                  </p>
+                  <p className="flex items-center">
+                    <Globe className="h-4 w-4 mr-2" />
+                    {vessel.currentRegion || 'International Waters'} • Flag: {vessel.flag || 'N/A'}
+                  </p>
+                </div>
               </div>
               
-
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+                <Button 
+                  className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-6 py-3 rounded-full font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                  onClick={() => {
+                    toast({
+                      title: "Quick Deal Interest! 🚢",
+                      description: "Your interest has been recorded. Our maritime team will contact you soon.",
+                      duration: 5000,
+                    });
+                  }}
+                >
+                  <TrendingUp className="h-4 w-4 mr-2" />
+                  Quick Deal
+                </Button>
+                <Button 
+                  variant="outline"
+                  className="border-2 border-white/30 text-white hover:bg-white/10 backdrop-blur-sm px-6 py-3 rounded-full font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+                  onClick={() => {
+                    toast({
+                      title: "Contact Request Sent! 📞",
+                      description: "Our specialists will reach out within 24 hours.",
+                      duration: 5000,
+                    });
+                  }}
+                >
+                  <Phone className="h-4 w-4 mr-2" />
+                  Contact
+                </Button>
+              </div>
             </div>
-            
-
           </div>
           
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
             <div className="lg:col-span-2">
-              {/* Main content area */}
-              <Tabs defaultValue="details" className="mb-6">
-                <TabsList className="mb-4">
-                  <TabsTrigger value="details" className="flex items-center">
+              {/* Enhanced Main content area */}
+              <Tabs defaultValue="details" className="mb-8">
+                <TabsList className="mb-6 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm shadow-lg rounded-xl p-1 border border-blue-200/20">
+                  <TabsTrigger value="details" className="flex items-center px-6 py-3 rounded-lg font-medium transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg">
                     <Info className="h-4 w-4 mr-2" />
                     Vessel Details
                   </TabsTrigger>
-                  <TabsTrigger value="voyage" className="flex items-center">
+                  <TabsTrigger value="voyage" className="flex items-center px-6 py-3 rounded-lg font-medium transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg">
                     <Compass className="h-4 w-4 mr-2" />
                     Voyage
                   </TabsTrigger>
-
-                  <TabsTrigger value="articles" className="flex items-center">
+                  <TabsTrigger value="articles" className="flex items-center px-6 py-3 rounded-lg font-medium transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-500 data-[state=active]:to-green-600 data-[state=active]:text-white data-[state=active]:shadow-lg">
                     <FileCheck className="h-4 w-4 mr-2" />
                     Professional Articles
                   </TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="details">
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="flex items-center">
-                        <Ship className="h-5 w-5 mr-2 text-primary" />
+                  <Card className="shadow-xl border-0 bg-gradient-to-br from-white to-blue-50 dark:from-slate-800 dark:to-slate-900 rounded-2xl overflow-hidden">
+                    <CardHeader className="pb-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+                      <CardTitle className="flex items-center text-xl">
+                        <Ship className="h-6 w-6 mr-3" />
                         Vessel Specifications
                       </CardTitle>
-                      <CardDescription>
+                      <CardDescription className="text-blue-100 text-base">
                         Technical details and specifications - التفاصيل والمواصفات التقنية
                       </CardDescription>
                     </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                          <h3 className="text-sm font-medium mb-3 flex items-center">
-                            <Info className="h-4 w-4 mr-2 text-primary" />
+                    <CardContent className="p-8">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-6">
+                          <h3 className="text-lg font-bold mb-4 flex items-center text-blue-800 dark:text-blue-200">
+                            <div className="bg-blue-500 p-2 rounded-full mr-3">
+                              <Info className="h-4 w-4 text-white" />
+                            </div>
                             General Information
                           </h3>
                           <InfoItem 
@@ -650,9 +698,11 @@ export default function VesselDetail() {
                           />
                         </div>
                         
-                        <div>
-                          <h3 className="text-sm font-medium mb-3 flex items-center">
-                            <Droplet className="h-4 w-4 mr-2 text-primary" />
+                        <div className="space-y-6">
+                          <h3 className="text-lg font-bold mb-4 flex items-center text-green-800 dark:text-green-200">
+                            <div className="bg-green-500 p-2 rounded-full mr-3">
+                              <Droplet className="h-4 w-4 text-white" />
+                            </div>
                             Cargo & Position
                           </h3>
                           <InfoItem 
@@ -673,9 +723,11 @@ export default function VesselDetail() {
                       <Separator className="my-6" />
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                          <h3 className="text-sm font-medium mb-3 flex items-center">
-                            <Users className="h-4 w-4 mr-2 text-primary" />
+                        <div className="space-y-6">
+                          <h3 className="text-lg font-bold mb-4 flex items-center text-purple-800 dark:text-purple-200">
+                            <div className="bg-purple-500 p-2 rounded-full mr-3">
+                              <Users className="h-4 w-4 text-white" />
+                            </div>
                             Ownership & Class
                           </h3>
                           <InfoItem 
@@ -695,9 +747,11 @@ export default function VesselDetail() {
                             value="North of England P&I" 
                           />
                         </div>
-                        <div>
-                          <h3 className="text-sm font-medium mb-3 flex items-center">
-                            <Gauge className="h-4 w-4 mr-2 text-primary" />
+                        <div className="space-y-6">
+                          <h3 className="text-lg font-bold mb-4 flex items-center text-orange-800 dark:text-orange-200">
+                            <div className="bg-orange-500 p-2 rounded-full mr-3">
+                              <Gauge className="h-4 w-4 text-white" />
+                            </div>
                             Dimensions & Equipment
                           </h3>
                           <InfoItem 
@@ -727,25 +781,29 @@ export default function VesselDetail() {
                     </CardFooter>
                   </Card>
                   
-                  <Card className="mt-6">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="flex items-center">
-                        <Navigation className="h-5 w-5 mr-2 text-primary" />
+                  <Card className="mt-8 shadow-xl border-0 bg-gradient-to-br from-white to-green-50 dark:from-slate-800 dark:to-slate-900 rounded-2xl overflow-hidden">
+                    <CardHeader className="pb-4 bg-gradient-to-r from-green-600 to-teal-600 text-white">
+                      <CardTitle className="flex items-center text-xl">
+                        <Navigation className="h-6 w-6 mr-3" />
                         Enhanced Live Tracking
                       </CardTitle>
-                      <CardDescription>
+                      <CardDescription className="text-green-100 text-base">
                         Real-time position with nearby ports and refineries (20km radius)
                       </CardDescription>
                     </CardHeader>
-                    <CardContent className="p-4">
+                    <CardContent className="p-6">
                       {vessel.currentLat && vessel.currentLng ? (
-                        <SimpleVesselMap vessel={vessel} />
+                        <div className="rounded-xl overflow-hidden shadow-lg">
+                          <SimpleVesselMap vessel={vessel} />
+                        </div>
                       ) : (
-                        <div className="h-96 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+                        <div className="h-96 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-xl flex items-center justify-center border border-gray-200 dark:border-gray-700">
                           <div className="text-center text-muted-foreground">
-                            <MapPin className="h-12 w-12 mx-auto mb-3 text-muted-foreground/50" />
-                            <p className="text-lg font-medium">No Position Data</p>
-                            <p className="text-sm">Vessel coordinates not available</p>
+                            <div className="bg-gray-200 dark:bg-gray-700 p-4 rounded-full w-fit mx-auto mb-4">
+                              <MapPin className="h-12 w-12 text-gray-500" />
+                            </div>
+                            <p className="text-xl font-semibold mb-2">No Position Data</p>
+                            <p className="text-base text-gray-600 dark:text-gray-400">Vessel coordinates not available</p>
                           </div>
                         </div>
                       )}
@@ -1253,6 +1311,7 @@ export default function VesselDetail() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }
