@@ -615,7 +615,7 @@ export default function VesselDetail() {
                   </TabsTrigger>
                   <TabsTrigger value="voyage" className="flex items-center">
                     <Compass className="h-4 w-4 mr-2" />
-                    Voyage
+                    Destination
                   </TabsTrigger>
                   <TabsTrigger value="articles" className="flex items-center">
                     <FileCheck className="h-4 w-4 mr-2" />
@@ -840,7 +840,7 @@ export default function VesselDetail() {
                       {isLoadingVoyageInfo && (
                         <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg text-center">
                           <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary mx-auto mb-2"></div>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">Loading voyage simulation data...</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">Loading destination simulation data...</p>
                         </div>
                       )}
                       
@@ -849,7 +849,7 @@ export default function VesselDetail() {
                           <div className="flex items-center">
                             <AlertTriangle className="h-5 w-5 mr-2 text-amber-600" />
                             <p className="text-sm text-amber-800 dark:text-amber-200">
-                              No active voyage simulation found. The vessel may not be on a tracked voyage.
+                              No active destination simulation found. The vessel may not be on a tracked route.
                             </p>
                           </div>
                         </div>
@@ -857,7 +857,7 @@ export default function VesselDetail() {
                       
                       <SimpleVoyageDetails 
                         vessel={vessel} 
-                        voyageProgress={{ 
+                        destinationProgress={{ 
                           percentComplete: vessel.voyageProgress || 45,
                           distanceTraveled: 1825,
                           distanceRemaining: 2231,
@@ -884,7 +884,7 @@ export default function VesselDetail() {
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg flex items-center">
                     <Calendar className="h-5 w-5 mr-2 text-primary" />
-                    Voyage Info
+                    Destination Info
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
