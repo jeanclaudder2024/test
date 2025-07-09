@@ -9244,9 +9244,13 @@ Keep the description professional, informative, and around 150-200 words. Focus 
     }
   });
 
-  // Get subscription plans
-  app.get("/api/admin/subscription-plans", async (req: Request, res: Response) => {
+  // Get subscription plans (admin authenticated)
+  app.get("/api/admin/subscription-plans", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
+      if (!req.user || req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
       const plans = await storage.getSubscriptionPlans();
       res.json(plans);
     } catch (error) {
@@ -9255,13 +9259,17 @@ Keep the description professional, informative, and around 150-200 words. Focus 
     }
   });
 
-  // Create subscription plan
-  app.post("/api/admin/subscription-plans", async (req: Request, res: Response) => {
+  // Create subscription plan (admin authenticated)
+  app.post("/api/admin/subscription-plans", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
+      if (!req.user || req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
       const planData = req.body;
       
       // Validate required fields (matching schema)
-      if (!planData.name || !planData.price || !planData.description) {
+      if (!planData.name || planData.price === undefined || !planData.description) {
         return res.status(400).json({ message: "Missing required fields: name, price, description" });
       }
 
@@ -9279,7 +9287,7 @@ Keep the description professional, informative, and around 150-200 words. Focus 
         canAccessBrokerFeatures: planData.canAccessBrokerFeatures || false,
         canAccessAnalytics: planData.canAccessAnalytics || false,
         canExportData: planData.canExportData || false,
-        isActive: true
+        isActive: planData.isActive !== false
       };
 
       // Create the plan
@@ -9291,13 +9299,31 @@ Keep the description professional, informative, and around 150-200 words. Focus 
     }
   });
 
-  // Update subscription plan
-  app.patch("/api/admin/subscription-plans/:id", async (req: Request, res: Response) => {
+  // Update subscription plan (admin authenticated)
+  app.put("/api/admin/subscription-plans/:id", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
+      if (!req.user || req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
       const planId = parseInt(req.params.id);
+      if (isNaN(planId)) {
+        return res.status(400).json({ message: "Invalid plan ID" });
+      }
+
       const updateData = req.body;
       
-      const plan = await storage.updateSubscriptionPlan(planId, updateData);
+      // Transform data to match schema
+      const transformedData = {
+        ...updateData,
+        price: updateData.price ? updateData.price.toString() : undefined,
+        features: Array.isArray(updateData.features) ? updateData.features : undefined,
+      };
+      
+      const plan = await storage.updateSubscriptionPlan(planId, transformedData);
+      if (!plan) {
+        return res.status(404).json({ message: "Subscription plan not found" });
+      }
       res.json(plan);
     } catch (error) {
       console.error("Error updating subscription plan:", error);
@@ -9305,10 +9331,18 @@ Keep the description professional, informative, and around 150-200 words. Focus 
     }
   });
 
-  // Delete subscription plan
-  app.delete("/api/admin/subscription-plans/:id", async (req: Request, res: Response) => {
+  // Delete subscription plan (admin authenticated)
+  app.delete("/api/admin/subscription-plans/:id", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
+      if (!req.user || req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
       const planId = parseInt(req.params.id);
+      if (isNaN(planId)) {
+        return res.status(400).json({ message: "Invalid plan ID" });
+      }
+
       await storage.deleteSubscriptionPlan(planId);
       res.json({ success: true });
     } catch (error) {

@@ -50,51 +50,97 @@ export default function AdminSubscriptionPlans() {
 
   // Fetch subscription plans
   const { data: plans = [], isLoading: plansLoading, refetch } = useQuery({
-    queryKey: ["/api/subscription-plans"],
+    queryKey: ["/api/admin/subscription-plans"],
     staleTime: 0,
   });
 
-  // Mutations - using simplified approach since database tables don't exist yet
+  // Real API mutations for subscription plan management
   const createPlanMutation = useMutation({
     mutationFn: async (planData: any) => {
-      // For now, just return success to test the UI
-      console.log("Would create plan:", planData);
-      return { success: true };
+      const response = await apiRequest("POST", "/api/admin/subscription-plans", {
+        name: planData.name,
+        description: planData.description,
+        price: parseFloat(planData.price),
+        interval: planData.interval || "month",
+        trialDays: parseInt(planData.trialDays) || 5,
+        isActive: planData.isActive !== false,
+        features: Array.isArray(planData.features) ? planData.features : [],
+        maxVessels: parseInt(planData.maxVessels) || -1,
+        maxPorts: parseInt(planData.maxPorts) || -1,
+        maxRefineries: parseInt(planData.maxRefineries) || -1,
+        canAccessBrokerFeatures: planData.canAccessBrokerFeatures || false,
+        canAccessAnalytics: planData.canAccessAnalytics || false,
+        canExportData: planData.canExportData || false
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to create subscription plan");
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
       setIsCreatePlanOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/subscription-plans"] });
       toast({ title: "Success", description: "Subscription plan created successfully" });
     },
     onError: (error: any) => {
-      toast({ title: "Error", description: "Failed to create subscription plan", variant: "destructive" });
+      toast({ title: "Error", description: error.message || "Failed to create subscription plan", variant: "destructive" });
       console.error("Create plan error:", error);
     },
   });
 
   const updatePlanMutation = useMutation({
     mutationFn: async ({ id, ...planData }: any) => {
-      // For now, just return success to test the UI
-      console.log("Would update plan:", id, planData);
-      return { success: true };
+      const response = await apiRequest("PUT", `/api/admin/subscription-plans/${id}`, {
+        name: planData.name,
+        description: planData.description,
+        price: parseFloat(planData.price),
+        interval: planData.interval || "month",
+        trialDays: parseInt(planData.trialDays) || 5,
+        isActive: planData.isActive !== false,
+        features: Array.isArray(planData.features) ? planData.features : [],
+        maxVessels: parseInt(planData.maxVessels) || -1,
+        maxPorts: parseInt(planData.maxPorts) || -1,
+        maxRefineries: parseInt(planData.maxRefineries) || -1,
+        canAccessBrokerFeatures: planData.canAccessBrokerFeatures || false,
+        canAccessAnalytics: planData.canAccessAnalytics || false,
+        canExportData: planData.canExportData || false
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to update subscription plan");
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
       setIsEditPlanOpen(false);
       setSelectedPlan(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/subscription-plans"] });
       toast({ title: "Success", description: "Subscription plan updated successfully" });
     },
     onError: (error: any) => {
-      toast({ title: "Error", description: "Failed to update subscription plan", variant: "destructive" });
+      toast({ title: "Error", description: error.message || "Failed to update subscription plan", variant: "destructive" });
       console.error("Update plan error:", error);
     },
   });
 
   const deletePlanMutation = useMutation({
     mutationFn: async (id: number) => {
-      // For now, just return success to test the UI
-      console.log("Would delete plan:", id);
-      return { success: true };
+      const response = await apiRequest("DELETE", `/api/admin/subscription-plans/${id}`);
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to delete subscription plan");
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/subscription-plans"] });
       toast({ title: "Success", description: "Subscription plan deleted successfully" });
     },
     onError: (error: any) => {
