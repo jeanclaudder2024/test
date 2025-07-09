@@ -1,17 +1,27 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
-import { Plus, Edit, Trash2, DollarSign, Calendar, Users, CheckCircle } from 'lucide-react';
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import { 
+  Plus, 
+  Edit, 
+  Trash2, 
+  Crown,
+  DollarSign,
+  Users,
+  CheckCircle,
+  XCircle
+} from "lucide-react";
 
 interface SubscriptionPlan {
   id: number;
@@ -28,519 +38,504 @@ interface SubscriptionPlan {
   canAccessBrokerFeatures: boolean;
   canAccessAnalytics: boolean;
   canExportData: boolean;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
 }
-
-interface PlanFormData {
-  name: string;
-  description: string;
-  price: string;
-  interval: string;
-  trialDays: number;
-  isActive: boolean;
-  features: string[];
-  maxVessels: number;
-  maxPorts: number;
-  maxRefineries: number;
-  canAccessBrokerFeatures: boolean;
-  canAccessAnalytics: boolean;
-  canExportData: boolean;
-}
-
-const defaultFormData: PlanFormData = {
-  name: '',
-  description: '',
-  price: '0.00',
-  interval: 'month',
-  trialDays: 5,
-  isActive: true,
-  features: [],
-  maxVessels: 50,
-  maxPorts: 5,
-  maxRefineries: 10,
-  canAccessBrokerFeatures: false,
-  canAccessAnalytics: false,
-  canExportData: false,
-};
 
 export default function AdminSubscriptionPlans() {
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [editingPlan, setEditingPlan] = useState<SubscriptionPlan | null>(null);
-  const [formData, setFormData] = useState<PlanFormData>(defaultFormData);
-  const [newFeature, setNewFeature] = useState('');
-
+  const [isCreatePlanOpen, setIsCreatePlanOpen] = useState(false);
+  const [isEditPlanOpen, setIsEditPlanOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Fetch subscription plans
-  const { data: plans = [], isLoading } = useQuery({
-    queryKey: ['/api/subscription-plans'],
-    queryFn: () => apiRequest('GET', '/api/subscription-plans').then(res => res.json()),
+  const { data: plans = [], isLoading: plansLoading, refetch } = useQuery({
+    queryKey: ["/api/subscription-plans"],
+    staleTime: 0,
   });
 
-  // Create plan mutation
+  // Mutations
   const createPlanMutation = useMutation({
-    mutationFn: (planData: PlanFormData) =>
-      apiRequest('POST', '/api/admin/subscription-plans', planData),
+    mutationFn: (planData: any) => apiRequest("/api/admin/subscription-plans", "POST", planData),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/subscription-plans'] });
-      setIsCreateDialogOpen(false);
-      setFormData(defaultFormData);
-      toast({
-        title: 'Success',
-        description: 'Subscription plan created successfully',
-      });
+      queryClient.invalidateQueries({ queryKey: ["/api/subscription-plans"] });
+      setIsCreatePlanOpen(false);
+      refetch();
+      toast({ title: "Success", description: "Subscription plan created successfully" });
     },
     onError: (error: any) => {
-      toast({
-        title: 'Error',
-        description: `Failed to create plan: ${error.message}`,
-        variant: 'destructive',
-      });
+      toast({ title: "Error", description: "Failed to create subscription plan", variant: "destructive" });
+      console.error("Create plan error:", error);
     },
   });
 
-  // Update plan mutation
   const updatePlanMutation = useMutation({
-    mutationFn: ({ id, planData }: { id: number; planData: PlanFormData }) =>
-      apiRequest('PUT', `/api/admin/subscription-plans/${id}`, planData),
+    mutationFn: ({ id, ...planData }: any) => apiRequest(`/api/admin/subscription-plans/${id}`, "PATCH", planData),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/subscription-plans'] });
-      setEditingPlan(null);
-      setFormData(defaultFormData);
-      toast({
-        title: 'Success',
-        description: 'Subscription plan updated successfully',
-      });
+      queryClient.invalidateQueries({ queryKey: ["/api/subscription-plans"] });
+      setIsEditPlanOpen(false);
+      setSelectedPlan(null);
+      refetch();
+      toast({ title: "Success", description: "Subscription plan updated successfully" });
     },
     onError: (error: any) => {
-      toast({
-        title: 'Error',
-        description: `Failed to update plan: ${error.message}`,
-        variant: 'destructive',
-      });
+      toast({ title: "Error", description: "Failed to update subscription plan", variant: "destructive" });
+      console.error("Update plan error:", error);
     },
   });
 
-  // Delete plan mutation
   const deletePlanMutation = useMutation({
-    mutationFn: (id: number) =>
-      apiRequest('DELETE', `/api/admin/subscription-plans/${id}`),
+    mutationFn: (id: number) => apiRequest(`/api/admin/subscription-plans/${id}`, "DELETE"),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/subscription-plans'] });
-      toast({
-        title: 'Success',
-        description: 'Subscription plan deleted successfully',
-      });
+      queryClient.invalidateQueries({ queryKey: ["/api/subscription-plans"] });
+      refetch();
+      toast({ title: "Success", description: "Subscription plan deleted successfully" });
     },
     onError: (error: any) => {
-      toast({
-        title: 'Error',
-        description: `Failed to delete plan: ${error.message}`,
-        variant: 'destructive',
-      });
+      toast({ title: "Error", description: "Failed to delete subscription plan", variant: "destructive" });
+      console.error("Delete plan error:", error);
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleCreatePlan = (formData: FormData) => {
+    const planData = {
+      name: formData.get("name") as string,
+      description: formData.get("description") as string,
+      price: formData.get("price") as string,
+      interval: formData.get("interval") as string || "month",
+      trialDays: parseInt(formData.get("trialDays") as string) || 5,
+      features: (formData.get("features") as string)?.split('\n').filter(f => f.trim()) || [],
+      maxVessels: parseInt(formData.get("maxVessels") as string) || 0,
+      maxPorts: parseInt(formData.get("maxPorts") as string) || 0,
+      maxRefineries: parseInt(formData.get("maxRefineries") as string) || 0,
+      canAccessBrokerFeatures: formData.get("canAccessBrokerFeatures") === "on",
+      canAccessAnalytics: formData.get("canAccessAnalytics") === "on",
+      canExportData: formData.get("canExportData") === "on",
+      isActive: true,
+    };
+    createPlanMutation.mutate(planData);
+  };
+
+  const handleUpdatePlan = (formData: FormData) => {
+    if (!selectedPlan) return;
     
-    if (editingPlan) {
-      updatePlanMutation.mutate({ id: editingPlan.id, planData: formData });
-    } else {
-      createPlanMutation.mutate(formData);
+    const planData = {
+      id: selectedPlan.id,
+      name: formData.get("name") as string,
+      description: formData.get("description") as string,
+      price: formData.get("price") as string,
+      interval: formData.get("interval") as string || "month",
+      trialDays: parseInt(formData.get("trialDays") as string) || 5,
+      features: (formData.get("features") as string)?.split('\n').filter(f => f.trim()) || [],
+      maxVessels: parseInt(formData.get("maxVessels") as string) || 0,
+      maxPorts: parseInt(formData.get("maxPorts") as string) || 0,
+      maxRefineries: parseInt(formData.get("maxRefineries") as string) || 0,
+      canAccessBrokerFeatures: formData.get("canAccessBrokerFeatures") === "on",
+      canAccessAnalytics: formData.get("canAccessAnalytics") === "on",
+      canExportData: formData.get("canExportData") === "on",
+      isActive: formData.get("isActive") === "on",
+    };
+    updatePlanMutation.mutate(planData);
+  };
+
+  const handleDeletePlan = (id: number) => {
+    if (confirm("Are you sure you want to delete this subscription plan? This action cannot be undone.")) {
+      deletePlanMutation.mutate(id);
     }
   };
 
-  const startEdit = (plan: SubscriptionPlan) => {
-    setEditingPlan(plan);
-    setFormData({
-      name: plan.name,
-      description: plan.description,
-      price: plan.price,
-      interval: plan.interval,
-      trialDays: plan.trialDays,
-      isActive: plan.isActive,
-      features: plan.features || [],
-      maxVessels: plan.maxVessels,
-      maxPorts: plan.maxPorts,
-      maxRefineries: plan.maxRefineries,
-      canAccessBrokerFeatures: plan.canAccessBrokerFeatures,
-      canAccessAnalytics: plan.canAccessAnalytics,
-      canExportData: plan.canExportData,
-    });
+  const handleEditPlan = (plan: SubscriptionPlan) => {
+    setSelectedPlan(plan);
+    setIsEditPlanOpen(true);
   };
-
-  const addFeature = () => {
-    if (newFeature.trim()) {
-      setFormData(prev => ({
-        ...prev,
-        features: [...prev.features, newFeature.trim()]
-      }));
-      setNewFeature('');
-    }
-  };
-
-  const removeFeature = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      features: prev.features.filter((_, i) => i !== index)
-    }));
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Subscription Plans Management</h2>
-          <p className="text-muted-foreground">Manage subscription plans, pricing, and features</p>
+          <h2 className="text-2xl font-bold tracking-tight">Subscription Plans Management</h2>
+          <p className="text-muted-foreground">
+            Create, edit, and manage subscription plans for your platform
+          </p>
         </div>
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <Dialog open={isCreatePlanOpen} onOpenChange={setIsCreatePlanOpen}>
           <DialogTrigger asChild>
             <Button>
-              <Plus className="w-4 h-4 mr-2" />
+              <Plus className="h-4 w-4 mr-2" />
               Create Plan
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Create New Subscription Plan</DialogTitle>
+              <DialogDescription>
+                Create a new subscription plan that will be available to users across the platform
+              </DialogDescription>
             </DialogHeader>
-            <PlanForm
-              formData={formData}
-              setFormData={setFormData}
-              newFeature={newFeature}
-              setNewFeature={setNewFeature}
-              addFeature={addFeature}
-              removeFeature={removeFeature}
-              onSubmit={handleSubmit}
-              isSubmitting={createPlanMutation.isPending}
-            />
+            <form action={handleCreatePlan} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="name">Plan Name *</Label>
+                  <Input id="name" name="name" placeholder="Professional Plan" required />
+                </div>
+                <div>
+                  <Label htmlFor="price">Price ($) *</Label>
+                  <Input id="price" name="price" type="number" step="0.01" placeholder="150" required />
+                </div>
+              </div>
+              
+              <div>
+                <Label htmlFor="description">Description</Label>
+                <Textarea id="description" name="description" placeholder="Full access to maritime tracking features" />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="interval">Billing Interval</Label>
+                  <Select name="interval">
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select interval" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="month">Monthly</SelectItem>
+                      <SelectItem value="year">Yearly</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="trialDays">Trial Days</Label>
+                  <Input id="trialDays" name="trialDays" type="number" placeholder="5" defaultValue="5" />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <Label className="text-base font-semibold">Features & Limits</Label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="maxVessels">Max Vessels</Label>
+                    <Input id="maxVessels" name="maxVessels" type="number" placeholder="100" />
+                  </div>
+                  <div>
+                    <Label htmlFor="maxPorts">Max Ports</Label>
+                    <Input id="maxPorts" name="maxPorts" type="number" placeholder="50" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="maxRefineries">Max Refineries</Label>
+                    <Input id="maxRefineries" name="maxRefineries" type="number" placeholder="25" />
+                  </div>
+                  <div className="space-y-3 pt-6">
+                    <div className="flex items-center space-x-2">
+                      <Switch id="canAccessBrokerFeatures" name="canAccessBrokerFeatures" />
+                      <Label htmlFor="canAccessBrokerFeatures">Broker Features</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Switch id="canAccessAnalytics" name="canAccessAnalytics" />
+                      <Label htmlFor="canAccessAnalytics">Analytics Access</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Switch id="canExportData" name="canExportData" />
+                      <Label htmlFor="canExportData">Data Export</Label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="features">Features List (one per line)</Label>
+                <Textarea 
+                  id="features" 
+                  name="features" 
+                  rows={6}
+                  placeholder="Real-time vessel tracking
+Advanced analytics dashboard
+Professional documentation
+Direct seller access
+24/7 support"
+                />
+              </div>
+
+              <div className="flex justify-end space-x-2">
+                <Button type="button" variant="outline" onClick={() => setIsCreatePlanOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={createPlanMutation.isPending}>
+                  {createPlanMutation.isPending ? "Creating..." : "Create Plan"}
+                </Button>
+              </div>
+            </form>
           </DialogContent>
         </Dialog>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {plans.map((plan: SubscriptionPlan) => (
-          <Card key={plan.id} className="relative">
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    {plan.name}
-                    {plan.isActive ? (
-                      <Badge variant="default">Active</Badge>
-                    ) : (
-                      <Badge variant="secondary">Inactive</Badge>
-                    )}
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {plan.description}
-                  </p>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-baseline gap-1">
-                <span className="text-3xl font-bold">${plan.price}</span>
-                <span className="text-muted-foreground">/{plan.interval}</span>
-              </div>
+      {/* Plans Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Crown className="h-5 w-5 text-yellow-500" />
+            Current Subscription Plans
+          </CardTitle>
+          <CardDescription>
+            Manage all subscription plans available to users
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {plansLoading ? (
+            <div className="flex justify-center py-8">
+              <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Plan Name</TableHead>
+                  <TableHead>Price</TableHead>
+                  <TableHead>Features</TableHead>
+                  <TableHead>Limits</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {plans.map((plan: SubscriptionPlan) => (
+                  <TableRow key={plan.id}>
+                    <TableCell>
+                      <div className="flex flex-col">
+                        <span className="font-medium">{plan.name}</span>
+                        <span className="text-xs text-muted-foreground">{plan.description}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <DollarSign className="h-4 w-4 text-green-600" />
+                        <span className="font-medium">${plan.price}</span>
+                        <span className="text-xs text-muted-foreground">/{plan.interval}</span>
+                      </div>
+                      {plan.trialDays > 0 && (
+                        <Badge variant="outline" className="mt-1 text-xs">
+                          {plan.trialDays} days trial
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        {plan.canAccessBrokerFeatures && (
+                          <Badge variant="secondary" className="text-xs">Broker</Badge>
+                        )}
+                        {plan.canAccessAnalytics && (
+                          <Badge variant="secondary" className="text-xs">Analytics</Badge>
+                        )}
+                        {plan.canExportData && (
+                          <Badge variant="secondary" className="text-xs">Export</Badge>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      <div className="space-y-1">
+                        <div>🚢 {plan.maxVessels || "∞"} vessels</div>
+                        <div>⚓ {plan.maxPorts || "∞"} ports</div>
+                        <div>🏭 {plan.maxRefineries || "∞"} refineries</div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {plan.isActive ? (
+                        <Badge className="bg-green-500 text-white">
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Active
+                        </Badge>
+                      ) : (
+                        <Badge variant="destructive">
+                          <XCircle className="h-3 w-3 mr-1" />
+                          Inactive
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleEditPlan(plan)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="destructive" 
+                          size="sm"
+                          onClick={() => handleDeletePlan(plan.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
 
-              {plan.trialDays > 0 && (
-                <div className="flex items-center gap-2 text-sm text-green-600">
-                  <Calendar className="w-4 h-4" />
-                  {plan.trialDays}-day free trial
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm">
-                  <Users className="w-4 h-4" />
-                  <span>Max Vessels: {plan.maxVessels === -1 ? 'Unlimited' : plan.maxVessels}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <DollarSign className="w-4 h-4" />
-                  <span>Ports: {plan.maxPorts === -1 ? 'Unlimited' : plan.maxPorts}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <CheckCircle className="w-4 h-4" />
-                  <span>Refineries: {plan.maxRefineries === -1 ? 'Unlimited' : plan.maxRefineries}</span>
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <h4 className="font-medium text-sm">Features:</h4>
-                <ul className="text-xs text-muted-foreground space-y-1">
-                  {plan.features?.slice(0, 3).map((feature, index) => (
-                    <li key={index} className="flex items-center gap-1">
-                      <CheckCircle className="w-3 h-3 text-green-500" />
-                      {feature}
-                    </li>
-                  ))}
-                  {plan.features?.length > 3 && (
-                    <li className="text-muted-foreground">+{plan.features.length - 3} more...</li>
-                  )}
-                </ul>
-              </div>
-
-              <div className="flex gap-2 pt-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => startEdit(plan)}
-                  className="flex-1"
-                >
-                  <Edit className="w-4 h-4 mr-1" />
-                  Edit
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => deletePlanMutation.mutate(plan.id)}
-                  disabled={deletePlanMutation.isPending}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Edit Dialog */}
-      <Dialog open={!!editingPlan} onOpenChange={() => setEditingPlan(null)}>
-        <DialogContent className="max-w-2xl">
+      {/* Edit Plan Dialog */}
+      <Dialog open={isEditPlanOpen} onOpenChange={setIsEditPlanOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Subscription Plan</DialogTitle>
+            <DialogDescription>
+              Update the subscription plan details
+            </DialogDescription>
           </DialogHeader>
-          <PlanForm
-            formData={formData}
-            setFormData={setFormData}
-            newFeature={newFeature}
-            setNewFeature={setNewFeature}
-            addFeature={addFeature}
-            removeFeature={removeFeature}
-            onSubmit={handleSubmit}
-            isSubmitting={updatePlanMutation.isPending}
-            isEditing={true}
-          />
+          {selectedPlan && (
+            <form action={handleUpdatePlan} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit-name">Plan Name *</Label>
+                  <Input 
+                    id="edit-name" 
+                    name="name" 
+                    defaultValue={selectedPlan.name}
+                    required 
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-price">Price ($) *</Label>
+                  <Input 
+                    id="edit-price" 
+                    name="price" 
+                    type="number" 
+                    step="0.01" 
+                    defaultValue={selectedPlan.price}
+                    required 
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <Label htmlFor="edit-description">Description</Label>
+                <Textarea 
+                  id="edit-description" 
+                  name="description" 
+                  defaultValue={selectedPlan.description}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit-interval">Billing Interval</Label>
+                  <Select name="interval" defaultValue={selectedPlan.interval}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="month">Monthly</SelectItem>
+                      <SelectItem value="year">Yearly</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="edit-trialDays">Trial Days</Label>
+                  <Input 
+                    id="edit-trialDays" 
+                    name="trialDays" 
+                    type="number" 
+                    defaultValue={selectedPlan.trialDays}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <Label className="text-base font-semibold">Features & Limits</Label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="edit-maxVessels">Max Vessels</Label>
+                    <Input 
+                      id="edit-maxVessels" 
+                      name="maxVessels" 
+                      type="number" 
+                      defaultValue={selectedPlan.maxVessels}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-maxPorts">Max Ports</Label>
+                    <Input 
+                      id="edit-maxPorts" 
+                      name="maxPorts" 
+                      type="number" 
+                      defaultValue={selectedPlan.maxPorts}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="edit-maxRefineries">Max Refineries</Label>
+                    <Input 
+                      id="edit-maxRefineries" 
+                      name="maxRefineries" 
+                      type="number" 
+                      defaultValue={selectedPlan.maxRefineries}
+                    />
+                  </div>
+                  <div className="space-y-3 pt-6">
+                    <div className="flex items-center space-x-2">
+                      <Switch 
+                        id="edit-canAccessBrokerFeatures" 
+                        name="canAccessBrokerFeatures" 
+                        defaultChecked={selectedPlan.canAccessBrokerFeatures}
+                      />
+                      <Label htmlFor="edit-canAccessBrokerFeatures">Broker Features</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Switch 
+                        id="edit-canAccessAnalytics" 
+                        name="canAccessAnalytics" 
+                        defaultChecked={selectedPlan.canAccessAnalytics}
+                      />
+                      <Label htmlFor="edit-canAccessAnalytics">Analytics Access</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Switch 
+                        id="edit-canExportData" 
+                        name="canExportData" 
+                        defaultChecked={selectedPlan.canExportData}
+                      />
+                      <Label htmlFor="edit-canExportData">Data Export</Label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="edit-features">Features List (one per line)</Label>
+                <Textarea 
+                  id="edit-features" 
+                  name="features" 
+                  rows={6}
+                  defaultValue={selectedPlan.features?.join('\n') || ''}
+                />
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Switch 
+                  id="edit-isActive" 
+                  name="isActive" 
+                  defaultChecked={selectedPlan.isActive}
+                />
+                <Label htmlFor="edit-isActive">Plan Active</Label>
+              </div>
+
+              <div className="flex justify-end space-x-2">
+                <Button type="button" variant="outline" onClick={() => setIsEditPlanOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={updatePlanMutation.isPending}>
+                  {updatePlanMutation.isPending ? "Updating..." : "Update Plan"}
+                </Button>
+              </div>
+            </form>
+          )}
         </DialogContent>
       </Dialog>
     </div>
-  );
-}
-
-interface PlanFormProps {
-  formData: PlanFormData;
-  setFormData: (data: PlanFormData | ((prev: PlanFormData) => PlanFormData)) => void;
-  newFeature: string;
-  setNewFeature: (feature: string) => void;
-  addFeature: () => void;
-  removeFeature: (index: number) => void;
-  onSubmit: (e: React.FormEvent) => void;
-  isSubmitting: boolean;
-  isEditing?: boolean;
-}
-
-function PlanForm({
-  formData,
-  setFormData,
-  newFeature,
-  setNewFeature,
-  addFeature,
-  removeFeature,
-  onSubmit,
-  isSubmitting,
-  isEditing = false
-}: PlanFormProps) {
-  return (
-    <form onSubmit={onSubmit} className="space-y-6">
-      <Tabs defaultValue="basic" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="basic">Basic Info</TabsTrigger>
-          <TabsTrigger value="features">Features</TabsTrigger>
-          <TabsTrigger value="limits">Limits & Access</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="basic" className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Plan Name</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="e.g., Professional Plan"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="price">Price ($)</Label>
-              <Input
-                id="price"
-                type="number"
-                step="0.01"
-                value={formData.price}
-                onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
-                placeholder="99.00"
-                required
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="Brief description of the plan"
-              rows={3}
-            />
-          </div>
-
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="interval">Billing Interval</Label>
-              <select
-                id="interval"
-                value={formData.interval}
-                onChange={(e) => setFormData(prev => ({ ...prev, interval: e.target.value }))}
-                className="w-full p-2 border rounded-md"
-              >
-                <option value="month">Monthly</option>
-                <option value="year">Yearly</option>
-              </select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="trialDays">Trial Days</Label>
-              <Input
-                id="trialDays"
-                type="number"
-                value={formData.trialDays}
-                onChange={(e) => setFormData(prev => ({ ...prev, trialDays: parseInt(e.target.value) || 0 }))}
-                placeholder="5"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Status</Label>
-              <div className="flex items-center space-x-2">
-                <Switch
-                  checked={formData.isActive}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isActive: checked }))}
-                />
-                <Label>{formData.isActive ? 'Active' : 'Inactive'}</Label>
-              </div>
-            </div>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="features" className="space-y-4">
-          <div className="space-y-2">
-            <Label>Plan Features</Label>
-            <div className="flex gap-2">
-              <Input
-                value={newFeature}
-                onChange={(e) => setNewFeature(e.target.value)}
-                placeholder="Add a feature..."
-                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addFeature())}
-              />
-              <Button type="button" onClick={addFeature}>Add</Button>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            {formData.features.map((feature, index) => (
-              <div key={index} className="flex items-center gap-2 p-2 bg-muted rounded">
-                <CheckCircle className="w-4 h-4 text-green-500" />
-                <span className="flex-1">{feature}</span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removeFeature(index)}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="limits" className="space-y-4">
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="maxVessels">Max Vessels</Label>
-              <Input
-                id="maxVessels"
-                type="number"
-                value={formData.maxVessels}
-                onChange={(e) => setFormData(prev => ({ ...prev, maxVessels: parseInt(e.target.value) || 0 }))}
-                placeholder="50 (-1 for unlimited)"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="maxPorts">Max Ports</Label>
-              <Input
-                id="maxPorts"
-                type="number"
-                value={formData.maxPorts}
-                onChange={(e) => setFormData(prev => ({ ...prev, maxPorts: parseInt(e.target.value) || 0 }))}
-                placeholder="5 (-1 for unlimited)"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="maxRefineries">Max Refineries</Label>
-              <Input
-                id="maxRefineries"
-                type="number"
-                value={formData.maxRefineries}
-                onChange={(e) => setFormData(prev => ({ ...prev, maxRefineries: parseInt(e.target.value) || 0 }))}
-                placeholder="10 (-1 for unlimited)"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <Switch
-                checked={formData.canAccessBrokerFeatures}
-                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, canAccessBrokerFeatures: checked }))}
-              />
-              <Label>Broker Features Access</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Switch
-                checked={formData.canAccessAnalytics}
-                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, canAccessAnalytics: checked }))}
-              />
-              <Label>Analytics Access</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Switch
-                checked={formData.canExportData}
-                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, canExportData: checked }))}
-              />
-              <Label>Data Export Access</Label>
-            </div>
-          </div>
-        </TabsContent>
-      </Tabs>
-
-      <div className="flex justify-end gap-2">
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Saving...' : isEditing ? 'Update Plan' : 'Create Plan'}
-        </Button>
-      </div>
-    </form>
   );
 }
