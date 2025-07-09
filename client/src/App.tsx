@@ -30,6 +30,8 @@ import AccountPage from "@/pages/AccountPage";
 import LandingPage from "@/pages/LandingPage";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
+import AuthCallback from "@/pages/AuthCallback";
+import VerifyEmail from "@/pages/VerifyEmail";
 import TrialExpired from "@/pages/TrialExpired";
 import SubscriptionUpgrade from "@/pages/SubscriptionUpgrade";
 import TradingDashboard from "@/pages/TradingDashboard";
@@ -141,6 +143,8 @@ function AuthenticatedApp() {
   if (!user) {
     if (location === "/login") return <Login />;
     if (location === "/register") return <Register />;
+    if (location === "/auth/callback") return <AuthCallback />;
+    if (location === "/verify-email") return <VerifyEmail />;
     if (location === "/") return <LandingPage />;
     // Redirect to login for protected routes
     return <Login />;

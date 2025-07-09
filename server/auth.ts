@@ -8,6 +8,13 @@ import { eq } from 'drizzle-orm';
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 const SALT_ROUNDS = 10;
 
+// Calculate trial end date (3 days from now)
+export function calculateTrialEndDate(): Date {
+  const endDate = new Date();
+  endDate.setDate(endDate.getDate() + 3);
+  return endDate;
+}
+
 export interface AuthenticatedRequest extends Request {
   user?: {
     id: number;
@@ -134,9 +141,3 @@ export function checkTrialStatus(req: AuthenticatedRequest, res: Response, next:
   next();
 }
 
-// Calculate trial end date (3 days from now)
-export function calculateTrialEndDate(): Date {
-  const trialEndDate = new Date();
-  trialEndDate.setDate(trialEndDate.getDate() + 3);
-  return trialEndDate;
-}

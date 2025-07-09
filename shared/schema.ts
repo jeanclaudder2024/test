@@ -29,16 +29,21 @@ export const subscriptionPlans = pgTable("subscription_plans", {
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   email: text("email").notNull().unique(),
-  password: text("password").notNull(), // Hashed password
+  password: text("password"), // Optional for OAuth users
   firstName: text("first_name"),
   lastName: text("last_name"),
   role: text("role").notNull().default("user"), // 'admin', 'user', 'broker'
   stripeCustomerId: text("stripe_customer_id"),
   isEmailVerified: boolean("is_email_verified").default(false),
   emailVerificationToken: text("email_verification_token"),
+  emailVerificationExpires: timestamp("email_verification_expires"),
   resetPasswordToken: text("reset_password_token"),
   resetPasswordExpires: timestamp("reset_password_expires"),
   lastLoginAt: timestamp("last_login_at"),
+  // OAuth fields
+  googleId: text("google_id"),
+  avatarUrl: text("avatar_url"),
+  provider: text("provider").default("email"), // 'email', 'google'
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -116,6 +121,9 @@ export const insertUserSchema = createInsertSchema(users).pick({
   firstName: true,
   lastName: true,
   role: true,
+  googleId: true,
+  avatarUrl: true,
+  provider: true,
 });
 
 export const insertUserSubscriptionSchema = createInsertSchema(userSubscriptions).pick({
@@ -147,6 +155,28 @@ export const registerSchema = z.object({
 
 // Login schema
 export const loginSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(1, "Password is required"),
+});
+
+// Email verification schema
+export const emailVerificationSchema = z.object({
+  token: z.string().min(1, "Verification token is required"),
+});
+
+// Password reset request schema
+export const passwordResetRequestSchema = z.object({
+  email: z.string().email("Invalid email address"),
+});
+
+// Password reset schema
+export const passwordResetSchema = z.object({
+  token: z.string().min(1, "Reset token is required"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
+
+// Resend verification schema
+export const resendVerificationSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(1, "Password is required"),
 });

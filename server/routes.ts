@@ -5,6 +5,8 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { storage } from "./storage";
 import authRoutes from "./routes/authRoutes";
+import passport from "./config/passport";
+import session from "express-session";
 import { authenticateToken, requireAdmin, AuthenticatedRequest } from "./auth";
 import { vesselService } from "./services/vesselService";
 import { refineryService } from "./services/refineryService";
@@ -103,6 +105,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes handled in index.ts
   
   const apiRouter = express.Router();
+
+  // Initialize passport and session middleware
+  app.use(session({
+    secret: process.env.SESSION_SECRET || 'your-session-secret',
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: false } // Set to true in production with HTTPS
+  }));
+  
+  app.use(passport.initialize());
+  app.use(passport.session());
 
   // Register authentication routes
   app.use("/api/auth", authRoutes);
