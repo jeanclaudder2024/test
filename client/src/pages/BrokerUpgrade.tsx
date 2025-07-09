@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLocation } from 'wouter';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -69,6 +70,7 @@ const STEPS = [
 ];
 
 export default function BrokerUpgrade() {
+  const [, setLocation] = useLocation();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<UpgradeFormData>({
     firstName: '',
@@ -148,26 +150,37 @@ export default function BrokerUpgrade() {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
+      // Validate all required fields one more time
+      if (!formData.firstName || !formData.lastName || !formData.email || !formData.phoneNumber) {
+        toast({
+          title: "Missing required information",
+          description: "Please fill in all required fields before submitting",
+          variant: "destructive"
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
       // Save broker data to localStorage for payment process
       localStorage.setItem('brokerUpgradeData', JSON.stringify(formData));
       
-      // Simulate API call for membership application
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
       toast({
         title: "Application submitted successfully!",
-        description: "Proceeding to payment for your elite membership",
+        description: "Redirecting to payment page for your elite membership",
       });
       
-      // Redirect to payment page
-      window.location.href = '/broker-payment';
+      // Use proper router navigation instead of window.location
+      setTimeout(() => {
+        setLocation('/broker-payment');
+      }, 1000);
+      
     } catch (error) {
+      console.error('Submission error:', error);
       toast({
         title: "Submission failed",
         description: "Please try again later",
         variant: "destructive"
       });
-    } finally {
       setIsSubmitting(false);
     }
   };
