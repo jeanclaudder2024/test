@@ -991,7 +991,6 @@ export default function VesselDetail() {
                         </h4>
                       </div>
                       <div className="p-6">
-                      
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div className="space-y-1">
                             <label className="text-sm font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wide">Oil Type / Commodity</label>
