@@ -361,6 +361,16 @@ Changelog:
   * **Interface Simplification**: Updated all company card references to use direct company fields instead of nested realCompany structure
   * **Safety Enhancements**: Added null checks and filtering for missing company fields to prevent display errors
   * **Clean User Experience**: Companies page now displays authentic real company information without fake company layer
+- July 9, 2025. **STUNNING CARGO INFORMATION ENHANCEMENT: Professional Maritime Deal Display**:
+  * **Comprehensive Cargo Data Display**: Enhanced vessel detail pages with 18+ detailed cargo information fields including Oil Type, Origin, Destination, Quantity, Deal Value, Contract Type, Delivery Terms, and Verification Status
+  * **Beautiful Visual Design**: Implemented professional card-based layout with color-coded sections (blue for cargo, green for financial, orange for operations, purple for company details, purple/pink for deal status)
+  * **Enhanced User Experience**: Each data field now displayed in individual cards with large icons, bold typography, and hover effects for better readability
+  * **Prominent Deal Buttons**: Added highly visible "Express Interest in Deal" and "Request Call Back" buttons with gradient styling and hover animations
+  * **Professional Header**: Enhanced section header with blue-to-purple gradient background and embedded action button
+  * **Arabic/English Support**: Maintained bilingual field labels as requested with professional presentation
+  * **Interactive Elements**: Added toast notifications for deal interest and contact requests with detailed user feedback
+  * **Responsive Design**: Grid-based layout that adapts beautifully to mobile, tablet, and desktop screens
+  * **Shadow and Animation Effects**: Added subtle shadows, hover effects, and smooth transitions for premium user experience
 - July 8, 2025. **STUNNING SIDEBAR REDESIGN: Modern Professional Navigation Experience**:
   * **Spectacular Visual Enhancement**: Completely redesigned sidebar with stunning gradients, backdrop blur effects, and professional glass-morphism design
   * **Animated Background**: Added subtle gradient animation overlay that flows between blue and orange colors for elegant visual appeal
