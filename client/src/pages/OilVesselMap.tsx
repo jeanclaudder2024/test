@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Wrapper } from '@googlemaps/react-wrapper';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -10,7 +9,23 @@ import { useVesselWebSocket } from '@/hooks/useVesselWebSocket';
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 
-// Google Maps component
+// Load Google Maps script
+const loadGoogleMapsScript = () => {
+  if (document.querySelector('script[src*="maps.googleapis.com"]')) {
+    return Promise.resolve();
+  }
+  
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&callback=console.debug&libraries=maps,marker&v=beta`;
+    script.async = true;
+    script.onload = resolve;
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+};
+
+// Modern Google Maps Web Component
 interface GoogleMapProps {
   vessels: any[];
   ports: any[];
