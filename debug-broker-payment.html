@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Broker Payment</title>
+</head>
+<body>
+    <h1>Debug Broker Payment</h1>
+    <button onclick="createTestData()">1. Create Test Broker Data</button>
+    <button onclick="testAPI()">2. Test API Direct</button>
+    <button onclick="goToPayment()">3. Go to Payment Page</button>
+    <button onclick="clearAll()">Clear All Data</button>
+    
+    <div id="results"></div>
+    
+    <script>
+        function log(message) {
+            document.getElementById('results').innerHTML += `<p>${message}</p>`;
+            console.log(message);
+        }
+        
+        function createTestData() {
+            const testData = {
+                firstName: 'John',
+                lastName: 'Doe',
+                email: 'john@test.com',
+                dateOfBirth: '1990-01-01',
+                nationality: 'US',
+                experience: '5',
+                specialization: 'Crude Oil',
+                previousEmployer: 'Test Corp',
+                certifications: 'Test Cert',
+                phoneNumber: '+1234567890',
+                address: '123 Test Street'
+            };
+            
+            localStorage.setItem('brokerUpgradeData', JSON.stringify(testData));
+            log('✓ Test broker data created in localStorage');
+        }
+        
+        async function testAPI() {
+            try {
+                const storedData = localStorage.getItem('brokerUpgradeData');
+                if (!storedData) {
+                    log('❌ No broker data in localStorage');
+                    return;
+                }
+                
+                const brokerData = JSON.parse(storedData);
+                log('Testing API with data: ' + JSON.stringify(brokerData, null, 2));
+                
+                const response = await fetch('/api/broker/create-payment-intent', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        amount: 299,
+                        brokerData: brokerData
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log('✓ API Success: ' + JSON.stringify(data));
+                    if (data.clientSecret) {
+                        log('✓ Client secret received: ' + data.clientSecret.substring(0, 20) + '...');
+                    } else {
+                        log('❌ No client secret in response');
+                    }
+                } else {
+                    const errorText = await response.text();
+                    log('❌ API Error: ' + response.status + ' - ' + errorText);
+                }
+            } catch (error) {
+                log('❌ Exception: ' + error.message);
+            }
+        }
+        
+        function goToPayment() {
+            window.location.href = '/broker-payment';
+        }
+        
+        function clearAll() {
+            localStorage.clear();
+            document.getElementById('results').innerHTML = '';
+            log('All data cleared');
+        }
+    </script>
+</body>
+</html>

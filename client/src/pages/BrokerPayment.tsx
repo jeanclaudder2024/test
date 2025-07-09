@@ -120,25 +120,38 @@ export default function BrokerPayment() {
   useEffect(() => {
     // Get broker data from localStorage (stored during upgrade process)
     const storedBrokerData = localStorage.getItem('brokerUpgradeData');
+    console.log('Stored broker data:', storedBrokerData);
+    
     if (!storedBrokerData) {
+      console.log('No broker data found, redirecting to upgrade...');
       setLocation('/broker-upgrade');
       return;
     }
 
     const parsedData = JSON.parse(storedBrokerData);
+    console.log('Parsed broker data:', parsedData);
     setBrokerData(parsedData);
 
     // Create payment intent
     const createPaymentIntent = async () => {
       try {
-        const response = await apiRequest('POST', '/api/broker/create-payment-intent', {
-          amount: 299, // $299 for 1-year membership
-          brokerData: parsedData,
+        console.log('Creating payment intent for data:', parsedData);
+        
+        const response = await apiRequest('/api/broker/create-payment-intent', {
+          method: 'POST',
+          body: JSON.stringify({
+            amount: 299,
+            brokerData: parsedData,
+          }),
         });
+
+        console.log('Payment response data:', response);
         
         if (response && response.clientSecret) {
           setClientSecret(response.clientSecret);
+          console.log('Client secret set successfully');
         } else {
+          console.error('No client secret in response:', response);
           throw new Error('No client secret received from server');
         }
       } catch (error) {

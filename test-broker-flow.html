@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Broker Payment Flow</title>
+</head>
+<body>
+    <h1>Test Broker Payment Flow</h1>
+    <button onclick="setupTestData()">Setup Test Broker Data</button>
+    <button onclick="clearData()">Clear Data</button>
+    <button onclick="goToPayment()">Go to Payment Page</button>
+    
+    <script>
+        function setupTestData() {
+            const testData = {
+                firstName: 'John',
+                lastName: 'Doe',
+                email: 'john@test.com',
+                dateOfBirth: '1990-01-01',
+                nationality: 'US',
+                experience: '5',
+                specialization: 'Crude Oil',
+                previousEmployer: 'Test Corp',
+                certifications: 'Test Cert',
+                phoneNumber: '+1234567890',
+                address: '123 Test Street, City, Country'
+            };
+            
+            localStorage.setItem('brokerUpgradeData', JSON.stringify(testData));
+            alert('Test broker data set in localStorage');
+            console.log('Test data set:', testData);
+        }
+        
+        function clearData() {
+            localStorage.removeItem('brokerUpgradeData');
+            alert('Broker data cleared');
+        }
+        
+        function goToPayment() {
+            window.location.href = '/broker-payment';
+        }
+    </script>
+</body>
+</html>
