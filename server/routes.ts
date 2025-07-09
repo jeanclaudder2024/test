@@ -12218,20 +12218,11 @@ Note: This document contains real vessel operational data and should be treated 
         return res.status(400).json({ error: 'Plan ID is required' });
       }
 
-      // Map frontend plan IDs to actual database plan IDs  
-      const planIdMapping = {
-        1: 7, // Basic -> Starter
-        2: 8, // Professional -> Professional  
-        3: 9  // Enterprise -> Enterprise
-      };
-      
-      const actualPlanId = planIdMapping[planId as keyof typeof planIdMapping];
-      
-      if (!actualPlanId) {
-        return res.status(400).json({ error: `Invalid plan ID: ${planId}. Available IDs: ${Object.keys(planIdMapping).join(', ')}` });
+      // Validate plan ID exists in database
+      const validPlanIds = [1, 2, 3];
+      if (!validPlanIds.includes(planId)) {
+        return res.status(400).json({ error: `Invalid plan ID: ${planId}. Available IDs: ${validPlanIds.join(', ')}` });
       }
-
-      console.log(`Mapping frontend planId ${planId} to database planId ${actualPlanId}`);
 
       // Check if subscription exists for this user
       const existingSubscription = await db.select().from(userSubscriptions).where(eq(userSubscriptions.userId, req.user.id));
@@ -12241,7 +12232,7 @@ Note: This document contains real vessel operational data and should be treated 
         await db
           .update(userSubscriptions)
           .set({
-            planId: actualPlanId,
+            planId: planId,
             status: 'active',
             updatedAt: new Date()
           })
@@ -12250,7 +12241,7 @@ Note: This document contains real vessel operational data and should be treated 
         // Create new subscription
         await db.insert(userSubscriptions).values({
           userId: req.user.id,
-          planId: actualPlanId,
+          planId: planId,
           status: 'active',
           currentPeriodStart: new Date(),
           currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
