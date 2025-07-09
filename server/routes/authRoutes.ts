@@ -58,19 +58,20 @@ router.post('/register', async (req, res) => {
       })
       .returning();
 
-    // Calculate 7-day trial dates
+    // Calculate 5-day trial dates (updated from 7-day)
     const trialStartDate = new Date();
     const trialEndDate = new Date();
-    trialEndDate.setDate(trialStartDate.getDate() + 7); // 7-day trial
+    trialEndDate.setDate(trialStartDate.getDate() + 5); // 5-day trial
 
-    // Create subscription with 7-day trial (only if subscription plans exist)
+    // Create subscription with 5-day trial using selected plan
     let userSubscription = null;
     try {
+      const selectedPlanId = validatedData.planId || 2; // Default to Professional plan if none provided
       const [subscription] = await db
         .insert(userSubscriptions)
         .values({
           userId: newUser.id,
-          planId: 2, // Professional plan ID for trial
+          planId: selectedPlanId,
           trialStartDate,
           trialEndDate,
           status: 'trial'
@@ -89,12 +90,12 @@ router.post('/register', async (req, res) => {
     const { password, ...userWithoutPassword } = newUser;
 
     res.status(201).json({
-      message: 'User registered successfully! Your 7-day free trial has started.',
+      message: 'User registered successfully! Your 5-day free trial has started.',
       user: userWithoutPassword,
       token,
       subscription: userSubscription,
       trialExpired: false,
-      trialDaysRemaining: 7,
+      trialDaysRemaining: 5,
       requiresEmailVerification: false
     });
 
