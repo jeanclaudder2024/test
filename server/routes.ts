@@ -5,6 +5,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { storage } from "./storage";
 import authRoutes from "./routes/authRoutes";
+import dealRoutes from "./routes/dealRoutes";
 import { authenticateToken, requireAdmin, AuthenticatedRequest } from "./auth";
 import { vesselService } from "./services/vesselService";
 import { refineryService } from "./services/refineryService";
@@ -105,6 +106,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Register authentication routes
   app.use("/api/auth", authRoutes);
+  
+  // Register deal management routes  
+  app.use("/api", dealRoutes);
   
   // Emergency admin user creation endpoint
   app.post("/api/create-admin", async (req: Request, res: Response) => {

@@ -109,6 +109,112 @@ export const paymentsRelations = relations(payments, ({ one }) => ({
   }),
 }));
 
+// Enhanced Deals Table for Comprehensive Oil Trading
+export const deals = pgTable("deals", {
+  id: serial("id").primaryKey(),
+  dealCode: varchar("deal_code", { length: 50 }).notNull().unique(),
+  
+  // Oil Type / Commodity Information
+  oilType: text("oil_type").notNull(), // ULSD EN 590, Gasoline, Crude Oil, etc.
+  commoditySpec: text("commodity_spec"), // 10ppm, Standard Gasoline Spec, etc.
+  qualityGrade: text("quality_grade"), // ULSD 10ppm, Standard Gasoline Spec
+  
+  // Geographic Information
+  originCountry: text("origin_country").notNull(), // Non-Sanctioned, Kharg Island, etc.
+  destinationPorts: text("destination_ports"), // JSON array of destination ports
+  loadingPort: text("loading_port").notNull(),
+  dischargePorts: text("discharge_ports"), // JSON array of discharge ports
+  
+  // Quantity & Pricing
+  quantityBarrels: decimal("quantity_barrels", { precision: 15, scale: 2 }),
+  quantityMts: decimal("quantity_mts", { precision: 15, scale: 2 }), // Metric tons
+  dealValueUsd: decimal("deal_value_usd", { precision: 15, scale: 2 }),
+  pricePerBarrel: decimal("price_per_barrel", { precision: 10, scale: 4 }),
+  marketPrice: decimal("market_price", { precision: 10, scale: 4 }), // For transparent comparison
+  
+  // Contract Information
+  contractType: text("contract_type").notNull(), // Spot Trial, 12 Months Optional, etc.
+  deliveryTerms: text("delivery_terms").notNull(), // FOB, CIF, etc.
+  paymentTerms: text("payment_terms"), // MT103/TT After Successful Delivery
+  
+  // Companies & Sources
+  sourceCompany: text("source_company").notNull(), // BP, Source Refinery, etc.
+  targetRefinery: text("target_refinery"),
+  buyerCompany: text("buyer_company"),
+  sellerCompany: text("seller_company"),
+  
+  // Deal Status & Verification
+  dealStatus: text("deal_status").default("open"), // open, reserved, closed, cancelled
+  isVerified: boolean("is_verified").default(false),
+  verificationDate: timestamp("verification_date"),
+  
+  // Customer Experience
+  customerRating: decimal("customer_rating", { precision: 3, scale: 2 }), // 4.7/5
+  totalReviews: integer("total_reviews").default(0),
+  
+  // Dates
+  dealDate: timestamp("deal_date").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  
+  // Associated Vessel
+  vesselId: integer("vessel_id").references(() => vessels.id),
+  
+  // Additional Metadata
+  isActive: boolean("is_active").default(true),
+  dealPriority: text("deal_priority").default("standard"), // high, standard, low
+  currencyCode: varchar("currency_code", { length: 3 }).default("USD"),
+});
+
+// Deal Analytics Table
+export const dealAnalytics = pgTable("deal_analytics", {
+  id: serial("id").primaryKey(),
+  dealId: integer("deal_id").notNull().references(() => deals.id),
+  metricName: text("metric_name").notNull(),
+  metricValue: decimal("metric_value", { precision: 15, scale: 4 }),
+  metricUnit: text("metric_unit"),
+  recordedAt: timestamp("recorded_at").defaultNow(),
+});
+
+// Deal Subscriptions Table
+export const dealSubscriptions = pgTable("deal_subscriptions", {
+  id: serial("id").primaryKey(),
+  dealId: integer("deal_id").notNull().references(() => deals.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  subscriptionType: text("subscription_type").notNull(), // view, reserve, purchase
+  subscriptionDate: timestamp("subscription_date").defaultNow(),
+  expiresAt: timestamp("expires_at"),
+  isActive: boolean("is_active").default(true),
+});
+
+// Enhanced Relations
+export const dealsRelations = relations(deals, ({ one, many }) => ({
+  vessel: one(vessels, {
+    fields: [deals.vesselId],
+    references: [vessels.id],
+  }),
+  analytics: many(dealAnalytics),
+  subscriptions: many(dealSubscriptions),
+}));
+
+export const dealAnalyticsRelations = relations(dealAnalytics, ({ one }) => ({
+  deal: one(deals, {
+    fields: [dealAnalytics.dealId],
+    references: [deals.id],
+  }),
+}));
+
+export const dealSubscriptionsRelations = relations(dealSubscriptions, ({ one }) => ({
+  deal: one(deals, {
+    fields: [dealSubscriptions.dealId],
+    references: [deals.id],
+  }),
+  user: one(users, {
+    fields: [dealSubscriptions.userId],
+    references: [users.id],
+  }),
+}));
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
@@ -136,6 +242,29 @@ export const insertPaymentSchema = createInsertSchema(payments).omit({
   id: true,
   createdAt: true,
 });
+
+// Enhanced Deals Insert Schemas
+export const insertDealSchema = createInsertSchema(deals).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertDealAnalyticsSchema = createInsertSchema(dealAnalytics).omit({
+  id: true,
+  recordedAt: true,
+});
+
+export const insertDealSubscriptionSchema = createInsertSchema(dealSubscriptions).omit({
+  id: true,
+  subscriptionDate: true,
+});
+
+// Type exports for enhanced deals
+export type Deal = typeof deals.$inferSelect;
+export type InsertDeal = z.infer<typeof insertDealSchema>;
+export type DealAnalytics = typeof dealAnalytics.$inferSelect;
+export type DealSubscription = typeof dealSubscriptions.$inferSelect;
 
 // Register schema with validation
 export const registerSchema = z.object({
@@ -190,7 +319,7 @@ export const vessels = pgTable("vessels", {
   operatorName: text("operator_name"), // Oil company that operates the vessel
   oilSource: text("oil_source"), // Which company/refinery the vessel is taking oil from
   
-  // Deal Information Fields
+  // Deal Information Fields - Enhanced with comprehensive cargo data
   oilType: text("oil_type"), // Type of oil/cargo
   quantity: decimal("quantity", { precision: 15, scale: 2 }), // Quantity in barrels/tons
   dealValue: decimal("deal_value", { precision: 15, scale: 2 }), // Value in USD
@@ -200,6 +329,19 @@ export const vessels = pgTable("vessels", {
   sourceCompany: text("source_company"), // Source company name
   targetRefinery: text("target_refinery"), // Target refinery name
   shippingType: text("shipping_type"), // FOB, In Tank, CIF, etc.
+  
+  // Enhanced cargo tracking fields
+  currentDealId: integer("current_deal_id").references(() => deals.id),
+  cargoStatus: text("cargo_status").default("loaded"), // loaded, discharged, in_transit
+  cargoManifestUrl: text("cargo_manifest_url"),
+  billOfLading: text("bill_of_lading"),
+  customsStatus: text("customs_status"),
+  inspectionStatus: text("inspection_status"),
+  dealCode: text("deal_code"), // Reference to deal code
+  contractType: text("contract_type"), // Spot Trial, Long-term, etc.
+  paymentTerms: text("payment_terms"), // MT103/TT, L/C, etc.
+  deliveryTerms: text("delivery_terms"), // FOB, CIF, CFR, etc.
+  customerRating: decimal("customer_rating", { precision: 3, scale: 2 }),
   
   // Route information
   routeDistance: decimal("route_distance", { precision: 10, scale: 2 }), // Distance in nautical miles
@@ -898,11 +1040,11 @@ export const companyRelations = relations(companies, ({ one, many }) => ({
     references: [companies.id],
   }),
   fakeCompanies: many(companies),
-  deals: many(deals),
+  brokerDealRequests: many(brokerDealRequests),
 }));
 
-// Deal requests between brokers and fake companies
-export const deals = pgTable("deals", {
+// Broker deal requests between brokers and fake companies (renamed to avoid conflict)
+export const brokerDealRequests = pgTable("broker_deal_requests", {
   id: serial("id").primaryKey(),
   brokerId: integer("broker_id").references(() => users.id),
   fakeCompanyId: integer("fake_company_id").references(() => companies.id),
@@ -987,7 +1129,7 @@ export const insertCompanySchema = createInsertSchema(companies).omit({
   linkedCompanyId: z.number().optional(),
 });
 
-export const insertDealSchema = createInsertSchema(deals).omit({
+export const insertBrokerDealRequestSchema = createInsertSchema(brokerDealRequests).omit({
   id: true,
   createdAt: true,
   lastUpdated: true,

@@ -60,9 +60,10 @@ export function MobileLayout({ children }: MobileLayoutProps) {
 
     const secondaryNavigation = [
       { name: "Companies", href: "/companies", icon: Briefcase },
+      { name: "Deals", href: "/deals", icon: ShoppingBag },
       { name: "Brokers", href: "/brokers", icon: UserPlus },
       { name: "AI Assistant", href: "/ai-assistant", icon: MessageSquare },
-      { name: "Pricing", href: "/pricing", icon: ShoppingBag },
+      { name: "Pricing", href: "/pricing", icon: CreditCard },
     ];
 
     const adminNavigation = user?.role === 'admin' ? [
