@@ -33,7 +33,7 @@ import {
   Flag, Droplet, Package, AlertCircle, Truck, Gauge, BarChart, History,
   Users, Clock, Compass, ArrowRight, FileText, FileCheck, Clipboard, Download, Globe,
   ZoomIn, ZoomOut, Fuel, Activity, Layers, Filter, Tag, Check, RotateCw,
-  MapPin, ExternalLink, Factory, AlertTriangle, RefreshCw, Route, TrendingUp, Phone
+  MapPin, ExternalLink, Factory, AlertTriangle, RefreshCw, Route, TrendingUp, Phone, Building
 } from 'lucide-react';
 
 // Define oil product categories for filtering
