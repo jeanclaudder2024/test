@@ -508,6 +508,14 @@ Changelog:
   * **Fixed Subscription Plan Creation**: Resolved "Missing required fields" error by updating API validation to match actual database schema
   * **Complete Admin Features**: Admin panel now fully accessible with unlimited time for user management, subscription management, and platform administration
   * **Production Ready**: Admin account admin@petrodealhub.com has permanent unlimited access to all platform features
+- July 9, 2025. **SUBSCRIPTION PLAN UPDATE ERROR FIX IN PROGRESS**:
+  * **Fixed Dialog Accessibility**: Added missing DialogDescription and VisuallyHidden DialogTitle to command.tsx component
+  * **Resolved Form Action Syntax**: Converted Server Actions to proper client-side form handling in AdminSubscriptionPlans
+  * **Database Table Creation**: Added automatic subscriptions table creation in database-init.ts
+  * **Fixed JSX Structure**: Corrected DialogHeader structure in VesselManagement component
+  * **API Request Function**: Updated apiRequest to match expected parameter signature (method, url, data)
+  * **Authentication Issue Identified**: "Unexpected token DOCTYPE" error caused by server returning HTML instead of JSON due to authentication failure
+  * **Status**: Investigating token validation issue in subscription plan update endpoint - PUT requests failing with "Invalid token" despite GET requests working
 
 ## User Preferences
 
