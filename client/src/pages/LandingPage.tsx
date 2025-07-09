@@ -119,32 +119,18 @@ export default function LandingPage() {
   // Handle trial start
   const handleStartTrial = async (planId: number) => {
     try {
-      const response = await apiRequest('POST', '/api/start-trial', { planId });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to start trial');
-      }
-
-      const data = await response.json();
-      
       toast({
-        title: "7-Day Free Trial Started!",
-        description: `Your trial has been activated. Please register to access your account.`,
+        title: "Start Your 7-Day Free Trial",
+        description: "Register now to access all subscription features. No credit card required!",
         variant: "default",
       });
       
-      // Redirect to registration
-      navigate('/register?trial=true');
+      // Store the selected plan and redirect to registration
+      localStorage.setItem('selectedTrialPlan', planId.toString());
+      navigate('/register?trial=true&plan=' + planId);
     } catch (error) {
       console.error('Error starting trial:', error);
-      toast({
-        title: "Trial Setup",
-        description: "Please register first to start your 7-day free trial. No credit card required!",
-        variant: "default",
-      });
-      
-      // Redirect to registration anyway
+      // Still redirect to registration
       navigate('/register?trial=true');
     }
   };

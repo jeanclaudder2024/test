@@ -33,7 +33,7 @@ export default function RegisterPage() {
       await registerUser(data);
       toast({
         title: "Welcome aboard!",
-        description: "Your account has been created. Your 3-day trial starts now!",
+        description: "Your account has been created. Your 7-day free trial starts now!",
       });
     } catch (error: any) {
       toast({
@@ -95,7 +95,7 @@ export default function RegisterPage() {
           <CardHeader className="text-center pb-6">
             <CardTitle className="text-2xl text-white">Create Account</CardTitle>
             <CardDescription className="text-slate-300">
-              Join thousands of oil trading professionals
+              Join thousands of oil trading professionals - Start your 7-day free trial
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">

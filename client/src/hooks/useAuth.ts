@@ -135,8 +135,8 @@ export const useAuth = () => {
       // Update state
       setAuthState({
         user: data.user,
-        subscription: null, // Will be fetched separately
-        trialExpired: false, // New user, trial just started
+        subscription: data.subscription,
+        trialExpired: data.trialExpired || false,
         isAuthenticated: true,
         isLoading: false,
       });

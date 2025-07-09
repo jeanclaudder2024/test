@@ -58,18 +58,19 @@ router.post('/register', async (req, res) => {
       })
       .returning();
 
-    // Calculate trial dates
+    // Calculate 7-day trial dates
     const trialStartDate = new Date();
-    const trialEndDate = calculateTrialEndDate();
+    const trialEndDate = new Date();
+    trialEndDate.setDate(trialStartDate.getDate() + 7); // 7-day trial
 
-    // Create subscription with 3-day trial (only if subscription plans exist)
+    // Create subscription with 7-day trial (only if subscription plans exist)
     let userSubscription = null;
     try {
       const [subscription] = await db
         .insert(userSubscriptions)
         .values({
           userId: newUser.id,
-          planId: 1, // Default trial plan ID
+          planId: 2, // Professional plan ID for trial
           trialStartDate,
           trialEndDate,
           status: 'trial'
@@ -88,11 +89,12 @@ router.post('/register', async (req, res) => {
     const { password, ...userWithoutPassword } = newUser;
 
     res.status(201).json({
-      message: 'User registered successfully and ready to use.',
+      message: 'User registered successfully! Your 7-day free trial has started.',
       user: userWithoutPassword,
       token,
       subscription: userSubscription,
       trialExpired: false,
+      trialDaysRemaining: 7,
       requiresEmailVerification: false
     });
 

@@ -4,6 +4,7 @@ import VesselInfo from "@/components/vessels/VesselInfo";
 import StatsCards from "@/components/dashboard/StatsCards";
 import RegionDistribution from "@/components/dashboard/RegionDistribution";
 import AIAssistant from "@/components/ai/AIAssistant";
+import { TrialBanner } from "@/components/TrialBanner";
 import { type Region, type RegionData } from "@/types";
 import { type Vessel, type Refinery, type Port } from "@shared/schema";
 // استيراد خدمة توليد السفن لمحطات النفط
@@ -238,6 +239,9 @@ export default function Dashboard() {
     <div className="w-full">
       {/* Header Stats Summary */}
       <div className="p-4 md:p-6 pb-0">
+        {/* Trial Banner */}
+        <TrialBanner />
+        
         <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
           <div>
             <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-500">Maritime Operations Dashboard</h1>
