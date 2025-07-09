@@ -26,6 +26,7 @@ export default function OilVesselMap() {
   const [showPortZones, setShowPortZones] = useState(true);
   const [showDestinationLines, setShowDestinationLines] = useState(true);
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected'>('connected');
+  const [mapError, setMapError] = useState<string | null>(null);
   const [mapCenter, setMapCenter] = useState<[number, number]>([25.0, 55.0]);
   const [mapZoom] = useState(4);
   const mapRef = useRef<HTMLDivElement>(null);
@@ -47,6 +48,12 @@ export default function OilVesselMap() {
       script.defer = true;
       
       window.initMap = initializeMap;
+      
+      script.onerror = () => {
+        setMapError('Failed to load Google Maps. Please check your internet connection.');
+        console.error('Failed to load Google Maps script');
+      };
+      
       document.head.appendChild(script);
     };
 
@@ -56,12 +63,24 @@ export default function OilVesselMap() {
   const initializeMap = () => {
     if (!mapRef.current || mapInstanceRef.current) return;
 
-    mapInstanceRef.current = new window.google.maps.Map(mapRef.current, {
-      center: { lat: mapCenter[0], lng: mapCenter[1] },
-      zoom: mapZoom,
-      mapTypeId: getGoogleMapType(),
-      styles: mapStyle === 'dark' ? getDarkMapStyles() : undefined,
-    });
+    try {
+      console.log('Initializing Google Map...');
+      mapInstanceRef.current = new window.google.maps.Map(mapRef.current, {
+        center: { lat: mapCenter[0], lng: mapCenter[1] },
+        zoom: mapZoom,
+        mapTypeId: 'roadmap',
+        styles: mapStyle === 'dark' ? getDarkMapStyles() : undefined,
+      });
+
+      // Wait for map to be ready
+      window.google.maps.event.addListenerOnce(mapInstanceRef.current, 'idle', () => {
+        console.log('Google Map is ready and loaded');
+        setMapError(null); // Clear any previous errors
+      });
+    } catch (error) {
+      console.error('Error initializing map:', error);
+      setMapError('Failed to initialize Google Maps. Please refresh the page.');
+    }
   };
 
   const getGoogleMapType = () => {
@@ -248,7 +267,7 @@ export default function OilVesselMap() {
 
   // Create markers when map and data are ready
   useEffect(() => {
-    if (!mapInstanceRef.current || !window.google?.maps) return;
+    if (!mapInstanceRef.current || !window.google?.maps || mappableVessels.length === 0) return;
 
     // Clear existing markers
     markersRef.current.forEach(marker => {
@@ -775,6 +794,25 @@ export default function OilVesselMap() {
           </div>
         )}
         
+        {mapError && (
+          <div className="absolute inset-0 bg-red-50 flex items-center justify-center z-10">
+            <div className="text-center p-4">
+              <div className="text-red-600 font-semibold mb-2">Map Loading Error</div>
+              <div className="text-red-500 text-sm">{mapError}</div>
+              <Button 
+                onClick={() => {
+                  setMapError(null);
+                  window.location.reload();
+                }}
+                className="mt-4"
+                size="sm"
+              >
+                Retry
+              </Button>
+            </div>
+          </div>
+        )}
+        
         <div 
           id="map" 
           ref={mapRef}
@@ -783,6 +821,16 @@ export default function OilVesselMap() {
             width: '100%'
           }}
         />
+        
+        {!loading && !mapError && mappableVessels.length === 0 && (
+          <div className="absolute inset-0 bg-blue-50 flex items-center justify-center">
+            <div className="text-center p-4">
+              <Ship className="h-12 w-12 text-blue-500 mx-auto mb-2" />
+              <div className="text-blue-700 font-semibold">No Vessels Found</div>
+              <div className="text-blue-600 text-sm">Try adjusting your filter settings</div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
