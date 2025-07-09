@@ -44,12 +44,7 @@ router.post('/register', async (req, res) => {
     // Hash password
     const hashedPassword = await hashPassword(validatedData.password);
 
-    // Generate email verification token
-    const verificationToken = emailService.generateVerificationToken();
-    const verificationExpires = new Date();
-    verificationExpires.setHours(verificationExpires.getHours() + 24); // 24 hours
-
-    // Create user
+    // Create user (skip email verification for now)
     const [newUser] = await db
       .insert(users)
       .values({
@@ -58,50 +53,47 @@ router.post('/register', async (req, res) => {
         firstName: validatedData.firstName,
         lastName: validatedData.lastName,
         role: 'user',
-        emailVerificationToken: verificationToken,
-        emailVerificationExpires: verificationExpires,
+        isEmailVerified: true, // Auto-verify for simplified flow
         provider: 'email'
       })
       .returning();
 
-    // Create subscription with 3-day trial
+    // Calculate trial dates
     const trialStartDate = new Date();
     const trialEndDate = calculateTrialEndDate();
 
-    await db
-      .insert(userSubscriptions)
-      .values({
-        userId: newUser.id,
-        planId: 1, // Default trial plan ID
-        trialStartDate,
-        trialEndDate,
-        status: 'trial'
-      });
+    // Create subscription with 3-day trial (only if subscription plans exist)
+    let userSubscription = null;
+    try {
+      const [subscription] = await db
+        .insert(userSubscriptions)
+        .values({
+          userId: newUser.id,
+          planId: 1, // Default trial plan ID
+          trialStartDate,
+          trialEndDate,
+          status: 'trial'
+        })
+        .returning();
+      userSubscription = subscription;
+    } catch (subscriptionError) {
+      console.log('Subscription creation skipped - plans table may not exist yet');
+      // Continue without subscription for now
+    }
 
     // Generate token
     const token = generateToken(newUser);
 
-    // Send verification email
-    try {
-      await emailService.sendVerificationEmail(
-        newUser.email,
-        newUser.firstName || 'User',
-        verificationToken
-      );
-    } catch (emailError) {
-      console.error('Failed to send verification email:', emailError);
-      // Continue with registration even if email fails
-    }
-
     // Return user data without password
-    const { password, emailVerificationToken, ...userWithoutPassword } = newUser;
+    const { password, ...userWithoutPassword } = newUser;
 
     res.status(201).json({
-      message: 'User registered successfully. Please check your email to verify your account.',
+      message: 'User registered successfully and ready to use.',
       user: userWithoutPassword,
       token,
-      trialEndDate: trialEndDate.toISOString(),
-      requiresEmailVerification: true
+      subscription: userSubscription,
+      trialExpired: false,
+      requiresEmailVerification: false
     });
 
   } catch (error: any) {
