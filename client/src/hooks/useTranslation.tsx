@@ -232,14 +232,16 @@ export function TranslationProvider({ children }: { children: ReactNode }) {
   const [language, setLanguage] = useState<Language>("en");
 
   const t = (key: string): string => {
-    return translations[language][key] || key;
+    // Always return English translations only
+    return translations["en"][key] || key;
   };
 
   const handleLanguageChange = (newLanguage: Language) => {
-    setLanguage(newLanguage);
-    // Set document direction for RTL languages
-    document.documentElement.dir = newLanguage === "ar" ? "rtl" : "ltr";
-    document.documentElement.lang = newLanguage;
+    // Force English only - ignore language change requests
+    setLanguage("en");
+    // Always use LTR direction
+    document.documentElement.dir = "ltr";
+    document.documentElement.lang = "en";
   };
 
   return (

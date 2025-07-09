@@ -45,7 +45,6 @@ import { apiRequest, queryClient } from "./lib/queryClient";
 import { MobileLayout } from "@/components/ui/mobile-layout";
 
 import { useAuth } from "@/hooks/useAuth";
-import { TranslationProvider } from "@/hooks/useTranslation.tsx";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { motion, AnimatePresence } from "framer-motion";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -165,10 +164,8 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="system">
-        <TranslationProvider>
-          <Router />
-          <Toaster />
-        </TranslationProvider>
+        <Router />
+        <Toaster />
       </ThemeProvider>
     </QueryClientProvider>
   );
