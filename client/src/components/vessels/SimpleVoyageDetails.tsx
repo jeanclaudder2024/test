@@ -144,7 +144,7 @@ export function SimpleVoyageDetails({ vessel, enhancedVesselData, voyageProgress
         <CardHeader className="pb-3">
           <CardTitle className="text-lg font-semibold flex items-center">
             <Navigation className="h-5 w-5 mr-2 text-primary" />
-            Voyage Information
+            Destination Information
           </CardTitle>
         </CardHeader>
         <CardContent>
