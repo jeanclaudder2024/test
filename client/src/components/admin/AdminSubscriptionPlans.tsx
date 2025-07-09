@@ -150,10 +150,26 @@ export default function AdminSubscriptionPlans() {
   });
 
   const handleCreatePlan = (formData: FormData) => {
+    const name = formData.get("name") as string;
+    const description = formData.get("description") as string;
+    const price = formData.get("price") as string;
+    
+    // Debug log to see what we're sending
+    console.log("Create plan data:", { name, description, price });
+    
+    if (!name || !description || !price) {
+      toast({ 
+        title: "Error", 
+        description: "Please fill in all required fields (name, description, price)", 
+        variant: "destructive" 
+      });
+      return;
+    }
+    
     const planData = {
-      name: formData.get("name") as string,
-      description: formData.get("description") as string,
-      price: formData.get("price") as string,
+      name,
+      description,
+      price,
       interval: formData.get("interval") as string || "month",
       trialDays: parseInt(formData.get("trialDays") as string) || 5,
       features: (formData.get("features") as string)?.split('\n').filter(f => f.trim()) || [],
@@ -237,14 +253,14 @@ export default function AdminSubscriptionPlans() {
               </div>
               
               <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea id="description" name="description" placeholder="Full access to maritime tracking features" />
+                <Label htmlFor="description">Description *</Label>
+                <Textarea id="description" name="description" placeholder="Full access to maritime tracking features" required />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="interval">Billing Interval</Label>
-                  <Select name="interval">
+                  <Select name="interval" defaultValue="month">
                     <SelectTrigger>
                       <SelectValue placeholder="Select interval" />
                     </SelectTrigger>

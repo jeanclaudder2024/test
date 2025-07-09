@@ -517,6 +517,9 @@ Changelog:
   * **Fixed Fetch API Error**: Corrected parameter order in App.tsx seeding function from "/api/seed", { method: "POST" } to "POST", "/api/seed"
   * **All Dialog Accessibility Fixed**: All DialogContent components now have proper DialogTitle or VisuallyHidden elements for screen reader compatibility
   * **Authentication Working**: Admin authentication confirmed functional - admin@petrodealhub.com login works properly
+  * **Subscription Plan Create Form Fixed**: Added required validation to description field and client-side validation with debug logging
+  * **Form Fields Enhanced**: Made description field required with asterisk, added defaultValue to interval Select component
+  * **Validation Improved**: Added client-side validation before sending data to prevent 400 errors with clear user feedback
 
 ## User Preferences
 
