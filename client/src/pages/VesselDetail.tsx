@@ -972,22 +972,9 @@ export default function VesselDetail() {
               
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <BarChart className="h-5 w-5 mr-2" />
-                      Cargo & Deal Information
-                    </div>
-                    <Button 
-                      onClick={() => {
-                        toast({
-                          title: "Deal Interest Registered",
-                          description: "Your interest in this deal has been recorded. Our team will contact you soon.",
-                          duration: 5000,
-                        });
-                      }}
-                    >
-                      Express Interest in Deal
-                    </Button>
+                  <CardTitle className="flex items-center">
+                    <BarChart className="h-5 w-5 mr-2" />
+                    Cargo & Deal Information
                   </CardTitle>
                   <CardDescription>
                     Complete cargo details and deal specifications - المعلومات التفصيلية للشحنة والصفقة
@@ -1190,10 +1177,10 @@ export default function VesselDetail() {
                         </div>
                       </div>
                       
-                      {/* Action Buttons */}
-                      <div className="flex flex-col sm:flex-row gap-3 mt-6">
+                      {/* Action Button */}
+                      <div className="mt-6">
                         <Button 
-                          className="flex-1"
+                          className="w-full"
                           onClick={() => {
                             toast({
                               title: "Deal Interest Registered",
@@ -1204,21 +1191,6 @@ export default function VesselDetail() {
                         >
                           <TrendingUp className="mr-2 h-4 w-4" />
                           Express Interest in Deal
-                        </Button>
-                        
-                        <Button 
-                          variant="outline"
-                          className="flex-1"
-                          onClick={() => {
-                            toast({
-                              title: "Contact Request Sent",
-                              description: "Our maritime specialists will reach out to discuss this opportunity.",
-                              duration: 5000,
-                            });
-                          }}
-                        >
-                          <Phone className="mr-2 h-4 w-4" />
-                          Request Call Back
                         </Button>
                       </div>
                     </div>
