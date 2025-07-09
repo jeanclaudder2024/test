@@ -67,8 +67,8 @@ function ProtectedRoutes() {
           <Route path="/refineries/:id" component={RefineryDetail} />
           <Route path="/ports" component={Ports} />
           <Route path="/ports/:id" component={PortDetail} />
-          <Route path="/map" component={GoogleMapsVessel} />
-          <Route path="/oil-vessel-map" component={OilVesselMap} />
+          <Route path="/map" component={OilVesselMap} />
+          <Route path="/google-map" component={GoogleMapsVessel} />
           <Route path="/brokers" component={Brokers} />
           <Route path="/companies" component={Companies} />
 
