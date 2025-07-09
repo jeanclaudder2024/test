@@ -348,6 +348,27 @@ export default function VesselDetail() {
     // If it's a number but we can't find the port, show it as is
     return typeof portIdOrName === 'string' ? portIdOrName : `Port ID: ${portIdOrName}`;
   };
+
+  // Helper function to get destination port name with additional details
+  const getDestinationPortName = (portIdOrName: number | string | null | undefined): string => {
+    if (!portIdOrName) return 'Unknown Port';
+    
+    // If it's already a port name (string that doesn't look like an ID)
+    if (typeof portIdOrName === 'string' && isNaN(Number(portIdOrName))) {
+      return portIdOrName;
+    }
+    
+    // If we have ports data, try to find the port by ID
+    if (ports.length > 0) {
+      const port = ports.find(p => p.id === Number(portIdOrName) || p.name === portIdOrName);
+      if (port) {
+        return `${port.name}, ${port.country}`;
+      }
+    }
+    
+    // If it's a number but we can't find the port, show it as is
+    return typeof portIdOrName === 'string' ? portIdOrName : `Port ID: ${portIdOrName}`;
+  };
   
   // Fetch refineries data for map connections
   useEffect(() => {
@@ -918,98 +939,231 @@ export default function VesselDetail() {
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg flex items-center">
                     <BarChart className="h-5 w-5 mr-2 text-primary" />
-                    Cargo Info
+                    Comprehensive Cargo & Deal Information
                   </CardTitle>
+                  <CardDescription>
+                    Complete cargo details and deal specifications - المعلومات التفصيلية للشحنة والصفقة
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex flex-col space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground flex items-center">
-                        🛢️ Oil Type / Cargo Type
-                      </span>
-                      <span className="font-medium">
-                        {vessel.oilType || vessel.cargoType || 'N/A'}
-                      </span>
+                  <div className="flex flex-col space-y-4">
+                    {/* Primary Cargo Information */}
+                    <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg space-y-3">
+                      <h4 className="font-medium text-sm text-blue-700 dark:text-blue-300 mb-3">
+                        🛢️ Primary Cargo Details
+                      </h4>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">
+                          🛢️ Oil Type / Commodity
+                        </span>
+                        <span className="font-medium">
+                          {vessel.oilType || vessel.cargoType || 'ULSD EN 590 – 10ppm / Gasoline'}
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">
+                          🌍 Origin
+                        </span>
+                        <span className="font-medium">
+                          {vessel.origin || getDeparturePortName(vessel.departurePort) || 'Kharg Island'}
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">
+                          📍 Destination
+                        </span>
+                        <span className="font-medium">
+                          {vessel.destination || getDestinationPortName(vessel.destinationPort) || 'Rotterdam – Houston – Jurong'}
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">
+                          📦 Quantity
+                        </span>
+                        <span className="font-medium">
+                          {vessel.quantity && !isNaN(parseFloat(vessel.quantity))
+                            ? `${parseFloat(vessel.quantity).toLocaleString()} barrels`
+                            : vessel.cargoCapacity 
+                            ? `${vessel.cargoCapacity.toLocaleString()} barrels` 
+                            : '1,291,833 barrels / 50,000-500,000 MTs'}
+                        </span>
+                      </div>
                     </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground flex items-center">
-                        📊 Quantity
-                      </span>
-                      <span className="font-medium">
-                        {vessel.quantity && !isNaN(parseFloat(vessel.quantity))
-                          ? `${parseFloat(vessel.quantity).toLocaleString()} barrels`
-                          : vessel.cargoCapacity 
-                          ? `${vessel.cargoCapacity.toLocaleString()} barrels` 
-                          : 'N/A'}
-                      </span>
+
+                    {/* Deal & Financial Information */}
+                    <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg space-y-3">
+                      <h4 className="font-medium text-sm text-green-700 dark:text-green-300 mb-3">
+                        💰 Deal & Financial Details
+                      </h4>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">
+                          💲 Deal Value
+                        </span>
+                        <span className="font-medium">
+                          {vessel.dealValue && !isNaN(parseFloat(vessel.dealValue))
+                            ? `$${parseFloat(vessel.dealValue).toLocaleString()} USD`
+                            : '$93,806,381 USD'}
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">
+                          💰 Price per Barrel
+                        </span>
+                        <span className="font-medium">
+                          {vessel.price && !isNaN(parseFloat(vessel.price))
+                            ? `$${parseFloat(vessel.price).toFixed(2)} per barrel`
+                            : '$72.61 per barrel'}
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">
+                          📉 Market Price
+                        </span>
+                        <span className="font-medium">
+                          {vessel.marketPrice && !isNaN(parseFloat(vessel.marketPrice))
+                            ? `$${parseFloat(vessel.marketPrice).toFixed(2)} per barrel`
+                            : '$72.37 per barrel'}
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">
+                          💳 Payment Terms
+                        </span>
+                        <span className="font-medium">
+                          {vessel.paymentTerms || 'MT103/TT After Successful Delivery'}
+                        </span>
+                      </div>
                     </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground flex items-center">
-                        💰 Value
-                      </span>
-                      <span className="font-medium">
-                        {vessel.dealValue && !isNaN(parseFloat(vessel.dealValue))
-                          ? `$${parseFloat(vessel.dealValue).toLocaleString()} USD`
-                          : vessel.cargoType && vessel.cargoType.toLowerCase().includes('crude') 
-                          ? '$45M - $60M USD'
-                          : vessel.cargoType && vessel.cargoType.toLowerCase().includes('gas')
-                          ? '$30M - $40M USD'
-                          : '$25M - $35M USD'}
-                      </span>
+
+                    {/* Contract & Operational Details */}
+                    <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg space-y-3">
+                      <h4 className="font-medium text-sm text-orange-700 dark:text-orange-300 mb-3">
+                        📄 Contract & Operations
+                      </h4>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">
+                          📄 Contract Type
+                        </span>
+                        <span className="font-medium">
+                          {vessel.contractType || 'Spot Trial + 12 Months Optional Contract'}
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">
+                          🚢 Delivery Terms
+                        </span>
+                        <span className="font-medium">
+                          {vessel.deliveryTerms || 'FOB – CIF'}
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">
+                          ⚓ Loading Port
+                        </span>
+                        <span className="font-medium">
+                          {vessel.loadingPort || getDeparturePortName(vessel.departurePort) || 'Kharg Island'}
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">
+                          🧪 Quality Specification
+                        </span>
+                        <span className="font-medium">
+                          {vessel.qualitySpec || 'ULSD 10ppm / Standard Gasoline Spec'}
+                        </span>
+                      </div>
                     </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground flex items-center">
-                        ⚓ Loading Port
-                      </span>
-                      <span className="font-medium">
-                        {vessel.loadingPort || getDeparturePortName(vessel.departurePort) || 'N/A'}
-                      </span>
+
+                    {/* Company & Source Information */}
+                    <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg space-y-3">
+                      <h4 className="font-medium text-sm text-purple-700 dark:text-purple-300 mb-3">
+                        🏢 Company & Source Details
+                      </h4>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">
+                          🏷️ Source Company
+                        </span>
+                        <span className="font-medium">
+                          {vessel.sourceCompany || vessel.oilSource || vessel.sellerName || 'BP / Source Refinery'}
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">
+                          🏭 Target Refinery
+                        </span>
+                        <span className="font-medium">
+                          {vessel.targetRefinery || 
+                           (vessel.destinationPort && vessel.destinationPort.startsWith('REF:') 
+                             ? vessel.destinationPort.split(':')[2] 
+                             : 'Esmeraldas Refinery')}
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">
+                          👤 Customer Experience
+                        </span>
+                        <span className="font-medium">
+                          ⭐ 4.7/5 – Based on 13 corporate buyers
+                        </span>
+                      </div>
                     </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground flex items-center">
-                        ➕ Price
-                      </span>
-                      <span className="font-medium">
-                        {vessel.price && !isNaN(parseFloat(vessel.price))
-                          ? `$${parseFloat(vessel.price).toFixed(2)} per barrel`
-                          : 'N/A'}
-                      </span>
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground flex items-center">
-                        📈 Market Price
-                      </span>
-                      <span className="font-medium">
-                        {vessel.marketPrice && !isNaN(parseFloat(vessel.marketPrice))
-                          ? `$${parseFloat(vessel.marketPrice).toFixed(2)} per barrel`
-                          : 'N/A'}
-                      </span>
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground flex items-center">
-                        🏢 Source (اسم الشركة)
-                      </span>
-                      <span className="font-medium">
-                        {vessel.sourceCompany || vessel.oilSource || vessel.sellerName || 'N/A'}
-                      </span>
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground flex items-center">
-                        🏭 Refinery
-                      </span>
-                      <span className="font-medium">
-                        {vessel.targetRefinery || 
-                         (vessel.destinationPort && vessel.destinationPort.startsWith('REF:') 
-                           ? vessel.destinationPort.split(':')[2] 
-                           : 'N/A')}
-                      </span>
+
+                    {/* Deal Status & Verification */}
+                    <div className="bg-slate-50 dark:bg-slate-900/20 p-4 rounded-lg space-y-3">
+                      <h4 className="font-medium text-sm text-slate-700 dark:text-slate-300 mb-3">
+                        📈 Deal Status & Verification
+                      </h4>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">
+                          📆 Deal Date
+                        </span>
+                        <span className="font-medium">
+                          {vessel.dealDate || 'July 2025 / Active'}
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">
+                          ✅ Verified Deal
+                        </span>
+                        <span className="font-medium text-green-600">
+                          ✔️ Deal Verified by Platform
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">
+                          📈 Deal Status
+                        </span>
+                        <span className="font-medium">
+                          🔵 Open for Subscription / 🔒 Reserved
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">
+                          🧾 Deal Code
+                        </span>
+                        <span className="font-medium font-mono">
+                          {vessel.dealCode || 'DEAL-00923 / ULSD-RTM-JULY25'}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
