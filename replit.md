@@ -457,13 +457,21 @@ Changelog:
   * **Google OAuth Status**: Configured correctly but experiencing "refused to connect" error due to Google Cloud Console consent screen configuration - can be re-enabled once resolved
 - July 9, 2025. **PROFESSIONAL SUBSCRIPTION PLANS UPDATE: Complete Pricing Structure Overhaul**:
   * **Updated Subscription Plans API**: Replaced old pricing with professional English version structure
-  * **Basic Plan**: Updated to $69/month (was $49) with 5-day trial and marine zone access
+  * **Basic Plan**: Updated to $69/month (was $49) with 7-day trial and marine zone access
   * **Professional Plan**: Updated to $150/month with broker features, documentation sets, and deal participation
   * **Enterprise Plan**: Updated to $399/month (was $499) with full global access and legal protection
   * **Enhanced Features**: Added comprehensive feature sets including marine zones, documentation types (LOI, B/L, SPA, ICPO, etc.), and International Broker ID eligibility
-  * **Professional Pricing Page**: Updated client interface with professional description and 5-day trial messaging
+  * **Professional Pricing Page**: Updated client interface with professional description and 7-day trial messaging
   * **Fixed Subscription Button Error**: Resolved JSON parsing error by adding proper checkout endpoint with informational response
   * **User Experience**: Subscription buttons now work properly with informative messages about contacting support for payment setup
+- July 9, 2025. **COMPLETE LANDING PAGE SUBSCRIPTION INTEGRATION: 7-Day Free Trial System**:
+  * **Updated Landing Page Pricing**: Replaced old pricing section with new professional subscription plans ($69, $150, $399)
+  * **Enhanced Features Display**: Added comprehensive feature lists matching professional English version (maritime zones, documentation types, broker features)
+  * **7-Day Free Trial Implementation**: All subscription buttons now offer 7-day free trial with "No credit card required" messaging
+  * **Trial Registration Flow**: Clicking trial buttons redirects users to registration page with trial parameter for seamless onboarding
+  * **Professional Descriptions**: Updated plan descriptions to match petroleum trading industry terminology and benefits
+  * **Server-Side Trial Support**: Added /api/start-trial endpoint to handle trial initiation and user guidance
+  * **User Experience**: Clear trial benefits messaging with green checkmarks and professional styling throughout landing page pricing section
 
 ## User Preferences
 

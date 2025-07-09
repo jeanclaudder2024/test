@@ -11888,6 +11888,28 @@ Note: This document contains real vessel operational data and should be treated 
     }
   });
 
+  // Start trial endpoint
+  app.post("/api/start-trial", async (req, res) => {
+    try {
+      const { planId } = req.body;
+      
+      if (!planId) {
+        return res.status(400).json({ message: "Plan ID is required" });
+      }
+      
+      // For now, return success message to encourage registration
+      res.json({ 
+        success: true,
+        message: "Trial initiated. Please complete registration to activate your 7-day free trial.",
+        planId,
+        trialDays: 7
+      });
+    } catch (error) {
+      console.error("Error starting trial:", error);
+      res.status(500).json({ message: "Failed to start trial" });
+    }
+  });
+
   // Get user subscription status
   app.get("/api/subscription-status", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {

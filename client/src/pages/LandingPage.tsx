@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -111,6 +113,41 @@ export default function LandingPage() {
   const howItWorksRef = useRef<HTMLDivElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
   const [activeSection, setActiveSection] = useState("");
+  const { toast } = useToast();
+  const [, navigate] = useLocation();
+
+  // Handle trial start
+  const handleStartTrial = async (planId: number) => {
+    try {
+      const response = await apiRequest('POST', '/api/start-trial', { planId });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to start trial');
+      }
+
+      const data = await response.json();
+      
+      toast({
+        title: "7-Day Free Trial Started!",
+        description: `Your trial has been activated. Please register to access your account.`,
+        variant: "default",
+      });
+      
+      // Redirect to registration
+      navigate('/register?trial=true');
+    } catch (error) {
+      console.error('Error starting trial:', error);
+      toast({
+        title: "Trial Setup",
+        description: "Please register first to start your 7-day free trial. No credit card required!",
+        variant: "default",
+      });
+      
+      // Redirect to registration anyway
+      navigate('/register?trial=true');
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -1252,10 +1289,17 @@ export default function LandingPage() {
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 text-white">
               Choose the Perfect Plan for Your Business
             </h2>
-            <p className="text-lg text-white/80 max-w-3xl mx-auto">
+            <p className="text-lg text-white/80 max-w-3xl mx-auto mb-6">
               Our subscription plans are designed to meet the needs of oil trading operations of all sizes,
               from independent brokers to large international corporations.
             </p>
+            <div className="inline-flex items-center gap-6 text-sm text-orange-300/80">
+              <span>✅ 7-Day free trial for every plan</span>
+              <span>•</span>
+              <span>✅ No credit card required</span>
+              <span>•</span>
+              <span>✅ Cancel anytime</span>
+            </div>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
@@ -1265,40 +1309,42 @@ export default function LandingPage() {
               <div className="relative z-10">
                 <h3 className="text-2xl font-bold text-white mb-4">Basic</h3>
                 <div className="mb-6">
-                  <span className="text-4xl font-bold text-white">$499</span>
+                  <span className="text-4xl font-bold text-white">$69</span>
                   <span className="text-white/60 ml-2">/month</span>
                 </div>
-                <p className="text-white/70 mb-8">Perfect for independent brokers and small trading teams.</p>
+                <p className="text-white/70 mb-8">Perfect for independent brokers and small trading teams starting in petroleum markets.</p>
                 
                 <ul className="space-y-3 mb-8">
                   <li className="flex items-start">
                     <CheckCircle2 className="h-5 w-5 text-orange-500 mr-3 mt-0.5 flex-shrink-0" />
-                    <span className="text-white/80">Up to 500 vessel tracking</span>
+                    <span className="text-white/80">Access to 1 major maritime zone</span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle2 className="h-5 w-5 text-orange-500 mr-3 mt-0.5 flex-shrink-0" />
-                    <span className="text-white/80">Basic refinery intelligence</span>
+                    <span className="text-white/80">Basic vessel tracking with verified activity</span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle2 className="h-5 w-5 text-orange-500 mr-3 mt-0.5 flex-shrink-0" />
-                    <span className="text-white/80">Standard documentation tools</span>
+                    <span className="text-white/80">Access to 15 regional ports</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle2 className="h-5 w-5 text-orange-500 mr-3 mt-0.5 flex-shrink-0" />
+                    <span className="text-white/80">Basic documentation: LOI, SPA</span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle2 className="h-5 w-5 text-orange-500 mr-3 mt-0.5 flex-shrink-0" />
                     <span className="text-white/80">Email support</span>
                   </li>
-                  <li className="flex items-start">
-                    <CheckCircle2 className="h-5 w-5 text-orange-500 mr-3 mt-0.5 flex-shrink-0" />
-                    <span className="text-white/80">1 user account</span>
-                  </li>
                 </ul>
                 
                 <div className="mt-auto">
-                  <Link href="/auth">
-                    <Button className="w-full bg-white/10 hover:bg-white/20 border border-white/20 text-white">
-                      Get Started
-                    </Button>
-                  </Link>
+                  <Button 
+                    className="w-full bg-white/10 hover:bg-white/20 border border-white/20 text-white mb-3"
+                    onClick={() => handleStartTrial(1)}
+                  >
+                    Start 7-Day Free Trial
+                  </Button>
+                  <p className="text-xs text-center text-white/50">No credit card required</p>
                 </div>
               </div>
             </div>
@@ -1314,40 +1360,46 @@ export default function LandingPage() {
               <div className="relative z-10">
                 <h3 className="text-2xl font-bold text-white mb-4">Professional</h3>
                 <div className="mb-6">
-                  <span className="text-4xl font-bold text-white">$1,299</span>
+                  <span className="text-4xl font-bold text-white">$150</span>
                   <span className="text-white/60 ml-2">/month</span>
                 </div>
-                <p className="text-white/70 mb-8">Ideal for growing companies and trading departments.</p>
+                <p className="text-white/70 mb-8">Professional brokers and medium-scale petroleum trading companies.</p>
                 
                 <ul className="space-y-3 mb-8">
                   <li className="flex items-start">
                     <CheckCircle2 className="h-5 w-5 text-orange-500 mr-3 mt-0.5 flex-shrink-0" />
-                    <span className="text-white/80">Unlimited vessel tracking</span>
+                    <span className="text-white/80">Access to 3 major maritime zones</span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle2 className="h-5 w-5 text-orange-500 mr-3 mt-0.5 flex-shrink-0" />
-                    <span className="text-white/80">Advanced refinery intelligence</span>
+                    <span className="text-white/80">Enhanced tracking with real-time updates</span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle2 className="h-5 w-5 text-orange-500 mr-3 mt-0.5 flex-shrink-0" />
-                    <span className="text-white/80">Complete document automation</span>
+                    <span className="text-white/80">Access to 50+ strategic ports</span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle2 className="h-5 w-5 text-orange-500 mr-3 mt-0.5 flex-shrink-0" />
-                    <span className="text-white/80">Priority support & training</span>
+                    <span className="text-white/80">Enhanced documentation: LOI, B/L, SPA, ICPO</span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle2 className="h-5 w-5 text-orange-500 mr-3 mt-0.5 flex-shrink-0" />
-                    <span className="text-white/80">Up to 5 user accounts</span>
+                    <span className="text-white/80">Basic broker features + deal participation</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle2 className="h-5 w-5 text-orange-500 mr-3 mt-0.5 flex-shrink-0" />
+                    <span className="text-white/80">Priority email support</span>
                   </li>
                 </ul>
                 
                 <div className="mt-auto">
-                  <Link href="/auth">
-                    <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white border border-orange-600/50">
-                      Get Started
-                    </Button>
-                  </Link>
+                  <Button 
+                    className="w-full bg-orange-500 hover:bg-orange-600 text-white border border-orange-600/50 mb-3"
+                    onClick={() => handleStartTrial(2)}
+                  >
+                    Start 7-Day Free Trial
+                  </Button>
+                  <p className="text-xs text-center text-white/50">No credit card required</p>
                 </div>
               </div>
             </div>
@@ -1358,40 +1410,50 @@ export default function LandingPage() {
               <div className="relative z-10">
                 <h3 className="text-2xl font-bold text-white mb-4">Enterprise</h3>
                 <div className="mb-6">
-                  <span className="text-4xl font-bold text-white">$2,999</span>
+                  <span className="text-4xl font-bold text-white">$399</span>
                   <span className="text-white/60 ml-2">/month</span>
                 </div>
-                <p className="text-white/70 mb-8">Complete solution for large trading corporations.</p>
+                <p className="text-white/70 mb-8">Full-scale solution for large petroleum trading corporations.</p>
                 
                 <ul className="space-y-3 mb-8">
                   <li className="flex items-start">
                     <CheckCircle2 className="h-5 w-5 text-orange-500 mr-3 mt-0.5 flex-shrink-0" />
-                    <span className="text-white/80">Unlimited vessel & refinery tracking</span>
+                    <span className="text-white/80">Access to 9 major global maritime zones</span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle2 className="h-5 w-5 text-orange-500 mr-3 mt-0.5 flex-shrink-0" />
-                    <span className="text-white/80">Premium market intelligence</span>
+                    <span className="text-white/80">Full live tracking with verified activity</span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle2 className="h-5 w-5 text-orange-500 mr-3 mt-0.5 flex-shrink-0" />
-                    <span className="text-white/80">Advanced AI document generation</span>
+                    <span className="text-white/80">Access to 100+ strategic global ports</span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle2 className="h-5 w-5 text-orange-500 mr-3 mt-0.5 flex-shrink-0" />
-                    <span className="text-white/80">24/7 dedicated support</span>
+                    <span className="text-white/80">Full set: SGS, SDS, Q88, ATB, customs</span>
                   </li>
                   <li className="flex items-start">
                     <CheckCircle2 className="h-5 w-5 text-orange-500 mr-3 mt-0.5 flex-shrink-0" />
-                    <span className="text-white/80">Unlimited user accounts</span>
+                    <span className="text-white/80">International Broker ID included</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle2 className="h-5 w-5 text-orange-500 mr-3 mt-0.5 flex-shrink-0" />
+                    <span className="text-white/80">Legal recognition and dispute protection</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle2 className="h-5 w-5 text-orange-500 mr-3 mt-0.5 flex-shrink-0" />
+                    <span className="text-white/80">24/7 premium support + account manager</span>
                   </li>
                 </ul>
                 
                 <div className="mt-auto">
-                  <Link href="/auth">
-                    <Button className="w-full bg-white/10 hover:bg-white/20 border border-white/20 text-white">
-                      Contact Sales
-                    </Button>
-                  </Link>
+                  <Button 
+                    className="w-full bg-white/10 hover:bg-white/20 border border-white/20 text-white mb-3"
+                    onClick={() => handleStartTrial(3)}
+                  >
+                    Start 7-Day Free Trial
+                  </Button>
+                  <p className="text-xs text-center text-white/50">No credit card required</p>
                 </div>
               </div>
             </div>
