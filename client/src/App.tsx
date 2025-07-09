@@ -165,7 +165,7 @@ function Router() {
     const seedData = async () => {
       if (process.env.NODE_ENV === "development") {
         try {
-          await apiRequest("/api/seed", { method: "POST" });
+          await apiRequest("POST", "/api/seed");
           console.log("Data seeded successfully");
         } catch (error) {
           console.error("Error seeding data:", error);
