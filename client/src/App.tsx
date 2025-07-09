@@ -34,7 +34,6 @@ import TrafficInsights from "@/pages/TrafficInsights";
 import FixedFullPageMap from "@/pages/FixedFullPageMap";
 import AdvancedMaritimeMap from "@/pages/AdvancedMaritimeMap";
 import OilVesselMap from "@/pages/OilVesselMap";
-
 import AdminPanel from "@/pages/AdminPanel";
 import SubscriptionAdmin from "@/pages/SubscriptionAdmin";
 import AdminDocumentsSimple from "@/pages/AdminDocumentsSimple";
@@ -67,7 +66,8 @@ function ProtectedRoutes() {
           <Route path="/refineries/:id" component={RefineryDetail} />
           <Route path="/ports" component={Ports} />
           <Route path="/ports/:id" component={PortDetail} />
-          <Route path="/map" component={OilVesselMap} />
+          <Route path="/map" component={AdvancedMaritimeMap} />
+          <Route path="/oil-vessel-map" component={OilVesselMap} />
           <Route path="/brokers" component={Brokers} />
           <Route path="/companies" component={Companies} />
 

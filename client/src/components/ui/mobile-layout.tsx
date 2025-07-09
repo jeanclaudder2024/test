@@ -53,7 +53,7 @@ export function MobileLayout({ children }: MobileLayoutProps) {
   const navigation = React.useMemo(() => {
     const baseNavigation = [
       { name: "Vessels", href: "/vessels", icon: Ship },
-      { name: "Map", href: "/map", icon: Home },
+      { name: "Map", href: "/oil-vessel-map", icon: Home },
       { name: "Refineries", href: "/refineries", icon: Database },
       { name: "Ports", href: "/ports", icon: Anchor },
     ];
