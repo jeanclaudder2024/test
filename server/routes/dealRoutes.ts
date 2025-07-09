@@ -6,7 +6,7 @@ import { authenticateToken, requireAdmin } from '../auth';
 const router = express.Router();
 
 // Get all deals with comprehensive information
-router.get('/api/deals', async (req, res) => {
+router.get('/deals', async (req, res) => {
   try {
     const deals = await storage.getAllDeals();
     res.json(deals);
@@ -17,7 +17,7 @@ router.get('/api/deals', async (req, res) => {
 });
 
 // Get deal by ID with full details
-router.get('/api/deals/:id', async (req, res) => {
+router.get('/deals/:id', async (req, res) => {
   try {
     const dealId = parseInt(req.params.id);
     if (isNaN(dealId)) {
@@ -37,7 +37,7 @@ router.get('/api/deals/:id', async (req, res) => {
 });
 
 // Get deals by status
-router.get('/api/deals/status/:status', async (req, res) => {
+router.get('/deals/status/:status', async (req, res) => {
   try {
     const status = req.params.status;
     const deals = await storage.getDealsByStatus(status);
@@ -49,7 +49,7 @@ router.get('/api/deals/status/:status', async (req, res) => {
 });
 
 // Create new comprehensive deal (Admin only)
-router.post('/api/admin/deals', authenticateToken, requireAdmin, async (req, res) => {
+router.post('/admin/deals', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const dealData: InsertDeal = req.body;
     
@@ -67,7 +67,7 @@ router.post('/api/admin/deals', authenticateToken, requireAdmin, async (req, res
 });
 
 // Update deal (Admin only)
-router.put('/api/admin/deals/:id', authenticateToken, requireAdmin, async (req, res) => {
+router.put('/admin/deals/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const dealId = parseInt(req.params.id);
     if (isNaN(dealId)) {
@@ -89,7 +89,7 @@ router.put('/api/admin/deals/:id', authenticateToken, requireAdmin, async (req, 
 });
 
 // Subscribe to deal (Authenticated users)
-router.post('/api/deals/:id/subscribe', authenticateToken, async (req, res) => {
+router.post('/deals/:id/subscribe', authenticateToken, async (req, res) => {
   try {
     const dealId = parseInt(req.params.id);
     const userId = req.user?.id;
@@ -108,7 +108,7 @@ router.post('/api/deals/:id/subscribe', authenticateToken, async (req, res) => {
 });
 
 // Get comprehensive deal information with vessel data
-router.get('/api/deals/:id/comprehensive', async (req, res) => {
+router.get('/deals/:id/comprehensive', async (req, res) => {
   try {
     const dealId = parseInt(req.params.id);
     if (isNaN(dealId)) {
@@ -171,8 +171,26 @@ function getStatusBadge(status: string | null): string {
   }
 }
 
+// Create new deal (public endpoint for testing)
+router.post('/deals', async (req, res) => {
+  try {
+    const dealData: InsertDeal = req.body;
+    
+    // Generate deal code if not provided
+    if (!dealData.dealCode) {
+      dealData.dealCode = `DEAL-${Date.now()}`;
+    }
+
+    const newDeal = await storage.createDeal(dealData);
+    res.status(201).json(newDeal);
+  } catch (error) {
+    console.error('Error creating deal:', error);
+    res.status(500).json({ error: 'Failed to create deal' });
+  }
+});
+
 // Delete deal (Admin only)
-router.delete('/api/admin/deals/:id', authenticateToken, requireAdmin, async (req, res) => {
+router.delete('/admin/deals/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const dealId = parseInt(req.params.id);
     if (isNaN(dealId)) {
