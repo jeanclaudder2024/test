@@ -11867,6 +11867,27 @@ Note: This document contains real vessel operational data and should be treated 
     }
   });
 
+  // Create Stripe checkout session
+  app.post("/api/create-stripe-checkout", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const { planId, interval = 'month' } = req.body;
+      
+      if (!planId) {
+        return res.status(400).json({ message: "Plan ID is required" });
+      }
+      
+      // For now, return a simple response since Stripe isn't fully configured
+      res.json({ 
+        message: "Subscription checkout not fully implemented yet. Please contact support.",
+        planId,
+        interval
+      });
+    } catch (error) {
+      console.error("Error creating checkout session:", error);
+      res.status(500).json({ message: "Failed to create checkout session" });
+    }
+  });
+
   // Get user subscription status
   app.get("/api/subscription-status", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {

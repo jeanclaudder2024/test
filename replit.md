@@ -455,6 +455,15 @@ Changelog:
   * **Security Features**: Password reset tokens, email verification tokens, last login tracking, and bcrypt password hashing
   * **Production Ready**: Main authentication system complete and operational for immediate use
   * **Google OAuth Status**: Configured correctly but experiencing "refused to connect" error due to Google Cloud Console consent screen configuration - can be re-enabled once resolved
+- July 9, 2025. **PROFESSIONAL SUBSCRIPTION PLANS UPDATE: Complete Pricing Structure Overhaul**:
+  * **Updated Subscription Plans API**: Replaced old pricing with professional English version structure
+  * **Basic Plan**: Updated to $69/month (was $49) with 5-day trial and marine zone access
+  * **Professional Plan**: Updated to $150/month with broker features, documentation sets, and deal participation
+  * **Enterprise Plan**: Updated to $399/month (was $499) with full global access and legal protection
+  * **Enhanced Features**: Added comprehensive feature sets including marine zones, documentation types (LOI, B/L, SPA, ICPO, etc.), and International Broker ID eligibility
+  * **Professional Pricing Page**: Updated client interface with professional description and 5-day trial messaging
+  * **Fixed Subscription Button Error**: Resolved JSON parsing error by adding proper checkout endpoint with informational response
+  * **User Experience**: Subscription buttons now work properly with informative messages about contacting support for payment setup
 
 ## User Preferences
 

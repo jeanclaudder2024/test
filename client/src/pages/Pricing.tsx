@@ -162,7 +162,7 @@ export default function PricingPage() {
     try {
       const response = await apiRequest(
         'POST',
-        '/api/subscriptions/create-checkout-session',
+        '/api/create-stripe-checkout',
         { planId, interval: billingInterval }
       );
 
@@ -171,9 +171,14 @@ export default function PricingPage() {
         throw new Error(errorData.message || 'Failed to create checkout session');
       }
 
-      const { url } = await response.json();
-      // Redirect to the Stripe Checkout page
-      window.location.href = url;
+      const data = await response.json();
+      
+      // Show info message about subscription process
+      toast({
+        title: "Subscription Information",
+        description: data.message || "Subscription checkout is being set up. Please contact support for assistance.",
+        variant: "default",
+      });
     } catch (error) {
       console.error('Error creating checkout session:', error);
       toast({
