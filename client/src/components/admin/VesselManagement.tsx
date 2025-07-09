@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -956,6 +956,9 @@ export default function VesselManagement() {
                   </div>
                 )}
               </div>
+              <DialogDescription>
+                {editingVessel ? 'Update vessel information and tracking details' : 'Add a new vessel with comprehensive maritime and cargo information'}
+              </DialogDescription>
             </DialogHeader>
             
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -1666,6 +1669,9 @@ export default function VesselManagement() {
           <DialogContent className="max-w-4xl h-[80vh]">
             <DialogHeader>
               <DialogTitle>Select Vessel Position</DialogTitle>
+              <DialogDescription>
+                Click on the map to set the vessel's current geographic coordinates
+              </DialogDescription>
             </DialogHeader>
             <div className="h-full">
               <MapSelector

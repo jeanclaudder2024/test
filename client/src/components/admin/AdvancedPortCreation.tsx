@@ -15,6 +15,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { 
   Tabs, 
@@ -349,6 +350,9 @@ export default function AdvancedPortCreation({ open, onClose, onSuccess, editing
             <Anchor className="h-5 w-5" />
             {editingPort ? 'Edit Port' : 'Create Advanced Port'}
           </DialogTitle>
+          <DialogDescription>
+            {editingPort ? 'Update port information with comprehensive maritime data' : 'Create a new port with detailed specifications and operational parameters'}
+          </DialogDescription>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-6">

@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
@@ -308,6 +308,9 @@ export default function FilterManagement() {
                       <DialogTitle>
                         {editingOilType ? 'Edit Oil Type' : 'Add New Oil Type'}
                       </DialogTitle>
+                      <DialogDescription>
+                        {editingOilType ? 'Update oil type information and specifications' : 'Create a new oil type with detailed maritime trading properties'}
+                      </DialogDescription>
                     </DialogHeader>
                     
                     <form onSubmit={handleOilTypeSubmit} className="space-y-4">
@@ -534,6 +537,9 @@ export default function FilterManagement() {
                   <DialogContent className="sm:max-w-[600px]">
                     <DialogHeader>
                       <DialogTitle>Add New Region</DialogTitle>
+                      <DialogDescription>
+                        Create a new maritime region with geographic and trading information
+                      </DialogDescription>
                     </DialogHeader>
                     
                     <form className="space-y-4">

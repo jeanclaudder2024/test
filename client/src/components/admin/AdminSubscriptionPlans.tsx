@@ -224,7 +224,7 @@ export default function AdminSubscriptionPlans() {
                 Create a new subscription plan that will be available to users across the platform
               </DialogDescription>
             </DialogHeader>
-            <form action={handleCreatePlan} className="space-y-4">
+            <form onSubmit={(e) => { e.preventDefault(); const formData = new FormData(e.currentTarget); handleCreatePlan(formData); }} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="name">Plan Name *</Label>
@@ -439,7 +439,7 @@ Direct seller access
             </DialogDescription>
           </DialogHeader>
           {selectedPlan && (
-            <form action={handleUpdatePlan} className="space-y-4">
+            <form onSubmit={(e) => { e.preventDefault(); const formData = new FormData(e.currentTarget); handleUpdatePlan(formData); }} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="edit-name">Plan Name *</Label>
