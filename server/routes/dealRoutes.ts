@@ -174,12 +174,16 @@ function getStatusBadge(status: string | null): string {
 // Create new deal (public endpoint for testing)
 router.post('/deals', async (req, res) => {
   try {
-    const dealData: InsertDeal = req.body;
+    const dealData = req.body;
     
-    // Generate deal code if not provided
-    if (!dealData.dealCode) {
-      dealData.dealCode = `DEAL-${Date.now()}`;
+    // Convert date string to Date object
+    if (dealData.dealDate && typeof dealData.dealDate === 'string') {
+      dealData.dealDate = new Date(dealData.dealDate);
     }
+    
+    // Set default timestamps
+    dealData.createdAt = new Date();
+    dealData.updatedAt = new Date();
 
     const newDeal = await storage.createDeal(dealData);
     res.status(201).json(newDeal);
