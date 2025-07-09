@@ -70,7 +70,8 @@ import {
   ports,
   vesselPortConnections,
   oilTypes,
-  regions
+  regions,
+  userSubscriptions
 } from "@shared/schema";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
@@ -11703,6 +11704,95 @@ Note: This document contains real vessel operational data and should be treated 
   // Maritime Document Management Routes - New System
   app.use("/api/maritime-documents", maritimeDocumentsRouter);
 
+  // Initialize subscription tables endpoint
+  app.post("/api/admin/initialize-subscription-tables", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user || req.user.role !== 'admin') {
+        return res.status(403).json({ error: 'Admin access required' });
+      }
+
+      // Create subscription_plans table and insert default plans
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS subscription_plans (
+          id SERIAL PRIMARY KEY,
+          name TEXT NOT NULL,
+          description TEXT,
+          price DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+          interval TEXT NOT NULL DEFAULT 'month',
+          trial_days INTEGER DEFAULT 5,
+          stripe_product_id TEXT,
+          stripe_price_id TEXT,
+          is_active BOOLEAN NOT NULL DEFAULT true,
+          features JSONB,
+          max_vessels INTEGER DEFAULT -1,
+          max_ports INTEGER DEFAULT -1,
+          max_refineries INTEGER DEFAULT -1,
+          can_access_broker_features BOOLEAN DEFAULT false,
+          can_access_analytics BOOLEAN DEFAULT false,
+          can_export_data BOOLEAN DEFAULT false,
+          created_at TIMESTAMP DEFAULT NOW(),
+          updated_at TIMESTAMP DEFAULT NOW()
+        );
+      `);
+
+      // Create the default plans with IDs 1, 2, 3 to match frontend expectations
+      await db.execute(sql`
+        DELETE FROM subscription_plans WHERE id IN (1, 2, 3);
+        INSERT INTO subscription_plans (id, name, description, price, interval, trial_days, features, max_vessels, max_ports, max_refineries, can_access_broker_features, can_access_analytics, can_export_data) VALUES
+        (1, '🧪 Basic', 'Perfect for independent brokers starting in petroleum markets', 69.00, 'month', 5, '["Access to 2 major maritime zones", "Basic vessel tracking with verified activity", "Access to 5 regional ports", "Basic documentation: LOI, SPA", "Email support"]', 50, 5, 10, false, false, false),
+        (2, '📈 Professional', 'Professional brokers and medium-scale petroleum trading companies', 150.00, 'month', 5, '["Access to 6 major maritime zones", "Enhanced tracking with real-time updates", "Access to 20+ strategic ports", "Enhanced documentation: LOI, B/L, SPA, ICPO", "Basic broker features + deal participation", "Priority email support"]', 100, 20, 25, true, true, false),
+        (3, '🏢 Enterprise', 'Full-scale solution for large petroleum trading corporations', 399.00, 'month', 5, '["Access to 9 major global maritime zones", "Full live tracking with verified activity", "Access to 100+ strategic global ports", "Full set: SGS, SDS, Q88, ATB, customs", "International Broker ID included", "Legal recognition and dispute protection", "24/7 premium support + account manager"]', -1, -1, -1, true, true, true);
+      `);
+
+      // Create subscriptions table if it doesn't exist
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS subscriptions (
+          id SERIAL PRIMARY KEY,
+          user_id INTEGER NOT NULL REFERENCES users(id),
+          plan_id INTEGER NOT NULL REFERENCES subscription_plans(id),
+          status TEXT NOT NULL,
+          stripe_customer_id TEXT,
+          stripe_subscription_id TEXT,
+          current_period_start TIMESTAMP,
+          current_period_end TIMESTAMP,
+          cancel_at_period_end BOOLEAN DEFAULT false,
+          billing_interval TEXT NOT NULL DEFAULT 'month',
+          created_at TIMESTAMP DEFAULT NOW(),
+          updated_at TIMESTAMP DEFAULT NOW()
+        );
+      `);
+
+      // Create default trial subscriptions for existing users
+      await db.execute(sql`
+        INSERT INTO subscriptions (user_id, plan_id, status, current_period_start, current_period_end, billing_interval)
+        SELECT 
+          u.id,
+          CASE 
+            WHEN u.role = 'admin' THEN 3
+            ELSE 2
+          END as plan_id,
+          CASE 
+            WHEN u.role = 'admin' THEN 'active'
+            ELSE 'trial'
+          END as status,
+          u.created_at,
+          CASE 
+            WHEN u.role = 'admin' THEN u.created_at + INTERVAL '1 year'
+            ELSE u.created_at + INTERVAL '5 days'
+          END as current_period_end,
+          'month'
+        FROM users u
+        WHERE NOT EXISTS (SELECT 1 FROM subscriptions s WHERE s.user_id = u.id)
+        ON CONFLICT DO NOTHING;
+      `);
+
+      res.json({ success: true, message: 'Subscription tables initialized successfully' });
+    } catch (error) {
+      console.error('Error initializing subscription tables:', error);
+      res.status(500).json({ success: false, message: 'Failed to initialize subscription tables', error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
   // Add database repair endpoint
   app.post("/api/fix-vessel-documents", async (req: Request, res: Response) => {
     try {
@@ -12128,20 +12218,51 @@ Note: This document contains real vessel operational data and should be treated 
         return res.status(400).json({ error: 'Plan ID is required' });
       }
 
-      // Update user's subscription tier and status
-      const updatedUser = await storage.updateUser(req.user.id, {
-        subscriptionTier: planId === 1 ? 'Basic' : planId === 2 ? 'Professional' : 'Enterprise',
-        isSubscribed: true,
-        subscriptionStatus: 'active'
-      });
+      // Map frontend plan IDs to actual database plan IDs  
+      const planIdMapping = {
+        1: 7, // Basic -> Starter
+        2: 8, // Professional -> Professional  
+        3: 9  // Enterprise -> Enterprise
+      };
+      
+      const actualPlanId = planIdMapping[planId as keyof typeof planIdMapping];
+      
+      if (!actualPlanId) {
+        return res.status(400).json({ error: `Invalid plan ID: ${planId}. Available IDs: ${Object.keys(planIdMapping).join(', ')}` });
+      }
 
-      // For demo purposes, we'll just update the user record
+      console.log(`Mapping frontend planId ${planId} to database planId ${actualPlanId}`);
+
+      // Check if subscription exists for this user
+      const existingSubscription = await db.select().from(userSubscriptions).where(eq(userSubscriptions.userId, req.user.id));
+      
+      if (existingSubscription.length > 0) {
+        // Update existing subscription
+        await db
+          .update(userSubscriptions)
+          .set({
+            planId: actualPlanId,
+            status: 'active',
+            updatedAt: new Date()
+          })
+          .where(eq(userSubscriptions.userId, req.user.id));
+      } else {
+        // Create new subscription
+        await db.insert(userSubscriptions).values({
+          userId: req.user.id,
+          planId: actualPlanId,
+          status: 'active',
+          currentPeriodStart: new Date(),
+          currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+        });
+      }
+
+      // For demo purposes, we'll just update the subscription record
       // In production, this would involve Stripe integration
       
       res.json({ 
         success: true, 
-        message: 'Subscription upgraded successfully',
-        user: updatedUser 
+        message: 'Subscription upgraded successfully'
       });
 
     } catch (error) {
