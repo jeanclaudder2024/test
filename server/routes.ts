@@ -12395,6 +12395,147 @@ Generate a professional, detailed document that incorporates the vessel informat
     }
   });
 
+  // Database Setup Endpoint for Broker Payment Tables
+  apiRouter.post("/setup-broker-payment-tables", async (req, res) => {
+    try {
+      // Create broker deals table
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS broker_deals (
+          id SERIAL PRIMARY KEY,
+          deal_title TEXT NOT NULL,
+          company_name TEXT NOT NULL,
+          company_id INTEGER,
+          deal_value TEXT,
+          status TEXT DEFAULT 'pending' CHECK (status IN ('active', 'pending', 'completed', 'cancelled')),
+          progress INTEGER DEFAULT 0,
+          start_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          expected_close_date TIMESTAMP,
+          oil_type TEXT,
+          quantity TEXT,
+          notes TEXT,
+          documents_count INTEGER DEFAULT 0,
+          broker_id INTEGER,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      // Create broker documents table
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS broker_documents (
+          id SERIAL PRIMARY KEY,
+          name TEXT NOT NULL,
+          type TEXT,
+          size TEXT,
+          upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          uploaded_by TEXT,
+          download_count INTEGER DEFAULT 0,
+          deal_id INTEGER,
+          is_admin_file BOOLEAN DEFAULT FALSE,
+          broker_id INTEGER,
+          file_path TEXT
+        )
+      `);
+
+      // Create admin broker files table
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS admin_broker_files (
+          id SERIAL PRIMARY KEY,
+          file_name TEXT NOT NULL,
+          file_type TEXT,
+          file_size TEXT,
+          sent_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          sent_by TEXT,
+          description TEXT,
+          category TEXT DEFAULT 'other' CHECK (category IN ('contract', 'compliance', 'legal', 'technical', 'other')),
+          broker_id INTEGER,
+          file_path TEXT
+        )
+      `);
+
+      // Create broker payments table
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS broker_payments (
+          id SERIAL PRIMARY KEY,
+          broker_id INTEGER NOT NULL,
+          stripe_payment_intent_id TEXT,
+          stripe_customer_id TEXT,
+          amount DECIMAL(10,2) NOT NULL,
+          currency TEXT DEFAULT 'USD',
+          status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'completed', 'failed', 'refunded')),
+          membership_start_date TIMESTAMP,
+          membership_end_date TIMESTAMP,
+          membership_card_generated BOOLEAN DEFAULT FALSE,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      // Add columns to brokers table
+      await db.execute(sql`
+        ALTER TABLE brokers ADD COLUMN IF NOT EXISTS membership_status TEXT DEFAULT 'pending' CHECK (membership_status IN ('pending', 'active', 'expired', 'cancelled'))
+      `);
+      await db.execute(sql`
+        ALTER TABLE brokers ADD COLUMN IF NOT EXISTS membership_expires_at TIMESTAMP
+      `);
+      await db.execute(sql`
+        ALTER TABLE brokers ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT
+      `);
+      await db.execute(sql`
+        ALTER TABLE brokers ADD COLUMN IF NOT EXISTS card_number TEXT
+      `);
+      await db.execute(sql`
+        ALTER TABLE brokers ADD COLUMN IF NOT EXISTS passport_photo TEXT
+      `);
+      await db.execute(sql`
+        ALTER TABLE brokers ADD COLUMN IF NOT EXISTS first_name TEXT
+      `);
+      await db.execute(sql`
+        ALTER TABLE brokers ADD COLUMN IF NOT EXISTS last_name TEXT
+      `);
+      await db.execute(sql`
+        ALTER TABLE brokers ADD COLUMN IF NOT EXISTS date_of_birth DATE
+      `);
+      await db.execute(sql`
+        ALTER TABLE brokers ADD COLUMN IF NOT EXISTS nationality TEXT
+      `);
+      await db.execute(sql`
+        ALTER TABLE brokers ADD COLUMN IF NOT EXISTS experience TEXT
+      `);
+      await db.execute(sql`
+        ALTER TABLE brokers ADD COLUMN IF NOT EXISTS specialization TEXT
+      `);
+      await db.execute(sql`
+        ALTER TABLE brokers ADD COLUMN IF NOT EXISTS previous_employer TEXT
+      `);
+      await db.execute(sql`
+        ALTER TABLE brokers ADD COLUMN IF NOT EXISTS certifications TEXT
+      `);
+      await db.execute(sql`
+        ALTER TABLE brokers ADD COLUMN IF NOT EXISTS phone_number TEXT
+      `);
+      await db.execute(sql`
+        ALTER TABLE brokers ADD COLUMN IF NOT EXISTS address TEXT
+      `);
+      await db.execute(sql`
+        ALTER TABLE brokers ADD COLUMN IF NOT EXISTS profile_completed BOOLEAN DEFAULT FALSE
+      `);
+
+      console.log("Broker payment tables created successfully");
+      
+      res.json({
+        success: true,
+        message: "Broker payment database tables created successfully",
+        tablesCreated: ['broker_deals', 'broker_documents', 'admin_broker_files', 'broker_payments']
+      });
+    } catch (error) {
+      console.error("Error creating broker payment tables:", error);
+      res.status(500).json({ 
+        message: "Failed to create broker payment tables", 
+        error: error.message 
+      });
+    }
+  });
+
   // Broker Payment Endpoints
   
   // Create payment intent for broker membership
