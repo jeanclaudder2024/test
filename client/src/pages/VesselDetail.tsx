@@ -767,10 +767,10 @@ export default function VesselDetail() {
                     <CardHeader className="pb-3">
                       <CardTitle className="flex items-center">
                         <Compass className="h-5 w-5 mr-2 text-primary" />
-                        Current Voyage
+                        Current Destination
                       </CardTitle>
                       <CardDescription>
-                        Real-time voyage tracking with simulation data - معلومات التتبع والتقدم في الوقت الفعلي
+                        Real-time destination tracking with simulation data - معلومات التتبع والتقدم في الوقت الفعلي
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -780,7 +780,7 @@ export default function VesselDetail() {
                           <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center">
                               <Ship className="h-5 w-5 mr-2 text-blue-600" />
-                              <h3 className="font-semibold text-blue-900 dark:text-blue-100">Live Voyage Simulation</h3>
+                              <h3 className="font-semibold text-blue-900 dark:text-blue-100">Live Destination Simulation</h3>
                             </div>
                             <Badge 
                               variant={voyageInfo.status === 'in_port' ? 'default' : 
@@ -793,7 +793,7 @@ export default function VesselDetail() {
                           
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                             <div>
-                              <p className="text-xs text-gray-600 dark:text-gray-400">Voyage Progress</p>
+                              <p className="text-xs text-gray-600 dark:text-gray-400">Destination Progress</p>
                               <div className="flex items-center mt-1">
                                 <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2 mr-3">
                                   <div 

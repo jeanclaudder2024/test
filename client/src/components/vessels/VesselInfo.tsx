@@ -338,7 +338,7 @@ export default function VesselInfo({ vessel }: VesselInfoProps) {
           
           {/* Voyage Info */}
           <div className="border-t md:border-t-0 md:border-l border-gray-200 pt-4 md:pt-0 md:pl-4">
-            <h4 className="text-sm font-medium text-gray-900 mb-3">CURRENT VOYAGE</h4>
+            <h4 className="text-sm font-medium text-gray-900 mb-3">CURRENT DESTINATION</h4>
             
             {/* Departure */}
             <div className="flex items-center mb-3">
