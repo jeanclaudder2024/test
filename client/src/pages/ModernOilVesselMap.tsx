@@ -15,9 +15,17 @@ const loadGoogleMapsScript = () => {
     return Promise.resolve();
   }
   
+  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+  console.log('Google Maps API Key available:', apiKey ? 'Yes' : 'No');
+  console.log('API Key (first 10 chars):', apiKey ? apiKey.substring(0, 10) + '...' : 'Not found');
+  
+  if (!apiKey) {
+    return Promise.reject(new Error('Google Maps API key not found. Please check VITE_GOOGLE_MAPS_API_KEY environment variable.'));
+  }
+  
   return new Promise<void>((resolve, reject) => {
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&callback=console.debug&libraries=maps,marker&v=beta`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=console.debug&libraries=maps,marker&v=beta`;
     script.async = true;
     script.onload = () => resolve();
     script.onerror = reject;
@@ -425,12 +433,19 @@ export default function ModernOilVesselMap() {
           />
         ) : (
           <div className="absolute inset-0 bg-white flex items-center justify-center">
-            <div className="text-center">
-              <div className="text-red-600 mb-2">
-                Google Maps API key not found
+            <div className="text-center p-8">
+              <div className="text-red-600 mb-4 text-lg font-semibold">
+                Google Maps API Key Not Found
               </div>
-              <div className="text-sm text-gray-600">
-                Please check your environment configuration
+              <div className="text-gray-600 mb-4">
+                The VITE_GOOGLE_MAPS_API_KEY environment variable is missing.
+              </div>
+              <div className="text-sm text-gray-500 space-y-2">
+                <div>Current API Key: {import.meta.env.VITE_GOOGLE_MAPS_API_KEY || 'undefined'}</div>
+                <div>Please check your .env file contains:</div>
+                <div className="bg-gray-100 p-2 rounded font-mono text-xs">
+                  VITE_GOOGLE_MAPS_API_KEY=AIzaSyAVyB_LKIVJwkcUIPcgKeioPWH71ulpays
+                </div>
               </div>
             </div>
           </div>
