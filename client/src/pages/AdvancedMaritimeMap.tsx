@@ -289,7 +289,7 @@ export default function AdvancedMaritimeMap() {
             <path d="M12 2v20" stroke="${color}" stroke-width="1" opacity="0.3"/>
             ${isMoving ? '<circle cx="12" cy="20" r="2" fill="white" class="animate-ping"/>' : ''}
           </svg>
-          ${vessel.speed ? `<div class="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[10px] font-bold text-white bg-black/70 px-1 rounded">${typeof vessel.speed === 'number' ? vessel.speed.toFixed(1) : parseFloat(vessel.speed.toString()).toFixed(1) || '0.0'}kt</div>` : ''}
+          ${vessel.speed ? `<div class="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[10px] font-bold text-white bg-black/70 px-1 rounded">${vessel.speed.toFixed(1)}kt</div>` : ''}
         </div>
       `,
       iconSize: [24, 24],
@@ -623,10 +623,10 @@ export default function AdvancedMaritimeMap() {
                         </Badge>
                       </p>
                       {vessel.speed !== undefined && (
-                        <p><span className="font-medium">Speed:</span> {typeof vessel.speed === 'number' ? vessel.speed.toFixed(1) : parseFloat(vessel.speed?.toString() || '0').toFixed(1)} knots</p>
+                        <p><span className="font-medium">Speed:</span> {vessel.speed.toFixed(1)} knots</p>
                       )}
                       {vessel.course !== undefined && (
-                        <p><span className="font-medium">Course:</span> {typeof vessel.course === 'number' ? vessel.course.toFixed(0) : parseFloat(vessel.course?.toString() || '0').toFixed(0)}°</p>
+                        <p><span className="font-medium">Course:</span> {vessel.course.toFixed(0)}°</p>
                       )}
                       {vessel.destinationPort && (
                         <p><span className="font-medium">Destination:</span> {vessel.destinationPort}</p>
@@ -875,7 +875,7 @@ export default function AdvancedMaritimeMap() {
                 <div className="bg-gray-50 dark:bg-gray-800 rounded p-2">
                   <p className="text-muted-foreground">Avg Speed</p>
                   <p className="font-semibold text-lg">
-                    {(filteredVessels.reduce((acc, v) => acc + (typeof v.speed === 'number' ? v.speed : parseFloat(v.speed?.toString() || '0') || 0), 0) / filteredVessels.length).toFixed(1)}kt
+                    {(filteredVessels.reduce((acc, v) => acc + (v.speed || 0), 0) / filteredVessels.length).toFixed(1)}kt
                   </p>
                 </div>
                 <div className="bg-gray-50 dark:bg-gray-800 rounded p-2">
