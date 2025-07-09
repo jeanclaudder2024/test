@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { storage } from '../storage';
 import { z } from 'zod';
 import { fromZodError } from 'zod-validation-error';
+import Stripe from 'stripe';
 
 export const brokerRouter = Router();
 
@@ -356,5 +357,115 @@ brokerRouter.post('/deals', async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error creating broker deal:', error);
     res.status(500).json({ message: 'Error creating broker deal' });
+  }
+});
+
+// Broker Payment Endpoints
+
+// Create payment intent for broker membership
+brokerRouter.post('/create-payment-intent', async (req: Request, res: Response) => {
+  try {
+    const { amount, brokerData } = req.body;
+    
+    console.log("Broker payment intent request:", { amount, brokerData });
+    
+    // Check if we have Stripe configured
+    if (!process.env.STRIPE_SECRET_KEY) {
+      console.error("Stripe secret key not configured");
+      return res.status(500).json({ 
+        message: "Payment processing not configured. Please contact support." 
+      });
+    }
+    
+    console.log("Initializing Stripe with API version...");
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2024-06-20',
+    });
+    
+    console.log("Creating payment intent...");
+    
+    // Create payment intent
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: Math.round(amount * 100), // Convert to cents
+      currency: 'usd',
+      metadata: {
+        type: 'broker_membership',
+        firstName: brokerData?.firstName || 'Unknown',
+        lastName: brokerData?.lastName || 'Unknown',
+        email: brokerData?.email || 'unknown@example.com',
+      },
+    });
+    
+    console.log("Payment intent created successfully:", paymentIntent.id);
+    res.json({ clientSecret: paymentIntent.client_secret });
+  } catch (error: any) {
+    console.error("Detailed error creating payment intent:", {
+      message: error.message,
+      stack: error.stack,
+      type: error.type,
+      code: error.code
+    });
+    res.status(500).json({ 
+      message: "Failed to create payment intent", 
+      error: error.message 
+    });
+  }
+});
+
+// Confirm payment and update broker status
+brokerRouter.post('/payment-confirm', async (req: Request, res: Response) => {
+  try {
+    const { paymentIntentId, brokerData } = req.body;
+    
+    if (!paymentIntentId || !brokerData) {
+      return res.status(400).json({ message: "Missing payment or broker data" });
+    }
+
+    // Generate membership card number
+    const cardNumber = `OIL-${Date.now().toString().slice(-6)}`;
+    
+    // Calculate membership expiry (1 year from now)
+    const membershipStart = new Date();
+    const membershipEnd = new Date();
+    membershipEnd.setFullYear(membershipEnd.getFullYear() + 1);
+    
+    // Activate broker subscription
+    await storage.activateBrokerSubscription({
+      paymentIntentId,
+      amount: 299,
+      membershipEndDate: membershipEnd,
+      cardNumber,
+      brokerData
+    });
+    
+    res.json({
+      success: true,
+      cardNumber,
+      membershipStart: membershipStart.toISOString(),
+      membershipEnd: membershipEnd.toISOString(),
+    });
+  } catch (error: any) {
+    console.error("Error confirming payment:", error);
+    res.status(500).json({ message: "Failed to confirm payment" });
+  }
+});
+
+// Generate membership card
+brokerRouter.post('/generate-membership-card', async (req: Request, res: Response) => {
+  try {
+    // Get broker data from localStorage or session
+    const cardNumber = Date.now().toString().slice(-6);
+    const expiryDate = new Date();
+    expiryDate.setFullYear(expiryDate.getFullYear() + 1);
+    
+    res.json({
+      success: true,
+      cardNumber: `OIL-${cardNumber}`,
+      expiryDate: expiryDate.toISOString(),
+      memberType: 'Professional Oil Specialist'
+    });
+  } catch (error: any) {
+    console.error("Error generating membership card:", error);
+    res.status(500).json({ message: "Failed to generate membership card" });
   }
 });
