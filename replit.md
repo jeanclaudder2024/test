@@ -411,6 +411,35 @@ Changelog:
   * **User Experience Enhancement**: All vessel tracking terminology now uses intuitive "destination" language instead of technical "voyage" terms
   * **Consistent Interface**: System-wide terminology standardization provides clearer understanding for maritime users
   * **Professional Presentation**: Maintained beautiful styling while improving terminology clarity throughout vessel detail pages
+- July 9, 2025. **MAJOR FEATURE: Complete Broker Upgrade System with Oil Union Membership**:
+  * **Comprehensive Step-by-Step Upgrade Flow**: Created BrokerUpgrade.tsx with 4-step process (Personal Info, Professional Background, Document Upload, Contact Details)
+  * **Oil Union Membership Integration**: Professional Oil Specialists Union membership application with passport photo upload and detailed personal data collection
+  * **ChatGPT-Style Navigation**: Progressive step-by-step flow with automatic advancement and validation at each stage
+  * **Professional Document Upload**: Passport photo upload with 5MB limit, file validation, and secure processing for membership card generation
+  * **Comprehensive Form Validation**: Real-time validation for all 15+ form fields including personal details, professional experience, and contact information
+  * **Beautiful Progress Indicators**: Visual progress bar, step completion indicators, and color-coded status throughout the upgrade process
+  * **Automatic Dashboard Redirection**: Broker dashboard now checks profile completion and redirects to upgrade page for new users
+  * **Professional Union Branding**: Complete visual branding with Oil Specialists Union information, benefits display, and membership value proposition
+- July 9, 2025. **DYNAMIC GLOBAL OIL PRICES SYSTEM: Real-Time Market Data**:
+  * **Comprehensive Oil Prices Page**: Created OilPrices.tsx with real-time pricing for 6 major oil benchmarks (Brent, WTI, Dubai Crude, Natural Gas, Heating Oil, Gasoline)
+  * **Live Market Updates**: Automatic price updates every 30 seconds with manual refresh capability and timestamp tracking
+  * **Professional Market Display**: Beautiful card-based layout with trend indicators, percentage changes, and market exchange information
+  * **Market Overview Dashboard**: Live statistics showing rising/falling commodities with color-coded indicators and comprehensive market summary
+  * **Market News Integration**: Real-time market news with impact indicators (positive/negative/neutral) and timestamp information
+  * **Global Market Coverage**: International benchmarks from ICE, NYMEX, and DME exchanges with proper units and descriptions
+  * **Professional Trading Interface**: Production-ready design suitable for professional oil trading and market analysis
+  * **Navigation Integration**: Added Oil Prices to main navigation menu with refresh icon for easy access to market data
+- July 9, 2025. **ENHANCED COMPANY DIRECT CONTACT SYSTEM**:
+  * **Direct Communication Features**: Added comprehensive contact section to company cards with email and phone direct access
+  * **One-Click Contact Actions**: Copy to clipboard and direct dial/email functionality with hover effects and professional styling
+  * **Contact Information Display**: Beautiful contact cards with green color scheme, icons, and copy/external link buttons
+  * **Enhanced User Experience**: Professional contact interface with availability indicators and fallback messaging for missing contact data
+  * **Mobile-Friendly Design**: Responsive contact system works seamlessly across desktop and mobile devices
+- July 9, 2025. **COMPLETE ARABIC TEXT REMOVAL FOR ENGLISH-ONLY INTERFACE**:
+  * **System-Wide Language Standardization**: Removed all Arabic text from vessel detail pages for clean English-only interface
+  * **Destination Tracking Cleanup**: Removed Arabic text from destination tracking section descriptions
+  * **Cargo Information Cleanup**: Eliminated Arabic text from cargo and deal information section descriptions
+  * **Professional English Interface**: Clean, professional appearance with consistent English-only content throughout the platform
 
 ## User Preferences
 

@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
+import { useLocation } from 'wouter';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -81,7 +82,21 @@ export default function BrokerDashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
+
+  // Check if user needs to complete upgrade first
+  const { data: brokerProfile } = useQuery({
+    queryKey: ['/api/broker/profile'],
+    retry: false,
+  });
+
+  useEffect(() => {
+    // Redirect to upgrade page if broker profile is incomplete
+    if (brokerProfile && !brokerProfile.isProfileComplete) {
+      setLocation('/broker-upgrade');
+    }
+  }, [brokerProfile, setLocation]);
 
   // Fetch broker deals
   const { data: deals = [], isLoading: dealsLoading } = useQuery<Deal[]>({

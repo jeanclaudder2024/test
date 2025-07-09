@@ -20,7 +20,9 @@ import {
   Factory,
   Ship,
   Anchor,
-  ChevronRight
+  ChevronRight,
+  MessageCircle,
+  Copy
 } from 'lucide-react';
 
 interface RealCompany {
@@ -293,6 +295,79 @@ export default function Companies() {
                       </div>
                     </div>
                   )}
+                </div>
+
+                {/* Direct Contact Section */}
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-4 border border-green-200">
+                  <h4 className="font-semibold text-green-800 mb-3 flex items-center">
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    Direct Contact
+                  </h4>
+                  <div className="space-y-2">
+                    {company.email && (
+                      <div className="flex items-center justify-between bg-white/70 rounded-lg p-2">
+                        <div className="flex items-center">
+                          <Mail className="h-4 w-4 text-green-600 mr-2" />
+                          <span className="text-sm text-gray-700">{company.email}</span>
+                        </div>
+                        <div className="flex space-x-1">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 w-7 p-0 hover:bg-green-100"
+                            onClick={() => {
+                              navigator.clipboard.writeText(company.email || '');
+                              // You could add a toast notification here
+                            }}
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 w-7 p-0 hover:bg-green-100"
+                            onClick={() => window.open(`mailto:${company.email}`, '_blank')}
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {company.phone && (
+                      <div className="flex items-center justify-between bg-white/70 rounded-lg p-2">
+                        <div className="flex items-center">
+                          <Phone className="h-4 w-4 text-green-600 mr-2" />
+                          <span className="text-sm text-gray-700">{company.phone}</span>
+                        </div>
+                        <div className="flex space-x-1">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 w-7 p-0 hover:bg-green-100"
+                            onClick={() => {
+                              navigator.clipboard.writeText(company.phone || '');
+                              // You could add a toast notification here
+                            }}
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 w-7 p-0 hover:bg-green-100"
+                            onClick={() => window.open(`tel:${company.phone}`, '_blank')}
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {!company.email && !company.phone && (
+                      <p className="text-sm text-gray-500 italic">Contact information not available</p>
+                    )}
+                  </div>
                 </div>
 
                 {/* Fleet Information */}
