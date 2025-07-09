@@ -54,20 +54,20 @@ export function useSubscription(): SubscriptionFeatures {
   const isProfessionalPlan = planId === 2;
   const isEnterprisePlan = planId === 3;
 
-  // For trial users, give them Professional level access
-  const effectivePlan = hasActiveTrial ? 2 : planId;
+  // For trial users, give them FULL access (like Enterprise plan)
+  const effectivePlan = hasActiveTrial ? 3 : planId; // Give trial users Enterprise level access
 
   return {
     hasBasicAccess: hasActiveSubscription || hasActiveTrial || effectivePlan >= 1,
     hasProfessionalAccess: hasActiveSubscription || hasActiveTrial || effectivePlan >= 2,
-    hasEnterpriseAccess: hasActiveSubscription || effectivePlan >= 3,
+    hasEnterpriseAccess: hasActiveSubscription || hasActiveTrial || effectivePlan >= 3,
     hasTrialAccess: hasActiveTrial,
     isTrialExpired: trialExpired || trialDaysRemaining === 0,
     trialDaysRemaining,
     canAccessBrokerFeatures: hasActiveSubscription || hasActiveTrial || effectivePlan >= 2,
-    canAccessAllZones: hasActiveSubscription || effectivePlan >= 3,
+    canAccessAllZones: hasActiveSubscription || hasActiveTrial || effectivePlan >= 3,
     canGenerateDocuments: hasActiveSubscription || hasActiveTrial || effectivePlan >= 1,
-    maxPorts: effectivePlan >= 3 ? 100 : effectivePlan >= 2 ? 50 : 15,
+    maxPorts: effectivePlan >= 3 ? 999 : effectivePlan >= 2 ? 50 : 15, // Trial users get unlimited ports
     documentTypes: effectivePlan >= 3 
       ? ['LOI', 'B/L', 'SPA', 'ICPO', 'SGS', 'SDS', 'Q88', 'ATB', 'customs']
       : effectivePlan >= 2 

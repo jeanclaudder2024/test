@@ -11932,33 +11932,32 @@ Note: This document contains real vessel operational data and should be treated 
         });
       }
 
-      // For regular users, return trial status (simplified for demo)
+      // For regular users, check trial status based on registration date
       const user = await storage.getUserById(req.user.id);
       if (!user) {
         return res.status(404).json({ error: 'User not found' });
       }
 
-      // Check if user has active trial
+      // Check if user has active trial (7 days from registration)
       const now = new Date();
-      const trialStart = user.subscription?.trialStartDate;
-      const trialEnd = user.subscription?.trialEndDate;
+      const registrationDate = new Date(user.createdAt);
+      const trialEndDate = new Date(registrationDate);
+      trialEndDate.setDate(registrationDate.getDate() + 7); // 7-day trial
       
-      const hasActiveTrial = trialStart && trialEnd && 
-        new Date(trialStart) <= now && 
-        now <= new Date(trialEnd);
+      const hasActiveTrial = now <= trialEndDate;
 
       if (hasActiveTrial) {
         return res.json({
           hasActiveSubscription: true,
-          planName: "Free Trial",
+          planName: "7-Day Free Trial",
           status: "trial",
-          trialEndsAt: trialEnd?.toISOString(),
-          canAccessBrokerFeatures: false,
-          canAccessAnalytics: false,
-          canExportData: false,
-          maxVessels: 10,
-          maxPorts: 10,
-          maxRefineries: 5
+          trialEndsAt: trialEndDate.toISOString(),
+          canAccessBrokerFeatures: true,
+          canAccessAnalytics: true,
+          canExportData: true,
+          maxVessels: -1,  // Unlimited vessels during trial
+          maxPorts: -1,    // Unlimited ports during trial
+          maxRefineries: -1 // Unlimited refineries during trial
         });
       }
 
@@ -12018,38 +12017,41 @@ Note: This document contains real vessel operational data and should be treated 
         });
       }
 
-      // Check trial status for regular users
+      // Check trial status for regular users (based on registration date)
       const now = new Date();
-      const trialStart = user.subscription?.trialStartDate;
-      const trialEnd = user.subscription?.trialEndDate;
+      const registrationDate = new Date(user.createdAt);
+      const trialEndDate = new Date(registrationDate);
+      trialEndDate.setDate(registrationDate.getDate() + 7); // 7-day trial
       
-      if (trialStart && trialEnd) {
+      const hasActiveTrial = now <= trialEndDate;
+      
+      if (hasActiveTrial) {
         return res.json({
           id: 1,
           userId: req.user.id,
-          planId: 1,
+          planId: 2, // Professional plan during trial
           status: 'trial',
-          trialStartDate: trialStart.toISOString(),
-          trialEndDate: trialEnd.toISOString(),
+          trialStartDate: registrationDate.toISOString(),
+          trialEndDate: trialEndDate.toISOString(),
           plan: {
-            id: 1,
-            name: "Free Trial",
-            description: "3-day free trial with full access",
+            id: 2,
+            name: "7-Day Free Trial",
+            description: "7-day free trial with unlimited access",
             price: 0,
             interval: "trial",
-            trialDays: 3,
-            features: ["Real-time vessel tracking", "Basic port information", "Limited refinery data"],
-            maxVessels: 10,
-            maxPorts: 10,
-            maxRefineries: 5,
-            canAccessBrokerFeatures: false,
-            canAccessAnalytics: false,
-            canExportData: false
+            trialDays: 7,
+            features: ["Unlimited vessel tracking", "Full port access", "Unlimited refinery data", "Broker features", "Analytics", "Data export"],
+            maxVessels: -1,
+            maxPorts: -1,
+            maxRefineries: -1,
+            canAccessBrokerFeatures: true,
+            canAccessAnalytics: true,
+            canExportData: true
           }
         });
       }
 
-      // No subscription found
+      // No active subscription or trial
       res.status(404).json({ error: 'No active subscription found' });
 
     } catch (error) {
