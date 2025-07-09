@@ -2390,6 +2390,116 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  // Broker subscription status check
+  async getBrokerSubscriptionStatus(userId: number): Promise<any> {
+    try {
+      const results = await db.execute(sql`
+        SELECT 
+          b.membership_status,
+          b.membership_expires_at,
+          b.profile_completed,
+          b.card_number,
+          bp.status as payment_status,
+          bp.membership_end_date
+        FROM brokers b
+        LEFT JOIN broker_payments bp ON b.id = bp.broker_id AND bp.status = 'completed'
+        WHERE b.id = ${userId}
+        ORDER BY bp.created_at DESC
+        LIMIT 1
+      `);
+      
+      const brokerData = results.rows?.[0];
+      
+      if (!brokerData) {
+        return {
+          hasActiveSubscription: false,
+          membershipStatus: 'pending',
+          membershipExpiresAt: null,
+          isProfileComplete: false,
+          cardNumber: null
+        };
+      }
+
+      const now = new Date();
+      const expirationDate = brokerData.membership_end_date ? new Date(brokerData.membership_end_date) : null;
+      const hasActiveSubscription = brokerData.payment_status === 'completed' && 
+                                   expirationDate && 
+                                   expirationDate > now;
+
+      return {
+        hasActiveSubscription,
+        membershipStatus: brokerData.membership_status || 'pending',
+        membershipExpiresAt: brokerData.membership_expires_at,
+        isProfileComplete: brokerData.profile_completed || false,
+        cardNumber: brokerData.card_number
+      };
+    } catch (error) {
+      console.error('Error fetching broker subscription status:', error);
+      return {
+        hasActiveSubscription: false,
+        membershipStatus: 'pending',
+        membershipExpiresAt: null,
+        isProfileComplete: false,
+        cardNumber: null
+      };
+    }
+  }
+
+  // Activate broker subscription after successful payment
+  async activateBrokerSubscription(data: {
+    paymentIntentId: string;
+    amount: number;
+    membershipEndDate: Date;
+    cardNumber: string;
+    brokerData: any;
+  }): Promise<void> {
+    try {
+      // First, create or update the broker record
+      await db.execute(sql`
+        INSERT INTO brokers (
+          name, company, contact_email, phone_number, address,
+          profile_completed, membership_status, membership_expires_at, card_number
+        ) VALUES (
+          ${data.brokerData.firstName + ' ' + data.brokerData.lastName},
+          ${'Professional Oil Specialists Union'},
+          ${data.brokerData.email},
+          ${data.brokerData.phoneNumber || ''},
+          ${data.brokerData.address || ''},
+          ${true},
+          ${'active'},
+          ${data.membershipEndDate.toISOString()},
+          ${data.cardNumber}
+        )
+        ON CONFLICT (contact_email) DO UPDATE SET
+          profile_completed = true,
+          membership_status = 'active',
+          membership_expires_at = ${data.membershipEndDate.toISOString()},
+          card_number = ${data.cardNumber}
+      `);
+
+      // Record the payment
+      await db.execute(sql`
+        INSERT INTO broker_payments (
+          broker_id, amount, status, payment_intent_id, membership_start_date, membership_end_date
+        ) 
+        SELECT 
+          b.id, 
+          ${data.amount}, 
+          'completed', 
+          ${data.paymentIntentId},
+          ${new Date().toISOString()},
+          ${data.membershipEndDate.toISOString()}
+        FROM brokers b 
+        WHERE b.contact_email = ${data.brokerData.email}
+      `);
+
+      console.log('Broker subscription activated successfully');
+    } catch (error) {
+      console.error('Error activating broker subscription:', error);
+      throw new Error('Failed to activate broker subscription');
+    }
+  }
+
   async getGeneratedArticles(): Promise<any[]> {
     try {
       // For now, return mock data until database tables are created

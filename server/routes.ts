@@ -11041,6 +11041,25 @@ Note: This document contains real vessel operational data and should be treated 
     }
   });
 
+  // Get broker subscription status
+  app.get("/api/broker/subscription-status", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const brokerStatus = await storage.getBrokerSubscriptionStatus(userId);
+      res.json(brokerStatus);
+    } catch (error) {
+      console.error("Error fetching broker subscription status:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch broker subscription status",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   // Get broker statistics
   app.get("/api/broker/stats", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
@@ -12577,16 +12596,26 @@ Generate a professional, detailed document that incorporates the vessel informat
     try {
       const { paymentIntentId, brokerData } = req.body;
       
+      if (!paymentIntentId || !brokerData) {
+        return res.status(400).json({ message: "Missing payment or broker data" });
+      }
+
       // Generate membership card number
-      const cardNumber = Date.now().toString().slice(-6);
+      const cardNumber = `OIL-${Date.now().toString().slice(-6)}`;
       
       // Calculate membership expiry (1 year from now)
       const membershipStart = new Date();
       const membershipEnd = new Date();
       membershipEnd.setFullYear(membershipEnd.getFullYear() + 1);
       
-      // Store payment record (if we had the broker payments table)
-      // For now, we'll just return success
+      // Activate broker subscription
+      await storage.activateBrokerSubscription({
+        paymentIntentId,
+        amount: 299,
+        membershipEndDate: membershipEnd,
+        cardNumber,
+        brokerData
+      });
       
       res.json({
         success: true,

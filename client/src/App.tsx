@@ -14,6 +14,8 @@ import BrokerDashboard from "@/pages/BrokerDashboard";
 import BrokerUpgrade from "@/pages/BrokerUpgrade";
 import BrokerPayment from "@/pages/BrokerPayment";
 import BrokerPaymentSuccess from "@/pages/BrokerPaymentSuccess";
+import BrokerLocked from "@/pages/BrokerLocked";
+import BrokerRoute from "@/components/BrokerRoute";
 import OilPrices from "@/pages/OilPrices";
 
 
@@ -62,7 +64,11 @@ function ProtectedRoutes() {
         <Switch>
           <Route path="/" component={Companies} />
           <Route path="/dashboard" component={Companies} />
-          <Route path="/broker-dashboard" component={BrokerDashboard} />
+          <Route path="/broker-dashboard">
+            <BrokerRoute>
+              <BrokerDashboard />
+            </BrokerRoute>
+          </Route>
           <Route path="/broker-upgrade" component={BrokerUpgrade} />
           <Route path="/broker-payment" component={BrokerPayment} />
           <Route path="/broker-payment-success" component={BrokerPaymentSuccess} />
