@@ -9260,13 +9260,30 @@ Keep the description professional, informative, and around 150-200 words. Focus 
     try {
       const planData = req.body;
       
-      // Validate required fields
-      if (!planData.name || !planData.slug || !planData.monthlyPrice || !planData.yearlyPrice) {
-        return res.status(400).json({ message: "Missing required fields" });
+      // Validate required fields (matching schema)
+      if (!planData.name || !planData.price || !planData.description) {
+        return res.status(400).json({ message: "Missing required fields: name, price, description" });
       }
 
+      // Transform data to match schema
+      const transformedPlan = {
+        name: planData.name,
+        description: planData.description,
+        price: planData.price.toString(),
+        interval: planData.interval || 'month',
+        trialDays: planData.trialDays || 5,
+        features: planData.features || [],
+        maxVessels: planData.maxVessels || -1,
+        maxPorts: planData.maxPorts || -1,
+        maxRefineries: planData.maxRefineries || -1,
+        canAccessBrokerFeatures: planData.canAccessBrokerFeatures || false,
+        canAccessAnalytics: planData.canAccessAnalytics || false,
+        canExportData: planData.canExportData || false,
+        isActive: true
+      };
+
       // Create the plan
-      const plan = await storage.createSubscriptionPlan(planData);
+      const plan = await storage.createSubscriptionPlan(transformedPlan);
       res.json(plan);
     } catch (error) {
       console.error("Error creating subscription plan:", error);
