@@ -229,7 +229,10 @@ export default function RegisterPage() {
                 type="button"
                 variant="outline"
                 className="w-full h-12 bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm"
-                onClick={() => window.location.href = '/api/auth/google'}
+                onClick={() => {
+                  // Use window.open for better OAuth handling
+                  window.location.href = '/api/auth/google';
+                }}
               >
                 <svg className="mr-3 h-5 w-5" viewBox="0 0 24 24">
                   <path
