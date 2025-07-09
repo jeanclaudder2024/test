@@ -67,6 +67,7 @@ export interface IStorage {
   createSubscriptionPlan(plan: InsertSubscriptionPlan): Promise<SubscriptionPlan>;
   updateSubscriptionPlan(id: number, plan: Partial<InsertSubscriptionPlan>): Promise<SubscriptionPlan | undefined>;
   deleteSubscriptionPlan(id: number): Promise<boolean>;
+  initializeSubscriptionPlans(): Promise<void>;
   
   // Subscription methods
   getSubscriptions(): Promise<Subscription[]>;
@@ -291,7 +292,74 @@ export class DatabaseStorage implements IStorage {
   
   // Subscription Plan Methods
   async getSubscriptionPlans(): Promise<SubscriptionPlan[]> {
-    return await db.select().from(subscriptionPlans).orderBy(subscriptionPlans.sortOrder);
+    return await db.select().from(subscriptionPlans);
+  }
+
+  // Initialize subscription plans with default data
+  async initializeSubscriptionPlans(): Promise<void> {
+    try {
+      // Check if plans already exist
+      const existingPlans = await db.select().from(subscriptionPlans);
+      
+      if (existingPlans.length === 0) {
+        console.log('Initializing subscription plans...');
+        
+        // Insert the three professional subscription plans
+        await db.insert(subscriptionPlans).values([
+          {
+            name: '🧪 Basic',
+            description: 'Perfect for independent brokers starting in petroleum markets',
+            price: '69.00',
+            interval: 'month',
+            trialDays: 5,
+            isActive: true,
+            features: ["Access to 2 major maritime zones", "Basic vessel tracking with verified activity", "Access to 5 regional ports", "Basic documentation: LOI, SPA", "Email support"],
+            maxVessels: 50,
+            maxPorts: 5,
+            maxRefineries: 10,
+            canAccessBrokerFeatures: false,
+            canAccessAnalytics: false,
+            canExportData: false
+          },
+          {
+            name: '📈 Professional',
+            description: 'Professional brokers and medium-scale petroleum trading companies',
+            price: '150.00',
+            interval: 'month',
+            trialDays: 5,
+            isActive: true,
+            features: ["Access to 6 major maritime zones", "Enhanced tracking with real-time updates", "Access to 20+ strategic ports", "Enhanced documentation: LOI, B/L, SPA, ICPO", "Basic broker features + deal participation", "Priority email support"],
+            maxVessels: 200,
+            maxPorts: 20,
+            maxRefineries: 50,
+            canAccessBrokerFeatures: true,
+            canAccessAnalytics: true,
+            canExportData: false
+          },
+          {
+            name: '🏢 Enterprise',
+            description: 'Full-scale solution for large petroleum trading corporations',
+            price: '399.00',
+            interval: 'month',
+            trialDays: 5,
+            isActive: true,
+            features: ["Access to 9 major global maritime zones", "Full live tracking with verified activity", "Access to 100+ strategic global ports", "Full set: SGS, SDS, Q88, ATB, customs", "International Broker ID included", "Legal recognition and dispute protection", "24/7 premium support + account manager"],
+            maxVessels: -1,
+            maxPorts: -1,
+            maxRefineries: -1,
+            canAccessBrokerFeatures: true,
+            canAccessAnalytics: true,
+            canExportData: true
+          }
+        ]);
+        
+        console.log('Subscription plans initialized successfully');
+      } else {
+        console.log(`Subscription plans already exist: ${existingPlans.length} plans`);
+      }
+    } catch (error) {
+      console.error('Error initializing subscription plans:', error);
+    }
   }
   
   async getSubscriptionPlanById(id: number): Promise<SubscriptionPlan | undefined> {
