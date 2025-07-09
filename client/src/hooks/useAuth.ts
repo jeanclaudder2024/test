@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { User, UserSubscription, RegisterInput, LoginInput } from '@shared/schema';
 
 interface AuthState {
@@ -18,8 +18,15 @@ export const useAuth = () => {
     trialExpired: false,
   });
 
+  // Use ref to prevent multiple simultaneous calls
+  const fetchingRef = useRef(false);
+  const hasInitializedRef = useRef(false);
+
   // Check for existing token on mount
   useEffect(() => {
+    if (hasInitializedRef.current) return;
+    hasInitializedRef.current = true;
+
     const token = localStorage.getItem('authToken');
     if (token) {
       fetchCurrentUser();
@@ -29,6 +36,10 @@ export const useAuth = () => {
   }, []);
 
   const fetchCurrentUser = async () => {
+    // Prevent multiple simultaneous calls
+    if (fetchingRef.current) return;
+    fetchingRef.current = true;
+
     try {
       const token = localStorage.getItem('authToken');
       if (!token) {
@@ -72,6 +83,8 @@ export const useAuth = () => {
         isAuthenticated: false,
         isLoading: false,
       });
+    } finally {
+      fetchingRef.current = false;
     }
   };
 
@@ -184,6 +197,10 @@ export const useAuth = () => {
     login,
     register,
     logout,
-    refetch: fetchCurrentUser,
+    refetch: () => {
+      if (!fetchingRef.current) {
+        fetchCurrentUser();
+      }
+    },
   };
 };
