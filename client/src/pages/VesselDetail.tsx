@@ -553,10 +553,10 @@ export default function VesselDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800">
+    <div className="min-h-screen bg-white dark:bg-gray-900">
       <div className="container mx-auto p-4">
         <Link href="/vessels">
-          <Button variant="ghost" className="mb-6 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all duration-300 shadow-sm hover:shadow-md">
+          <Button variant="ghost" className="mb-6">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Vessels
           </Button>
@@ -568,116 +568,103 @@ export default function VesselDetail() {
         </div>
       ) : vessel ? (
         <>
-          {/* Enhanced Header with vessel name, status badge and actions */}
-          <div className="relative overflow-hidden bg-gradient-to-br from-blue-900 via-blue-800 to-purple-900 rounded-2xl p-8 mb-8 shadow-2xl border border-blue-700/20">
-            {/* Animated Background Elements */}
-            <div className="absolute opacity-5 right-0 bottom-0 transform rotate-12">
-              <Ship className="h-72 w-72 text-white" />
-            </div>
-            <div className="absolute -top-10 -left-10 opacity-10">
-              <div className="w-40 h-40 bg-blue-400 rounded-full blur-3xl"></div>
-            </div>
-            <div className="absolute -bottom-10 -right-10 opacity-10">
-              <div className="w-32 h-32 bg-purple-400 rounded-full blur-2xl"></div>
-            </div>
-            
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center relative z-10">
-              <div className="text-white mb-4 md:mb-0">
-                <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 mb-2">
-                  <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
-                    {vessel.name}
-                  </h1>
-                  <div className="flex space-x-2">
-                    <Badge className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-3 py-1 text-sm font-semibold shadow-lg">
-                      {getOilCategory(vessel.cargoType)}
-                    </Badge>
-                    <Badge className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-3 py-1 text-sm font-semibold shadow-lg">
-                      🌊 Active
-                    </Badge>
+          {/* Professional Header */}
+          <Card className="mb-8">
+            <CardHeader className="pb-6">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+                <div className="mb-4 md:mb-0">
+                  <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 mb-2">
+                    <h1 className="text-3xl font-semibold">
+                      {vessel.name}
+                    </h1>
+                    <div className="flex space-x-2">
+                      <Badge variant="secondary">
+                        {getOilCategory(vessel.cargoType)}
+                      </Badge>
+                      <Badge className="bg-green-100 text-green-800">
+                        Active
+                      </Badge>
+                    </div>
+                  </div>
+                  <div className="text-muted-foreground space-y-1">
+                    <p className="flex items-center">
+                      <Ship className="h-4 w-4 mr-2" />
+                      {vessel.vesselType || 'Oil Tanker'} • IMO: {vessel.imo || 'N/A'} • MMSI: {vessel.mmsi || 'N/A'}
+                    </p>
+                    <p className="flex items-center">
+                      <Globe className="h-4 w-4 mr-2" />
+                      {vessel.currentRegion || 'International Waters'} • Flag: {vessel.flag || 'N/A'}
+                    </p>
                   </div>
                 </div>
-                <div className="text-blue-100 text-lg space-y-1">
-                  <p className="flex items-center">
-                    <Ship className="h-4 w-4 mr-2" />
-                    {vessel.vesselType || 'Oil Tanker'} • IMO: {vessel.imo || 'N/A'} • MMSI: {vessel.mmsi || 'N/A'}
-                  </p>
-                  <p className="flex items-center">
-                    <Globe className="h-4 w-4 mr-2" />
-                    {vessel.currentRegion || 'International Waters'} • Flag: {vessel.flag || 'N/A'}
-                  </p>
+                
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+                  <Button 
+                    onClick={() => {
+                      toast({
+                        title: "Deal Interest Recorded",
+                        description: "Our maritime team will contact you soon.",
+                        duration: 5000,
+                      });
+                    }}
+                  >
+                    <TrendingUp className="h-4 w-4 mr-2" />
+                    Express Interest
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      toast({
+                        title: "Contact Request Sent",
+                        description: "Our specialists will reach out within 24 hours.",
+                        duration: 5000,
+                      });
+                    }}
+                  >
+                    <Phone className="h-4 w-4 mr-2" />
+                    Request Contact
+                  </Button>
                 </div>
               </div>
-              
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
-                <Button 
-                  className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-6 py-3 rounded-full font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                  onClick={() => {
-                    toast({
-                      title: "Quick Deal Interest! 🚢",
-                      description: "Your interest has been recorded. Our maritime team will contact you soon.",
-                      duration: 5000,
-                    });
-                  }}
-                >
-                  <TrendingUp className="h-4 w-4 mr-2" />
-                  Quick Deal
-                </Button>
-                <Button 
-                  variant="outline"
-                  className="border-2 border-white/30 text-white hover:bg-white/10 backdrop-blur-sm px-6 py-3 rounded-full font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
-                  onClick={() => {
-                    toast({
-                      title: "Contact Request Sent! 📞",
-                      description: "Our specialists will reach out within 24 hours.",
-                      duration: 5000,
-                    });
-                  }}
-                >
-                  <Phone className="h-4 w-4 mr-2" />
-                  Contact
-                </Button>
-              </div>
-            </div>
-          </div>
+            </CardHeader>
+          </Card>
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
             <div className="lg:col-span-2">
               {/* Enhanced Main content area */}
               <Tabs defaultValue="details" className="mb-8">
-                <TabsList className="mb-6 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm shadow-lg rounded-xl p-1 border border-blue-200/20">
-                  <TabsTrigger value="details" className="flex items-center px-6 py-3 rounded-lg font-medium transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg">
+                <TabsList className="mb-6">
+                  <TabsTrigger value="details" className="flex items-center">
                     <Info className="h-4 w-4 mr-2" />
                     Vessel Details
                   </TabsTrigger>
-                  <TabsTrigger value="voyage" className="flex items-center px-6 py-3 rounded-lg font-medium transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg">
+                  <TabsTrigger value="voyage" className="flex items-center">
                     <Compass className="h-4 w-4 mr-2" />
                     Voyage
                   </TabsTrigger>
-                  <TabsTrigger value="articles" className="flex items-center px-6 py-3 rounded-lg font-medium transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-500 data-[state=active]:to-green-600 data-[state=active]:text-white data-[state=active]:shadow-lg">
+                  <TabsTrigger value="articles" className="flex items-center">
                     <FileCheck className="h-4 w-4 mr-2" />
                     Professional Articles
                   </TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="details">
-                  <Card className="shadow-xl border-0 bg-gradient-to-br from-white to-blue-50 dark:from-slate-800 dark:to-slate-900 rounded-2xl overflow-hidden">
-                    <CardHeader className="pb-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-                      <CardTitle className="flex items-center text-xl">
-                        <Ship className="h-6 w-6 mr-3" />
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center">
+                        <Ship className="h-5 w-5 mr-2" />
                         Vessel Specifications
                       </CardTitle>
-                      <CardDescription className="text-blue-100 text-base">
+                      <CardDescription>
                         Technical details and specifications - التفاصيل والمواصفات التقنية
                       </CardDescription>
                     </CardHeader>
-                    <CardContent className="p-8">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div className="space-y-6">
-                          <h3 className="text-lg font-bold mb-4 flex items-center text-blue-800 dark:text-blue-200">
-                            <div className="bg-blue-500 p-2 rounded-full mr-3">
-                              <Info className="h-4 w-4 text-white" />
-                            </div>
+                    <CardContent className="p-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <h3 className="text-lg font-semibold mb-4 flex items-center">
+                            <Info className="h-4 w-4 mr-2 text-blue-600" />
                             General Information
                           </h3>
                           <InfoItem 
@@ -698,11 +685,9 @@ export default function VesselDetail() {
                           />
                         </div>
                         
-                        <div className="space-y-6">
-                          <h3 className="text-lg font-bold mb-4 flex items-center text-green-800 dark:text-green-200">
-                            <div className="bg-green-500 p-2 rounded-full mr-3">
-                              <Droplet className="h-4 w-4 text-white" />
-                            </div>
+                        <div>
+                          <h3 className="text-lg font-semibold mb-4 flex items-center">
+                            <Droplet className="h-4 w-4 mr-2 text-green-600" />
                             Cargo & Position
                           </h3>
                           <InfoItem 
@@ -723,11 +708,9 @@ export default function VesselDetail() {
                       <Separator className="my-6" />
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-6">
-                          <h3 className="text-lg font-bold mb-4 flex items-center text-purple-800 dark:text-purple-200">
-                            <div className="bg-purple-500 p-2 rounded-full mr-3">
-                              <Users className="h-4 w-4 text-white" />
-                            </div>
+                        <div>
+                          <h3 className="text-lg font-semibold mb-4 flex items-center">
+                            <Users className="h-4 w-4 mr-2 text-purple-600" />
                             Ownership & Class
                           </h3>
                           <InfoItem 
@@ -747,11 +730,9 @@ export default function VesselDetail() {
                             value="North of England P&I" 
                           />
                         </div>
-                        <div className="space-y-6">
-                          <h3 className="text-lg font-bold mb-4 flex items-center text-orange-800 dark:text-orange-200">
-                            <div className="bg-orange-500 p-2 rounded-full mr-3">
-                              <Gauge className="h-4 w-4 text-white" />
-                            </div>
+                        <div>
+                          <h3 className="text-lg font-semibold mb-4 flex items-center">
+                            <Gauge className="h-4 w-4 mr-2 text-orange-600" />
                             Dimensions & Equipment
                           </h3>
                           <InfoItem 
@@ -781,29 +762,25 @@ export default function VesselDetail() {
                     </CardFooter>
                   </Card>
                   
-                  <Card className="mt-8 shadow-xl border-0 bg-gradient-to-br from-white to-green-50 dark:from-slate-800 dark:to-slate-900 rounded-2xl overflow-hidden">
-                    <CardHeader className="pb-4 bg-gradient-to-r from-green-600 to-teal-600 text-white">
-                      <CardTitle className="flex items-center text-xl">
-                        <Navigation className="h-6 w-6 mr-3" />
-                        Enhanced Live Tracking
+                  <Card className="mt-8">
+                    <CardHeader>
+                      <CardTitle className="flex items-center">
+                        <Navigation className="h-5 w-5 mr-2" />
+                        Live Tracking
                       </CardTitle>
-                      <CardDescription className="text-green-100 text-base">
+                      <CardDescription>
                         Real-time position with nearby ports and refineries (20km radius)
                       </CardDescription>
                     </CardHeader>
-                    <CardContent className="p-6">
+                    <CardContent>
                       {vessel.currentLat && vessel.currentLng ? (
-                        <div className="rounded-xl overflow-hidden shadow-lg">
-                          <SimpleVesselMap vessel={vessel} />
-                        </div>
+                        <SimpleVesselMap vessel={vessel} />
                       ) : (
-                        <div className="h-96 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-xl flex items-center justify-center border border-gray-200 dark:border-gray-700">
+                        <div className="h-96 bg-gray-50 dark:bg-gray-800 rounded-lg flex items-center justify-center">
                           <div className="text-center text-muted-foreground">
-                            <div className="bg-gray-200 dark:bg-gray-700 p-4 rounded-full w-fit mx-auto mb-4">
-                              <MapPin className="h-12 w-12 text-gray-500" />
-                            </div>
-                            <p className="text-xl font-semibold mb-2">No Position Data</p>
-                            <p className="text-base text-gray-600 dark:text-gray-400">Vessel coordinates not available</p>
+                            <MapPin className="h-12 w-12 mx-auto mb-3" />
+                            <p className="text-lg font-medium">No Position Data</p>
+                            <p className="text-sm">Vessel coordinates not available</p>
                           </div>
                         </div>
                       )}
@@ -993,15 +970,14 @@ export default function VesselDetail() {
                 </CardContent>
               </Card>
               
-              <Card className="shadow-lg border-0 bg-gradient-to-br from-slate-50 to-white dark:from-slate-900 dark:to-slate-800">
-                <CardHeader className="pb-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-t-lg">
-                  <CardTitle className="text-xl flex items-center justify-between">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
                     <div className="flex items-center">
-                      <BarChart className="h-6 w-6 mr-3" />
-                      Comprehensive Cargo & Deal Information
+                      <BarChart className="h-5 w-5 mr-2" />
+                      Cargo & Deal Information
                     </div>
                     <Button 
-                      className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-full font-medium shadow-lg"
                       onClick={() => {
                         toast({
                           title: "Deal Interest Registered",
@@ -1010,288 +986,238 @@ export default function VesselDetail() {
                         });
                       }}
                     >
-                      💼 Express Interest in Deal
+                      Express Interest in Deal
                     </Button>
                   </CardTitle>
-                  <CardDescription className="text-blue-100 text-base">
+                  <CardDescription>
                     Complete cargo details and deal specifications - المعلومات التفصيلية للشحنة والصفقة
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="p-6">
-                  <div className="flex flex-col space-y-6">
+                <CardContent>
+                  <div className="space-y-6">
                     {/* Primary Cargo Information */}
-                    <div className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/20 p-6 rounded-xl border-l-4 border-blue-500 shadow-md hover:shadow-lg transition-shadow duration-300">
-                      <h4 className="font-bold text-lg text-blue-800 dark:text-blue-200 mb-4 flex items-center">
-                        <div className="bg-blue-500 p-2 rounded-full mr-3">
-                          <span className="text-white text-lg">🛢️</span>
-                        </div>
+                    <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                      <h4 className="font-semibold text-lg mb-4 flex items-center">
+                        <Package className="h-5 w-5 mr-2 text-blue-600" />
                         Primary Cargo Details
                       </h4>
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="bg-white dark:bg-slate-800 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
-                          <div className="flex items-center mb-2">
-                            <span className="text-2xl mr-2">🛢️</span>
-                            <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">Oil Type / Commodity</span>
-                          </div>
-                          <span className="font-bold text-lg text-blue-900 dark:text-blue-100">
+                        <div className="bg-white dark:bg-slate-700 p-3 rounded border">
+                          <div className="text-sm text-muted-foreground mb-1">Oil Type / Commodity</div>
+                          <div className="font-medium">
                             {vessel.oilType || vessel.cargoType || 'ULSD EN 590 – 10ppm / Gasoline'}
-                          </span>
+                          </div>
                         </div>
                         
-                        <div className="bg-white dark:bg-slate-800 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
-                          <div className="flex items-center mb-2">
-                            <span className="text-2xl mr-2">🌍</span>
-                            <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">Origin</span>
-                          </div>
-                          <span className="font-bold text-lg text-blue-900 dark:text-blue-100">
+                        <div className="bg-white dark:bg-slate-700 p-3 rounded border">
+                          <div className="text-sm text-muted-foreground mb-1">Origin</div>
+                          <div className="font-medium">
                             {vessel.origin || getDeparturePortName(vessel.departurePort) || 'Kharg Island'}
-                          </span>
+                          </div>
                         </div>
                         
-                        <div className="bg-white dark:bg-slate-800 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
-                          <div className="flex items-center mb-2">
-                            <span className="text-2xl mr-2">📍</span>
-                            <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">Destination</span>
-                          </div>
-                          <span className="font-bold text-lg text-blue-900 dark:text-blue-100">
+                        <div className="bg-white dark:bg-slate-700 p-3 rounded border">
+                          <div className="text-sm text-muted-foreground mb-1">Destination</div>
+                          <div className="font-medium">
                             {vessel.destination || getDestinationPortName(vessel.destinationPort) || 'Rotterdam – Houston – Jurong'}
-                          </span>
+                          </div>
                         </div>
                         
-                        <div className="bg-white dark:bg-slate-800 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
-                          <div className="flex items-center mb-2">
-                            <span className="text-2xl mr-2">📦</span>
-                            <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">Quantity</span>
-                          </div>
-                          <span className="font-bold text-lg text-blue-900 dark:text-blue-100">
+                        <div className="bg-white dark:bg-slate-700 p-3 rounded border">
+                          <div className="text-sm text-muted-foreground mb-1">Quantity</div>
+                          <div className="font-medium">
                             {vessel.quantity && !isNaN(parseFloat(vessel.quantity))
                               ? `${parseFloat(vessel.quantity).toLocaleString()} barrels`
                               : vessel.cargoCapacity 
                               ? `${vessel.cargoCapacity.toLocaleString()} barrels` 
                               : '1,291,833 barrels / 50,000-500,000 MTs'}
-                          </span>
+                          </div>
                         </div>
                       </div>
                     </div>
 
                     {/* Deal & Financial Information */}
-                    <div className="bg-gradient-to-r from-green-50 to-emerald-100 dark:from-green-900/30 dark:to-emerald-800/20 p-6 rounded-xl border-l-4 border-green-500 shadow-md hover:shadow-lg transition-shadow duration-300">
-                      <h4 className="font-bold text-lg text-green-800 dark:text-green-200 mb-4 flex items-center">
-                        <div className="bg-green-500 p-2 rounded-full mr-3">
-                          <span className="text-white text-lg">💰</span>
-                        </div>
+                    <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                      <h4 className="font-semibold text-lg mb-4 flex items-center">
+                        <Droplet className="h-5 w-5 mr-2 text-green-600" />
                         Deal & Financial Details
                       </h4>
                       
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="bg-white dark:bg-slate-800 p-4 rounded-lg border border-green-200 dark:border-green-700">
-                          <div className="flex items-center mb-2">
-                            <span className="text-2xl mr-2">💲</span>
-                            <span className="text-sm font-semibold text-green-700 dark:text-green-300">Deal Value</span>
-                          </div>
-                          <span className="font-bold text-xl text-green-900 dark:text-green-100">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="bg-white dark:bg-slate-700 p-3 rounded border">
+                          <div className="text-sm text-muted-foreground mb-1">Deal Value</div>
+                          <div className="font-medium text-lg">
                             {vessel.dealValue && !isNaN(parseFloat(vessel.dealValue))
                               ? `$${parseFloat(vessel.dealValue).toLocaleString()} USD`
                               : '$93,806,381 USD'}
-                          </span>
+                          </div>
                         </div>
                         
-                        <div className="bg-white dark:bg-slate-800 p-4 rounded-lg border border-green-200 dark:border-green-700">
-                          <div className="flex items-center mb-2">
-                            <span className="text-2xl mr-2">💰</span>
-                            <span className="text-sm font-semibold text-green-700 dark:text-green-300">Price per Barrel</span>
-                          </div>
-                          <span className="font-bold text-xl text-green-900 dark:text-green-100">
+                        <div className="bg-white dark:bg-slate-700 p-3 rounded border">
+                          <div className="text-sm text-muted-foreground mb-1">Price per Barrel</div>
+                          <div className="font-medium text-lg">
                             {vessel.price && !isNaN(parseFloat(vessel.price))
                               ? `$${parseFloat(vessel.price).toFixed(2)}`
                               : '$72.61'}
-                          </span>
+                          </div>
                         </div>
                         
-                        <div className="bg-white dark:bg-slate-800 p-4 rounded-lg border border-green-200 dark:border-green-700">
-                          <div className="flex items-center mb-2">
-                            <span className="text-2xl mr-2">📉</span>
-                            <span className="text-sm font-semibold text-green-700 dark:text-green-300">Market Price</span>
-                          </div>
-                          <span className="font-bold text-xl text-green-900 dark:text-green-100">
+                        <div className="bg-white dark:bg-slate-700 p-3 rounded border">
+                          <div className="text-sm text-muted-foreground mb-1">Market Price</div>
+                          <div className="font-medium text-lg">
                             {vessel.marketPrice && !isNaN(parseFloat(vessel.marketPrice))
                               ? `$${parseFloat(vessel.marketPrice).toFixed(2)}`
                               : '$72.37'}
-                          </span>
+                          </div>
                         </div>
                         
-                        <div className="bg-white dark:bg-slate-800 p-4 rounded-lg border border-green-200 dark:border-green-700">
-                          <div className="flex items-center mb-2">
-                            <span className="text-2xl mr-2">💳</span>
-                            <span className="text-sm font-semibold text-green-700 dark:text-green-300">Payment Terms</span>
-                          </div>
-                          <span className="font-bold text-lg text-green-900 dark:text-green-100">
+                        <div className="bg-white dark:bg-slate-700 p-3 rounded border">
+                          <div className="text-sm text-muted-foreground mb-1">Payment Terms</div>
+                          <div className="font-medium text-lg">
                             {vessel.paymentTerms || 'MT103/TT After Delivery'}
-                          </span>
+                          </div>
                         </div>
                       </div>
                     </div>
 
                     {/* Contract & Operational Details */}
-                    <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg space-y-3">
-                      <h4 className="font-medium text-sm text-orange-700 dark:text-orange-300 mb-3">
-                        📄 Contract & Operations
+                    <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                      <h4 className="font-semibold text-lg mb-4 flex items-center">
+                        <FileText className="h-5 w-5 mr-2 text-orange-600" />
+                        Contract & Operations
                       </h4>
                       
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">
-                          📄 Contract Type
-                        </span>
-                        <span className="font-medium">
-                          {vessel.contractType || 'Spot Trial + 12 Months Optional Contract'}
-                        </span>
-                      </div>
-                      
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">
-                          🚢 Delivery Terms
-                        </span>
-                        <span className="font-medium">
-                          {vessel.deliveryTerms || 'FOB – CIF'}
-                        </span>
-                      </div>
-                      
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">
-                          ⚓ Loading Port
-                        </span>
-                        <span className="font-medium">
-                          {vessel.loadingPort || getDeparturePortName(vessel.departurePort) || 'Kharg Island'}
-                        </span>
-                      </div>
-                      
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">
-                          🧪 Quality Specification
-                        </span>
-                        <span className="font-medium">
-                          {vessel.qualitySpec || 'ULSD 10ppm / Standard Gasoline Spec'}
-                        </span>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-muted-foreground">Contract Type</span>
+                          <span className="font-medium">
+                            {vessel.contractType || 'Spot Trial + 12 Months Optional Contract'}
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-muted-foreground">Delivery Terms</span>
+                          <span className="font-medium">
+                            {vessel.deliveryTerms || 'FOB – CIF'}
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-muted-foreground">Loading Port</span>
+                          <span className="font-medium">
+                            {vessel.loadingPort || getDeparturePortName(vessel.departurePort) || 'Kharg Island'}
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-muted-foreground">Quality Specification</span>
+                          <span className="font-medium">
+                            {vessel.qualitySpec || 'ULSD 10ppm / Standard Gasoline Spec'}
+                          </span>
+                        </div>
                       </div>
                     </div>
 
                     {/* Company & Source Information */}
-                    <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg space-y-3">
-                      <h4 className="font-medium text-sm text-purple-700 dark:text-purple-300 mb-3">
-                        🏢 Company & Source Details
+                    <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                      <h4 className="font-semibold text-lg mb-4 flex items-center">
+                        <Building className="h-5 w-5 mr-2 text-purple-600" />
+                        Company & Source Details
                       </h4>
                       
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">
-                          🏷️ Source Company
-                        </span>
-                        <span className="font-medium">
-                          {vessel.sourceCompany || vessel.oilSource || vessel.sellerName || 'BP / Source Refinery'}
-                        </span>
-                      </div>
-                      
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">
-                          🏭 Target Refinery
-                        </span>
-                        <span className="font-medium">
-                          {vessel.targetRefinery || 
-                           (vessel.destinationPort && vessel.destinationPort.startsWith('REF:') 
-                             ? vessel.destinationPort.split(':')[2] 
-                             : 'Esmeraldas Refinery')}
-                        </span>
-                      </div>
-                      
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">
-                          👤 Customer Experience
-                        </span>
-                        <span className="font-medium">
-                          ⭐ 4.7/5 – Based on 13 corporate buyers
-                        </span>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-muted-foreground">Source Company</span>
+                          <span className="font-medium">
+                            {vessel.sourceCompany || vessel.oilSource || vessel.sellerName || 'BP / Source Refinery'}
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-muted-foreground">Target Refinery</span>
+                          <span className="font-medium">
+                            {vessel.targetRefinery || 
+                             (vessel.destinationPort && vessel.destinationPort.startsWith('REF:') 
+                               ? vessel.destinationPort.split(':')[2] 
+                               : 'Esmeraldas Refinery')}
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-muted-foreground">Customer Experience</span>
+                          <span className="font-medium">
+                            4.7/5 – Based on 13 corporate buyers
+                          </span>
+                        </div>
                       </div>
                     </div>
 
                     {/* Deal Status & Verification */}
-                    <div className="bg-gradient-to-r from-purple-50 to-pink-100 dark:from-purple-900/30 dark:to-pink-800/20 p-6 rounded-xl border-l-4 border-purple-500 shadow-md hover:shadow-lg transition-shadow duration-300">
-                      <h4 className="font-bold text-lg text-purple-800 dark:text-purple-200 mb-4 flex items-center">
-                        <div className="bg-purple-500 p-2 rounded-full mr-3">
-                          <span className="text-white text-lg">📈</span>
-                        </div>
+                    <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                      <h4 className="font-semibold text-lg mb-4 flex items-center">
+                        <TrendingUp className="h-5 w-5 mr-2 text-purple-600" />
                         Deal Status & Verification
                       </h4>
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                        <div className="bg-white dark:bg-slate-800 p-4 rounded-lg border border-purple-200 dark:border-purple-700">
-                          <div className="flex items-center mb-2">
-                            <span className="text-2xl mr-2">📆</span>
-                            <span className="text-sm font-semibold text-purple-700 dark:text-purple-300">Deal Date</span>
-                          </div>
-                          <span className="font-bold text-lg text-purple-900 dark:text-purple-100">
+                        <div className="bg-white dark:bg-slate-700 p-3 rounded border">
+                          <div className="text-sm text-muted-foreground mb-1">Deal Date</div>
+                          <div className="font-medium">
                             {vessel.dealDate || 'July 2025 / Active'}
-                          </span>
+                          </div>
                         </div>
                         
-                        <div className="bg-white dark:bg-slate-800 p-4 rounded-lg border border-purple-200 dark:border-purple-700">
-                          <div className="flex items-center mb-2">
-                            <span className="text-2xl mr-2">✅</span>
-                            <span className="text-sm font-semibold text-purple-700 dark:text-purple-300">Verified Deal</span>
+                        <div className="bg-white dark:bg-slate-700 p-3 rounded border">
+                          <div className="text-sm text-muted-foreground mb-1">Verified Deal</div>
+                          <div className="font-medium text-green-600">
+                            Platform Verified
                           </div>
-                          <span className="font-bold text-lg text-green-600 dark:text-green-400">
-                            ✔️ Platform Verified
-                          </span>
                         </div>
                         
-                        <div className="bg-white dark:bg-slate-800 p-4 rounded-lg border border-purple-200 dark:border-purple-700">
-                          <div className="flex items-center mb-2">
-                            <span className="text-2xl mr-2">📈</span>
-                            <span className="text-sm font-semibold text-purple-700 dark:text-purple-300">Deal Status</span>
+                        <div className="bg-white dark:bg-slate-700 p-3 rounded border">
+                          <div className="text-sm text-muted-foreground mb-1">Deal Status</div>
+                          <div className="font-medium text-blue-600">
+                            Open for Subscription
                           </div>
-                          <span className="font-bold text-lg text-blue-600 dark:text-blue-400">
-                            🔵 Open for Subscription
-                          </span>
                         </div>
                         
-                        <div className="bg-white dark:bg-slate-800 p-4 rounded-lg border border-purple-200 dark:border-purple-700">
-                          <div className="flex items-center mb-2">
-                            <span className="text-2xl mr-2">🧾</span>
-                            <span className="text-sm font-semibold text-purple-700 dark:text-purple-300">Deal Code</span>
-                          </div>
-                          <span className="font-bold text-lg font-mono text-purple-900 dark:text-purple-100">
+                        <div className="bg-white dark:bg-slate-700 p-3 rounded border">
+                          <div className="text-sm text-muted-foreground mb-1">Deal Code</div>
+                          <div className="font-medium font-mono">
                             {vessel.dealCode || 'DEAL-00923'}
-                          </span>
+                          </div>
                         </div>
                       </div>
                       
                       {/* Action Buttons */}
-                      <div className="flex flex-col sm:flex-row gap-4 mt-6">
+                      <div className="flex flex-col sm:flex-row gap-3 mt-6">
                         <Button 
-                          className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-8 py-4 rounded-full font-bold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                          className="flex-1"
                           onClick={() => {
                             toast({
-                              title: "Deal Interest Registered! 🎉",
+                              title: "Deal Interest Registered",
                               description: "Your interest in this maritime deal has been recorded. Our broker team will contact you within 24 hours.",
                               duration: 6000,
                             });
                           }}
                         >
-                          <span className="text-lg mr-2">💼</span>
+                          <TrendingUp className="mr-2 h-4 w-4" />
                           Express Interest in Deal
                         </Button>
                         
                         <Button 
                           variant="outline"
-                          className="flex-1 border-2 border-purple-500 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 px-8 py-4 rounded-full font-bold shadow-lg hover:shadow-xl transition-all duration-300"
+                          className="flex-1"
                           onClick={() => {
                             toast({
-                              title: "Contact Request Sent! 📞",
+                              title: "Contact Request Sent",
                               description: "Our maritime specialists will reach out to discuss this opportunity.",
                               duration: 5000,
                             });
                           }}
                         >
-                          <span className="text-lg mr-2">📞</span>
+                          <Phone className="mr-2 h-4 w-4" />
                           Request Call Back
                         </Button>
                       </div>
