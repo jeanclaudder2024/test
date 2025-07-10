@@ -56,9 +56,10 @@ export default function Companies() {
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedCompany, setExpandedCompany] = useState<number | null>(null);
 
-  // Fetch real companies directly
+  // Fetch companies with subscription limits
   const { data: response, isLoading } = useQuery({
-    queryKey: ['/api/admin/real-companies'],
+    queryKey: ['/api/companies'],
+    staleTime: 0, // Always get fresh data
     retry: false,
   });
 

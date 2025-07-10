@@ -210,10 +210,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/companies", async (req: Request, res: Response) => {
+  // Public companies endpoint with subscription limits
+  apiRouter.get("/companies", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
-      const companies = await storage.getFakeCompaniesWithRelations();
-      res.json(companies);
+      console.log("Fetching companies with subscription limits...");
+      
+      // Get user subscription and apply limits
+      const user = req.user;
+      let subscriptionLimits = { maxVessels: 50, maxPorts: 5, maxRefineries: 10, maxCompanies: 10 }; // Default Basic plan limits
+      
+      if (user) {
+        try {
+          // Get user's subscription from database
+          const userSubscription = await db.select()
+            .from(userSubscriptions)
+            .where(eq(userSubscriptions.userId, user.id))
+            .limit(1);
+          
+          const subscription = userSubscription[0];
+          const planId = subscription?.planId || 1; // Default to Basic plan
+          
+          // Apply limits based on plan (admin users get unlimited access)
+          if (user.role === 'admin') {
+            subscriptionLimits = { maxVessels: 999, maxPorts: 999, maxRefineries: 999, maxCompanies: 999 };
+          } else {
+            const limits = getSubscriptionLimits(planId);
+            subscriptionLimits = { ...limits, maxCompanies: limits.maxPorts * 2 }; // Companies limit = 2x ports limit
+          }
+          
+          console.log(`User ${user.email} (Plan ${planId}) company limit: ${subscriptionLimits.maxCompanies}`);
+        } catch (subError) {
+          console.error("Error fetching subscription:", subError);
+          // Use default Basic plan limits on error
+        }
+      }
+      
+      // Get real companies from database
+      const allCompanies = await db.select().from(realCompanies);
+      
+      // Apply subscription-based company limit
+      const limitedCompanies = allCompanies.slice(0, subscriptionLimits.maxCompanies);
+      if (allCompanies.length > subscriptionLimits.maxCompanies) {
+        console.log(`Applied subscription limit: showing ${limitedCompanies.length} of ${allCompanies.length} total companies`);
+      }
+      
+      res.json(limitedCompanies);
     } catch (error) {
       console.error("Error fetching companies:", error);
       res.status(500).json({ message: "Failed to fetch companies" });
