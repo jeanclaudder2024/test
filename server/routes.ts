@@ -277,8 +277,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register admin vessel management routes
   app.use("/api/admin/vessels", vesselRouter);
   
-  // Register company management routes
-  app.use("/api/companies", companyRouter);
+  // Register company management routes - DISABLED to use new subscription-limited endpoint above
+  // app.use("/api/companies", companyRouter);
   
   // Oil types now handled by simplified admin routes below
   // Removed complex oilTypeRoutes to avoid schema conflicts
