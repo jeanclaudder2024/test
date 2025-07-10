@@ -599,6 +599,13 @@ Changelog:
   * **Authentication Endpoint Fixes**: Updated both Landing page and Pricing page to use public `/api/subscription-plans` endpoint
   * **Regular User Access**: Fixed 403 errors for non-admin users accessing pricing information
   * **Production Ready**: Complete payment system now functional without loading loops or authentication errors
+- July 10, 2025. **CRITICAL FIX: Broker Subscription Logic Corrected for Existing Users**:
+  * **Fixed Subscription Validation**: Resolved issue where users with Professional Plan 2 subscriptions couldn't access broker features
+  * **Enhanced Trial Support**: Professional and Enterprise plan users now get broker access during both trial and paid periods
+  * **Server-Side Logic Fixed**: Updated getBrokerSubscriptionStatus to properly validate both active subscriptions and trials for Pro+ plans
+  * **Client-Side Logic Fixed**: Updated useSubscription hook to allow broker access for Professional+ plans (including trials)
+  * **User Experience Improved**: Once users have Professional+ plan, they maintain broker access without needing to upgrade again
+  * **Production Ready**: Broker dashboard now correctly accessible for all Professional and Enterprise subscribers
 
 ## User Preferences
 
