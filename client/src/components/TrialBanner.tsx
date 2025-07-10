@@ -17,7 +17,7 @@ export function TrialBanner() {
         <Clock className="h-4 w-4 text-orange-500" />
         <AlertDescription className="flex items-center justify-between">
           <span className="text-white">
-            Your 7-day trial has expired. Upgrade now to continue accessing all features.
+            Your 5-day trial has expired. Upgrade now to continue accessing all features.
           </span>
           <Link href="/pricing">
             <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-white">
@@ -35,7 +35,7 @@ export function TrialBanner() {
       <Star className="h-4 w-4 text-blue-400" />
       <AlertDescription className="flex items-center justify-between">
         <span className="text-white">
-          🎉 You're on a 7-day free trial! {trialDaysRemaining} day{trialDaysRemaining !== 1 ? 's' : ''} remaining.
+          🎉 You're on a 5-day free trial! {trialDaysRemaining} day{trialDaysRemaining !== 1 ? 's' : ''} remaining.
         </span>
         <Link href="/pricing">
           <Button size="sm" variant="outline" className="border-blue-400 text-blue-400 hover:bg-blue-400 hover:text-white">
