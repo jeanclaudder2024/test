@@ -4761,8 +4761,8 @@ Only use authentic, real-world data for existing refineries.`;
   // API routes for AI-powered content generation
   app.use("/api/ai", aiRouter);
   
-  // API routes for oil shipping companies
-  app.use("/api/companies", companyRouter);
+  // API routes for oil shipping companies - DISABLED to use subscription-limited endpoint
+  // app.use("/api/companies", companyRouter);
   
   // API routes for broker functionality
   app.use("/api/broker", brokerRouter);
