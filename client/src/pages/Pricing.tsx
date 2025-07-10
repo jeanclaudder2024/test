@@ -59,17 +59,17 @@ export default function PricingPage() {
         return plansData.map((plan: any) => ({
           id: plan.id,
           name: plan.name,
-          slug: plan.name.toLowerCase(),
+          slug: plan.name.toLowerCase().replace(/\s+/g, '-'),
           description: plan.description,
-          monthlyPrice: plan.price.toFixed(2),
-          yearlyPrice: plan.priceAnnual ? plan.priceAnnual.toFixed(2) : (plan.price * 12 * 0.8).toFixed(2),
-          monthlyPriceId: plan.stripePriceId,
-          yearlyPriceId: plan.stripePriceId.replace('monthly', 'yearly'),
+          monthlyPrice: plan.price.toString(),
+          yearlyPrice: plan.priceAnnual ? plan.priceAnnual.toString() : (plan.price * 12 * 0.8).toFixed(0),
+          monthlyPriceId: plan.stripePriceId || `price_${plan.id}_monthly`,
+          yearlyPriceId: plan.stripePriceId ? plan.stripePriceId.replace('monthly', 'yearly') : `price_${plan.id}_yearly`,
           currency: 'usd',
-          features: plan.features.map((feature: string) => ({
+          features: Array.isArray(plan.features) ? plan.features.map((feature: string) => ({
             name: feature,
             included: true
-          })),
+          })) : [],
           isPopular: plan.isPopular || false,
           trialDays: plan.trialDays || 5
         })).sort((a: PricingPlan, b: PricingPlan) => a.id - b.id);

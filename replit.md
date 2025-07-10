@@ -521,6 +521,9 @@ Changelog:
   * **Form Fields Enhanced**: Made description field required with asterisk, added defaultValue to interval Select component
   * **Validation Improved**: Added client-side validation before sending data to prevent 400 errors with clear user feedback
   * **SUBSCRIPTION MANAGEMENT COMPLETE**: All subscription plan CRUD operations (Create, Read, Update, Delete) now working perfectly
+  * **PRICING PAGES FIXED**: Updated both Landing Page and Pricing page to fetch real subscription data from API instead of hardcoded values
+  * **Dynamic Plan Display**: Both pages now show actual subscription plans with correct pricing, features, and trial periods from database
+  * **Loading States Added**: Added proper loading skeletons while subscription plans are being fetched
   * **Next Phase Ready**: Platform ready for advanced features like real-time notifications, advanced analytics, and enhanced user management
 
 ## User Preferences
