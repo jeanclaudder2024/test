@@ -12670,12 +12670,31 @@ Note: This document contains real vessel operational data and should be treated 
         console.log("Created Stripe customer:", stripeCustomerId);
       }
 
-      // Create checkout session
+      // For demo purposes, we'll create price_data instead of using pre-configured prices
+      // In production, you would use actual Stripe Price IDs from your subscription plans
+      
+      // Get plan details from database to determine price
+      const plan = await storage.getSubscriptionPlanById(planId);
+      if (!plan) {
+        return res.status(404).json({ error: 'Subscription plan not found' });
+      }
+
+      // Create checkout session with price_data for demo
       const session = await stripe.checkout.sessions.create({
         customer: stripeCustomerId,
         payment_method_types: ['card'],
         line_items: [{
-          price: priceId,
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: plan.name,
+              description: plan.description || `${plan.name} subscription plan`,
+            },
+            unit_amount: Math.round(parseFloat(plan.price) * 100), // Convert to cents
+            recurring: {
+              interval: plan.interval || 'month',
+            },
+          },
           quantity: 1,
         }],
         mode: 'subscription',
@@ -12689,7 +12708,8 @@ Note: This document contains real vessel operational data and should be treated 
           metadata: {
             userId: user.id.toString(),
             planId: planId.toString()
-          }
+          },
+          trial_period_days: plan.trialDays || 5,
         }
       });
 
