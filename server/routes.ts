@@ -3022,7 +3022,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Fallback to text matching if no relationships exist
           const connectedVessels = vessels.filter(vessel => {
             const matchesPort = (vesselPortName, portName) => {
-              if (!vesselPortName || !portName) return false;
+              if (!vesselPortName || !portName || typeof vesselPortName !== 'string' || typeof portName !== 'string') return false;
               
               const vesselPort = vesselPortName.toLowerCase().trim();
               const actualPort = portName.toLowerCase().trim();
@@ -3037,11 +3037,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
           
           const departingVessels = connectedVessels.filter(vessel => 
-            vessel.departurePort && vessel.departurePort.toLowerCase().includes(port.name.toLowerCase())
+            vessel.departurePort && typeof vessel.departurePort === 'string' && vessel.departurePort.toLowerCase().includes(port.name.toLowerCase())
           );
           
           const arrivingVessels = connectedVessels.filter(vessel => 
-            vessel.destinationPort && vessel.destinationPort.toLowerCase().includes(port.name.toLowerCase())
+            vessel.destinationPort && typeof vessel.destinationPort === 'string' && vessel.destinationPort.toLowerCase().includes(port.name.toLowerCase())
           );
           
           return {
@@ -3055,9 +3055,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
               name: vessel.name,
               type: vessel.vesselType,
               imo: vessel.imo,
-              connectionType: vessel.departurePort && vessel.departurePort.toLowerCase().includes(port.name.toLowerCase()) 
+              connectionType: vessel.departurePort && typeof vessel.departurePort === 'string' && vessel.departurePort.toLowerCase().includes(port.name.toLowerCase()) 
                 ? 'Departing' 
-                : vessel.destinationPort && vessel.destinationPort.toLowerCase().includes(port.name.toLowerCase())
+                : vessel.destinationPort && typeof vessel.destinationPort === 'string' && vessel.destinationPort.toLowerCase().includes(port.name.toLowerCase())
                 ? 'Arriving' 
                 : 'Nearby'
             }))
