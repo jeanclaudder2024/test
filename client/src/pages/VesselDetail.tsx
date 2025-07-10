@@ -296,7 +296,10 @@ export default function VesselDetail() {
   const [, params] = useRoute('/vessels/:id');
   const vesselId = params?.id ? parseInt(params.id) : null;
   const { toast } = useToast();
-  const { hasFeature } = useSubscription();
+  const subscriptionData = useSubscription();
+  const { hasFeature } = subscriptionData;
+  
+
   const [vessel, setVessel] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isUpdatingLocation, setIsUpdatingLocation] = useState(false);
@@ -309,6 +312,7 @@ export default function VesselDetail() {
   const [isGeneratingManifest, setIsGeneratingManifest] = useState(false);
   const [refineries, setRefineries] = useState<any[]>([]);
   const [ports, setPorts] = useState<any[]>([]);
+  const [testBrokerOverride, setTestBrokerOverride] = useState<boolean | null>(null);
   
   // Helper function to get port name by ID or name
   const getPortName = (portIdOrName: number | string | null | undefined): string => {
@@ -1220,9 +1224,40 @@ export default function VesselDetail() {
                         </div>
                       </div>
                       
+                      {/* Test Broker Access Button */}
+                      <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <p className="text-sm text-yellow-800 mb-2">Test Broker Access Control:</p>
+                        <div className="flex space-x-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => setTestBrokerOverride(true)}
+                            className={testBrokerOverride === true ? "bg-green-100" : ""}
+                          >
+                            Test Broker Access
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => setTestBrokerOverride(false)}
+                            className={testBrokerOverride === false ? "bg-red-100" : ""}
+                          >
+                            Test Locked State
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => setTestBrokerOverride(null)}
+                            className={testBrokerOverride === null ? "bg-blue-100" : ""}
+                          >
+                            Reset (Use Real)
+                          </Button>
+                        </div>
+                      </div>
+
                       {/* Action Button */}
                       <div className="mt-6">
-                        {hasFeature('broker') ? (
+                        {(testBrokerOverride !== null ? testBrokerOverride : hasFeature('broker')) ? (
                           <Button 
                             className="w-full py-4 px-6 font-semibold shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-700 animate-pulse"
                             style={{
