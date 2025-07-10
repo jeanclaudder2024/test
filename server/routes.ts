@@ -12643,7 +12643,7 @@ Note: This document contains real vessel operational data and should be treated 
         return res.status(400).json({ error: 'Invalid plan price: ' + plan.price });
       }
 
-      // Create checkout session with immediate payment (no trial)
+      // Create checkout session with immediate payment (no trial period to avoid loading loops)
       const session = await stripe.checkout.sessions.create({
         customer: stripeCustomerId,
         payment_method_types: ['card'],
@@ -12673,7 +12673,7 @@ Note: This document contains real vessel operational data and should be treated 
             userId: user.id.toString(),
             planId: planId.toString()
           },
-          trial_period_days: plan.trialDays || 5,
+          // No trial period in Stripe - users get trial access through registration instead
         }
       });
 
