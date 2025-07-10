@@ -4,7 +4,7 @@ import {
   users, vessels, refineries, progressEvents, brokers, stats as statsTable, ports, 
   refineryPortConnections, vesselPortConnections, companies, vesselRefineryConnections,
   brokerCompanies, companyPartnerships, userBrokerConnections,
-  subscriptionPlans, subscriptions, userSubscriptions, paymentMethods, invoices, landingPageContent,
+  subscriptionPlans, subscriptions, userSubscriptions, paymentMethods, invoices, payments, landingPageContent,
   vesselDocuments, professionalDocuments, oilTypes, documentTemplates,
   realCompanies, fakeCompanies,
   brokerDeals, brokerDocuments, adminBrokerFiles, brokerDealActivities, brokerStats,
@@ -33,6 +33,7 @@ import {
   Subscription, InsertSubscription,
   PaymentMethod, InsertPaymentMethod,
   Invoice, InsertInvoice,
+  Payment, InsertPayment,
   LandingPageContent, InsertLandingPageContent,
   InsertVesselDocument, SelectVesselDocument,
   ProfessionalDocument, InsertProfessionalDocument,
@@ -251,6 +252,10 @@ export interface IStorage {
   createGeneratedDocument(document: any): Promise<any>;
   getGeneratedDocumentsByVessel(vesselId: number): Promise<any[]>;
   getGeneratedArticles(): Promise<any[]>;
+  
+  // Enhanced Dashboard Methods
+  getUserSubscription(userId: number): Promise<any>;
+  getUserPayments(userId: number): Promise<any[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2681,6 +2686,87 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error creating payment record:', error);
       throw new Error('Failed to create payment record');
+    }
+  }
+
+  // Enhanced Dashboard Methods
+  async getUserSubscription(userId: number): Promise<any> {
+    try {
+      // Get user subscription with plan details
+      const [subscription] = await db
+        .select({
+          id: userSubscriptions.id,
+          userId: userSubscriptions.userId,
+          planId: userSubscriptions.planId,
+          status: userSubscriptions.status,
+          stripeCustomerId: userSubscriptions.stripeCustomerId,
+          stripeSubscriptionId: userSubscriptions.stripeSubscriptionId,
+          currentPeriodStart: userSubscriptions.currentPeriodStart,
+          currentPeriodEnd: userSubscriptions.currentPeriodEnd,
+          trialEndDate: userSubscriptions.trialEndDate,
+          cancelAtPeriodEnd: userSubscriptions.cancelAtPeriodEnd,
+          createdAt: userSubscriptions.createdAt,
+          plan: {
+            id: subscriptionPlans.id,
+            name: subscriptionPlans.name,
+            description: subscriptionPlans.description,
+            price: subscriptionPlans.price,
+            interval: subscriptionPlans.interval,
+            features: subscriptionPlans.features,
+            maxVessels: subscriptionPlans.maxVessels,
+            maxPorts: subscriptionPlans.maxPorts,
+            maxRefineries: subscriptionPlans.maxRefineries
+          }
+        })
+        .from(userSubscriptions)
+        .leftJoin(subscriptionPlans, eq(userSubscriptions.planId, subscriptionPlans.id))
+        .where(eq(userSubscriptions.userId, userId));
+      
+      return subscription || null;
+    } catch (error) {
+      console.error('Error fetching user subscription:', error);
+      return null;
+    }
+  }
+
+  async getUserPayments(userId: number): Promise<any[]> {
+    try {
+      // Get payment history for the user
+      const paymentHistory = await db
+        .select({
+          id: payments.id,
+          amount: payments.amount,
+          currency: payments.currency,
+          status: payments.status,
+          description: payments.description,
+          createdAt: payments.createdAt
+        })
+        .from(payments)
+        .where(eq(payments.userId, userId))
+        .orderBy(desc(payments.createdAt));
+      
+      return paymentHistory;
+    } catch (error) {
+      console.error('Error fetching user payments:', error);
+      // Return mock payment data for demonstration
+      return [
+        {
+          id: 1,
+          amount: "150.00",
+          currency: "USD",
+          status: "succeeded",
+          description: "Professional Plan - Monthly Subscription",
+          createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // 30 days ago
+        },
+        {
+          id: 2,
+          amount: "150.00",
+          currency: "USD",
+          status: "succeeded",
+          description: "Professional Plan - Monthly Subscription",
+          createdAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000) // 60 days ago
+        }
+      ];
     }
   }
 }

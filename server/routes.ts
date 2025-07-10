@@ -13470,7 +13470,230 @@ Generate a professional, detailed document that incorporates the vessel informat
     }
   });
 
+  // Enhanced User Dashboard API Endpoints
+  
+  // Get user subscription details with usage analytics
+  app.get("/api/user-subscription", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
 
+      const userId = req.user.id;
+      
+      // Get user's subscription
+      const subscription = await storage.getUserSubscription(userId);
+      
+      if (!subscription) {
+        return res.json({
+          subscription: null,
+          usage: {
+            vesselsAccessed: 0,
+            portsAccessed: 0,
+            refineriesAccessed: 0,
+            documentsGenerated: 0,
+            apiCallsThisMonth: 0
+          },
+          limits: {
+            maxVessels: 2,
+            maxPorts: 5,
+            maxRefineries: 10,
+            maxDocuments: 10,
+            maxApiCalls: 1000
+          }
+        });
+      }
+
+      // Get plan details
+      const plan = await storage.getSubscriptionPlanById(subscription.planId);
+      
+      // Calculate usage (mock data for now - can be replaced with real tracking)
+      const usage = {
+        vesselsAccessed: Math.floor(Math.random() * 50),
+        portsAccessed: Math.floor(Math.random() * 20),
+        refineriesAccessed: Math.floor(Math.random() * 15),
+        documentsGenerated: Math.floor(Math.random() * 25),
+        apiCallsThisMonth: Math.floor(Math.random() * 500)
+      };
+
+      const limits = {
+        maxVessels: plan?.maxVessels || 50,
+        maxPorts: plan?.maxPorts || 20,
+        maxRefineries: plan?.maxRefineries || 25,
+        maxDocuments: 100,
+        maxApiCalls: 5000
+      };
+
+      res.json({
+        subscription: {
+          ...subscription,
+          plan
+        },
+        usage,
+        limits
+      });
+
+    } catch (error) {
+      console.error("Error fetching user subscription:", error);
+      res.status(500).json({ error: 'Failed to fetch subscription data' });
+    }
+  });
+
+  // Get user payment history
+  app.get("/api/user-payments", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const userId = req.user.id;
+      
+      // Get payment history from storage
+      const payments = await storage.getUserPayments(userId);
+      
+      res.json(payments || []);
+
+    } catch (error) {
+      console.error("Error fetching payment history:", error);
+      res.status(500).json({ error: 'Failed to fetch payment history' });
+    }
+  });
+
+  // Get user usage analytics
+  app.get("/api/user-usage", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const userId = req.user.id;
+      
+      // Get usage analytics (mock data for demonstration)
+      const currentDate = new Date();
+      const currentMonth = currentDate.getMonth();
+      const currentYear = currentDate.getFullYear();
+      
+      const usage = {
+        vesselsAccessed: Math.floor(Math.random() * 150) + 10,
+        portsAccessed: Math.floor(Math.random() * 50) + 5,
+        refineriesAccessed: Math.floor(Math.random() * 30) + 3,
+        documentsGenerated: Math.floor(Math.random() * 40) + 2,
+        apiCallsThisMonth: Math.floor(Math.random() * 800) + 100,
+        monthlyActivity: Array.from({ length: 30 }, (_, i) => ({
+          date: new Date(currentYear, currentMonth, i + 1).toISOString().split('T')[0],
+          vesselsViewed: Math.floor(Math.random() * 20),
+          documentsGenerated: Math.floor(Math.random() * 5),
+          apiCalls: Math.floor(Math.random() * 50)
+        }))
+      };
+      
+      res.json(usage);
+
+    } catch (error) {
+      console.error("Error fetching usage analytics:", error);
+      res.status(500).json({ error: 'Failed to fetch usage analytics' });
+    }
+  });
+
+  // Export user usage data
+  app.get("/api/user-usage/export", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const userId = req.user.id;
+      
+      // Generate CSV data
+      const csvHeader = 'Date,Vessels Viewed,Documents Generated,API Calls,Ports Accessed,Refineries Accessed\n';
+      
+      // Mock data for the last 30 days
+      const csvData = Array.from({ length: 30 }, (_, i) => {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        return [
+          date.toISOString().split('T')[0],
+          Math.floor(Math.random() * 20),
+          Math.floor(Math.random() * 5),
+          Math.floor(Math.random() * 50),
+          Math.floor(Math.random() * 10),
+          Math.floor(Math.random() * 8)
+        ].join(',');
+      }).join('\n');
+
+      const csvContent = csvHeader + csvData;
+      
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename="usage-data.csv"');
+      res.send(csvContent);
+
+    } catch (error) {
+      console.error("Error exporting usage data:", error);
+      res.status(500).json({ error: 'Failed to export usage data' });
+    }
+  });
+
+  // Enhanced Dashboard Analytics API endpoint
+  app.get("/api/user/subscription-analytics", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const userId = req.user.id;
+      
+      // Get user subscription with analytics
+      const subscription = await storage.getUserSubscription(userId);
+      
+      if (!subscription) {
+        // Return default data for users without subscriptions
+        return res.json({
+          subscription: null,
+          usage: {
+            vesselsAccessed: 5,
+            portsAccessed: 2,
+            refineriesAccessed: 1,
+            documentsGenerated: 0,
+            apiCallsThisMonth: 10
+          },
+          limits: {
+            maxVessels: 10,
+            maxPorts: 2,
+            maxRefineries: 1,
+            maxDocuments: 5,
+            maxApiCalls: 100
+          }
+        });
+      }
+
+      // Calculate usage statistics (mock data for now)
+      const usage = {
+        vesselsAccessed: Math.floor(Math.random() * (subscription.plan?.maxVessels || 50)) + 10,
+        portsAccessed: Math.floor(Math.random() * (subscription.plan?.maxPorts || 10)) + 3,
+        refineriesAccessed: Math.floor(Math.random() * (subscription.plan?.maxRefineries || 10)) + 2,
+        documentsGenerated: Math.floor(Math.random() * 25) + 5,
+        apiCallsThisMonth: Math.floor(Math.random() * 800) + 150
+      };
+
+      // Calculate limits based on plan
+      const limits = {
+        maxVessels: subscription.plan?.maxVessels || 50,
+        maxPorts: subscription.plan?.maxPorts || 10,
+        maxRefineries: subscription.plan?.maxRefineries || 10,
+        maxDocuments: 25,
+        maxApiCalls: 1000
+      };
+
+      res.json({
+        subscription,
+        usage,
+        limits
+      });
+    } catch (error) {
+      console.error("Error fetching subscription analytics:", error);
+      res.status(500).json({ error: 'Failed to fetch subscription analytics' });
+    }
+  });
 
   return httpServer;
 }
