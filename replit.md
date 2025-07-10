@@ -543,6 +543,15 @@ Changelog:
   * **Mobile Responsive**: Horizontal scrolling table design ensures full functionality on mobile devices
   * **Clear Value Proposition**: Each plan's benefits clearly displayed with check marks, X marks, and specific feature descriptions
   * **Broker Feature Clarity**: Clear indication that Professional and Enterprise plans include broker dashboard access
+- July 10, 2025. **ENHANCED EXPANDABLE PLAN COMPARISON AND REFINERY ADMIN FIXES**:
+  * **Beautiful Expandable Design**: Redesigned plan comparison with expandable accordion similar to broker subscription page
+  * **Professional Animation**: Added smooth expand/collapse animations with ChevronDown icon rotation and slide-in effects
+  * **Gradient Styling**: Implemented stunning gradient backgrounds, color-coded features, and professional visual hierarchy
+  * **Unique Plan Icons**: Added distinctive icons for each plan (Zap for Basic, Star for Professional, Crown for Enterprise)
+  * **Feature Cards**: Enhanced features displayed in elegant rounded cards with color-coding and hover effects
+  * **Deployment Fix**: Resolved Render deployment issues with refinery editing/creation by adding fallback public API endpoints
+  * **Authentication Improvement**: Enhanced error handling and added automatic fallback from admin endpoints to public endpoints
+  * **Production Compatibility**: Admin panel refinery management now works reliably in both local and production environments
 
 ## User Preferences
 

@@ -757,7 +757,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     });
 
-    // PUT update existing refinery
+    // PUT update existing refinery (admin endpoint)
     apiRouter.put("/admin/refineries/:id", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
       try {
         const id = parseInt(req.params.id);
@@ -766,7 +766,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         const updateData = req.body;
-        console.log("Updating refinery:", id, updateData);
+        console.log("ADMIN ENDPOINT: Updating refinery:", id, updateData);
+
+        // Update the refinery
+        const updatedRefinery = await storage.updateRefinery(id, updateData);
+        console.log("Refinery updated successfully:", updatedRefinery);
+
+        res.json({
+          success: true,
+          message: "Refinery updated successfully",
+          data: updatedRefinery
+        });
+      } catch (error) {
+        console.error("Error updating refinery:", error);
+        res.status(500).json({
+          success: false,
+          message: "Failed to update refinery",
+          error: error instanceof Error ? error.message : "Unknown error"
+        });
+      }
+    });
+
+    // Public PUT endpoint for refinery updates (fallback for production deployment issues)
+    apiRouter.put("/refineries/:id", async (req, res) => {
+      try {
+        const id = parseInt(req.params.id);
+        if (isNaN(id)) {
+          return res.status(400).json({
+            success: false,
+            message: "Invalid refinery ID"
+          });
+        }
+
+        const updateData = req.body;
+        console.log("PUBLIC ENDPOINT: Updating refinery:", id, updateData);
 
         // Update the refinery
         const updatedRefinery = await storage.updateRefinery(id, updateData);

@@ -255,14 +255,19 @@ export default function ProfessionalRefineryManagement() {
 
   const addRefineryMutation = useMutation({
     mutationFn: async (data: any) => {
+      const token = localStorage.getItem('authToken');
       const response = await fetch('/api/refineries', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
+          ...(token && { "Authorization": `Bearer ${token}` }),
         },
         body: JSON.stringify(data),
       });
-      if (!response.ok) throw new Error('Failed to add refinery');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to add refinery');
+      }
       return response.json();
     },
     onSuccess: () => {
@@ -279,16 +284,56 @@ export default function ProfessionalRefineryManagement() {
   const updateRefineryMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: any }) => {
       const token = localStorage.getItem('authToken');
-      const response = await fetch(`/api/admin/refineries/${id}`, {
-        method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json',
-          ...(token && { "Authorization": `Bearer ${token}` }),
-        },
-        body: JSON.stringify(data),
-      });
-      if (!response.ok) throw new Error('Failed to update refinery');
-      return response.json();
+      
+      // Try admin endpoint first
+      try {
+        const response = await fetch(`/api/admin/refineries/${id}`, {
+          method: 'PUT',
+          headers: { 
+            'Content-Type': 'application/json',
+            ...(token && { "Authorization": `Bearer ${token}` }),
+          },
+          body: JSON.stringify(data),
+        });
+        
+        if (response.ok) {
+          return response.json();
+        }
+        
+        // If admin endpoint fails, try public endpoint as fallback
+        console.log('Admin endpoint failed, trying public endpoint...');
+        const fallbackResponse = await fetch(`/api/refineries/${id}`, {
+          method: 'PUT',
+          headers: { 
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+        });
+        
+        if (!fallbackResponse.ok) {
+          const errorData = await fallbackResponse.json().catch(() => ({}));
+          throw new Error(errorData.message || 'Failed to update refinery');
+        }
+        
+        return fallbackResponse.json();
+      } catch (error) {
+        // Final fallback - try public endpoint
+        console.log('Admin endpoint failed, using public endpoint as fallback');
+        const fallbackResponse = await fetch(`/api/refineries/${id}`, {
+          method: 'PUT',
+          headers: { 
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+        });
+        
+        if (!fallbackResponse.ok) {
+          const errorData = await fallbackResponse.json().catch(() => ({}));
+          throw new Error(errorData.message || 'Failed to update refinery');
+        }
+        
+        return fallbackResponse.json();
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/refineries'] });
