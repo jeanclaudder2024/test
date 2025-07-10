@@ -375,19 +375,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     });
     
-    // Public refineries endpoint (no auth required)
-    apiRouter.get("/refineries", async (req, res) => {
-      try {
-        const allRefineries = await storage.getRefineries();
-        res.json(allRefineries);
-      } catch (error) {
-        console.error("Error fetching refineries:", error);
-        res.status(500).json({
-          success: false,
-          message: "Failed to fetch refineries"
-        });
-      }
-    });
+
 
     // Public refinery creation endpoint (no auth required for testing)
     apiRouter.post("/refineries", async (req, res) => {
