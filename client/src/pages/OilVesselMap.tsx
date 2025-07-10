@@ -124,29 +124,55 @@ export default function OilVesselMap() {
   const [mapCenter, setMapCenter] = useState<[number, number]>([25.0, 55.0]);
   const { toast } = useToast();
 
-  const { vessels, loading, error, connectionStatus, refetch } = useVesselWebSocket({
-    region: 'global',
-    loadAllVessels: true,
-    refreshInterval: 30000
+  // Check if user is authenticated by trying to get auth token
+  const authToken = localStorage.getItem('authToken');
+  const isAuthenticated = !!authToken;
+
+  // Use polling endpoint for vessel data with authentication
+  const { data: vesselData, isLoading: vesselsLoading, error: vesselError } = useQuery({
+    queryKey: ['/api/vessels/polling'],
+    enabled: isAuthenticated,
+    refetchInterval: 30000,
+    retry: 1
   });
 
-  // Fetch ports data
-  const { data: ports = [] } = useQuery({
+  const vessels = React.useMemo(() => {
+    if (!vesselData) return [];
+    const vesselArray = vesselData.vessels || vesselData || [];
+    if (!Array.isArray(vesselArray)) return [];
+    
+    return vesselArray.filter((v: any) => 
+      v && v.id && v.name && v.currentLat && v.currentLng
+    );
+  }, [vesselData]);
+
+  const loading = vesselsLoading;
+  const error = vesselError;
+  const connectionStatus = 'connected';
+
+  // Fetch ports data with error handling
+  const { data: portsData, isLoading: portsLoading, error: portsError } = useQuery({
     queryKey: ['/api/ports'],
-    enabled: true
+    enabled: true,
+    retry: 1
   });
+  const ports = Array.isArray(portsData) ? portsData : (portsData?.ports || []);
 
-  // Fetch refineries data
-  const { data: refineries = [] } = useQuery({
+  // Fetch refineries data with error handling
+  const { data: refineriesData, isLoading: refineriesLoading, error: refineriesError } = useQuery({
     queryKey: ['/api/refineries'],
-    enabled: true
+    enabled: true,
+    retry: 1
   });
+  const refineries = Array.isArray(refineriesData) ? refineriesData : [];
 
-  // Fetch oil types
-  const { data: oilTypes = [] } = useQuery({
+  // Fetch oil types with error handling
+  const { data: oilTypesData, isLoading: oilTypesLoading, error: oilTypesError } = useQuery({
     queryKey: ['/api/oil-types'],
-    enabled: true
+    enabled: true,
+    retry: 1
   });
+  const oilTypes = Array.isArray(oilTypesData) ? oilTypesData : [];
 
   // Location search function
   const searchForLocation = async () => {
@@ -368,6 +394,28 @@ export default function OilVesselMap() {
     );
   };
 
+  // Show login message for unauthenticated users
+  if (!isAuthenticated) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50">
+        <Card className="p-8 max-w-md mx-auto">
+          <CardHeader className="text-center">
+            <CardTitle className="text-blue-600 flex items-center justify-center">
+              <Ship className="w-8 h-8 mr-2" />
+              Vessel Map
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-center space-y-4">
+            <p className="text-gray-600">Please log in to view real-time vessel tracking data.</p>
+            <Button onClick={() => window.location.href = '/login'} className="w-full">
+              Login to View Vessels
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (error) {
     return (
       <div className="p-8">
@@ -376,8 +424,8 @@ export default function OilVesselMap() {
             <div className="text-center">
               <Ship className="h-12 w-12 text-red-500 mx-auto mb-4" />
               <h3 className="text-lg font-semibold mb-2">Error Loading Map</h3>
-              <p className="text-gray-600 mb-4">{error}</p>
-              <Button onClick={refetch} className="flex items-center gap-2">
+              <p className="text-gray-600 mb-4">{error?.message || 'Connection error'}</p>
+              <Button onClick={() => window.location.reload()} className="flex items-center gap-2">
                 <RefreshCw className="h-4 w-4" />
                 Try Again
               </Button>

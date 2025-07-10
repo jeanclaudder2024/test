@@ -160,80 +160,104 @@ export default function AdvancedMaritimeMap() {
   const { toast } = useToast();
   const mapRef = useRef<L.Map | null>(null);
 
-  // Fetch data using React Query
-  const { data: vessels = [], isLoading: vesselsLoading } = useQuery<Vessel[]>({
+  // Check if user is authenticated
+  const authToken = localStorage.getItem('authToken');
+  const isAuthenticated = !!authToken;
+
+  // Fetch data using React Query with error handling
+  const { data: vesselData, isLoading: vesselsLoading, error: vesselError } = useQuery<any>({
     queryKey: ['/api/vessels/polling'],
     refetchInterval: realTimeTracking ? 30000 : false,
-    select: (data: any) => {
-      return (data.vessels || []).filter((v: any) => 
-        v && v.id && v.name && v.currentLat && v.currentLng
-      ).map((v: any) => ({
-        id: v.id,
-        name: v.name,
-        lat: parseFloat(v.currentLat),
-        lng: parseFloat(v.currentLng),
-        vesselType: v.vesselType || 'Unknown',
-        imo: v.imo || 'N/A',
-        mmsi: v.mmsi || 'N/A',
-        flag: v.flag || 'Unknown',
-        cargoType: v.cargoType || 'Unknown',
-        status: v.status || 'At Sea',
-        speed: v.speed || 0,
-        course: v.course || 0,
-        heading: v.heading || 0,
-        cargoCapacity: v.cargoCapacity,
-        departurePort: v.departurePort,
-        destinationPort: v.destinationPort,
-        eta: v.eta,
-        draught: v.draught,
-        length: v.length,
-        width: v.width
-      }));
-    }
+    retry: 1,
+    enabled: isAuthenticated
   });
 
-  const { data: ports = [], isLoading: portsLoading } = useQuery<Port[]>({
+  const vessels = useMemo(() => {
+    if (!vesselData) return [];
+    const vesselArray = vesselData.vessels || vesselData || [];
+    if (!Array.isArray(vesselArray)) return [];
+    
+    return vesselArray.filter((v: any) => 
+      v && v.id && v.name && v.currentLat && v.currentLng
+    ).map((v: any) => ({
+      id: v.id,
+      name: v.name,
+      lat: parseFloat(v.currentLat),
+      lng: parseFloat(v.currentLng),
+      vesselType: v.vesselType || 'Unknown',
+      imo: v.imo || 'N/A',
+      mmsi: v.mmsi || 'N/A',
+      flag: v.flag || 'Unknown',
+      cargoType: v.cargoType || 'Unknown',
+      status: v.status || 'At Sea',
+      speed: v.speed || 0,
+      course: v.course || 0,
+      heading: v.heading || 0,
+      cargoCapacity: v.cargoCapacity,
+      departurePort: v.departurePort,
+      destinationPort: v.destinationPort,
+      eta: v.eta,
+      draught: v.draught,
+      length: v.length,
+      width: v.width
+    }));
+  }, [vesselData]);
+
+  const { data: portsData, isLoading: portsLoading, error: portsError } = useQuery<any>({
     queryKey: ['/api/ports'],
     staleTime: 5 * 60 * 1000,
-    select: (data: any) => {
-      return (data || []).filter((p: any) => 
-        p && p.id && p.name && p.lat && p.lng
-      ).map((p: any) => ({
-        id: p.id,
-        name: p.name,
-        lat: parseFloat(p.lat),
-        lng: parseFloat(p.lng),
-        country: p.country || 'Unknown',
-        region: p.region || 'Unknown',
-        type: p.type || 'Commercial',
-        status: p.status || 'Active',
-        capacity: p.capacity,
-        vesselCapacity: p.vesselCapacity,
-        throughput: p.throughput
-      }));
-    }
+    retry: 1,
+    enabled: true
   });
 
-  const { data: refineries = [], isLoading: refineriesLoading } = useQuery<Refinery[]>({
+  const ports = useMemo(() => {
+    if (!portsData) return [];
+    const portArray = portsData.ports || portsData || [];
+    if (!Array.isArray(portArray)) return [];
+    
+    return portArray.filter((p: any) => 
+      p && p.id && p.name && p.lat && p.lng
+    ).map((p: any) => ({
+      id: p.id,
+      name: p.name,
+      lat: parseFloat(p.lat),
+      lng: parseFloat(p.lng),
+      country: p.country || 'Unknown',
+      region: p.region || 'Unknown',
+      type: p.type || 'Commercial',
+      status: p.status || 'Active',
+      capacity: p.capacity,
+      vesselCapacity: p.vesselCapacity,
+      throughput: p.throughput
+    }));
+  }, [portsData]);
+
+  const { data: refineriesData, isLoading: refineriesLoading, error: refineriesError } = useQuery<any>({
     queryKey: ['/api/refineries'],
     staleTime: 5 * 60 * 1000,
-    select: (data: any) => {
-      return (data || []).filter((r: any) => 
-        r && r.id && r.name && r.lat && r.lng
-      ).map((r: any) => ({
-        id: r.id,
-        name: r.name,
-        lat: parseFloat(r.lat),
-        lng: parseFloat(r.lng),
-        country: r.country || 'Unknown',
-        region: r.region || 'Unknown',
-        operator: r.operator || 'Unknown',
-        capacity: r.capacity,
-        status: r.status || 'Active',
-        products: r.products || []
-      }));
-    }
+    retry: 1,
+    enabled: true
   });
+
+  const refineries = useMemo(() => {
+    if (!refineriesData) return [];
+    const refineryArray = Array.isArray(refineriesData) ? refineriesData : [];
+    
+    return refineryArray.filter((r: any) => 
+      r && r.id && r.name && r.lat && r.lng
+    ).map((r: any) => ({
+      id: r.id,
+      name: r.name,
+      lat: parseFloat(r.lat),
+      lng: parseFloat(r.lng),
+      country: r.country || 'Unknown',
+      region: r.region || 'Unknown',
+      operator: r.operator || 'Unknown',
+      capacity: r.capacity,
+      status: r.status || 'Active',
+      products: r.products || []
+    }));
+  }, [refineriesData]);
 
   // Fetch oil types from public endpoint
   const { data: oilTypes = [] } = useQuery({
@@ -500,6 +524,28 @@ export default function AdvancedMaritimeMap() {
   };
 
   const isLoading = vesselsLoading || portsLoading || refineriesLoading;
+
+  // Show login message for unauthenticated users
+  if (!isAuthenticated) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50">
+        <Card className="p-8 max-w-md mx-auto">
+          <CardHeader className="text-center">
+            <CardTitle className="text-blue-600 flex items-center justify-center">
+              <Ship className="w-8 h-8 mr-2" />
+              Advanced Maritime Map
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-center space-y-4">
+            <p className="text-gray-600">Please log in to access the advanced maritime intelligence features.</p>
+            <Button onClick={() => window.location.href = '/login'} className="w-full">
+              Login to Access Map
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen w-full relative">
