@@ -178,7 +178,6 @@ export default function PricingPage() {
         '/api/create-checkout-session',
         { 
           planId, 
-          priceId,
           interval: billingInterval 
         }
       );

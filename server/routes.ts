@@ -12644,10 +12644,10 @@ Note: This document contains real vessel operational data and should be treated 
         return res.status(401).json({ error: 'User not authenticated' });
       }
 
-      const { planId, priceId } = req.body;
+      const { planId, interval = 'month' } = req.body;
       const user = req.user;
 
-      console.log("Creating checkout session for user:", user.email, "Plan:", planId, "Price:", priceId);
+      console.log("Creating checkout session for user:", user.email, "Plan:", planId, "Interval:", interval);
 
       // Get or create Stripe customer
       let stripeCustomerId = user.stripeCustomerId;
@@ -12698,8 +12698,8 @@ Note: This document contains real vessel operational data and should be treated 
           quantity: 1,
         }],
         mode: 'subscription',
-        success_url: `${req.headers.origin}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${req.headers.origin}/pricing`,
+        success_url: `${req.protocol}://${req.get('host')}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${req.protocol}://${req.get('host')}/pricing`,
         metadata: {
           userId: user.id.toString(),
           planId: planId.toString()
