@@ -117,16 +117,23 @@ export default function LandingPage() {
   const { toast } = useToast();
   const [, navigate] = useLocation();
 
-  // Fetch subscription plans
+  // Fetch subscription plans (no cache to always get latest)
   const { data: subscriptionPlans, isLoading: plansLoading } = useQuery({
-    queryKey: ['/api/subscription-plans'],
+    queryKey: ['/api/admin/subscription-plans'],
     queryFn: async () => {
-      const response = await apiRequest('GET', '/api/subscription-plans');
+      const response = await apiRequest('GET', '/api/admin/subscription-plans');
       if (!response.ok) {
         throw new Error('Failed to fetch subscription plans');
       }
-      return response.json();
+      const plans = await response.json();
+      return plans.map((plan: any) => ({
+        ...plan,
+        price: parseFloat(plan.price),
+        isPopular: plan.id === 2 // Professional plan is popular
+      }));
     },
+    staleTime: 0, // Always fetch fresh data
+    cacheTime: 0, // Don't cache the results
   });
 
   // Handle trial start

@@ -39,21 +39,23 @@ export default function PricingPage() {
   const { toast } = useToast();
   const [, navigate] = useLocation();
 
-  // Fetch subscription plans
+  // Fetch subscription plans (no cache to always get latest)
   const { data: plans, isLoading, error } = useQuery({
-    queryKey: ['/api/subscription-plans'],
+    queryKey: ['/api/admin/subscription-plans'],
+    staleTime: 0, // Always fetch fresh data
+    cacheTime: 0, // Don't cache the results
     queryFn: async () => {
       try {
         const response = await apiRequest(
           'GET',
-          '/api/subscription-plans'
+          '/api/admin/subscription-plans'
         );
         
         if (!response.ok) {
           throw new Error('Failed to fetch subscription plans');
         }
         
-        // Parse the response from the updated API
+        // Parse the response from the admin API
         const plansData = await response.json();
         
         return plansData.map((plan: any) => ({
@@ -61,8 +63,8 @@ export default function PricingPage() {
           name: plan.name,
           slug: plan.name.toLowerCase().replace(/\s+/g, '-'),
           description: plan.description,
-          monthlyPrice: plan.price.toString(),
-          yearlyPrice: plan.priceAnnual ? plan.priceAnnual.toString() : (plan.price * 12 * 0.8).toFixed(0),
+          monthlyPrice: parseFloat(plan.price).toString(),
+          yearlyPrice: (parseFloat(plan.price) * 12 * 0.8).toFixed(0), // 20% discount for yearly
           monthlyPriceId: plan.stripePriceId || `price_${plan.id}_monthly`,
           yearlyPriceId: plan.stripePriceId ? plan.stripePriceId.replace('monthly', 'yearly') : `price_${plan.id}_yearly`,
           currency: 'usd',
@@ -70,7 +72,7 @@ export default function PricingPage() {
             name: feature,
             included: true
           })) : [],
-          isPopular: plan.isPopular || false,
+          isPopular: plan.id === 2, // Professional plan is popular
           trialDays: plan.trialDays || 5
         })).sort((a: PricingPlan, b: PricingPlan) => a.id - b.id);
       } catch (err) {
