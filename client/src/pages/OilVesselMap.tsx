@@ -471,7 +471,7 @@ export default function OilVesselMap() {
             </Badge>
             
             <Button
-              onClick={refetch}
+              onClick={() => window.location.reload()}
               disabled={loading}
               size="sm"
               variant="outline"

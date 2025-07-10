@@ -481,6 +481,13 @@ Changelog:
   * **Landing Page Integration**: Trial buttons now redirect to registration with plan parameter for seamless trial activation
   * **Dashboard Integration**: Added trial banner to Dashboard.tsx to display trial status prominently to users
   * **Production Ready**: Complete 7-day trial system with controlled access to subscription features but not everything - users get substantial access during trial period
+- July 10, 2025. **MAP AUTHENTICATION AND ERROR FIXES**:
+  * **Fixed Map Authentication Issues**: Updated both OilVesselMap and AdvancedMaritimeMap to properly handle unauthenticated users
+  * **Login Prompts for Maps**: Added professional login prompts instead of failed API requests when users aren't authenticated
+  * **Vessel Data Authentication**: Updated vessel data queries to only run when user is authenticated (enabled: isAuthenticated)
+  * **Error Handling Enhancement**: Fixed undefined refetch function error in OilVesselMap refresh button
+  * **Data Query Improvements**: Added proper error handling and fallback values for vessel, port, and refinery data
+  * **User Experience**: Maps now show clear "Login to View Vessels" messages instead of errors for non-authenticated users
 - July 9, 2025. **PROFESSIONAL SUBSCRIPTION PLANS UPDATE: Complete Pricing Structure Overhaul**:
   * **Updated Subscription Plans API**: Replaced old pricing with professional English version structure
   * **Basic Plan**: Updated to $69/month (was $49) with 5-day trial and marine zone access
