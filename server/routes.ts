@@ -11313,7 +11313,7 @@ Note: This document contains real vessel operational data and should be treated 
     }
   });
 
-  // Get broker subscription status
+  // Get broker subscription status - Updated to use regular subscription plans
   app.get("/api/broker/subscription-status", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
       const userId = req.user?.id;

@@ -54,7 +54,7 @@ export default function BrokerLocked() {
   const [, setLocation] = useLocation();
 
   const handleUpgrade = () => {
-    setLocation('/broker-upgrade');
+    setLocation('/plans');
   };
 
   return (
@@ -76,11 +76,11 @@ export default function BrokerLocked() {
             Broker Dashboard
           </h1>
           <p className="text-xl text-slate-600 mb-4">
-            Premium Feature - Subscription Required
+            Premium Feature - Professional/Enterprise Plan Required
           </p>
           <Badge variant="outline" className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-0 px-4 py-2">
             <Shield className="w-4 h-4 mr-2" />
-            Professional Oil Specialists Union Membership
+            Broker Features Access
           </Badge>
         </div>
 
@@ -96,18 +96,18 @@ export default function BrokerLocked() {
               Unlock Professional Trading Features
             </CardTitle>
             <p className="text-slate-600 mt-2">
-              Join the Professional Oil Specialists Union to access exclusive broker tools and trading opportunities
+              Upgrade to Professional or Enterprise plan to access exclusive broker tools and trading opportunities
             </p>
           </CardHeader>
           <CardContent className="text-center">
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 mb-6">
               <div className="flex items-center justify-center mb-4">
                 <Star className="w-6 h-6 text-yellow-500 mr-2" />
-                <span className="text-lg font-semibold text-slate-800">Annual Membership</span>
+                <span className="text-lg font-semibold text-slate-800">Professional Plan</span>
                 <Star className="w-6 h-6 text-yellow-500 ml-2" />
               </div>
-              <div className="text-4xl font-bold text-blue-600 mb-2">$299</div>
-              <p className="text-slate-600">per year</p>
+              <div className="text-4xl font-bold text-blue-600 mb-2">$150</div>
+              <p className="text-slate-600">per month</p>
             </div>
             
             <Button 

@@ -4,7 +4,7 @@ import {
   users, vessels, refineries, progressEvents, brokers, stats as statsTable, ports, 
   refineryPortConnections, vesselPortConnections, companies, vesselRefineryConnections,
   brokerCompanies, companyPartnerships, userBrokerConnections,
-  subscriptionPlans, subscriptions, paymentMethods, invoices, landingPageContent,
+  subscriptionPlans, subscriptions, userSubscriptions, paymentMethods, invoices, landingPageContent,
   vesselDocuments, professionalDocuments, oilTypes, documentTemplates,
   realCompanies, fakeCompanies,
   brokerDeals, brokerDocuments, adminBrokerFiles, brokerDealActivities, brokerStats,
@@ -2463,27 +2463,18 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  // Broker subscription status check
+  // Broker subscription status check - Updated to use regular subscription plans
   async getBrokerSubscriptionStatus(userId: number): Promise<any> {
     try {
-      const results = await db.execute(sql`
-        SELECT 
-          b.membership_status,
-          b.membership_expires_at,
-          b.profile_completed,
-          b.card_number,
-          bp.status as payment_status,
-          bp.membership_end_date
-        FROM brokers b
-        LEFT JOIN broker_payments bp ON b.id = bp.broker_id AND bp.status = 'completed'
-        WHERE b.id = ${userId}
-        ORDER BY bp.created_at DESC
-        LIMIT 1
-      `);
+      // Check user's regular subscription plan
+      const userSubscription = await db.select()
+        .from(userSubscriptions)
+        .where(eq(userSubscriptions.userId, userId))
+        .limit(1);
       
-      const brokerData = results.rows?.[0];
+      const subscription = userSubscription[0];
       
-      if (!brokerData) {
+      if (!subscription) {
         return {
           hasActiveSubscription: false,
           membershipStatus: 'pending',
@@ -2494,17 +2485,29 @@ export class DatabaseStorage implements IStorage {
       }
 
       const now = new Date();
-      const expirationDate = brokerData.membership_end_date ? new Date(brokerData.membership_end_date) : null;
-      const hasActiveSubscription = brokerData.payment_status === 'completed' && 
-                                   expirationDate && 
-                                   expirationDate > now;
+      const planId = subscription.planId;
+      
+      // Broker features require Professional (Plan 2) or Enterprise (Plan 3) plan
+      const canAccessBrokerFeatures = planId >= 2;
+      
+      // Check if trial is still active
+      const isTrialActive = subscription.status === 'trial' && 
+                           subscription.trialEndDate && 
+                           new Date(subscription.trialEndDate) > now;
+      
+      // Check if subscription is active
+      const isSubscriptionActive = subscription.status === 'active' && 
+                                  subscription.currentPeriodEnd && 
+                                  new Date(subscription.currentPeriodEnd) > now;
+
+      const hasActiveSubscription = canAccessBrokerFeatures && (isTrialActive || isSubscriptionActive);
 
       return {
         hasActiveSubscription,
-        membershipStatus: brokerData.membership_status || 'pending',
-        membershipExpiresAt: brokerData.membership_expires_at,
-        isProfileComplete: brokerData.profile_completed || false,
-        cardNumber: brokerData.card_number
+        membershipStatus: hasActiveSubscription ? 'active' : 'pending',
+        membershipExpiresAt: subscription.trialEndDate || subscription.currentPeriodEnd,
+        isProfileComplete: true, // Since they have a subscription, profile is complete
+        cardNumber: hasActiveSubscription ? `BROKER-${userId}-${planId}` : null
       };
     } catch (error) {
       console.error('Error fetching broker subscription status:', error);
