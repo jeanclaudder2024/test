@@ -193,17 +193,17 @@ export default function RegisterPage() {
               <div className="border-t border-white/20 pt-3">
                 <div className="flex items-center justify-between text-sm">
                   <div className="text-left">
-                    <p className="text-white font-medium">Primary Port:</p>
-                    <p className="text-slate-300">{previewData.selectedPort.name}, {previewData.selectedPort.country}</p>
+                    <p className="text-white font-medium">Selected Ports:</p>
+                    <p className="text-slate-300">{previewData.totalPortsSelected} ports in {previewData.totalRegionsSelected} regions</p>
                   </div>
                   <div className="text-right space-y-1">
                     <div className="flex items-center text-xs text-slate-300">
                       <Ship className="w-3 h-3 mr-1" />
-                      {previewData.vessels.length} vessels
+                      {previewData.vessels?.length || 0} vessels
                     </div>
                     <div className="flex items-center text-xs text-slate-300">
                       <Anchor className="w-3 h-3 mr-1" />
-                      {previewData.refineries.length} refineries
+                      {previewData.refineries?.length || 0} refineries
                     </div>
                   </div>
                 </div>
