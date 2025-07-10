@@ -4741,6 +4741,9 @@ Only use authentic, real-world data for existing refineries.`;
   // API routes for vessel distribution data
   app.use("/api/distribution", vesselDistributionRouter);
   
+  // API routes for port proximity data
+  app.use("/api/port-proximity", portProximityRouter);
+  
   // Register PDF document handlers
   app.use(directPdfRouter);
   app.use(enhancedPdfRouter);

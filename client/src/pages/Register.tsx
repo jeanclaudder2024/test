@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Mail, Lock, User, Ship, Waves, Eye, EyeOff, Anchor, Star, CheckCircle2, ArrowLeft } from 'lucide-react';
+import LocationBasedRegistration from '@/components/registration/LocationBasedRegistration';
 
 // Subscription plans data
 const subscriptionPlans = [
@@ -74,8 +75,10 @@ const subscriptionPlans = [
 ];
 
 export default function RegisterPage() {
-  const [currentStep, setCurrentStep] = useState<'plans' | 'registration'>('plans');
+  const [currentStep, setCurrentStep] = useState<'location' | 'registration'>('location');
   const [selectedPlan, setSelectedPlan] = useState<number | null>(null);
+  const [selectedPort, setSelectedPort] = useState<number | null>(null);
+  const [previewData, setPreviewData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const { register: registerUser } = useAuth();
@@ -91,8 +94,10 @@ export default function RegisterPage() {
     },
   });
 
-  const handlePlanSelection = (planId: number) => {
-    setSelectedPlan(planId);
+  const handleLocationBasedComplete = (data: { selectedPlan: number; selectedPort: number; previewData: any }) => {
+    setSelectedPlan(data.selectedPlan);
+    setSelectedPort(data.selectedPort);
+    setPreviewData(data.previewData);
     setCurrentStep('registration');
   };
 
@@ -128,110 +133,7 @@ export default function RegisterPage() {
     }
   };
 
-  // Plan selection step component
-  const PlanSelectionStep = () => (
-    <div className="w-full max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="text-center mb-12 space-y-6">
-        <div className="flex justify-center">
-          <div className="relative">
-            <img 
-              src="/assets/petrodealhub-logo.png" 
-              alt="PetroDealHub" 
-              className="h-20 w-auto filter drop-shadow-2xl"
-              onError={(e) => {
-                e.currentTarget.src = "/assets/petrodealhub-logo.svg";
-              }}
-            />
-            <div className="absolute -inset-2 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-xl blur opacity-30"></div>
-          </div>
-        </div>
-        <div className="space-y-2">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-white via-blue-100 to-cyan-100 bg-clip-text text-transparent">
-            Choose Your Plan
-          </h1>
-          <p className="text-slate-300 text-lg">Start your 5-day free trial with any plan</p>
-        </div>
-        <Badge variant="outline" className="px-4 py-2 bg-orange-500/20 text-white border-orange-500/30">
-          ✅ 5-Day free trial • No credit card required • Cancel anytime
-        </Badge>
-      </div>
 
-      {/* Subscription Plans */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {subscriptionPlans.map((plan) => (
-          <Card 
-            key={plan.id}
-            className={`relative backdrop-blur-xl border-2 shadow-2xl transition-all duration-300 hover:transform hover:scale-105 cursor-pointer ${
-              plan.popular 
-                ? 'bg-gradient-to-br from-[#003366]/90 to-[#00264d]/90 border-orange-500/50' 
-                : 'bg-white/10 border-white/20'
-            }`}
-            onClick={() => handlePlanSelection(plan.id)}
-          >
-            {plan.popular && (
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                <Badge className="bg-orange-500 text-white px-6 py-1 text-sm font-semibold">
-                  MOST POPULAR
-                </Badge>
-              </div>
-            )}
-            
-            <CardHeader className="text-center pb-4">
-              <CardTitle className="text-2xl font-bold text-white mb-2">{plan.name}</CardTitle>
-              <div className="mb-4">
-                <div className="flex items-center justify-center gap-2 mb-2">
-                  <span className="text-4xl font-bold text-white">{plan.price}</span>
-                  <div className="text-left">
-                    <div className="text-white/60 text-sm">{plan.period}</div>
-                    <div className="text-xs text-slate-400 line-through">{plan.originalPrice}</div>
-                  </div>
-                </div>
-                <Badge variant="secondary" className="bg-green-500/20 text-green-300 border-green-500/30">
-                  {plan.savings}
-                </Badge>
-              </div>
-              <CardDescription className="text-white/70 text-sm">
-                {plan.description}
-              </CardDescription>
-            </CardHeader>
-            
-            <CardContent className="space-y-6">
-              <ul className="space-y-3">
-                {plan.features.map((feature, idx) => (
-                  <li key={idx} className="flex items-start">
-                    <CheckCircle2 className="h-5 w-5 text-orange-500 mr-3 mt-0.5 flex-shrink-0" />
-                    <span className="text-white/80 text-sm">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-              
-              <Button 
-                className={`w-full py-3 transition-all duration-300 ${
-                  plan.popular
-                    ? 'bg-orange-500 hover:bg-orange-600 text-white border-orange-600/50'
-                    : 'bg-white/10 hover:bg-white/20 border border-white/20 text-white'
-                }`}
-                onClick={() => handlePlanSelection(plan.id)}
-              >
-                {plan.buttonText}
-              </Button>
-              <p className="text-xs text-center text-white/50">No credit card required</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-      
-      <div className="mt-12 text-center">
-        <p className="text-white/70 mb-4">
-          Already have an account?{" "}
-          <Link href="/auth" className="text-orange-500 hover:text-orange-400 font-medium">
-            Sign in here
-          </Link>
-        </p>
-      </div>
-    </div>
-  );
 
   // Registration form step component  
   const RegistrationFormStep = () => {
@@ -239,6 +141,18 @@ export default function RegisterPage() {
     
     return (
       <div className="w-full max-w-lg">
+        {/* Back Button */}
+        <div className="mb-6">
+          <Button 
+            onClick={() => setCurrentStep('location')}
+            variant="ghost"
+            className="text-white hover:bg-white/10 hover:text-blue-300"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Change Location & Plan
+          </Button>
+        </div>
+
         {/* Logo and Header */}
         <div className="text-center mb-8 space-y-6">
           <div className="flex justify-center">
@@ -261,23 +175,38 @@ export default function RegisterPage() {
             <p className="text-slate-300 text-lg">Complete your registration</p>
           </div>
           
-          {/* Selected Plan Display */}
-          {selectedPlanData && (
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 p-4">
+          {/* Selected Plan and Location Display */}
+          {selectedPlanData && previewData && (
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="text-left">
-                  <p className="text-white font-medium">{selectedPlanData.name}</p>
-                  <p className="text-white/60 text-sm">5-day free trial, then {selectedPlanData.price}/month</p>
+                  <p className="text-white font-semibold">{selectedPlanData.name}</p>
+                  <p className="text-slate-300 text-sm">5-day trial, then {selectedPlanData.price}/month</p>
                 </div>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => setCurrentStep('plans')}
-                  className="text-orange-500 hover:text-orange-400 hover:bg-orange-500/10"
-                >
-                  <ArrowLeft className="h-4 w-4 mr-1" />
-                  Change Plan
-                </Button>
+                <div className="text-right">
+                  <Badge variant="secondary" className="bg-green-500/20 text-green-300 border-green-500/30">
+                    ✓ Selected
+                  </Badge>
+                </div>
+              </div>
+              
+              <div className="border-t border-white/20 pt-3">
+                <div className="flex items-center justify-between text-sm">
+                  <div className="text-left">
+                    <p className="text-white font-medium">Primary Port:</p>
+                    <p className="text-slate-300">{previewData.selectedPort.name}, {previewData.selectedPort.country}</p>
+                  </div>
+                  <div className="text-right space-y-1">
+                    <div className="flex items-center text-xs text-slate-300">
+                      <Ship className="w-3 h-3 mr-1" />
+                      {previewData.vessels.length} vessels
+                    </div>
+                    <div className="flex items-center text-xs text-slate-300">
+                      <Anchor className="w-3 h-3 mr-1" />
+                      {previewData.refineries.length} refineries
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -481,8 +410,12 @@ export default function RegisterPage() {
         <Star className="h-8 w-8 text-blue-200 animate-pulse" />
       </div>
 
-      <div className="relative z-10">
-        {currentStep === 'plans' ? <PlanSelectionStep /> : <RegistrationFormStep />}
+      <div className="relative z-10 w-full">
+        {currentStep === 'location' ? (
+          <LocationBasedRegistration onComplete={handleLocationBasedComplete} />
+        ) : (
+          <RegistrationFormStep />
+        )}
       </div>
     </div>
   );
