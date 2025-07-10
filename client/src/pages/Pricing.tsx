@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Check, X } from 'lucide-react';
+import { Check, X, Ship, MapPin, Building2, BarChart3, FileText, Users, Globe, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/useAuth';
@@ -378,6 +378,236 @@ export default function PricingPage() {
             </Card>
           );
         })}
+      </div>
+      
+      {/* Plan Comparison Section */}
+      <div className="mt-16 mx-auto max-w-6xl">
+        <div className="text-center mb-12">
+          <h2 className="text-2xl font-bold mb-4">Detailed Plan Comparison</h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            Compare all features across our subscription plans to find the perfect fit for your maritime operations.
+          </p>
+        </div>
+        
+        <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b bg-gray-50">
+                  <th className="text-left p-4 font-semibold text-gray-900">Features</th>
+                  {plans?.map((plan) => (
+                    <th key={plan.id} className="text-center p-4 font-semibold text-gray-900 min-w-[180px]">
+                      <div className="flex flex-col items-center">
+                        <span className="text-lg">{plan.name}</span>
+                        <span className="text-sm text-muted-foreground mt-1">
+                          {formatCurrency(billingInterval === 'month' ? plan.monthlyPrice : plan.yearlyPrice, plan.currency)}
+                          /{billingInterval}
+                        </span>
+                        {plan.isPopular && (
+                          <Badge className="bg-primary hover:bg-primary text-xs mt-1">Popular</Badge>
+                        )}
+                      </div>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {/* Vessel Tracking */}
+                <tr className="border-b hover:bg-gray-50">
+                  <td className="p-4 font-medium text-gray-900 flex items-center">
+                    <Ship className="w-5 h-5 mr-2 text-blue-500" />
+                    Vessel Tracking
+                  </td>
+                  <td className="p-4 text-center">Up to 50 vessels</td>
+                  <td className="p-4 text-center">Up to 200 vessels</td>
+                  <td className="p-4 text-center">Unlimited vessels</td>
+                </tr>
+                
+                {/* Real-time Positions */}
+                <tr className="border-b hover:bg-gray-50">
+                  <td className="p-4 font-medium text-gray-900 flex items-center">
+                    <MapPin className="w-5 h-5 mr-2 text-green-500" />
+                    Real-time Positions
+                  </td>
+                  <td className="p-4 text-center">
+                    <Check className="w-5 h-5 text-green-500 mx-auto" />
+                  </td>
+                  <td className="p-4 text-center">
+                    <Check className="w-5 h-5 text-green-500 mx-auto" />
+                  </td>
+                  <td className="p-4 text-center">
+                    <Check className="w-5 h-5 text-green-500 mx-auto" />
+                  </td>
+                </tr>
+                
+                {/* Port & Refinery Access */}
+                <tr className="border-b hover:bg-gray-50">
+                  <td className="p-4 font-medium text-gray-900 flex items-center">
+                    <Building2 className="w-5 h-5 mr-2 text-purple-500" />
+                    Port & Refinery Access
+                  </td>
+                  <td className="p-4 text-center">Limited access</td>
+                  <td className="p-4 text-center">Full access</td>
+                  <td className="p-4 text-center">Global access</td>
+                </tr>
+                
+                {/* Analytics Dashboard */}
+                <tr className="border-b hover:bg-gray-50">
+                  <td className="p-4 font-medium text-gray-900 flex items-center">
+                    <BarChart3 className="w-5 h-5 mr-2 text-orange-500" />
+                    Analytics Dashboard
+                  </td>
+                  <td className="p-4 text-center">Basic reporting</td>
+                  <td className="p-4 text-center">Advanced analytics</td>
+                  <td className="p-4 text-center">Enterprise analytics</td>
+                </tr>
+                
+                {/* Document Generation */}
+                <tr className="border-b hover:bg-gray-50">
+                  <td className="p-4 font-medium text-gray-900 flex items-center">
+                    <FileText className="w-5 h-5 mr-2 text-indigo-500" />
+                    Document Generation
+                  </td>
+                  <td className="p-4 text-center">Basic documents</td>
+                  <td className="p-4 text-center">Professional docs</td>
+                  <td className="p-4 text-center">All document types</td>
+                </tr>
+                
+                {/* Broker Features */}
+                <tr className="border-b hover:bg-gray-50">
+                  <td className="p-4 font-medium text-gray-900 flex items-center">
+                    <Users className="w-5 h-5 mr-2 text-red-500" />
+                    Broker Features
+                  </td>
+                  <td className="p-4 text-center">
+                    <X className="w-5 h-5 text-red-500 mx-auto" />
+                  </td>
+                  <td className="p-4 text-center">
+                    <Check className="w-5 h-5 text-green-500 mx-auto" />
+                  </td>
+                  <td className="p-4 text-center">
+                    <Check className="w-5 h-5 text-green-500 mx-auto" />
+                  </td>
+                </tr>
+                
+                {/* API Access */}
+                <tr className="border-b hover:bg-gray-50">
+                  <td className="p-4 font-medium text-gray-900 flex items-center">
+                    <Globe className="w-5 h-5 mr-2 text-cyan-500" />
+                    API Access
+                  </td>
+                  <td className="p-4 text-center">
+                    <X className="w-5 h-5 text-red-500 mx-auto" />
+                  </td>
+                  <td className="p-4 text-center">Limited API</td>
+                  <td className="p-4 text-center">Full API access</td>
+                </tr>
+                
+                {/* Support */}
+                <tr className="border-b hover:bg-gray-50">
+                  <td className="p-4 font-medium text-gray-900 flex items-center">
+                    <Shield className="w-5 h-5 mr-2 text-yellow-500" />
+                    Support Level
+                  </td>
+                  <td className="p-4 text-center">Email support</td>
+                  <td className="p-4 text-center">Priority support</td>
+                  <td className="p-4 text-center">24/7 dedicated support</td>
+                </tr>
+                
+                {/* Data Export */}
+                <tr className="border-b hover:bg-gray-50">
+                  <td className="p-4 font-medium text-gray-900">Data Export</td>
+                  <td className="p-4 text-center">CSV only</td>
+                  <td className="p-4 text-center">CSV, JSON</td>
+                  <td className="p-4 text-center">All formats</td>
+                </tr>
+                
+                {/* Historical Data */}
+                <tr className="border-b hover:bg-gray-50">
+                  <td className="p-4 font-medium text-gray-900">Historical Data</td>
+                  <td className="p-4 text-center">3 months</td>
+                  <td className="p-4 text-center">12 months</td>
+                  <td className="p-4 text-center">Unlimited</td>
+                </tr>
+                
+                {/* Action buttons */}
+                <tr className="bg-gray-50">
+                  <td className="p-4 font-medium text-gray-900">Get Started</td>
+                  {plans?.map((plan) => (
+                    <td key={plan.id} className="p-4 text-center">
+                      <Button 
+                        onClick={() => handleSubscribe(plan.id)}
+                        className={cn(
+                          "w-full",
+                          plan.isPopular ? "bg-primary hover:bg-primary/90" : "bg-gray-900 hover:bg-gray-800"
+                        )}
+                        size="sm"
+                      >
+                        Choose {plan.name}
+                      </Button>
+                    </td>
+                  ))}
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      
+      {/* FAQ Section */}
+      <div className="mt-16 mx-auto max-w-4xl">
+        <div className="text-center mb-12">
+          <h2 className="text-2xl font-bold mb-4">Frequently Asked Questions</h2>
+          <p className="text-muted-foreground">
+            Common questions about our subscription plans and features.
+          </p>
+        </div>
+        
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">What's included in the free trial?</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">
+                All plans include a 5-day free trial with full access to your chosen plan's features. No credit card required to start.
+              </p>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Can I change plans anytime?</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">
+                Yes, you can upgrade or downgrade your plan at any time. Changes take effect immediately, and billing is prorated.
+              </p>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">What broker features are included?</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">
+                Professional and Enterprise plans include access to broker dashboard, deal management, document generation, and professional trading tools.
+              </p>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Is there a setup fee?</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">
+                No setup fees. All plans are charged monthly or yearly with no additional costs. Cancel anytime without penalties.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
       
       <div className="mt-12 mx-auto max-w-3xl text-center">

@@ -532,6 +532,17 @@ Changelog:
   * **Dynamic Plan Display**: Both pages now show actual subscription plans with correct pricing, features, and trial periods from database
   * **Loading States Added**: Added proper loading skeletons while subscription plans are being fetched
   * **Next Phase Ready**: Platform ready for advanced features like real-time notifications, advanced analytics, and enhanced user management
+- July 10, 2025. **COMPREHENSIVE PLAN COMPARISON FEATURE ADDED TO PRICING PAGE**:
+  * **Detailed Comparison Table**: Added comprehensive plan comparison table with feature-by-feature breakdown across all subscription tiers
+  * **Visual Feature Icons**: Integrated colored icons for each feature category (vessel tracking, analytics, documents, broker features, etc.)
+  * **Professional Styling**: Beautiful table design with hover effects, proper spacing, and responsive layout for all screen sizes
+  * **Feature Categorization**: Organized features into logical groups with clear visual hierarchy and easy-to-scan format
+  * **Action Buttons**: Added "Choose Plan" buttons directly in comparison table for seamless user experience
+  * **FAQ Section**: Comprehensive FAQ section addressing common questions about trials, plan changes, broker features, and billing
+  * **Enhanced User Experience**: Complete pricing page now includes plan cards, detailed comparison, FAQ section, and enterprise contact information
+  * **Mobile Responsive**: Horizontal scrolling table design ensures full functionality on mobile devices
+  * **Clear Value Proposition**: Each plan's benefits clearly displayed with check marks, X marks, and specific feature descriptions
+  * **Broker Feature Clarity**: Clear indication that Professional and Enterprise plans include broker dashboard access
 
 ## User Preferences
 
