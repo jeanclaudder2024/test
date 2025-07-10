@@ -1,31 +1,30 @@
-import { ReactNode } from 'react';
-import { useBrokerSubscription } from '@/hooks/useBrokerSubscription';
+import { useAuth } from '@/hooks/useAuth';
+import { useSubscription } from '@/hooks/useSubscription';
 import BrokerLocked from '@/pages/BrokerLocked';
 
 interface BrokerRouteProps {
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
 export default function BrokerRoute({ children }: BrokerRouteProps) {
-  const { subscriptionStatus, isLoading, hasAccess } = useBrokerSubscription();
+  const { user } = useAuth();
+  const { canAccessBrokerFeatures, isTrialExpired, hasActiveTrial } = useSubscription();
 
-  // Show loading while checking subscription status
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-slate-600">Checking subscription status...</p>
-        </div>
-      </div>
-    );
+  // Admin users always have access
+  if (user?.role === 'admin') {
+    return <>{children}</>;
   }
 
-  // If user doesn't have active subscription, show locked page
-  if (!hasAccess) {
+  // If trial is expired and user doesn't have active subscription, block access
+  if (isTrialExpired && !canAccessBrokerFeatures) {
     return <BrokerLocked />;
   }
 
-  // User has access, show the protected content
-  return <>{children}</>;
+  // If user has broker access (trial or paid), allow access
+  if (canAccessBrokerFeatures) {
+    return <>{children}</>;
+  }
+
+  // Default to locked page for users without proper subscription
+  return <BrokerLocked />;
 }

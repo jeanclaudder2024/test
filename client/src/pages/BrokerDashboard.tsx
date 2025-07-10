@@ -12,6 +12,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { useSubscription } from '@/hooks/useSubscription';
+import PaymentReminder from '@/components/PaymentReminder';
 import { 
   Handshake, 
   FileText, 
@@ -84,6 +86,7 @@ export default function BrokerDashboard() {
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { trialDaysRemaining, isTrialExpired, hasActiveTrial, canAccessBrokerFeatures } = useSubscription();
 
   // Check if user needs to complete upgrade first
   const { data: brokerProfile } = useQuery({
@@ -97,6 +100,9 @@ export default function BrokerDashboard() {
       setLocation('/broker-upgrade');
     }
   }, [brokerProfile, setLocation]);
+
+  // Show payment reminder if trial is ending or expired
+  const shouldShowPaymentReminder = hasActiveTrial && (trialDaysRemaining <= 2 || isTrialExpired);
 
   // Fetch broker deals
   const { data: deals = [], isLoading: dealsLoading } = useQuery<Deal[]>({
@@ -247,6 +253,16 @@ export default function BrokerDashboard() {
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Broker Dashboard</h1>
           <p className="text-gray-600">Manage your deals, documents, and client communications</p>
         </div>
+
+        {/* Payment Reminder - Show when trial is ending or expired */}
+        {shouldShowPaymentReminder && (
+          <PaymentReminder
+            trialDaysRemaining={trialDaysRemaining}
+            isTrialExpired={isTrialExpired}
+            planName="Professional Plan"
+            planPrice="$150"
+          />
+        )}
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">

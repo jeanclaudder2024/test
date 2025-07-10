@@ -71,6 +71,7 @@ function ProtectedRoutes() {
               <BrokerDashboard />
             </BrokerRoute>
           </Route>
+          <Route path="/broker-locked" component={BrokerLocked} />
           <Route path="/broker-upgrade" component={BrokerUpgrade} />
           <Route path="/broker-payment" component={BrokerPayment} />
           <Route path="/broker-payment-success" component={BrokerPaymentSuccess} />

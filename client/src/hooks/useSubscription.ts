@@ -14,6 +14,7 @@ export interface SubscriptionFeatures {
   maxPorts: number;
   maxRefineries: number;
   documentTypes: string[];
+  hasActiveTrial: boolean;
 }
 
 export function useSubscription(): SubscriptionFeatures {
@@ -26,12 +27,15 @@ export function useSubscription(): SubscriptionFeatures {
       hasProfessionalAccess: true,
       hasEnterpriseAccess: true,
       hasTrialAccess: true,
+      hasActiveTrial: false,
       isTrialExpired: false,
       trialDaysRemaining: 365,
       canAccessBrokerFeatures: true,
       canAccessAllZones: true,
       canGenerateDocuments: true,
+      maxVessels: 999,
       maxPorts: 999,
+      maxRefineries: 999,
       documentTypes: ['LOI', 'B/L', 'SPA', 'ICPO', 'SGS', 'SDS', 'Q88', 'ATB', 'customs']
     };
   }
@@ -49,6 +53,9 @@ export function useSubscription(): SubscriptionFeatures {
   const trialDaysRemaining = calculateTrialDays();
   const hasActiveSubscription = subscription?.status === 'active';
   const hasActiveTrial = subscription?.status === 'trial' && !trialExpired && trialDaysRemaining > 0;
+  
+  // For broker features, require payment after trial expires
+  const canAccessBrokerFeaturesAfterTrial = hasActiveSubscription && effectivePlan >= 2;
 
   // Determine subscription level
   const planId = subscription?.planId || 0;
@@ -64,10 +71,11 @@ export function useSubscription(): SubscriptionFeatures {
     hasProfessionalAccess: hasActiveSubscription || hasActiveTrial || effectivePlan >= 2,
     hasEnterpriseAccess: hasActiveSubscription || hasActiveTrial || effectivePlan >= 3,
     hasTrialAccess: hasActiveTrial,
+    hasActiveTrial,
     isTrialExpired: trialExpired || trialDaysRemaining === 0,
     trialDaysRemaining,
-    // FIXED: Broker features require Professional (Plan 2) or Enterprise (Plan 3) - includes trial access for Pro+ plans
-    canAccessBrokerFeatures: ((hasActiveSubscription || hasActiveTrial) && effectivePlan >= 2) || (user?.role === 'admin'),
+    // FIXED: Broker features require Professional (Plan 2) or Enterprise (Plan 3) - trial access only during active trial, payment required after trial
+    canAccessBrokerFeatures: ((hasActiveTrial || canAccessBrokerFeaturesAfterTrial) && effectivePlan >= 2) || (user?.role === 'admin'),
     canAccessAllZones: hasActiveSubscription || hasActiveTrial || effectivePlan >= 3,
     canGenerateDocuments: hasActiveSubscription || hasActiveTrial || effectivePlan >= 1,
     maxVessels: effectivePlan >= 3 ? 999 : effectivePlan >= 2 ? 100 : 50, // Basic=50, Professional=100, Enterprise=unlimited

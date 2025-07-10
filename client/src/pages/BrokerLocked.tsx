@@ -1,204 +1,189 @@
+import { useLocation } from 'wouter';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useLocation } from 'wouter';
 import { 
   Lock, 
   Crown, 
-  Shield, 
-  Star, 
+  ArrowRight, 
   CheckCircle, 
-  ArrowRight,
-  Building2,
-  TrendingUp,
-  FileText,
+  Zap,
+  Star,
+  CreditCard,
+  Shield,
   Users,
-  BarChart3,
-  Handshake
+  FileText,
+  Globe,
+  BarChart3
 } from 'lucide-react';
-
-const PREMIUM_FEATURES = [
-  {
-    icon: Handshake,
-    title: 'Deal Management',
-    description: 'Track and manage oil trading deals with real-time progress monitoring'
-  },
-  {
-    icon: FileText,
-    title: 'Document Center',
-    description: 'Secure document storage and sharing with admin team'
-  },
-  {
-    icon: Building2,
-    title: 'Company Network',
-    description: 'Access to exclusive oil company partnerships and connections'
-  },
-  {
-    icon: TrendingUp,
-    title: 'Market Analytics',
-    description: 'Advanced market insights and trading analytics dashboard'
-  },
-  {
-    icon: BarChart3,
-    title: 'Performance Reports',
-    description: 'Comprehensive reporting on deal performance and commission tracking'
-  },
-  {
-    icon: Users,
-    title: 'VIP Support',
-    description: 'Priority customer support and dedicated account management'
-  }
-];
 
 export default function BrokerLocked() {
   const [, setLocation] = useLocation();
 
   const handleUpgrade = () => {
-    setLocation('/plans');
+    setLocation('/pricing');
   };
 
+  const handleLogin = () => {
+    setLocation('/login');
+  };
+
+  const plans = [
+    {
+      name: "Professional",
+      price: "$150",
+      icon: <Star className="w-6 h-6" />,
+      color: "from-blue-500 to-purple-600",
+      features: [
+        "Broker Dashboard Access",
+        "Deal Management",
+        "Document Generation",
+        "Client Communications",
+        "Performance Analytics",
+        "20 Maritime Zones"
+      ]
+    },
+    {
+      name: "Enterprise",
+      price: "$399",
+      icon: <Crown className="w-6 h-6" />,
+      color: "from-purple-500 to-pink-600",
+      features: [
+        "Everything in Professional",
+        "Unlimited Maritime Zones",
+        "Priority Support",
+        "Custom Integrations",
+        "Advanced Analytics",
+        "Legal Protection"
+      ]
+    }
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-4">
-      <div className="max-w-4xl mx-auto">
-        {/* Header Section */}
-        <div className="text-center mb-8 pt-8">
-          <div className="flex justify-center mb-4">
-            <div className="relative">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
-                <Lock className="w-10 h-10 text-white" />
-              </div>
-              <div className="absolute -top-2 -right-2">
-                <Crown className="w-8 h-8 text-yellow-500" />
-              </div>
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 flex items-center justify-center p-4">
+      <div className="max-w-4xl w-full">
+        {/* Header */}
+        <div className="text-center mb-10">
+          <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Lock className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-4xl font-bold text-slate-800 mb-2">
-            Broker Dashboard
-          </h1>
-          <p className="text-xl text-slate-600 mb-4">
-            Premium Feature - Professional/Enterprise Plan Required
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Broker Features Locked</h1>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Your trial has expired. Upgrade to a Professional or Enterprise plan to continue accessing broker features.
           </p>
-          <Badge variant="outline" className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-0 px-4 py-2">
-            <Shield className="w-4 h-4 mr-2" />
-            Broker Features Access
-          </Badge>
         </div>
 
-        {/* Lock Card */}
-        <Card className="mb-8 border-2 border-blue-200 shadow-xl bg-white/70 backdrop-blur-sm">
-          <CardHeader className="text-center pb-4">
-            <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-red-500 rounded-full flex items-center justify-center">
-                <Lock className="w-8 h-8 text-white" />
+        {/* Trial Expired Message */}
+        <Card className="border-2 border-red-200 bg-red-50 mb-8">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center">
+                <Lock className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-red-800">Trial Period Ended</h3>
+                <p className="text-red-600">
+                  Your broker trial has expired. Please upgrade to continue using broker features like deal management, document generation, and client communications.
+                </p>
               </div>
             </div>
-            <CardTitle className="text-2xl text-slate-800">
-              Unlock Professional Trading Features
-            </CardTitle>
-            <p className="text-slate-600 mt-2">
-              Upgrade to Professional or Enterprise plan to access exclusive broker tools and trading opportunities
-            </p>
-          </CardHeader>
-          <CardContent className="text-center">
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 mb-6">
-              <div className="flex items-center justify-center mb-4">
-                <Star className="w-6 h-6 text-yellow-500 mr-2" />
-                <span className="text-lg font-semibold text-slate-800">Professional Plan</span>
-                <Star className="w-6 h-6 text-yellow-500 ml-2" />
-              </div>
-              <div className="text-4xl font-bold text-blue-600 mb-2">$150</div>
-              <p className="text-slate-600">per month</p>
-            </div>
-            
-            <Button 
-              onClick={handleUpgrade}
-              className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
-              size="lg"
-            >
-              Upgrade to Premium
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </Button>
-            
-            <p className="text-sm text-slate-500 mt-4">
-              Secure payment processing via Stripe • Cancel anytime
-            </p>
           </CardContent>
         </Card>
 
-        {/* Features Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {PREMIUM_FEATURES.map((feature, index) => {
-            const Icon = feature.icon;
-            return (
-              <Card key={index} className="border border-slate-200 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-white/80 backdrop-blur-sm">
-                <CardContent className="p-6">
-                  <div className="flex items-start space-x-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shrink-0">
-                      <Icon className="w-6 h-6 text-white" />
+        {/* Pricing Plans */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+          {plans.map((plan, index) => (
+            <Card key={plan.name} className="border-2 border-gray-200 hover:border-blue-300 transition-colors">
+              <CardHeader className="pb-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${plan.color} flex items-center justify-center text-white`}>
+                      {plan.icon}
                     </div>
                     <div>
-                      <h3 className="font-semibold text-slate-800 mb-2">{feature.title}</h3>
-                      <p className="text-sm text-slate-600">{feature.description}</p>
+                      <CardTitle className="text-xl text-gray-900">{plan.name}</CardTitle>
+                      <p className="text-gray-600">Perfect for maritime brokers</p>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+                  <div className="text-right">
+                    <div className="text-3xl font-bold text-gray-900">{plan.price}</div>
+                    <div className="text-sm text-gray-500">per month</div>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3 mb-6">
+                  {plan.features.map((feature, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-500" />
+                      <span className="text-gray-700">{feature}</span>
+                    </div>
+                  ))}
+                </div>
+                <Button 
+                  onClick={handleUpgrade}
+                  className={`w-full bg-gradient-to-r ${plan.color} hover:opacity-90 text-white font-semibold py-3`}
+                >
+                  <CreditCard className="w-4 h-4 mr-2" />
+                  Upgrade to {plan.name}
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
-        {/* Benefits Section */}
-        <Card className="border-2 border-green-200 shadow-xl bg-gradient-to-br from-green-50 to-emerald-50">
+        {/* Features Preview */}
+        <Card className="bg-gray-50 border-gray-200">
           <CardHeader>
-            <CardTitle className="text-center text-2xl text-slate-800 flex items-center justify-center">
-              <CheckCircle className="w-6 h-6 text-green-500 mr-2" />
-              Membership Benefits
-            </CardTitle>
+            <CardTitle className="text-center text-gray-900">What You'll Get With Broker Access</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-3">
-                <div className="flex items-center">
-                  <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
-                  <span className="text-slate-700">Exclusive oil trading deals</span>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="text-center">
+                <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <BarChart3 className="w-6 h-6 text-white" />
                 </div>
-                <div className="flex items-center">
-                  <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
-                  <span className="text-slate-700">Direct company connections</span>
-                </div>
-                <div className="flex items-center">
-                  <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
-                  <span className="text-slate-700">Real-time market analytics</span>
-                </div>
+                <h4 className="font-semibold text-gray-900 mb-2">Deal Management</h4>
+                <p className="text-sm text-gray-600">Track deals, manage pipelines, and monitor performance with advanced analytics.</p>
               </div>
-              <div className="space-y-3">
-                <div className="flex items-center">
-                  <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
-                  <span className="text-slate-700">Professional certification</span>
+              <div className="text-center">
+                <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <FileText className="w-6 h-6 text-white" />
                 </div>
-                <div className="flex items-center">
-                  <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
-                  <span className="text-slate-700">Priority customer support</span>
-                </div>
-                <div className="flex items-center">
-                  <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
-                  <span className="text-slate-700">Commission tracking tools</span>
-                </div>
+                <h4 className="font-semibold text-gray-900 mb-2">Document Generation</h4>
+                <p className="text-sm text-gray-600">Generate professional maritime documents, contracts, and certificates.</p>
               </div>
-            </div>
-            
-            <div className="text-center mt-6">
-              <Button 
-                onClick={handleUpgrade}
-                variant="outline"
-                className="border-green-500 text-green-600 hover:bg-green-50"
-              >
-                Start Your Membership Journey
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
+              <div className="text-center">
+                <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Users className="w-6 h-6 text-white" />
+                </div>
+                <h4 className="font-semibold text-gray-900 mb-2">Client Communications</h4>
+                <p className="text-sm text-gray-600">Manage client relationships and communications through our platform.</p>
+              </div>
             </div>
           </CardContent>
         </Card>
+
+        {/* Footer */}
+        <div className="text-center mt-8">
+          <p className="text-gray-600 mb-4">
+            Need help choosing the right plan? 
+            <a href="mailto:support@petrodealhub.com" className="text-blue-600 hover:underline ml-1">
+              Contact our sales team
+            </a>
+          </p>
+          <div className="flex justify-center gap-4">
+            <Button variant="outline" onClick={handleLogin}>
+              <Users className="w-4 h-4 mr-2" />
+              Login to Different Account
+            </Button>
+            <Button onClick={handleUpgrade} className="bg-blue-600 hover:bg-blue-700">
+              <CreditCard className="w-4 h-4 mr-2" />
+              View All Plans
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );
