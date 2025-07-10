@@ -151,7 +151,7 @@ export default function Ports() {
     setCurrentPage(1);
   }, [selectedRegion, searchTerm]);
   
-  // Fetch ports data
+  // Fetch ports data with subscription limits
   const { 
     data: portsData = [], 
     isLoading: isPortsLoading, 
@@ -159,7 +159,7 @@ export default function Ports() {
     error: portsError,
     refetch: refetchPorts
   } = useQuery({
-    queryKey: ['/api/admin/ports'], // Use admin endpoint for consistent data
+    queryKey: ['/api/ports'], // Use subscription-limited endpoint
     staleTime: 0, // Always fresh data
   });
 
@@ -176,7 +176,11 @@ export default function Ports() {
   const allPorts = useMemo(() => {
     if (!portsData || !vesselsData) return [];
     
-    return portsData.map((port: Port) => {
+    // Handle both API response formats (direct array or object with ports property)
+    const ports = portsData.ports || portsData;
+    if (!Array.isArray(ports)) return [];
+    
+    return ports.map((port: Port) => {
       // Find vessels connected to this port
       const departingVessels = vesselsData.filter((vessel: any) => {
         try {
