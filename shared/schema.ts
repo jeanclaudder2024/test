@@ -1550,6 +1550,147 @@ export const insertLandingPageContentSchema = createInsertSchema(landingPageCont
   updatedAt: true,
 });
 
+// Broker System Tables
+export const brokerDeals = pgTable("broker_deals", {
+  id: serial("id").primaryKey(),
+  brokerId: integer("broker_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  companyId: integer("company_id").references(() => realCompanies.id, { onDelete: "set null" }),
+  dealTitle: varchar("deal_title", { length: 255 }).notNull(),
+  companyName: varchar("company_name", { length: 255 }).notNull(),
+  dealValue: decimal("deal_value", { precision: 15, scale: 2 }).notNull(),
+  status: varchar("status", { length: 50 }).notNull().default("pending"),
+  progress: integer("progress").notNull().default(0),
+  startDate: timestamp("start_date").notNull().defaultNow(),
+  expectedCloseDate: timestamp("expected_close_date"),
+  oilType: varchar("oil_type", { length: 100 }).notNull(),
+  quantity: varchar("quantity", { length: 100 }).notNull(),
+  notes: text("notes"),
+  documentsCount: integer("documents_count").default(0),
+  commissionRate: decimal("commission_rate", { precision: 5, scale: 2 }).default("0.00"),
+  commissionAmount: decimal("commission_amount", { precision: 15, scale: 2 }).default("0.00"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const brokerDocuments = pgTable("broker_documents", {
+  id: serial("id").primaryKey(),
+  brokerId: integer("broker_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  dealId: integer("deal_id").references(() => brokerDeals.id, { onDelete: "cascade" }),
+  name: varchar("name", { length: 255 }).notNull(),
+  originalName: varchar("original_name", { length: 255 }).notNull(),
+  fileType: varchar("file_type", { length: 50 }).notNull(),
+  fileSize: varchar("file_size", { length: 50 }).notNull(),
+  filePath: varchar("file_path", { length: 500 }).notNull(),
+  description: text("description"),
+  uploadDate: timestamp("upload_date").defaultNow(),
+  uploadedBy: varchar("uploaded_by", { length: 255 }).notNull(),
+  downloadCount: integer("download_count").default(0),
+  isAdminFile: boolean("is_admin_file").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const brokerAdminFiles = pgTable("broker_admin_files", {
+  id: serial("id").primaryKey(),
+  brokerId: integer("broker_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  fileName: varchar("file_name", { length: 255 }).notNull(),
+  originalName: varchar("original_name", { length: 255 }).notNull(),
+  fileType: varchar("file_type", { length: 50 }).notNull(),
+  fileSize: varchar("file_size", { length: 50 }).notNull(),
+  filePath: varchar("file_path", { length: 500 }).notNull(),
+  sentDate: timestamp("sent_date").defaultNow(),
+  sentBy: varchar("sent_by", { length: 255 }).notNull(),
+  description: text("description"),
+  category: varchar("category", { length: 50 }).notNull().default("other"),
+  priority: varchar("priority", { length: 20 }).notNull().default("medium"),
+  isRead: boolean("is_read").default(false),
+  readAt: timestamp("read_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const brokerStats = pgTable("broker_stats", {
+  id: serial("id").primaryKey(),
+  brokerId: integer("broker_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  activeDeals: integer("active_deals").default(0),
+  totalDeals: integer("total_deals").default(0),
+  completedDeals: integer("completed_deals").default(0),
+  cancelledDeals: integer("cancelled_deals").default(0),
+  totalValue: decimal("total_value", { precision: 15, scale: 2 }).default("0.00"),
+  totalCommission: decimal("total_commission", { precision: 15, scale: 2 }).default("0.00"),
+  successRate: decimal("success_rate", { precision: 5, scale: 2 }).default("0.00"),
+  completionRate: decimal("completion_rate", { precision: 5, scale: 2 }).default("0.00"),
+  averageDealSize: decimal("average_deal_size", { precision: 15, scale: 2 }).default("0.00"),
+  lastUpdated: timestamp("last_updated").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const brokerProfiles = pgTable("broker_profiles", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  firstName: varchar("first_name", { length: 100 }),
+  lastName: varchar("last_name", { length: 100 }),
+  dateOfBirth: timestamp("date_of_birth"),
+  nationality: varchar("nationality", { length: 100 }),
+  experience: varchar("experience", { length: 100 }),
+  specialization: varchar("specialization", { length: 100 }),
+  previousEmployer: varchar("previous_employer", { length: 255 }),
+  certifications: text("certifications"),
+  passportPhotoPath: varchar("passport_photo_path", { length: 500 }),
+  phoneNumber: varchar("phone_number", { length: 50 }),
+  address: text("address"),
+  isProfileComplete: boolean("is_profile_complete").default(false),
+  membershipStatus: varchar("membership_status", { length: 50 }).default("inactive"),
+  membershipExpiresAt: timestamp("membership_expires_at"),
+  cardNumber: varchar("card_number", { length: 50 }),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Broker schema validation
+export const insertBrokerDealSchema = createInsertSchema(brokerDeals).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertBrokerDocumentSchema = createInsertSchema(brokerDocuments).omit({
+  id: true,
+  createdAt: true,
+  uploadDate: true,
+  downloadCount: true,
+});
+
+export const insertBrokerAdminFileSchema = createInsertSchema(brokerAdminFiles).omit({
+  id: true,
+  createdAt: true,
+  sentDate: true,
+  isRead: true,
+  readAt: true,
+});
+
+export const insertBrokerStatsSchema = createInsertSchema(brokerStats).omit({
+  id: true,
+  createdAt: true,
+  lastUpdated: true,
+});
+
+export const insertBrokerProfileSchema = createInsertSchema(brokerProfiles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Broker types
+export type BrokerDeal = typeof brokerDeals.$inferSelect;
+export type InsertBrokerDeal = z.infer<typeof insertBrokerDealSchema>;
+export type BrokerDocument = typeof brokerDocuments.$inferSelect;
+export type InsertBrokerDocument = z.infer<typeof insertBrokerDocumentSchema>;
+export type BrokerAdminFile = typeof brokerAdminFiles.$inferSelect;
+export type InsertBrokerAdminFile = z.infer<typeof insertBrokerAdminFileSchema>;
+export type BrokerStats = typeof brokerStats.$inferSelect;
+export type InsertBrokerStats = z.infer<typeof insertBrokerStatsSchema>;
+export type BrokerProfile = typeof brokerProfiles.$inferSelect;
+export type InsertBrokerProfile = z.infer<typeof insertBrokerProfileSchema>;
+
 export const insertLandingPageImageSchema = createInsertSchema(landingPageImages).omit({
   id: true,
   createdAt: true,
@@ -1602,139 +1743,3 @@ export const insertRegionSchema = createInsertSchema(regions).omit({
 
 export type InsertRegion = z.infer<typeof insertRegionSchema>;
 export type Region = typeof regions.$inferSelect;
-
-// Broker Deals Management
-export const brokerDeals = pgTable("broker_deals", {
-  id: serial("id").primaryKey(),
-  brokerId: integer("broker_id").notNull().references(() => users.id),
-  companyId: integer("company_id").notNull().references(() => realCompanies.id),
-  dealTitle: text("deal_title").notNull(),
-  dealValue: text("deal_value").notNull(),
-  status: text("status").notNull().default("pending"), // active, pending, completed, cancelled
-  progress: integer("progress").default(0), // 0-100
-  oilType: text("oil_type").notNull(),
-  quantity: text("quantity").notNull(),
-  startDate: timestamp("start_date").defaultNow(),
-  expectedCloseDate: timestamp("expected_close_date"),
-  actualCloseDate: timestamp("actual_close_date"),
-  notes: text("notes"),
-  commissionRate: text("commission_rate"),
-  commissionAmount: text("commission_amount"),
-  metadata: text("metadata"), // JSON string for additional data
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-// Broker Documents
-export const brokerDocuments = pgTable("broker_documents", {
-  id: serial("id").primaryKey(),
-  brokerId: integer("broker_id").notNull().references(() => users.id),
-  dealId: integer("deal_id").references(() => brokerDeals.id),
-  fileName: text("file_name").notNull(),
-  originalName: text("original_name").notNull(),
-  fileType: text("file_type").notNull(),
-  fileSize: text("file_size").notNull(),
-  filePath: text("file_path").notNull(),
-  description: text("description"),
-  uploadedBy: text("uploaded_by").notNull(),
-  downloadCount: integer("download_count").default(0),
-  isPublic: boolean("is_public").default(false),
-  tags: text("tags"), // JSON array of tags
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-// Admin Files sent to Brokers
-export const adminBrokerFiles = pgTable("admin_broker_files", {
-  id: serial("id").primaryKey(),
-  brokerId: integer("broker_id").notNull().references(() => users.id),
-  sentByUserId: integer("sent_by_user_id").notNull().references(() => users.id),
-  fileName: text("file_name").notNull(),
-  originalName: text("original_name").notNull(),
-  fileType: text("file_type").notNull(),
-  fileSize: text("file_size").notNull(),
-  filePath: text("file_path").notNull(),
-  description: text("description").notNull(),
-  category: text("category").notNull().default("other"), // contract, compliance, legal, technical, other
-  priority: text("priority").default("normal"), // low, normal, high, urgent
-  isRead: boolean("is_read").default(false),
-  readAt: timestamp("read_at"),
-  expiresAt: timestamp("expires_at"),
-  requiresSignature: boolean("requires_signature").default(false),
-  signedAt: timestamp("signed_at"),
-  notes: text("notes"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-// Broker Deal Activities/Timeline
-export const brokerDealActivities = pgTable("broker_deal_activities", {
-  id: serial("id").primaryKey(),
-  dealId: integer("deal_id").notNull().references(() => brokerDeals.id),
-  userId: integer("user_id").notNull().references(() => users.id),
-  activityType: text("activity_type").notNull(), // status_change, document_added, note_added, etc.
-  description: text("description").notNull(),
-  oldValue: text("old_value"),
-  newValue: text("new_value"),
-  metadata: text("metadata"), // JSON string for additional data
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
-// Broker Statistics
-export const brokerStats = pgTable("broker_stats", {
-  id: serial("id").primaryKey(),
-  brokerId: integer("broker_id").notNull().references(() => users.id),
-  totalDeals: integer("total_deals").default(0),
-  activeDeals: integer("active_deals").default(0),
-  completedDeals: integer("completed_deals").default(0),
-  cancelledDeals: integer("cancelled_deals").default(0),
-  totalValue: text("total_value").default("0"),
-  totalCommission: text("total_commission").default("0"),
-  successRate: integer("success_rate").default(0), // percentage
-  averageDealSize: text("average_deal_size").default("0"),
-  lastActivityAt: timestamp("last_activity_at"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-// Insert schemas for broker tables
-export const insertBrokerDealSchema = createInsertSchema(brokerDeals).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertBrokerDocumentSchema = createInsertSchema(brokerDocuments).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertAdminBrokerFileSchema = createInsertSchema(adminBrokerFiles).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertBrokerDealActivitySchema = createInsertSchema(brokerDealActivities).omit({
-  id: true,
-  createdAt: true,
-});
-
-export const insertBrokerStatsSchema = createInsertSchema(brokerStats).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-// Types for broker tables
-export type BrokerDeal = typeof brokerDeals.$inferSelect;
-export type InsertBrokerDeal = z.infer<typeof insertBrokerDealSchema>;
-export type BrokerDocument = typeof brokerDocuments.$inferSelect;
-export type InsertBrokerDocument = z.infer<typeof insertBrokerDocumentSchema>;
-export type AdminBrokerFile = typeof adminBrokerFiles.$inferSelect;
-export type InsertAdminBrokerFile = z.infer<typeof insertAdminBrokerFileSchema>;
-export type BrokerDealActivity = typeof brokerDealActivities.$inferSelect;
-export type InsertBrokerDealActivity = z.infer<typeof insertBrokerDealActivitySchema>;
-export type BrokerStats = typeof brokerStats.$inferSelect;
-export type InsertBrokerStats = z.infer<typeof insertBrokerStatsSchema>;

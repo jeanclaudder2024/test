@@ -7,7 +7,7 @@ import {
   subscriptionPlans, subscriptions, userSubscriptions, paymentMethods, invoices, payments, landingPageContent,
   vesselDocuments, professionalDocuments, oilTypes, documentTemplates,
   realCompanies, fakeCompanies,
-  brokerDeals, brokerDocuments, adminBrokerFiles, brokerDealActivities, brokerStats,
+  brokerDeals, brokerDocuments, brokerAdminFiles, brokerStats,
   User, InsertUser, 
   Vessel, InsertVessel,
   Refinery, InsertRefinery,
@@ -23,8 +23,7 @@ import {
   FakeCompany, InsertFakeCompany,
   BrokerDeal, InsertBrokerDeal,
   BrokerDocument, InsertBrokerDocument,
-  AdminBrokerFile, InsertAdminBrokerFile,
-  BrokerDealActivity, InsertBrokerDealActivity,
+  BrokerAdminFile, InsertBrokerAdminFile,
   BrokerStats, InsertBrokerStats,
   BrokerCompany, InsertBrokerCompany,
   CompanyPartnership, InsertCompanyPartnership,
@@ -148,6 +147,31 @@ export interface IStorage {
   createVesselDocument(document: InsertVesselDocument): Promise<SelectVesselDocument>;
   updateVesselDocument(id: number, document: Partial<InsertVesselDocument>): Promise<SelectVesselDocument | undefined>;
   deleteVesselDocument(id: number): Promise<boolean>;
+
+  // Broker methods
+  getBrokerProfile(userId: number): Promise<any | undefined>;
+  updateBrokerProfile(userId: number, profileData: any): Promise<any>;
+  
+  // Broker Deal methods
+  getBrokerDeals(brokerId: number): Promise<any[]>;
+  createBrokerDeal(deal: any): Promise<any>;
+  updateBrokerDeal(dealId: number, brokerId: number, dealData: any): Promise<any>;
+  deleteBrokerDeal(dealId: number, brokerId: number): Promise<boolean>;
+  
+  // Broker Document methods
+  getBrokerDocuments(brokerId: number): Promise<any[]>;
+  getBrokerDocument(documentId: number, brokerId: number): Promise<any | undefined>;
+  createBrokerDocument(document: any): Promise<any>;
+  deleteBrokerDocument(documentId: number, brokerId: number): Promise<boolean>;
+  incrementDocumentDownloadCount(documentId: number): Promise<void>;
+  
+  // Broker Admin File methods
+  getBrokerAdminFiles(brokerId: number): Promise<any[]>;
+  markBrokerAdminFileAsRead(fileId: number, brokerId: number): Promise<void>;
+  
+  // Broker Stats methods
+  getBrokerStats(brokerId: number): Promise<any | undefined>;
+  updateBrokerStats(brokerId: number): Promise<void>;
 
   // Broker methods
   getBrokers(): Promise<Broker[]>;
@@ -2768,6 +2792,263 @@ export class DatabaseStorage implements IStorage {
           createdAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000) // 60 days ago
         }
       ];
+    }
+  }
+
+  // Broker Profile Management
+  async getBrokerProfile(userId: number): Promise<any | undefined> {
+    try {
+      const [profile] = await db.select()
+        .from(brokerProfiles)
+        .where(eq(brokerProfiles.userId, userId));
+      return profile;
+    } catch (error) {
+      console.error('Error fetching broker profile:', error);
+      return undefined;
+    }
+  }
+
+  async updateBrokerProfile(userId: number, profileData: any): Promise<any> {
+    try {
+      const existingProfile = await this.getBrokerProfile(userId);
+      
+      if (existingProfile) {
+        const [updatedProfile] = await db
+          .update(brokerProfiles)
+          .set({ ...profileData, updatedAt: new Date() })
+          .where(eq(brokerProfiles.userId, userId))
+          .returning();
+        return updatedProfile;
+      } else {
+        const [newProfile] = await db
+          .insert(brokerProfiles)
+          .values({ ...profileData, userId })
+          .returning();
+        return newProfile;
+      }
+    } catch (error) {
+      console.error('Error updating broker profile:', error);
+      throw error;
+    }
+  }
+
+  // Broker Deal Management
+  async getBrokerDeals(brokerId: number): Promise<any[]> {
+    try {
+      const deals = await db.select()
+        .from(brokerDeals)
+        .where(eq(brokerDeals.brokerId, brokerId))
+        .orderBy(desc(brokerDeals.createdAt));
+      return deals;
+    } catch (error) {
+      console.error('Error fetching broker deals:', error);
+      return [];
+    }
+  }
+
+  async createBrokerDeal(deal: any): Promise<any> {
+    try {
+      const [newDeal] = await db.insert(brokerDeals).values(deal).returning();
+      
+      // Update broker stats
+      await this.updateBrokerStats(deal.brokerId);
+      
+      return newDeal;
+    } catch (error) {
+      console.error('Error creating broker deal:', error);
+      throw error;
+    }
+  }
+
+  async updateBrokerDeal(dealId: number, brokerId: number, dealData: any): Promise<any> {
+    try {
+      const [updatedDeal] = await db
+        .update(brokerDeals)
+        .set({ ...dealData, updatedAt: new Date() })
+        .where(and(eq(brokerDeals.id, dealId), eq(brokerDeals.brokerId, brokerId)))
+        .returning();
+      
+      // Update broker stats
+      await this.updateBrokerStats(brokerId);
+      
+      return updatedDeal;
+    } catch (error) {
+      console.error('Error updating broker deal:', error);
+      throw error;
+    }
+  }
+
+  async deleteBrokerDeal(dealId: number, brokerId: number): Promise<boolean> {
+    try {
+      const result = await db
+        .delete(brokerDeals)
+        .where(and(eq(brokerDeals.id, dealId), eq(brokerDeals.brokerId, brokerId)));
+      
+      // Update broker stats
+      await this.updateBrokerStats(brokerId);
+      
+      return result.rowCount !== undefined && result.rowCount > 0;
+    } catch (error) {
+      console.error('Error deleting broker deal:', error);
+      return false;
+    }
+  }
+
+  // Broker Document Management
+  async getBrokerDocuments(brokerId: number): Promise<any[]> {
+    try {
+      const documents = await db.select()
+        .from(brokerDocuments)
+        .where(eq(brokerDocuments.brokerId, brokerId))
+        .orderBy(desc(brokerDocuments.createdAt));
+      return documents;
+    } catch (error) {
+      console.error('Error fetching broker documents:', error);
+      return [];
+    }
+  }
+
+  async getBrokerDocument(documentId: number, brokerId: number): Promise<any | undefined> {
+    try {
+      const [document] = await db.select()
+        .from(brokerDocuments)
+        .where(and(eq(brokerDocuments.id, documentId), eq(brokerDocuments.brokerId, brokerId)));
+      return document;
+    } catch (error) {
+      console.error('Error fetching broker document:', error);
+      return undefined;
+    }
+  }
+
+  async createBrokerDocument(document: any): Promise<any> {
+    try {
+      const [newDocument] = await db.insert(brokerDocuments).values(document).returning();
+      return newDocument;
+    } catch (error) {
+      console.error('Error creating broker document:', error);
+      throw error;
+    }
+  }
+
+  async deleteBrokerDocument(documentId: number, brokerId: number): Promise<boolean> {
+    try {
+      const result = await db
+        .delete(brokerDocuments)
+        .where(and(eq(brokerDocuments.id, documentId), eq(brokerDocuments.brokerId, brokerId)));
+      return result.rowCount !== undefined && result.rowCount > 0;
+    } catch (error) {
+      console.error('Error deleting broker document:', error);
+      return false;
+    }
+  }
+
+  async incrementDocumentDownloadCount(documentId: number): Promise<void> {
+    try {
+      await db
+        .update(brokerDocuments)
+        .set({ downloadCount: sql`${brokerDocuments.downloadCount} + 1` })
+        .where(eq(brokerDocuments.id, documentId));
+    } catch (error) {
+      console.error('Error incrementing document download count:', error);
+    }
+  }
+
+  // Broker Admin File Management
+  async getBrokerAdminFiles(brokerId: number): Promise<any[]> {
+    try {
+      const files = await db.select()
+        .from(brokerAdminFiles)
+        .where(eq(brokerAdminFiles.brokerId, brokerId))
+        .orderBy(desc(brokerAdminFiles.createdAt));
+      return files;
+    } catch (error) {
+      console.error('Error fetching broker admin files:', error);
+      return [];
+    }
+  }
+
+  async markBrokerAdminFileAsRead(fileId: number, brokerId: number): Promise<void> {
+    try {
+      await db
+        .update(brokerAdminFiles)
+        .set({ isRead: true, readAt: new Date() })
+        .where(and(eq(brokerAdminFiles.id, fileId), eq(brokerAdminFiles.brokerId, brokerId)));
+    } catch (error) {
+      console.error('Error marking broker admin file as read:', error);
+    }
+  }
+
+  // Broker Statistics
+  async getBrokerStats(brokerId: number): Promise<any | undefined> {
+    try {
+      const [stats] = await db.select()
+        .from(brokerStats)
+        .where(eq(brokerStats.brokerId, brokerId));
+      return stats;
+    } catch (error) {
+      console.error('Error fetching broker stats:', error);
+      return undefined;
+    }
+  }
+
+  async updateBrokerStats(brokerId: number): Promise<void> {
+    try {
+      const deals = await this.getBrokerDeals(brokerId);
+      
+      const totalDeals = deals.length;
+      const activeDeals = deals.filter(d => d.status === 'active').length;
+      const completedDeals = deals.filter(d => d.status === 'completed').length;
+      const cancelledDeals = deals.filter(d => d.status === 'cancelled').length;
+      
+      const totalValue = deals.reduce((sum, deal) => {
+        const value = parseFloat(deal.dealValue.replace(/[^\d.]/g, '')) || 0;
+        return sum + value;
+      }, 0);
+      
+      const totalCommission = deals.reduce((sum, deal) => {
+        const commission = parseFloat(deal.commissionAmount?.replace(/[^\d.]/g, '') || '0');
+        return sum + commission;
+      }, 0);
+      
+      const successRate = totalDeals > 0 ? Math.round((completedDeals / totalDeals) * 100) : 0;
+      const averageDealSize = totalDeals > 0 ? totalValue / totalDeals : 0;
+      
+      const existingStats = await this.getBrokerStats(brokerId);
+      
+      if (existingStats) {
+        await db
+          .update(brokerStats)
+          .set({
+            totalDeals,
+            activeDeals,
+            completedDeals,
+            cancelledDeals,
+            totalValue: totalValue.toFixed(2),
+            totalCommission: totalCommission.toFixed(2),
+            successRate,
+            averageDealSize: averageDealSize.toFixed(2),
+            lastActivityAt: new Date(),
+            updatedAt: new Date()
+          })
+          .where(eq(brokerStats.brokerId, brokerId));
+      } else {
+        await db
+          .insert(brokerStats)
+          .values({
+            brokerId,
+            totalDeals,
+            activeDeals,
+            completedDeals,
+            cancelledDeals,
+            totalValue: totalValue.toFixed(2),
+            totalCommission: totalCommission.toFixed(2),
+            successRate,
+            averageDealSize: averageDealSize.toFixed(2),
+            lastActivityAt: new Date()
+          });
+      }
+    } catch (error) {
+      console.error('Error updating broker stats:', error);
     }
   }
 }

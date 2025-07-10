@@ -77,11 +77,11 @@ import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 
 import { brokerRouter } from "./routes/brokerRoutes";
+import brokerApiRoutes from "./routes/brokerApiRoutes";
 import vesselRouter from "./routes/vesselRoutes";
 import { portProximityRouter } from "./routes/port-proximity";
 import { tradingRouter } from "./routes/tradingRoutes";
 import { vesselDistributionRouter } from "./routes/vesselDistributionRoutes";
-import { portProximityRouter } from "./routes/port-proximity";
 import { vesselRefineryRouter } from "./routes/vesselRefineryRoutes";
 import { generateVesselPositionData } from "./routes/vessel-data-generation";
 import { refineryPortRouter } from "./routes/refineryPortRoutes";
@@ -4905,6 +4905,7 @@ Only use authentic, real-world data for existing refineries.`;
   
   // API routes for broker functionality
   app.use("/api/broker", brokerRouter);
+  app.use("/api/broker-api", brokerApiRoutes);
   
   // API routes for broker-connections
   app.get("/api/broker-connections/:brokerId", async (req, res) => {
