@@ -377,12 +377,24 @@ export default function VesselDetail() {
   useEffect(() => {
     const fetchRefineries = async () => {
       try {
-        const response = await axios.get('/api/refineries');
+        const authToken = localStorage.getItem('authToken');
+        const response = await axios.get('/api/refineries', {
+          headers: authToken ? { Authorization: `Bearer ${authToken}` } : {}
+        });
         if (response.status === 200) {
           setRefineries(response.data);
         }
       } catch (error) {
         console.error('Failed to fetch refineries for map:', error);
+        // Try fallback without auth
+        try {
+          const response = await axios.get('/api/refineries');
+          if (response.status === 200) {
+            setRefineries(response.data);
+          }
+        } catch (fallbackError) {
+          console.error('Fallback refineries fetch also failed:', fallbackError);
+        }
       }
     };
     
@@ -393,12 +405,24 @@ export default function VesselDetail() {
   useEffect(() => {
     const fetchPorts = async () => {
       try {
-        const response = await axios.get('/api/ports');
+        const authToken = localStorage.getItem('authToken');
+        const response = await axios.get('/api/ports', {
+          headers: authToken ? { Authorization: `Bearer ${authToken}` } : {}
+        });
         if (response.status === 200) {
           setPorts(response.data);
         }
       } catch (error) {
         console.error('Failed to fetch ports for map:', error);
+        // Try fallback without auth
+        try {
+          const response = await axios.get('/api/ports');
+          if (response.status === 200) {
+            setPorts(response.data);
+          }
+        } catch (fallbackError) {
+          console.error('Fallback ports fetch also failed:', fallbackError);
+        }
       }
     };
     
