@@ -109,20 +109,20 @@ export default function SubscriptionSuccess() {
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Button 
-            onClick={() => navigate("/dashboard")}
+            onClick={() => navigate("/login")}
             className="flex items-center gap-2"
           >
-            Go to Dashboard
+            Sign In to Dashboard
             <ArrowRight className="h-4 w-4" />
           </Button>
           
           <Button 
             variant="outline"
-            onClick={() => navigate("/vessels")}
+            onClick={() => navigate("/")}
             className="flex items-center gap-2"
           >
             <Ship className="h-4 w-4" />
-            View Vessels
+            Back to Home
           </Button>
         </div>
 

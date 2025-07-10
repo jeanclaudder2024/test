@@ -145,6 +145,7 @@ function AuthenticatedApp() {
     if (location === "/register") return <Register />;
     if (location === "/auth/callback") return <AuthCallback />;
     if (location === "/verify-email") return <VerifyEmail />;
+    if (location === "/subscription/success") return <SubscriptionSuccess />;
     if (location === "/") return <LandingPage />;
     // Redirect to login for protected routes
     return <Login />;
