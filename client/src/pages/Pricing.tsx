@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Check, X, Ship, MapPin, Building2, BarChart3, FileText, Users, Globe, Shield } from 'lucide-react';
+import { Check, X, Ship, MapPin, Building2, BarChart3, FileText, Users, Globe, Shield, ChevronDown, Zap, Crown, Star } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/useAuth';
@@ -35,6 +35,7 @@ interface PricingPlan {
 
 export default function PricingPage() {
   const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month');
+  const [showComparison, setShowComparison] = useState(false);
   const { isAuthenticated } = useAuth();
   const { toast } = useToast();
   const [, navigate] = useLocation();
@@ -380,179 +381,268 @@ export default function PricingPage() {
         })}
       </div>
       
-      {/* Plan Comparison Section */}
-      <div className="mt-16 mx-auto max-w-6xl">
-        <div className="text-center mb-12">
-          <h2 className="text-2xl font-bold mb-4">Detailed Plan Comparison</h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Compare all features across our subscription plans to find the perfect fit for your maritime operations.
-          </p>
-        </div>
-        
-        <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b bg-gray-50">
-                  <th className="text-left p-4 font-semibold text-gray-900">Features</th>
-                  {plans?.map((plan) => (
-                    <th key={plan.id} className="text-center p-4 font-semibold text-gray-900 min-w-[180px]">
-                      <div className="flex flex-col items-center">
-                        <span className="text-lg">{plan.name}</span>
-                        <span className="text-sm text-muted-foreground mt-1">
-                          {formatCurrency(billingInterval === 'month' ? plan.monthlyPrice : plan.yearlyPrice, plan.currency)}
-                          /{billingInterval}
-                        </span>
-                        {plan.isPopular && (
-                          <Badge className="bg-primary hover:bg-primary text-xs mt-1">Popular</Badge>
-                        )}
+      {/* Expandable Plan Comparison Button */}
+      <div className="mt-16 mx-auto max-w-4xl text-center">
+        <Button
+          onClick={() => setShowComparison(!showComparison)}
+          variant="outline"
+          size="lg"
+          className="bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border-blue-200 text-blue-800 font-semibold px-8 py-4 text-lg transition-all duration-300 shadow-lg hover:shadow-xl"
+        >
+          <BarChart3 className="w-6 h-6 mr-3" />
+          {showComparison ? 'Hide' : 'View'} Detailed Plan Comparison
+          <ChevronDown className={cn(
+            "w-5 h-5 ml-3 transition-transform duration-300",
+            showComparison && "rotate-180"
+          )} />
+        </Button>
+        <p className="text-sm text-muted-foreground mt-3">
+          Compare all features side-by-side to find your perfect plan
+        </p>
+      </div>
+
+      {/* Expandable Plan Comparison Section */}
+      {showComparison && (
+        <div className="mt-12 mx-auto max-w-7xl animate-in slide-in-from-top-4 duration-500">
+          <div className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-2xl border border-blue-100 shadow-2xl overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-8 text-center">
+              <h2 className="text-3xl font-bold mb-2">Professional Plan Comparison</h2>
+              <p className="text-blue-100 text-lg">
+                Choose the perfect maritime solution for your business needs
+              </p>
+            </div>
+            
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-gradient-to-r from-gray-50 to-blue-50 border-b border-blue-200">
+                    <th className="text-left p-6 font-bold text-gray-900 text-lg">Features & Capabilities</th>
+                    {plans?.map((plan, index) => (
+                      <th key={plan.id} className="text-center p-6 min-w-[200px]">
+                        <div className="flex flex-col items-center space-y-3">
+                          <div className="flex items-center space-x-2">
+                            {index === 0 && <Zap className="w-6 h-6 text-orange-500" />}
+                            {index === 1 && <Star className="w-6 h-6 text-blue-500" />}
+                            {index === 2 && <Crown className="w-6 h-6 text-purple-500" />}
+                            <span className="text-xl font-bold text-gray-900">{plan.name}</span>
+                          </div>
+                          <div className="bg-white rounded-lg px-4 py-2 shadow-sm border">
+                            <span className="text-2xl font-bold text-blue-600">
+                              {formatCurrency(billingInterval === 'month' ? plan.monthlyPrice : plan.yearlyPrice, plan.currency)}
+                            </span>
+                            <span className="text-gray-600 text-sm">/{billingInterval}</span>
+                          </div>
+                          {plan.isPopular && (
+                            <Badge className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-0 shadow-lg">
+                              ⭐ Most Popular
+                            </Badge>
+                          )}
+                        </div>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="bg-white">
+                  {/* Vessel Tracking */}
+                  <tr className="border-b border-gray-100 hover:bg-gradient-to-r hover:from-blue-25 hover:to-indigo-25 transition-all duration-200">
+                    <td className="p-6 font-semibold text-gray-900 flex items-center text-lg">
+                      <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+                        <Ship className="w-6 h-6 text-blue-600" />
                       </div>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {/* Vessel Tracking */}
-                <tr className="border-b hover:bg-gray-50">
-                  <td className="p-4 font-medium text-gray-900 flex items-center">
-                    <Ship className="w-5 h-5 mr-2 text-blue-500" />
-                    Vessel Tracking
-                  </td>
-                  <td className="p-4 text-center">Up to 50 vessels</td>
-                  <td className="p-4 text-center">Up to 200 vessels</td>
-                  <td className="p-4 text-center">Unlimited vessels</td>
-                </tr>
-                
-                {/* Real-time Positions */}
-                <tr className="border-b hover:bg-gray-50">
-                  <td className="p-4 font-medium text-gray-900 flex items-center">
-                    <MapPin className="w-5 h-5 mr-2 text-green-500" />
-                    Real-time Positions
-                  </td>
-                  <td className="p-4 text-center">
-                    <Check className="w-5 h-5 text-green-500 mx-auto" />
-                  </td>
-                  <td className="p-4 text-center">
-                    <Check className="w-5 h-5 text-green-500 mx-auto" />
-                  </td>
-                  <td className="p-4 text-center">
-                    <Check className="w-5 h-5 text-green-500 mx-auto" />
-                  </td>
-                </tr>
-                
-                {/* Port & Refinery Access */}
-                <tr className="border-b hover:bg-gray-50">
-                  <td className="p-4 font-medium text-gray-900 flex items-center">
-                    <Building2 className="w-5 h-5 mr-2 text-purple-500" />
-                    Port & Refinery Access
-                  </td>
-                  <td className="p-4 text-center">Limited access</td>
-                  <td className="p-4 text-center">Full access</td>
-                  <td className="p-4 text-center">Global access</td>
-                </tr>
-                
-                {/* Analytics Dashboard */}
-                <tr className="border-b hover:bg-gray-50">
-                  <td className="p-4 font-medium text-gray-900 flex items-center">
-                    <BarChart3 className="w-5 h-5 mr-2 text-orange-500" />
-                    Analytics Dashboard
-                  </td>
-                  <td className="p-4 text-center">Basic reporting</td>
-                  <td className="p-4 text-center">Advanced analytics</td>
-                  <td className="p-4 text-center">Enterprise analytics</td>
-                </tr>
-                
-                {/* Document Generation */}
-                <tr className="border-b hover:bg-gray-50">
-                  <td className="p-4 font-medium text-gray-900 flex items-center">
-                    <FileText className="w-5 h-5 mr-2 text-indigo-500" />
-                    Document Generation
-                  </td>
-                  <td className="p-4 text-center">Basic documents</td>
-                  <td className="p-4 text-center">Professional docs</td>
-                  <td className="p-4 text-center">All document types</td>
-                </tr>
-                
-                {/* Broker Features */}
-                <tr className="border-b hover:bg-gray-50">
-                  <td className="p-4 font-medium text-gray-900 flex items-center">
-                    <Users className="w-5 h-5 mr-2 text-red-500" />
-                    Broker Features
-                  </td>
-                  <td className="p-4 text-center">
-                    <X className="w-5 h-5 text-red-500 mx-auto" />
-                  </td>
-                  <td className="p-4 text-center">
-                    <Check className="w-5 h-5 text-green-500 mx-auto" />
-                  </td>
-                  <td className="p-4 text-center">
-                    <Check className="w-5 h-5 text-green-500 mx-auto" />
-                  </td>
-                </tr>
-                
-                {/* API Access */}
-                <tr className="border-b hover:bg-gray-50">
-                  <td className="p-4 font-medium text-gray-900 flex items-center">
-                    <Globe className="w-5 h-5 mr-2 text-cyan-500" />
-                    API Access
-                  </td>
-                  <td className="p-4 text-center">
-                    <X className="w-5 h-5 text-red-500 mx-auto" />
-                  </td>
-                  <td className="p-4 text-center">Limited API</td>
-                  <td className="p-4 text-center">Full API access</td>
-                </tr>
-                
-                {/* Support */}
-                <tr className="border-b hover:bg-gray-50">
-                  <td className="p-4 font-medium text-gray-900 flex items-center">
-                    <Shield className="w-5 h-5 mr-2 text-yellow-500" />
-                    Support Level
-                  </td>
-                  <td className="p-4 text-center">Email support</td>
-                  <td className="p-4 text-center">Priority support</td>
-                  <td className="p-4 text-center">24/7 dedicated support</td>
-                </tr>
-                
-                {/* Data Export */}
-                <tr className="border-b hover:bg-gray-50">
-                  <td className="p-4 font-medium text-gray-900">Data Export</td>
-                  <td className="p-4 text-center">CSV only</td>
-                  <td className="p-4 text-center">CSV, JSON</td>
-                  <td className="p-4 text-center">All formats</td>
-                </tr>
-                
-                {/* Historical Data */}
-                <tr className="border-b hover:bg-gray-50">
-                  <td className="p-4 font-medium text-gray-900">Historical Data</td>
-                  <td className="p-4 text-center">3 months</td>
-                  <td className="p-4 text-center">12 months</td>
-                  <td className="p-4 text-center">Unlimited</td>
-                </tr>
-                
-                {/* Action buttons */}
-                <tr className="bg-gray-50">
-                  <td className="p-4 font-medium text-gray-900">Get Started</td>
-                  {plans?.map((plan) => (
-                    <td key={plan.id} className="p-4 text-center">
-                      <Button 
-                        onClick={() => handleSubscribe(plan.id)}
-                        className={cn(
-                          "w-full",
-                          plan.isPopular ? "bg-primary hover:bg-primary/90" : "bg-gray-900 hover:bg-gray-800"
-                        )}
-                        size="sm"
-                      >
-                        Choose {plan.name}
-                      </Button>
+                      Vessel Tracking Capacity
                     </td>
-                  ))}
-                </tr>
-              </tbody>
-            </table>
+                    <td className="p-6 text-center">
+                      <div className="bg-orange-50 rounded-lg py-2 px-4 inline-block">
+                        <span className="font-bold text-orange-700">50 vessels</span>
+                      </div>
+                    </td>
+                    <td className="p-6 text-center">
+                      <div className="bg-blue-50 rounded-lg py-2 px-4 inline-block">
+                        <span className="font-bold text-blue-700">200 vessels</span>
+                      </div>
+                    </td>
+                    <td className="p-6 text-center">
+                      <div className="bg-purple-50 rounded-lg py-2 px-4 inline-block">
+                        <span className="font-bold text-purple-700">Unlimited</span>
+                      </div>
+                    </td>
+                  </tr>
+                  
+                  {/* Real-time Positions */}
+                  <tr className="border-b border-gray-100 hover:bg-gradient-to-r hover:from-green-25 hover:to-emerald-25 transition-all duration-200">
+                    <td className="p-6 font-semibold text-gray-900 flex items-center text-lg">
+                      <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
+                        <MapPin className="w-6 h-6 text-green-600" />
+                      </div>
+                      Real-time Vessel Positions
+                    </td>
+                    <td className="p-6 text-center">
+                      <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                        <Check className="w-6 h-6 text-green-600" />
+                      </div>
+                    </td>
+                    <td className="p-6 text-center">
+                      <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                        <Check className="w-6 h-6 text-green-600" />
+                      </div>
+                    </td>
+                    <td className="p-6 text-center">
+                      <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                        <Check className="w-6 h-6 text-green-600" />
+                      </div>
+                    </td>
+                  </tr>
+                  
+                  {/* Port & Refinery Access */}
+                  <tr className="border-b border-gray-100 hover:bg-gradient-to-r hover:from-purple-25 hover:to-pink-25 transition-all duration-200">
+                    <td className="p-6 font-semibold text-gray-900 flex items-center text-lg">
+                      <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mr-4">
+                        <Building2 className="w-6 h-6 text-purple-600" />
+                      </div>
+                      Maritime Infrastructure Access
+                    </td>
+                    <td className="p-6 text-center">
+                      <div className="bg-orange-50 rounded-lg py-2 px-4 inline-block">
+                        <span className="font-medium text-orange-700">Regional Access</span>
+                      </div>
+                    </td>
+                    <td className="p-6 text-center">
+                      <div className="bg-blue-50 rounded-lg py-2 px-4 inline-block">
+                        <span className="font-medium text-blue-700">Full Network</span>
+                      </div>
+                    </td>
+                    <td className="p-6 text-center">
+                      <div className="bg-purple-50 rounded-lg py-2 px-4 inline-block">
+                        <span className="font-medium text-purple-700">Global Coverage</span>
+                      </div>
+                    </td>
+                  </tr>
+                  
+                  {/* Broker Features */}
+                  <tr className="border-b border-gray-100 hover:bg-gradient-to-r hover:from-red-25 hover:to-rose-25 transition-all duration-200">
+                    <td className="p-6 font-semibold text-gray-900 flex items-center text-lg">
+                      <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mr-4">
+                        <Users className="w-6 h-6 text-red-600" />
+                      </div>
+                      Professional Broker Tools
+                    </td>
+                    <td className="p-6 text-center">
+                      <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto">
+                        <X className="w-6 h-6 text-red-600" />
+                      </div>
+                    </td>
+                    <td className="p-6 text-center">
+                      <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                        <Check className="w-6 h-6 text-green-600" />
+                      </div>
+                    </td>
+                    <td className="p-6 text-center">
+                      <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                        <Check className="w-6 h-6 text-green-600" />
+                      </div>
+                    </td>
+                  </tr>
+                  
+                  {/* Analytics Dashboard */}
+                  <tr className="border-b border-gray-100 hover:bg-gradient-to-r hover:from-orange-25 hover:to-amber-25 transition-all duration-200">
+                    <td className="p-6 font-semibold text-gray-900 flex items-center text-lg">
+                      <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mr-4">
+                        <BarChart3 className="w-6 h-6 text-orange-600" />
+                      </div>
+                      Analytics & Reporting
+                    </td>
+                    <td className="p-6 text-center">
+                      <div className="bg-orange-50 rounded-lg py-2 px-4 inline-block">
+                        <span className="font-medium text-orange-700">Basic Reports</span>
+                      </div>
+                    </td>
+                    <td className="p-6 text-center">
+                      <div className="bg-blue-50 rounded-lg py-2 px-4 inline-block">
+                        <span className="font-medium text-blue-700">Advanced Analytics</span>
+                      </div>
+                    </td>
+                    <td className="p-6 text-center">
+                      <div className="bg-purple-50 rounded-lg py-2 px-4 inline-block">
+                        <span className="font-medium text-purple-700">Enterprise Intelligence</span>
+                      </div>
+                    </td>
+                  </tr>
+                  
+                  {/* Document Generation */}
+                  <tr className="border-b border-gray-100 hover:bg-gradient-to-r hover:from-indigo-25 hover:to-blue-25 transition-all duration-200">
+                    <td className="p-6 font-semibold text-gray-900 flex items-center text-lg">
+                      <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mr-4">
+                        <FileText className="w-6 h-6 text-indigo-600" />
+                      </div>
+                      Document Generation Suite
+                    </td>
+                    <td className="p-6 text-center">
+                      <div className="bg-orange-50 rounded-lg py-2 px-4 inline-block">
+                        <span className="font-medium text-orange-700">Standard Docs</span>
+                      </div>
+                    </td>
+                    <td className="p-6 text-center">
+                      <div className="bg-blue-50 rounded-lg py-2 px-4 inline-block">
+                        <span className="font-medium text-blue-700">Professional Suite</span>
+                      </div>
+                    </td>
+                    <td className="p-6 text-center">
+                      <div className="bg-purple-50 rounded-lg py-2 px-4 inline-block">
+                        <span className="font-medium text-purple-700">Complete Library</span>
+                      </div>
+                    </td>
+                  </tr>
+                  
+                  {/* Support Level */}
+                  <tr className="border-b border-gray-100 hover:bg-gradient-to-r hover:from-yellow-25 hover:to-orange-25 transition-all duration-200">
+                    <td className="p-6 font-semibold text-gray-900 flex items-center text-lg">
+                      <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mr-4">
+                        <Shield className="w-6 h-6 text-yellow-600" />
+                      </div>
+                      Customer Support
+                    </td>
+                    <td className="p-6 text-center">
+                      <div className="bg-orange-50 rounded-lg py-2 px-4 inline-block">
+                        <span className="font-medium text-orange-700">Email Support</span>
+                      </div>
+                    </td>
+                    <td className="p-6 text-center">
+                      <div className="bg-blue-50 rounded-lg py-2 px-4 inline-block">
+                        <span className="font-medium text-blue-700">Priority Support</span>
+                      </div>
+                    </td>
+                    <td className="p-6 text-center">
+                      <div className="bg-purple-50 rounded-lg py-2 px-4 inline-block">
+                        <span className="font-medium text-purple-700">24/7 Dedicated</span>
+                      </div>
+                    </td>
+                  </tr>
+                  
+                  {/* Action buttons */}
+                  <tr className="bg-gradient-to-r from-gray-50 to-blue-50">
+                    <td className="p-6 font-bold text-gray-900 text-lg">Start Your Journey</td>
+                    {plans?.map((plan, index) => (
+                      <td key={plan.id} className="p-6 text-center">
+                        <Button 
+                          onClick={() => handleSubscribe(plan.id)}
+                          className={cn(
+                            "w-full py-3 px-6 text-lg font-semibold shadow-lg transition-all duration-300 transform hover:scale-105",
+                            index === 0 && "bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600",
+                            index === 1 && "bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600",
+                            index === 2 && "bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                          )}
+                        >
+                          Choose {plan.name}
+                        </Button>
+                      </td>
+                    ))}
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
-      </div>
+      )}
       
       {/* FAQ Section */}
       <div className="mt-16 mx-auto max-w-4xl">
