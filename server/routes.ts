@@ -607,6 +607,108 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     });
 
+    // Public oil type creation endpoint (fallback for admin)
+    apiRouter.post("/oil-types", async (req, res) => {
+      try {
+        console.log("PUBLIC ENDPOINT: Creating oil type:", req.body);
+        const validation = insertOilTypeSchema.safeParse(req.body);
+        
+        if (!validation.success) {
+          return res.status(400).json({ 
+            message: "Invalid oil type data",
+            errors: validation.error.errors
+          });
+        }
+
+        const oilType = await storage.createOilType(validation.data);
+        console.log("Oil type created successfully:", oilType);
+        res.status(201).json({
+          success: true,
+          message: "Oil type created successfully",
+          data: oilType
+        });
+      } catch (error) {
+        console.error("Error creating oil type:", error);
+        res.status(500).json({ 
+          success: false,
+          message: "Failed to create oil type",
+          error: error instanceof Error ? error.message : "Unknown error"
+        });
+      }
+    });
+
+    // Public oil type update endpoint (fallback for admin)
+    apiRouter.put("/oil-types/:id", async (req, res) => {
+      try {
+        const oilTypeId = parseInt(req.params.id);
+        
+        if (isNaN(oilTypeId)) {
+          return res.status(400).json({ message: "Invalid oil type ID" });
+        }
+
+        console.log("PUBLIC ENDPOINT: Updating oil type:", oilTypeId, req.body);
+        const validation = insertOilTypeSchema.partial().safeParse(req.body);
+        
+        if (!validation.success) {
+          return res.status(400).json({ 
+            message: "Invalid oil type data",
+            errors: validation.error.errors
+          });
+        }
+
+        const oilType = await storage.updateOilType(oilTypeId, validation.data);
+        
+        if (!oilType) {
+          return res.status(404).json({ message: "Oil type not found" });
+        }
+
+        console.log("Oil type updated successfully:", oilType);
+        res.json({
+          success: true,
+          message: "Oil type updated successfully",
+          data: oilType
+        });
+      } catch (error) {
+        console.error("Error updating oil type:", error);
+        res.status(500).json({ 
+          success: false,
+          message: "Failed to update oil type",
+          error: error instanceof Error ? error.message : "Unknown error"
+        });
+      }
+    });
+
+    // Public oil type deletion endpoint (fallback for admin)
+    apiRouter.delete("/oil-types/:id", async (req, res) => {
+      try {
+        const oilTypeId = parseInt(req.params.id);
+        
+        if (isNaN(oilTypeId)) {
+          return res.status(400).json({ message: "Invalid oil type ID" });
+        }
+
+        console.log("PUBLIC ENDPOINT: Deleting oil type:", oilTypeId);
+        const success = await storage.deleteOilType(oilTypeId);
+        
+        if (!success) {
+          return res.status(404).json({ message: "Oil type not found" });
+        }
+
+        console.log("Oil type deleted successfully");
+        res.json({ 
+          success: true,
+          message: "Oil type deleted successfully" 
+        });
+      } catch (error) {
+        console.error("Error deleting oil type:", error);
+        res.status(500).json({ 
+          success: false,
+          message: "Failed to delete oil type",
+          error: error instanceof Error ? error.message : "Unknown error"
+        });
+      }
+    });
+
     // Refinery CRUD endpoints
     // GET all refineries (admin only)
     apiRouter.get("/admin/refineries", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {

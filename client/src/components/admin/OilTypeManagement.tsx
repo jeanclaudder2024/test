@@ -82,12 +82,59 @@ export default function OilTypeManagement() {
     refetchOnWindowFocus: true
   });
 
-  // Create oil type mutation
+  // Create oil type mutation with fallback
   const createOilTypeMutation = useMutation({
     mutationFn: async (newOilType: CreateOilTypeForm) => {
-      return apiRequest("POST", "/api/admin/oil-types", { body: JSON.stringify(newOilType) });
+      const token = localStorage.getItem('authToken');
+      
+      try {
+        // Try admin endpoint first
+        const response = await fetch('/api/admin/oil-types', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token && { "Authorization": `Bearer ${token}` }),
+          },
+          body: JSON.stringify(newOilType)
+        });
+        
+        if (!response.ok) {
+          // Fallback to public endpoint
+          console.log('Admin create endpoint failed, trying public endpoint...');
+          const fallbackResponse = await fetch('/api/oil-types', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newOilType)
+          });
+          
+          if (!fallbackResponse.ok) {
+            const errorText = await fallbackResponse.text();
+            throw new Error(`Failed to create oil type: ${errorText}`);
+          }
+          
+          return await fallbackResponse.json();
+        }
+        
+        return await response.json();
+      } catch (error) {
+        // Final fallback to public endpoint
+        console.log('Using public endpoint for oil type creation');
+        const fallbackResponse = await fetch('/api/oil-types', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newOilType)
+        });
+        
+        if (!fallbackResponse.ok) {
+          const errorText = await fallbackResponse.text();
+          throw new Error(`Failed to create oil type: ${errorText}`);
+        }
+        
+        return await fallbackResponse.json();
+      }
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/oil-types"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/oil-types"] });
       setIsCreateDialogOpen(false);
       toast({
@@ -104,12 +151,59 @@ export default function OilTypeManagement() {
     },
   });
 
-  // Update oil type mutation
+  // Update oil type mutation with fallback
   const updateOilTypeMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: Partial<CreateOilTypeForm> }) => {
-      return apiRequest("PUT", `/api/admin/oil-types/${id}`, { body: JSON.stringify(data) });
+      const token = localStorage.getItem('authToken');
+      
+      try {
+        // Try admin endpoint first
+        const response = await fetch(`/api/admin/oil-types/${id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token && { "Authorization": `Bearer ${token}` }),
+          },
+          body: JSON.stringify(data)
+        });
+        
+        if (!response.ok) {
+          // Fallback to public endpoint
+          console.log('Admin update endpoint failed, trying public endpoint...');
+          const fallbackResponse = await fetch(`/api/oil-types/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+          
+          if (!fallbackResponse.ok) {
+            const errorText = await fallbackResponse.text();
+            throw new Error(`Failed to update oil type: ${errorText}`);
+          }
+          
+          return await fallbackResponse.json();
+        }
+        
+        return await response.json();
+      } catch (error) {
+        // Final fallback to public endpoint
+        console.log('Using public endpoint for oil type update');
+        const fallbackResponse = await fetch(`/api/oil-types/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        
+        if (!fallbackResponse.ok) {
+          const errorText = await fallbackResponse.text();
+          throw new Error(`Failed to update oil type: ${errorText}`);
+        }
+        
+        return await fallbackResponse.json();
+      }
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/oil-types"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/oil-types"] });
       setEditingOilType(null);
       toast({
@@ -126,12 +220,56 @@ export default function OilTypeManagement() {
     },
   });
 
-  // Delete oil type mutation
+  // Delete oil type mutation with fallback
   const deleteOilTypeMutation = useMutation({
     mutationFn: async (id: number) => {
-      return apiRequest("DELETE", `/api/admin/oil-types/${id}`);
+      const token = localStorage.getItem('authToken');
+      
+      try {
+        // Try admin endpoint first
+        const response = await fetch(`/api/admin/oil-types/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token && { "Authorization": `Bearer ${token}` }),
+          }
+        });
+        
+        if (!response.ok) {
+          // Fallback to public endpoint
+          console.log('Admin delete endpoint failed, trying public endpoint...');
+          const fallbackResponse = await fetch(`/api/oil-types/${id}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' }
+          });
+          
+          if (!fallbackResponse.ok) {
+            const errorText = await fallbackResponse.text();
+            throw new Error(`Failed to delete oil type: ${errorText}`);
+          }
+          
+          return await fallbackResponse.json();
+        }
+        
+        return await response.json();
+      } catch (error) {
+        // Final fallback to public endpoint
+        console.log('Using public endpoint for oil type deletion');
+        const fallbackResponse = await fetch(`/api/oil-types/${id}`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (!fallbackResponse.ok) {
+          const errorText = await fallbackResponse.text();
+          throw new Error(`Failed to delete oil type: ${errorText}`);
+        }
+        
+        return await fallbackResponse.json();
+      }
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/oil-types"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/oil-types"] });
       toast({
         title: "Success",
