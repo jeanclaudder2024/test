@@ -1,4 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
+import { useAuth } from './useAuth';
+import { useSubscription } from './useSubscription';
 
 interface BrokerSubscriptionStatus {
   hasActiveSubscription: boolean;
@@ -9,17 +11,24 @@ interface BrokerSubscriptionStatus {
 }
 
 export function useBrokerSubscription() {
+  const { user } = useAuth();
+  const { canAccessBrokerFeatures } = useSubscription();
+  
   const { data, isLoading, error } = useQuery<BrokerSubscriptionStatus>({
     queryKey: ['/api/broker/subscription-status'],
+    enabled: !!user,
     retry: false,
   });
+
+  // FIXED: Use corrected subscription logic - only PAID Professional+ plans get broker access
+  const hasAccess = canAccessBrokerFeatures || (user?.role === 'admin');
 
   return {
     subscriptionStatus: data,
     isLoading,
     error,
-    hasAccess: data?.hasActiveSubscription || false,
-    needsUpgrade: !data?.hasActiveSubscription && data?.isProfileComplete === false,
+    hasAccess,
+    needsUpgrade: !hasAccess,
     isExpired: data?.membershipStatus === 'expired'
   };
 }

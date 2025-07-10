@@ -66,7 +66,8 @@ export function useSubscription(): SubscriptionFeatures {
     hasTrialAccess: hasActiveTrial,
     isTrialExpired: trialExpired || trialDaysRemaining === 0,
     trialDaysRemaining,
-    canAccessBrokerFeatures: hasActiveSubscription || hasActiveTrial || effectivePlan >= 2,
+    // FIXED: Broker features require PAID Professional (Plan 2) or Enterprise (Plan 3) - NO trial access
+    canAccessBrokerFeatures: (hasActiveSubscription && effectivePlan >= 2) || (user?.role === 'admin'),
     canAccessAllZones: hasActiveSubscription || hasActiveTrial || effectivePlan >= 3,
     canGenerateDocuments: hasActiveSubscription || hasActiveTrial || effectivePlan >= 1,
     maxVessels: effectivePlan >= 3 ? 999 : effectivePlan >= 2 ? 100 : 50, // Basic=50, Professional=100, Enterprise=unlimited

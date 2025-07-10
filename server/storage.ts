@@ -2502,17 +2502,13 @@ export class DatabaseStorage implements IStorage {
       // Broker features require Professional (Plan 2) or Enterprise (Plan 3) plan
       const canAccessBrokerFeatures = planId >= 2;
       
-      // Check if trial is still active
-      const isTrialActive = subscription.status === 'trial' && 
-                           subscription.trialEndDate && 
-                           new Date(subscription.trialEndDate) > now;
-      
-      // Check if subscription is active
+      // Check if subscription is PAID and active (NO trial access for broker features)
       const isSubscriptionActive = subscription.status === 'active' && 
                                   subscription.currentPeriodEnd && 
                                   new Date(subscription.currentPeriodEnd) > now;
 
-      const hasActiveSubscription = canAccessBrokerFeatures && (isTrialActive || isSubscriptionActive);
+      // FIXED: Broker access requires PAID subscription only (no trial)
+      const hasActiveSubscription = canAccessBrokerFeatures && isSubscriptionActive;
 
       return {
         hasActiveSubscription,
