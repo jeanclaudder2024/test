@@ -1554,39 +1554,59 @@ export const insertLandingPageContentSchema = createInsertSchema(landingPageCont
 export const brokerDeals = pgTable("broker_deals", {
   id: serial("id").primaryKey(),
   brokerId: integer("broker_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  companyId: integer("company_id").references(() => realCompanies.id, { onDelete: "set null" }),
+  sellerCompanyId: integer("seller_company_id"),
+  buyerCompanyId: integer("buyer_company_id"),
+  vesselId: integer("vessel_id").references(() => vessels.id, { onDelete: "set null" }),
+  
   dealTitle: varchar("deal_title", { length: 255 }).notNull(),
-  companyName: varchar("company_name", { length: 255 }).notNull(),
-  dealValue: decimal("deal_value", { precision: 15, scale: 2 }).notNull(),
-  status: varchar("status", { length: 50 }).notNull().default("pending"),
-  progress: integer("progress").notNull().default(0),
-  startDate: timestamp("start_date").notNull().defaultNow(),
-  expectedCloseDate: timestamp("expected_close_date"),
-  oilType: varchar("oil_type", { length: 100 }).notNull(),
-  quantity: varchar("quantity", { length: 100 }).notNull(),
-  notes: text("notes"),
-  documentsCount: integer("documents_count").default(0),
-  commissionRate: decimal("commission_rate", { precision: 5, scale: 2 }).default("0.00"),
-  commissionAmount: decimal("commission_amount", { precision: 15, scale: 2 }).default("0.00"),
+  dealDescription: text("deal_description"),
+  cargoType: varchar("cargo_type", { length: 100 }).notNull(),
+  quantity: decimal("quantity", { precision: 12, scale: 2 }).notNull(),
+  quantityUnit: varchar("quantity_unit", { length: 20 }).default("MT"),
+  pricePerUnit: decimal("price_per_unit", { precision: 10, scale: 2 }).notNull(),
+  totalValue: decimal("total_value", { precision: 15, scale: 2 }).notNull(),
+  currency: varchar("currency", { length: 10 }).default("USD"),
+  
+  status: varchar("status", { length: 50 }).default("draft"),
+  priority: varchar("priority", { length: 20 }).default("medium"),
+  commissionRate: decimal("commission_rate", { precision: 5, scale: 4 }).default("0.0150"),
+  commissionAmount: decimal("commission_amount", { precision: 12, scale: 2 }),
+  
+  originPort: varchar("origin_port", { length: 255 }),
+  destinationPort: varchar("destination_port", { length: 255 }),
+  departureDate: timestamp("departure_date"),
+  arrivalDate: timestamp("arrival_date"),
+  
+  progressPercentage: integer("progress_percentage").default(0),
+  completionDate: timestamp("completion_date"),
+  
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+  notes: text("notes"),
 });
 
 export const brokerDocuments = pgTable("broker_documents", {
   id: serial("id").primaryKey(),
   brokerId: integer("broker_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   dealId: integer("deal_id").references(() => brokerDeals.id, { onDelete: "cascade" }),
-  name: varchar("name", { length: 255 }).notNull(),
-  originalName: varchar("original_name", { length: 255 }).notNull(),
-  fileType: varchar("file_type", { length: 50 }).notNull(),
-  fileSize: varchar("file_size", { length: 50 }).notNull(),
+  
+  documentName: varchar("document_name", { length: 255 }).notNull(),
+  documentType: varchar("document_type", { length: 100 }).notNull(),
   filePath: varchar("file_path", { length: 500 }).notNull(),
+  fileSize: integer("file_size").notNull(),
+  mimeType: varchar("mime_type", { length: 100 }),
+  
   description: text("description"),
+  version: varchar("version", { length: 20 }).default("1.0"),
+  status: varchar("status", { length: 50 }).default("active"),
+  confidentialityLevel: varchar("confidentiality_level", { length: 20 }).default("standard"),
+  
   uploadDate: timestamp("upload_date").defaultNow(),
-  uploadedBy: varchar("uploaded_by", { length: 255 }).notNull(),
+  lastAccessed: timestamp("last_accessed"),
   downloadCount: integer("download_count").default(0),
-  isAdminFile: boolean("is_admin_file").default(false),
+  
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const brokerAdminFiles = pgTable("broker_admin_files", {
@@ -1610,37 +1630,60 @@ export const brokerAdminFiles = pgTable("broker_admin_files", {
 export const brokerStats = pgTable("broker_stats", {
   id: serial("id").primaryKey(),
   brokerId: integer("broker_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  activeDeals: integer("active_deals").default(0),
+  
   totalDeals: integer("total_deals").default(0),
+  activeDeals: integer("active_deals").default(0),
   completedDeals: integer("completed_deals").default(0),
   cancelledDeals: integer("cancelled_deals").default(0),
-  totalValue: decimal("total_value", { precision: 15, scale: 2 }).default("0.00"),
+  
+  totalRevenue: decimal("total_revenue", { precision: 15, scale: 2 }).default("0.00"),
   totalCommission: decimal("total_commission", { precision: 15, scale: 2 }).default("0.00"),
+  averageDealValue: decimal("average_deal_value", { precision: 12, scale: 2 }).default("0.00"),
+  
   successRate: decimal("success_rate", { precision: 5, scale: 2 }).default("0.00"),
-  completionRate: decimal("completion_rate", { precision: 5, scale: 2 }).default("0.00"),
-  averageDealSize: decimal("average_deal_size", { precision: 15, scale: 2 }).default("0.00"),
-  lastUpdated: timestamp("last_updated").defaultNow(),
+  averageDealDuration: integer("average_deal_duration").default(0),
+  clientSatisfactionScore: decimal("client_satisfaction_score", { precision: 3, scale: 2 }).default("0.00"),
+  
+  documentsUploaded: integer("documents_uploaded").default(0),
+  lastActivityDate: timestamp("last_activity_date"),
+  
+  statsPeriod: varchar("stats_period", { length: 20 }).default("all_time"),
+  periodStartDate: timestamp("period_start_date"),
+  periodEndDate: timestamp("period_end_date"),
+  
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const brokerProfiles = pgTable("broker_profiles", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  firstName: varchar("first_name", { length: 100 }),
-  lastName: varchar("last_name", { length: 100 }),
-  dateOfBirth: timestamp("date_of_birth"),
-  nationality: varchar("nationality", { length: 100 }),
-  experience: varchar("experience", { length: 100 }),
-  specialization: varchar("specialization", { length: 100 }),
-  previousEmployer: varchar("previous_employer", { length: 255 }),
+  
+  companyName: varchar("company_name", { length: 255 }),
+  jobTitle: varchar("job_title", { length: 255 }),
+  licenseNumber: varchar("license_number", { length: 100 }),
+  yearsExperience: integer("years_experience"),
+  specializations: text("specializations"),
+  
+  businessPhone: varchar("business_phone", { length: 50 }),
+  businessEmail: varchar("business_email", { length: 255 }),
+  businessAddress: text("business_address"),
+  websiteUrl: varchar("website_url", { length: 255 }),
+  linkedinUrl: varchar("linkedin_url", { length: 255 }),
+  
   certifications: text("certifications"),
-  passportPhotoPath: varchar("passport_photo_path", { length: 500 }),
-  phoneNumber: varchar("phone_number", { length: 50 }),
-  address: text("address"),
-  isProfileComplete: boolean("is_profile_complete").default(false),
-  membershipStatus: varchar("membership_status", { length: 50 }).default("inactive"),
-  membershipExpiresAt: timestamp("membership_expires_at"),
-  cardNumber: varchar("card_number", { length: 50 }),
+  complianceStatus: varchar("compliance_status", { length: 50 }).default("pending"),
+  lastComplianceCheck: timestamp("last_compliance_check"),
+  
+  rating: decimal("rating", { precision: 3, scale: 2 }).default("0.00"),
+  totalRatings: integer("total_ratings").default(0),
+  verifiedBroker: boolean("verified_broker").default(false),
+  premiumMember: boolean("premium_member").default(false),
+  
+  notificationPreferences: text("notification_preferences"),
+  timezone: varchar("timezone", { length: 50 }).default("UTC"),
+  languagePreference: varchar("language_preference", { length: 10 }).default("en"),
+  
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

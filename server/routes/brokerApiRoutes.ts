@@ -44,6 +44,13 @@ const upload = multer({
 // Get broker profile
 router.get('/profile', authenticateToken, async (req: Request, res: Response) => {
   try {
+    // Admin users have full access without payment restrictions
+    if (req.user!.role === 'admin') {
+      const profile = await storage.getBrokerProfile(req.user!.id);
+      res.json(profile);
+      return;
+    }
+    
     const profile = await storage.getBrokerProfile(req.user!.id);
     res.json(profile);
   } catch (error) {
@@ -66,6 +73,13 @@ router.put('/profile', authenticateToken, async (req: Request, res: Response) =>
 // Get broker deals
 router.get('/deals', authenticateToken, async (req: Request, res: Response) => {
   try {
+    // Admin users have full access without payment restrictions
+    if (req.user!.role === 'admin') {
+      const deals = await storage.getBrokerDeals(req.user!.id);
+      res.json(deals);
+      return;
+    }
+    
     const deals = await storage.getBrokerDeals(req.user!.id);
     res.json(deals);
   } catch (error) {
