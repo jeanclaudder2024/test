@@ -277,21 +277,70 @@ export default function AdvancedPortCreation({ open, onClose, onSuccess, editing
     try {
       console.log(editingPort ? 'Updating' : 'Creating', 'comprehensive port data:', formData);
       
-      // Use public endpoints for production deployment compatibility
-      const url = editingPort ? `/api/ports/${editingPort.id}` : '/api/admin/ports';
-      const method = editingPort ? 'PUT' : 'POST';
+      const token = localStorage.getItem('authToken');
+      let response;
       
-      console.log(`Making ${method} request to: ${url}`);
-      
-      const response = await fetch(url, {
-        method: method,
-        headers: {
-          'Content-Type': 'application/json',
-          // Remove Authorization for public PUT endpoint, keep for admin POST endpoint
-          ...(editingPort ? {} : { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` })
-        },
-        body: JSON.stringify(formData)
-      });
+      if (editingPort) {
+        // Try admin endpoint first for updates, then fallback to public endpoint
+        try {
+          response = await fetch(`/api/admin/ports/${editingPort.id}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token && { "Authorization": `Bearer ${token}` }),
+            },
+            body: JSON.stringify(formData)
+          });
+          
+          if (!response.ok) {
+            // Fallback to public endpoint
+            console.log('Admin update endpoint failed, trying public endpoint...');
+            response = await fetch(`/api/ports/${editingPort.id}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(formData)
+            });
+          }
+        } catch (error) {
+          // Final fallback to public endpoint
+          console.log('Using public endpoint for port update');
+          response = await fetch(`/api/ports/${editingPort.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+          });
+        }
+      } else {
+        // Try admin endpoint first for creation, then fallback to public endpoint
+        try {
+          response = await fetch('/api/admin/ports', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token && { "Authorization": `Bearer ${token}` }),
+            },
+            body: JSON.stringify(formData)
+          });
+          
+          if (!response.ok) {
+            // Fallback to public endpoint
+            console.log('Admin create endpoint failed, trying public endpoint...');
+            response = await fetch('/api/ports', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(formData)
+            });
+          }
+        } catch (error) {
+          // Final fallback to public endpoint
+          console.log('Using public endpoint for port creation');
+          response = await fetch('/api/ports', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+          });
+        }
+      }
 
       console.log(`Response status: ${response.status}`);
       

@@ -9379,6 +9379,95 @@ Keep the description professional, informative, and around 150-200 words. Focus 
     }
   });
 
+  // Admin port creation endpoint
+  apiRouter.post("/admin/ports", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      console.log("ADMIN ENDPOINT: Creating port:", req.body);
+      const portData = insertPortSchema.parse(req.body);
+      const newPort = await storage.createPort(portData);
+      console.log("Port created successfully:", newPort);
+      
+      res.status(201).json({
+        success: true,
+        message: "Port created successfully",
+        data: newPort
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      console.error("Error creating port:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "Failed to create port",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Admin port update endpoint
+  apiRouter.put("/admin/ports/:id", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid port ID" });
+      }
+
+      console.log("ADMIN ENDPOINT: Updating port:", id, req.body);
+      const portUpdate = req.body;
+      const updatedPort = await storage.updatePort(id, portUpdate);
+      
+      if (!updatedPort) {
+        return res.status(404).json({ message: "Port not found" });
+      }
+      
+      console.log("Port updated successfully:", updatedPort);
+      res.json({
+        success: true,
+        message: "Port updated successfully",
+        data: updatedPort
+      });
+    } catch (error) {
+      console.error("Error updating port:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to update port",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Admin port deletion endpoint
+  apiRouter.delete("/admin/ports/:id", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid port ID" });
+      }
+
+      console.log("ADMIN ENDPOINT: Deleting port:", id);
+      const success = await storage.deletePort(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Port not found" });
+      }
+      
+      console.log("Port deleted successfully");
+      res.json({
+        success: true,
+        message: "Port deleted successfully"
+      });
+    } catch (error) {
+      console.error("Error deleting port:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to delete port",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   // Admin port statistics endpoint
   apiRouter.get("/admin/port-stats", async (req, res) => {
     try {
