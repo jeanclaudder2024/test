@@ -1919,10 +1919,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Create a specific API endpoint for polling vessel data as WebSocket fallback
-  apiRouter.get("/vessels/polling", async (req, res) => {
+  // Create a specific API endpoint for polling vessel data as WebSocket fallback with subscription limits
+  apiRouter.get("/vessels/polling", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
       console.log('REST API polling request received');
+      
+      // Get user subscription and apply limits
+      const user = req.user;
+      let subscriptionLimits = { maxVessels: 50, maxPorts: 5, maxRefineries: 10 }; // Default Basic plan limits
+      
+      if (user) {
+        try {
+          // Get user's subscription from database
+          const userSubscription = await db.select()
+            .from(userSubscriptions)
+            .where(eq(userSubscriptions.userId, user.id))
+            .limit(1);
+          
+          const subscription = userSubscription[0];
+          const planId = subscription?.planId || 1; // Default to Basic plan
+          
+          // Apply limits based on plan (admin users get unlimited access)
+          if (user.role === 'admin') {
+            subscriptionLimits = { maxVessels: 999, maxPorts: 999, maxRefineries: 999 };
+          } else {
+            subscriptionLimits = getSubscriptionLimits(planId);
+          }
+          
+          console.log(`User ${user.email} (Plan ${planId}) vessel polling limit: ${subscriptionLimits.maxVessels}`);
+        } catch (subError) {
+          console.error("Error fetching subscription:", subError);
+          // Use default Basic plan limits on error
+        }
+      }
       
       // Get region from query parameter if present
       const region = req.query.region as string | undefined;
@@ -1941,18 +1970,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const page = parseInt(req.query.page as string) || 1;
       const pageSize = parseInt(req.query.pageSize as string) || 500;
       
-      // Apply pagination
+      // Apply subscription-based vessel limit first
+      const limitedVessels = vessels.slice(0, subscriptionLimits.maxVessels);
+      if (vessels.length > subscriptionLimits.maxVessels) {
+        console.log(`Applied subscription limit: showing ${limitedVessels.length} of ${vessels.length} total vessels`);
+      }
+      
+      // Apply pagination to limited vessels
       const startIndex = (page - 1) * pageSize;
       const endIndex = startIndex + pageSize;
-      const paginatedVessels = vessels.slice(startIndex, endIndex);
+      const paginatedVessels = limitedVessels.slice(startIndex, endIndex);
       
-      // Return with timestamp and metadata for pagination
+      // Return with timestamp and metadata for pagination (using limited vessel count)
       res.json({
         vessels: paginatedVessels,
         timestamp: new Date().toISOString(),
         count: paginatedVessels.length,
-        totalCount: vessels.length,
-        totalPages: Math.ceil(vessels.length / pageSize),
+        totalCount: limitedVessels.length, // Use limited count for subscription-aware pagination
+        totalPages: Math.ceil(limitedVessels.length / pageSize),
         currentPage: page,
         pageSize: pageSize
       });

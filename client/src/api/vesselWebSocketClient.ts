@@ -325,9 +325,17 @@ export class VesselWebSocketClient {
         params.append('vesselType', this.config.vesselType);
       }
       
-      // Try the polling endpoint first (faster)
+      // Try the polling endpoint first (faster) with authentication
       try {
-        const pollingResponse = await fetch(`/api/vessels/polling?${params.toString()}`);
+        const token = localStorage.getItem('authToken');
+        const headers: Record<string, string> = {
+          ...(token ? { "Authorization": `Bearer ${token}` } : {})
+        };
+        
+        const pollingResponse = await fetch(`/api/vessels/polling?${params.toString()}`, {
+          headers,
+          credentials: "include"
+        });
         
         if (pollingResponse.ok) {
           const data = await pollingResponse.json();
@@ -348,8 +356,16 @@ export class VesselWebSocketClient {
         console.warn('Polling endpoint failed:', pollingError);
       }
       
-      // Fall back to regular vessels endpoint
-      const response = await fetch(`/api/vessels?${params.toString()}`);
+      // Fall back to regular vessels endpoint with authentication
+      const token = localStorage.getItem('authToken');
+      const headers: Record<string, string> = {
+        ...(token ? { "Authorization": `Bearer ${token}` } : {})
+      };
+      
+      const response = await fetch(`/api/vessels?${params.toString()}`, {
+        headers,
+        credentials: "include"
+      });
       
       if (response.ok) {
         const data = await response.json();

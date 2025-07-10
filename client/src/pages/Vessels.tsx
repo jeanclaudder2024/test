@@ -247,9 +247,14 @@ export default function Vessels() {
   useEffect(() => {
     const fetchPorts = async () => {
       try {
-        const response = await axios.get('/api/ports');
+        const token = localStorage.getItem('authToken');
+        const response = await axios.get('/api/ports', {
+          headers: {
+            ...(token ? { "Authorization": `Bearer ${token}` } : {})
+          }
+        });
         if (response.status === 200) {
-          setPorts(response.data);
+          setPorts(response.data.ports || response.data); // Handle both formats
         }
       } catch (error) {
         console.error('Failed to fetch ports for name resolution:', error);
@@ -347,11 +352,15 @@ export default function Vessels() {
       // If all external APIs failed, try polling endpoint as final fallback
       try {
         console.log('Trying fallback REST polling endpoint...');
+        const token = localStorage.getItem('authToken');
         const fallbackResponse = await axios.get('/api/vessels/polling', {
           params: { 
             region: selectedRegion,
             limit: MAX_OIL_VESSELS * 2, // Request more to ensure we get enough after filtering
             vesselType: 'oil'
+          },
+          headers: {
+            ...(token ? { "Authorization": `Bearer ${token}` } : {})
           }
         });
         
