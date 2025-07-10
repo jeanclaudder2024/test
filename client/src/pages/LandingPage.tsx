@@ -119,9 +119,9 @@ export default function LandingPage() {
 
   // Fetch subscription plans (no cache to always get latest)
   const { data: subscriptionPlans, isLoading: plansLoading } = useQuery({
-    queryKey: ['/api/admin/subscription-plans'],
+    queryKey: ['/api/subscription-plans'],
     queryFn: async () => {
-      const response = await apiRequest('GET', '/api/admin/subscription-plans');
+      const response = await apiRequest('GET', '/api/subscription-plans');
       if (!response.ok) {
         throw new Error('Failed to fetch subscription plans');
       }

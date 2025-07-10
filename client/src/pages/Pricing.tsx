@@ -42,21 +42,21 @@ export default function PricingPage() {
 
   // Fetch subscription plans (no cache to always get latest)
   const { data: plans, isLoading, error } = useQuery({
-    queryKey: ['/api/admin/subscription-plans'],
+    queryKey: ['/api/subscription-plans'],
     staleTime: 0, // Always fetch fresh data
     cacheTime: 0, // Don't cache the results
     queryFn: async () => {
       try {
         const response = await apiRequest(
           'GET',
-          '/api/admin/subscription-plans'
+          '/api/subscription-plans'
         );
         
         if (!response.ok) {
           throw new Error('Failed to fetch subscription plans');
         }
         
-        // Parse the response from the admin API
+        // Parse the response from the public API
         const plansData = await response.json();
         
         return plansData.map((plan: any) => ({
