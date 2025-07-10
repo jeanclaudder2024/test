@@ -101,6 +101,17 @@ import { enhancedPdfRouter } from './routes/enhanced-pdf';
 import { reliablePdfRouter } from './routes/reliable-pdf';
 import { maritimeRoutesRouter } from './routes/maritime-routes';
 
+// Helper function to get subscription limits based on plan
+function getSubscriptionLimits(planId: number | null) {
+  if (!planId || planId === 1) { // Basic plan
+    return { maxVessels: 50, maxPorts: 5, maxRefineries: 10 };
+  } else if (planId === 2) { // Professional plan
+    return { maxVessels: 100, maxPorts: 20, maxRefineries: 25 };
+  } else { // Enterprise plan (3) or higher
+    return { maxVessels: 999, maxPorts: 999, maxRefineries: 999 };
+  }
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup Supabase Authentication Routes (Primary Auth System)
   // Authentication routes handled in index.ts
@@ -1737,12 +1748,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Vessel endpoints - Oil vessels only
-  apiRouter.get("/vessels", async (req, res) => {
+  // Vessel endpoints - Oil vessels only with subscription limits
+  apiRouter.get("/vessels", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
       const region = req.query.region as string | undefined;
       const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
       const vesselType = req.query.type as string | undefined;
+      
+      // Get user subscription and apply limits
+      const user = req.user;
+      let subscriptionLimits = { maxVessels: 50, maxPorts: 5, maxRefineries: 10 }; // Default Basic plan limits
+      
+      if (user) {
+        try {
+          // Get user's subscription from database
+          const userSubscription = await db.select()
+            .from(userSubscriptions)
+            .where(eq(userSubscriptions.userId, user.id))
+            .limit(1);
+          
+          const subscription = userSubscription[0];
+          const planId = subscription?.planId || 1; // Default to Basic plan
+          
+          // Apply limits based on plan (admin users get unlimited access)
+          if (user.role === 'admin') {
+            subscriptionLimits = { maxVessels: 999, maxPorts: 999, maxRefineries: 999 };
+          } else {
+            subscriptionLimits = getSubscriptionLimits(planId);
+          }
+          
+          console.log(`User ${user.email} (Plan ${planId}) vessel limit: ${subscriptionLimits.maxVessels}`);
+        } catch (subError) {
+          console.error("Error fetching subscription:", subError);
+          // Use default Basic plan limits on error
+        }
+      }
       
       // Apply filters based on query parameters
       let vessels;
@@ -1784,9 +1824,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
       }
       
-      // Apply limit to reduce payload size if specified
-      if (limit && limit > 0 && limit < vessels.length) {
-        vessels = vessels.slice(0, limit);
+      // Apply subscription-based vessel limit (override query limit if subscription limit is lower)
+      const finalLimit = limit ? Math.min(limit, subscriptionLimits.maxVessels) : subscriptionLimits.maxVessels;
+      if (vessels.length > finalLimit) {
+        vessels = vessels.slice(0, finalLimit);
+        console.log(`Applied subscription limit: showing ${finalLimit} of ${vessels.length} total vessels`);
       }
       
       res.json(vessels);
@@ -2832,13 +2874,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Port API endpoints - Direct Supabase connection
-  apiRouter.get("/ports", async (req, res) => {
+  // Port API endpoints - Direct Supabase connection with subscription limits
+  apiRouter.get("/ports", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
       console.log("Fetching ports directly from Supabase database...");
       
       // Filter by region if specified in the query parameters
       const { region } = req.query;
+      
+      // Get user subscription and apply limits
+      const user = req.user;
+      let subscriptionLimits = { maxVessels: 50, maxPorts: 5, maxRefineries: 10 }; // Default Basic plan limits
+      
+      if (user) {
+        try {
+          // Get user's subscription from database
+          const userSubscription = await db.select()
+            .from(userSubscriptions)
+            .where(eq(userSubscriptions.userId, user.id))
+            .limit(1);
+          
+          const subscription = userSubscription[0];
+          const planId = subscription?.planId || 1; // Default to Basic plan
+          
+          // Apply limits based on plan (admin users get unlimited access)
+          if (user.role === 'admin') {
+            subscriptionLimits = { maxVessels: 999, maxPorts: 999, maxRefineries: 999 };
+          } else {
+            subscriptionLimits = getSubscriptionLimits(planId);
+          }
+          
+          console.log(`User ${user.email} (Plan ${planId}) port limit: ${subscriptionLimits.maxPorts}`);
+        } catch (subError) {
+          console.error("Error fetching subscription:", subError);
+          // Use default Basic plan limits on error
+        }
+      }
       
       // Always use Supabase database for authentic port data
       let ports;
@@ -3004,15 +3075,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
 
-      console.log(`Processed ${portsWithVessels.length} ports with vessel connections`);
+      // Apply subscription-based port limit
+      const limitedPorts = portsWithVessels.slice(0, subscriptionLimits.maxPorts);
+      if (portsWithVessels.length > subscriptionLimits.maxPorts) {
+        console.log(`Applied subscription limit: showing ${limitedPorts.length} of ${portsWithVessels.length} total ports`);
+      }
+      
+      console.log(`Processed ${limitedPorts.length} ports with vessel connections`);
 
       res.json({
-        ports: portsWithVessels,
-        total: portsWithVessels.length,
+        ports: limitedPorts,
+        total: limitedPorts.length,
         summary: {
-          totalPorts: portsWithVessels.length,
-          portsWithVessels: portsWithVessels.filter(p => p.vesselCount > 0).length,
-          totalVesselConnections: portsWithVessels.reduce((sum, p) => sum + p.vesselCount, 0)
+          totalPorts: limitedPorts.length,
+          portsWithVessels: limitedPorts.filter(p => p.vesselCount > 0).length,
+          totalVesselConnections: limitedPorts.reduce((sum, p) => sum + p.vesselCount, 0)
         }
       });
     } catch (error) {
@@ -3349,10 +3426,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Refinery endpoints
-  apiRouter.get("/refineries", async (req, res) => {
+  // Refinery endpoints with subscription limits
+  apiRouter.get("/refineries", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
       const region = req.query.region as string | undefined;
+      
+      // Get user subscription and apply limits
+      const user = req.user;
+      let subscriptionLimits = { maxVessels: 50, maxPorts: 5, maxRefineries: 10 }; // Default Basic plan limits
+      
+      if (user) {
+        try {
+          // Get user's subscription from database
+          const userSubscription = await db.select()
+            .from(userSubscriptions)
+            .where(eq(userSubscriptions.userId, user.id))
+            .limit(1);
+          
+          const subscription = userSubscription[0];
+          const planId = subscription?.planId || 1; // Default to Basic plan
+          
+          // Apply limits based on plan (admin users get unlimited access)
+          if (user.role === 'admin') {
+            subscriptionLimits = { maxVessels: 999, maxPorts: 999, maxRefineries: 999 };
+          } else {
+            subscriptionLimits = getSubscriptionLimits(planId);
+          }
+          
+          console.log(`User ${user.email} (Plan ${planId}) refinery limit: ${subscriptionLimits.maxRefineries}`);
+        } catch (subError) {
+          console.error("Error fetching subscription:", subError);
+          // Use default Basic plan limits on error
+        }
+      }
       
       // Apply filters based on query parameters
       let refineries;
@@ -3395,7 +3501,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      res.json(refineries);
+      // Apply subscription-based refinery limit
+      const limitedRefineries = refineries.slice(0, subscriptionLimits.maxRefineries);
+      if (refineries.length > subscriptionLimits.maxRefineries) {
+        console.log(`Applied subscription limit: showing ${limitedRefineries.length} of ${refineries.length} total refineries`);
+      }
+      
+      res.json(limitedRefineries);
     } catch (error) {
       console.error("Error fetching refineries:", error);
       res.status(500).json({ message: "Failed to fetch refineries" });

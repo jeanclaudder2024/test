@@ -10,7 +10,9 @@ export interface SubscriptionFeatures {
   canAccessBrokerFeatures: boolean;
   canAccessAllZones: boolean;
   canGenerateDocuments: boolean;
+  maxVessels: number;
   maxPorts: number;
+  maxRefineries: number;
   documentTypes: string[];
 }
 
@@ -54,8 +56,8 @@ export function useSubscription(): SubscriptionFeatures {
   const isProfessionalPlan = planId === 2;
   const isEnterprisePlan = planId === 3;
 
-  // For trial users, give them FULL access (like Enterprise plan)
-  const effectivePlan = hasActiveTrial ? 3 : planId; // Give trial users Enterprise level access
+  // For trial users, use their actual selected plan limits (no unlimited access)
+  const effectivePlan = planId; // Use actual plan limits even during trial
 
   return {
     hasBasicAccess: hasActiveSubscription || hasActiveTrial || effectivePlan >= 1,
@@ -67,7 +69,9 @@ export function useSubscription(): SubscriptionFeatures {
     canAccessBrokerFeatures: hasActiveSubscription || hasActiveTrial || effectivePlan >= 2,
     canAccessAllZones: hasActiveSubscription || hasActiveTrial || effectivePlan >= 3,
     canGenerateDocuments: hasActiveSubscription || hasActiveTrial || effectivePlan >= 1,
-    maxPorts: effectivePlan >= 3 ? 999 : effectivePlan >= 2 ? 50 : 15, // Trial users get unlimited ports
+    maxVessels: effectivePlan >= 3 ? 999 : effectivePlan >= 2 ? 100 : 50, // Basic=50, Professional=100, Enterprise=unlimited
+    maxPorts: effectivePlan >= 3 ? 999 : effectivePlan >= 2 ? 20 : 5, // Basic=5, Professional=20, Enterprise=unlimited
+    maxRefineries: effectivePlan >= 3 ? 999 : effectivePlan >= 2 ? 25 : 10, // Basic=10, Professional=25, Enterprise=unlimited
     documentTypes: effectivePlan >= 3 
       ? ['LOI', 'B/L', 'SPA', 'ICPO', 'SGS', 'SDS', 'Q88', 'ATB', 'customs']
       : effectivePlan >= 2 
