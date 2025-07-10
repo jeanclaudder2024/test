@@ -137,10 +137,23 @@ export default function BrokerPayment() {
       try {
         console.log('Creating payment intent for data:', parsedData);
         
-        const response = await apiRequest('POST', '/api/broker/create-payment-intent', {
-          amount: 299,
-          brokerData: parsedData,
+        // Direct fetch to avoid any caching issues
+        const fetchResponse = await fetch('/api/broker/create-payment-intent', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            amount: 299,
+            brokerData: parsedData,
+          }),
         });
+        
+        if (!fetchResponse.ok) {
+          throw new Error(`HTTP error! status: ${fetchResponse.status}`);
+        }
+        
+        const response = await fetchResponse.json();
 
         console.log('Payment response data:', response);
         
