@@ -1297,52 +1297,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Ports endpoints - Public access for now
-  apiRouter.get("/ports", async (req: any, res) => {
-    try {
-      console.log("API request for ports received");
-      
-      // Get port data from API with database fallback
-      let ports: Port[] = [];
-      
-      // First try to get ports from MyShipTracking API
-      if (marineTrafficService.isConfigured()) {
-        try {
-          console.log("Attempting to fetch ports from MyShipTracking API...");
-          const apiPorts = await marineTrafficService.fetchPorts();
-          
-          if (apiPorts && apiPorts.length > 0) {
-            ports = apiPorts as Port[];
-            console.log(`Retrieved ${ports.length} ports from MyShipTracking API`);
-          } else {
-            console.log("API returned 0 ports, falling back to database");
-          }
-        } catch (apiError) {
-          console.error("Error fetching ports from API:", apiError);
-          console.log("Falling back to database for port data");
-        }
-      } else {
-        console.log("MyShipTracking API not configured, using database for port data");
-      }
-      
-      // If API call failed or returned no data, use database
-      if (ports.length === 0) {
-        try {
-          ports = await portService.getAllPorts();
-          console.log(`Retrieved ${ports.length} ports from database`);
-        } catch (dbError) {
-          console.error("Database error when fetching ports:", dbError);
-          res.status(500).json({ message: "Failed to fetch port data from any source" });
-          return;
-        }
-      }
-      
-      res.json(ports);
-    } catch (error) {
-      console.error("Error handling port request:", error);
-      res.status(500).json({ message: "Failed to fetch port data" });
-    }
-  });
+
   
   // Port detail endpoint - Public access for now
   apiRouter.get("/ports/:id", async (req: any, res) => {
