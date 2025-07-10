@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { useSubscription } from '@/hooks/useSubscription';
 import PaymentReminder from '@/components/PaymentReminder';
+import CreateDealDialog from '@/components/broker/CreateDealDialog';
 import { 
   Handshake, 
   FileText, 
@@ -362,70 +363,84 @@ export default function BrokerDashboard() {
                   </SelectContent>
                 </Select>
               </div>
+              <CreateDealDialog />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filteredDeals.map((deal) => (
-                <Card key={deal.id} className="bg-gray-800/90 border-gray-700 hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="text-white">{deal.dealTitle}</CardTitle>
-                        <CardDescription className="text-gray-300">{deal.companyName}</CardDescription>
+            {filteredDeals.length === 0 ? (
+              <div className="text-center py-12">
+                <Handshake className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-white mb-2">No Deals Found</h3>
+                <p className="text-gray-400 mb-4">
+                  {searchTerm || statusFilter !== 'all' 
+                    ? 'No deals match your current filters.' 
+                    : 'Start by creating your first deal to begin tracking your broker activities.'}
+                </p>
+                <CreateDealDialog />
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                {filteredDeals.map((deal) => (
+                  <Card key={deal.id} className="bg-gray-800/90 border-gray-700 hover:shadow-lg transition-shadow">
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <CardTitle className="text-white">{deal.dealTitle}</CardTitle>
+                          <CardDescription className="text-gray-300">{deal.companyName}</CardDescription>
+                        </div>
+                        <Badge className={`${getStatusColor(deal.status)} text-white`}>
+                          {getStatusIcon(deal.status)}
+                          <span className="ml-1 capitalize">{deal.status}</span>
+                        </Badge>
                       </div>
-                      <Badge className={`${getStatusColor(deal.status)} text-white`}>
-                        {getStatusIcon(deal.status)}
-                        <span className="ml-1 capitalize">{deal.status}</span>
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <p className="text-gray-400">Deal Value</p>
-                        <p className="font-semibold text-white">{deal.dealValue}</p>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <p className="text-gray-400">Deal Value</p>
+                          <p className="font-semibold text-white">{deal.dealValue}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400">Oil Type</p>
+                          <p className="font-semibold text-white">{deal.oilType}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400">Quantity</p>
+                          <p className="font-semibold text-white">{deal.quantity}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400">Documents</p>
+                          <p className="font-semibold text-white">{deal.documentsCount}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-gray-400">Oil Type</p>
-                        <p className="font-semibold text-white">{deal.oilType}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-400">Quantity</p>
-                        <p className="font-semibold text-white">{deal.quantity}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-400">Documents</p>
-                        <p className="font-semibold text-white">{deal.documentsCount}</p>
-                      </div>
-                    </div>
 
-                    <div>
-                      <div className="flex justify-between text-sm mb-2">
-                        <span className="text-gray-400">Progress</span>
-                        <span className="text-white">{deal.progress}%</span>
+                      <div>
+                        <div className="flex justify-between text-sm mb-2">
+                          <span className="text-gray-400">Progress</span>
+                          <span className="text-white">{deal.progress}%</span>
+                        </div>
+                        <div className="w-full bg-gray-700 rounded-full h-2">
+                          <div 
+                            className="bg-orange-500 h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${deal.progress}%` }}
+                          />
+                        </div>
                       </div>
-                      <div className="w-full bg-gray-700 rounded-full h-2">
-                        <div 
-                          className="bg-orange-500 h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${deal.progress}%` }}
-                        />
-                      </div>
-                    </div>
 
-                    <div className="flex gap-2">
-                      <Button 
-                        size="sm" 
-                        className="flex-1 bg-orange-600 hover:bg-orange-700"
-                        onClick={() => setSelectedDeal(deal)}
-                      >
-                        <Eye className="h-4 w-4 mr-2" />
-                        View Details
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                      <div className="flex gap-2">
+                        <Button 
+                          size="sm" 
+                          className="flex-1 bg-orange-600 hover:bg-orange-700"
+                          onClick={() => setSelectedDeal(deal)}
+                        >
+                          <Eye className="h-4 w-4 mr-2" />
+                          View Details
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </TabsContent>
 
           {/* Documents Tab */}
@@ -455,7 +470,45 @@ export default function BrokerDashboard() {
                       Upload a new document to your broker account
                     </DialogDescription>
                   </DialogHeader>
-                  {/* Upload form would go here */}
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="file-upload" className="text-white">Select File</Label>
+                      <Input
+                        id="file-upload"
+                        type="file"
+                        accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+                        className="bg-gray-700 border-gray-600 text-white"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const description = prompt("Enter description for this document:");
+                            if (description) {
+                              uploadMutation.mutate({ file, description });
+                            }
+                          }
+                        }}
+                      />
+                      <p className="text-xs text-gray-400 mt-2">
+                        Supported formats: PDF, DOC, DOCX, TXT, JPG, JPEG, PNG (max 10MB)
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="deal-select" className="text-white">Link to Deal (Optional)</Label>
+                      <Select>
+                        <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
+                          <SelectValue placeholder="Select a deal" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-gray-700 border-gray-600">
+                          {deals.map((deal) => (
+                            <SelectItem key={deal.id} value={deal.id.toString()}>
+                              {deal.dealTitle}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
                 </DialogContent>
               </Dialog>
             </div>

@@ -1,471 +1,347 @@
-import { Router, Request, Response } from 'express';
-import { storage } from '../storage';
-import { z } from 'zod';
-import { fromZodError } from 'zod-validation-error';
-import Stripe from 'stripe';
+import type { Express } from "express";
+import { storage } from "../storage";
+import { authenticateToken } from "../auth";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
 
-export const brokerRouter = Router();
-
-// Get broker profile
-brokerRouter.get('/profile', async (req: Request, res: Response) => {
-  try {
-    // For demo purposes, return the first broker
-    // In a real app, this would use authentication to get the current broker
-    const brokers = await storage.getBrokers();
-    if (brokers.length === 0) {
-      return res.status(404).json({ message: 'No brokers found' });
+const upload = multer({ 
+  dest: 'uploads/',
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['.pdf', '.doc', '.docx', '.txt', '.jpg', '.jpeg', '.png'];
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (allowedTypes.includes(ext)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type'));
     }
-    res.json(brokers[0]);
-  } catch (error) {
-    console.error('Error getting broker profile:', error);
-    res.status(500).json({ message: 'Error fetching broker profile' });
   }
 });
 
-// Get broker stats
-brokerRouter.get('/stats', async (req: Request, res: Response) => {
-  try {
-    // Simulated broker stats data
-    res.json({
-      activeConnections: 12,
-      pendingDeals: 5,
-      completedDeals: 37,
-      totalRevenue: 385000
-    });
-  } catch (error) {
-    console.error('Error getting broker stats:', error);
-    res.status(500).json({ message: 'Error fetching broker stats' });
-  }
-});
-
-// Get broker connections
-brokerRouter.get('/connections/:brokerId', async (req: Request, res: Response) => {
-  try {
-    const brokerId = parseInt(req.params.brokerId);
-    if (isNaN(brokerId)) {
-      return res.status(400).json({ message: 'Invalid broker ID' });
+export function registerBrokerRoutes(app: Express) {
+  // Get broker stats
+  app.get('/api/broker/stats', authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const stats = await storage.getBrokerStats(userId);
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching broker stats:', error);
+      res.status(500).json({ error: 'Failed to fetch broker stats' });
     }
-    
-    // Simulated broker-company connections
-    const connections = [
-      {
-        id: 1,
-        brokerId: brokerId,
-        companyId: 1,
-        connectionType: 'both',
-        status: 'active',
-        connectionDate: '2025-01-15T00:00:00.000Z',
-        lastActivityDate: '2025-05-10T00:00:00.000Z',
-        dealsCount: 7,
-        totalVolume: 145000,
-        notes: 'Regular business partner with strong relationship'
-      },
-      {
-        id: 2,
-        brokerId: brokerId,
-        companyId: 2,
-        connectionType: 'seller',
-        status: 'active',
-        connectionDate: '2025-02-20T00:00:00.000Z',
-        lastActivityDate: '2025-05-18T00:00:00.000Z',
-        dealsCount: 3,
-        totalVolume: 85000,
-        notes: 'Primary supplier for Middle East crude oil'
-      },
-      {
-        id: 3,
-        brokerId: brokerId,
-        companyId: 3,
-        connectionType: 'buyer',
-        status: 'pending',
-        connectionDate: '2025-05-01T00:00:00.000Z',
-        lastActivityDate: null,
-        dealsCount: 0,
-        totalVolume: 0,
-        notes: 'New potential buyer, awaiting approval'
+  });
+
+  // Get broker deals
+  app.get('/api/broker/deals', authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const deals = await storage.getBrokerDeals(userId);
+      res.json(deals);
+    } catch (error) {
+      console.error('Error fetching broker deals:', error);
+      res.status(500).json({ error: 'Failed to fetch broker deals' });
+    }
+  });
+
+  // Create broker deal
+  app.post('/api/broker/deals', authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const dealData = {
+        ...req.body,
+        brokerId: userId,
+        progress: 0,
+        startDate: new Date(),
+        documentsCount: 0
+      };
+      
+      const deal = await storage.createBrokerDeal(dealData);
+      res.json(deal);
+    } catch (error) {
+      console.error('Error creating broker deal:', error);
+      res.status(500).json({ error: 'Failed to create broker deal' });
+    }
+  });
+
+  // Update broker deal
+  app.put('/api/broker/deals/:id', authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const dealId = parseInt(req.params.id);
+      const deal = await storage.updateBrokerDeal(dealId, userId, req.body);
+      
+      if (!deal) {
+        return res.status(404).json({ error: 'Deal not found' });
       }
-    ];
-    
-    res.json(connections);
-  } catch (error) {
-    console.error('Error getting broker connections:', error);
-    res.status(500).json({ message: 'Error fetching broker connections' });
-  }
-});
-
-// Create broker-company connection
-brokerRouter.post('/connections', async (req: Request, res: Response) => {
-  try {
-    const connectionSchema = z.object({
-      brokerId: z.number(),
-      companyId: z.number(),
-      connectionType: z.enum(['buyer', 'seller', 'both']),
-      notes: z.string().optional()
-    });
-    
-    const validationResult = connectionSchema.safeParse(req.body);
-    if (!validationResult.success) {
-      const errorMessage = fromZodError(validationResult.error).message;
-      return res.status(400).json({ message: errorMessage });
+      
+      res.json(deal);
+    } catch (error) {
+      console.error('Error updating broker deal:', error);
+      res.status(500).json({ error: 'Failed to update broker deal' });
     }
-    
-    const { brokerId, companyId, connectionType, notes } = validationResult.data;
-    
-    // Simulate creating a connection (would store in database in a real app)
-    const newConnection = {
-      id: Date.now(),
-      brokerId,
-      companyId,
-      connectionType,
-      status: 'pending',
-      connectionDate: new Date().toISOString(),
-      lastActivityDate: null,
-      dealsCount: 0,
-      totalVolume: 0,
-      notes
-    };
-    
-    res.status(201).json(newConnection);
-  } catch (error) {
-    console.error('Error creating broker connection:', error);
-    res.status(500).json({ message: 'Error creating broker connection' });
-  }
-});
+  });
 
-// Get broker deals
-brokerRouter.get('/deals/:brokerId', async (req: Request, res: Response) => {
-  try {
-    const brokerId = parseInt(req.params.brokerId);
-    if (isNaN(brokerId)) {
-      return res.status(400).json({ message: 'Invalid broker ID' });
-    }
-    
-    // Simulated broker deals
-    const deals = [
-      {
-        id: 1,
-        brokerId: brokerId,
-        brokerName: 'Abdullah Al-Saud',
-        sellerId: 1,
-        sellerName: 'Saudi Aramco',
-        buyerId: 4,
-        buyerName: 'Shell Global',
-        vesselId: 1028,
-        vesselName: 'Seawise Giant II',
-        cargoType: 'Crude Oil',
-        volume: 280000,
-        volumeUnit: 'MT',
-        price: 85,
-        currency: 'USD',
-        status: 'completed',
-        departurePortId: 12,
-        departurePortName: 'Ras Tanura Port',
-        destinationPortId: 18,
-        destinationPortName: 'Rotterdam Port',
-        estimatedDeparture: '2025-03-10T00:00:00.000Z',
-        estimatedArrival: '2025-03-28T00:00:00.000Z',
-        createdAt: '2025-02-25T00:00:00.000Z',
-        lastUpdated: '2025-04-02T00:00:00.000Z',
-        commissionRate: 0.015,
-        commissionAmount: 357000
-      },
-      {
-        id: 2,
-        brokerId: brokerId,
-        brokerName: 'Abdullah Al-Saud',
-        sellerId: 2,
-        sellerName: 'Abu Dhabi National Oil Company',
-        buyerId: 6,
-        buyerName: 'BP',
-        vesselId: 1045,
-        vesselName: 'Gulf Prosperity',
-        cargoType: 'Jet Fuel',
-        volume: 120000,
-        volumeUnit: 'MT',
-        price: 105,
-        currency: 'USD',
-        status: 'pending',
-        departurePortId: 15,
-        departurePortName: 'Jebel Ali Port',
-        destinationPortId: 22,
-        destinationPortName: 'Singapore Port',
-        estimatedDeparture: '2025-05-25T00:00:00.000Z',
-        estimatedArrival: '2025-06-12T00:00:00.000Z',
-        createdAt: '2025-05-01T00:00:00.000Z',
-        lastUpdated: '2025-05-05T00:00:00.000Z',
-        commissionRate: 0.01,
-        commissionAmount: 126000
-      },
-      {
-        id: 3,
-        brokerId: brokerId,
-        brokerName: 'Abdullah Al-Saud',
-        sellerId: 3,
-        sellerName: 'Kuwait Petroleum Corporation',
-        buyerId: 5,
-        buyerName: 'ExxonMobil',
-        vesselId: null,
-        vesselName: null,
-        cargoType: 'Diesel',
-        volume: 85000,
-        volumeUnit: 'MT',
-        price: 95,
-        currency: 'USD',
-        status: 'draft',
-        departurePortId: null,
-        departurePortName: null,
-        destinationPortId: null,
-        destinationPortName: null,
-        estimatedDeparture: null,
-        estimatedArrival: null,
-        createdAt: '2025-05-12T00:00:00.000Z',
-        lastUpdated: null,
-        commissionRate: 0.0125,
-        commissionAmount: 100938
+  // Delete broker deal
+  app.delete('/api/broker/deals/:id', authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const dealId = parseInt(req.params.id);
+      const success = await storage.deleteBrokerDeal(dealId, userId);
+      
+      if (!success) {
+        return res.status(404).json({ error: 'Deal not found' });
       }
-    ];
-    
-    res.json(deals);
-  } catch (error) {
-    console.error('Error getting broker deals:', error);
-    res.status(500).json({ message: 'Error fetching broker deals' });
-  }
-});
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting broker deal:', error);
+      res.status(500).json({ error: 'Failed to delete broker deal' });
+    }
+  });
 
-// Get recent broker deals
-brokerRouter.get('/deals/recent', async (req: Request, res: Response) => {
-  try {
-    // Simulated recent deals (would fetch from database in a real app)
-    const recentDeals = [
-      {
-        id: 1,
-        brokerId: 1,
-        brokerName: 'Abdullah Al-Saud',
-        sellerId: 1,
-        sellerName: 'Saudi Aramco',
-        buyerId: 4,
-        buyerName: 'Shell Global',
-        vesselName: 'Seawise Giant II',
-        cargoType: 'Crude Oil',
-        volume: 280000,
-        volumeUnit: 'MT',
-        price: 85,
-        currency: 'USD',
-        status: 'completed',
-        createdAt: '2025-04-15T00:00:00.000Z',
-        commissionRate: 0.015
-      },
-      {
-        id: 2,
-        brokerId: 1,
-        brokerName: 'Abdullah Al-Saud',
-        sellerId: 2,
-        sellerName: 'Abu Dhabi National Oil Company',
-        buyerId: 6,
-        buyerName: 'BP',
-        vesselName: 'Gulf Prosperity',
-        cargoType: 'Jet Fuel',
-        volume: 120000,
-        volumeUnit: 'MT',
-        price: 105,
-        currency: 'USD',
-        status: 'pending',
-        createdAt: '2025-05-01T00:00:00.000Z',
-        commissionRate: 0.01
-      },
-      {
-        id: 3,
-        brokerId: 1,
-        brokerName: 'Abdullah Al-Saud',
-        sellerId: 3,
-        sellerName: 'Kuwait Petroleum Corporation',
-        buyerId: 5,
-        buyerName: 'ExxonMobil',
-        vesselName: null,
-        cargoType: 'Diesel',
-        volume: 85000,
-        volumeUnit: 'MT',
-        price: 95,
-        currency: 'USD',
-        status: 'draft',
-        createdAt: '2025-05-12T00:00:00.000Z',
-        commissionRate: 0.0125
-      },
-      {
-        id: 4,
-        brokerId: 1,
-        brokerName: 'Abdullah Al-Saud',
-        sellerId: 1,
-        sellerName: 'Saudi Aramco',
-        buyerId: 7,
-        buyerName: 'Total Energies',
-        vesselName: 'Arabian Pearl',
-        cargoType: 'Gasoline',
-        volume: 95000,
-        volumeUnit: 'MT',
-        price: 110,
-        currency: 'USD',
-        status: 'confirmed',
-        createdAt: '2025-05-10T00:00:00.000Z',
-        commissionRate: 0.01
+  // Get broker documents
+  app.get('/api/broker/documents', authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const documents = await storage.getBrokerDocuments(userId);
+      res.json(documents);
+    } catch (error) {
+      console.error('Error fetching broker documents:', error);
+      res.status(500).json({ error: 'Failed to fetch broker documents' });
+    }
+  });
+
+  // Upload broker document
+  app.post('/api/broker/documents', authenticateToken, upload.single('document'), async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const file = req.file;
+      const { description, dealId } = req.body;
+      
+      if (!file) {
+        return res.status(400).json({ error: 'No file uploaded' });
       }
-    ];
-    
-    res.json(recentDeals);
-  } catch (error) {
-    console.error('Error getting recent deals:', error);
-    res.status(500).json({ message: 'Error fetching recent deals' });
-  }
-});
-
-// Create broker deal
-brokerRouter.post('/deals', async (req: Request, res: Response) => {
-  try {
-    const dealSchema = z.object({
-      brokerId: z.number(),
-      sellerId: z.number(),
-      sellerName: z.string(),
-      buyerId: z.number(),
-      buyerName: z.string(),
-      vesselName: z.string().optional().nullable(),
-      cargoType: z.string(),
-      volume: z.number().positive(),
-      volumeUnit: z.string(),
-      price: z.number().positive(),
-      currency: z.string(),
-      status: z.string(),
-      commissionRate: z.number(),
-      createdAt: z.string()
-    });
-    
-    const validationResult = dealSchema.safeParse(req.body);
-    if (!validationResult.success) {
-      const errorMessage = fromZodError(validationResult.error).message;
-      return res.status(400).json({ message: errorMessage });
+      
+      const documentData = {
+        brokerId: userId,
+        fileName: file.originalname,
+        fileType: path.extname(file.originalname),
+        fileSize: file.size,
+        filePath: file.path,
+        description,
+        dealId: dealId ? parseInt(dealId) : null
+      };
+      
+      const document = await storage.createBrokerDocument(documentData);
+      res.json(document);
+    } catch (error) {
+      console.error('Error uploading broker document:', error);
+      res.status(500).json({ error: 'Failed to upload document' });
     }
-    
-    const dealData = validationResult.data;
-    
-    // Simulate creating a deal (would store in database in a real app)
-    const newDeal = {
-      id: Date.now(),
-      ...dealData,
-      brokerName: 'Abdullah Al-Saud', // Would be retrieved from the authenticated user
-    };
-    
-    res.status(201).json(newDeal);
-  } catch (error) {
-    console.error('Error creating broker deal:', error);
-    res.status(500).json({ message: 'Error creating broker deal' });
-  }
-});
+  });
 
-// Broker Payment Endpoints
-
-// Create payment intent for broker membership
-brokerRouter.post('/create-payment-intent', async (req: Request, res: Response) => {
-  try {
-    const { amount, brokerData } = req.body;
-    
-    console.log("Broker payment intent request:", { amount, brokerData });
-    
-    // Check if we have Stripe configured
-    if (!process.env.STRIPE_SECRET_KEY) {
-      console.error("Stripe secret key not configured");
-      return res.status(500).json({ 
-        message: "Payment processing not configured. Please contact support." 
-      });
+  // Download broker document
+  app.get('/api/broker/documents/:id/download', authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const documentId = parseInt(req.params.id);
+      const document = await storage.getBrokerDocument(documentId, userId);
+      
+      if (!document) {
+        return res.status(404).json({ error: 'Document not found' });
+      }
+      
+      if (fs.existsSync(document.filePath)) {
+        res.download(document.filePath, document.fileName);
+        
+        // Update download count
+        await storage.updateBrokerDocumentDownloadCount(documentId);
+      } else {
+        res.status(404).json({ error: 'File not found on server' });
+      }
+    } catch (error) {
+      console.error('Error downloading broker document:', error);
+      res.status(500).json({ error: 'Failed to download document' });
     }
-    
-    console.log("Initializing Stripe with API version...");
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: '2024-06-20',
-    });
-    
-    console.log("Creating payment intent...");
-    
-    // Create payment intent
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(amount * 100), // Convert to cents
-      currency: 'usd',
-      metadata: {
-        type: 'broker_membership',
-        firstName: brokerData?.firstName || 'Unknown',
-        lastName: brokerData?.lastName || 'Unknown',
-        email: brokerData?.email || 'unknown@example.com',
-      },
-    });
-    
-    console.log("Payment intent created successfully:", paymentIntent.id);
-    res.json({ clientSecret: paymentIntent.client_secret });
-  } catch (error: any) {
-    console.error("Detailed error creating payment intent:", {
-      message: error.message,
-      stack: error.stack,
-      type: error.type,
-      code: error.code
-    });
-    res.status(500).json({ 
-      message: "Failed to create payment intent", 
-      error: error.message 
-    });
-  }
-});
+  });
 
-// Confirm payment and update broker status
-brokerRouter.post('/payment-confirm', async (req: Request, res: Response) => {
-  try {
-    const { paymentIntentId, brokerData } = req.body;
-    
-    if (!paymentIntentId || !brokerData) {
-      return res.status(400).json({ message: "Missing payment or broker data" });
+  // Get admin files sent to broker
+  app.get('/api/broker/admin-files', authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const adminFiles = await storage.getBrokerAdminFiles(userId);
+      res.json(adminFiles);
+    } catch (error) {
+      console.error('Error fetching admin files:', error);
+      res.status(500).json({ error: 'Failed to fetch admin files' });
     }
+  });
 
-    // Generate membership card number
-    const cardNumber = `OIL-${Date.now().toString().slice(-6)}`;
-    
-    // Calculate membership expiry (1 year from now)
-    const membershipStart = new Date();
-    const membershipEnd = new Date();
-    membershipEnd.setFullYear(membershipEnd.getFullYear() + 1);
-    
-    // Activate broker subscription
-    await storage.activateBrokerSubscription({
-      paymentIntentId,
-      amount: 299,
-      membershipEndDate: membershipEnd,
-      cardNumber,
-      brokerData
-    });
-    
-    res.json({
-      success: true,
-      cardNumber,
-      membershipStart: membershipStart.toISOString(),
-      membershipEnd: membershipEnd.toISOString(),
-    });
-  } catch (error: any) {
-    console.error("Error confirming payment:", error);
-    res.status(500).json({ message: "Failed to confirm payment" });
-  }
-});
+  // Mark admin file as read
+  app.post('/api/broker/admin-files/:id/read', authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const fileId = parseInt(req.params.id);
+      await storage.markBrokerAdminFileAsRead(fileId, userId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error marking admin file as read:', error);
+      res.status(500).json({ error: 'Failed to mark file as read' });
+    }
+  });
 
-// Generate membership card
-brokerRouter.post('/generate-membership-card', async (req: Request, res: Response) => {
-  try {
-    // Get broker data from localStorage or session
-    const cardNumber = Date.now().toString().slice(-6);
-    const expiryDate = new Date();
-    expiryDate.setFullYear(expiryDate.getFullYear() + 1);
-    
-    res.json({
-      success: true,
-      cardNumber: `OIL-${cardNumber}`,
-      expiryDate: expiryDate.toISOString(),
-      memberType: 'Professional Oil Specialist'
-    });
-  } catch (error: any) {
-    console.error("Error generating membership card:", error);
-    res.status(500).json({ message: "Failed to generate membership card" });
-  }
-});
+  // Get broker profile
+  app.get('/api/broker/profile', authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const profile = await storage.getBrokerProfile(userId);
+      res.json(profile);
+    } catch (error) {
+      console.error('Error fetching broker profile:', error);
+      res.status(500).json({ error: 'Failed to fetch broker profile' });
+    }
+  });
+
+  // Update broker profile
+  app.put('/api/broker/profile', authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const profile = await storage.updateBrokerProfile(userId, req.body);
+      res.json(profile);
+    } catch (error) {
+      console.error('Error updating broker profile:', error);
+      res.status(500).json({ error: 'Failed to update broker profile' });
+    }
+  });
+
+  // Generate sample data for broker
+  app.post('/api/broker/generate-sample-data', authenticateToken, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      
+      // Generate sample deals
+      const sampleDeals = [
+        {
+          dealTitle: 'Crude Oil Export to Asia',
+          companyName: 'Pacific Energy Trading',
+          dealValue: '$2,500,000',
+          oilType: 'Brent Crude',
+          quantity: '50,000 barrels',
+          status: 'active',
+          progress: 65,
+          startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+          expectedCloseDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
+          documentsCount: 3,
+          notes: 'High-priority deal with established client'
+        },
+        {
+          dealTitle: 'Diesel Fuel Supply Contract',
+          companyName: 'Atlantic Maritime Corp',
+          dealValue: '$1,200,000',
+          oilType: 'Diesel',
+          quantity: '25,000 barrels',
+          status: 'pending',
+          progress: 25,
+          startDate: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
+          expectedCloseDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          documentsCount: 1,
+          notes: 'Awaiting regulatory approval'
+        },
+        {
+          dealTitle: 'Gasoline Distribution Agreement',
+          companyName: 'Gulf Coast Logistics',
+          dealValue: '$800,000',
+          oilType: 'Gasoline',
+          quantity: '20,000 barrels',
+          status: 'completed',
+          progress: 100,
+          startDate: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
+          expectedCloseDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+          documentsCount: 5,
+          notes: 'Successfully completed with bonus commission'
+        }
+      ];
+
+      // Create sample deals
+      for (const dealData of sampleDeals) {
+        await storage.createBrokerDeal({ ...dealData, brokerId: userId });
+      }
+
+      // Generate sample documents
+      const sampleDocuments = [
+        {
+          brokerId: userId,
+          fileName: 'Contract_Pacific_Energy.pdf',
+          fileType: '.pdf',
+          fileSize: 2048576,
+          filePath: 'uploads/sample_contract.pdf',
+          description: 'Main contract for Pacific Energy Trading deal',
+          downloadCount: 3,
+          isAdminFile: false
+        },
+        {
+          brokerId: userId,
+          fileName: 'Shipping_Manifest_Atlantic.xlsx',
+          fileType: '.xlsx',
+          fileSize: 1024000,
+          filePath: 'uploads/sample_manifest.xlsx',
+          description: 'Shipping manifest for Atlantic Maritime contract',
+          downloadCount: 1,
+          isAdminFile: false
+        },
+        {
+          brokerId: userId,
+          fileName: 'Compliance_Certificate.pdf',
+          fileType: '.pdf',
+          fileSize: 512000,
+          filePath: 'uploads/sample_compliance.pdf',
+          description: 'Regulatory compliance certificate',
+          downloadCount: 2,
+          isAdminFile: false
+        }
+      ];
+
+      // Create sample documents
+      for (const docData of sampleDocuments) {
+        await storage.createBrokerDocument(docData);
+      }
+
+      // Generate sample admin files
+      const sampleAdminFiles = [
+        {
+          brokerId: userId,
+          fileName: 'Q4_Market_Report.pdf',
+          fileType: '.pdf',
+          fileSize: 3072000,
+          sentBy: 'Admin Team',
+          sentDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+          description: 'Quarterly market analysis and trends report',
+          category: 'report',
+          isRead: false
+        },
+        {
+          brokerId: userId,
+          fileName: 'New_Compliance_Guidelines.docx',
+          fileType: '.docx',
+          fileSize: 1536000,
+          sentBy: 'Compliance Team',
+          sentDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+          description: 'Updated compliance guidelines for Q1 2025',
+          category: 'compliance',
+          isRead: false
+        }
+      ];
+
+      // Create sample admin files
+      for (const fileData of sampleAdminFiles) {
+        await storage.createBrokerAdminFile(fileData);
+      }
+
+      res.json({ success: true, message: 'Sample data generated successfully' });
+    } catch (error) {
+      console.error('Error generating sample data:', error);
+      res.status(500).json({ error: 'Failed to generate sample data' });
+    }
+  });
+}

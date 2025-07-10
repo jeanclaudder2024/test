@@ -5,6 +5,8 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { storage } from "./storage";
 import authRoutes from "./routes/authRoutes";
+import { registerBrokerRoutes } from "./routes/brokerRoutes";
+import { registerSubscriptionRoutes } from "./routes/subscriptionRoutes";
 import passport from "./config/passport";
 import session from "express-session";
 import { authenticateToken, requireAdmin, AuthenticatedRequest } from "./auth";
@@ -76,7 +78,7 @@ import {
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 
-import { brokerRouter } from "./routes/brokerRoutes";
+// Broker routes will be registered via registerBrokerRoutes function
 import brokerApiRoutes from "./routes/brokerApiRoutes";
 import vesselRouter from "./routes/vesselRoutes";
 import { portProximityRouter } from "./routes/port-proximity";
@@ -89,7 +91,7 @@ import maritimeDocumentsRouter from "./routes/maritimeDocuments";
 import { aiRouter } from "./routes/aiRoutes";
 import { companyRouter } from "./routes/companyRoutes";
 import portVesselRouter from "./routes/portVesselRoutes";
-import { subscriptionRouter } from "./routes/subscriptionRoutes";
+// Subscription routes will be registered via registerSubscriptionRoutes function
 import translationRouter from "./routes/translationRoutes";
 import vesselDashboardRouter from "./routes/vessel-dashboard";
 import { cargoManifestRouter } from "./routes/cargo-manifest-router";
@@ -264,7 +266,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register routes
   app.use("/api/translate", translationRouter);
-  app.use("/api/subscriptions", subscriptionRouter);
+  // Subscription routes registered via registerSubscriptionRoutes function
   
   // Register vessel position data generation endpoint
   app.post("/api/vessels/:id/generate-position-data", generateVesselPositionData);
@@ -4903,8 +4905,8 @@ Only use authentic, real-world data for existing refineries.`;
   // API routes for oil shipping companies - DISABLED to use subscription-limited endpoint
   // app.use("/api/companies", companyRouter);
   
-  // API routes for broker functionality
-  app.use("/api/broker", brokerRouter);
+  // API routes for broker functionality registered via registerBrokerRoutes function
+  registerBrokerRoutes(app);
   app.use("/api/broker-api", brokerApiRoutes);
   
   // API routes for broker-connections
@@ -5204,7 +5206,7 @@ Only use authentic, real-world data for existing refineries.`;
   app.use("/api/port-vessels", portVesselRouter);
   
   // API routes for subscription management
-  app.use("/api/subscriptions", subscriptionRouter);
+  registerSubscriptionRoutes(app);
 
   // API routes for vessel dashboard
   app.use(vesselDashboardRouter);
