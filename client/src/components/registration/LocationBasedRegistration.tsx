@@ -261,11 +261,24 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
     };
 
     const togglePort = (portId: number) => {
-      setSelectedPorts(prev => 
-        prev.includes(portId) 
-          ? prev.filter(p => p !== portId)
-          : [...prev, portId]
-      );
+      const plan = subscriptionPlans.find(p => p.id === selectedPlan);
+      if (!plan) return;
+
+      setSelectedPorts(prev => {
+        if (prev.includes(portId)) {
+          // Remove port if already selected
+          return prev.filter(p => p !== portId);
+        } else {
+          // Add port only if under plan limit
+          if (prev.length < plan.maxPorts) {
+            return [...prev, portId];
+          } else {
+            // Show user they've reached the limit
+            alert(`You can only select up to ${plan.maxPorts} ports with your ${plan.name} plan`);
+            return prev;
+          }
+        }
+      });
     };
 
     return (
@@ -319,20 +332,32 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
               <MapPin className="inline-block w-5 h-5 mr-2" />
               Select Your Ports
               <Badge className="ml-2" variant="outline">
-                {selectedPorts.length} selected from {filteredPorts.length} available
+                {selectedPorts.length} / {subscriptionPlans.find(p => p.id === selectedPlan)?.maxPorts} selected
               </Badge>
+              {selectedPorts.length >= (subscriptionPlans.find(p => p.id === selectedPlan)?.maxPorts || 0) && (
+                <Badge className="ml-2 bg-orange-100 text-orange-800">
+                  Plan limit reached
+                </Badge>
+              )}
             </label>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
-              {filteredPorts.map((port: Port) => (
-                <Card 
-                  key={port.id}
-                  className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
-                    selectedPorts.includes(port.id) 
-                      ? 'ring-2 ring-blue-500 bg-blue-50' 
-                      : 'hover:bg-gray-50'
-                  }`}
-                  onClick={() => togglePort(port.id)}
-                >
+              {filteredPorts.map((port: Port) => {
+                const plan = subscriptionPlans.find(p => p.id === selectedPlan);
+                const isSelected = selectedPorts.includes(port.id);
+                const canSelect = isSelected || selectedPorts.length < (plan?.maxPorts || 0);
+                
+                return (
+                  <Card 
+                    key={port.id}
+                    className={`transition-all duration-200 ${
+                      canSelect ? 'cursor-pointer hover:shadow-md' : 'cursor-not-allowed opacity-50'
+                    } ${
+                      isSelected 
+                        ? 'ring-2 ring-blue-500 bg-blue-50' 
+                        : canSelect ? 'hover:bg-gray-50' : 'bg-gray-100'
+                    }`}
+                    onClick={() => canSelect && togglePort(port.id)}
+                  >
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
@@ -350,7 +375,8 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                     </div>
                   </CardContent>
                 </Card>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
