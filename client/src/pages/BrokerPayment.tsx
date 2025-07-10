@@ -137,12 +137,9 @@ export default function BrokerPayment() {
       try {
         console.log('Creating payment intent for data:', parsedData);
         
-        const response = await apiRequest('/api/broker/create-payment-intent', {
-          method: 'POST',
-          body: JSON.stringify({
-            amount: 299,
-            brokerData: parsedData,
-          }),
+        const response = await apiRequest('POST', '/api/broker/create-payment-intent', {
+          amount: 299,
+          brokerData: parsedData,
         });
 
         console.log('Payment response data:', response);
