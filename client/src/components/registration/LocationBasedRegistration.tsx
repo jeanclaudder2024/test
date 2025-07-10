@@ -61,8 +61,8 @@ interface LocationBasedRegistrationProps {
 
 export default function LocationBasedRegistration({ onComplete }: LocationBasedRegistrationProps) {
   const [step, setStep] = useState(1);
-  const [selectedRegion, setSelectedRegion] = useState<string>('');
-  const [selectedPort, setSelectedPort] = useState<number | null>(null);
+  const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
+  const [selectedPorts, setSelectedPorts] = useState<number[]>([]);
   const [selectedPlan, setSelectedPlan] = useState<number | null>(null);
   const [previewData, setPreviewData] = useState<any>(null);
 
@@ -74,19 +74,7 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
   
   const ports = portsResponse?.ports || [];
 
-  // Fetch vessels near selected port
-  const { data: nearbyVessels = [], isLoading: vesselsLoading } = useQuery({
-    queryKey: [`/api/port-proximity/vessels/${selectedPort}`],
-    enabled: !!selectedPort,
-    staleTime: 0,
-  });
-
-  // Fetch refineries near selected port
-  const { data: nearbyRefineries = [], isLoading: refineriesLoading } = useQuery({
-    queryKey: [`/api/port-proximity/refineries/${selectedPort}`],
-    enabled: !!selectedPort,
-    staleTime: 0,
-  });
+  // No longer need vessel/refinery proximity queries for registration since we show selections instead
 
   // Subscription plans with limits
   const subscriptionPlans: SubscriptionPlan[] = [
@@ -160,36 +148,28 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
     }
   };
 
-  // Filter ports by selected region and plan limits
-  const filteredPorts = selectedRegion && selectedPlan
-    ? ports.filter((port: Port) => {
-        const allowedRegions = getRegionsForPlan(selectedPlan);
-        return port.region === selectedRegion && allowedRegions.includes(port.region);
-      })
+  // Filter ports by selected regions (no plan limits during registration)
+  const filteredPorts = selectedRegions.length > 0
+    ? ports.filter((port: Port) => selectedRegions.includes(port.region))
     : [];
 
-  // Generate preview data when port and plan are selected
+  // Generate preview data when ports and plan are selected
   useEffect(() => {
-    if (selectedPort && selectedPlan) {
+    if (selectedPorts.length > 0 && selectedPlan) {
       const plan = subscriptionPlans.find(p => p.id === selectedPlan);
-      const port = ports.find((p: Port) => p.id === selectedPort);
+      const selectedPortData = ports.filter((p: Port) => selectedPorts.includes(p.id));
       
-      if (plan && port) {
-        // Apply subscription limits to show exactly what user will get
-        const limitedVessels = nearbyVessels.slice(0, plan.maxVessels);
-        const limitedRefineries = nearbyRefineries.slice(0, plan.maxRefineries);
-        
+      if (plan && selectedPortData.length > 0) {
         setPreviewData({
-          selectedPort: port,
+          selectedPorts: selectedPortData,
+          selectedRegions: selectedRegions,
           selectedPlan: plan,
-          vessels: limitedVessels,
-          refineries: limitedRefineries,
-          totalNearbyVessels: nearbyVessels.length,
-          totalNearbyRefineries: nearbyRefineries.length
+          totalPortsSelected: selectedPorts.length,
+          totalRegionsSelected: selectedRegions.length
         });
       }
     }
-  }, [selectedPort, selectedPlan, nearbyVessels, nearbyRefineries, ports]);
+  }, [selectedPorts, selectedPlan, selectedRegions, ports]);
 
   // Step 1: Select Subscription Plan
   const PlanStep = () => (
@@ -270,72 +250,60 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
     </div>
   );
 
-  // Step 2: Select Region and Port (based on plan limits)
-  const LocationStep = () => (
-    <div className="space-y-6">
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-4">
-          Choose Your Primary Location
-        </h2>
-        <p className="text-gray-600 max-w-2xl mx-auto">
-          Based on your {subscriptionPlans.find(p => p.id === selectedPlan)?.name} plan, 
-          you have access to {getRegionsForPlan(selectedPlan || 1).length} maritime regions.
-        </p>
-      </div>
+  // Step 2: Select Multiple Regions and Ports (no restrictions)
+  const LocationStep = () => {
+    const toggleRegion = (region: string) => {
+      setSelectedRegions(prev => 
+        prev.includes(region) 
+          ? prev.filter(r => r !== region)
+          : [...prev, region]
+      );
+    };
 
-      {/* Region Selection - Limited by Plan */}
-      <div className="space-y-4">
-        <label className="text-lg font-semibold text-gray-900">
-          <Globe className="inline-block w-5 h-5 mr-2" />
-          Select Your Region
-          <Badge className="ml-2" variant="outline">
-            {getRegionsForPlan(selectedPlan || 1).length} regions available
-          </Badge>
-        </label>
-        <Select value={selectedRegion} onValueChange={setSelectedRegion}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Choose from your available regions..." />
-          </SelectTrigger>
-          <SelectContent>
-            {getRegionsForPlan(selectedPlan || 1).map((region) => (
-              <SelectItem key={region} value={region}>
-                {region}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+    const togglePort = (portId: number) => {
+      setSelectedPorts(prev => 
+        prev.includes(portId) 
+          ? prev.filter(p => p !== portId)
+          : [...prev, portId]
+      );
+    };
 
-      {/* Port Selection */}
-      {selectedRegion && (
+    return (
+      <div className="space-y-6">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            Choose Your Maritime Regions & Ports
+          </h2>
+          <p className="text-gray-600 max-w-2xl mx-auto">
+            Select as many regions and ports as you're interested in. Your subscription plan will determine how many you can actively access.
+          </p>
+        </div>
+
+        {/* Region Selection - No Limits */}
         <div className="space-y-4">
           <label className="text-lg font-semibold text-gray-900">
-            <Anchor className="inline-block w-5 h-5 mr-2" />
-            Select Your Primary Port
+            <Globe className="inline-block w-5 h-5 mr-2" />
+            Select Your Regions
+            <Badge className="ml-2" variant="outline">
+              {selectedRegions.length} selected
+            </Badge>
           </label>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {filteredPorts.map((port: Port) => (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {regions.map((region) => (
               <Card 
-                key={port.id}
-                className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
-                  selectedPort === port.id 
+                key={region}
+                className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
+                  selectedRegions.includes(region) 
                     ? 'ring-2 ring-blue-500 bg-blue-50' 
                     : 'hover:bg-gray-50'
                 }`}
-                onClick={() => setSelectedPort(port.id)}
+                onClick={() => toggleRegion(region)}
               >
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-semibold text-gray-900">{port.name}</h3>
-                      <p className="text-sm text-gray-600">{port.country}</p>
-                      <div className="flex items-center text-xs text-gray-500 mt-1">
-                        <MapPin className="w-3 h-3 mr-1" />
-                        {parseFloat(port.lat).toFixed(2)}, {parseFloat(port.lng).toFixed(2)}
-                      </div>
-                    </div>
-                    {selectedPort === port.id && (
-                      <CheckCircle2 className="w-6 h-6 text-blue-500" />
+                <CardContent className="p-4 text-center">
+                  <div className="flex items-center justify-center space-x-2">
+                    <span className="font-medium text-sm">{region}</span>
+                    {selectedRegions.includes(region) && (
+                      <CheckCircle2 className="w-4 h-4 text-blue-500" />
                     )}
                   </div>
                 </CardContent>
@@ -343,32 +311,75 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
             ))}
           </div>
         </div>
-      )}
 
-      {selectedPort && (
-        <div className="flex justify-center space-x-4">
-          <Button 
-            variant="outline"
-            onClick={() => setStep(1)}
-            className="px-6 py-3"
-          >
-            Change Plan
-          </Button>
-          <Button 
-            onClick={() => setStep(3)}
-            className="px-8 py-3 text-lg"
-          >
-            See Your Preview
-            <ArrowRight className="w-5 h-5 ml-2" />
-          </Button>
-        </div>
-      )}
-    </div>
-  );
+        {/* Port Selection */}
+        {selectedRegions.length > 0 && (
+          <div className="space-y-4">
+            <label className="text-lg font-semibold text-gray-900">
+              <MapPin className="inline-block w-5 h-5 mr-2" />
+              Select Your Ports
+              <Badge className="ml-2" variant="outline">
+                {selectedPorts.length} selected from {filteredPorts.length} available
+              </Badge>
+            </label>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
+              {filteredPorts.map((port: Port) => (
+                <Card 
+                  key={port.id}
+                  className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
+                    selectedPorts.includes(port.id) 
+                      ? 'ring-2 ring-blue-500 bg-blue-50' 
+                      : 'hover:bg-gray-50'
+                  }`}
+                  onClick={() => togglePort(port.id)}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-semibold text-gray-900">{port.name}</h3>
+                        <p className="text-sm text-gray-600">{port.country}</p>
+                        <p className="text-xs text-purple-600 font-medium">{port.region}</p>
+                        <div className="flex items-center text-xs text-gray-500 mt-1">
+                          <MapPin className="w-3 h-3 mr-1" />
+                          {parseFloat(port.lat).toFixed(2)}, {parseFloat(port.lng).toFixed(2)}
+                        </div>
+                      </div>
+                      {selectedPorts.includes(port.id) && (
+                        <CheckCircle2 className="w-6 h-6 text-blue-500" />
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {selectedPorts.length > 0 && (
+          <div className="flex justify-center space-x-4">
+            <Button 
+              variant="outline"
+              onClick={() => setStep(1)}
+              className="px-6 py-3"
+            >
+              Change Plan
+            </Button>
+            <Button 
+              onClick={() => setStep(3)}
+              className="px-8 py-3 text-lg"
+            >
+              Preview Your Access
+              <ArrowRight className="w-5 h-5 ml-2" />
+            </Button>
+          </div>
+        )}
+      </div>
+    );
+  };
 
 
 
-  // Step 3: Preview what user will get
+  // Step 3: Preview what user will get with their selections
   const PreviewStep = () => (
     <div className="space-y-8">
       <div className="text-center">
@@ -376,13 +387,13 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
           Your Access Preview
         </h2>
         <p className="text-gray-600 max-w-2xl mx-auto">
-          Here's exactly what you'll have access to with your selected plan and location.
+          Based on your selections, here's what your subscription plan will give you access to.
         </p>
       </div>
 
       {previewData && (
         <div className="space-y-6">
-          {/* Selected Plan and Port Summary */}
+          {/* Selected Plan Summary */}
           <Card className="bg-blue-50 border-blue-200">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
@@ -390,9 +401,10 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
                   <h3 className="text-xl font-bold text-blue-900">
                     {previewData.selectedPlan.name} Plan
                   </h3>
-                  <p className="text-blue-700">
-                    Primary Port: {previewData.selectedPort.name}, {previewData.selectedPort.country}
-                  </p>
+                  <div className="space-y-1 text-blue-700">
+                    <p>{previewData.totalRegionsSelected} regions selected • {previewData.totalPortsSelected} ports selected</p>
+                    <p className="text-sm">Your plan will give you access based on subscription limits</p>
+                  </div>
                 </div>
                 <div className="text-right">
                   <div className="text-2xl font-bold text-blue-900">
@@ -404,72 +416,56 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
             </CardContent>
           </Card>
 
-          {/* Access Details */}
+          {/* Your Selections */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Vessels */}
+            {/* Selected Regions */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">
-                  <Ship className="w-5 h-5 mr-2 text-blue-500" />
-                  Vessels You'll Access
+                  <Globe className="w-5 h-5 mr-2 text-purple-500" />
+                  Selected Regions
                 </CardTitle>
                 <CardDescription>
-                  {previewData.vessels.length} of {previewData.totalNearbyVessels} vessels near your port
+                  {previewData.totalRegionsSelected} regions you're interested in
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3 max-h-64 overflow-y-auto">
-                  {previewData.vessels.slice(0, 8).map((vessel: Vessel) => (
-                    <div key={vessel.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div>
-                        <div className="font-medium text-sm">{vessel.name}</div>
-                        <div className="text-xs text-gray-600">
-                          {vessel.vesselType} • {vessel.oilType}
-                        </div>
-                      </div>
-                      <Badge variant="outline" className="text-xs">
-                        {vessel.cargoCapacity?.toLocaleString()} tons
-                      </Badge>
+                <div className="space-y-2">
+                  {previewData.selectedRegions.map((region: string, idx: number) => (
+                    <div key={region} className="flex items-center p-3 bg-gray-50 rounded-lg">
+                      <CheckCircle2 className="w-4 h-4 text-green-500 mr-3" />
+                      <span className="font-medium text-sm">{region}</span>
                     </div>
                   ))}
-                  {previewData.vessels.length > 8 && (
-                    <div className="text-center text-sm text-gray-500 pt-2">
-                      ...and {previewData.vessels.length - 8} more vessels
-                    </div>
-                  )}
                 </div>
               </CardContent>
             </Card>
 
-            {/* Refineries */}
+            {/* Selected Ports */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">
-                  <Factory className="w-5 h-5 mr-2 text-green-500" />
-                  Refineries You'll Access
+                  <Anchor className="w-5 h-5 mr-2 text-blue-500" />
+                  Selected Ports
                 </CardTitle>
                 <CardDescription>
-                  {previewData.refineries.length} of {previewData.totalNearbyRefineries} refineries near your port
+                  {previewData.totalPortsSelected} ports you're interested in
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-3 max-h-64 overflow-y-auto">
-                  {previewData.refineries.slice(0, 8).map((refinery: Refinery) => (
-                    <div key={refinery.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <CardContent className="max-h-64 overflow-y-auto">
+                <div className="space-y-2">
+                  {previewData.selectedPorts.slice(0, 8).map((port: Port) => (
+                    <div key={port.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                       <div>
-                        <div className="font-medium text-sm">{refinery.name}</div>
-                        <div className="text-xs text-gray-600">
-                          {refinery.country} • {refinery.region}
-                        </div>
+                        <div className="font-medium text-sm">{port.name}</div>
+                        <div className="text-xs text-gray-600">{port.country} • {port.region}</div>
                       </div>
-                      <Badge variant="outline" className="text-xs">
-                        {refinery.processingCapacity?.toLocaleString()} bpd
-                      </Badge>
+                      <CheckCircle2 className="w-4 h-4 text-green-500" />
                     </div>
                   ))}
-                  {previewData.refineries.length > 8 && (
+                  {previewData.selectedPorts.length > 8 && (
                     <div className="text-center text-sm text-gray-500 pt-2">
-                      ...and {previewData.refineries.length - 8} more refineries
+                      ...and {previewData.selectedPorts.length - 8} more ports
                     </div>
                   )}
                 </div>
@@ -477,12 +473,51 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
             </Card>
           </div>
 
+          {/* Plan Limits Information */}
+          <Card className="bg-yellow-50 border-yellow-200">
+            <CardContent className="p-6">
+              <h4 className="font-semibold text-yellow-900 mb-3">
+                🔢 Your Plan Access Limits
+              </h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-yellow-900">
+                    {previewData.selectedPlan.maxPorts}
+                  </div>
+                  <div className="text-yellow-700">Max Ports</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-yellow-900">
+                    {previewData.selectedPlan.maxVessels}
+                  </div>
+                  <div className="text-yellow-700">Max Vessels</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-yellow-900">
+                    {previewData.selectedPlan.maxRefineries}
+                  </div>
+                  <div className="text-yellow-700">Max Refineries</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-yellow-900">
+                    {previewData.selectedPlan.id === 1 ? '2' : 
+                     previewData.selectedPlan.id === 2 ? '6' : '9+'}
+                  </div>
+                  <div className="text-yellow-700">Regions</div>
+                </div>
+              </div>
+              <p className="text-xs text-yellow-700 mt-3 text-center">
+                While you selected {previewData.totalPortsSelected} ports, your plan gives you access to up to {previewData.selectedPlan.maxPorts} ports with full features.
+              </p>
+            </CardContent>
+          </Card>
+
           {/* Complete Registration Button */}
           <div className="flex justify-center pt-6">
             <Button 
               onClick={() => onComplete({
                 selectedPlan: selectedPlan!,
-                selectedPort: selectedPort!,
+                selectedPort: selectedPorts[0] || 1,
                 previewData
               })}
               className="px-12 py-4 text-lg bg-blue-600 hover:bg-blue-700"
