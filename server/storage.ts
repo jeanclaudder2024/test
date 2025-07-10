@@ -80,6 +80,13 @@ export interface IStorage {
   updateSubscription(id: number, subscription: Partial<InsertSubscription>): Promise<Subscription | undefined>;
   deleteSubscription(id: number): Promise<boolean>;
   
+  // User Subscription methods (for new payment flow)
+  createUserSubscription(subscription: any): Promise<any>;
+  updateUserSubscriptionByStripeId(stripeId: string, updateData: any): Promise<any>;
+  
+  // Payment methods
+  createPayment(payment: any): Promise<any>;
+  
   // Payment Method methods
   getPaymentMethods(userId: number): Promise<PaymentMethod[]>;
   getPaymentMethodById(id: number): Promise<PaymentMethod | undefined>;
@@ -2610,6 +2617,70 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error fetching generated articles:', error);
       throw new Error('Failed to fetch generated articles');
+    }
+  }
+
+  // Payment Integration Storage Methods
+  async createUserSubscription(subscriptionData: any): Promise<any> {
+    try {
+      const [subscription] = await db.insert(userSubscriptions).values({
+        userId: subscriptionData.userId,
+        planId: subscriptionData.planId,
+        stripeSubscriptionId: subscriptionData.stripeSubscriptionId,
+        status: subscriptionData.status,
+        currentPeriodStart: subscriptionData.currentPeriodStart,
+        currentPeriodEnd: subscriptionData.currentPeriodEnd,
+        trialStartDate: subscriptionData.trialStartDate,
+        trialEndDate: subscriptionData.trialEndDate,
+      }).returning();
+      
+      console.log('User subscription created:', subscription);
+      return subscription;
+    } catch (error) {
+      console.error('Error creating user subscription:', error);
+      throw new Error('Failed to create user subscription');
+    }
+  }
+
+  async updateUserSubscriptionByStripeId(stripeId: string, updateData: any): Promise<any> {
+    try {
+      const [updatedSubscription] = await db
+        .update(userSubscriptions)
+        .set({
+          status: updateData.status,
+          currentPeriodStart: updateData.currentPeriodStart,
+          currentPeriodEnd: updateData.currentPeriodEnd,
+          canceledAt: updateData.canceledAt,
+          updatedAt: new Date()
+        })
+        .where(eq(userSubscriptions.stripeSubscriptionId, stripeId))
+        .returning();
+      
+      console.log('User subscription updated:', updatedSubscription);
+      return updatedSubscription;
+    } catch (error) {
+      console.error('Error updating user subscription:', error);
+      throw new Error('Failed to update user subscription');
+    }
+  }
+
+  async createPayment(paymentData: any): Promise<any> {
+    try {
+      const [payment] = await db.insert(payments).values({
+        userId: paymentData.userId,
+        subscriptionId: paymentData.subscriptionId,
+        stripePaymentIntentId: paymentData.stripePaymentIntentId,
+        amount: paymentData.amount,
+        currency: paymentData.currency,
+        status: paymentData.status,
+        description: paymentData.description,
+      }).returning();
+      
+      console.log('Payment recorded:', payment);
+      return payment;
+    } catch (error) {
+      console.error('Error creating payment record:', error);
+      throw new Error('Failed to create payment record');
     }
   }
 }

@@ -163,10 +163,24 @@ export default function PricingPage() {
     }
 
     try {
+      // Get the plan data to find the price ID
+      const plan = plans?.find(p => p.id === planId);
+      if (!plan) {
+        throw new Error('Plan not found');
+      }
+
+      const priceId = billingInterval === 'month' ? plan.monthlyPriceId : plan.yearlyPriceId;
+
+      console.log('Creating checkout session for:', { planId, priceId, billingInterval });
+
       const response = await apiRequest(
         'POST',
-        '/api/create-stripe-checkout',
-        { planId, interval: billingInterval }
+        '/api/create-checkout-session',
+        { 
+          planId, 
+          priceId,
+          interval: billingInterval 
+        }
       );
 
       if (!response.ok) {
@@ -176,17 +190,20 @@ export default function PricingPage() {
 
       const data = await response.json();
       
-      // Show info message about subscription process
-      toast({
-        title: "Subscription Information",
-        description: data.message || "Subscription checkout is being set up. Please contact support for assistance.",
-        variant: "default",
-      });
+      // Redirect to Stripe checkout
+      if (data.url) {
+        window.location.href = data.url;
+      } else if (data.sessionId) {
+        // Fallback: construct URL manually if needed
+        window.location.href = `https://checkout.stripe.com/pay/${data.sessionId}`;
+      } else {
+        throw new Error('No checkout URL received');
+      }
     } catch (error) {
       console.error('Error creating checkout session:', error);
       toast({
-        title: "Subscription Error",
-        description: error instanceof Error ? error.message : "Failed to process subscription request",
+        title: "Payment Error",
+        description: error instanceof Error ? error.message : "Failed to start checkout process. Please try again.",
         variant: "destructive",
       });
     }

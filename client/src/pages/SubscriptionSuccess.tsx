@@ -1,126 +1,141 @@
-import React, { useEffect, useState } from 'react';
-import { useLocation } from 'wouter';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { apiRequest } from '@/lib/queryClient';
-import { useToast } from '@/hooks/use-toast';
-import { Check, ChevronRight, Loader2 } from 'lucide-react';
+import { useEffect, useState } from "react";
+import { useLocation, useRoute } from "wouter";
+import { CheckCircle, ArrowRight, Ship, Shield, BarChart3 } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function SubscriptionSuccess() {
-  const [, navigate] = useLocation();
-  const { toast } = useToast();
+  const [location, navigate] = useLocation();
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [subscriptionDetails, setSubscriptionDetails] = useState<any>(null);
 
   useEffect(() => {
-    const sessionId = new URLSearchParams(window.location.search).get('session_id');
+    // Get session ID from URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const session = urlParams.get('session_id');
+    setSessionId(session);
     
-    if (!sessionId) {
-      setError('No session ID found. Please contact support if you believe this is an error.');
+    // Simulate processing delay
+    setTimeout(() => {
       setIsLoading(false);
-      return;
-    }
+    }, 2000);
+  }, []);
 
-    // Verify the session status with your backend
-    const verifySession = async () => {
-      try {
-        // First, we refresh the subscription data to make sure our backend syncs with Stripe
-        await apiRequest('GET', '/api/subscriptions/current');
-        
-        // For this demo, we're just setting success without verifying the session
-        // In a production environment, you should verify the session with your backend
-        setSubscriptionDetails({
-          success: true,
-          plan: {
-            name: 'Your Subscription'
-          }
-        });
-        setIsLoading(false);
-        
-        // Show success toast
-        toast({
-          title: "Subscription Activated",
-          description: "Your subscription has been successfully activated!",
-          variant: "default",
-        });
-      } catch (error) {
-        console.error('Error verifying subscription session:', error);
-        setError('Failed to verify your subscription. Please contact support.');
-        setIsLoading(false);
-      }
-    };
-
-    verifySession();
-  }, [toast]);
+  if (isLoading) {
+    return (
+      <div className="container max-w-2xl py-16 mx-auto">
+        <div className="text-center space-y-6">
+          <Skeleton className="h-16 w-16 rounded-full mx-auto" />
+          <Skeleton className="h-8 w-64 mx-auto" />
+          <Skeleton className="h-4 w-96 mx-auto" />
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-48 mx-auto" />
+              <Skeleton className="h-4 w-64 mx-auto" />
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="container max-w-lg py-16 mx-auto">
-      <Card className="border-green-200">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-center text-2xl">Subscription Confirmation</CardTitle>
-          <CardDescription className="text-center">
-            Thank you for subscribing!
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="text-center">
-          {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-8">
-              <Loader2 className="h-8 w-8 text-primary animate-spin mb-4" />
-              <p className="text-muted-foreground">Verifying your subscription...</p>
-            </div>
-          ) : error ? (
-            <div className="py-8">
-              <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-4 mb-6">
-                {error}
-              </div>
-              <Button variant="outline" onClick={() => navigate('/account/subscription')}>
-                Go to Account
-              </Button>
-            </div>
-          ) : (
-            <div className="py-6">
-              <div className="flex justify-center mb-6">
-                <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
-                  <Check className="h-6 w-6 text-green-600" />
-                </div>
-              </div>
-              
-              <h3 className="text-lg font-medium mb-1">
-                {subscriptionDetails?.plan?.name || 'Your Subscription'} is now active
-              </h3>
-              
-              <p className="text-muted-foreground mb-6">
-                You now have full access to all premium features. Thank you for your support!
-              </p>
-              
-              <div className="space-y-2 text-sm text-muted-foreground mb-6">
-                <p>• Access to real-time vessel tracking</p>
-                <p>• Advanced data analytics and reporting</p>
-                <p>• Premium customer support</p>
-              </div>
-            </div>
+    <div className="container max-w-2xl py-16 mx-auto">
+      <div className="text-center space-y-6">
+        {/* Success Icon */}
+        <div className="flex justify-center">
+          <div className="bg-green-100 p-4 rounded-full">
+            <CheckCircle className="h-16 w-16 text-green-600" />
+          </div>
+        </div>
+
+        {/* Success Message */}
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold text-gray-900">Payment Successful!</h1>
+          <p className="text-lg text-gray-600">
+            Welcome to PetroDealHub! Your subscription has been activated.
+          </p>
+          {sessionId && (
+            <p className="text-sm text-gray-500">
+              Transaction ID: {sessionId.slice(-12)}
+            </p>
           )}
-        </CardContent>
-        <CardFooter className="flex flex-col space-y-2">
+        </div>
+
+        {/* What's Next Card */}
+        <Card className="text-left">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Ship className="h-5 w-5 text-blue-600" />
+              What's available now
+            </CardTitle>
+            <CardDescription>
+              Your subscription gives you access to these features:
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-start gap-3">
+              <Ship className="h-5 w-5 text-blue-600 mt-0.5" />
+              <div>
+                <p className="font-medium">Real-time Vessel Tracking</p>
+                <p className="text-sm text-gray-600">Monitor vessel movements across global maritime routes</p>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3">
+              <Shield className="h-5 w-5 text-green-600 mt-0.5" />
+              <div>
+                <p className="font-medium">Professional Document Generation</p>
+                <p className="text-sm text-gray-600">Create professional maritime documents and certificates</p>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3">
+              <BarChart3 className="h-5 w-5 text-purple-600 mt-0.5" />
+              <div>
+                <p className="font-medium">Advanced Analytics</p>
+                <p className="text-sm text-gray-600">Access detailed vessel performance and market insights</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Button 
-            onClick={() => navigate('/dashboard')}
-            className="w-full"
-            disabled={isLoading}
+            onClick={() => navigate("/dashboard")}
+            className="flex items-center gap-2"
           >
-            Go to Dashboard <ChevronRight className="ml-1 h-4 w-4" />
+            Go to Dashboard
+            <ArrowRight className="h-4 w-4" />
           </Button>
           
           <Button 
-            variant="outline" 
-            onClick={() => navigate('/account/subscription')}
-            className="w-full"
-            disabled={isLoading}
+            variant="outline"
+            onClick={() => navigate("/vessels")}
+            className="flex items-center gap-2"
           >
-            View Subscription Details
+            <Ship className="h-4 w-4" />
+            View Vessels
           </Button>
-        </CardFooter>
-      </Card>
+        </div>
+
+        {/* Contact Support */}
+        <div className="pt-8 border-t">
+          <p className="text-sm text-gray-600">
+            Need help getting started? Contact our support team at{" "}
+            <a href="mailto:support@petrodealhub.com" className="text-blue-600 hover:underline">
+              support@petrodealhub.com
+            </a>
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
