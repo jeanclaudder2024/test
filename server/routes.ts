@@ -78,6 +78,7 @@ import { fromZodError } from "zod-validation-error";
 
 import { brokerRouter } from "./routes/brokerRoutes";
 import vesselRouter from "./routes/vesselRoutes";
+import { portProximityRouter } from "./routes/port-proximity";
 import { tradingRouter } from "./routes/tradingRoutes";
 import { vesselDistributionRouter } from "./routes/vesselDistributionRoutes";
 import { portProximityRouter } from "./routes/port-proximity";
@@ -5758,7 +5759,78 @@ Only use authentic, real-world data for existing refineries.`;
   });
 
 
+  // Public ports endpoint for registration (no authentication required)
+  app.get("/api/public/ports", async (req, res) => {
+    try {
+      console.log("Fetching ports for registration (public access)...");
+      
+      // Get all ports from database without authentication
+      const allPorts = await storage.getPorts();
+      
+      // Return basic port information needed for registration
+      const publicPorts = allPorts.map(port => ({
+        id: port.id,
+        name: port.name,
+        country: port.country,
+        region: port.region,
+        lat: port.lat,
+        lng: port.lng,
+        type: port.type,
+        status: port.status
+      }));
+      
+      res.json({
+        ports: publicPorts,
+        total: publicPorts.length
+      });
+    } catch (error) {
+      console.error("Error fetching public ports:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch ports data",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Mount port-proximity router for public access (registration)
+  app.use("/api/port-proximity", portProximityRouter);
+
+  // Add public routes before API router to avoid conflicts
+  app.get("/api/public/ports", async (req, res) => {
+    try {
+      console.log("Fetching ports for registration (public access)...");
+      
+      // Get all ports from database without authentication
+      const allPorts = await storage.getPorts();
+      
+      // Return basic port information needed for registration
+      const publicPorts = allPorts.map(port => ({
+        id: port.id,
+        name: port.name,
+        country: port.country,
+        region: port.region,
+        lat: port.lat,
+        lng: port.lng,
+        type: port.type,
+        status: port.status
+      }));
+      
+      res.json({
+        ports: publicPorts,
+        total: publicPorts.length
+      });
+    } catch (error) {
+      console.error("Error fetching public ports:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch ports data",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   // Mount API router for general endpoints
+  app.use("/api", apiRouter);
+  
   // Special endpoint to add all 7,183 ports in a simple way
   app.post("/generate-all-ports", async (req, res) => {
     try {

@@ -66,11 +66,13 @@ export default function LocationBasedRegistration({ onComplete }: LocationBasedR
   const [selectedPlan, setSelectedPlan] = useState<number | null>(null);
   const [previewData, setPreviewData] = useState<any>(null);
 
-  // Fetch ports
-  const { data: ports = [], isLoading: portsLoading } = useQuery({
-    queryKey: ['/api/admin/ports'],
+  // Fetch ports from public endpoint for registration
+  const { data: portsResponse, isLoading: portsLoading } = useQuery({
+    queryKey: ['/api/public/ports'],
     staleTime: 0,
   });
+  
+  const ports = portsResponse?.ports || [];
 
   // Fetch vessels near selected port
   const { data: nearbyVessels = [], isLoading: vesselsLoading } = useQuery({
