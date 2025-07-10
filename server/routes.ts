@@ -12637,6 +12637,66 @@ Note: This document contains real vessel operational data and should be treated 
     apiVersion: '2024-06-20',
   });
 
+  // Test payment endpoint - creates one-time payment to test Stripe integration
+  app.post("/api/test-stripe-payment", authenticateToken, async (req: AuthenticatedRequest, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+
+      const { planId } = req.body;
+      const user = req.user;
+
+      console.log("Creating test payment for user:", user.email, "Plan:", planId);
+
+      // Get plan details
+      const plan = await storage.getSubscriptionPlanById(planId);
+      if (!plan) {
+        return res.status(404).json({ error: 'Subscription plan not found' });
+      }
+
+      const priceInCents = Math.round(parseFloat(plan.price) * 100);
+      console.log("Test payment - Plan details:", { name: plan.name, price: plan.price, priceInCents });
+
+      // Create one-time payment session (not subscription)
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: [{
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: `${plan.name} - Test Payment`,
+              description: `Test payment for ${plan.name} subscription`,
+            },
+            unit_amount: priceInCents,
+          },
+          quantity: 1,
+        }],
+        mode: 'payment', // One-time payment instead of subscription
+        success_url: `${req.protocol}://${req.get('host')}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${req.protocol}://${req.get('host')}/pricing`,
+        metadata: {
+          userId: user.id.toString(),
+          planId: planId.toString(),
+          testPayment: 'true'
+        }
+      });
+
+      console.log("Test payment session created:", session.id);
+      res.json({ 
+        sessionId: session.id,
+        url: session.url 
+      });
+
+    } catch (error) {
+      console.error("Error creating test payment:", error);
+      res.status(500).json({ 
+        message: "Failed to create test payment",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   // Create Stripe checkout session
   app.post("/api/create-checkout-session", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
@@ -12670,16 +12730,20 @@ Note: This document contains real vessel operational data and should be treated 
         console.log("Created Stripe customer:", stripeCustomerId);
       }
 
-      // For demo purposes, we'll create price_data instead of using pre-configured prices
-      // In production, you would use actual Stripe Price IDs from your subscription plans
-      
       // Get plan details from database to determine price
       const plan = await storage.getSubscriptionPlanById(planId);
       if (!plan) {
         return res.status(404).json({ error: 'Subscription plan not found' });
       }
 
-      // Create checkout session with price_data for demo
+      const priceInCents = Math.round(parseFloat(plan.price) * 100);
+      console.log("Plan details:", { name: plan.name, price: plan.price, priceInCents });
+
+      if (priceInCents <= 0) {
+        return res.status(400).json({ error: 'Invalid plan price: ' + plan.price });
+      }
+
+      // Create checkout session with immediate payment (no trial)
       const session = await stripe.checkout.sessions.create({
         customer: stripeCustomerId,
         payment_method_types: ['card'],
@@ -12690,7 +12754,7 @@ Note: This document contains real vessel operational data and should be treated 
               name: plan.name,
               description: plan.description || `${plan.name} subscription plan`,
             },
-            unit_amount: Math.round(parseFloat(plan.price) * 100), // Convert to cents
+            unit_amount: priceInCents,
             recurring: {
               interval: plan.interval || 'month',
             },
