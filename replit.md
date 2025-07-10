@@ -606,6 +606,13 @@ Changelog:
   * **Client-Side Logic Fixed**: Updated useSubscription hook to allow broker access for Professional+ plans (including trials)
   * **User Experience Improved**: Once users have Professional+ plan, they maintain broker access without needing to upgrade again
   * **Production Ready**: Broker dashboard now correctly accessible for all Professional and Enterprise subscribers
+- July 10, 2025. **DEAL BUTTON ACCESS CONTROL: Broker Subscription Required for Deal Features**:
+  * **Vessel Detail Page Security**: Added broker access control to "Express Interest in Deal" button in vessel detail pages
+  * **Subscription Validation**: Non-broker users now see locked "Broker Access Required" button instead of functional deal button
+  * **Enhanced useSubscription Hook**: Added hasFeature() function for flexible feature checking across components
+  * **Professional User Experience**: Locked button shows clear upgrade message directing users to Professional/Enterprise plans
+  * **Admin Bypass**: Admin users maintain full access to all deal features without subscription restrictions
+  * **Visual Feedback**: Locked button uses Lock icon with disabled styling and helpful tooltip messaging
 - July 10, 2025. **COMPLETE PAYMENT ENFORCEMENT SYSTEM: Trial-to-Paid Conversion Implementation**:
   * **Payment Reminder Component**: Created beautiful PaymentReminder.tsx with trial countdown, upgrade prompts, and payment buttons
   * **BrokerRoute Protection**: Added comprehensive route protection that blocks access after trial expiration requiring payment

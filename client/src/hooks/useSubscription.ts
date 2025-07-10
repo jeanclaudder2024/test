@@ -15,6 +15,7 @@ export interface SubscriptionFeatures {
   maxRefineries: number;
   documentTypes: string[];
   hasActiveTrial: boolean;
+  hasFeature: (feature: string) => boolean;
 }
 
 export function useSubscription(): SubscriptionFeatures {
@@ -36,7 +37,8 @@ export function useSubscription(): SubscriptionFeatures {
       maxVessels: 999,
       maxPorts: 999,
       maxRefineries: 999,
-      documentTypes: ['LOI', 'B/L', 'SPA', 'ICPO', 'SGS', 'SDS', 'Q88', 'ATB', 'customs']
+      documentTypes: ['LOI', 'B/L', 'SPA', 'ICPO', 'SGS', 'SDS', 'Q88', 'ATB', 'customs'],
+      hasFeature: (feature: string) => true // Admin has all features
     };
   }
 
@@ -66,7 +68,7 @@ export function useSubscription(): SubscriptionFeatures {
   // For trial users, use their actual selected plan limits (no unlimited access)
   const effectivePlan = planId; // Use actual plan limits even during trial
 
-  return {
+  const features = {
     hasBasicAccess: hasActiveSubscription || hasActiveTrial || effectivePlan >= 1,
     hasProfessionalAccess: hasActiveSubscription || hasActiveTrial || effectivePlan >= 2,
     hasEnterpriseAccess: hasActiveSubscription || hasActiveTrial || effectivePlan >= 3,
@@ -86,5 +88,27 @@ export function useSubscription(): SubscriptionFeatures {
       : effectivePlan >= 2 
       ? ['LOI', 'B/L', 'SPA', 'ICPO']
       : ['LOI', 'SPA']
+  };
+
+  return {
+    ...features,
+    hasFeature: (feature: string) => {
+      switch (feature) {
+        case 'broker':
+          return features.canAccessBrokerFeatures;
+        case 'basic':
+          return features.hasBasicAccess;
+        case 'professional':
+          return features.hasProfessionalAccess;
+        case 'enterprise':
+          return features.hasEnterpriseAccess;
+        case 'documents':
+          return features.canGenerateDocuments;
+        case 'zones':
+          return features.canAccessAllZones;
+        default:
+          return false;
+      }
+    }
   };
 }

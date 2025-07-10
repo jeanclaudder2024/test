@@ -25,6 +25,7 @@ import { formatDate } from '@/lib/utils';
 import { Link, useRoute } from 'wouter';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useMutation } from '@tanstack/react-query';
+import { useSubscription } from '@/hooks/useSubscription';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
 import { Label } from '@/components/ui/label';
@@ -34,7 +35,7 @@ import {
   Users, Clock, Compass, ArrowRight, FileText, FileCheck, Clipboard, Download, Globe,
   ZoomIn, ZoomOut, Fuel, Activity, Layers, Filter, Tag, Check, RotateCw,
   MapPin, ExternalLink, Factory, AlertTriangle, RefreshCw, Route, TrendingUp, Phone, Building,
-  DollarSign, CreditCard, CheckCircle, Star, Shield, Hash
+  DollarSign, CreditCard, CheckCircle, Star, Shield, Hash, Lock
 } from 'lucide-react';
 
 // Define oil product categories for filtering
@@ -295,6 +296,7 @@ export default function VesselDetail() {
   const [, params] = useRoute('/vessels/:id');
   const vesselId = params?.id ? parseInt(params.id) : null;
   const { toast } = useToast();
+  const { hasFeature } = useSubscription();
   const [vessel, setVessel] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isUpdatingLocation, setIsUpdatingLocation] = useState(false);
@@ -1196,22 +1198,40 @@ export default function VesselDetail() {
                       
                       {/* Action Button */}
                       <div className="mt-6">
-                        <Button 
-                          className="w-full py-4 px-6 font-semibold shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-700 animate-pulse"
-                          style={{
-                            animationDuration: '3s'
-                          }}
-                          onClick={() => {
-                            toast({
-                              title: "Deal Interest Registered",
-                              description: "Your interest in this maritime deal has been recorded. Our broker team will contact you within 24 hours.",
-                              duration: 6000,
-                            });
-                          }}
-                        >
-                          <TrendingUp className="mr-2 h-4 w-4" />
-                          Express Interest in Deal
-                        </Button>
+                        {hasFeature('broker') ? (
+                          <Button 
+                            className="w-full py-4 px-6 font-semibold shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-700 animate-pulse"
+                            style={{
+                              animationDuration: '3s'
+                            }}
+                            onClick={() => {
+                              toast({
+                                title: "Deal Interest Registered",
+                                description: "Your interest in this maritime deal has been recorded. Our broker team will contact you within 24 hours.",
+                                duration: 6000,
+                              });
+                            }}
+                          >
+                            <TrendingUp className="mr-2 h-4 w-4" />
+                            Express Interest in Deal
+                          </Button>
+                        ) : (
+                          <Button 
+                            className="w-full py-4 px-6 font-semibold shadow-lg relative opacity-60 cursor-not-allowed"
+                            disabled
+                            onClick={() => {
+                              toast({
+                                title: "Broker Access Required",
+                                description: "You need a Professional or Enterprise subscription to access deal features. Please upgrade your plan.",
+                                variant: "destructive",
+                                duration: 5000,
+                              });
+                            }}
+                          >
+                            <Lock className="mr-2 h-4 w-4" />
+                            Broker Access Required
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>
