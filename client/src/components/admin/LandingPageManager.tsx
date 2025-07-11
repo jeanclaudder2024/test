@@ -654,10 +654,21 @@ export default function LandingPageManager() {
 
         {/* Image Management Tab */}
         <TabsContent value="images" className="space-y-6">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <h4 className="font-semibold text-blue-800 mb-2">How to Use Image Management</h4>
+            <div className="text-sm text-blue-700 space-y-1">
+              <p>• <strong>Add Image:</strong> Click "Add Image" button to upload images for different sections of your landing page</p>
+              <p>• <strong>Sections:</strong> Choose from 8 different sections (Hero, Industry, Features, etc.)</p>
+              <p>• <strong>Image Key:</strong> Give each image a unique name (e.g., "hero-background", "company-logo")</p>
+              <p>• <strong>URL:</strong> Paste image URL from Unsplash, your server, or any public image link</p>
+              <p>• <strong>Display Order:</strong> Control which image appears first (1 = first, 2 = second, etc.)</p>
+            </div>
+          </div>
+          
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">Image Management</h3>
-              <p className="text-gray-600">Manage logos, backgrounds, and visual assets</p>
+              <h3 className="text-lg font-semibold text-gray-900">Landing Page Images</h3>
+              <p className="text-gray-600">Organize by sections: {landingImages?.length || 0} images total</p>
             </div>
             <Dialog open={isImageDialogOpen} onOpenChange={setIsImageDialogOpen}>
               <DialogTrigger asChild>
@@ -719,8 +730,16 @@ export default function LandingPageManager() {
                     <Input
                       value={imageFormData.imageUrl}
                       onChange={(e) => setImageFormData({ ...imageFormData, imageUrl: e.target.value })}
-                      placeholder="Enter image URL or upload path"
+                      placeholder="https://images.unsplash.com/photo-..."
                     />
+                    <div className="mt-2 text-xs text-gray-500">
+                      <p className="mb-1"><strong>Sample URLs you can use:</strong></p>
+                      <div className="space-y-1 font-mono text-xs">
+                        <p>• Maritime: https://images.unsplash.com/photo-1578662996442-48f60103fc96</p>
+                        <p>• Oil Refinery: https://images.unsplash.com/photo-1518709268805-4e9042af2176</p>
+                        <p>• Technology: https://images.unsplash.com/photo-1544551763-46a013bb70d5</p>
+                      </div>
+                    </div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-2">Alt Text</label>
@@ -752,94 +771,115 @@ export default function LandingPageManager() {
             </Dialog>
           </div>
 
-          {/* Images List */}
-          <div className="grid gap-4">
+          {/* Images List - Organized by Sections */}
+          <div className="space-y-6">
             {landingImages && Array.isArray(landingImages) && landingImages.length > 0 ? (
-              landingImages
-                .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0))
-                .map((image) => {
-                  const sectionInfo = getSectionInfo(image.section);
-                  return (
-                    <Card key={image.id} className="border border-gray-200">
-                      <CardHeader className="pb-3">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Image className="w-5 h-5 text-gray-500" />
-                            <CardTitle className="text-lg">{sectionInfo.label}</CardTitle>
-                            <span className="text-sm text-gray-500">#{image.displayOrder}</span>
-                            {image.isActive ? (
-                              <Eye className="w-4 h-4 text-green-600" />
-                            ) : (
-                              <EyeOff className="w-4 h-4 text-gray-400" />
-                            )}
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleEditImage(image)}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => deleteImageMutation.mutate(image.id)}
-                              disabled={deleteImageMutation.isPending}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
+              CONTENT_SECTIONS.map((section) => {
+                const sectionImages = landingImages
+                  .filter(img => img.section === section.value)
+                  .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+                
+                return (
+                  <div key={section.value} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-white rounded-lg shadow-sm">
+                          <section.icon className="w-5 h-5 text-blue-600" />
                         </div>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <div className="space-y-2">
-                              <div>
-                                <span className="text-sm font-medium text-gray-600">Image Key:</span>
-                                <p className="text-gray-900 font-mono text-sm">{image.imageKey}</p>
+                        <div>
+                          <h4 className="font-semibold text-gray-900">{section.label}</h4>
+                          <p className="text-sm text-gray-600">
+                            {sectionImages.length} image{sectionImages.length !== 1 ? 's' : ''} 
+                            {sectionImages.length === 0 ? ' - Add your first image for this section' : ''}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {sectionImages.length > 0 ? (
+                      <div className="p-4 space-y-3">
+                        {sectionImages.map((image) => (
+                          <div key={image.id} className="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-medium text-blue-600">#{image.displayOrder}</span>
+                                <span className="text-sm font-mono bg-white px-2 py-1 rounded border">{image.imageKey}</span>
+                                {image.isActive ? (
+                                  <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Active</span>
+                                ) : (
+                                  <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">Inactive</span>
+                                )}
                               </div>
-                              {image.altText && (
+                              <div className="flex items-center space-x-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleEditImage(image)}
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => deleteImageMutation.mutate(image.id)}
+                                  disabled={deleteImageMutation.isPending}
+                                  className="text-red-600 hover:text-red-700"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                              <div className="lg:col-span-1">
+                                {image.imageUrl && (
+                                  <div className="space-y-2">
+                                    <div className="border rounded-lg overflow-hidden bg-white">
+                                      <img
+                                        src={image.imageUrl}
+                                        alt={image.altText || "Landing page image"}
+                                        className="w-full h-32 object-cover"
+                                        onError={(e) => {
+                                          const target = e.target as HTMLImageElement;
+                                          target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23f3f4f6"/><text x="50" y="50" text-anchor="middle" dy=".3em" fill="%23666">No Image</text></svg>';
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="lg:col-span-2 space-y-2">
+                                {image.altText && (
+                                  <div>
+                                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Alt Text:</span>
+                                    <p className="text-sm text-gray-700">{image.altText}</p>
+                                  </div>
+                                )}
                                 <div>
-                                  <span className="text-sm font-medium text-gray-600">Alt Text:</span>
-                                  <p className="text-gray-700">{image.altText}</p>
+                                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Image URL:</span>
+                                  <p className="text-xs text-gray-600 break-all font-mono bg-white px-2 py-1 rounded border">{image.imageUrl}</p>
                                 </div>
-                              )}
+                              </div>
                             </div>
                           </div>
-                          <div>
-                            {image.imageUrl && (
-                              <div className="space-y-2">
-                                <span className="text-sm font-medium text-gray-600">Preview:</span>
-                                <div className="border rounded-lg p-2 bg-gray-50">
-                                  <img
-                                    src={image.imageUrl}
-                                    alt={image.altText || "Landing page image"}
-                                    className="w-full h-24 object-cover rounded"
-                                    onError={(e) => {
-                                      const target = e.target as HTMLImageElement;
-                                      target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23f3f4f6"/><text x="50" y="50" text-anchor="middle" dy=".3em" fill="%23666">No Image</text></svg>';
-                                    }}
-                                  />
-                                </div>
-                                <div>
-                                  <span className="text-sm font-medium text-gray-600">URL:</span>
-                                  <p className="text-gray-700 text-xs truncate">{image.imageUrl}</p>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-6 text-center text-gray-500">
+                        <Image className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                        <p className="text-sm">No images in this section yet</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })
             ) : (
               <Card className="border-dashed border-2 border-gray-300">
                 <CardContent className="text-center py-8">
                   <Image className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                  <p className="text-gray-500">No landing page images found. Add your first image.</p>
+                  <h4 className="text-lg font-semibold text-gray-700 mb-2">No Images Found</h4>
+                  <p className="text-gray-500 mb-4">Start by adding your first landing page image.</p>
+                  <p className="text-sm text-gray-400">Images will be organized by sections for easy management.</p>
                 </CardContent>
               </Card>
             )}
