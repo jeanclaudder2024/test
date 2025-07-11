@@ -1557,15 +1557,16 @@ export const landingPageSections = pgTable("landing_page_sections", {
 
 export const landingPageImages = pgTable("landing_page_images", {
   id: serial("id").primaryKey(),
-  sectionId: integer("section_id").references(() => landingPageSections.id).notNull(),
+  section: text("section").notNull(), // Changed from sectionId to section text field
   imageKey: varchar("image_key", { length: 100 }).notNull(),
   imageUrl: text("image_url"),
   altText: varchar("alt_text", { length: 255 }),
   displayOrder: integer("display_order").default(0),
+  isActive: boolean("is_active").default(true), // Added isActive field
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => ({
-  uniqueImage: unique("unique_section_image").on(table.sectionId, table.imageKey),
+  uniqueImage: unique("unique_section_image").on(table.section, table.imageKey),
 }));
 
 export const landingPageBlocks = pgTable("landing_page_blocks", {
@@ -1585,6 +1586,12 @@ export const landingPageBlocks = pgTable("landing_page_blocks", {
 });
 
 export const insertLandingPageSectionSchema = createInsertSchema(landingPageSections).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertLandingPageImageSchema = createInsertSchema(landingPageImages).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
@@ -1773,12 +1780,6 @@ export type BrokerStats = typeof brokerStats.$inferSelect;
 export type InsertBrokerStats = z.infer<typeof insertBrokerStatsSchema>;
 export type BrokerProfile = typeof brokerProfiles.$inferSelect;
 export type InsertBrokerProfile = z.infer<typeof insertBrokerProfileSchema>;
-
-export const insertLandingPageImageSchema = createInsertSchema(landingPageImages).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
 
 export const insertLandingPageBlockSchema = createInsertSchema(landingPageBlocks).omit({
   id: true,

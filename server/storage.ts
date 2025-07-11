@@ -255,6 +255,14 @@ export interface IStorage {
   updateLandingPageContent(id: number, content: Partial<InsertLandingPageContent>): Promise<LandingPageContent | undefined>;
   deleteLandingPageContent(id: number): Promise<boolean>;
   cleanupUnusedLandingPageSections(usedSections: string[]): Promise<string[]>;
+
+  // Landing Page Image methods
+  getLandingPageImages(): Promise<LandingPageImage[]>;
+  getLandingPageImageById(id: number): Promise<LandingPageImage | undefined>;
+  getLandingPageImagesBySection(section: string): Promise<LandingPageImage[]>;
+  createLandingPageImage(image: InsertLandingPageImage): Promise<LandingPageImage>;
+  updateLandingPageImage(id: number, image: Partial<InsertLandingPageImage>): Promise<LandingPageImage | undefined>;
+  deleteLandingPageImage(id: number): Promise<boolean>;
   
   // Regions Filter Management methods
   getRegions(): Promise<Region[]>;
@@ -2075,6 +2083,80 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error("Error cleaning up unused landing page sections:", error);
       return [];
+    }
+  }
+
+  // Landing Page Image Management methods
+  async getLandingPageImages(): Promise<LandingPageImage[]> {
+    try {
+      return await db.select().from(landingPageImages).orderBy(landingPageImages.section, landingPageImages.displayOrder);
+    } catch (error) {
+      console.error('Error fetching landing page images:', error);
+      return [];
+    }
+  }
+
+  async getLandingPageImageById(id: number): Promise<LandingPageImage | undefined> {
+    try {
+      const [image] = await db.select().from(landingPageImages).where(eq(landingPageImages.id, id));
+      return image;
+    } catch (error) {
+      console.error('Error fetching landing page image by ID:', error);
+      return undefined;
+    }
+  }
+
+  async getLandingPageImagesBySection(section: string): Promise<LandingPageImage[]> {
+    try {
+      return await db
+        .select()
+        .from(landingPageImages)
+        .where(eq(landingPageImages.section, section))
+        .orderBy(landingPageImages.displayOrder);
+    } catch (error) {
+      console.error('Error fetching landing page images by section:', error);
+      return [];
+    }
+  }
+
+  async createLandingPageImage(image: InsertLandingPageImage): Promise<LandingPageImage> {
+    try {
+      const [newImage] = await db
+        .insert(landingPageImages)
+        .values({
+          ...image,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .returning();
+      return newImage;
+    } catch (error) {
+      console.error('Error creating landing page image:', error);
+      throw error;
+    }
+  }
+
+  async updateLandingPageImage(id: number, image: Partial<InsertLandingPageImage>): Promise<LandingPageImage | undefined> {
+    try {
+      const [updatedImage] = await db
+        .update(landingPageImages)
+        .set({ ...image, updatedAt: new Date() })
+        .where(eq(landingPageImages.id, id))
+        .returning();
+      return updatedImage;
+    } catch (error) {
+      console.error('Error updating landing page image:', error);
+      return undefined;
+    }
+  }
+
+  async deleteLandingPageImage(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(landingPageImages).where(eq(landingPageImages.id, id)).returning();
+      return result.length > 0;
+    } catch (error) {
+      console.error('Error deleting landing page image:', error);
+      return false;
     }
   }
 

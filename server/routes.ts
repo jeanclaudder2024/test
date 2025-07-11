@@ -8802,6 +8802,101 @@ IMPORTANT: Generate a complete professional maritime document with the following
     }
   });
 
+  // Landing Page Image Management API Routes
+  
+  // Get all landing page images
+  apiRouter.get("/admin/landing-images", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const images = await storage.getLandingPageImages();
+      res.json(images);
+    } catch (error) {
+      console.error("Error fetching landing page images:", error);
+      res.status(500).json({ error: "Failed to fetch landing page images" });
+    }
+  });
+
+  // Get landing page images by section
+  apiRouter.get("/admin/landing-images/section/:section", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const { section } = req.params;
+      
+      if (!section) {
+        return res.status(400).json({ error: "Section parameter is required" });
+      }
+
+      const images = await storage.getLandingPageImagesBySection(section);
+      res.json(images);
+    } catch (error) {
+      console.error("Error fetching landing page images by section:", error);
+      res.status(500).json({ error: "Failed to fetch landing page images by section" });
+    }
+  });
+
+  // Create new landing page image
+  apiRouter.post("/admin/landing-images", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const imageData = req.body;
+
+      // Validate required fields
+      if (!imageData.section || !imageData.imageKey || !imageData.imageUrl) {
+        return res.status(400).json({ 
+          error: "Missing required fields: section, imageKey, and imageUrl are required" 
+        });
+      }
+
+      const newImage = await storage.createLandingPageImage(imageData);
+      res.status(201).json(newImage);
+    } catch (error) {
+      console.error("Error creating landing page image:", error);
+      res.status(500).json({ error: "Failed to create landing page image" });
+    }
+  });
+
+  // Update existing landing page image
+  apiRouter.put("/admin/landing-images/:id", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updateData = req.body;
+
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid image ID" });
+      }
+
+      const updatedImage = await storage.updateLandingPageImage(id, updateData);
+      
+      if (!updatedImage) {
+        return res.status(404).json({ error: "Landing page image not found" });
+      }
+
+      res.json(updatedImage);
+    } catch (error) {
+      console.error("Error updating landing page image:", error);
+      res.status(500).json({ error: "Failed to update landing page image" });
+    }
+  });
+
+  // Delete landing page image
+  apiRouter.delete("/admin/landing-images/:id", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const id = parseInt(req.params.id);
+
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid image ID" });
+      }
+
+      const deleted = await storage.deleteLandingPageImage(id);
+      
+      if (!deleted) {
+        return res.status(404).json({ error: "Landing page image not found" });
+      }
+
+      res.json({ message: "Landing page image deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting landing page image:", error);
+      res.status(500).json({ error: "Failed to delete landing page image" });
+    }
+  });
+
   app.use("/api", apiRouter);
 
   const httpServer = createServer(app);
