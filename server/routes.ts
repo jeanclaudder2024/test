@@ -12711,7 +12711,7 @@ Note: This document contains real vessel operational data and should be treated 
         return res.status(400).json({ error: 'Invalid plan price: ' + plan.price });
       }
 
-      // Create checkout session with immediate payment (no trial period to avoid loading loops)
+      // Create checkout session with immediate payment (using payment mode to avoid subscription loading loops)
       const session = await stripe.checkout.sessions.create({
         customer: stripeCustomerId,
         payment_method_types: ['card'],
@@ -12719,29 +12719,20 @@ Note: This document contains real vessel operational data and should be treated 
           price_data: {
             currency: 'usd',
             product_data: {
-              name: plan.name,
-              description: plan.description || `${plan.name} subscription plan`,
+              name: `${plan.name} - 1 Month Access`,
+              description: `${plan.description || plan.name} - One month subscription payment`,
             },
             unit_amount: priceInCents,
-            recurring: {
-              interval: plan.interval || 'month',
-            },
           },
           quantity: 1,
         }],
-        mode: 'subscription',
+        mode: 'payment',
         success_url: `${req.protocol}://${req.get('host')}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${req.protocol}://${req.get('host')}/pricing`,
         metadata: {
           userId: user.id.toString(),
-          planId: planId.toString()
-        },
-        subscription_data: {
-          metadata: {
-            userId: user.id.toString(),
-            planId: planId.toString()
-          },
-          // No trial period in Stripe - users get trial access through registration instead
+          planId: planId.toString(),
+          paymentType: 'monthly_subscription'
         }
       });
 
