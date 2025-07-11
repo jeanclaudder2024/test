@@ -132,10 +132,7 @@ export default function DocumentManagement() {
   // Create template mutation
   const createTemplateMutation = useMutation({
     mutationFn: async (data: ArticleTemplateForm) => {
-      return await apiRequest('/api/admin/article-templates', {
-        method: 'POST',
-        body: JSON.stringify(data)
-      });
+      return await apiRequest('POST', '/api/admin/article-templates', data);
     },
     onSuccess: () => {
       toast({
@@ -158,10 +155,7 @@ export default function DocumentManagement() {
   // Update template mutation
   const updateTemplateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: ArticleTemplateForm }) => {
-      return await apiRequest(`/api/admin/article-templates/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(data)
-      });
+      return await apiRequest('PUT', `/api/admin/article-templates/${id}`, data);
     },
     onSuccess: () => {
       toast({
@@ -184,9 +178,7 @@ export default function DocumentManagement() {
   // Delete template mutation
   const deleteTemplateMutation = useMutation({
     mutationFn: async (id: number) => {
-      return await apiRequest(`/api/admin/article-templates/${id}`, {
-        method: 'DELETE'
-      });
+      return await apiRequest('DELETE', `/api/admin/article-templates/${id}`);
     },
     onSuccess: () => {
       toast({
