@@ -222,6 +222,33 @@ export async function initializeCustomAuthTables() {
       console.log('Broker tables creation skipped:', error);
     }
     
+    // Ensure enhanced profile columns exist
+    try {
+      await db.execute(sql`
+        ALTER TABLE users 
+        ADD COLUMN IF NOT EXISTS username TEXT,
+        ADD COLUMN IF NOT EXISTS phone_number TEXT,
+        ADD COLUMN IF NOT EXISTS company TEXT,
+        ADD COLUMN IF NOT EXISTS job_title TEXT,
+        ADD COLUMN IF NOT EXISTS country TEXT,
+        ADD COLUMN IF NOT EXISTS timezone TEXT,
+        ADD COLUMN IF NOT EXISTS bio TEXT,
+        ADD COLUMN IF NOT EXISTS website TEXT,
+        ADD COLUMN IF NOT EXISTS linkedin_url TEXT,
+        ADD COLUMN IF NOT EXISTS twitter_handle TEXT,
+        ADD COLUMN IF NOT EXISTS email_notifications BOOLEAN DEFAULT true,
+        ADD COLUMN IF NOT EXISTS marketing_emails BOOLEAN DEFAULT false,
+        ADD COLUMN IF NOT EXISTS weekly_reports BOOLEAN DEFAULT true,
+        ADD COLUMN IF NOT EXISTS sms_notifications BOOLEAN DEFAULT false,
+        ADD COLUMN IF NOT EXISTS profile_completeness INTEGER DEFAULT 0,
+        ADD COLUMN IF NOT EXISTS onboarding_completed BOOLEAN DEFAULT false;
+      `);
+      
+      console.log('Enhanced profile columns ensured');
+    } catch (error) {
+      console.log('Profile columns setup skipped:', error.message);
+    }
+    
   } catch (error) {
     console.error('Error initializing custom auth tables:', error);
     throw error;

@@ -301,8 +301,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
-    return user || undefined;
+    try {
+      const [user] = await db.select().from(users).where(eq(users.username, username));
+      return user || undefined;
+    } catch (error) {
+      console.log('getUserByUsername error (username column may not exist):', error.message);
+      // Fallback to email-based lookup if username column doesn't exist
+      return await this.getUserByEmail(username);
+    }
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
