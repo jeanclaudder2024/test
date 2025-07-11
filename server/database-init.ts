@@ -248,6 +248,43 @@ export async function initializeCustomAuthTables() {
     } catch (error) {
       console.log('Profile columns setup skipped:', error.message);
     }
+
+    // Create landing page images table
+    try {
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS landing_page_images (
+          id SERIAL PRIMARY KEY,
+          section TEXT NOT NULL,
+          image_key VARCHAR(100) NOT NULL,
+          image_url TEXT,
+          alt_text VARCHAR(255),
+          display_order INTEGER DEFAULT 0,
+          is_active BOOLEAN DEFAULT true,
+          created_at TIMESTAMP DEFAULT NOW(),
+          updated_at TIMESTAMP DEFAULT NOW(),
+          UNIQUE(section, image_key)
+        );
+      `);
+      
+      // Insert sample images if table is empty
+      const existingImages = await db.execute(sql`SELECT COUNT(*) as count FROM landing_page_images`);
+      const count = existingImages.rows[0]?.count || 0;
+      
+      if (count === 0) {
+        await db.execute(sql`
+          INSERT INTO landing_page_images (section, image_key, image_url, alt_text, display_order, is_active) VALUES
+          ('hero', 'hero-background', 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?q=80&w=2070', 'Maritime oil tanker at sea', 1, true),
+          ('industry', 'oil-refinery', 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?q=80&w=2125', 'Modern oil refinery facility', 1, true),
+          ('features', 'vessel-tracking', 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=2070', 'Vessel tracking technology', 1, true),
+          ('how-it-works', 'platform-workflow', 'https://images.unsplash.com/photo-1586864387789-628af9feed72?q=80&w=2070', 'Digital platform workflow', 1, true);
+        `);
+        console.log('Landing page images table created with sample data');
+      } else {
+        console.log('Landing page images table already exists with data');
+      }
+    } catch (error) {
+      console.log('Landing page images table setup skipped:', error.message);
+    }
     
   } catch (error) {
     console.error('Error initializing custom auth tables:', error);
