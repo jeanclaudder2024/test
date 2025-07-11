@@ -7086,7 +7086,7 @@ IMPORTANT: Generate a complete professional maritime document with the following
   });
 
   // Get generated articles (admin endpoint) - maps to generated documents
-  apiRouter.get("/admin/generated-articles", requireAdmin, async (req: AuthenticatedRequest, res) => {
+  apiRouter.get("/admin/generated-articles", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
     try {
       const documents = await storage.getAllGeneratedDocuments();
       // Transform to match expected article format
