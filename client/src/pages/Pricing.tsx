@@ -189,12 +189,26 @@ export default function PricingPage() {
 
       const data = await response.json();
       
-      // Redirect to Stripe checkout
-      if (data.url) {
-        window.location.href = data.url;
+      // Redirect to Stripe checkout - ensure top-level navigation to avoid iFrame issues
+      const checkoutUrl = data.url || data.redirectUrl;
+      
+      if (checkoutUrl) {
+        // Force top-level navigation to avoid iFrame permission issues
+        if (window.top && window.top !== window) {
+          // If we're in an iframe, redirect the parent window
+          window.top.location.href = checkoutUrl;
+        } else {
+          // Normal redirect
+          window.location.href = checkoutUrl;
+        }
       } else if (data.sessionId) {
         // Fallback: construct URL manually if needed
-        window.location.href = `https://checkout.stripe.com/pay/${data.sessionId}`;
+        const fallbackUrl = `https://checkout.stripe.com/pay/${data.sessionId}`;
+        if (window.top && window.top !== window) {
+          window.top.location.href = fallbackUrl;
+        } else {
+          window.location.href = fallbackUrl;
+        }
       } else {
         throw new Error('No checkout URL received');
       }

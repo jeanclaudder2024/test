@@ -82,7 +82,14 @@ export default function Account() {
       return response.json();
     },
     onSuccess: (data) => {
-      window.location.href = data.url;
+      // Force top-level navigation to avoid iFrame permission issues
+      if (window.top && window.top !== window) {
+        // If we're in an iframe, redirect the parent window
+        window.top.location.href = data.url;
+      } else {
+        // Normal redirect
+        window.location.href = data.url;
+      }
     },
     onError: () => {
       toast({

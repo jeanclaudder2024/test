@@ -12737,9 +12737,13 @@ Note: This document contains real vessel operational data and should be treated 
       });
 
       console.log("Stripe checkout session created:", session.id);
+      console.log("Checkout URL:", session.url);
+      
+      // Ensure we return the proper redirect URL
       res.json({ 
         sessionId: session.id,
-        url: session.url 
+        url: session.url,
+        redirectUrl: session.url // Explicit redirect URL for iFrame issues
       });
 
     } catch (error) {
