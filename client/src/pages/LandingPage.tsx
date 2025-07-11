@@ -136,6 +136,20 @@ export default function LandingPage() {
     cacheTime: 0, // Don't cache the results
   });
 
+  // Fetch landing page content from database
+  const { data: landingContent, isLoading: contentLoading } = useQuery({
+    queryKey: ['/api/landing-content'],
+    queryFn: async () => {
+      const response = await fetch('/api/landing-content');
+      if (!response.ok) {
+        throw new Error('Failed to fetch landing content');
+      }
+      return response.json();
+    },
+    staleTime: 0, // Always fetch fresh data
+    cacheTime: 0, // Don't cache the results
+  });
+
   // Handle trial start - redirect to registration with message
   const handleStartTrial = (planId: number) => {
     // Always show message and redirect to registration
@@ -363,33 +377,53 @@ export default function LandingPage() {
                   Premier Oil Trading Platform
                 </Badge>
                 
-                <h1 className="text-4xl md:text-5xl xl:text-6xl font-bold leading-tight mb-6 tracking-tight">
-                  Revolutionizing Petroleum Trading:
-                  <span className="bg-gradient-to-r from-orange-400 to-orange-300 bg-clip-text text-transparent block mt-2">
-                    From Tanker to Signed Deal
-                  </span>
-                </h1>
-                
-                <p className="text-xl text-white/80 mb-8 leading-relaxed max-w-2xl">
-                  Empowering brokers, traders, and companies with real-time intelligence, 
-                  seamless negotiations, and smart documentation for the global 
-                  petroleum industry.
-                </p>
-                
-                <div className="flex flex-wrap gap-4 mb-12">
-                  <Link href="/dashboard">
-                    <Button size="lg" className="bg-orange-500 hover:bg-orange-600 text-white font-medium px-8 py-6 rounded-md shadow-lg shadow-orange-500/20 hover:translate-y-[-2px] transition-all duration-200">
-                      Explore Platform
-                      <ChevronRight className="h-5 w-5 ml-1" />
-                    </Button>
-                  </Link>
-                  <Link href="/vessels">
-                    <Button size="lg" variant="outline" className="border-white/20 text-white bg-white/5 hover:bg-white/10 hover:border-white/30 font-medium px-8 py-6 rounded-md backdrop-blur-sm hover:translate-y-[-2px] transition-all duration-200">
-                      Live Tanker Demo
-                      <Play className="h-5 w-5 ml-1" />
-                    </Button>
-                  </Link>
-                </div>
+{(() => {
+                  const heroContent = landingContent?.find((content: any) => content.section === 'hero');
+                  if (contentLoading || !heroContent) {
+                    return (
+                      <>
+                        <h1 className="text-4xl md:text-5xl xl:text-6xl font-bold leading-tight mb-6 tracking-tight">
+                          Loading...
+                        </h1>
+                        <p className="text-xl text-white/80 mb-8 leading-relaxed max-w-2xl">
+                          Loading content...
+                        </p>
+                      </>
+                    );
+                  }
+                  
+                  return (
+                    <>
+                      <h1 className="text-4xl md:text-5xl xl:text-6xl font-bold leading-tight mb-6 tracking-tight">
+                        {heroContent.title}
+                        {heroContent.subtitle && (
+                          <span className="bg-gradient-to-r from-orange-400 to-orange-300 bg-clip-text text-transparent block mt-2">
+                            {heroContent.subtitle}
+                          </span>
+                        )}
+                      </h1>
+                      
+                      <p className="text-xl text-white/80 mb-8 leading-relaxed max-w-2xl">
+                        {heroContent.description}
+                      </p>
+                      
+                      <div className="flex flex-wrap gap-4 mb-12">
+                        <Link href={heroContent.buttonLink || "/dashboard"}>
+                          <Button size="lg" className="bg-orange-500 hover:bg-orange-600 text-white font-medium px-8 py-6 rounded-md shadow-lg shadow-orange-500/20 hover:translate-y-[-2px] transition-all duration-200">
+                            {heroContent.buttonText || "Get Started"}
+                            <ChevronRight className="h-5 w-5 ml-1" />
+                          </Button>
+                        </Link>
+                        <Link href="/vessels">
+                          <Button size="lg" variant="outline" className="border-white/20 text-white bg-white/5 hover:bg-white/10 hover:border-white/30 font-medium px-8 py-6 rounded-md backdrop-blur-sm hover:translate-y-[-2px] transition-all duration-200">
+                            Live Tanker Demo
+                            <Play className="h-5 w-5 ml-1" />
+                          </Button>
+                        </Link>
+                      </div>
+                    </>
+                  );
+                })()}
                 
                 {/* Quick Stats */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-3xl">
@@ -649,10 +683,19 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <Badge variant="outline" className="mb-4 bg-orange-500/10 text-orange-300 border-orange-500/30">Platform Features</Badge>
-            <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">Complete Petroleum Trading Ecosystem</h2>
-            <p className="text-white/70 text-lg">
-              An all-in-one platform designed to handle every aspect of modern petroleum trading
-            </p>
+{(() => {
+              const featuresContent = landingContent?.find((content: any) => content.section === 'features');
+              return (
+                <>
+                  <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">
+                    {featuresContent?.title || "Complete Petroleum Trading Ecosystem"}
+                  </h2>
+                  <p className="text-white/70 text-lg">
+                    {featuresContent?.description || "An all-in-one platform designed to handle every aspect of modern petroleum trading"}
+                  </p>
+                </>
+              );
+            })()}
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -1287,13 +1330,19 @@ export default function LandingPage() {
               <div className="w-2 h-2 rounded-full bg-orange-500 mr-2 animate-pulse"></div>
               Flexible Pricing Plans
             </Badge>
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 text-white">
-              Choose the Perfect Plan for Your Business
-            </h2>
-            <p className="text-lg text-white/80 max-w-3xl mx-auto mb-6">
-              Our subscription plans are designed to meet the needs of oil trading operations of all sizes,
-              from independent brokers to large international corporations.
-            </p>
+{(() => {
+              const pricingContent = landingContent?.find((content: any) => content.section === 'pricing');
+              return (
+                <>
+                  <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 text-white">
+                    {pricingContent?.title || "Choose the Perfect Plan for Your Business"}
+                  </h2>
+                  <p className="text-lg text-white/80 max-w-3xl mx-auto mb-6">
+                    {pricingContent?.description || "Our subscription plans are designed to meet the needs of oil trading operations of all sizes, from independent brokers to large international corporations."}
+                  </p>
+                </>
+              );
+            })()}
             <div className="inline-flex items-center gap-6 text-sm text-orange-300/80">
               <span>✅ 5-Day free trial for every plan</span>
               <span>•</span>

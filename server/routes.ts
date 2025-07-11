@@ -8649,7 +8649,21 @@ IMPORTANT: Generate a complete professional maritime document with the following
   // LANDING PAGE CONTENT MANAGEMENT API ROUTES
   // ==========================================
 
-  // Get all landing page content
+  // Public endpoint to get all landing page content (no authentication required)
+  app.get("/api/landing-content", async (req, res) => {
+    try {
+      const content = await storage.getLandingPageContent();
+      res.json(content);
+    } catch (error) {
+      console.error("Error fetching landing page content:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch landing page content",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Get all landing page content (admin only)
   apiRouter.get("/admin/landing-content", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
     try {
       const content = await storage.getLandingPageContent();
