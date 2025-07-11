@@ -1176,6 +1176,7 @@ export const documentTemplates = pgTable("document_templates", {
   usageCount: integer("usage_count").default(0),
   // Access Control Fields
   adminOnly: boolean("admin_only").default(false), // Only admin can generate
+  brokerOnly: boolean("broker_only").default(false), // Only broker members can generate
   basicAccess: boolean("basic_access").default(true), // Basic plan can generate
   professionalAccess: boolean("professional_access").default(true), // Professional plan can generate
   enterpriseAccess: boolean("enterprise_access").default(true), // Enterprise plan can generate

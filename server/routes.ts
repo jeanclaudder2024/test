@@ -6884,6 +6884,7 @@ IMPORTANT: Generate a complete professional maritime document with the following
         createdAt: template.createdAt,
         updatedAt: template.updatedAt,
         adminOnly: template.adminOnly || false,
+        brokerOnly: template.brokerOnly || false,
         basicAccess: template.basicAccess !== false,
         professionalAccess: template.professionalAccess !== false,
         enterpriseAccess: template.enterpriseAccess !== false
@@ -6908,6 +6909,7 @@ IMPORTANT: Generate a complete professional maritime document with the following
         prompt, 
         isActive = true,
         adminOnly = false,
+        brokerOnly = false,
         basicAccess = true,
         professionalAccess = true,
         enterpriseAccess = true
@@ -6936,6 +6938,7 @@ IMPORTANT: Generate a complete professional maritime document with the following
         prompt: prompt,
         isActive: isActive,
         adminOnly: adminOnly,
+        brokerOnly: brokerOnly,
         basicAccess: basicAccess,
         professionalAccess: professionalAccess,
         enterpriseAccess: enterpriseAccess,
@@ -6955,6 +6958,7 @@ IMPORTANT: Generate a complete professional maritime document with the following
         createdAt: template.createdAt,
         updatedAt: template.updatedAt,
         adminOnly: template.adminOnly || false,
+        brokerOnly: template.brokerOnly || false,
         basicAccess: template.basicAccess !== false,
         professionalAccess: template.professionalAccess !== false,
         enterpriseAccess: template.enterpriseAccess !== false
@@ -6985,6 +6989,7 @@ IMPORTANT: Generate a complete professional maritime document with the following
         prompt, 
         isActive,
         adminOnly = false,
+        brokerOnly = false,
         basicAccess = true,
         professionalAccess = true,
         enterpriseAccess = true
@@ -7016,6 +7021,7 @@ IMPORTANT: Generate a complete professional maritime document with the following
         category: mappedCategory,
         isActive: isActive !== undefined ? isActive : true,
         adminOnly: adminOnly,
+        brokerOnly: brokerOnly,
         basicAccess: basicAccess,
         professionalAccess: professionalAccess,
         enterpriseAccess: enterpriseAccess,
@@ -7039,6 +7045,7 @@ IMPORTANT: Generate a complete professional maritime document with the following
         createdAt: updatedTemplate.createdAt,
         updatedAt: updatedTemplate.updatedAt,
         adminOnly: updatedTemplate.adminOnly || false,
+        brokerOnly: updatedTemplate.brokerOnly || false,
         basicAccess: updatedTemplate.basicAccess !== false,
         professionalAccess: updatedTemplate.professionalAccess !== false,
         enterpriseAccess: updatedTemplate.enterpriseAccess !== false
