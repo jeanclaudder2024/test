@@ -82,22 +82,17 @@ export default function Account() {
       return response.json();
     },
     onSuccess: (data) => {
-      try {
-        // Use location.assign for more reliable redirection
-        window.location.assign(data.url);
-      } catch (assignError) {
-        console.warn('location.assign failed, trying href:', assignError);
-        try {
-          window.location.href = data.url;
-        } catch (hrefError) {
-          console.error('Both assign and href failed:', hrefError);
-          // Final fallback: open in new window
-          window.open(data.url, '_blank');
-          toast({
-            title: "Billing Portal Opened",
-            description: "Stripe billing portal opened in a new window.",
-          });
-        }
+      console.log('Portal redirect data:', data);
+      // Force immediate top-level navigation to prevent iFrame issues
+      if (window.parent && window.parent !== window) {
+        // We're in an iframe - force parent navigation
+        window.parent.location.href = data.url;
+      } else if (window.top && window.top !== window) {
+        // Alternative iframe detection
+        window.top.location.href = data.url;
+      } else {
+        // Direct navigation for non-iframe context
+        window.location.replace(data.url);
       }
     },
     onError: () => {

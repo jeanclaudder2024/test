@@ -194,22 +194,39 @@ export default function PricingPage() {
       
       console.log('Checkout response data:', data);
       console.log('Attempting to redirect to:', checkoutUrl);
+      console.log('Window context check - parent:', window.parent !== window, 'top:', window.top !== window);
       
       if (checkoutUrl && typeof checkoutUrl === 'string' && checkoutUrl.length > 0) {
+        // Check if we're in a restricted environment (like Replit iframe)
         try {
-          // Use location.assign for more reliable redirection
-          window.location.assign(checkoutUrl);
-        } catch (assignError) {
-          console.warn('location.assign failed, trying href:', assignError);
-          try {
-            window.location.href = checkoutUrl;
-          } catch (hrefError) {
-            console.error('Both assign and href failed:', hrefError);
-            // Final fallback: open in new window
-            window.open(checkoutUrl, '_blank');
+          // Force immediate top-level navigation to prevent iFrame issues
+          if (window.parent && window.parent !== window) {
+            // We're in an iframe - force parent navigation
+            console.log('Detected iframe - using parent.location');
+            window.parent.location.href = checkoutUrl;
+          } else if (window.top && window.top !== window) {
+            // Alternative iframe detection
+            console.log('Detected iframe - using top.location');
+            window.top.location.href = checkoutUrl;
+          } else {
+            // Direct navigation for non-iframe context
+            console.log('Using direct navigation - window.location.replace');
+            window.location.replace(checkoutUrl);
+          }
+        } catch (securityError) {
+          console.warn('Security error with iframe navigation, opening in new tab:', securityError);
+          // If we can't access parent/top due to security restrictions, open in new tab
+          const newWindow = window.open(checkoutUrl, '_blank', 'noopener,noreferrer');
+          if (newWindow) {
             toast({
               title: "Checkout Opened",
-              description: "Stripe checkout opened in a new window.",
+              description: "Stripe checkout opened in a new tab. Please complete your payment there.",
+            });
+          } else {
+            toast({
+              title: "Popup Blocked",
+              description: "Please allow popups and try again, or copy this URL to complete payment: " + checkoutUrl,
+              variant: "destructive",
             });
           }
         }
@@ -217,12 +234,18 @@ export default function PricingPage() {
         // Fallback: construct URL manually if needed
         const fallbackUrl = `https://checkout.stripe.com/c/pay/${data.sessionId}`;
         try {
-          window.location.assign(fallbackUrl);
-        } catch (error) {
-          window.open(fallbackUrl, '_blank');
+          if (window.parent && window.parent !== window) {
+            window.parent.location.href = fallbackUrl;
+          } else if (window.top && window.top !== window) {
+            window.top.location.href = fallbackUrl;
+          } else {
+            window.location.replace(fallbackUrl);
+          }
+        } catch (securityError) {
+          window.open(fallbackUrl, '_blank', 'noopener,noreferrer');
           toast({
             title: "Checkout Opened",
-            description: "Stripe checkout opened in a new window.",
+            description: "Stripe checkout opened in a new tab.",
           });
         }
       } else {
