@@ -248,6 +248,13 @@ export interface IStorage {
   updateOilType(id: number, oilType: Partial<InsertOilType>): Promise<OilType | undefined>;
   deleteOilType(id: number): Promise<boolean>;
   
+  // Landing Page Content Management methods
+  getLandingPageContent(): Promise<LandingPageContent[]>;
+  getLandingPageContentBySection(section: string): Promise<LandingPageContent | undefined>;
+  createLandingPageContent(content: InsertLandingPageContent): Promise<LandingPageContent>;
+  updateLandingPageContent(id: number, content: Partial<InsertLandingPageContent>): Promise<LandingPageContent | undefined>;
+  deleteLandingPageContent(id: number): Promise<boolean>;
+  
   // Regions Filter Management methods
   getRegions(): Promise<Region[]>;
   getRegionById(id: number): Promise<Region | undefined>;
@@ -1969,6 +1976,72 @@ export class DatabaseStorage implements IStorage {
       return result.length > 0;
     } catch (error) {
       console.error('Error deleting oil type:', error);
+      return false;
+    }
+  }
+
+  // Landing Page Content Management methods
+  async getLandingPageContent(): Promise<LandingPageContent[]> {
+    try {
+      return await db.select().from(landingPageContent).orderBy(landingPageContent.displayOrder);
+    } catch (error) {
+      console.error('Error fetching landing page content:', error);
+      return [];
+    }
+  }
+
+  async getLandingPageContentBySection(section: string): Promise<LandingPageContent | undefined> {
+    try {
+      const [content] = await db
+        .select()
+        .from(landingPageContent)
+        .where(eq(landingPageContent.section, section));
+      return content;
+    } catch (error) {
+      console.error('Error fetching landing page content by section:', error);
+      return undefined;
+    }
+  }
+
+  async createLandingPageContent(content: InsertLandingPageContent): Promise<LandingPageContent> {
+    try {
+      const [newContent] = await db
+        .insert(landingPageContent)
+        .values({
+          ...content,
+          updatedAt: new Date(),
+        })
+        .returning();
+      return newContent;
+    } catch (error) {
+      console.error('Error creating landing page content:', error);
+      throw error;
+    }
+  }
+
+  async updateLandingPageContent(id: number, content: Partial<InsertLandingPageContent>): Promise<LandingPageContent | undefined> {
+    try {
+      const [updatedContent] = await db
+        .update(landingPageContent)
+        .set({
+          ...content,
+          updatedAt: new Date(),
+        })
+        .where(eq(landingPageContent.id, id))
+        .returning();
+      return updatedContent;
+    } catch (error) {
+      console.error('Error updating landing page content:', error);
+      return undefined;
+    }
+  }
+
+  async deleteLandingPageContent(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(landingPageContent).where(eq(landingPageContent.id, id)).returning();
+      return result.length > 0;
+    } catch (error) {
+      console.error('Error deleting landing page content:', error);
       return false;
     }
   }

@@ -27,6 +27,7 @@ import { CompanyManagement } from "@/components/admin/CompanyManagement";
 import { BrokerManagement } from "@/components/admin/BrokerManagement";
 import DocumentManagement from "@/components/admin/DocumentManagement";
 import SimpleOilTypeManagement from "@/components/admin/SimpleOilTypeManagement";
+import LandingPageManager from "@/components/admin/LandingPageManager";
 
 export default function AdminPanel() {
   const [_, navigate] = useLocation();
@@ -219,12 +220,12 @@ export default function AdminPanel() {
               <span className="xl:hidden">Migrate</span>
             </TabsTrigger>
             <TabsTrigger 
-              value="landing" 
-              className="flex items-center gap-2 data-[state=active]:bg-emerald-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-200 hover:bg-emerald-50 rounded-lg"
+              value="landing-page" 
+              className="flex items-center gap-2 data-[state=active]:bg-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-200 hover:bg-purple-50 rounded-lg"
             >
               <Globe className="h-4 w-4" />
-              <span className="hidden xl:inline font-medium">Landing</span>
-              <span className="xl:hidden">Web</span>
+              <span className="hidden xl:inline font-medium">Landing Page</span>
+              <span className="xl:hidden">Landing</span>
             </TabsTrigger>
             <TabsTrigger 
               value="settings" 
@@ -421,6 +422,10 @@ export default function AdminPanel() {
         </TabsContent>
 
 
+
+        <TabsContent value="landing-page" className="space-y-4">
+          <LandingPageManager />
+        </TabsContent>
 
         <TabsContent value="settings" className="space-y-4">
           <Card>

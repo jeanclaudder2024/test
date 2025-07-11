@@ -97,7 +97,31 @@ export const payments = pgTable("payments", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Landing Page Content Management
+export const landingPageContent = pgTable("landing_page_content", {
+  id: serial("id").primaryKey(),
+  section: text("section").notNull().unique(), // 'hero', 'features', 'pricing', 'about', 'stats'
+  title: text("title"),
+  subtitle: text("subtitle"),
+  description: text("description"),
+  buttonText: text("button_text"),
+  buttonLink: text("button_link"),
+  content: jsonb("content"), // For flexible content storage
+  isActive: boolean("is_active").notNull().default(true),
+  displayOrder: integer("display_order").default(0),
+  updatedBy: integer("updated_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Define relations
+export const landingPageContentRelations = relations(landingPageContent, ({ one }) => ({
+  updatedByUser: one(users, {
+    fields: [landingPageContent.updatedBy],
+    references: [users.id],
+  }),
+}));
+
 export const subscriptionPlansRelations = relations(subscriptionPlans, ({ many }) => ({
   subscriptions: many(userSubscriptions),
 }));
@@ -1352,6 +1376,16 @@ export const insertPaymentMethodSchema = createInsertSchema(paymentMethods).omit
 export type InsertPaymentMethod = z.infer<typeof insertPaymentMethodSchema>;
 export type PaymentMethod = typeof paymentMethods.$inferSelect;
 
+// Landing Page Content schemas
+export const insertLandingPageContentSchema = createInsertSchema(landingPageContent).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type LandingPageContent = typeof landingPageContent.$inferSelect;
+export type InsertLandingPageContent = z.infer<typeof insertLandingPageContentSchema>;
+
 // Invoices
 export const invoices = pgTable("invoices", {
   id: serial("id").primaryKey(),
@@ -1515,18 +1549,7 @@ export const landingPageSections = pgTable("landing_page_sections", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-export const landingPageContent = pgTable("landing_page_content", {
-  id: serial("id").primaryKey(),
-  sectionId: integer("section_id").references(() => landingPageSections.id).notNull(),
-  contentKey: varchar("content_key", { length: 100 }).notNull(),
-  contentType: varchar("content_type", { length: 50 }).default("text"),
-  contentValue: text("content_value"),
-  placeholderText: varchar("placeholder_text", { length: 255 }),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-}, (table) => ({
-  uniqueContent: unique("unique_section_content").on(table.sectionId, table.contentKey),
-}));
+
 
 export const landingPageImages = pgTable("landing_page_images", {
   id: serial("id").primaryKey(),
@@ -1558,12 +1581,6 @@ export const landingPageBlocks = pgTable("landing_page_blocks", {
 });
 
 export const insertLandingPageSectionSchema = createInsertSchema(landingPageSections).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertLandingPageContentSchema = createInsertSchema(landingPageContent).omit({
   id: true,
   createdAt: true,
   updatedAt: true,

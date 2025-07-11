@@ -55,6 +55,7 @@ import {
   insertFakeCompanySchema,
   insertOilTypeSchema,
   insertRegionSchema,
+  insertLandingPageContentSchema,
   Vessel,
   Refinery,
   Port,
@@ -8641,6 +8642,126 @@ IMPORTANT: Generate a complete professional maritime document with the following
     } catch (error) {
       console.error("Error fetching companies:", error);
       res.status(500).json({ message: "Failed to fetch companies" });
+    }
+  });
+
+  // ==========================================
+  // LANDING PAGE CONTENT MANAGEMENT API ROUTES
+  // ==========================================
+
+  // Get all landing page content
+  apiRouter.get("/admin/landing-content", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const content = await storage.getLandingPageContent();
+      res.json(content);
+    } catch (error) {
+      console.error("Error fetching landing page content:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch landing page content",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Get landing page content by section
+  apiRouter.get("/admin/landing-content/section/:section", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const section = req.params.section;
+      const content = await storage.getLandingPageContentBySection(section);
+      
+      if (!content) {
+        return res.status(404).json({ message: "Content section not found" });
+      }
+
+      res.json(content);
+    } catch (error) {
+      console.error("Error fetching landing page content by section:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch landing page content section",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Create new landing page content
+  apiRouter.post("/admin/landing-content", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const validation = insertLandingPageContentSchema.safeParse(req.body);
+      
+      if (!validation.success) {
+        return res.status(400).json({ 
+          message: "Invalid landing page content data",
+          errors: validation.error.errors
+        });
+      }
+
+      const newContent = await storage.createLandingPageContent(validation.data);
+      res.status(201).json(newContent);
+    } catch (error) {
+      console.error("Error creating landing page content:", error);
+      res.status(500).json({ 
+        message: "Failed to create landing page content",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Update landing page content
+  apiRouter.put("/admin/landing-content/:id", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const contentId = parseInt(req.params.id);
+      
+      if (isNaN(contentId)) {
+        return res.status(400).json({ message: "Invalid content ID" });
+      }
+
+      const validation = insertLandingPageContentSchema.partial().safeParse(req.body);
+      
+      if (!validation.success) {
+        return res.status(400).json({ 
+          message: "Invalid landing page content data",
+          errors: validation.error.errors
+        });
+      }
+
+      const updatedContent = await storage.updateLandingPageContent(contentId, validation.data);
+      
+      if (!updatedContent) {
+        return res.status(404).json({ message: "Landing page content not found" });
+      }
+
+      res.json(updatedContent);
+    } catch (error) {
+      console.error("Error updating landing page content:", error);
+      res.status(500).json({ 
+        message: "Failed to update landing page content",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Delete landing page content
+  apiRouter.delete("/admin/landing-content/:id", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const contentId = parseInt(req.params.id);
+      
+      if (isNaN(contentId)) {
+        return res.status(400).json({ message: "Invalid content ID" });
+      }
+
+      const deleted = await storage.deleteLandingPageContent(contentId);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "Landing page content not found" });
+      }
+
+      res.json({ message: "Landing page content deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting landing page content:", error);
+      res.status(500).json({ 
+        message: "Failed to delete landing page content",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
     }
   });
 
