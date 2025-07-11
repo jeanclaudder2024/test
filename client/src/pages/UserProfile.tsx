@@ -81,6 +81,8 @@ export default function UserProfile() {
   const [activeTab, setActiveTab] = useState('profile');
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<Partial<ProfileData>>({});
+  
+  console.log('UserProfile component rendering, user:', user);
 
   // Fetch user profile
   const { data: profile, isLoading, refetch } = useQuery<ProfileData>({
