@@ -88,7 +88,8 @@ export default function AIDocumentGenerator({ vesselId, vesselName }: AIDocument
       });
       
       if (!response.ok) {
-        throw new Error(`Failed to generate document: ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({ message: response.statusText }));
+        throw new Error(errorData.message || `Failed to generate document: ${response.statusText}`);
       }
       
       return response.json();

@@ -6378,7 +6378,7 @@ Only use authentic, real-world data for existing refineries.`;
   });
 
   // Generate AI Document from Template
-  apiRouter.post("/generate-document", async (req: Request, res) => {
+  apiRouter.post("/generate-document", authenticateToken, async (req: AuthenticatedRequest, res) => {
     try {
       const { templateId, vesselId } = req.body;
 
@@ -6396,6 +6396,46 @@ Only use authentic, real-world data for existing refineries.`;
       const template = await storage.getArticleTemplateById(templateIdNum);
       if (!template) {
         return res.status(404).json({ message: "Template not found" });
+      }
+
+      // Check template access permissions based on user role and subscription
+      const user = req.user!;
+      console.log(`User ${user.email} (role: ${user.role}) attempting to generate document from template ${template.name}`);
+      
+      // Admin users have access to all templates
+      if (user.role === 'admin') {
+        console.log('Admin user - access granted to all templates');
+      } else {
+        // Check access control for regular users
+        if (template.adminOnly) {
+          return res.status(403).json({ message: "This template is only available to administrators" });
+        }
+        
+        if (template.brokerOnly) {
+          // Check if user has broker subscription access
+          const brokerStatus = await storage.getBrokerSubscriptionStatus(user.id);
+          if (!brokerStatus.hasActiveSubscription) {
+            return res.status(403).json({ message: "This template requires broker member access. Please upgrade your subscription." });
+          }
+        }
+        
+        // Check subscription plan access
+        const userSubscription = await storage.getUserSubscription(user.id);
+        const userPlan = userSubscription?.planId || 1; // Default to basic plan
+        
+        if (template.enterpriseAccess === false && userPlan < 3) {
+          return res.status(403).json({ message: "This template requires Enterprise plan access" });
+        }
+        
+        if (template.professionalAccess === false && userPlan < 2) {
+          return res.status(403).json({ message: "This template requires Professional plan access" });
+        }
+        
+        if (template.basicAccess === false && userPlan < 1) {
+          return res.status(403).json({ message: "This template requires a subscription plan" });
+        }
+        
+        console.log(`User access validated for template ${template.name}`);
       }
 
       // Get vessel data
