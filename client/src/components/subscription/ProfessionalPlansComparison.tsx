@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Check, X, Star, Crown, Zap, Users, ArrowRight, TestTube } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
+import { useAuth } from '@/hooks/useAuth';
 
 interface Plan {
   id: number;
@@ -177,12 +178,102 @@ const exclusiveFeatures = [
 
 export default function ProfessionalPlansComparison() {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const [, navigate] = useLocation();
 
-  const handleStartTrial = (planName: string) => {
-    toast({
-      title: "Start Your Free Trial",
-      description: `Redirecting to registration for ${planName} plan with 5-day free trial.`,
-    });
+  const handleStartTrial = async (planId: number, planName: string) => {
+    try {
+      // Check if user is authenticated - if not, redirect to registration
+      if (!user) {
+        toast({
+          title: "Start Your 5-Day Free Trial",
+          description: "Register now to access all subscription features. No credit card required!",
+          variant: "default",
+        });
+        
+        // Store the selected plan and redirect to registration
+        localStorage.setItem('selectedTrialPlan', planId.toString());
+        navigate(`/register?trial=true&plan=${planId}`);
+        return;
+      }
+
+      // User is authenticated - proceed with checkout
+      toast({
+        title: "Creating checkout...",
+        description: "Setting up your subscription payment...",
+      });
+
+      const response = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        },
+        body: JSON.stringify({
+          planId: planId,
+          priceId: `price_${planId}_monthly`,
+          billingInterval: 'month'
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create checkout session');
+      }
+
+      const data = await response.json();
+      
+      // Redirect to Stripe checkout with improved iframe handling
+      const checkoutUrl = data.url || data.redirectUrl;
+      
+      console.log('Checkout response data:', data);
+      console.log('Attempting to redirect to:', checkoutUrl);
+      console.log('Window context check - parent:', window.parent !== window, 'top:', window.top !== window);
+      
+      if (checkoutUrl && typeof checkoutUrl === 'string' && checkoutUrl.length > 0) {
+        // Check if we're in a restricted environment (like Replit iframe)
+        try {
+          // Force immediate top-level navigation to prevent iFrame issues
+          if (window.parent && window.parent !== window) {
+            // We're in an iframe - force parent navigation
+            console.log('Detected iframe - using parent.location');
+            window.parent.location.href = checkoutUrl;
+          } else if (window.top && window.top !== window) {
+            // Alternative iframe detection
+            console.log('Detected iframe - using top.location');
+            window.top.location.href = checkoutUrl;
+          } else {
+            // Direct navigation for non-iframe context
+            console.log('Using direct navigation - window.location.replace');
+            window.location.replace(checkoutUrl);
+          }
+        } catch (securityError) {
+          console.warn('Security error with iframe navigation, opening in new tab:', securityError);
+          // If we can't access parent/top due to security restrictions, open in new tab
+          const newWindow = window.open(checkoutUrl, '_blank', 'noopener,noreferrer');
+          if (newWindow) {
+            toast({
+              title: "Checkout Opened",
+              description: "Stripe checkout opened in a new tab. Please complete your payment there.",
+            });
+          } else {
+            toast({
+              title: "Popup Blocked",
+              description: "Please allow popups and try again, or copy this URL to complete payment: " + checkoutUrl,
+              variant: "destructive",
+            });
+          }
+        }
+      } else {
+        throw new Error('No checkout URL received');
+      }
+    } catch (error) {
+      console.error('Error starting trial:', error);
+      toast({
+        title: "Payment Error",
+        description: "Failed to start checkout. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -289,15 +380,13 @@ export default function ProfessionalPlansComparison() {
                   </div>
                 </div>
 
-                <Link href="/register?trial=true&plan=${plan.id}">
-                  <Button 
-                    className={`w-full bg-gradient-to-r ${plan.gradient} hover:opacity-90 text-white font-semibold py-3 rounded-lg transition-all duration-200`}
-                    onClick={() => handleStartTrial(plan.name)}
-                  >
-                    🔹 Start Free Trial
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </Button>
-                </Link>
+                <Button 
+                  className={`w-full bg-gradient-to-r ${plan.gradient} hover:opacity-90 text-white font-semibold py-3 rounded-lg transition-all duration-200`}
+                  onClick={() => handleStartTrial(plan.id, plan.name)}
+                >
+                  🔹 Start Free Trial
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
                 
                 <Link href="/pricing">
                   <Button variant="outline" className="w-full mt-2">
@@ -421,12 +510,14 @@ export default function ProfessionalPlansComparison() {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/register?trial=true">
-              <Button size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:opacity-90 text-white px-8 py-3">
-                🔹 Start Free Trial
-                <ArrowRight className="h-5 w-5 ml-2" />
-              </Button>
-            </Link>
+            <Button 
+              size="lg" 
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:opacity-90 text-white px-8 py-3"
+              onClick={() => handleStartTrial(2, "Professional")}
+            >
+              🔹 Start Free Trial
+              <ArrowRight className="h-5 w-5 ml-2" />
+            </Button>
             <Link href="/pricing">
               <Button size="lg" variant="outline" className="px-8 py-3">
                 🔹 Compare All Plans

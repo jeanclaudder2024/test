@@ -139,19 +139,96 @@ export default function LandingPage() {
   // Handle trial start
   const handleStartTrial = async (planId: number) => {
     try {
+      // Check if user is authenticated - if not, redirect to registration
+      if (!user) {
+        toast({
+          title: "Start Your 5-Day Free Trial",
+          description: "Register now to access all subscription features. No credit card required!",
+          variant: "default",
+        });
+        
+        // Store the selected plan and redirect to registration
+        localStorage.setItem('selectedTrialPlan', planId.toString());
+        navigate('/register?trial=true&plan=' + planId);
+        return;
+      }
+
+      // User is authenticated - proceed with checkout
       toast({
-        title: "Start Your 7-Day Free Trial",
-        description: "Register now to access all subscription features. No credit card required!",
-        variant: "default",
+        title: "Creating checkout...",
+        description: "Setting up your subscription payment...",
       });
+
+      const response = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        },
+        body: JSON.stringify({
+          planId: planId,
+          priceId: `price_${planId}_monthly`,
+          billingInterval: 'month'
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create checkout session');
+      }
+
+      const data = await response.json();
       
-      // Store the selected plan and redirect to registration
-      localStorage.setItem('selectedTrialPlan', planId.toString());
-      navigate('/register?trial=true&plan=' + planId);
+      // Redirect to Stripe checkout with improved iframe handling
+      const checkoutUrl = data.url || data.redirectUrl;
+      
+      console.log('Checkout response data:', data);
+      console.log('Attempting to redirect to:', checkoutUrl);
+      console.log('Window context check - parent:', window.parent !== window, 'top:', window.top !== window);
+      
+      if (checkoutUrl && typeof checkoutUrl === 'string' && checkoutUrl.length > 0) {
+        // Check if we're in a restricted environment (like Replit iframe)
+        try {
+          // Force immediate top-level navigation to prevent iFrame issues
+          if (window.parent && window.parent !== window) {
+            // We're in an iframe - force parent navigation
+            console.log('Detected iframe - using parent.location');
+            window.parent.location.href = checkoutUrl;
+          } else if (window.top && window.top !== window) {
+            // Alternative iframe detection
+            console.log('Detected iframe - using top.location');
+            window.top.location.href = checkoutUrl;
+          } else {
+            // Direct navigation for non-iframe context
+            console.log('Using direct navigation - window.location.replace');
+            window.location.replace(checkoutUrl);
+          }
+        } catch (securityError) {
+          console.warn('Security error with iframe navigation, opening in new tab:', securityError);
+          // If we can't access parent/top due to security restrictions, open in new tab
+          const newWindow = window.open(checkoutUrl, '_blank', 'noopener,noreferrer');
+          if (newWindow) {
+            toast({
+              title: "Checkout Opened",
+              description: "Stripe checkout opened in a new tab. Please complete your payment there.",
+            });
+          } else {
+            toast({
+              title: "Popup Blocked",
+              description: "Please allow popups and try again, or copy this URL to complete payment: " + checkoutUrl,
+              variant: "destructive",
+            });
+          }
+        }
+      } else {
+        throw new Error('No checkout URL received');
+      }
     } catch (error) {
       console.error('Error starting trial:', error);
-      // Still redirect to registration
-      navigate('/register?trial=true');
+      toast({
+        title: "Payment Error",
+        description: "Failed to start checkout. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
