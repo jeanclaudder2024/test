@@ -43,7 +43,6 @@ const articleTemplateSchema = z.object({
   isActive: z.boolean().default(true),
   // Access Control Fields
   adminOnly: z.boolean().default(false),
-  brokerOnly: z.boolean().default(false),
   basicAccess: z.boolean().default(true),
   professionalAccess: z.boolean().default(true),
   enterpriseAccess: z.boolean().default(true)
@@ -63,7 +62,6 @@ interface ArticleTemplate {
   usageCount: number;
   // Access Control Fields
   adminOnly?: boolean;
-  brokerOnly?: boolean;
   basicAccess?: boolean;
   professionalAccess?: boolean;
   enterpriseAccess?: boolean;
@@ -122,7 +120,6 @@ export default function DocumentManagement() {
       prompt: '',
       isActive: true,
       adminOnly: false,
-      brokerOnly: false,
       basicAccess: true,
       professionalAccess: true,
       enterpriseAccess: true
@@ -221,7 +218,6 @@ export default function DocumentManagement() {
       prompt: template.prompt,
       isActive: template.isActive,
       adminOnly: template.adminOnly || false,
-      brokerOnly: template.brokerOnly || false,
       basicAccess: template.basicAccess !== false,
       professionalAccess: template.professionalAccess !== false,
       enterpriseAccess: template.enterpriseAccess !== false
@@ -621,18 +617,7 @@ export default function DocumentManagement() {
                     </label>
                   </div>
 
-                  {/* Broker Only Option */}
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="brokerOnly"
-                      {...form.register('brokerOnly')}
-                      className="rounded border-slate-300"
-                    />
-                    <label htmlFor="brokerOnly" className="text-sm font-medium text-orange-700">
-                      📈 Broker+ Only
-                    </label>
-                  </div>
+
 
                   {/* Basic Plan Access */}
                   <div className="flex items-center space-x-2">
@@ -689,8 +674,8 @@ export default function DocumentManagement() {
                 
                 <div className="mt-3 text-xs text-blue-600">
                   <p>• <strong>Admin Only:</strong> Only admin users can generate documents</p>
-                  <p>• <strong>Broker+ Only:</strong> Only Professional+ plans can generate</p>
                   <p>• <strong>Plan Access:</strong> Check which subscription plans have access</p>
+                  <p>• <strong>Note:</strong> Brokers have separate internal subscription system</p>
                 </div>
               </div>
 

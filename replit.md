@@ -532,6 +532,14 @@ Changelog:
   * **Dynamic Plan Display**: Both pages now show actual subscription plans with correct pricing, features, and trial periods from database
   * **Loading States Added**: Added proper loading skeletons while subscription plans are being fetched
   * **Next Phase Ready**: Platform ready for advanced features like real-time notifications, advanced analytics, and enhanced user management
+- July 11, 2025. **BROKER ACCESS CONTROL REMOVAL: Simplified Template Permission System**:
+  * **Removed Broker-Only Access Option**: Eliminated brokerOnly field from document template access control based on user clarification that brokers have separate internal subscription system
+  * **Frontend Interface Cleanup**: Removed "Broker+ Only" checkbox option from admin panel template creation and editing forms
+  * **Backend API Updates**: Updated all API endpoints (GET, POST, PUT) to remove brokerOnly field handling and validation
+  * **Database Schema Simplification**: Removed brokerOnly field references from shared schema documentTemplates table definition
+  * **Access Control Streamlining**: Template permissions now simplified to admin-only access and regular subscription plan-based access (Basic, Professional, Enterprise)
+  * **User Clarification**: Brokers have internal subscription system (2-year payment cycle) separate from regular platform subscription plans
+  * **Clean Architecture**: System now has cleaner access control without broker-specific template restrictions
 - July 10, 2025. **COMPREHENSIVE PLAN COMPARISON FEATURE ADDED TO PRICING PAGE**:
   * **Detailed Comparison Table**: Added comprehensive plan comparison table with feature-by-feature breakdown across all subscription tiers
   * **Visual Feature Icons**: Integrated colored icons for each feature category (vessel tracking, analytics, documents, broker features, etc.)
