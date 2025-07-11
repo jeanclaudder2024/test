@@ -63,6 +63,7 @@ export function MobileLayout({ children }: MobileLayoutProps) {
       { name: "Companies", href: "/companies", icon: Briefcase },
       { name: "Oil Prices", href: "/oil-prices", icon: RefreshCw },
       { name: "Broker", href: "/broker-dashboard", icon: Lock },
+      { name: "Profile", href: "/profile", icon: User },
       { name: "AI Assistant", href: "/ai-assistant", icon: MessageSquare },
       { name: "Pricing", href: "/pricing", icon: ShoppingBag },
     ];

@@ -5219,6 +5219,71 @@ Only use authentic, real-world data for existing refineries.`;
 
   // Document routes removed - replaced with maritime document system
 
+  // Enhanced User Profile API routes
+  app.get("/api/profile", authenticateToken, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.user.id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Remove sensitive data
+      const { password, resetPasswordToken, emailVerificationToken, ...safeUser } = user;
+      res.json(safeUser);
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+      res.status(500).json({ message: "Failed to fetch profile" });
+    }
+  });
+
+  app.put("/api/profile", authenticateToken, async (req, res) => {
+    try {
+      const profileData = req.body;
+      
+      // Validate and sanitize input
+      const allowedFields = [
+        'firstName', 'lastName', 'username', 'phoneNumber', 'company', 
+        'jobTitle', 'country', 'timezone', 'bio', 'website', 'linkedinUrl', 
+        'twitterHandle', 'avatarUrl', 'emailNotifications', 'marketingEmails', 
+        'weeklyReports', 'smsNotifications'
+      ];
+      
+      const updateData = {};
+      allowedFields.forEach(field => {
+        if (field in profileData) {
+          updateData[field] = profileData[field];
+        }
+      });
+
+      const updatedUser = await storage.updateUserProfile(req.user.id, updateData);
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Remove sensitive data
+      const { password, resetPasswordToken, emailVerificationToken, ...safeUser } = updatedUser;
+      res.json(safeUser);
+    } catch (error) {
+      console.error("Error updating user profile:", error);
+      res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+
+  app.get("/api/profile/completeness", authenticateToken, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.user.id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      const completeness = storage.calculateProfileCompleteness(user);
+      res.json({ completeness, userId: user.id });
+    } catch (error) {
+      console.error("Error calculating profile completeness:", error);
+      res.status(500).json({ message: "Failed to calculate profile completeness" });
+    }
+  });
+
   // API routes configured and ready for production
 
 

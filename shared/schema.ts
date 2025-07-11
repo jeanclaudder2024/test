@@ -32,6 +32,7 @@ export const users = pgTable("users", {
   password: text("password"), // Optional for OAuth users
   firstName: text("first_name"),
   lastName: text("last_name"),
+  username: text("username"),
   role: text("role").notNull().default("user"), // 'admin', 'user', 'broker'
   stripeCustomerId: text("stripe_customer_id"),
   isEmailVerified: boolean("is_email_verified").default(false),
@@ -44,6 +45,24 @@ export const users = pgTable("users", {
   googleId: text("google_id"),
   avatarUrl: text("avatar_url"),
   provider: text("provider").default("email"), // 'email', 'google'
+  // Enhanced Profile Fields
+  phoneNumber: text("phone_number"),
+  company: text("company"),
+  jobTitle: text("job_title"),
+  country: text("country"),
+  timezone: text("timezone"),
+  bio: text("bio"),
+  website: text("website"),
+  linkedinUrl: text("linkedin_url"),
+  twitterHandle: text("twitter_handle"),
+  // Preferences
+  emailNotifications: boolean("email_notifications").default(true),
+  marketingEmails: boolean("marketing_emails").default(false),
+  weeklyReports: boolean("weekly_reports").default(true),
+  smsNotifications: boolean("sms_notifications").default(false),
+  // Profile completion tracking
+  profileCompleteness: integer("profile_completeness").default(0), // 0-100
+  onboardingCompleted: boolean("onboarding_completed").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

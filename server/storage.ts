@@ -60,6 +60,8 @@ export interface IStorage {
   getUserByStripeCustomerId(customerId: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, user: Partial<User>): Promise<User | undefined>;
+  updateUserProfile(id: number, profileData: Partial<User>): Promise<User | undefined>;
+  calculateProfileCompleteness(user: User): number;
   
   // Subscription Plan methods
   getSubscriptionPlans(): Promise<SubscriptionPlan[]>;
@@ -321,10 +323,50 @@ export class DatabaseStorage implements IStorage {
   async updateUser(id: number, userUpdate: Partial<User>): Promise<User | undefined> {
     const [updatedUser] = await db
       .update(users)
-      .set(userUpdate)
+      .set({
+        ...userUpdate,
+        updatedAt: new Date()
+      })
       .where(eq(users.id, id))
       .returning();
     return updatedUser || undefined;
+  }
+
+  async updateUserProfile(id: number, profileData: Partial<User>): Promise<User | undefined> {
+    // Calculate profile completeness based on the new data
+    const currentUser = await this.getUser(id);
+    if (!currentUser) return undefined;
+
+    const mergedData = { ...currentUser, ...profileData };
+    const completeness = this.calculateProfileCompleteness(mergedData);
+
+    const [updatedUser] = await db
+      .update(users)
+      .set({
+        ...profileData,
+        profileCompleteness: completeness,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, id))
+      .returning();
+    return updatedUser || undefined;
+  }
+
+  calculateProfileCompleteness(user: User): number {
+    const fields = [
+      user.firstName,
+      user.lastName,
+      user.email,
+      user.phoneNumber,
+      user.company,
+      user.jobTitle,
+      user.country,
+      user.bio,
+      user.avatarUrl
+    ];
+    
+    const completedFields = fields.filter(field => field && field.trim() !== '').length;
+    return Math.round((completedFields / fields.length) * 100);
   }
   
   // Subscription Plan Methods
