@@ -189,25 +189,41 @@ export default function PricingPage() {
 
       const data = await response.json();
       
-      // Redirect to Stripe checkout - ensure top-level navigation to avoid iFrame issues
+      // Redirect to Stripe checkout with better error handling
       const checkoutUrl = data.url || data.redirectUrl;
       
-      if (checkoutUrl) {
-        // Force top-level navigation to avoid iFrame permission issues
-        if (window.top && window.top !== window) {
-          // If we're in an iframe, redirect the parent window
-          window.top.location.href = checkoutUrl;
-        } else {
-          // Normal redirect
-          window.location.href = checkoutUrl;
+      console.log('Checkout response data:', data);
+      console.log('Attempting to redirect to:', checkoutUrl);
+      
+      if (checkoutUrl && typeof checkoutUrl === 'string' && checkoutUrl.length > 0) {
+        try {
+          // Use location.assign for more reliable redirection
+          window.location.assign(checkoutUrl);
+        } catch (assignError) {
+          console.warn('location.assign failed, trying href:', assignError);
+          try {
+            window.location.href = checkoutUrl;
+          } catch (hrefError) {
+            console.error('Both assign and href failed:', hrefError);
+            // Final fallback: open in new window
+            window.open(checkoutUrl, '_blank');
+            toast({
+              title: "Checkout Opened",
+              description: "Stripe checkout opened in a new window.",
+            });
+          }
         }
       } else if (data.sessionId) {
         // Fallback: construct URL manually if needed
-        const fallbackUrl = `https://checkout.stripe.com/pay/${data.sessionId}`;
-        if (window.top && window.top !== window) {
-          window.top.location.href = fallbackUrl;
-        } else {
-          window.location.href = fallbackUrl;
+        const fallbackUrl = `https://checkout.stripe.com/c/pay/${data.sessionId}`;
+        try {
+          window.location.assign(fallbackUrl);
+        } catch (error) {
+          window.open(fallbackUrl, '_blank');
+          toast({
+            title: "Checkout Opened",
+            description: "Stripe checkout opened in a new window.",
+          });
         }
       } else {
         throw new Error('No checkout URL received');

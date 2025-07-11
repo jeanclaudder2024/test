@@ -82,13 +82,22 @@ export default function Account() {
       return response.json();
     },
     onSuccess: (data) => {
-      // Force top-level navigation to avoid iFrame permission issues
-      if (window.top && window.top !== window) {
-        // If we're in an iframe, redirect the parent window
-        window.top.location.href = data.url;
-      } else {
-        // Normal redirect
-        window.location.href = data.url;
+      try {
+        // Use location.assign for more reliable redirection
+        window.location.assign(data.url);
+      } catch (assignError) {
+        console.warn('location.assign failed, trying href:', assignError);
+        try {
+          window.location.href = data.url;
+        } catch (hrefError) {
+          console.error('Both assign and href failed:', hrefError);
+          // Final fallback: open in new window
+          window.open(data.url, '_blank');
+          toast({
+            title: "Billing Portal Opened",
+            description: "Stripe billing portal opened in a new window.",
+          });
+        }
       }
     },
     onError: () => {
