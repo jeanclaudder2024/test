@@ -136,19 +136,18 @@ export default function LandingPage() {
     cacheTime: 0, // Don't cache the results
   });
 
-  // Fetch landing page content from database with timestamp to ensure fresh data
+  // Fetch landing page content from database
   const { data: landingContent, isLoading: contentLoading, refetch: refetchContent } = useQuery({
-    queryKey: ['/api/landing-content', Date.now()], // Include timestamp for fresh queries
+    queryKey: ['/api/landing-content'],
     queryFn: async () => {
-      const response = await fetch('/api/landing-content?' + new URLSearchParams({ t: Date.now().toString() }));
+      const response = await fetch('/api/landing-content');
       if (!response.ok) {
         throw new Error('Failed to fetch landing content');
       }
       return response.json();
     },
-    staleTime: 0, // Always fetch fresh data
-    cacheTime: 0, // Don't cache the results
-    refetchInterval: 5000, // Auto-refresh every 5 seconds
+    staleTime: 60000, // Cache for 1 minute
+    cacheTime: 300000, // Keep in cache for 5 minutes
   });
 
   // Handle trial start - redirect to registration with message
