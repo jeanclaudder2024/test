@@ -249,6 +249,22 @@ export async function initializeCustomAuthTables() {
       console.log('Profile columns setup skipped:', error.message);
     }
 
+    // Add template access control columns
+    try {
+      await db.execute(sql`
+        ALTER TABLE document_templates 
+        ADD COLUMN IF NOT EXISTS admin_only BOOLEAN DEFAULT false,
+        ADD COLUMN IF NOT EXISTS broker_only BOOLEAN DEFAULT false,
+        ADD COLUMN IF NOT EXISTS basic_access BOOLEAN DEFAULT true,
+        ADD COLUMN IF NOT EXISTS professional_access BOOLEAN DEFAULT true,
+        ADD COLUMN IF NOT EXISTS enterprise_access BOOLEAN DEFAULT true;
+      `);
+      
+      console.log('Template access control columns ensured');
+    } catch (error) {
+      console.log('Template access control columns setup skipped:', error.message);
+    }
+
     // Create landing page images table
     try {
       await db.execute(sql`

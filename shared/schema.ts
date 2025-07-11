@@ -1174,6 +1174,12 @@ export const documentTemplates = pgTable("document_templates", {
   prompt: text("prompt").notNull(), // AI prompt describing what document to generate
   isActive: boolean("is_active").default(true),
   usageCount: integer("usage_count").default(0),
+  // Access Control Fields
+  adminOnly: boolean("admin_only").default(false), // Only admin can generate
+  brokerOnly: boolean("broker_only").default(false), // Only broker+ plans can generate
+  basicAccess: boolean("basic_access").default(true), // Basic plan can generate
+  professionalAccess: boolean("professional_access").default(true), // Professional plan can generate
+  enterpriseAccess: boolean("enterprise_access").default(true), // Enterprise plan can generate
   createdBy: integer("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

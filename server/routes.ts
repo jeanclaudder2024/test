@@ -6882,7 +6882,12 @@ IMPORTANT: Generate a complete professional maritime document with the following
         usageCount: template.usageCount || 0,
         createdBy: template.createdBy,
         createdAt: template.createdAt,
-        updatedAt: template.updatedAt
+        updatedAt: template.updatedAt,
+        adminOnly: template.adminOnly || false,
+        brokerOnly: template.brokerOnly || false,
+        basicAccess: template.basicAccess !== false,
+        professionalAccess: template.professionalAccess !== false,
+        enterpriseAccess: template.enterpriseAccess !== false
       }));
       res.json(transformedTemplates);
     } catch (error) {
@@ -6897,7 +6902,18 @@ IMPORTANT: Generate a complete professional maritime document with the following
   // Create new document template (admin endpoint)
   apiRouter.post("/admin/article-templates", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
     try {
-      const { title, description, category, prompt, isActive = true } = req.body;
+      const { 
+        title, 
+        description, 
+        category, 
+        prompt, 
+        isActive = true,
+        adminOnly = false,
+        brokerOnly = false,
+        basicAccess = true,
+        professionalAccess = true,
+        enterpriseAccess = true
+      } = req.body;
       
       if (!title || !description || !category || !prompt) {
         return res.status(400).json({ message: "Missing required fields" });
@@ -6915,25 +6931,37 @@ IMPORTANT: Generate a complete professional maritime document with the following
       
       const mappedCategory = categoryMapping[category] || category;
 
-      const template = await storage.createArticleTemplate({
-        title: title,
-        description: description, // Use actual description from form
-        category: mappedCategory, // Use mapped category
+      const template = await storage.createDocumentTemplate({
+        name: title,
+        description: description,
+        category: mappedCategory,
+        prompt: prompt,
+        isActive: isActive,
+        adminOnly: adminOnly,
+        brokerOnly: brokerOnly,
+        basicAccess: basicAccess,
+        professionalAccess: professionalAccess,
+        enterpriseAccess: enterpriseAccess,
         createdBy: req.user!.id
       });
       
       // Transform response to match expected format
       const transformedTemplate = {
         id: template.id,
-        title: template.name, // Database stores in 'name' field
-        description: prompt, // Use the original prompt as description for display
+        title: template.name,
+        description: template.description,
         category: template.category,
-        prompt: template.prompt, // AI instructions are now properly stored in prompt field
+        prompt: template.prompt,
         isActive: template.isActive,
         usageCount: template.usageCount || 0,
         createdBy: template.createdBy,
         createdAt: template.createdAt,
-        updatedAt: template.updatedAt
+        updatedAt: template.updatedAt,
+        adminOnly: template.adminOnly || false,
+        brokerOnly: template.brokerOnly || false,
+        basicAccess: template.basicAccess !== false,
+        professionalAccess: template.professionalAccess !== false,
+        enterpriseAccess: template.enterpriseAccess !== false
       };
       
       res.status(201).json(transformedTemplate);
@@ -6954,7 +6982,18 @@ IMPORTANT: Generate a complete professional maritime document with the following
         return res.status(400).json({ message: "Invalid template ID" });
       }
 
-      const { title, description, category, prompt, isActive } = req.body;
+      const { 
+        title, 
+        description, 
+        category, 
+        prompt, 
+        isActive,
+        adminOnly = false,
+        brokerOnly = false,
+        basicAccess = true,
+        professionalAccess = true,
+        enterpriseAccess = true
+      } = req.body;
       
       if (!title || !description || !category || !prompt) {
         return res.status(400).json({ message: "Missing required fields" });
@@ -6977,10 +7016,15 @@ IMPORTANT: Generate a complete professional maritime document with the following
       // Update the template
       const updatedTemplate = await storage.updateDocumentTemplate(templateId, {
         name: title,
-        description: description, // Store the actual description from form
-        prompt: prompt, // Store prompt in prompt field
-        category: mappedCategory, // Use mapped category
+        description: description,
+        prompt: prompt,
+        category: mappedCategory,
         isActive: isActive !== undefined ? isActive : true,
+        adminOnly: adminOnly,
+        brokerOnly: brokerOnly,
+        basicAccess: basicAccess,
+        professionalAccess: professionalAccess,
+        enterpriseAccess: enterpriseAccess,
         updatedAt: new Date()
       });
       
@@ -6992,14 +7036,19 @@ IMPORTANT: Generate a complete professional maritime document with the following
       const transformedTemplate = {
         id: updatedTemplate.id,
         title: updatedTemplate.name,
-        description: description, // Return original description for display
+        description: updatedTemplate.description,
         category: updatedTemplate.category,
         prompt: updatedTemplate.prompt,
         isActive: updatedTemplate.isActive,
         usageCount: updatedTemplate.usageCount || 0,
         createdBy: updatedTemplate.createdBy,
         createdAt: updatedTemplate.createdAt,
-        updatedAt: updatedTemplate.updatedAt
+        updatedAt: updatedTemplate.updatedAt,
+        adminOnly: updatedTemplate.adminOnly || false,
+        brokerOnly: updatedTemplate.brokerOnly || false,
+        basicAccess: updatedTemplate.basicAccess !== false,
+        professionalAccess: updatedTemplate.professionalAccess !== false,
+        enterpriseAccess: updatedTemplate.enterpriseAccess !== false
       };
       
       res.json(transformedTemplate);

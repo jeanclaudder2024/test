@@ -40,7 +40,13 @@ const articleTemplateSchema = z.object({
   description: z.string().min(1, 'Description is required').max(500, 'Description too long'),
   category: z.enum(['technical', 'commercial', 'inspection', 'cargo', 'compliance', 'general']),
   prompt: z.string().min(50, 'Prompt must be at least 50 characters').max(2000, 'Prompt too long'),
-  isActive: z.boolean().default(true)
+  isActive: z.boolean().default(true),
+  // Access Control Fields
+  adminOnly: z.boolean().default(false),
+  brokerOnly: z.boolean().default(false),
+  basicAccess: z.boolean().default(true),
+  professionalAccess: z.boolean().default(true),
+  enterpriseAccess: z.boolean().default(true)
 });
 
 type ArticleTemplateForm = z.infer<typeof articleTemplateSchema>;
@@ -55,6 +61,12 @@ interface ArticleTemplate {
   createdAt: string;
   updatedAt: string;
   usageCount: number;
+  // Access Control Fields
+  adminOnly?: boolean;
+  brokerOnly?: boolean;
+  basicAccess?: boolean;
+  professionalAccess?: boolean;
+  enterpriseAccess?: boolean;
 }
 
 interface GeneratedArticle {
@@ -108,7 +120,12 @@ export default function DocumentManagement() {
       description: '',
       category: 'technical',
       prompt: '',
-      isActive: true
+      isActive: true,
+      adminOnly: false,
+      brokerOnly: false,
+      basicAccess: true,
+      professionalAccess: true,
+      enterpriseAccess: true
     }
   });
 
@@ -202,7 +219,12 @@ export default function DocumentManagement() {
       description: template.description,
       category: template.category as any,
       prompt: template.prompt,
-      isActive: template.isActive
+      isActive: template.isActive,
+      adminOnly: template.adminOnly || false,
+      brokerOnly: template.brokerOnly || false,
+      basicAccess: template.basicAccess !== false,
+      professionalAccess: template.professionalAccess !== false,
+      enterpriseAccess: template.enterpriseAccess !== false
     });
     setIsCreateDialogOpen(true);
   };
@@ -578,18 +600,101 @@ export default function DocumentManagement() {
                 )}
               />
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="isActive"
-                    {...form.register('isActive')}
-                    className="rounded border-slate-300"
-                  />
-                  <label htmlFor="isActive" className="text-sm font-medium">
-                    Active Template
-                  </label>
+              {/* Access Control Section */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h4 className="font-semibold text-blue-800 mb-3">Template Access Control</h4>
+                <p className="text-sm text-blue-700 mb-4">
+                  Control which subscription plans can generate documents from this template:
+                </p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Admin Only Option */}
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="adminOnly"
+                      {...form.register('adminOnly')}
+                      className="rounded border-slate-300"
+                    />
+                    <label htmlFor="adminOnly" className="text-sm font-medium text-red-700">
+                      🔒 Admin Only
+                    </label>
+                  </div>
+
+                  {/* Broker Only Option */}
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="brokerOnly"
+                      {...form.register('brokerOnly')}
+                      className="rounded border-slate-300"
+                    />
+                    <label htmlFor="brokerOnly" className="text-sm font-medium text-orange-700">
+                      📈 Broker+ Only
+                    </label>
+                  </div>
+
+                  {/* Basic Plan Access */}
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="basicAccess"
+                      {...form.register('basicAccess')}
+                      className="rounded border-slate-300"
+                    />
+                    <label htmlFor="basicAccess" className="text-sm font-medium text-green-700">
+                      🧪 Basic Plan
+                    </label>
+                  </div>
+
+                  {/* Professional Plan Access */}
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="professionalAccess"
+                      {...form.register('professionalAccess')}
+                      className="rounded border-slate-300"
+                    />
+                    <label htmlFor="professionalAccess" className="text-sm font-medium text-blue-700">
+                      📈 Professional Plan
+                    </label>
+                  </div>
+
+                  {/* Enterprise Plan Access */}
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="enterpriseAccess"
+                      {...form.register('enterpriseAccess')}
+                      className="rounded border-slate-300"
+                    />
+                    <label htmlFor="enterpriseAccess" className="text-sm font-medium text-purple-700">
+                      🏢 Enterprise Plan
+                    </label>
+                  </div>
+
+                  {/* Active Template */}
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="isActive"
+                      {...form.register('isActive')}
+                      className="rounded border-slate-300"
+                    />
+                    <label htmlFor="isActive" className="text-sm font-medium text-gray-700">
+                      ✅ Active Template
+                    </label>
+                  </div>
                 </div>
+                
+                <div className="mt-3 text-xs text-blue-600">
+                  <p>• <strong>Admin Only:</strong> Only admin users can generate documents</p>
+                  <p>• <strong>Broker+ Only:</strong> Only Professional+ plans can generate</p>
+                  <p>• <strong>Plan Access:</strong> Check which subscription plans have access</p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end">
                 
                 <div className="flex gap-3">
                   <Button type="button" variant="outline" onClick={handleCloseDialog}>
