@@ -265,6 +265,19 @@ export async function initializeCustomAuthTables() {
       console.log('Template access control columns setup skipped:', error.message);
     }
 
+    // Clean up any existing templates with broker_only = true (no longer used)
+    try {
+      await db.execute(sql`
+        UPDATE document_templates 
+        SET broker_only = false 
+        WHERE broker_only = true;
+      `);
+      
+      console.log('Cleaned up existing templates with broker_only access');
+    } catch (error) {
+      console.log('Template broker access cleanup skipped:', error.message);
+    }
+
     // Create landing page images table
     try {
       await db.execute(sql`
