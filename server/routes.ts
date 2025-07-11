@@ -8779,6 +8779,29 @@ IMPORTANT: Generate a complete professional maritime document with the following
     }
   });
 
+  // Cleanup unused landing page sections
+  apiRouter.post("/admin/landing-content/cleanup", authenticateToken, requireAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      // Define the sections that are actually used in the landing page
+      const usedSections = ['hero', 'industry', 'why-us', 'features', 'how-it-works', 'results', 'cta', 'pricing'];
+      
+      // Delete unused sections
+      const deletedSections = await storage.cleanupUnusedLandingPageSections(usedSections);
+      
+      res.json({ 
+        message: "Landing page content cleanup completed",
+        deletedSections: deletedSections,
+        remainingSections: usedSections.length
+      });
+    } catch (error) {
+      console.error("Error during landing page content cleanup:", error);
+      res.status(500).json({
+        message: "Failed to cleanup landing page content",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   app.use("/api", apiRouter);
 
   const httpServer = createServer(app);

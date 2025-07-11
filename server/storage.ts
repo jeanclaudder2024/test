@@ -254,6 +254,7 @@ export interface IStorage {
   createLandingPageContent(content: InsertLandingPageContent): Promise<LandingPageContent>;
   updateLandingPageContent(id: number, content: Partial<InsertLandingPageContent>): Promise<LandingPageContent | undefined>;
   deleteLandingPageContent(id: number): Promise<boolean>;
+  cleanupUnusedLandingPageSections(usedSections: string[]): Promise<string[]>;
   
   // Regions Filter Management methods
   getRegions(): Promise<Region[]>;
@@ -2043,6 +2044,37 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error deleting landing page content:', error);
       return false;
+    }
+  }
+
+  async cleanupUnusedLandingPageSections(usedSections: string[]): Promise<string[]> {
+    try {
+      // Get all current sections
+      const allContent = await db.select({
+        id: landingPageContent.id,
+        section: landingPageContent.section
+      }).from(landingPageContent);
+
+      // Find sections that are not in the used sections list
+      const unusedSections = allContent.filter(content => 
+        !usedSections.includes(content.section)
+      );
+
+      // Delete unused sections
+      const deletedSections: string[] = [];
+      for (const content of unusedSections) {
+        const result = await db.delete(landingPageContent)
+          .where(eq(landingPageContent.id, content.id));
+        
+        if (result.rowsAffected && result.rowsAffected > 0) {
+          deletedSections.push(content.section);
+        }
+      }
+
+      return deletedSections;
+    } catch (error) {
+      console.error("Error cleaning up unused landing page sections:", error);
+      return [];
     }
   }
 

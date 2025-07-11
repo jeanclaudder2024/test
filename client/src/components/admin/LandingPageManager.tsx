@@ -20,8 +20,6 @@ const CONTENT_SECTIONS = [
   { value: "results", label: "Results & Testimonials Section", icon: Sparkles },
   { value: "cta", label: "Call to Action Section", icon: Type },
   { value: "pricing", label: "Subscription Plans Section", icon: Layout },
-  { value: "stats", label: "Stats Section", icon: Sparkles },
-  { value: "contact", label: "Contact Section", icon: FileText },
 ];
 
 export default function LandingPageManager() {
