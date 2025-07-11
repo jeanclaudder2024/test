@@ -1052,6 +1052,8 @@ export const vesselDocuments = pgTable("vessel_documents", {
   lastUpdated: timestamp("last_updated").defaultNow(),
 });
 
+// Landing page content schema will be defined later
+
 export const insertCompanySchema = createInsertSchema(companies).omit({
   id: true,
   createdAt: true,
@@ -1094,6 +1096,8 @@ export type InsertVesselDocument = z.infer<typeof insertVesselDocumentSchema>;
 export type SelectVesselDocument = typeof vesselDocuments.$inferSelect;
 
 
+
+// Landing page types will be defined later
 
 export type InsertCompany = z.infer<typeof insertCompanySchema>;
 export type Company = typeof companies.$inferSelect;
@@ -1783,11 +1787,9 @@ export const insertLandingPageBlockSchema = createInsertSchema(landingPageBlocks
 });
 
 export type LandingPageSection = typeof landingPageSections.$inferSelect;
-export type LandingPageContent = typeof landingPageContent.$inferSelect;
 export type LandingPageImage = typeof landingPageImages.$inferSelect;
 export type LandingPageBlock = typeof landingPageBlocks.$inferSelect;
 export type InsertLandingPageSection = z.infer<typeof insertLandingPageSectionSchema>;
-export type InsertLandingPageContent = z.infer<typeof insertLandingPageContentSchema>;
 export type InsertLandingPageImage = z.infer<typeof insertLandingPageImageSchema>;
 export type InsertLandingPageBlock = z.infer<typeof insertLandingPageBlockSchema>;
 
