@@ -569,10 +569,19 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <Badge variant="outline" className="mb-4 bg-orange-500/10 text-orange-300 border-orange-500/30">Global Infrastructure</Badge>
-            <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">Connecting the World's Energy Infrastructure</h2>
-            <p className="text-white/70 text-lg">
-              From massive refineries to state-of-the-art tankers and strategic ports worldwide
-            </p>
+{(() => {
+              const industryContent = landingContent?.find((content: any) => content.section === 'industry');
+              return (
+                <>
+                  <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">
+                    {industryContent?.title || "Connecting the World's Energy Infrastructure"}
+                  </h2>
+                  <p className="text-white/70 text-lg">
+                    {industryContent?.description || "From massive refineries to state-of-the-art tankers and strategic ports worldwide"}
+                  </p>
+                </>
+              );
+            })()}
           </div>
 
           <IndustrySlider />
@@ -587,11 +596,19 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <Badge variant="outline" className="mb-4 bg-orange-500/10 text-orange-300 border-orange-500/30">The Problem & Solution</Badge>
-            <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">Traditional Oil Trading is Broken.<br />We're Here to Fix It.</h2>
-            <p className="text-white/70 text-lg">
-              Our platform transforms the fragmented, inefficient petroleum trading process into a streamlined,
-              secure digital ecosystem.
-            </p>
+{(() => {
+              const whyUsContent = landingContent?.find((content: any) => content.section === 'why-us');
+              return (
+                <>
+                  <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">
+                    {whyUsContent?.title || "Traditional Oil Trading is Broken. We're Here to Fix It."}
+                  </h2>
+                  <p className="text-white/70 text-lg">
+                    {whyUsContent?.description || "Our platform transforms the fragmented, inefficient petroleum trading process into a streamlined, secure digital ecosystem."}
+                  </p>
+                </>
+              );
+            })()}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
@@ -877,10 +894,19 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <Badge variant="outline" className="mb-4 bg-orange-500/10 text-orange-300 border-orange-500/30">Process</Badge>
-            <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">How PetroDealHub Works</h2>
-            <p className="text-white/70 text-lg">
-              Our streamlined petroleum trading workflow connects every step of the deal process in one platform
-            </p>
+{(() => {
+              const howItWorksContent = landingContent?.find((content: any) => content.section === 'how-it-works');
+              return (
+                <>
+                  <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">
+                    {howItWorksContent?.title || "How PetroDealHub Works"}
+                  </h2>
+                  <p className="text-white/70 text-lg">
+                    {howItWorksContent?.description || "Our streamlined petroleum trading workflow connects every step of the deal process in one platform"}
+                  </p>
+                </>
+              );
+            })()}
           </div>
           
           <div className="max-w-5xl mx-auto">
@@ -1173,10 +1199,19 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <Badge variant="outline" className="mb-4 bg-orange-500/10 text-orange-300 border-orange-500/30">Real Results</Badge>
-            <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">Delivering Results That Matter</h2>
-            <p className="text-white/70 text-lg">
-              Trusted by petroleum professionals worldwide with proven impact
-            </p>
+{(() => {
+              const resultsContent = landingContent?.find((content: any) => content.section === 'results');
+              return (
+                <>
+                  <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">
+                    {resultsContent?.title || "Delivering Results That Matter"}
+                  </h2>
+                  <p className="text-white/70 text-lg">
+                    {resultsContent?.description || "Trusted by petroleum professionals worldwide with proven impact"}
+                  </p>
+                </>
+              );
+            })()}
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-5xl mx-auto mb-16">
@@ -1241,11 +1276,19 @@ export default function LandingPage() {
           <div className="max-w-4xl mx-auto">
             <div className="bg-slate-800/40 rounded-2xl p-10 border border-slate-700/50 backdrop-blur-sm shadow-xl">
               <div className="text-center mb-8">
-                <h2 className="text-3xl md:text-4xl font-bold mb-6">Transform Your Oil & Petroleum Trading Today</h2>
-                <p className="text-lg text-white/80 max-w-2xl mx-auto">
-                  Join industry leaders who are already leveraging PetroDealHub for faster, smarter, 
-                  and more profitable petroleum deals.
-                </p>
+{(() => {
+                  const ctaContent = landingContent?.find((content: any) => content.section === 'cta');
+                  return (
+                    <>
+                      <h2 className="text-3xl md:text-4xl font-bold mb-6">
+                        {ctaContent?.title || "Transform Your Oil & Petroleum Trading Today"}
+                      </h2>
+                      <p className="text-lg text-white/80 max-w-2xl mx-auto">
+                        {ctaContent?.description || "Join industry leaders who are already leveraging PetroDealHub for faster, smarter, and more profitable petroleum deals."}
+                      </p>
+                    </>
+                  );
+                })()}
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
@@ -1307,7 +1350,10 @@ export default function LandingPage() {
                       />
                     </div>
                     <Button className="w-full py-6 bg-orange-500 hover:bg-orange-600 text-white">
-                      Request Demo Now
+{(() => {
+                        const ctaContent = landingContent?.find((content: any) => content.section === 'cta');
+                        return ctaContent?.buttonText || "Request Demo Now";
+                      })()}
                       <ArrowRight className="ml-2 h-5 w-5" />
                     </Button>
                     <p className="text-xs text-center text-white/50 mt-4">

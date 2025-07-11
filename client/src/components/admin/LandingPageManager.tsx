@@ -10,15 +10,16 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import type { LandingPageContent, InsertLandingPageContent } from "@shared/schema";
 
-// Content section definitions matching the actual database structure
+// Content section definitions matching the actual landing page structure
 const CONTENT_SECTIONS = [
   { value: "hero", label: "Hero Section", icon: Type },
-  { value: "features", label: "Features Section", icon: Layout },
-  { value: "stats", label: "Statistics Section", icon: Sparkles },
-  { value: "pricing", label: "Pricing Section", icon: Layout },
-  { value: "contact", label: "Contact Section", icon: FileText },
-  { value: "about", label: "About Section", icon: FileText },
-  { value: "testimonials", label: "Testimonials Section", icon: Sparkles },
+  { value: "industry", label: "Industry Showcase Section", icon: Layout },
+  { value: "why-us", label: "Why PetroDealHub Section", icon: Sparkles },
+  { value: "features", label: "Platform Features Section", icon: Layout },
+  { value: "how-it-works", label: "How It Works Section", icon: FileText },
+  { value: "results", label: "Results & Testimonials Section", icon: Sparkles },
+  { value: "cta", label: "Call to Action Section", icon: Type },
+  { value: "pricing", label: "Subscription Plans Section", icon: Layout },
 ];
 
 export default function LandingPageManager() {
