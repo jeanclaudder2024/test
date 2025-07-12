@@ -6625,10 +6625,10 @@ IMPORTANT: Generate a complete professional maritime document with the following
       }
 
       if (format === 'pdf') {
-        // Use your exact PDF template - only put AI content inside
+        // Use your exact template background with AI content overlay
         const doc = new PDFDocument({
           size: 'A4',
-          margin: 72
+          margin: 50
         });
         
         // Set response headers for PDF download
@@ -6638,7 +6638,80 @@ IMPORTANT: Generate a complete professional maritime document with the following
         // Pipe PDF to response
         doc.pipe(res);
         
-        // Only add the AI-generated content - no design changes
+        const pageWidth = doc.page.width;
+        const pageHeight = doc.page.height;
+        
+        // Your exact template design
+        // Top Left: "LEGAL DOCUMENT SERVICES"
+        doc.fontSize(14)
+           .fillColor('#000000')
+           .font('Helvetica-Bold')
+           .text('LEGAL DOCUMENT', 50, 50);
+        
+        doc.fontSize(10)
+           .fillColor('#888888')
+           .font('Helvetica')
+           .text('S E R V I C E S', 50, 70);
+        
+        // Top Right: "PetroDealHub"
+        doc.fontSize(28)
+           .fillColor('#b8d4f0')
+           .font('Helvetica-Bold')
+           .text('PetroDealHub', pageWidth - 220, 40);
+        
+        doc.fontSize(12)
+           .fillColor('#b8d4f0')
+           .font('Helvetica')
+           .text('Connecting Tankers, Refineries, and Deals', pageWidth - 220, 70);
+        
+        // Central Logo
+        const centerX = pageWidth / 2;
+        const centerY = 300;
+        
+        // Outer circle (light blue)
+        doc.circle(centerX, centerY, 80)
+           .fillColor('#c8ddf0')
+           .fill();
+        
+        // Inner circle (white)
+        doc.circle(centerX, centerY, 70)
+           .fillColor('#ffffff')
+           .fill();
+        
+        // Yellow flame shape
+        doc.moveTo(centerX - 20, centerY - 30)
+           .bezierCurveTo(centerX - 30, centerY - 50, centerX + 10, centerY - 60, centerX + 20, centerY - 40)
+           .bezierCurveTo(centerX + 25, centerY - 20, centerX, centerY - 10, centerX - 20, centerY - 30)
+           .fillColor('#f7e075')
+           .fill();
+        
+        // Ship silhouette
+        doc.rect(centerX - 35, centerY + 10, 50, 15)
+           .fillColor('#a8c4e0')
+           .fill();
+        
+        // Ship mast
+        doc.rect(centerX - 5, centerY - 5, 3, 20)
+           .fillColor('#a8c4e0')
+           .fill();
+        
+        // Waves
+        doc.moveTo(centerX - 60, centerY + 35)
+           .bezierCurveTo(centerX - 40, centerY + 40, centerX - 20, centerY + 30, centerX, centerY + 35)
+           .bezierCurveTo(centerX + 20, centerY + 40, centerX + 40, centerY + 30, centerX + 60, centerY + 35)
+           .strokeColor('#c8ddf0')
+           .lineWidth(3)
+           .stroke();
+        
+        // "CLIENT COPY" watermark
+        doc.fontSize(36)
+           .fillColor('#f0c0c0')
+           .font('Helvetica-Bold')
+           .rotate(-30, {origin: [pageWidth - 200, pageHeight - 200]})
+           .text('CLIENT COPY', pageWidth - 300, pageHeight - 220)
+           .rotate(30, {origin: [pageWidth - 200, pageHeight - 200]});
+        
+        // AI Content Area - positioned around logo
         let content = document.content || "";
         content = content.replace(/<[^>]*>/g, '');
         content = content.replace(/&nbsp;/g, ' ');
@@ -6646,13 +6719,27 @@ IMPORTANT: Generate a complete professional maritime document with the following
         content = content.replace(/&lt;/g, '<');
         content = content.replace(/&gt;/g, '>');
         
-        let currentY = 72;
+        let currentY = 120; // Start after header
         const lines = content.split('\n').filter(line => line.trim());
         
         lines.forEach(line => {
-          if (currentY > doc.page.height - 72) {
+          // Skip logo area (around Y 250-350)
+          if (currentY > 220 && currentY < 420) {
+            currentY = 420;
+          }
+          
+          if (currentY > pageHeight - 120) {
             doc.addPage();
-            currentY = 72;
+            // Repeat template on new page
+            doc.fontSize(14)
+               .fillColor('#000000')
+               .font('Helvetica-Bold')
+               .text('LEGAL DOCUMENT', 50, 50);
+            doc.fontSize(10)
+               .fillColor('#888888')
+               .font('Helvetica')
+               .text('S E R V I C E S', 50, 70);
+            currentY = 120;
           }
           
           const trimmedLine = line.trim();
@@ -6660,21 +6747,43 @@ IMPORTANT: Generate a complete professional maritime document with the following
             doc.fontSize(11)
                .fillColor('#000000')
                .font('Helvetica')
-               .text(trimmedLine, 72, currentY, {
-                 width: doc.page.width - 144,
+               .text(trimmedLine, 50, currentY, {
+                 width: pageWidth - 100,
                  align: 'left'
                });
             currentY += 16;
           }
         });
         
-        // Your exact footer text
-        const footerY = doc.page.height - 72;
+        // Footer with fingerprint and legal text
+        const footerY = pageHeight - 80;
+        
+        // Fingerprint icon
+        doc.circle(65, footerY + 15, 12)
+           .strokeColor('#4a9eff')
+           .lineWidth(2)
+           .stroke();
+        
+        for (let i = 0; i < 3; i++) {
+          doc.circle(65, footerY + 15, 8 - i * 2)
+             .strokeColor('#4a9eff')
+             .lineWidth(1)
+             .stroke();
+        }
+        
+        // Legal text
         doc.fontSize(9)
            .fillColor('#000000')
            .font('Helvetica')
-           .text('It is officially recognized within the Petrodealhub platform under its legal terms and privacy policy. All rights reserved. Unauthorized use, modification, or distribution of this document is strictly prohibited. For full legal terms, visit: https://www.petrodealhub.com/legal', 
-                 72, footerY, { width: doc.page.width - 144 });
+           .text('It is officially recognized within the Petrodealhub platform under its legal terms and privacy policy. All rights reserved. Unauthorized use,', 
+                 90, footerY);
+        
+        doc.text('modification, or distribution of this document is strictly prohibited. For full legal terms, visit: ', 
+                 90, footerY + 12);
+        
+        doc.fillColor('#4a9eff')
+           .text('https://www.petrodealhub.com/legal', 
+                 90, footerY + 24);
         
         doc.end();
         
