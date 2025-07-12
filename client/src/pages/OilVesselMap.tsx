@@ -23,24 +23,31 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-// Create custom vessel icon
+// Create enhanced vessel icon similar to vessel detail page
 const createVesselIcon = (vesselType: string) => {
   const isOilVessel = vesselType?.toLowerCase().includes('tanker') || 
                      vesselType?.toLowerCase().includes('oil') || 
                      vesselType?.toLowerCase().includes('crude');
   
   const bgColor = isOilVessel ? '#ef4444' : '#3b82f6';
-  const shadowColor = isOilVessel ? 'rgba(239, 68, 68, 0.4)' : 'rgba(59, 130, 246, 0.4)';
+  const bgColorSecondary = isOilVessel ? '#dc2626' : '#2563eb';
+  const shadowColor = isOilVessel ? 'rgba(239, 68, 68, 0.6)' : 'rgba(59, 130, 246, 0.6)';
   
   return L.divIcon({
     html: `<div style="
-      background: linear-gradient(135deg, ${bgColor}, ${bgColor}dd);
-      width: 18px;
-      height: 18px;
+      background: linear-gradient(135deg, ${bgColor}, ${bgColorSecondary});
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
-      border: 3px solid white;
-      box-shadow: 0 4px 8px ${shadowColor}, 0 2px 4px rgba(0,0,0,0.2);
+      border: 4px solid white;
+      box-shadow: 
+        0 8px 16px ${shadowColor}, 
+        0 4px 8px rgba(0,0,0,0.3),
+        inset 0 2px 4px rgba(255,255,255,0.3);
       position: relative;
+      transform: scale(1);
+      transition: all 0.3s ease;
+      cursor: pointer;
     ">
       <div style="
         position: absolute;
@@ -48,13 +55,26 @@ const createVesselIcon = (vesselType: string) => {
         left: 50%;
         transform: translate(-50%, -50%);
         color: white;
-        font-size: 10px;
+        font-size: 16px;
         font-weight: bold;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
       ">🚢</div>
+      <div style="
+        position: absolute;
+        top: -2px;
+        right: -2px;
+        width: 12px;
+        height: 12px;
+        background: linear-gradient(135deg, #10b981, #059669);
+        border-radius: 50%;
+        border: 2px solid white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      "></div>
     </div>`,
-    className: 'vessel-marker',
-    iconSize: [24, 24],
-    iconAnchor: [12, 12]
+    className: 'vessel-marker-enhanced',
+    iconSize: [40, 40],
+    iconAnchor: [20, 20]
   });
 };
 

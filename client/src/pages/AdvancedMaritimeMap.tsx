@@ -278,46 +278,77 @@ export default function AdvancedMaritimeMap() {
     });
   }, [vessels, selectedVesselTypes, searchTerm]);
 
-  // Get vessel icon with rotation based on heading
+  // Get enhanced vessel icon similar to vessel detail page
   const getVesselIcon = (vessel: Vessel) => {
-    const colorMap: Record<string, string> = {
-      'Tanker': '#10b981',
-      'Oil': '#10b981',
-      'LNG': '#8b5cf6',
-      'LPG': '#8b5cf6',
-      'Container': '#3b82f6',
-      'Bulk': '#f97316',
-      'Passenger': '#ec4899',
-      'Cargo': '#06b6d4'
-    };
-
-    let color = '#6b7280';
-    for (const [key, value] of Object.entries(colorMap)) {
-      if (vessel.vesselType.includes(key)) {
-        color = value;
-        break;
-      }
-    }
+    const isOilVessel = vessel.vesselType?.toLowerCase().includes('tanker') || 
+                       vessel.vesselType?.toLowerCase().includes('oil') || 
+                       vessel.vesselType?.toLowerCase().includes('crude');
+    
+    const bgColor = isOilVessel ? '#ef4444' : '#3b82f6';
+    const bgColorSecondary = isOilVessel ? '#dc2626' : '#2563eb';
+    const shadowColor = isOilVessel ? 'rgba(239, 68, 68, 0.6)' : 'rgba(59, 130, 246, 0.6)';
 
     const rotation = vessel.heading || vessel.course || 0;
     const isMoving = vessel.speed && vessel.speed > 0.5;
 
     return L.divIcon({
-      className: 'vessel-marker-advanced',
+      className: 'vessel-marker-enhanced',
       html: `
-        <div class="relative" style="transform: rotate(${rotation}deg)">
-          <div class="absolute inset-0 rounded-full opacity-30 blur-sm ${isMoving ? 'animate-pulse' : ''}" 
-               style="background-color: ${color}"></div>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="${color}" class="relative">
-            <path d="M12 2L4 7v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V7l-8-5zm0 2.5L18 8v8c0 .55-.45 1-1 1H7c-.55 0-1-.45-1-1V8l6-3.5z"/>
-            <path d="M12 2v20" stroke="${color}" stroke-width="1" opacity="0.3"/>
-            ${isMoving ? '<circle cx="12" cy="20" r="2" fill="white" class="animate-ping"/>' : ''}
-          </svg>
-          ${vessel.speed ? `<div class="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[10px] font-bold text-white bg-black/70 px-1 rounded">${vessel.speed.toFixed(1)}kt</div>` : ''}
+        <div style="
+          background: linear-gradient(135deg, ${bgColor}, ${bgColorSecondary});
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          border: 4px solid white;
+          box-shadow: 
+            0 8px 16px ${shadowColor}, 
+            0 4px 8px rgba(0,0,0,0.3),
+            inset 0 2px 4px rgba(255,255,255,0.3);
+          position: relative;
+          transform: rotate(${rotation}deg) scale(1);
+          transition: all 0.3s ease;
+          cursor: pointer;
+          ${isMoving ? 'animation: pulse 2s infinite;' : ''}
+        ">
+          <div style="
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-${rotation}deg);
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+          ">🚢</div>
+          <div style="
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 12px;
+            height: 12px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+          "></div>
+          ${vessel.speed ? `<div style="
+            position: absolute;
+            bottom: -18px;
+            left: 50%;
+            transform: translateX(-50%) rotate(-${rotation}deg);
+            font-size: 10px;
+            font-weight: bold;
+            color: white;
+            background: rgba(0,0,0,0.7);
+            padding: 2px 4px;
+            border-radius: 4px;
+            white-space: nowrap;
+          ">${vessel.speed.toFixed(1)}kt</div>` : ''}
         </div>
       `,
-      iconSize: [24, 24],
-      iconAnchor: [12, 12]
+      iconSize: [40, 40],
+      iconAnchor: [20, 20]
     });
   };
 

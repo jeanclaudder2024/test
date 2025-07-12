@@ -249,13 +249,60 @@ export default function ProfessionalMaritimeMap({
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  // Custom icons
-  const vesselIcon = L.icon({
-    iconUrl: '/assets/vessel-icon.svg',
-    iconSize: [32, 32],
-    iconAnchor: [16, 16],
-    popupAnchor: [0, -16]
-  });
+  // Create enhanced vessel icon similar to vessel detail page
+  const createVesselIcon = (vessel: VesselType) => {
+    const isOilVessel = vessel.vesselType?.toLowerCase().includes('tanker') || 
+                       vessel.vesselType?.toLowerCase().includes('oil') || 
+                       vessel.vesselType?.toLowerCase().includes('crude');
+    
+    const bgColor = isOilVessel ? '#ef4444' : '#3b82f6';
+    const bgColorSecondary = isOilVessel ? '#dc2626' : '#2563eb';
+    const shadowColor = isOilVessel ? 'rgba(239, 68, 68, 0.6)' : 'rgba(59, 130, 246, 0.6)';
+    
+    return L.divIcon({
+      html: `<div style="
+        background: linear-gradient(135deg, ${bgColor}, ${bgColorSecondary});
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: 4px solid white;
+        box-shadow: 
+          0 8px 16px ${shadowColor}, 
+          0 4px 8px rgba(0,0,0,0.3),
+          inset 0 2px 4px rgba(255,255,255,0.3);
+        position: relative;
+        transform: scale(1);
+        transition: all 0.3s ease;
+        cursor: pointer;
+      ">
+        <div style="
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          color: white;
+          font-size: 16px;
+          font-weight: bold;
+          text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+          filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+        ">🚢</div>
+        <div style="
+          position: absolute;
+          top: -2px;
+          right: -2px;
+          width: 12px;
+          height: 12px;
+          background: linear-gradient(135deg, #10b981, #059669);
+          border-radius: 50%;
+          border: 2px solid white;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        "></div>
+      </div>`,
+      className: 'vessel-marker-enhanced',
+      iconSize: [40, 40],
+      iconAnchor: [20, 20]
+    });
+  };
 
   const portIcon = L.icon({
     iconUrl: '/assets/port-icon.svg',
@@ -357,7 +404,7 @@ export default function ProfessionalMaritimeMap({
                   <Marker
                     key={`vessel-${vessel.id}`}
                     position={[lat, lng]}
-                    icon={vesselIcon}
+                    icon={createVesselIcon(vessel)}
                   >
                     <Popup className="vessel-popup">
                       <div className="p-1">
@@ -391,7 +438,7 @@ export default function ProfessionalMaritimeMap({
                   <Marker
                     key={`vessel-${vessel.id}`}
                     position={[lat, lng]}
-                    icon={vesselIcon}
+                    icon={createVesselIcon(vessel)}
                   >
                     <Popup className="vessel-popup">
                       <div className="p-1">
