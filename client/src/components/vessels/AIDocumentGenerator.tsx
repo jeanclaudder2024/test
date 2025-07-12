@@ -227,26 +227,26 @@ export default function AIDocumentGenerator({ vesselId, vesselName }: AIDocument
                                   e.stopPropagation();
                                   if (template.accessMessage === 'BROKER_ACCESS_REQUIRED') {
                                     toast({
-                                      title: "Broker Access Required",
-                                      description: "Contact us from your broker dashboard for verification and document unlock.",
+                                      title: "🔒 Broker Verification Required",
+                                      description: "Contact us through your broker dashboard for professional verification and template access.",
                                       variant: "destructive",
                                     });
                                   } else if (template.accessMessage === 'UPGRADE_TO_PROFESSIONAL') {
                                     toast({
-                                      title: "Professional Plan Required",
-                                      description: "Upgrade to Professional plan to access this document.",
+                                      title: "📈 Professional Plan Required",
+                                      description: "Unlock advanced maritime documentation with Professional subscription.",
                                       variant: "destructive",
                                     });
                                   } else if (template.accessMessage === 'UPGRADE_TO_ENTERPRISE') {
                                     toast({
-                                      title: "Enterprise Plan Required", 
-                                      description: "Upgrade to Enterprise plan to access this document.",
+                                      title: "🏢 Enterprise Plan Required", 
+                                      description: "Access premium business documentation suite with Enterprise subscription.",
                                       variant: "destructive",
                                     });
                                   } else {
                                     toast({
-                                      title: "Access Required",
-                                      description: "Please upgrade your plan or contact support.",
+                                      title: "🔐 Subscription Required",
+                                      description: "Upgrade your plan to access professional maritime documentation tools.",
                                       variant: "destructive",
                                     });
                                   }
@@ -257,52 +257,80 @@ export default function AIDocumentGenerator({ vesselId, vesselName }: AIDocument
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent 
-                              className="max-w-sm bg-white text-gray-900 p-4 rounded-lg shadow-xl border" 
+                              className="max-w-sm bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 text-white p-5 rounded-xl shadow-2xl border border-blue-400/30 backdrop-blur-sm" 
                               side="top"
-                              sideOffset={5}
+                              sideOffset={8}
                             >
-                              <div className="space-y-3">
+                              <div className="space-y-4">
                                 {template.accessMessage === 'BROKER_ACCESS_REQUIRED' ? (
                                   <>
-                                    <p className="text-sm font-medium text-gray-900">Broker Member Access Required</p>
-                                    <p className="text-xs text-gray-600">If you are a broker, contact us from your dashboard for verification. We'll review your documents and unlock access.</p>
-                                    <Link href="/broker-dashboard">
-                                      <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-                                        <MessageCircle className="h-3 w-3 mr-1" />
+                                    <div className="text-center">
+                                      <div className="inline-flex items-center justify-center w-10 h-10 bg-orange-500/20 rounded-full mb-3">
+                                        <Lock className="h-5 w-5 text-orange-400" />
+                                      </div>
+                                      <h3 className="text-sm font-semibold text-white mb-1">Broker Member Verification Required</h3>
+                                      <p className="text-xs text-blue-200 leading-relaxed">
+                                        If you are a licensed broker, please contact us through your dashboard. Our team will review your verification documents and unlock access to this professional template.
+                                      </p>
+                                    </div>
+                                    <Link href="/broker-dashboard" className="block">
+                                      <Button size="sm" className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-200">
+                                        <MessageCircle className="h-4 w-4 mr-2" />
                                         Contact from Dashboard
                                       </Button>
                                     </Link>
                                   </>
                                 ) : template.accessMessage === 'UPGRADE_TO_PROFESSIONAL' ? (
                                   <>
-                                    <p className="text-sm font-medium text-gray-900">Professional Plan Required</p>
-                                    <p className="text-xs text-gray-600">Upgrade to Professional plan to access this document template.</p>
-                                    <Link href="/plans">
-                                      <Button size="sm" className="w-full bg-green-600 hover:bg-green-700 text-white">
-                                        <ExternalLink className="h-3 w-3 mr-1" />
+                                    <div className="text-center">
+                                      <div className="inline-flex items-center justify-center w-10 h-10 bg-blue-500/20 rounded-full mb-3">
+                                        <Lock className="h-5 w-5 text-blue-400" />
+                                      </div>
+                                      <h3 className="text-sm font-semibold text-white mb-1">Professional Plan Required</h3>
+                                      <p className="text-xs text-blue-200 leading-relaxed">
+                                        This advanced document template is available for Professional subscribers. Upgrade now to access premium maritime documentation tools.
+                                      </p>
+                                    </div>
+                                    <Link href="/plans" className="block">
+                                      <Button size="sm" className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-200">
+                                        <ExternalLink className="h-4 w-4 mr-2" />
                                         Upgrade to Professional
                                       </Button>
                                     </Link>
                                   </>
                                 ) : template.accessMessage === 'UPGRADE_TO_ENTERPRISE' ? (
                                   <>
-                                    <p className="text-sm font-medium text-gray-900">Enterprise Plan Required</p>
-                                    <p className="text-xs text-gray-600">Upgrade to Enterprise plan to access this document template.</p>
-                                    <Link href="/plans">
-                                      <Button size="sm" className="w-full bg-purple-600 hover:bg-purple-700 text-white">
-                                        <ExternalLink className="h-3 w-3 mr-1" />
+                                    <div className="text-center">
+                                      <div className="inline-flex items-center justify-center w-10 h-10 bg-purple-500/20 rounded-full mb-3">
+                                        <Lock className="h-5 w-5 text-purple-400" />
+                                      </div>
+                                      <h3 className="text-sm font-semibold text-white mb-1">Enterprise Plan Required</h3>
+                                      <p className="text-xs text-blue-200 leading-relaxed">
+                                        This premium document template is exclusive to Enterprise subscribers. Unlock comprehensive maritime business documentation suite.
+                                      </p>
+                                    </div>
+                                    <Link href="/plans" className="block">
+                                      <Button size="sm" className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-200">
+                                        <ExternalLink className="h-4 w-4 mr-2" />
                                         Upgrade to Enterprise
                                       </Button>
                                     </Link>
                                   </>
                                 ) : (
                                   <>
-                                    <p className="text-sm font-medium text-gray-900">Access Required</p>
-                                    <p className="text-xs text-gray-600">{template.accessMessage}</p>
-                                    <Link href="/plans">
-                                      <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-                                        <ExternalLink className="h-3 w-3 mr-1" />
-                                        View Plans
+                                    <div className="text-center">
+                                      <div className="inline-flex items-center justify-center w-10 h-10 bg-blue-500/20 rounded-full mb-3">
+                                        <Lock className="h-5 w-5 text-blue-400" />
+                                      </div>
+                                      <h3 className="text-sm font-semibold text-white mb-1">Access Required</h3>
+                                      <p className="text-xs text-blue-200 leading-relaxed">
+                                        This document template requires a subscription plan. Please upgrade your account to access professional maritime documentation tools.
+                                      </p>
+                                    </div>
+                                    <Link href="/plans" className="block">
+                                      <Button size="sm" className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-200">
+                                        <ExternalLink className="h-4 w-4 mr-2" />
+                                        View Subscription Plans
                                       </Button>
                                     </Link>
                                   </>
