@@ -6682,8 +6682,7 @@ IMPORTANT: Generate a complete professional maritime document with the following
         
         // Official document badge (top right)
         doc.rect(pageWidth - 180, 15, 160, 20)
-           .fill('#059669')
-           .radius(3);
+           .fill('#059669');
         
         doc.fontSize(9)
            .fillColor('white')
