@@ -663,8 +663,8 @@ export default function OilVesselMap() {
           <LayersControl position="topright">
             <LayersControl.BaseLayer checked={mapStyle === 'street'} name="Street Map">
               <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution='&copy; <a href="https://carto.com/attributions">CartoDB</a>, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
               />
             </LayersControl.BaseLayer>
             
@@ -677,19 +677,19 @@ export default function OilVesselMap() {
             
             <LayersControl.BaseLayer checked={mapStyle === 'terrain'} name="Terrain">
               <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
+                attribution='&copy; <a href="https://carto.com/attributions">CartoDB</a>, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                url="https://{s}.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}{r}.png"
               />
             </LayersControl.BaseLayer>
             
             <LayersControl.BaseLayer checked={mapStyle === 'maritime'} name="Maritime">
               <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                url="https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png"
+                attribution='&copy; <a href="https://carto.com/attributions">CartoDB</a>, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
               />
               <TileLayer
-                attribution='&copy; OpenStreetMap contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                url="https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png"
               />
             </LayersControl.BaseLayer>
           </LayersControl>

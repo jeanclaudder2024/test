@@ -122,14 +122,14 @@ interface WeatherData {
   visibility: number;
 }
 
-// Map styles
+// Map styles - using CartoDB tiles for English country names
 const mapStyles = {
-  standard: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+  standard: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
   satellite: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
   ocean: 'https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}',
   nautical: 'https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png',
   dark: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-  terrain: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png'
+  terrain: 'https://{s}.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}{r}.png'
 };
 
 // Heat map gradient for vessel density
@@ -559,7 +559,7 @@ export default function AdvancedMaritimeMap() {
       >
         {/* Base map layers */}
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+          attribution='&copy; <a href="https://carto.com/attributions">CartoDB</a>, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url={mapStyles[mapStyle]}
         />
         
