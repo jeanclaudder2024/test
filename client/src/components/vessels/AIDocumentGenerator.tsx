@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
-import { FileText, Download, Plus, Eye, BookOpen, Clock, Loader2, Lock } from "lucide-react";
+import { FileText, Download, Plus, Eye, BookOpen, Clock, Loader2, Lock, ExternalLink, MessageCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Link } from "wouter";
 import type { Vessel } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -224,11 +225,31 @@ export default function AIDocumentGenerator({ vesselId, vesselName }: AIDocument
                                 onClick={(e) => {
                                   e.preventDefault();
                                   e.stopPropagation();
-                                  toast({
-                                    title: "Access Required",
-                                    description: template.accessMessage,
-                                    variant: "destructive",
-                                  });
+                                  if (template.accessMessage === 'BROKER_ACCESS_REQUIRED') {
+                                    toast({
+                                      title: "Broker Access Required",
+                                      description: "Contact us from your broker dashboard for verification and document unlock.",
+                                      variant: "destructive",
+                                    });
+                                  } else if (template.accessMessage === 'UPGRADE_TO_PROFESSIONAL') {
+                                    toast({
+                                      title: "Professional Plan Required",
+                                      description: "Upgrade to Professional plan to access this document.",
+                                      variant: "destructive",
+                                    });
+                                  } else if (template.accessMessage === 'UPGRADE_TO_ENTERPRISE') {
+                                    toast({
+                                      title: "Enterprise Plan Required", 
+                                      description: "Upgrade to Enterprise plan to access this document.",
+                                      variant: "destructive",
+                                    });
+                                  } else {
+                                    toast({
+                                      title: "Access Required",
+                                      description: "Please upgrade your plan or contact support.",
+                                      variant: "destructive",
+                                    });
+                                  }
                                 }}
                               >
                                 <Lock className="h-4 w-4" />
@@ -236,11 +257,57 @@ export default function AIDocumentGenerator({ vesselId, vesselName }: AIDocument
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent 
-                              className="max-w-xs bg-black text-white p-3 rounded-lg shadow-lg" 
+                              className="max-w-sm bg-white text-gray-900 p-4 rounded-lg shadow-xl border" 
                               side="top"
                               sideOffset={5}
                             >
-                              <p className="text-sm leading-relaxed">{template.accessMessage}</p>
+                              <div className="space-y-3">
+                                {template.accessMessage === 'BROKER_ACCESS_REQUIRED' ? (
+                                  <>
+                                    <p className="text-sm font-medium text-gray-900">Broker Member Access Required</p>
+                                    <p className="text-xs text-gray-600">If you are a broker, contact us from your dashboard for verification. We'll review your documents and unlock access.</p>
+                                    <Link href="/broker-dashboard">
+                                      <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+                                        <MessageCircle className="h-3 w-3 mr-1" />
+                                        Contact from Dashboard
+                                      </Button>
+                                    </Link>
+                                  </>
+                                ) : template.accessMessage === 'UPGRADE_TO_PROFESSIONAL' ? (
+                                  <>
+                                    <p className="text-sm font-medium text-gray-900">Professional Plan Required</p>
+                                    <p className="text-xs text-gray-600">Upgrade to Professional plan to access this document template.</p>
+                                    <Link href="/plans">
+                                      <Button size="sm" className="w-full bg-green-600 hover:bg-green-700 text-white">
+                                        <ExternalLink className="h-3 w-3 mr-1" />
+                                        Upgrade to Professional
+                                      </Button>
+                                    </Link>
+                                  </>
+                                ) : template.accessMessage === 'UPGRADE_TO_ENTERPRISE' ? (
+                                  <>
+                                    <p className="text-sm font-medium text-gray-900">Enterprise Plan Required</p>
+                                    <p className="text-xs text-gray-600">Upgrade to Enterprise plan to access this document template.</p>
+                                    <Link href="/plans">
+                                      <Button size="sm" className="w-full bg-purple-600 hover:bg-purple-700 text-white">
+                                        <ExternalLink className="h-3 w-3 mr-1" />
+                                        Upgrade to Enterprise
+                                      </Button>
+                                    </Link>
+                                  </>
+                                ) : (
+                                  <>
+                                    <p className="text-sm font-medium text-gray-900">Access Required</p>
+                                    <p className="text-xs text-gray-600">{template.accessMessage}</p>
+                                    <Link href="/plans">
+                                      <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+                                        <ExternalLink className="h-3 w-3 mr-1" />
+                                        View Plans
+                                      </Button>
+                                    </Link>
+                                  </>
+                                )}
+                              </div>
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>

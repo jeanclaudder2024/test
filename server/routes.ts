@@ -6391,20 +6391,20 @@ Only use authentic, real-world data for existing refineries.`;
           // Check broker-only access
           else if (template.brokerOnly && !brokerStatus.hasActiveSubscription) {
             canGenerate = false;
-            accessMessage = 'This document is available for broker members only. Contact us to help you get access to this document as it requires special approval.';
+            accessMessage = 'BROKER_ACCESS_REQUIRED';
           }
           // Check subscription plan access
           else if (template.enterpriseAccess === false && userPlan < 3) {
             canGenerate = false;
-            accessMessage = 'Please upgrade your plan to Enterprise to access this document.';
+            accessMessage = 'UPGRADE_TO_ENTERPRISE';
           }
           else if (template.professionalAccess === false && userPlan < 2) {
             canGenerate = false;
-            accessMessage = 'Please upgrade your plan to Professional to access this document.';
+            accessMessage = 'UPGRADE_TO_PROFESSIONAL';
           }
           else if (template.basicAccess === false && userPlan < 1) {
             canGenerate = false;
-            accessMessage = 'Please upgrade your plan to access this document.';
+            accessMessage = 'UPGRADE_TO_BASIC';
           }
         }
         
