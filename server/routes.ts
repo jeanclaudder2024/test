@@ -6642,78 +6642,80 @@ IMPORTANT: Generate a complete professional maritime document with the following
         const pageWidth = doc.page.width;
         const pageHeight = doc.page.height;
         
-        // Gradient Header Background
-        doc.rect(0, 0, pageWidth, 100)
-           .fillColor('#0f172a', 1)
+        // EXACT HEADER FROM YOUR PDF - Dark Blue Background
+        doc.rect(0, 0, pageWidth, 120)
+           .fillColor('#1a365d', 1)
            .fill();
         
-        doc.rect(0, 0, pageWidth, 100)
-           .fillColor('#1e40af', 0.8)
-           .fill();
-        
-        // Modern Logo Design
-        doc.circle(50, 50, 25)
+        // Your Logo Design - Large Circular Logo
+        doc.circle(80, 60, 35)
            .fillColor('white', 1)
-           .fill()
-           .stroke('#1e40af')
-           .lineWidth(3);
+           .fill();
         
-        doc.fontSize(22)
-           .fillColor('#1e40af')
-           .font('Helvetica-Bold')
-           .text('P', 40, 38);
+        // Logo Inner Design - Oil Drop Shape
+        doc.circle(80, 55, 18)
+           .fillColor('#1a365d', 1)
+           .fill();
         
-        // Company Branding
-        doc.fontSize(32)
+        // Logo Text "P"
+        doc.fontSize(24)
            .fillColor('white')
            .font('Helvetica-Bold')
-           .text('PETRODEALHUB', 90, 30);
+           .text('P', 72, 47);
         
+        // Company Name - EXACTLY like your PDF
+        doc.fontSize(36)
+           .fillColor('white')
+           .font('Helvetica-Bold')
+           .text('PETRODEALHUB', 140, 35);
+        
+        // Subtitle - Professional Maritime Platform
         doc.fontSize(14)
-           .fillColor('#e2e8f0')
+           .fillColor('#cbd5e1')
            .font('Helvetica')
-           .text('Maritime Documentation Excellence', 90, 60);
+           .text('Professional Maritime Documentation Platform', 140, 75);
         
-        // Status Badge
-        doc.rect(pageWidth - 200, 20, 180, 30)
-           .fillColor('#10b981', 1)
+        // Document Status Badge - Top Right
+        doc.rect(pageWidth - 220, 25, 200, 25)
+           .fillColor('#047857', 1)
            .fill();
         
-        doc.fontSize(12)
+        doc.fontSize(11)
            .fillColor('white')
            .font('Helvetica-Bold')
-           .text('CERTIFIED DOCUMENT', pageWidth - 190, 32);
+           .text('OFFICIAL MARITIME CERTIFICATE', pageWidth - 210, 33);
         
-        // Document Title Section
-        doc.rect(0, 100, pageWidth, 80)
-           .fillColor('#f8fafc', 1)
+        // White Background Section for Title
+        doc.rect(0, 120, pageWidth, 60)
+           .fillColor('#ffffff', 1)
            .fill();
         
-        doc.fontSize(28)
-           .fillColor('#1e293b')
+        // Document Title - Large and Centered
+        doc.fontSize(26)
+           .fillColor('#1a365d')
            .font('Helvetica-Bold')
-           .text(document.title, 50, 125, {
+           .text(document.title, 50, 140, {
              width: pageWidth - 100,
              align: 'center'
            });
         
-        // Vessel Information Panel
+        // Vessel Information Panel - Blue Header Style
         const vesselBoxY = 200;
-        doc.rect(50, vesselBoxY, pageWidth - 100, 100)
-           .fillColor('#ffffff', 1)
+        doc.rect(50, vesselBoxY, pageWidth - 100, 90)
+           .fillColor('#f8fafc', 1)
            .fill()
-           .stroke('#e2e8f0')
-           .lineWidth(2);
+           .stroke('#cbd5e1')
+           .lineWidth(1);
         
-        // Vessel Header
-        doc.rect(50, vesselBoxY, pageWidth - 100, 35)
-           .fillColor('#3b82f6', 1)
+        // Vessel Header - Dark Blue like your PDF
+        doc.rect(50, vesselBoxY, pageWidth - 100, 30)
+           .fillColor('#1a365d', 1)
            .fill();
         
-        doc.fontSize(16)
+        doc.fontSize(14)
            .fillColor('white')
            .font('Helvetica-Bold')
-           .text('VESSEL INFORMATION', 70, vesselBoxY + 10);
+           .text('VESSEL INFORMATION', 70, vesselBoxY + 8);
         
         // Vessel Details
         doc.fontSize(18)
