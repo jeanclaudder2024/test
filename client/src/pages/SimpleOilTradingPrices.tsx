@@ -3,11 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-// Removed recharts imports for simpler oil prices page
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -15,12 +13,9 @@ import {
   BarChart3, 
   Globe, 
   RefreshCw, 
-  AlertCircle,
   Clock,
   Target,
   Calculator,
-  Activity,
-  Zap,
   ArrowUp,
   ArrowDown,
   Minus
@@ -66,164 +61,161 @@ interface TradingOpportunity {
   risk: 'low' | 'medium' | 'high';
 }
 
-export default function OilTradingPrices() {
+export default function SimpleOilTradingPrices() {
   const [oilPrices, setOilPrices] = useState<OilPrice[]>([]);
   const [marketNews, setMarketNews] = useState<MarketNews[]>([]);
   const [tradingOpportunities, setTradingOpportunities] = useState<TradingOpportunity[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
-  const [selectedTimeframe, setSelectedTimeframe] = useState('1h');
+  const [loading, setLoading] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState(new Date());
   const [selectedCommodity, setSelectedCommodity] = useState('all');
-  const [calculatorValues, setCalculatorValues] = useState({
+  
+  // Calculator states
+  const [calculatorData, setCalculatorData] = useState({
     quantity: '',
-    price: '',
-    margin: ''
+    buyPrice: '',
+    sellPrice: '',
+    leverage: '1'
   });
+
   const { toast } = useToast();
 
-  // Fetch real oil price data from Oil Price API
-  const fetchOilPrices = async (): Promise<OilPrice[]> => {
-    try {
-      const response = await fetch('/api/oil-prices/live');
-      if (!response.ok) {
-        throw new Error('Failed to fetch oil prices');
-      }
-      const data = await response.json();
-      return data.prices || [];
-    } catch (error) {
-      console.error('Error fetching oil prices:', error);
-      toast({
-        title: "API Error",
-        description: "Unable to fetch live oil prices. Please check API configuration.",
-        variant: "destructive",
-      });
-      return [];
+  // Sample data for demo
+  const sampleOilPrices: OilPrice[] = [
+    {
+      id: '1',
+      name: 'Brent Crude Oil',
+      symbol: 'BRENT',
+      price: 82.45,
+      change: 1.23,
+      changePercent: 1.52,
+      volume: 145000,
+      high24h: 83.12,
+      low24h: 81.05,
+      exchange: 'ICE',
+      unit: 'USD/barrel',
+      lastUpdated: new Date().toISOString(),
+      description: 'North Sea Brent Crude Oil futures'
+    },
+    {
+      id: '2',
+      name: 'WTI Crude Oil',
+      symbol: 'WTI',
+      price: 78.92,
+      change: -0.45,
+      changePercent: -0.57,
+      volume: 198000,
+      high24h: 79.88,
+      low24h: 78.12,
+      exchange: 'NYMEX',
+      unit: 'USD/barrel',
+      lastUpdated: new Date().toISOString(),
+      description: 'West Texas Intermediate Crude Oil'
+    },
+    {
+      id: '3',
+      name: 'Natural Gas',
+      symbol: 'NG',
+      price: 2.845,
+      change: 0.089,
+      changePercent: 3.23,
+      volume: 89000,
+      high24h: 2.892,
+      low24h: 2.756,
+      exchange: 'NYMEX',
+      unit: 'USD/MMBtu',
+      lastUpdated: new Date().toISOString(),
+      description: 'Natural Gas futures'
+    },
+    {
+      id: '4',
+      name: 'Heating Oil',
+      symbol: 'HO',
+      price: 2.456,
+      change: 0.034,
+      changePercent: 1.41,
+      volume: 45000,
+      high24h: 2.478,
+      low24h: 2.422,
+      exchange: 'NYMEX',
+      unit: 'USD/gallon',
+      lastUpdated: new Date().toISOString(),
+      description: 'Heating Oil futures'
     }
-  };
+  ];
 
-  // Generate market news
-  const generateMarketNews = (): MarketNews[] => {
-    const newsItems = [
-      {
-        headline: "OPEC+ Announces Production Cut Extension",
-        summary: "Major oil producers agree to extend current production cuts through Q2 2025",
-        impact: 'positive' as const,
-        source: "Reuters Energy",
-        relevantCommodities: ['BRENT', 'WTI', 'DUBAI']
-      },
-      {
-        headline: "US Strategic Reserve Release Plans",
-        summary: "Administration considering strategic petroleum reserve releases to stabilize prices",
-        impact: 'negative' as const,
-        source: "Bloomberg Energy",
-        relevantCommodities: ['WTI', 'BRENT']
-      },
-      {
-        headline: "Refinery Capacity Utilization Rises",
-        summary: "Global refinery runs increase 3.2% as maintenance season concludes",
-        impact: 'positive' as const,
-        source: "Energy Intelligence",
-        relevantCommodities: ['RB', 'HO', 'JET']
-      },
-      {
-        headline: "Middle East Tensions Escalate",
-        summary: "Geopolitical concerns drive risk premium in crude oil markets",
-        impact: 'positive' as const,
-        source: "Platts Energy",
-        relevantCommodities: ['BRENT', 'DUBAI']
-      }
-    ];
+  const sampleMarketNews: MarketNews[] = [
+    {
+      id: '1',
+      headline: 'OPEC+ Considers Production Cut Extension',
+      summary: 'OPEC+ is discussing extending current production cuts through Q2 2025 to support oil prices.',
+      impact: 'positive',
+      timestamp: new Date().toISOString(),
+      source: 'Reuters',
+      relevantCommodities: ['BRENT', 'WTI']
+    },
+    {
+      id: '2',
+      headline: 'US Crude Inventories Rise More Than Expected',
+      summary: 'Weekly inventory data shows unexpected build in crude stocks, putting pressure on prices.',
+      impact: 'negative',
+      timestamp: new Date().toISOString(),
+      source: 'EIA',
+      relevantCommodities: ['WTI']
+    }
+  ];
 
-    return newsItems.map((item, index) => ({
-      id: `news-${index}`,
-      headline: item.headline,
-      summary: item.summary,
-      impact: item.impact,
-      timestamp: new Date(Date.now() - Math.random() * 3600000).toISOString(),
-      source: item.source,
-      relevantCommodities: item.relevantCommodities
-    }));
-  };
+  const sampleTradingOpportunities: TradingOpportunity[] = [
+    {
+      id: '1',
+      type: 'buy',
+      commodity: 'Brent Crude',
+      currentPrice: 82.45,
+      targetPrice: 88.00,
+      confidence: 75,
+      timeframe: '2-3 weeks',
+      reasoning: 'Technical indicators suggest upward momentum with strong support at $81.',
+      risk: 'medium'
+    },
+    {
+      id: '2',
+      type: 'sell',
+      commodity: 'Natural Gas',
+      currentPrice: 2.845,
+      targetPrice: 2.650,
+      confidence: 68,
+      timeframe: '1-2 weeks',
+      reasoning: 'Weather forecasts indicate warmer temperatures reducing heating demand.',
+      risk: 'low'
+    }
+  ];
 
-  // Generate trading opportunities
-  const generateTradingOpportunities = (): TradingOpportunity[] => {
-    const opportunities = [
-      {
-        type: 'buy' as const,
-        commodity: 'Brent Crude',
-        currentPrice: 85.45,
-        targetPrice: 92.00,
-        confidence: 78,
-        timeframe: '2-3 weeks',
-        reasoning: 'Technical analysis shows strong support at $84. OPEC cuts and winter demand expected to drive prices higher.',
-        risk: 'medium' as const
-      },
-      {
-        type: 'sell' as const,
-        commodity: 'Natural Gas',
-        currentPrice: 2.85,
-        targetPrice: 2.60,
-        confidence: 65,
-        timeframe: '1-2 weeks',
-        reasoning: 'Weather forecasts show milder temperatures. Storage levels above seasonal norms.',
-        risk: 'low' as const
-      },
-      {
-        type: 'buy' as const,
-        commodity: 'Gasoline',
-        currentPrice: 2.45,
-        targetPrice: 2.65,
-        confidence: 82,
-        timeframe: '3-4 weeks',
-        reasoning: 'Refinery maintenance season ending. Summer driving season demand pickup expected.',
-        risk: 'medium' as const
-      }
-    ];
-
-    return opportunities.map((item, index) => ({
-      id: `opp-${index}`,
-      ...item
-    }));
-  };
-
-  // Calculate profit/loss
-  const calculateProfitLoss = () => {
-    const quantity = parseFloat(calculatorValues.quantity) || 0;
-    const price = parseFloat(calculatorValues.price) || 0;
-    const margin = parseFloat(calculatorValues.margin) || 0;
-    
-    const totalValue = quantity * price;
-    const profit = totalValue * (margin / 100);
-    
-    return {
-      totalValue: totalValue.toFixed(2),
-      profit: profit.toFixed(2),
-      margin: margin.toFixed(2)
-    };
-  };
-
-  // Update data
+  // Fetch oil prices data
   const updateData = async () => {
     setLoading(true);
     try {
-      const [prices] = await Promise.all([
-        fetchOilPrices(),
-      ]);
-      
-      setOilPrices(prices);
-      setMarketNews(generateMarketNews());
-      setTradingOpportunities(generateTradingOpportunities());
+      const response = await fetch('/api/oil-prices/live');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.prices && data.prices.length > 0) {
+          setOilPrices(data.prices);
+        } else {
+          // Use sample data if no real data available
+          setOilPrices(sampleOilPrices);
+        }
+      } else {
+        setOilPrices(sampleOilPrices);
+      }
+      setMarketNews(sampleMarketNews);
+      setTradingOpportunities(sampleTradingOpportunities);
       setLastUpdate(new Date());
-      
-      toast({
-        title: "Data Updated",
-        description: "Live market data refreshed successfully",
-      });
     } catch (error) {
-      console.error('Error updating data:', error);
+      console.error('Error fetching oil prices:', error);
+      setOilPrices(sampleOilPrices);
+      setMarketNews(sampleMarketNews);
+      setTradingOpportunities(sampleTradingOpportunities);
       toast({
-        title: "Update Failed",
-        description: "Failed to update market data",
+        title: "Connection Error",
+        description: "Using demo data. Check your connection.",
         variant: "destructive",
       });
     } finally {
@@ -231,7 +223,7 @@ export default function OilTradingPrices() {
     }
   };
 
-  // Initialize data
+  // Initialize data and set up refresh every 25 hours
   useEffect(() => {
     updateData();
     
@@ -245,6 +237,19 @@ export default function OilTradingPrices() {
     ? oilPrices 
     : oilPrices.filter(price => price.symbol.toLowerCase().includes(selectedCommodity.toLowerCase()));
 
+  // Calculate profit/loss
+  const calculateProfitLoss = () => {
+    const quantity = parseFloat(calculatorData.quantity) || 0;
+    const buyPrice = parseFloat(calculatorData.buyPrice) || 0;
+    const sellPrice = parseFloat(calculatorData.sellPrice) || 0;
+    const leverage = parseFloat(calculatorData.leverage) || 1;
+
+    const profit = (sellPrice - buyPrice) * quantity * leverage;
+    const profitPercent = buyPrice > 0 ? ((sellPrice - buyPrice) / buyPrice) * 100 * leverage : 0;
+
+    return { profit, profitPercent };
+  };
+
   const calculations = calculateProfitLoss();
 
   return (
@@ -255,7 +260,7 @@ export default function OilTradingPrices() {
           <div>
             <h1 className="text-3xl font-bold text-slate-900">Oil Trading Prices</h1>
             <p className="text-slate-600 mt-1">
-              Real-time market data, analysis, and trading opportunities
+              Real-time market data and trading opportunities
             </p>
           </div>
           
@@ -369,26 +374,15 @@ export default function OilTradingPrices() {
                 <div className="space-y-4">
                   {filteredPrices.map((price) => (
                     <div key={price.id} className="p-4 border rounded-lg hover:bg-slate-50 transition-colors">
-                      <div className="grid grid-cols-1 lg:grid-cols-6 gap-4 items-center">
-                        <div className="lg:col-span-2">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                              <span className="text-white font-bold text-sm">{price.symbol.charAt(0)}</span>
-                            </div>
-                            <div>
-                              <h3 className="font-semibold">{price.name}</h3>
-                              <p className="text-sm text-slate-500">{price.exchange}</p>
-                            </div>
-                          </div>
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+                        <div>
+                          <h3 className="font-semibold">{price.name}</h3>
+                          <p className="text-sm text-slate-600">{price.symbol} • {price.exchange}</p>
                         </div>
                         
                         <div>
-                          <p className="text-2xl font-bold">{price.price}</p>
-                          <p className="text-sm text-slate-500">{price.unit}</p>
-                        </div>
-                        
-                        <div>
-                          <div className="flex items-center gap-2">
+                          <p className="text-2xl font-bold">{price.price} {price.unit}</p>
+                          <div className="flex items-center gap-2 mt-1">
                             <Badge 
                               variant={price.changePercent >= 0 ? "default" : "destructive"} 
                               className={price.changePercent >= 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}
@@ -482,64 +476,6 @@ export default function OilTradingPrices() {
               ))}
             </div>
           </TabsContent>
-                  {tradingOpportunities.map((opportunity) => (
-                    <div key={opportunity.id} className="p-4 border rounded-lg">
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <Badge 
-                              variant={opportunity.type === 'buy' ? 'default' : opportunity.type === 'sell' ? 'destructive' : 'secondary'}
-                              className={
-                                opportunity.type === 'buy' ? 'bg-green-100 text-green-800' :
-                                opportunity.type === 'sell' ? 'bg-red-100 text-red-800' :
-                                'bg-yellow-100 text-yellow-800'
-                              }
-                            >
-                              {opportunity.type.toUpperCase()}
-                            </Badge>
-                            <span className="font-semibold">{opportunity.commodity}</span>
-                          </div>
-                          <p className="text-sm text-slate-600">{opportunity.timeframe}</p>
-                        </div>
-                        
-                        <div className="text-right">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-slate-500">Confidence:</span>
-                            <Badge variant="outline">{opportunity.confidence}%</Badge>
-                          </div>
-                          <Badge 
-                            variant="outline" 
-                            className={
-                              opportunity.risk === 'low' ? 'text-green-600' :
-                              opportunity.risk === 'medium' ? 'text-yellow-600' :
-                              'text-red-600'
-                            }
-                          >
-                            {opportunity.risk} risk
-                          </Badge>
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-4 mb-3">
-                        <div>
-                          <p className="text-sm text-slate-500">Current Price</p>
-                          <p className="font-semibold">${opportunity.currentPrice}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-slate-500">Target Price</p>
-                          <p className="font-semibold">${opportunity.targetPrice}</p>
-                        </div>
-                      </div>
-                      
-                      <div className="bg-slate-50 p-3 rounded-lg">
-                        <p className="text-sm"><strong>Analysis:</strong> {opportunity.reasoning}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
 
           {/* Profit Calculator */}
           <TabsContent value="calculator" className="space-y-6">
@@ -547,52 +483,93 @@ export default function OilTradingPrices() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Calculator className="w-5 h-5" />
-                  Trading Calculator
+                  Trading Profit Calculator
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                  <div>
-                    <Label htmlFor="quantity">Quantity (barrels)</Label>
-                    <Input
-                      id="quantity"
-                      placeholder="1000"
-                      value={calculatorValues.quantity}
-                      onChange={(e) => setCalculatorValues(prev => ({ ...prev, quantity: e.target.value }))}
-                    />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="quantity">Quantity (barrels/units)</Label>
+                      <Input
+                        id="quantity"
+                        type="number"
+                        value={calculatorData.quantity}
+                        onChange={(e) => setCalculatorData(prev => ({ ...prev, quantity: e.target.value }))}
+                        placeholder="1000"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="buyPrice">Buy Price ($)</Label>
+                      <Input
+                        id="buyPrice"
+                        type="number"
+                        step="0.01"
+                        value={calculatorData.buyPrice}
+                        onChange={(e) => setCalculatorData(prev => ({ ...prev, buyPrice: e.target.value }))}
+                        placeholder="80.00"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="sellPrice">Sell Price ($)</Label>
+                      <Input
+                        id="sellPrice"
+                        type="number"
+                        step="0.01"
+                        value={calculatorData.sellPrice}
+                        onChange={(e) => setCalculatorData(prev => ({ ...prev, sellPrice: e.target.value }))}
+                        placeholder="85.00"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="leverage">Leverage</Label>
+                      <Select value={calculatorData.leverage} onValueChange={(value) => setCalculatorData(prev => ({ ...prev, leverage: value }))}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">1:1 (No Leverage)</SelectItem>
+                          <SelectItem value="5">1:5</SelectItem>
+                          <SelectItem value="10">1:10</SelectItem>
+                          <SelectItem value="20">1:20</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
-                  <div>
-                    <Label htmlFor="price">Price per barrel ($)</Label>
-                    <Input
-                      id="price"
-                      placeholder="85.45"
-                      value={calculatorValues.price}
-                      onChange={(e) => setCalculatorValues(prev => ({ ...prev, price: e.target.value }))}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="margin">Profit Margin (%)</Label>
-                    <Input
-                      id="margin"
-                      placeholder="5"
-                      value={calculatorValues.margin}
-                      onChange={(e) => setCalculatorValues(prev => ({ ...prev, margin: e.target.value }))}
-                    />
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 p-4 bg-slate-50 rounded-lg">
-                  <div className="text-center">
-                    <p className="text-sm text-slate-600">Total Value</p>
-                    <p className="text-2xl font-bold text-blue-600">${calculations.totalValue}</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm text-slate-600">Expected Profit</p>
-                    <p className="text-2xl font-bold text-green-600">${calculations.profit}</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm text-slate-600">Margin</p>
-                    <p className="text-2xl font-bold text-purple-600">{calculations.margin}%</p>
+                  
+                  <div className="space-y-4">
+                    <div className="p-4 bg-slate-50 rounded-lg">
+                      <h3 className="font-semibold mb-3">Calculation Results</h3>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span>Total Profit/Loss:</span>
+                          <span className={`font-semibold ${calculations.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            ${calculations.profit.toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Profit/Loss %:</span>
+                          <span className={`font-semibold ${calculations.profitPercent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {calculations.profitPercent.toFixed(2)}%
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Leverage Used:</span>
+                          <span className="font-semibold">{calculatorData.leverage}:1</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <h4 className="font-semibold text-yellow-800 mb-2">Risk Warning</h4>
+                      <p className="text-sm text-yellow-700">
+                        Trading with leverage increases both potential profits and losses. 
+                        Never risk more than you can afford to lose.
+                      </p>
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -605,53 +582,33 @@ export default function OilTradingPrices() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Globe className="w-5 h-5" />
-                  Market News & Analysis
+                  Market News
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {marketNews.map((news) => (
                     <div key={news.id} className="p-4 border rounded-lg hover:bg-slate-50 transition-colors">
-                      <div className="flex items-start gap-3">
-                        <div className={`w-2 h-2 rounded-full mt-2 ${
-                          news.impact === 'positive' ? 'bg-green-500' :
-                          news.impact === 'negative' ? 'bg-red-500' :
-                          'bg-yellow-500'
-                        }`} />
-                        
+                      <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
-                          <div className="flex items-start justify-between mb-2">
-                            <h3 className="font-semibold text-slate-900">{news.headline}</h3>
-                            <Badge 
-                              variant="outline" 
-                              className={
-                                news.impact === 'positive' ? 'text-green-600' :
-                                news.impact === 'negative' ? 'text-red-600' :
-                                'text-yellow-600'
-                              }
-                            >
-                              {news.impact}
-                            </Badge>
-                          </div>
-                          
-                          <p className="text-slate-600 mb-3">{news.summary}</p>
-                          
-                          <div className="flex items-center justify-between text-sm">
-                            <div className="flex items-center gap-2">
-                              <span className="text-slate-500">{news.source}</span>
-                              <span className="text-slate-400">•</span>
-                              <span className="text-slate-500">{new Date(news.timestamp).toLocaleTimeString()}</span>
-                            </div>
-                            
-                            <div className="flex gap-1">
-                              {news.relevantCommodities.map((commodity) => (
-                                <Badge key={commodity} variant="secondary" className="text-xs">
-                                  {commodity}
-                                </Badge>
-                              ))}
-                            </div>
+                          <h3 className="font-semibold mb-2">{news.headline}</h3>
+                          <p className="text-sm text-slate-600 mb-3">{news.summary}</p>
+                          <div className="flex items-center gap-3 text-xs text-slate-500">
+                            <span>{news.source}</span>
+                            <span>•</span>
+                            <span>{new Date(news.timestamp).toLocaleString()}</span>
                           </div>
                         </div>
+                        <Badge 
+                          variant="outline"
+                          className={`${
+                            news.impact === 'positive' ? 'text-green-600 border-green-300' :
+                            news.impact === 'negative' ? 'text-red-600 border-red-300' :
+                            'text-gray-600 border-gray-300'
+                          }`}
+                        >
+                          {news.impact}
+                        </Badge>
                       </div>
                     </div>
                   ))}

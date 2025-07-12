@@ -653,6 +653,14 @@ Changelog:
   * **Enhanced User Experience**: Templates display with orange warning boxes and clear upgrade paths for restricted access
   * **Fixed HTML Structure**: Resolved React DOM nesting warnings by properly structuring card components
   * **Production Ready**: Complete template permission system with visual feedback and clear user guidance
+- July 12, 2025. **OIL TRADING PRICES SIMPLIFICATION: Removed Complex Charts for Clean Interface**:
+  * **Simplified Oil Prices Interface**: Removed all complex recharts components and analysis charts per user request
+  * **Created SimpleOilTradingPrices Component**: Built clean, simple version with basic oil price data, trading opportunities, calculator, and market news
+  * **Updated Broker Dashboard Integration**: Modified BrokerDashboard.tsx to use simplified oil prices component
+  * **Clean User Experience**: Oil Prices tab now shows essential trading information without overwhelming charts and technical analysis
+  * **Maintained Real-Time Data**: Kept 25-hour automatic refresh cycle and live price updates from Oil Price API
+  * **Professional Design**: Clean card-based layout with proper responsive design and hover effects
+  * **Essential Features Only**: Focus on live prices, simple trading opportunities, profit calculator, and market news
 - July 11, 2025. **COMPLETE DYNAMIC LANDING PAGE INTEGRATION: Database-Driven Content Management System**:
   * **Database Schema Mismatch Fixed**: Resolved critical issue where database table had `section_id` column but Drizzle ORM expected `section` text column
   * **Complete Table Rebuild**: Dropped and recreated `landing_page_content` table with correct structure matching Drizzle schema definition

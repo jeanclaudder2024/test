@@ -15,7 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useSubscription } from '@/hooks/useSubscription';
 import PaymentReminder from '@/components/PaymentReminder';
 import CreateDealDialog from '@/components/broker/CreateDealDialog';
-import OilTradingPrices from '@/pages/OilTradingPrices';
+import SimpleOilTradingPrices from '@/pages/SimpleOilTradingPrices';
 import { 
   Handshake, 
   FileText, 
@@ -613,7 +613,7 @@ export default function BrokerDashboard() {
 
           {/* Oil Prices Tab */}
           <TabsContent value="oil-prices" className="space-y-6">
-            <OilTradingPrices />
+            <SimpleOilTradingPrices />
           </TabsContent>
 
           {/* Analytics Tab */}
