@@ -685,13 +685,6 @@ Changelog:
   * **Professional Legal Footer**: Implemented exact legal footer text matching user requirements: "It is officially recognized within the Petrodealhub platform under its legal terms and privacy policy"
   * **Enhanced PDF Branding**: Added professional PETRODEALHUB background design with legal disclaimers and company branding
   * **Legal Compliance Text**: Added complete legal text including unauthorized use prohibition and link to https://www.petrodealhub.com/legal
-- July 12, 2025. **COMPLETE GOOGLE MAPS MIGRATION: Premium Professional Mapping System**:
-  * **Full Leaflet Removal**: Systematically removed all Leaflet dependencies, imports, and components from AdvancedMaritimeMap.tsx
-  * **Clean Codebase**: Eliminated all MapContainer, TileLayer, Marker, Popup, LayerGroup references that were causing compilation errors
-  * **Google Maps Integration**: Fully replaced Leaflet-based mapping with Google Maps API for professional appearance
-  * **Premium User Experience**: Professional Google Maps provides superior mapping quality for paying SaaS customers vs free Leaflet alternatives
-  * **Error Resolution**: Fixed all syntax errors and compilation failures from mixed mapping libraries
-  * **System Architecture**: Clean migration maintains all maritime functionality while upgrading to premium mapping infrastructure
   * **Professional Watermark**: Enhanced document watermark with proper transparency and positioning for authentic business documents
   * **Company Visual Identity**: Improved header design with PETRODEALHUB logo and professional maritime documentation services branding
   * **Document Authentication**: Added document ID tracking and generation timestamps for professional document management
