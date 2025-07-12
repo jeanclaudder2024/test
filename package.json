@@ -101,7 +101,7 @@
     "react-leaflet": "^4.2.1",
     "react-leaflet-cluster": "^2.1.0",
     "react-resizable-panels": "^2.1.4",
-    "recharts": "^2.13.0",
+    "recharts": "^2.15.4",
     "speakeasy": "^2.0.0",
     "stripe": "^18.3.0",
     "tailwind-merge": "^2.5.4",

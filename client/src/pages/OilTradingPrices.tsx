@@ -7,6 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -18,8 +19,6 @@ import {
   Clock,
   Target,
   Calculator,
-  LineChart,
-  PieChart,
   Activity,
   Zap,
   ArrowUp,
@@ -236,8 +235,8 @@ export default function OilTradingPrices() {
   useEffect(() => {
     updateData();
     
-    // Auto-refresh every 30 seconds
-    const interval = setInterval(updateData, 30000);
+    // Auto-refresh every 25 hours (90,000,000 milliseconds)
+    const interval = setInterval(updateData, 90000000);
     return () => clearInterval(interval);
   }, []);
 
@@ -321,13 +320,17 @@ export default function OilTradingPrices() {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="prices" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="prices" className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4" />
               <span className="hidden sm:inline">Prices</span>
             </TabsTrigger>
+            <TabsTrigger value="charts" className="flex items-center gap-2">
+              <Activity className="w-4 h-4" />
+              <span className="hidden sm:inline">Charts</span>
+            </TabsTrigger>
             <TabsTrigger value="analysis" className="flex items-center gap-2">
-              <LineChart className="w-4 h-4" />
+              <TrendingUp className="w-4 h-4" />
               <span className="hidden sm:inline">Analysis</span>
             </TabsTrigger>
             <TabsTrigger value="opportunities" className="flex items-center gap-2">
@@ -421,6 +424,147 @@ export default function OilTradingPrices() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Price Charts */}
+          <TabsContent value="charts" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Bar Chart - Oil Prices */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="w-5 h-5" />
+                    Oil Price Comparison
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={oilPrices.slice(0, 6)}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis 
+                        dataKey="symbol" 
+                        tick={{ fontSize: 12 }}
+                        angle={-45}
+                        textAnchor="end"
+                        height={80}
+                      />
+                      <YAxis tick={{ fontSize: 12 }} />
+                      <Tooltip 
+                        formatter={(value, name) => [`$${value}`, 'Price']}
+                        labelFormatter={(label) => `Oil Type: ${label}`}
+                      />
+                      <Bar dataKey="price" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              {/* Line Chart - Price Trends */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Activity className="w-5 h-5" />
+                    Price Trend Analysis
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={oilPrices.slice(0, 6)}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis 
+                        dataKey="symbol" 
+                        tick={{ fontSize: 12 }}
+                        angle={-45}
+                        textAnchor="end"
+                        height={80}
+                      />
+                      <YAxis tick={{ fontSize: 12 }} />
+                      <Tooltip 
+                        formatter={(value, name) => [`$${value}`, 'Price']}
+                        labelFormatter={(label) => `Oil Type: ${label}`}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="price" 
+                        stroke="#10b981" 
+                        strokeWidth={3}
+                        dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              {/* Pie Chart - Market Share */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5" />
+                    Market Volume Distribution
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={oilPrices.slice(0, 5)}
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="volume"
+                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      >
+                        {oilPrices.slice(0, 5).map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={[
+                            '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'
+                          ][index % 5]} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value) => [`${value}M`, 'Volume']} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              {/* Change Percentage Chart */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Zap className="w-5 h-5" />
+                    24H Price Changes
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={oilPrices.slice(0, 6)}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis 
+                        dataKey="symbol" 
+                        tick={{ fontSize: 12 }}
+                        angle={-45}
+                        textAnchor="end"
+                        height={80}
+                      />
+                      <YAxis tick={{ fontSize: 12 }} />
+                      <Tooltip 
+                        formatter={(value, name) => [`${value}%`, 'Change']}
+                        labelFormatter={(label) => `Oil Type: ${label}`}
+                      />
+                      <Bar 
+                        dataKey="changePercent" 
+                        fill={(data) => data.changePercent >= 0 ? '#10b981' : '#ef4444'}
+                        radius={[4, 4, 0, 0]}
+                      >
+                        {oilPrices.slice(0, 6).map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.changePercent >= 0 ? '#10b981' : '#ef4444'} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           {/* Market Analysis */}
