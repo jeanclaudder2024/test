@@ -79,7 +79,7 @@ export default function SimpleOilTradingPrices() {
 
   const { toast } = useToast();
 
-  // Sample data for demo
+  // Comprehensive oil types data
   const sampleOilPrices: OilPrice[] = [
     {
       id: '1',
@@ -113,6 +113,36 @@ export default function SimpleOilTradingPrices() {
     },
     {
       id: '3',
+      name: 'Dubai Crude',
+      symbol: 'DUBAI',
+      price: 80.15,
+      change: 0.78,
+      changePercent: 0.98,
+      volume: 67000,
+      high24h: 80.95,
+      low24h: 79.45,
+      exchange: 'DME',
+      unit: 'USD/barrel',
+      lastUpdated: new Date().toISOString(),
+      description: 'Dubai Crude Oil benchmark'
+    },
+    {
+      id: '4',
+      name: 'Oman Crude',
+      symbol: 'OMAN',
+      price: 79.85,
+      change: -0.32,
+      changePercent: -0.40,
+      volume: 45000,
+      high24h: 80.78,
+      low24h: 79.22,
+      exchange: 'DME',
+      unit: 'USD/barrel',
+      lastUpdated: new Date().toISOString(),
+      description: 'Oman Crude Oil futures'
+    },
+    {
+      id: '5',
       name: 'Natural Gas',
       symbol: 'NG',
       price: 2.845,
@@ -127,7 +157,22 @@ export default function SimpleOilTradingPrices() {
       description: 'Natural Gas futures'
     },
     {
-      id: '4',
+      id: '6',
+      name: 'Gasoline RBOB',
+      symbol: 'RB',
+      price: 2.123,
+      change: 0.045,
+      changePercent: 2.16,
+      volume: 78000,
+      high24h: 2.156,
+      low24h: 2.089,
+      exchange: 'NYMEX',
+      unit: 'USD/gallon',
+      lastUpdated: new Date().toISOString(),
+      description: 'Reformulated Blendstock for Oxygenate Blending'
+    },
+    {
+      id: '7',
       name: 'Heating Oil',
       symbol: 'HO',
       price: 2.456,
@@ -140,6 +185,81 @@ export default function SimpleOilTradingPrices() {
       unit: 'USD/gallon',
       lastUpdated: new Date().toISOString(),
       description: 'Heating Oil futures'
+    },
+    {
+      id: '8',
+      name: 'Jet Fuel',
+      symbol: 'JET',
+      price: 2.678,
+      change: -0.021,
+      changePercent: -0.78,
+      volume: 32000,
+      high24h: 2.712,
+      low24h: 2.645,
+      exchange: 'ICE',
+      unit: 'USD/gallon',
+      lastUpdated: new Date().toISOString(),
+      description: 'Jet Fuel (Kerosene) futures'
+    },
+    {
+      id: '9',
+      name: 'Diesel Fuel',
+      symbol: 'ULSD',
+      price: 2.534,
+      change: 0.067,
+      changePercent: 2.71,
+      volume: 56000,
+      high24h: 2.578,
+      low24h: 2.489,
+      exchange: 'NYMEX',
+      unit: 'USD/gallon',
+      lastUpdated: new Date().toISOString(),
+      description: 'Ultra Low Sulfur Diesel'
+    },
+    {
+      id: '10',
+      name: 'Naphtha',
+      symbol: 'NAPH',
+      price: 645.50,
+      change: 12.30,
+      changePercent: 1.94,
+      volume: 28000,
+      high24h: 652.80,
+      low24h: 638.90,
+      exchange: 'PLATTS',
+      unit: 'USD/ton',
+      lastUpdated: new Date().toISOString(),
+      description: 'Naphtha CIF NWE (Platts)'
+    },
+    {
+      id: '11',
+      name: 'Fuel Oil 380',
+      symbol: 'FO380',
+      price: 425.75,
+      change: -8.45,
+      changePercent: -1.95,
+      volume: 34000,
+      high24h: 438.20,
+      low24h: 422.10,
+      exchange: 'PLATTS',
+      unit: 'USD/ton',
+      lastUpdated: new Date().toISOString(),
+      description: 'Fuel Oil 380 CST FOB Singapore'
+    },
+    {
+      id: '12',
+      name: 'LPG Propane',
+      symbol: 'LPG',
+      price: 1.234,
+      change: 0.089,
+      changePercent: 7.78,
+      volume: 19000,
+      high24h: 1.267,
+      low24h: 1.198,
+      exchange: 'NYMEX',
+      unit: 'USD/gallon',
+      lastUpdated: new Date().toISOString(),
+      description: 'Liquefied Petroleum Gas - Propane'
     }
   ];
 
@@ -186,6 +306,50 @@ export default function SimpleOilTradingPrices() {
       timeframe: '1-2 weeks',
       reasoning: 'Weather forecasts indicate warmer temperatures reducing heating demand.',
       risk: 'low'
+    },
+    {
+      id: '3',
+      type: 'buy',
+      commodity: 'Dubai Crude',
+      currentPrice: 80.15,
+      targetPrice: 84.50,
+      confidence: 72,
+      timeframe: '3-4 weeks',
+      reasoning: 'Asian demand recovering with strong refinery margins supporting prices.',
+      risk: 'medium'
+    },
+    {
+      id: '4',
+      type: 'hold',
+      commodity: 'Gasoline RBOB',
+      currentPrice: 2.123,
+      targetPrice: 2.200,
+      confidence: 65,
+      timeframe: '2-3 weeks',
+      reasoning: 'Driving season approaching but refinery capacity increases may limit gains.',
+      risk: 'low'
+    },
+    {
+      id: '5',
+      type: 'buy',
+      commodity: 'Diesel Fuel',
+      currentPrice: 2.534,
+      targetPrice: 2.750,
+      confidence: 80,
+      timeframe: '1-2 weeks',
+      reasoning: 'Strong industrial demand and low inventory levels supporting price increases.',
+      risk: 'medium'
+    },
+    {
+      id: '6',
+      type: 'sell',
+      commodity: 'Fuel Oil 380',
+      currentPrice: 425.75,
+      targetPrice: 395.00,
+      confidence: 70,
+      timeframe: '2-4 weeks',
+      reasoning: 'IMO 2020 regulations reducing demand for high sulfur fuel oil.',
+      risk: 'medium'
     }
   ];
 
@@ -235,7 +399,25 @@ export default function SimpleOilTradingPrices() {
   // Filter prices based on selected commodity
   const filteredPrices = selectedCommodity === 'all' 
     ? oilPrices 
-    : oilPrices.filter(price => price.symbol.toLowerCase().includes(selectedCommodity.toLowerCase()));
+    : oilPrices.filter(price => {
+        const symbol = price.symbol.toLowerCase();
+        const name = price.name.toLowerCase();
+        
+        switch(selectedCommodity) {
+          case 'crude':
+            return ['brent', 'wti', 'dubai', 'oman'].some(crude => symbol.includes(crude) || name.includes(crude));
+          case 'gas':
+            return ['ng', 'lpg', 'gas', 'propane'].some(gas => symbol.includes(gas) || name.includes(gas));
+          case 'refined':
+            return ['rb', 'ulsd', 'jet', 'gasoline', 'diesel'].some(refined => symbol.includes(refined) || name.includes(refined));
+          case 'heavy':
+            return ['fo380', 'naph', 'fuel oil', 'naphtha'].some(heavy => symbol.includes(heavy) || name.includes(heavy));
+          case 'heating':
+            return ['ho', 'lpg', 'heating', 'propane'].some(heating => symbol.includes(heating) || name.includes(heating));
+          default:
+            return true;
+        }
+      });
 
   // Calculate profit/loss
   const calculateProfitLoss = () => {
@@ -362,9 +544,11 @@ export default function SimpleOilTradingPrices() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Commodities</SelectItem>
-                        <SelectItem value="crude">Crude Oil</SelectItem>
-                        <SelectItem value="gas">Natural Gas</SelectItem>
-                        <SelectItem value="refined">Refined Products</SelectItem>
+                        <SelectItem value="crude">Crude Oil (Brent, WTI, Dubai, Oman)</SelectItem>
+                        <SelectItem value="gas">Natural Gas & LPG</SelectItem>
+                        <SelectItem value="refined">Refined Products (Gasoline, Diesel, Jet Fuel)</SelectItem>
+                        <SelectItem value="heavy">Heavy Products (Fuel Oil, Naphtha)</SelectItem>
+                        <SelectItem value="heating">Heating & Energy (Heating Oil, Propane)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
