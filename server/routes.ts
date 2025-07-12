@@ -6625,10 +6625,10 @@ IMPORTANT: Generate a complete professional maritime document with the following
       }
 
       if (format === 'pdf') {
-        // EXACT COPY of user's PDF template - no modifications
+        // Professional PDF for paying customers
         const doc = new PDFDocument({
           size: 'A4',
-          margin: 72
+          margin: 50
         });
         
         // Set response headers for PDF download
@@ -6638,42 +6638,135 @@ IMPORTANT: Generate a complete professional maritime document with the following
         // Pipe PDF to response
         doc.pipe(res);
         
-        // Document Content - using template data only
+        const pageWidth = doc.page.width;
+        const pageHeight = doc.page.height;
+        
+        // Professional Header with PETRODEALHUB branding
+        doc.rect(0, 0, pageWidth, 80)
+           .fillColor('#1e40af')
+           .fill();
+        
+        // Company Logo and Name
+        doc.circle(60, 40, 25)
+           .fillColor('white')
+           .fill();
+        
+        doc.fontSize(20)
+           .fillColor('#1e40af')
+           .font('Helvetica-Bold')
+           .text('P', 48, 30);
+        
+        doc.fontSize(24)
+           .fillColor('white')
+           .font('Helvetica-Bold')
+           .text('PETRODEALHUB', 100, 25);
+        
+        doc.fontSize(12)
+           .fillColor('#dbeafe')
+           .font('Helvetica')
+           .text('Professional Maritime Documentation', 100, 50);
+        
+        // Document Title
+        doc.fontSize(18)
+           .fillColor('#1e293b')
+           .font('Helvetica-Bold')
+           .text(document.title, 50, 120, {
+             width: pageWidth - 100,
+             align: 'center'
+           });
+        
+        // Vessel Information Box
+        doc.rect(50, 160, pageWidth - 100, 80)
+           .fillColor('#f8fafc')
+           .fill()
+           .stroke('#e2e8f0')
+           .lineWidth(1);
+        
+        doc.fontSize(14)
+           .fillColor('#1e40af')
+           .font('Helvetica-Bold')
+           .text('VESSEL INFORMATION', 70, 175);
+        
+        doc.fontSize(12)
+           .fillColor('#374151')
+           .font('Helvetica-Bold')
+           .text(`Vessel: ${vessel.name}`, 70, 200)
+           .text(`IMO: ${vessel.imo || 'N/A'}`, 70, 215)
+           .text(`Flag: ${vessel.flag || 'International'}`, 300, 200)
+           .text(`Type: ${vessel.vesselType || 'Oil Tanker'}`, 300, 215);
+        
+        // Document Content
         let content = document.content || "";
         content = content.replace(/<[^>]*>/g, '');
         content = content.replace(/&nbsp;/g, ' ');
         content = content.replace(/&amp;/g, '&');
+        content = content.replace(/&lt;/g, '<');
+        content = content.replace(/&gt;/g, '>');
         
-        let currentY = 72;
+        let currentY = 280;
         const lines = content.split('\n').filter(line => line.trim());
         
+        doc.fontSize(14)
+           .fillColor('#1e40af')
+           .font('Helvetica-Bold')
+           .text('DOCUMENT CONTENT', 50, 260);
+        
         lines.forEach(line => {
-          if (currentY > doc.page.height - 120) {
+          if (currentY > pageHeight - 150) {
             doc.addPage();
-            currentY = 72;
+            currentY = 50;
           }
           
           const trimmedLine = line.trim();
           if (trimmedLine.length > 0) {
-            doc.fontSize(11)
-               .fillColor('#000000')
-               .font('Helvetica')
-               .text(trimmedLine, 72, currentY, {
-                 width: doc.page.width - 144,
-                 align: 'left'
-               });
-            currentY += 15;
+            if (trimmedLine.includes(':')) {
+              doc.fontSize(12)
+                 .fillColor('#1e40af')
+                 .font('Helvetica-Bold')
+                 .text(trimmedLine, 50, currentY, {
+                   width: pageWidth - 100
+                 });
+              currentY += 20;
+            } else {
+              doc.fontSize(11)
+                 .fillColor('#374151')
+                 .font('Helvetica')
+                 .text(trimmedLine, 50, currentY, {
+                   width: pageWidth - 100,
+                   align: 'justify'
+                 });
+              currentY += 18;
+            }
           }
         });
         
-        // Footer - EXACTLY your template text at bottom
-        const footerY = doc.page.height - 72;
+        // Professional Footer
+        const footerY = pageHeight - 100;
         
-        doc.fontSize(9)
-           .fillColor('#000000')
+        doc.rect(0, footerY - 10, pageWidth, 110)
+           .fillColor('#f8fafc')
+           .fill();
+        
+        doc.fontSize(8)
+           .fillColor('#64748b')
            .font('Helvetica')
-           .text('It is officially recognized within the Petrodealhub platform under its legal terms and privacy policy. All rights reserved. Unauthorized use, modification, or distribution of this document is strictly prohibited. For full legal terms, visit: https://www.petrodealhub.com/legal', 
-                 72, footerY, { width: doc.page.width - 144 });
+           .text('It is officially recognized within the Petrodealhub platform under its legal terms and privacy policy. All rights reserved.', 
+                 50, footerY, { width: pageWidth - 100 });
+        
+        doc.text('Unauthorized use, modification, or distribution of this document is strictly prohibited.', 
+                 50, footerY + 15, { width: pageWidth - 100 });
+        
+        doc.fontSize(8)
+           .fillColor('#1e40af')
+           .font('Helvetica')
+           .text('For full legal terms, visit: https://www.petrodealhub.com/legal', 
+                 50, footerY + 30, { width: pageWidth - 100 });
+        
+        doc.fontSize(10)
+           .fillColor('#1e40af')
+           .font('Helvetica-Bold')
+           .text(`Document ID: ${document.id}`, 50, footerY + 50)
+           .text(`Generated: ${new Date().toLocaleDateString()}`, pageWidth - 200, footerY + 50);
         
         doc.end();
         
