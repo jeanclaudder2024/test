@@ -158,25 +158,25 @@ export default function OilVesselMap() {
   const error = vesselError;
   const connectionStatus = 'connected';
 
-  // Fetch ports data with error handling and authentication
+  // Fetch ports data with error handling - use public endpoint
   const { data: portsData, isLoading: portsLoading, error: portsError } = useQuery({
-    queryKey: ['/api/admin/ports'],
+    queryKey: ['/api/ports'],
     enabled: isAuthenticated,
     retry: 1
   });
   const ports = Array.isArray(portsData) ? portsData : (portsData?.ports || []);
 
-  // Fetch refineries data with error handling and authentication
+  // Fetch refineries data with error handling - use public endpoint
   const { data: refineriesData, isLoading: refineriesLoading, error: refineriesError } = useQuery({
-    queryKey: ['/api/admin/refineries'],
+    queryKey: ['/api/refineries'],
     enabled: isAuthenticated,
     retry: 1
   });
   const refineries = Array.isArray(refineriesData) ? refineriesData : [];
 
-  // Fetch oil types with error handling and authentication
+  // Fetch oil types with error handling - use public endpoint
   const { data: oilTypesData, isLoading: oilTypesLoading, error: oilTypesError } = useQuery({
-    queryKey: ['/api/admin/oil-types'],
+    queryKey: ['/api/oil-types'],
     enabled: isAuthenticated,
     retry: 1
   });

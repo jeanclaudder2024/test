@@ -204,7 +204,7 @@ export default function AdvancedMaritimeMap() {
   }, [vesselData]);
 
   const { data: portsData, isLoading: portsLoading, error: portsError } = useQuery<any>({
-    queryKey: ['/api/admin/ports'],
+    queryKey: ['/api/ports'],
     staleTime: 5 * 60 * 1000,
     retry: 1,
     enabled: isAuthenticated
@@ -233,7 +233,7 @@ export default function AdvancedMaritimeMap() {
   }, [portsData]);
 
   const { data: refineriesData, isLoading: refineriesLoading, error: refineriesError } = useQuery<any>({
-    queryKey: ['/api/admin/refineries'],
+    queryKey: ['/api/refineries'],
     staleTime: 5 * 60 * 1000,
     retry: 1,
     enabled: isAuthenticated
