@@ -6454,7 +6454,7 @@ Only use authentic, real-world data for existing refineries.`;
         return res.status(404).json({ message: "Template not found" });
       }
       
-      console.log(`Debug: template object:`, JSON.stringify(template, null, 2));
+
 
       // Check template access permissions based on user role and subscription
       const user = req.user!;
@@ -6502,7 +6502,7 @@ Only use authentic, real-world data for existing refineries.`;
         return res.status(404).json({ message: "Vessel not found" });
       }
       
-      console.log(`Debug: vessel object:`, { id: vessel.id, name: vessel.name });
+
 
       // Generate AI document using OpenAI
       const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -6752,23 +6752,54 @@ IMPORTANT: Generate a complete professional maritime document with the following
           }
         });
         
-        // Footer
-        const footerY = doc.page.height - 80;
-        doc.rect(0, footerY, doc.page.width, 80)
-           .fill(darkGray);
+        // Professional Footer with Legal Text (matching user's PDF)
+        const footerY = doc.page.height - 100;
         
+        // Footer separator line
+        doc.moveTo(50, footerY)
+           .lineTo(doc.page.width - 50, footerY)
+           .stroke('#e2e8f0')
+           .lineWidth(1);
+        
+        // Legal disclaimer background
+        doc.rect(50, footerY + 10, doc.page.width - 100, 75)
+           .fill('#fafafa')
+           .stroke('#e5e7eb');
+        
+        // Legal text (matching your PDF exactly)
         doc.fontSize(8)
-           .fillColor('white')
-           .text('PETRODEALHUB - Maritime Documentation Services', 50, footerY + 20)
-           .text('Generated on ' + new Date().toLocaleString(), 50, footerY + 35)
-           .text('Document ID: ' + document.id, 50, footerY + 50);
+           .fillColor('#6b7280')
+           .text('It is officially recognized within the Petrodealhub platform under its legal terms and privacy policy. All rights reserved.', 
+                 60, footerY + 20, { width: doc.page.width - 120 });
         
-        // Watermark
+        doc.text('Unauthorized use, modification, or distribution of this document is strictly prohibited.', 
+                 60, footerY + 35, { width: doc.page.width - 120 });
+        
+        doc.text('For full legal terms, visit: https://www.petrodealhub.com/legal', 
+                 60, footerY + 50, { width: doc.page.width - 120 });
+        
+        // Document generation info and page number
+        doc.fontSize(9)
+           .fillColor(primaryBlue)
+           .text(`Document ID: ${document.id} | Generated: ${new Date().toLocaleDateString()}`, 
+                 60, footerY + 70);
+        
+        doc.text('Page 1', doc.page.width - 100, footerY + 70);
+        
+        // Company branding
+        doc.fontSize(8)
+           .fillColor('#64748b')
+           .text('© 2025 PetroDealHub Maritime Platform', 
+                 60, footerY + 85);
+        
+        // Professional Watermark
+        doc.save();
+        doc.rotate(-45, { origin: [doc.page.width / 2, doc.page.height / 2] });
         doc.fontSize(60)
-           .fillColor('#000000', 0.05)
-           .text('PETRODEALHUB', 100, 400, {
-             rotate: -45
-           });
+           .fillColor('#f1f5f9')
+           .fillOpacity(0.15)
+           .text('PETRODEALHUB', (doc.page.width / 2) - 180, (doc.page.height / 2) - 30);
+        doc.restore();
         
         doc.end();
         
