@@ -32,10 +32,10 @@ export class VesselPositionService {
       this.isInitialized = true;
       this.lastUpdate = new Date();
       
-      // Start the simulation update loop if not already running
-      if (!this.updateInterval) {
-        this.startPositionUpdates();
-      }
+      // Vessel movement simulation disabled
+      // if (!this.updateInterval) {
+      //   this.startPositionUpdates();
+      // }
     } catch (error) {
       console.error('Error initializing vessel position service:', error);
       this.isInitialized = false;
@@ -71,9 +71,15 @@ export class VesselPositionService {
   }
   
   /**
-   * Update vessel positions with simulated movement
+   * Update vessel positions with simulated movement - DISABLED
    */
   async updateVesselPositions() {
+    // Vessel movement simulation disabled to prevent performance issues
+    console.log('Vessel movement simulation disabled');
+    return [];
+    
+    /* COMMENTED OUT - Original movement code
+  async updateVesselPositions_DISABLED() {
     try {
       // Update about 10% of vessels each time to simulate staggered movement
       const vesselCount = this.vessels.length;
@@ -133,6 +139,7 @@ export class VesselPositionService {
       console.error('Error updating vessel positions:', error);
       return [];
     }
+    */ // END OF COMMENTED OUT CODE
   }
   
   /**

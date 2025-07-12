@@ -722,6 +722,14 @@ Changelog:
   * **Premium Branding**: Upgraded company logo design with shadow effects and sophisticated styling
   * **Beautiful Footer Design**: Created elegant footer with gradient background and decorative elements
   * **Professional Typography**: Improved text readability with proper font sizes, colors, and spacing throughout document
+- July 12, 2025. **VESSEL MOVEMENT SIMULATION COMPLETELY DISABLED**:
+  * **Performance Issue Resolution**: Completely disabled automatic vessel movement simulation in vesselPositionService.ts per user request
+  * **Movement Script Removal**: Commented out startPositionUpdates() call in initialization to prevent automatic vessel position updates
+  * **Function Disabled**: Modified updateVesselPositions() to return immediately without processing vessel movements
+  * **Database Protection**: Eliminated database writes from vessel position simulation to prevent performance problems
+  * **Map Stability**: Vessel icons now display static positions without automatic movement updates every 15 minutes
+  * **System Optimization**: Removed resource-intensive automatic positioning that was causing system performance issues
+  * **Read-Only Vessel Service**: Vessel position service now only provides read access to vessel data and port proximity calculations
 
 ## User Preferences
 
