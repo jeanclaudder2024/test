@@ -214,14 +214,16 @@ export default function AIDocumentGenerator({ vesselId, vesselName }: AIDocument
                           Create
                         </Button>
                       ) : (
-                        <TooltipProvider>
+                        <TooltipProvider delayDuration={100}>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
                                 size="sm"
-                                disabled
-                                className="ml-2 bg-gray-300 text-gray-500 cursor-not-allowed hover:bg-gray-400"
-                                onClick={() => {
+                                variant="secondary"
+                                className="ml-2 bg-orange-200 text-orange-700 cursor-not-allowed hover:bg-orange-300 border border-orange-300"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
                                   toast({
                                     title: "Access Required",
                                     description: template.accessMessage,
@@ -233,8 +235,12 @@ export default function AIDocumentGenerator({ vesselId, vesselName }: AIDocument
                                 Locked
                               </Button>
                             </TooltipTrigger>
-                            <TooltipContent className="max-w-sm">
-                              <p>{template.accessMessage}</p>
+                            <TooltipContent 
+                              className="max-w-xs bg-black text-white p-3 rounded-lg shadow-lg" 
+                              side="top"
+                              sideOffset={5}
+                            >
+                              <p className="text-sm leading-relaxed">{template.accessMessage}</p>
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
