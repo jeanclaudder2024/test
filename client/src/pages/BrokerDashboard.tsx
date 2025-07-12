@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useSubscription } from '@/hooks/useSubscription';
 import PaymentReminder from '@/components/PaymentReminder';
 import CreateDealDialog from '@/components/broker/CreateDealDialog';
+import OilTradingPrices from '@/pages/OilTradingPrices';
 import { 
   Handshake, 
   FileText, 
@@ -318,7 +319,7 @@ export default function BrokerDashboard() {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4 bg-gray-800 border-gray-700">
+          <TabsList className="grid w-full grid-cols-5 bg-gray-800 border-gray-700">
             <TabsTrigger value="deals" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white">
               <Handshake className="h-4 w-4 mr-2" />
               Deals
@@ -330,6 +331,10 @@ export default function BrokerDashboard() {
             <TabsTrigger value="admin-files" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white">
               <Paperclip className="h-4 w-4 mr-2" />
               Admin Files
+            </TabsTrigger>
+            <TabsTrigger value="oil-prices" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white">
+              <TrendingUp className="h-4 w-4 mr-2" />
+              Oil Prices
             </TabsTrigger>
             <TabsTrigger value="analytics" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white">
               <BarChart3 className="h-4 w-4 mr-2" />
@@ -604,6 +609,11 @@ export default function BrokerDashboard() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Oil Prices Tab */}
+          <TabsContent value="oil-prices" className="space-y-6">
+            <OilTradingPrices />
           </TabsContent>
 
           {/* Analytics Tab */}
